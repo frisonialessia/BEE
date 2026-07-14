@@ -148,6 +148,7 @@ export function renderHiveCanvas(
   height: number,
   radius: number,
   hovered: HiveHexCell | null,
+  hoverStrength = 0,
 ): void {
   const color = createTemperatureColorScale();
   const dpr = window.devicePixelRatio || 1;
@@ -157,13 +158,18 @@ export function renderHiveCanvas(
 
   for (const cell of cells) {
     const isHovered = hovered === cell;
-    drawHexagon(ctx, cell.x, cell.y, radius - 1);
+    const scale = isHovered ? 1 + hoverStrength * 0.06 : 1;
+    const r = (radius - 1) * scale;
+
+    drawHexagon(ctx, cell.x, cell.y, r);
     ctx.fillStyle = color(cell.temperature);
-    ctx.globalAlpha = isHovered ? 1 : 0.88;
+    ctx.globalAlpha = isHovered ? 0.88 + hoverStrength * 0.12 : 0.82;
     ctx.fill();
     ctx.globalAlpha = 1;
-    ctx.strokeStyle = isHovered ? BEE_COLORS.chart.magenta : "rgba(138, 158, 255, 0.2)";
-    ctx.lineWidth = isHovered ? 2 : 0.5;
+    ctx.strokeStyle = isHovered
+      ? BEE_COLORS.chart.magenta
+      : "rgba(138, 158, 255, 0.15)";
+    ctx.lineWidth = isHovered ? 1 + hoverStrength * 1.5 : 0.5;
     ctx.stroke();
   }
 }

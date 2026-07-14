@@ -11,17 +11,32 @@ import { cn } from "@/lib/utils";
 import type { LeadCard } from "@/types/control";
 import { Badge } from "@/components/ui/badge";
 
-function KanbanCard({ card }: { card: LeadCard }) {
+/** Pastel card backgrounds cycling through brand palette. */
+const CARD_TONES = [
+  "bg-[var(--bee-surface-primary)]/70",
+  "bg-[var(--bee-chart-gold)]/35",
+  "bg-[var(--bee-chart-violet)]/30",
+  "bg-white/60",
+] as const;
+
+function cardTone(index: number) {
+  return CARD_TONES[index % CARD_TONES.length];
+}
+
+function KanbanCard({ card, index }: { card: LeadCard; index: number }) {
   const channel = card.strategy?.channel;
   const pain = card.strategy?.pain_point;
 
   return (
     <Link
       href={`/dashboard/opportunities/${card.opportunity_id}`}
-      className="block rounded-xl bg-[var(--bee-surface-primary)]/40 p-4 shadow-[var(--bee-shadow)] transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(138,158,255,0.35)]"
+      className={cn(
+        "bee-kanban-card group block",
+        cardTone(index),
+      )}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="line-clamp-2 text-sm font-light leading-snug tracking-tight">
+        <p className="line-clamp-2 text-sm font-medium leading-snug tracking-tight">
           {card.title}
         </p>
         <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
@@ -64,24 +79,32 @@ function KanbanColumn({
   return (
     <div className="flex w-[min(100%,240px)] shrink-0 flex-col">
       <div className="mb-3 flex items-baseline justify-between px-1">
-        <h3 className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-          {label}
-        </h3>
+        <h3 className="bee-eyebrow">{label}</h3>
         <span className="font-mono text-[10px] text-muted-foreground">{cards.length}</span>
       </div>
-      <div className="flex flex-1 flex-col gap-2 rounded-xl bg-muted/20 p-2 min-h-[120px]">
+      <div className="flex min-h-[140px] flex-1 flex-col gap-2.5 rounded-2xl bg-muted/15 p-2.5">
         {cards.length === 0 ? (
-          <p className="px-2 py-6 text-center text-[11px] font-light text-muted-foreground">
+          <p className="px-2 py-8 text-center text-[11px] font-light text-muted-foreground">
             —
           </p>
         ) : (
-          cards.map((card) => (
-            <div key={card.opportunity_id} className="group">
-              <KanbanCard card={card} />
+          cards.map((card, i) => (
+            <div key={card.opportunity_id}>
+              <KanbanCard card={card} index={i} />
             </div>
           ))
         )}
       </div>
+    </div>
+  );
+}
+
+function WorkspaceSkeleton() {
+  return (
+    <div className="flex gap-4 overflow-hidden">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-64 w-56 shrink-0 rounded-2xl" />
+      ))}
     </div>
   );
 }
@@ -96,13 +119,15 @@ export function LeadWorkspace() {
   const grouped = groupLeadCards(cards);
 
   return (
-    <section className="bee-surface min-h-[480px] p-6" aria-label="Lead workspace">
-      <div className="mb-6 flex items-end justify-between gap-4">
+    <section
+      className="bee-surface flex h-full min-h-[var(--bee-zone-footer)] flex-col p-6"
+      aria-label="Lead workspace"
+    >
+      <div className="mb-6 flex shrink-0 items-end justify-between gap-4">
         <div>
-          <h2 className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            Lead Workspace
-          </h2>
-          <p className="mt-1 text-xs font-light text-muted-foreground">
+          <h2 className="bee-eyebrow">Lead Workspace</h2>
+          <p className="bee-kpi mt-2">Daily Operation</p>
+          <p className="bee-caption mt-1">
             Strategies by pipeline stage · updates automatically
           </p>
         </div>
@@ -111,23 +136,21 @@ export function LeadWorkspace() {
         )}
       </div>
 
-      {isLoading ? (
-        <div className="flex gap-4 overflow-hidden">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-64 w-56 shrink-0 rounded-xl" />
-          ))}
-        </div>
-      ) : (
-        <div className={cn("flex gap-4 overflow-x-auto pb-2")}>
-          {KANBAN_COLUMNS.map((col) => (
-            <KanbanColumn
-              key={col.id}
-              label={col.label}
-              cards={grouped[col.id] ?? []}
-            />
-          ))}
-        </div>
-      )}
+      <div className="min-h-0 flex-1">
+        {isLoading ? (
+          <WorkspaceSkeleton />
+        ) : (
+          <div className="flex gap-4 overflow-x-auto pb-2">
+            {KANBAN_COLUMNS.map((col) => (
+              <KanbanColumn
+                key={col.id}
+                label={col.label}
+                cards={grouped[col.id] ?? []}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

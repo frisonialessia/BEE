@@ -22,6 +22,8 @@ const STAGE_LABELS: Record<string, string> = {
   ready_to_buy: "Ready to buy",
 };
 
+const HOVER_LERP_MS = 180;
+
 interface SignalHexMapProps {
   className?: string;
   /** Canvas height in CSS pixels. */
@@ -45,26 +47,26 @@ function HiveTooltip({
 
   return (
     <div
-      className="pointer-events-none absolute z-20 w-56 rounded-xl bg-[var(--bee-surface-secondary)] p-3 shadow-[var(--bee-shadow)] backdrop-blur-sm"
+      className="bee-hex-tooltip pointer-events-none absolute z-20 w-56 rounded-2xl bg-[var(--bee-surface-secondary)] p-4 shadow-[var(--bee-shadow)] backdrop-blur-sm"
       style={{
         left: Math.min(Math.max(x + 12, 8), containerWidth - 240),
         top: Math.max(y - 8, 8),
         transform: "translateY(-100%)",
       }}
     >
-      <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--bee-accent-hot)]">
+      <p className="bee-eyebrow text-[var(--bee-accent-hot)]">
         Closing temp · {Math.round(cell.temperature)}°
       </p>
-      <p className="mt-1 text-sm font-light leading-snug">
+      <p className="mt-1.5 text-sm font-light leading-snug">
         {lead.company_name ?? lead.company_domain}
       </p>
       <p className="text-[11px] text-muted-foreground">{lead.company_domain}</p>
       <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
-        <span className="rounded-md bg-muted px-1.5 py-0.5">
+        <span className="rounded-lg bg-muted px-2 py-0.5">
           {STAGE_LABELS[lead.buying_stage] ?? lead.buying_stage}
         </span>
         {lead.is_hot && (
-          <span className="rounded-md bg-[var(--bee-surface-primary)] px-1.5 py-0.5 text-[var(--bee-accent-hot)]">
+          <span className="rounded-lg bg-[var(--bee-surface-primary)] px-2 py-0.5 text-[var(--bee-accent-hot)]">
             HOT
           </span>
         )}
@@ -85,17 +87,21 @@ function HiveTooltip({
  * SignalHexMap — Colmena hexagonal heatmap of DarkFunnel closing temperature.
  *
  * Uses d3-hexbin for efficient aggregation + Canvas rendering for hundreds of leads.
- * Terracotta/ochre palette · hover tooltip with lead detail.
+ * Brand palette · smooth hover transitions · editorial hero layout.
  */
 export function SignalHexMap({
   className,
-  height = 280,
+  height = 360,
   maxLeads = 200,
 }: SignalHexMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hoverStrengthRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
   const [size, setSize] = useState({ width: 600, height });
   const [hovered, setHovered] = useState<HiveHexCell | null>(null);
+  const [renderHover, setRenderHover] = useState<HiveHexCell | null>(null);
+  const [hoverStrength, setHoverStrength] = useState(0);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
 
   const { data: result, isLoading } = useHiveLeads(maxLeads);
@@ -114,19 +120,50 @@ export function SignalHexMap({
   }, [leads, size.width, size.height, hexRadius]);
 
   const redraw = useCallback(
-    (hoverCell: HiveHexCell | null) => {
+    (hoverCell: HiveHexCell | null, strength: number) => {
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      renderHiveCanvas(ctx, cells, size.width, size.height, hexRadius, hoverCell);
+      renderHiveCanvas(ctx, cells, size.width, size.height, hexRadius, hoverCell, strength);
     },
     [cells, size.width, size.height, hexRadius],
   );
 
+  // Smooth hover strength animation
   useEffect(() => {
-    redraw(hovered);
-  }, [redraw, hovered]);
+    hoverStrengthRef.current = hoverStrength;
+  }, [hoverStrength]);
+
+  useEffect(() => {
+    const target = hovered ? 1 : 0;
+    const start = performance.now();
+    const from = hoverStrengthRef.current;
+
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / HOVER_LERP_MS, 1);
+      const eased = t * (2 - t);
+      const next = from + (target - from) * eased;
+      hoverStrengthRef.current = next;
+      setHoverStrength(next);
+      setRenderHover(hovered);
+
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [hovered]);
+
+  useEffect(() => {
+    redraw(renderHover, hoverStrength);
+  }, [redraw, renderHover, hoverStrength]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -150,15 +187,18 @@ export function SignalHexMap({
     canvas.height = size.height * dpr;
     canvas.style.width = `${size.width}px`;
     canvas.style.height = `${size.height}px`;
-    redraw(hovered);
-  }, [size, redraw, hovered]);
+    redraw(renderHover, hoverStrength);
+  }, [size, redraw, renderHover, hoverStrength]);
 
   const onMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
-    setPointer({ x: mx, y: e.clientY - (containerRef.current?.getBoundingClientRect().top ?? 0) });
+    setPointer({
+      x: mx,
+      y: e.clientY - (containerRef.current?.getBoundingClientRect().top ?? 0),
+    });
     setHovered(findHexAt(cells, mx, my, hexRadius));
   };
 
@@ -166,22 +206,21 @@ export function SignalHexMap({
 
   return (
     <section
-      className={cn("bee-surface p-6", className)}
+      className={cn("bee-surface flex h-full flex-col", className)}
       aria-label="Signal hex map — hive heatmap"
     >
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            Colmena
-          </h2>
-          <p className="mt-1 text-xs font-light text-muted-foreground">
+          <h2 className="bee-eyebrow">Performance</h2>
+          <p className="bee-kpi mt-2">Colmena</p>
+          <p className="bee-caption mt-1">
             Closing temperature · DarkFunnelService · {leads.length} leads
           </p>
         </div>
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
           <span>Cool</span>
           <div
-            className="h-2 w-24 rounded-full"
+            className="h-2 w-28 rounded-full"
             style={{
               background: `linear-gradient(90deg, ${TEMPERATURE_COLORS.cool}, ${TEMPERATURE_COLORS.mild}, ${TEMPERATURE_COLORS.warm}, ${TEMPERATURE_COLORS.hot}, ${TEMPERATURE_COLORS.peak})`,
             }}
@@ -190,35 +229,40 @@ export function SignalHexMap({
         </div>
       </div>
 
-      {isLoading ? (
-        <Skeleton className="w-full rounded-xl" style={{ height }} />
-      ) : leads.length === 0 ? (
-        <div
-          className="flex items-center justify-center rounded-xl bg-muted/20 text-sm font-light text-muted-foreground"
-          style={{ height }}
-        >
-          No dark funnel leads yet — intent signals will populate the hive.
-        </div>
-      ) : (
-        <div ref={containerRef} className="relative w-full" style={{ height }}>
-          <canvas
-            ref={canvasRef}
-            className="cursor-crosshair rounded-xl"
-            onMouseMove={onMouseMove}
-            onMouseLeave={onMouseLeave}
-            role="img"
-            aria-label={`Hexagonal heatmap of ${leads.length} leads by closing temperature`}
-          />
-          {hovered && (
-            <HiveTooltip
-              cell={hovered}
-              x={pointer.x}
-              y={pointer.y}
-              containerWidth={size.width}
+      <div className="relative min-h-0 flex-1" style={{ minHeight: height }}>
+        {isLoading ? (
+          <Skeleton className="h-full w-full rounded-2xl" style={{ height }} />
+        ) : leads.length === 0 ? (
+          <div
+            className="flex h-full items-center justify-center rounded-2xl bg-muted/20 text-sm font-light text-muted-foreground"
+            style={{ height }}
+          >
+            No dark funnel leads yet — intent signals will populate the hive.
+          </div>
+        ) : (
+          <div ref={containerRef} className="relative h-full w-full" style={{ height }}>
+            <canvas
+              ref={canvasRef}
+              className={cn(
+                "bee-hex-canvas cursor-crosshair",
+                hovered && "bee-hex-canvas--active",
+              )}
+              onMouseMove={onMouseMove}
+              onMouseLeave={onMouseLeave}
+              role="img"
+              aria-label={`Hexagonal heatmap of ${leads.length} leads by closing temperature`}
             />
-          )}
-        </div>
-      )}
+            {hovered && (
+              <HiveTooltip
+                cell={hovered}
+                x={pointer.x}
+                y={pointer.y}
+                containerWidth={size.width}
+              />
+            )}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

@@ -30,6 +30,33 @@ function StatusDot({ className }: { className?: string }) {
   );
 }
 
+function KpiCard({
+  label,
+  value,
+  mono,
+  warn,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  warn?: boolean;
+}) {
+  return (
+    <div className="bee-kpi-card">
+      <p className="bee-kpi-card__label">{label}</p>
+      <p
+        className={cn(
+          "bee-kpi-card__value",
+          mono && "font-mono",
+          warn && "text-destructive",
+        )}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
 function ProviderRow({ provider }: { provider: ProviderStatus }) {
   const label = PROVIDER_LABELS[provider.name] ?? provider.name;
   const pct =
@@ -64,7 +91,7 @@ function ProviderRow({ provider }: { provider: ProviderStatus }) {
   );
 }
 
-function WorkerStrip({ worker }: { worker: WorkerHealth }) {
+function WorkerKpis({ worker }: { worker: WorkerHealth }) {
   const stateLabel = {
     idle: "Idle",
     busy: "Processing",
@@ -73,41 +100,30 @@ function WorkerStrip({ worker }: { worker: WorkerHealth }) {
   }[worker.state];
 
   return (
-    <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-      <Metric label="IngestionWorker" value={worker.running ? stateLabel : "Off"} />
-      <Metric label="Queue" value={String(worker.queue_depth)} mono />
-      <Metric label="Processed" value={String(worker.processed_count)} mono />
-      <Metric label="Errors" value={String(worker.error_count)} mono warn={worker.error_count > 0} />
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <KpiCard label="IngestionWorker" value={worker.running ? stateLabel : "Off"} />
+      <KpiCard label="Queue" value={String(worker.queue_depth)} mono />
+      <KpiCard label="Processed" value={String(worker.processed_count)} mono />
+      <KpiCard
+        label="Errors"
+        value={String(worker.error_count)}
+        mono
+        warn={worker.error_count > 0}
+      />
     </div>
   );
 }
 
-function Metric({
-  label,
-  value,
-  mono,
-  warn,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-  warn?: boolean;
-}) {
+function HealthSkeleton() {
   return (
-    <div>
-      <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-        {label}
-      </p>
-      <p
-        className={cn(
-          "mt-1 text-lg font-light tracking-tight",
-          mono && "font-mono tabular-nums",
-          warn && "text-destructive",
-        )}
-      >
-        {value}
-      </p>
-    </div>
+    <section className="bee-surface h-full p-8">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-[5.5rem] rounded-2xl" />
+        ))}
+      </div>
+      <Skeleton className="mt-8 h-24 rounded-2xl" />
+    </section>
   );
 }
 
@@ -123,22 +139,12 @@ export function SystemHealth() {
   const live = result?.live ?? false;
 
   if (isLoading) {
-    return (
-      <section className="bee-surface p-8">
-        <Skeleton className="mb-6 h-5 w-40" />
-        <div className="grid grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-12" />
-          ))}
-        </div>
-        <Skeleton className="mt-8 h-24" />
-      </section>
-    );
+    return <HealthSkeleton />;
   }
 
   if (isError || !snapshot) {
     return (
-      <section className="bee-surface p-8">
+      <section className="bee-surface flex h-full items-center p-8">
         <div className="flex items-center gap-2 text-destructive">
           <WifiOff className="size-4" />
           <p className="text-sm">Unable to reach BEE API — check NEXT_PUBLIC_API_URL</p>
@@ -154,16 +160,11 @@ export function SystemHealth() {
   });
 
   return (
-    <section className="bee-surface p-8" aria-label="System health">
-      {/* Header */}
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <section className="bee-surface flex h-full flex-col p-8" aria-label="System health">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            System Health
-          </h2>
-          <p className="mt-1 text-2xl font-light tracking-tight text-foreground">
-            {live ? "Connected" : "Offline"}
-          </p>
+          <h2 className="bee-eyebrow">System Health</h2>
+          <p className="bee-kpi mt-2">{live ? "Connected" : "Offline"}</p>
         </div>
         <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
@@ -185,17 +186,13 @@ export function SystemHealth() {
         </div>
       </div>
 
-      {/* Worker */}
-      <WorkerStrip worker={snapshot.worker} />
+      <WorkerKpis worker={snapshot.worker} />
 
-      {/* Providers */}
       {snapshot.providers.length > 0 && (
-        <div className="mt-10">
+        <div className="mt-8 flex-1">
           <div className="mb-2 flex items-center gap-2">
             <Radio className="size-3.5 text-muted-foreground" />
-            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-              External APIs
-            </p>
+            <p className="bee-eyebrow">External APIs</p>
           </div>
           <div className="divide-y divide-border/40">
             {snapshot.providers.map((p) => (
@@ -206,7 +203,7 @@ export function SystemHealth() {
       )}
 
       {!live && (
-        <p className="mt-6 text-xs text-muted-foreground">
+        <p className="mt-4 text-xs text-muted-foreground">
           Showing fallback state — start the API or set{" "}
           <code className="rounded bg-muted px-1 py-0.5">NEXT_PUBLIC_API_URL</code> in{" "}
           <code className="rounded bg-muted px-1 py-0.5">.env.local</code>

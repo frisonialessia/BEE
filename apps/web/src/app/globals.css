@@ -4,13 +4,13 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * BEE design system — brand palette
+ * BEE design system — brand palette & editorial control dashboard
  * Background #f7f7f7 · Text #222222 · Surfaces #c8d7f8 / #dbdeff
  * Charts: #ffb213 #fca000 #ffbe55 #8a9eff #d567ff #c197ff
  */
 
 :root {
-  --radius: 0.75rem;
+  --radius: 1.5rem;
 
   /* Brand primitives */
   --bee-bg: #f7f7f7;
@@ -27,6 +27,27 @@
   --bee-accent-warm: #ffb213;
   --bee-accent-hot: #d567ff;
   --bee-shadow: 0 2px 24px -6px rgba(138, 158, 255, 0.18);
+  --bee-shadow-sm: 0 1px 8px -2px rgba(34, 34, 34, 0.08);
+  --bee-shadow-hover: 0 8px 32px -8px rgba(138, 158, 255, 0.28);
+
+  /* Editorial spacing */
+  --bee-gap-sm: 0.75rem;
+  --bee-gap-md: 1.25rem;
+  --bee-gap-lg: 2rem;
+  --bee-gap-xl: 2.75rem;
+  --bee-pad-surface: 2rem;
+  --bee-pad-surface-lg: 2.5rem;
+
+  /* Layout-shift-free zones */
+  --bee-zone-health: 220px;
+  --bee-zone-hero: 400px;
+  --bee-zone-footer: 540px;
+
+  /* Typography scale */
+  --bee-text-display: clamp(1.75rem, 2.5vw, 2.25rem);
+  --bee-text-kpi: clamp(1.5rem, 2vw, 2rem);
+  --bee-text-title: 0.6875rem;
+  --bee-text-caption: 0.75rem;
 
   /* shadcn semantic tokens */
   --background: #f7f7f7;
@@ -96,10 +117,12 @@
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
+  --radius-2xl: calc(var(--radius) + 16px);
+  --radius-3xl: calc(var(--radius) + 24px);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -132,7 +155,8 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* BEE Control dashboard shell */
+/* ── BEE Control dashboard shell ─────────────────────────────────────── */
+
 .bee-control {
   --bee-canvas: var(--bee-bg);
   background-color: var(--bee-canvas);
@@ -141,9 +165,176 @@
 
 .bee-control .bee-surface {
   background: var(--bee-surface-secondary);
-  border-radius: 1.25rem;
+  border-radius: var(--radius-xl);
   box-shadow: var(--bee-shadow);
   color: var(--bee-text);
+}
+
+.bee-control .bee-surface--hero {
+  border-radius: var(--radius-2xl);
+  padding: var(--bee-pad-surface-lg);
+}
+
+.bee-control .bee-surface--compact {
+  border-radius: var(--radius-lg);
+  padding: var(--bee-pad-surface);
+}
+
+/* Editorial typography */
+.bee-eyebrow {
+  font-size: var(--bee-text-title);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.bee-display {
+  font-size: var(--bee-text-display);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.bee-kpi {
+  font-size: var(--bee-text-kpi);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.bee-caption {
+  font-size: var(--bee-text-caption);
+  font-weight: 300;
+  color: var(--muted-foreground);
+}
+
+/* KPI metric cards (SystemHealth header row) */
+.bee-kpi-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.45);
+  min-height: 5.5rem;
+}
+
+.bee-kpi-card__label {
+  font-size: var(--bee-text-title);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+.bee-kpi-card__value {
+  font-size: var(--bee-text-kpi);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* Kanban tactile cards */
+.bee-kanban-card {
+  border-radius: var(--radius-xl);
+  padding: 1.125rem 1.25rem;
+  box-shadow: var(--bee-shadow-sm);
+  transition:
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+.bee-kanban-card:hover {
+  box-shadow: var(--bee-shadow-hover);
+  transform: translateY(-1px);
+}
+
+/* Hex map canvas hover zone */
+.bee-hex-canvas {
+  border-radius: var(--radius-lg);
+  transition: opacity 180ms ease;
+}
+
+.bee-hex-canvas--active {
+  opacity: 1;
+}
+
+/* Tooltip fade-in */
+.bee-hex-tooltip {
+  animation: bee-fade-in 180ms ease forwards;
+}
+
+@keyframes bee-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-100% + 4px));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-100%);
+  }
+}
+
+/* ── Control page grid architecture ──────────────────────────────────── */
+
+.bee-control-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows:
+    auto
+    minmax(var(--bee-zone-health), auto)
+    minmax(var(--bee-zone-hero), auto)
+    minmax(var(--bee-zone-footer), auto);
+  gap: var(--bee-gap-lg);
+  width: 100%;
+}
+
+.bee-control-grid__header {
+  grid-column: 1 / -1;
+  padding-bottom: var(--bee-gap-sm);
+}
+
+.bee-control-grid__health {
+  grid-column: 1 / -1;
+  min-height: var(--bee-zone-health);
+}
+
+.bee-control-grid__hero {
+  grid-column: 1 / -1;
+  min-height: var(--bee-zone-hero);
+}
+
+.bee-control-grid__footer {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 3fr 7fr;
+  gap: var(--bee-gap-lg);
+  min-height: var(--bee-zone-footer);
+  align-items: stretch;
+}
+
+.bee-control-grid__stream {
+  min-height: var(--bee-zone-footer);
+  min-width: 0;
+}
+
+.bee-control-grid__workspace {
+  min-height: var(--bee-zone-footer);
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .bee-control-grid__footer {
+    grid-template-columns: 1fr;
+  }
+
+  :root {
+    --bee-zone-health: 280px;
+    --bee-zone-hero: 340px;
+    --bee-zone-footer: auto;
+  }
 }
 
 @layer base {
@@ -155,5 +346,6 @@
     color: var(--foreground);
     font-family: var(--font-sans), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
