@@ -81,3 +81,13 @@ Open http://localhost:3000/dashboard
 |----------|----------|-------------|
 | `NEXT_PUBLIC_API_URL` | Yes | BEE API base URL |
 | `NEXT_PUBLIC_BEE_API_KEY` | Prod | Matches backend `API_SECRET_KEY` |
+
+## Vercel deployment
+
+This app lives in a monorepo. In Vercel **Project Settings → General → Root Directory**, set:
+
+```
+apps/web
+```
+
+See `vercel.json` in this folder and `DEPLOY_CHECKLIST.md` §6 at the repo root for full setup.

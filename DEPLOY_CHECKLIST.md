@@ -108,4 +108,52 @@ python scripts/simulate_signal.py --failure   # valida logs seguros ante caída 
 
 ---
 
+## 6. Frontend — Vercel (monorepo)
+
+El frontend Next.js vive en **`apps/web/`**. El repo **no** tiene `app/` en la raíz — si Vercel apunta al root del monorepo, el build falla con `Couldn't find any app directory` y las rutas devuelven **404**.
+
+### Configuración obligatoria en Vercel
+
+| Setting | Valor |
+|---------|-------|
+| **Root Directory** | `apps/web` |
+| **Framework Preset** | Next.js |
+| **Install Command** | `pnpm install` |
+| **Build Command** | `pnpm build` |
+| **Node.js Version** | 20.x (`.nvmrc` en `apps/web`) |
+
+### Variables de entorno (Production + Preview)
+
+| Variable | Valor |
+|----------|-------|
+| `NEXT_PUBLIC_API_URL` | URL pública del API FastAPI (ej. `https://api.tu-dominio.com`) |
+| `NEXT_PUBLIC_BEE_API_KEY` | Mismo valor que `API_SECRET_KEY` del backend |
+
+### Verificación post-deploy
+
+Tras el deploy, confirma que el build log incluye:
+
+```
+○ /dashboard/control
+○ /dashboard
+○ /dashboard/signals
+```
+
+URLs de prueba:
+
+- `/` — landing
+- `/dashboard` — overview
+- `/dashboard/control` — panel operador (redirect desde `/control`)
+
+### Archivos de referencia en el repo
+
+| Archivo | Propósito |
+|---------|-----------|
+| `apps/web/vercel.json` | Install/build commands para Vercel |
+| `apps/web/next.config.ts` | Redirect `/control` → `/dashboard/control` |
+| `apps/web/src/app/dashboard/control/page.tsx` | Ruta App Router |
+| `apps/web/.env.example` | Template de variables |
+
+---
+
 *Última actualización: fase External Ingestion — backend Ready.*
