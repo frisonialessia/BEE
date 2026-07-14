@@ -17,6 +17,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.logging import configure_logging, get_logger
+from app.core.middleware import APIKeyMiddleware, SecurityHeadersMiddleware
 
 logger = get_logger(__name__)
 
@@ -54,14 +55,25 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # CORS so the Next.js frontend can call the API from the browser.
+    # Middleware stack is applied in reverse registration order.
+    # Outermost (last added) runs first on request, first on response.
+
+    # 1. CORS — must be outermost so pre-flight OPTIONS requests are handled
+    #    before any auth check (browsers send OPTIONS without credentials).
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
-        allow_headers=["*"],
+        allow_headers=["*", "X-API-Key"],
     )
+
+    # 2. API key authentication — runs after CORS, before business logic.
+    #    Enabled only when API_SECRET_KEY is configured.
+    app.add_middleware(APIKeyMiddleware)
+
+    # 3. Security headers — innermost, applied to every response including errors.
+    app.add_middleware(SecurityHeadersMiddleware, environment=settings.ENVIRONMENT)
 
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 

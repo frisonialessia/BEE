@@ -133,6 +133,14 @@ class EnrichmentContext:
     dark_funnel_score: float | None = None
     dark_funnel_stage: str | None = None  # buying_stage from HotLeadScore
 
+    # ── VectorKnowledgeBase: similar winning strategies (Sales DNA) ───────────
+    # Semantically similar past WON strategies retrieved from the vector store.
+    # Each item is a dict with keys: content, score, playbook, channel, industry.
+    # Rule-based generators use these to bias channel/playbook selection.
+    # LLM generators inject them verbatim as few-shot examples in the system prompt.
+    # Empty list = no similar wins yet; generators use their default logic.
+    similar_wins: list[dict] = field(default_factory=list)
+
     @property
     def best_hint(self) -> SuccessHint | None:
         """Return the highest win-rate actionable hint, or None."""

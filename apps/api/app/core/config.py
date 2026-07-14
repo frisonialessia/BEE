@@ -63,6 +63,15 @@ class Settings(BaseSettings):
     # Toggle allows local development without signing while enforcing it in prod.
     WEBHOOK_SIGNATURE_REQUIRED: bool = False
 
+    # API Key authentication for REST endpoints.
+    # When set, all non-health endpoints require the header:
+    #   X-API-Key: <value>
+    # Set to None to disable (development mode).
+    API_SECRET_KEY: str | None = None
+    # Comma-separated list of paths exempt from API key auth (exact prefix match).
+    # /api/v1/health and /api/v1/ready are always exempt.
+    API_KEY_EXEMPT_PATHS: str = "/api/v1/health,/api/v1/ready"
+
     # ----- CORS ----------------------------------------------------------------
     # Comma-separated list of origins allowed to call the API (the Next.js app).
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"

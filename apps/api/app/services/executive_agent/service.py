@@ -98,8 +98,10 @@ class ExecutiveAgent:
         except Exception as exc:
             raise ValueError(f"Could not parse strategy for opportunity {opp.id}: {exc}") from exc
 
-        # Inject learned CEO style preferences into the generation context
+        # Inject learned CEO style preferences (CorrectionLearning) and
+        # brand voice context (PersonalBrandService) into the generation context.
         style_hint = self._get_style_injection(opp)
+        brand_brief = self._get_brand_brief(opp)
 
         ctx = ArtifactContext(
             strategy=strategy,
@@ -110,6 +112,7 @@ class ExecutiveAgent:
             signal_title=self._resolve_signal_title(opp),
             opportunity_title=opp.title,
             style_hint=style_hint,
+            brand_brief=brand_brief,
         )
 
         generators = get_artifact_generators()
@@ -177,6 +180,33 @@ class ExecutiveAgent:
             from app.services.correction_learning import CorrectionLearningService
             return CorrectionLearningService(self.session).get_style_summary_for_injection()
         except Exception:  # noqa: BLE001
+            return ""
+
+    def _get_brand_brief(self, opp: Opportunity) -> str:
+        """Retrieve the CEO brand voice context from PersonalBrandService.
+
+        The brand brief provides:
+        - CEO's authority topics and areas of expertise
+        - Writing style characteristics and tone preferences
+        - Company DNA context for authentic voice alignment
+
+        Used by generators to ensure all artifacts sound like the CEO, not generic AI.
+        In LLM mode, this is injected directly into the system prompt.
+        """
+        try:
+            from app.services.personal_brand import PersonalBrandService
+
+            # Use the company/opportunity context as the semantic query
+            query = (
+                opp.strategy.get("pain_point", "")
+                or opp.title
+                or "sales outreach"
+            ) if opp.strategy else opp.title or "sales outreach"
+
+            svc = PersonalBrandService(self.session)
+            return svc.get_brand_context(query[:200])
+        except Exception:  # noqa: BLE001
+            logger.debug("PersonalBrandService unavailable — brand_brief will be empty", exc_info=True)
             return ""
 
     def _audit_bundle(self, opp: Opportunity, bundle: ArtifactBundle) -> None:

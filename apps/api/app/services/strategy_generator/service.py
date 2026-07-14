@@ -155,6 +155,9 @@ class StrategyGeneratorService:
             except Exception:  # noqa: BLE001
                 logger.warning("TrendAnalyst unavailable; proceeding without market insights.")
 
+        # ── 4. VectorKnowledgeBase: retrieve similar winning strategies ────────
+        similar_wins = self._query_similar_wins(signal_type.value, industry, signal.title)
+
         return EnrichmentContext(
             signal_type=signal_type,
             signal_title=signal.title,
@@ -174,7 +177,61 @@ class StrategyGeneratorService:
             success_hints=hints,
             market_insights=market_insights,
             active_variant=variant_ref,
+            similar_wins=similar_wins,
         )
+
+    def _query_similar_wins(
+        self,
+        signal_type: str,
+        industry: str | None,
+        signal_title: str,
+        top_k: int = 3,
+    ) -> list[dict]:
+        """Retrieve semantically similar past WON strategies from the VectorKnowledgeBase.
+
+        The query combines signal type, industry, and the signal title so the
+        retrieval focuses on deals that resembled the current context.
+
+        Returns a list of dicts (content, score, playbook, channel, industry)
+        that generators inject as few-shot examples for channel/playbook bias.
+
+        Non-blocking: returns [] when the store is empty or unavailable.
+        """
+        try:
+            from app.services.vector_store import get_vector_store
+
+            store = get_vector_store()
+            if store.count() == 0:
+                return []
+
+            query = (
+                f"SIGNAL: {signal_type}. "
+                f"INDUSTRY: {industry or 'general'}. "
+                f"{signal_title[:100]}"
+            )
+            results = store.query(query, top_k=top_k)
+            wins = []
+            for doc in results:
+                if doc.score < 0.05:  # noqa: PLR2004
+                    continue
+                wins.append({
+                    "content": doc.content[:300],
+                    "similarity_score": round(doc.score, 3),
+                    "playbook": doc.metadata.get("playbook"),
+                    "channel": doc.metadata.get("channel"),
+                    "industry": doc.metadata.get("industry"),
+                    "signal_type": doc.metadata.get("signal_type"),
+                    "days_to_close": doc.metadata.get("days_to_close"),
+                })
+            if wins:
+                logger.info(
+                    "VectorKnowledgeBase: retrieved %d similar win(s) for signal_type=%s industry=%s",
+                    len(wins), signal_type, industry,
+                )
+            return wins
+        except Exception:  # noqa: BLE001
+            logger.warning("VectorKnowledgeBase query failed — proceeding without similar wins", exc_info=True)
+            return []
 
     def _run_generators(self, ctx: EnrichmentContext) -> StrategySchema | None:
         """Execute generators in priority order; return the first successful result."""

@@ -57,8 +57,12 @@ class ArtifactContext:
     signal_type: str = "other"
     signal_title: str = ""
     opportunity_title: str = ""
-    # Learned CEO writing style preferences — auto-injected from CorrectionLearningService
+    # Learned CEO writing style preferences — auto-injected from CorrectionLearningService.
+    # Used by template generators to adapt tone/structure; injected directly into LLM prompts.
     style_hint: str = ""
+    # CEO brand voice context — auto-injected from PersonalBrandService.
+    # Contains authority topics, writing style, and brand DNA for authentic voice alignment.
+    brand_brief: str = ""
 
 
 class ArtifactGenerator(ABC):

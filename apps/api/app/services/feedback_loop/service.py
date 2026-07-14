@@ -154,6 +154,13 @@ class FeedbackLoopService:
         self.session.commit()
         logger.info("Outcome: opp=%s result=%s days=%d variant=%s", opp_id, body.outcome, days, variant_id_str)
 
+        # ── VectorKnowledgeBase: seed Sales DNA on WON outcomes ───────────────
+        # Every successful close is encoded and stored in the vector store so
+        # future StrategyGeneratorService calls can retrieve similar wins as
+        # few-shot examples ("what worked for deals like this one").
+        if won:
+            self._seed_vector_store(outcome_row)
+
         return OutcomeOut(
             opportunity_id=opp_id,
             outcome=body.outcome,
@@ -249,6 +256,56 @@ class FeedbackLoopService:
         if variant is None:
             raise ValueError(f"Variant {variant_id} not found")
         return self._to_variant_out(variant)
+
+    # ── VectorKnowledgeBase integration ───────────────────────────────────────
+
+    def _seed_vector_store(self, outcome: StrategyOutcome) -> None:
+        """Encode a WON strategy into the vector store (Sales DNA).
+
+        The document content is a natural-language summary of the winning
+        strategy — rich enough for semantic similarity search but structured
+        enough to be useful as a few-shot example for LLM generators.
+
+        Non-blocking: failures are logged but never propagate to the caller.
+        """
+        try:
+            from app.services.vector_store import get_vector_store
+
+            strat = outcome.strategy_snapshot or {}
+
+            # Compose a semantic content string for embedding
+            content = (
+                f"SIGNAL: {outcome.signal_type or 'unknown'}. "
+                f"INDUSTRY: {outcome.company_industry or 'general'}. "
+                f"LEAD: {outcome.lead_seniority or 'unknown seniority'}. "
+                f"PLAYBOOK: {strat.get('playbook', outcome.playbook)}. "
+                f"CHANNEL: {strat.get('channel', outcome.channel)}. "
+                f"PAIN: {strat.get('pain_point', '')[:150]}. "
+                f"CLOSING: {strat.get('closing_argument', '')[:150]}. "
+                f"RESULT: WON in {outcome.days_to_close} days. "
+                f"SCORE: {outcome.score_at_close:.1f}."
+            )
+
+            store = get_vector_store()
+            store.upsert(
+                doc_id=f"outcome:{outcome.id}",
+                content=content,
+                metadata={
+                    "signal_type": outcome.signal_type,
+                    "industry": outcome.company_industry,
+                    "playbook": outcome.playbook,
+                    "channel": outcome.channel,
+                    "days_to_close": outcome.days_to_close,
+                    "score": outcome.score_at_close,
+                    "generator": outcome.generator,
+                },
+            )
+            logger.info(
+                "VectorKnowledgeBase: seeded WON outcome %s (signal=%s industry=%s)",
+                outcome.id, outcome.signal_type, outcome.company_industry,
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning("VectorKnowledgeBase seeding failed for outcome %s", outcome.id, exc_info=True)
 
     # ── Private helpers ────────────────────────────────────────────────────────
 

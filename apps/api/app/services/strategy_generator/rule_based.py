@@ -36,15 +36,40 @@ def _lead(ctx: EnrichmentContext) -> str:
     return ctx.lead_name or ctx.lead_title or "the decision-maker"
 
 
+def _best_similar_win_channel_playbook(
+    ctx: EnrichmentContext,
+) -> tuple[str, str] | None:
+    """Return (channel, playbook) from the highest-scoring similar WON strategy.
+
+    The VectorKnowledgeBase provides semantically similar past wins. When the
+    top result has a high similarity score (≥ 0.40) and matches the current
+    signal type, we use its channel/playbook as a data-backed recommendation.
+
+    Returns None when no similar wins exist or scores are too low to be reliable.
+    """
+    if not ctx.similar_wins:
+        return None
+    top = ctx.similar_wins[0]
+    score = top.get("similarity_score", 0.0)
+    if score < 0.40:  # noqa: PLR2004
+        return None
+    channel = top.get("channel")
+    playbook = top.get("playbook")
+    if channel and playbook:
+        return channel, playbook
+    return None
+
+
 def _apply_hints_and_variant(
     ctx: EnrichmentContext, default_channel: str, default_playbook: str
 ) -> tuple[str, str]:
-    """Return (channel, playbook) biased by A/B variant config, then adaptive hints.
+    """Return (channel, playbook) biased by A/B variant, adaptive hints, and Sales DNA.
 
     Priority order:
     1. Active A/B variant config (experiment in progress — always honor it)
     2. Adaptive memory hints (statistical evidence from closed deals)
-    3. Generator defaults (fallback)
+    3. VectorKnowledgeBase similar wins (semantic Sales DNA retrieval)
+    4. Generator defaults (fallback)
     """
     # 1. A/B variant overrides take highest priority to ensure clean experiment data.
     if ctx.active_variant:
@@ -57,6 +82,11 @@ def _apply_hints_and_variant(
     hint = ctx.best_hint
     if hint is not None:
         return hint.channel, hint.playbook
+
+    # 3. VectorKnowledgeBase: similar past wins give semantic backing.
+    similar = _best_similar_win_channel_playbook(ctx)
+    if similar is not None:
+        return similar
 
     return default_channel, default_playbook
 

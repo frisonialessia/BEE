@@ -251,6 +251,11 @@ def record_outcome(
             import logging
             logging.getLogger(__name__).exception("WorkflowOrchestrator dispatch failed for opp %s", opportunity_id)
 
+    # ── Step 4: Trigger AnomalyDetector after every outcome ───────────────────
+    # Run automatically (non-blocking) so the CEO is alerted if this outcome
+    # creates a statistically significant conversion-rate anomaly.
+    _trigger_anomaly_check(session)
+
     return OutcomeWithPrediction(
         opportunity_id=str(outcome_out.opportunity_id),
         outcome=outcome_out.outcome,
@@ -259,6 +264,30 @@ def record_outcome(
         resource_prediction=prediction,
         workflow_tasks_dispatched=workflow_tasks_dispatched,
     )
+
+
+def _trigger_anomaly_check(session: Session) -> None:
+    """Run AnomalyDetector non-blocking after every outcome recording.
+
+    Errors are swallowed so a detector failure never blocks the outcome call.
+    Any alerts generated create ``PendingAction`` records for the CEO.
+    """
+    try:
+        from app.services.anomaly_detector.service import AnomalyDetector
+
+        detector = AnomalyDetector(session)
+        result = detector.check_all()
+        if result.alerts_created > 0:
+            import logging
+            logging.getLogger(__name__).info(
+                "AnomalyDetector: %d new alert(s) created after outcome recording",
+                result.alerts_created,
+            )
+    except Exception:  # noqa: BLE001
+        import logging
+        logging.getLogger(__name__).exception(
+            "AnomalyDetector post-outcome check failed — outcome was recorded successfully"
+        )
 
 
 @router.get(
