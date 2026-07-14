@@ -11,11 +11,14 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     analytics,
     brand,
+    dark_funnel,
     engagement,
     health,
     insights,
+    network,
     opportunities,
     orchestrator,
+    psychographic,
     sequences,
     signals,
 )
@@ -30,3 +33,6 @@ api_router.include_router(analytics.router)
 api_router.include_router(brand.router)
 api_router.include_router(engagement.router)
 api_router.include_router(sequences.router)
+api_router.include_router(psychographic.router)
+api_router.include_router(dark_funnel.router)
+api_router.include_router(network.router)

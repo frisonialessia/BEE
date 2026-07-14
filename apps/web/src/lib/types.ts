@@ -544,3 +544,132 @@ export interface AdvanceResult {
   pending_action_created: boolean;
   message: string;
 }
+
+// ─── Psychology & Network Intelligence ────────────────────────────────────────
+
+export type DISCStyle = "D" | "I" | "S" | "C" | "UNKNOWN";
+export type BuyingStage = "awareness" | "consideration" | "decision" | "ready_to_buy";
+export type IntroType = "warm_intro" | "referral" | "alumni" | "cold";
+
+export interface LeadPsychographic {
+  id: string;
+  lead_id: string;
+  d_score: number;
+  i_score: number;
+  s_score: number;
+  c_score: number;
+  dominant_style: DISCStyle;
+  secondary_style: DISCStyle | null;
+  confidence: number;
+  preferred_tone: string;
+  preferred_message_length: string;
+  avoid_phrases: string[];
+  classification_source: string;
+  classification_notes: string | null;
+  classified_at: string;
+  created_at: string;
+}
+
+export interface AdaptedContent {
+  original: string;
+  adapted: string;
+  disc_style: DISCStyle;
+  adaptations_applied: string[];
+  confidence: number;
+  artifact_type: string;
+}
+
+export interface DarkFunnelSignal {
+  id: string;
+  company_domain: string;
+  company_name: string | null;
+  signal_type: string;
+  source_platform: string | null;
+  intent_keywords: string[];
+  anonymous: boolean;
+  weight: number;
+  processed: boolean;
+  created_at: string;
+}
+
+export interface HotLeadScore {
+  id: string;
+  company_domain: string;
+  company_name: string | null;
+  lead_id: string | null;
+  research_intensity_score: number;
+  buying_stage: BuyingStage;
+  signal_count: number;
+  signal_types_seen: string[];
+  top_intent_keywords: string[];
+  last_signal_at: string | null;
+  is_hot: boolean;
+  hot_since: string | null;
+  alerted: boolean;
+  created_at: string;
+}
+
+export interface DarkFunnelSummary {
+  total_signals_today: number;
+  total_hot_leads: number;
+  ready_to_buy_count: number;
+  decision_stage_count: number;
+  consideration_stage_count: number;
+  new_signals_today: number;
+  top_intent_signals: string[];
+}
+
+export interface NetworkConnection {
+  id: string;
+  contact_name: string;
+  contact_company: string;
+  contact_domain: string;
+  contact_title: string | null;
+  connection_type: string;
+  relationship_strength: number;
+  notes: string | null;
+  tags: string[];
+  industries: string[];
+  interaction_count: number;
+  active: boolean;
+  created_at: string;
+}
+
+export interface IntroStep {
+  person: string;
+  company: string;
+  relationship_to_next: string;
+  strength: number;
+}
+
+export interface IntroPath {
+  target_name: string | null;
+  target_company: string;
+  target_domain: string;
+  path_length: number;
+  intro_type: IntroType;
+  strength_score: number;
+  connector_name: string | null;
+  connector_id: string | null;
+  steps: IntroStep[];
+  action_recommendation: string;
+  draft_ask: string | null;
+}
+
+export interface NetworkQueryResult {
+  target_company: string;
+  target_domain: string;
+  paths_found: IntroPath[];
+  best_path: IntroPath | null;
+  cold_outreach_fallback: boolean;
+  network_coverage: "none" | "weak" | "moderate" | "strong";
+}
+
+export interface NetworkStats {
+  total_connections: number;
+  first_degree_count: number;
+  second_degree_count: number;
+  top_industries: string[];
+  avg_relationship_strength: number;
+  companies_covered: number;
+}

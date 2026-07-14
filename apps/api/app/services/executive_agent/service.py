@@ -117,13 +117,23 @@ class ExecutiveAgent:
             "Generating artifacts for opportunity %s using %s", opp.id, gen.name
         )
 
+        email_artifact = gen.generate_email(ctx)
+        meeting_artifact = gen.generate_meeting(ctx)
+        next_steps_artifact = gen.generate_next_steps(ctx)
+
+        # ── PsychographicAnalyzer middleware ──────────────────────────────────
+        # Apply DISC content style adaptation to all text artifacts before
+        # they reach the CEO. This is the mandatory middleware step.
+        email_artifact = self._apply_psychographic_middleware(email_artifact, opp, "email_draft")
+        meeting_artifact = self._apply_psychographic_middleware(meeting_artifact, opp, "meeting_agenda")
+
         return ArtifactBundle(
             opportunity_id=opp.id,
             generated_at=datetime.now(UTC),
             generator=gen.name,
-            email_draft=gen.generate_email(ctx),
-            meeting_structure=gen.generate_meeting(ctx),
-            next_steps=gen.generate_next_steps(ctx),
+            email_draft=email_artifact,
+            meeting_structure=meeting_artifact,
+            next_steps=next_steps_artifact,
             context_snapshot={
                 "company": ctx.company_name,
                 "lead": ctx.lead_name,
@@ -155,6 +165,55 @@ class ExecutiveAgent:
             )
         except Exception:  # noqa: BLE001
             logger.exception("Failed to create orchestrator actions for %s", bundle.opportunity_id)
+
+    def _apply_psychographic_middleware(
+        self,
+        artifact: object,
+        opp: Opportunity,
+        artifact_type: str,
+    ) -> object:
+        """Run the PsychographicAnalyzer ContentStyleMiddleware on artifact text.
+
+        Adapts the artifact's body/content field to match the lead's DISC
+        communication style. Non-destructive: if no lead or profile found,
+        returns the artifact unchanged.
+
+        This is the mandatory middleware hook that ensures ALL BEE-generated
+        content passes through the DISC style filter before CEO review.
+        """
+        if not opp.lead_id:
+            return artifact
+        try:
+            from app.models.lead import Lead
+            from app.services.psychographic import PsychographicAnalyzer
+
+            lead = self.session.get(Lead, opp.lead_id)
+            if not lead:
+                return artifact
+
+            analyzer = PsychographicAnalyzer(self.session)
+
+            # Adapt the body field of the artifact (different artifact types have different fields)
+            body_field = getattr(artifact, "body", None) or getattr(artifact, "content", None)
+            if not body_field:
+                return artifact
+
+            adapted = analyzer.adapt_content(str(body_field), lead, artifact_type)
+
+            # Write the adapted content back to the artifact
+            if hasattr(artifact, "body"):
+                artifact = artifact.model_copy(update={"body": adapted.adapted})  # type: ignore[union-attr]
+            elif hasattr(artifact, "content"):
+                artifact = artifact.model_copy(update={"content": adapted.adapted})  # type: ignore[union-attr]
+
+            logger.debug(
+                "Psychographic middleware applied: lead=%s style=%s artifact=%s adaptations=%d",
+                lead.id, adapted.disc_style, artifact_type, len(adapted.adaptations_applied),
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning("Psychographic middleware failed, returning unmodified artifact", exc_info=True)
+
+        return artifact
 
     def _emit_webhook(self, bundle: ArtifactBundle) -> None:
         url = getattr(self._settings, "WEBHOOK_EXECUTION_URL", None)

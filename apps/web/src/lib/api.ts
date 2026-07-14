@@ -1,14 +1,22 @@
 import type {
+  AdaptedContent,
   AdvanceResult,
   ArtifactBundle,
   Battlecard,
   BrandContextResult,
   BrandFragment,
   ChannelStatus,
+  DarkFunnelSignal,
+  DarkFunnelSummary,
   DynamicSequence,
   EngagementAnalysis,
   EngagementEvent,
+  HotLeadScore,
+  LeadPsychographic,
   MarketInsight,
+  NetworkConnection,
+  NetworkQueryResult,
+  NetworkStats,
   OrchestratorStatus,
   OutcomeIn,
   OutcomeWithPrediction,
@@ -391,4 +399,145 @@ export async function advanceSequenceExecution(
   });
   if (!res.ok) throw new Error(`API responded ${res.status}`);
   return { data: (await res.json()) as AdvanceResult, live: true };
+}
+
+// ─── PsychographicAnalyzer ────────────────────────────────────────────────────
+
+export async function getLeadDISCProfile(leadId: string): Promise<FetchResult<LeadPsychographic>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/psychographic/leads/${leadId}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as LeadPsychographic, live: true };
+  } catch {
+    return { data: null as unknown as LeadPsychographic, live: false };
+  }
+}
+
+export async function adaptContent(payload: {
+  content: string;
+  lead_id: string;
+  artifact_type?: string;
+}): Promise<FetchResult<AdaptedContent>> {
+  const res = await fetch(`${API_URL}/api/v1/psychographic/adapt`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: (await res.json()) as AdaptedContent, live: true };
+}
+
+export async function listDISCProfiles(): Promise<FetchResult<LeadPsychographic[]>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/psychographic/profiles`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as LeadPsychographic[], live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+// ─── DarkFunnelService ────────────────────────────────────────────────────────
+
+export async function getDarkFunnelHotLeads(params?: {
+  min_score?: number;
+  buying_stage?: string;
+  hot_only?: boolean;
+  limit?: number;
+}): Promise<FetchResult<HotLeadScore[]>> {
+  try {
+    const query = new URLSearchParams();
+    if (params?.min_score !== undefined) query.set("min_score", String(params.min_score));
+    if (params?.buying_stage) query.set("buying_stage", params.buying_stage);
+    if (params?.hot_only) query.set("hot_only", "true");
+    if (params?.limit) query.set("limit", String(params.limit));
+    const res = await fetch(`${API_URL}/api/v1/dark-funnel/hot-leads?${query}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as HotLeadScore[], live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+export async function getDarkFunnelSummary(): Promise<FetchResult<DarkFunnelSummary | null>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/dark-funnel/summary`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as DarkFunnelSummary, live: true };
+  } catch {
+    return { data: null, live: false };
+  }
+}
+
+export async function ingestDarkFunnelSignal(payload: {
+  company_domain: string;
+  signal_type: string;
+  company_name?: string;
+  intent_keywords?: string[];
+  source_platform?: string;
+}): Promise<FetchResult<DarkFunnelSignal>> {
+  const res = await fetch(`${API_URL}/api/v1/dark-funnel/signals`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: (await res.json()) as DarkFunnelSignal, live: true };
+}
+
+// ─── NetworkNavigator ─────────────────────────────────────────────────────────
+
+export async function getNetworkConnections(): Promise<FetchResult<NetworkConnection[]>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/network/connections`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as NetworkConnection[], live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+export async function addNetworkConnection(payload: {
+  contact_name: string;
+  contact_company: string;
+  contact_domain: string;
+  contact_title?: string;
+  relationship_strength: number;
+  connection_type?: string;
+  notes?: string;
+}): Promise<FetchResult<NetworkConnection>> {
+  const res = await fetch(`${API_URL}/api/v1/network/connections`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: (await res.json()) as NetworkConnection, live: true };
+}
+
+export async function findIntroPaths(params: {
+  target_domain: string;
+  target_company?: string;
+  target_name?: string;
+}): Promise<FetchResult<NetworkQueryResult>> {
+  try {
+    const query = new URLSearchParams({ target_domain: params.target_domain });
+    if (params.target_company) query.set("target_company", params.target_company);
+    if (params.target_name) query.set("target_name", params.target_name);
+    const res = await fetch(`${API_URL}/api/v1/network/paths?${query}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as NetworkQueryResult, live: true };
+  } catch {
+    return { data: null as unknown as NetworkQueryResult, live: false };
+  }
+}
+
+export async function getNetworkStats(): Promise<FetchResult<NetworkStats | null>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/network/stats`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as NetworkStats, live: true };
+  } catch {
+    return { data: null, live: false };
+  }
 }

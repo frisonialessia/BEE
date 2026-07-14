@@ -48,6 +48,7 @@ from app.models.base import SignalType
 if TYPE_CHECKING:
     from app.schemas.feedback import SuccessHint
     from app.schemas.insights import MarketInsightRef
+    from app.schemas.network import IntroPath
     from app.schemas.variants import ActiveVariantRef
 
 
@@ -110,11 +111,50 @@ class EnrichmentContext:
     # Generators apply these overrides to support controlled A/B experiments.
     active_variant: ActiveVariantRef | None = None
 
+    # ── Psychographic profile: DISC communication style ───────────────────────
+    # The lead's DISC dominant style (D/I/S/C) and content preferences.
+    # Injected by StrategyGeneratorService after querying PsychographicAnalyzer.
+    # Used by generators to adjust recommended channel, message tone, and
+    # the ContentStyleMiddleware adapts all generated text accordingly.
+    psychographic_style: str | None = None  # "D" | "I" | "S" | "C" | None
+    psychographic_tone: str | None = None   # "direct" | "enthusiastic" | "warm" | "analytical"
+
+    # ── Network intelligence: warm intro paths ────────────────────────────────
+    # Introduction paths from CEO's network to the target company.
+    # Injected by StrategyGeneratorService after querying NetworkNavigator.
+    # Generators use this to adjust the recommended channel:
+    #   - If warm intro path exists → recommend warm_intro channel
+    #   - If no path → fall back to cold email with dark funnel personalisation
+    intro_paths: list[IntroPath] = field(default_factory=list)
+
+    # ── Dark funnel: research intensity from DarkFunnelService ────────────────
+    # 0-100 score indicating how actively the company is researching solutions.
+    # High score → recommend immediate outreach; low → nurture first.
+    dark_funnel_score: float | None = None
+    dark_funnel_stage: str | None = None  # buying_stage from HotLeadScore
+
     @property
     def best_hint(self) -> SuccessHint | None:
         """Return the highest win-rate actionable hint, or None."""
         actionable = [h for h in self.success_hints if h.is_actionable]
         return actionable[0] if actionable else None
+
+    @property
+    def has_warm_intro(self) -> bool:
+        """Return True if at least one warm intro path exists."""
+        return bool(self.intro_paths)
+
+    @property
+    def best_intro_path(self) -> IntroPath | None:
+        """Return the highest-scored intro path, or None."""
+        if not self.intro_paths:
+            return None
+        return max(self.intro_paths, key=lambda p: p.strength_score)
+
+    @property
+    def is_dark_funnel_hot(self) -> bool:
+        """Return True if the dark funnel score indicates a hot/ready-to-buy lead."""
+        return (self.dark_funnel_score or 0) >= 50
 
     @property
     def top_market_insight(self) -> MarketInsightRef | None:

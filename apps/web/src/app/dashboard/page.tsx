@@ -1,9 +1,11 @@
-import { Activity, Bot, Flame, Radio, ShieldCheck, TrendingUp } from "lucide-react";
+import { Activity, Bot, Flame, Network, Radio, ShieldCheck, TrendingUp } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
 import { BrandVoicePanel } from "@/components/brand-voice";
+import { DarkFunnelDashboard } from "@/components/dark-funnel-dashboard";
 import { EngagementInboxPanel } from "@/components/engagement-inbox";
 import { MetricCard } from "@/components/metric-card";
+import { NetworkNavigatorPanel } from "@/components/network-navigator";
 import { PendingActionsPanel } from "@/components/pending-actions";
 import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
 import { SignalCard } from "@/components/signal-card";
@@ -114,6 +116,33 @@ export default async function DashboardPage() {
             <BrandVoicePanel />
             <EngagementInboxPanel />
           </div>
+        </section>
+
+        {/* Psychology & Network Intelligence */}
+        <section className="mt-10">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <Flame className="h-4 w-4 text-red-500" />
+              <h2 className="text-sm font-semibold text-white">Dark Funnel — Hot Leads</h2>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mb-4">
+            Companies in active research mode — captured from anonymous visits, review sites, competitor comparisons.
+            Sorted by research intensity score. These leads are looking for a solution before they reach out.
+          </p>
+          <DarkFunnelDashboard />
+        </section>
+
+        <section className="mt-10">
+          <div className="mb-3 flex items-center gap-2">
+            <Network className="h-4 w-4 text-blue-500" />
+            <h2 className="text-sm font-semibold text-white">Network Navigator — Warm Intros</h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-4">
+            Map introduction paths through your professional network. Warm intros close 5-10× faster than cold outreach.
+            Find the shortest, strongest path to any target company.
+          </p>
+          <NetworkNavigatorPanel />
         </section>
 
         {/* Signals feed */}

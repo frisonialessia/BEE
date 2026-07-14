@@ -18,11 +18,14 @@ from app.models.base import (
 )
 from app.models.brand_profile import BrandFragment, VoiceProfile
 from app.models.company import Company
+from app.models.dark_funnel import DarkFunnelSignal, HotLeadScore
 from app.models.engagement_event import IncomingEngagementEvent
 from app.models.lead import Lead
 from app.models.market_insight import MarketInsight
+from app.models.network import NetworkConnection
 from app.models.opportunity import Opportunity
 from app.models.pending_action import PendingAction
+from app.models.psychographic import LeadPsychographic
 from app.models.sequence import DynamicSequence, SequenceExecution
 from app.models.signal import Signal
 from app.models.strategy_outcome import StrategyOutcome
@@ -45,6 +48,10 @@ __all__ = [
     "IncomingEngagementEvent",
     "DynamicSequence",
     "SequenceExecution",
+    "LeadPsychographic",
+    "DarkFunnelSignal",
+    "HotLeadScore",
+    "NetworkConnection",
     "ActionStatus",
     "ActionType",
     "BehavioralEventType",
