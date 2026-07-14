@@ -47,6 +47,8 @@ from app.models.base import SignalType
 
 if TYPE_CHECKING:
     from app.schemas.feedback import SuccessHint
+    from app.schemas.insights import MarketInsightRef
+    from app.schemas.variants import ActiveVariantRef
 
 
 @dataclass(slots=True)
@@ -97,11 +99,29 @@ class EnrichmentContext:
     # Empty list = no historical data yet; generators use their default logic.
     success_hints: list[SuccessHint] = field(default_factory=list)
 
+    # ── Market intelligence: macro patterns from TrendAnalyst ────────────────
+    # Fresh MarketInsights for this signal type and industry. Generators can
+    # use these to adjust urgency or add sector context to the closing argument.
+    market_insights: list[MarketInsightRef] = field(default_factory=list)
+
+    # ── A/B variant: active experiment arm assignment ─────────────────────────
+    # When a TacticVariant is active for this signal type, this ref contains
+    # the assigned arm ("a" or "b") and its config overrides (channel, playbook).
+    # Generators apply these overrides to support controlled A/B experiments.
+    active_variant: ActiveVariantRef | None = None
+
     @property
     def best_hint(self) -> SuccessHint | None:
         """Return the highest win-rate actionable hint, or None."""
         actionable = [h for h in self.success_hints if h.is_actionable]
         return actionable[0] if actionable else None
+
+    @property
+    def top_market_insight(self) -> MarketInsightRef | None:
+        """Return the highest-confidence fresh market insight, if any."""
+        if not self.market_insights:
+            return None
+        return max(self.market_insights, key=lambda i: i.confidence)
 
 
 class StrategyGenerator(ABC):

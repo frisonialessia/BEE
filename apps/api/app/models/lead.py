@@ -6,6 +6,7 @@ when the intelligence is person-level rather than company-level.
 """
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import JSON, Column
@@ -43,6 +44,15 @@ class Lead(TimestampMixin, table=True):
     score: float = Field(default=0.0)
 
     attributes: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+
+    # ----- DataValidator fields -----------------------------------------------
+    # Populated by DataValidator.validate_lead() — async background audits.
+    data_freshness_score: float = Field(default=1.0)  # 0-1; lower = staler data
+    validation_flags: list[str] = Field(
+        default_factory=list, sa_column=Column(JSON)
+    )  # e.g. ["email_invalid", "stale_title", "linkedin_unreachable"]
+    last_validated_at: datetime | None = Field(default=None)
+    stale_risk: bool = Field(default=False, index=True)  # true when data > 90 days old
 
     # ----- Relationships -------------------------------------------------------
     company: "Company" = Relationship(back_populates="leads")

@@ -6,27 +6,44 @@ relies on to create the schema.
 """
 
 from app.models.base import (
+    ActionStatus,
+    ActionType,
     BehavioralEventType,
+    InsightType,
     LeadStatus,
     OpportunityStatus,
     SignalSource,
     SignalType,
+    VariantStatus,
 )
 from app.models.company import Company
 from app.models.lead import Lead
+from app.models.market_insight import MarketInsight
 from app.models.opportunity import Opportunity
+from app.models.pending_action import PendingAction
 from app.models.signal import Signal
 from app.models.strategy_outcome import StrategyOutcome
+from app.models.tactic_variant import TacticVariant, VariantOutcome
+from app.models.workflow_task import WorkflowTask
 
 __all__ = [
     "Company",
     "Lead",
+    "MarketInsight",
+    "PendingAction",
     "Signal",
     "Opportunity",
     "StrategyOutcome",
+    "TacticVariant",
+    "VariantOutcome",
+    "WorkflowTask",
+    "ActionStatus",
+    "ActionType",
     "BehavioralEventType",
+    "InsightType",
     "LeadStatus",
     "OpportunityStatus",
     "SignalSource",
     "SignalType",
+    "VariantStatus",
 ]

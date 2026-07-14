@@ -86,6 +86,7 @@ class ExecutiveAgent:
 
         bundle = self._generate(opp)
         self._persist(opp, bundle)
+        self._create_orchestrator_actions(bundle)
         self._emit_webhook(bundle)
         return bundle
 
@@ -137,6 +138,23 @@ class ExecutiveAgent:
         self.session.add(opp)
         self.session.commit()
         logger.debug("Persisted artifacts for opportunity %s", opp.id)
+
+    def _create_orchestrator_actions(self, bundle: ArtifactBundle) -> None:
+        """Register all executable artifacts with the AgentOrchestrator.
+
+        Creates PendingAction records (PENDING_APPROVAL) for every external
+        action. No action can be executed until explicitly approved.
+        """
+        try:
+            from app.services.orchestrator import AgentOrchestrator
+            orchestrator = AgentOrchestrator(self.session)
+            actions = orchestrator.create_from_bundle(bundle)
+            logger.info(
+                "Created %d orchestrator action(s) for opportunity %s",
+                len(actions), bundle.opportunity_id,
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("Failed to create orchestrator actions for %s", bundle.opportunity_id)
 
     def _emit_webhook(self, bundle: ArtifactBundle) -> None:
         url = getattr(self._settings, "WEBHOOK_EXECUTION_URL", None)

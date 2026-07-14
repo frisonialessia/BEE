@@ -8,9 +8,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import health, opportunities, signals
+from app.api.v1.endpoints import analytics, health, insights, opportunities, orchestrator, signals
 
 api_router = APIRouter()
 api_router.include_router(health.router)
 api_router.include_router(signals.router)
 api_router.include_router(opportunities.router)
+api_router.include_router(orchestrator.router)
+api_router.include_router(insights.router)
+api_router.include_router(analytics.router)

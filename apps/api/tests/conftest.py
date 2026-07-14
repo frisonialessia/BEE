@@ -7,7 +7,9 @@ the test engine, exercising the real code paths end-to-end.
 
 from __future__ import annotations
 
+import uuid
 from collections.abc import Generator
+from datetime import UTC, datetime
 
 import pytest
 from fastapi.testclient import TestClient
@@ -17,6 +19,85 @@ from sqlmodel import Session, SQLModel, create_engine
 import app.models  # noqa: F401 - register table metadata
 from app.core.database import get_session
 from app.main import create_app
+from app.models.base import OpportunityStatus, SignalType
+from app.models.company import Company
+from app.models.lead import Lead
+from app.models.opportunity import Opportunity
+from app.models.signal import Signal, SignalSource
+
+
+def _create_full_opportunity(session: Session) -> tuple[Company, Lead, Signal, Opportunity]:
+    """Helper: create a complete Company → Lead → Signal → Opportunity chain.
+
+    Used by tests that need a real persisted opportunity (e.g. outcome endpoint tests).
+    Returns the four created entities.
+    """
+    company = Company(
+        id=uuid.uuid4(),
+        name="Test Corp",
+        industry="SaaS",
+        size="50-200",
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    session.add(company)
+    session.flush()
+
+    lead = Lead(
+        id=uuid.uuid4(),
+        company_id=company.id,
+        first_name="Jane",
+        last_name="Doe",
+        full_name="Jane Doe",
+        email=f"jane.{uuid.uuid4().hex[:6]}@testcorp.com",
+        title="VP Sales",
+        seniority="vp",
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    session.add(lead)
+    session.flush()
+
+    signal = Signal(
+        id=uuid.uuid4(),
+        company_id=company.id,
+        signal_type=SignalType.FUNDING_ROUND,
+        title="Test Corp raised $5M Series A",
+        raw_payload={"amount": "5M", "round": "Series A"},
+        source=SignalSource.WEBHOOK,
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    session.add(signal)
+    session.flush()
+
+    opp = Opportunity(
+        id=uuid.uuid4(),
+        lead_id=lead.id,
+        company_id=company.id,
+        signal_id=signal.id,
+        title="Test Opportunity",
+        score=72.0,
+        status=OpportunityStatus.READY_TO_ACTION,
+        strategy={
+            "generator": "rule_based_v1",
+            "generator_version": "1.0.0",
+            "signal_type": "funding_round",
+            "playbook": "post_funding_outreach",
+            "channel": "email",
+            "pain_point": "Scaling pains post-funding",
+            "closing_argument": "We solve scaling",
+            "timing_window": "Next 30 days",
+            "confidence_score": 0.85,
+            "manual_review_required": False,
+        },
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    session.add(opp)
+    session.commit()
+    session.refresh(opp)
+    return company, lead, signal, opp
 
 
 @pytest.fixture(name="engine")

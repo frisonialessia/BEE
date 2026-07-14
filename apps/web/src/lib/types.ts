@@ -69,19 +69,6 @@ export interface TimingWindow {
   expires_at: string | null;
 }
 
-export interface BattlecardStrategy {
-  pain_point: string;
-  closing_argument: string;
-  timing_window: TimingWindow;
-  playbook: string;
-  next_best_action: string;
-  channel: string;
-  rationale: string | null;
-  generator: string;
-  generator_version: string;
-  generated_at: string;
-}
-
 export interface BattlecardCompany {
   name: string | null;
   domain: string | null;
@@ -107,13 +94,34 @@ export interface BattlecardSignal {
   tags: string[];
 }
 
+export interface BattlecardStrategy {
+  pain_point: string;
+  closing_argument: string;
+  timing_window: TimingWindow;
+  playbook: string;
+  next_best_action: string;
+  channel: string;
+  rationale: string | null;
+  generator: string;
+  generator_version: string;
+  generated_at: string;
+  /** 0-1 confidence score set by ObservabilityService */
+  confidence_score: number;
+  /** True when confidence_score < 0.80 — CEO must review before execution */
+  manual_review_required: boolean;
+  variant_id: string | null;
+  variant_arm: string | null;
+}
+
 export interface Battlecard {
   opportunity_id: string;
   title: string;
   status: OpportunityStatus;
   score: number;
   ready_to_action: boolean;
-  hot_lead: boolean;  // true when BehavioralCollector detects buying intent
+  hot_lead: boolean;
+  /** True when confidence < 0.80 — show warning badge */
+  manual_review_required: boolean;
   company: BattlecardCompany;
   lead: BattlecardLead;
   signal: BattlecardSignal;
@@ -186,6 +194,188 @@ export interface OutcomeOut {
   outcome: string;
   closed_at: string;
   message: string;
+}
+
+// ── AgentOrchestrator ─────────────────────────────────────────────────────────
+
+export type ActionStatus =
+  | "pending_approval"
+  | "approved"
+  | "rejected"
+  | "executing"
+  | "completed"
+  | "failed";
+
+export type ActionType =
+  | "send_email"
+  | "book_meeting"
+  | "crm_update"
+  | "slack_notify"
+  | "linkedin_message"
+  | "webhook_call";
+
+export interface PendingAction {
+  id: string;
+  opportunity_id: string;
+  action_type: ActionType;
+  status: ActionStatus;
+  title: string;
+  description: string | null;
+  preview: string | null;
+  payload: Record<string, unknown>;
+  priority: number;
+  retry_count: number;
+  approved_by: string | null;
+  approved_at: string | null;
+  completed_at: string | null;
+  failure_reason: string | null;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrchestratorStatus {
+  total_pending: number;
+  total_approved: number;
+  total_executing: number;
+  total_completed: number;
+  total_failed: number;
+  total_rejected: number;
+}
+
+// ── MarketInsights (TrendAnalyst) ─────────────────────────────────────────────
+
+export type InsightType =
+  | "volume_spike"
+  | "sector_momentum"
+  | "emerging_pattern"
+  | "competitive_cluster"
+  | "seasonal_trend";
+
+export interface MarketInsight {
+  id: string;
+  insight_type: InsightType;
+  signal_type: string | null;
+  industry: string | null;
+  title: string;
+  description: string;
+  tactical_implication: string | null;
+  confidence: number;
+  evidence_count: number;
+  is_active: boolean;
+  expires_at: string | null;
+  created_at: string;
+}
+
+// ── A/B Tactic Variants ───────────────────────────────────────────────────────
+
+export type VariantStatus = "active" | "paused" | "concluded";
+
+export interface TacticVariant {
+  id: string;
+  name: string;
+  description: string | null;
+  hypothesis: string | null;
+  signal_type: string;
+  industry: string | null;
+  arm_a_config: Record<string, unknown>;
+  arm_b_config: Record<string, unknown>;
+  traffic_split: number;
+  min_samples_per_arm: number;
+  status: VariantStatus;
+  winner_arm: string | null;
+  arm_a_wins: number;
+  arm_a_total: number;
+  arm_b_wins: number;
+  arm_b_total: number;
+  arm_a_win_rate: number;
+  arm_b_win_rate: number;
+  is_ready_to_conclude: boolean;
+  created_at: string;
+}
+
+// ── ResourcePredictor ─────────────────────────────────────────────────────────
+
+export type RiskLevel = "low" | "medium" | "high";
+
+export interface ResourcePrediction {
+  risk_level: RiskLevel;
+  capacity_impact_score: number;
+  warnings: string[];
+  recommended_actions: string[];
+  blocks_confirmation: boolean;
+  summary: string;
+}
+
+export interface OutcomeWithPrediction {
+  opportunity_id: string;
+  outcome: "won" | "lost";
+  closed_at: string;
+  message: string;
+  resource_prediction: ResourcePrediction | null;
+  workflow_tasks_dispatched: number;
+}
+
+// ── WorkflowOrchestrator (event bus) ──────────────────────────────────────────
+
+export type WorkflowTaskStatus =
+  | "pending"
+  | "dispatched"
+  | "mock_dispatched"
+  | "completed"
+  | "failed"
+  | "skipped";
+
+export interface WorkflowTask {
+  id: string;
+  event_type: string;
+  entity_id: string | null;
+  handler_name: string;
+  status: WorkflowTaskStatus;
+  mock: boolean;
+  payload: Record<string, unknown>;
+  result: Record<string, unknown> | null;
+  dispatched_at: string | null;
+  completed_at: string | null;
+  error_message: string | null;
+  created_at: string;
+}
+
+export interface WorkflowStatus {
+  total_tasks: number;
+  dispatched: number;
+  mock_dispatched: number;
+  completed: number;
+  failed: number;
+  skipped: number;
+  pending: number;
+}
+
+// ── RevenueSimulator ──────────────────────────────────────────────────────────
+
+export interface SimulatorScenario {
+  label: string;
+  multiplier: number;
+  prospecting_increase_factor: number;
+  projected_new_pipeline: number;
+  projected_won_deals: number;
+  uplift_vs_baseline: number;
+}
+
+export interface RevenueSimulation {
+  signal_type: string;
+  industry: string | null;
+  increase_factor: number;
+  current_pipeline_count: number;
+  historical_win_rate: number;
+  data_confidence: "none" | "low" | "medium" | "high";
+  sample_size: number;
+  baseline_expected_won: number;
+  scenarios: SimulatorScenario[];
+  top_playbook: string | null;
+  top_channel: string | null;
+  recommendation: string;
+  disclaimer: string;
 }
 
 // ── Behavioral intent (BehavioralCollector) ────────────────────────────────────

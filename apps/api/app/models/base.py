@@ -92,6 +92,59 @@ class BehavioralEventType(str, Enum):
     REPEAT_VISIT = "repeat_visit"       # returned ≥ 3 times in 7 days
 
 
+class ActionStatus(str, Enum):
+    """State machine for AgentOrchestrator pending actions.
+
+    Security principle: every external action (email send, CRM update) MUST
+    pass through PENDING_APPROVAL before any execution can begin. There is no
+    shortcut from creation to EXECUTING — a human (or an explicit API call)
+    must approve each action first.
+
+    State machine::
+
+        PENDING_APPROVAL ──► APPROVED ──► EXECUTING ──► COMPLETED
+               │                │                │
+               ▼                ▼                ▼
+           REJECTED           (wait)           FAILED ──► PENDING_APPROVAL (retry)
+    """
+
+    PENDING_APPROVAL = "pending_approval"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    EXECUTING = "executing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class ActionType(str, Enum):
+    """Type of execution action the orchestrator manages."""
+
+    SEND_EMAIL = "send_email"
+    BOOK_MEETING = "book_meeting"
+    CRM_UPDATE = "crm_update"
+    SLACK_NOTIFY = "slack_notify"
+    LINKEDIN_MESSAGE = "linkedin_message"
+    WEBHOOK_CALL = "webhook_call"
+
+
+class InsightType(str, Enum):
+    """Categories of market insights detected by the TrendAnalyst."""
+
+    VOLUME_SPIKE = "volume_spike"          # unusual signal volume for a type/industry
+    SECTOR_MOMENTUM = "sector_momentum"    # many companies in an industry show same signal
+    EMERGING_PATTERN = "emerging_pattern"  # new signal type appearing more frequently
+    COMPETITIVE_CLUSTER = "competitive_cluster"  # competitor activity surge
+    SEASONAL_TREND = "seasonal_trend"      # recurring cyclical pattern
+
+
+class VariantStatus(str, Enum):
+    """Lifecycle of a tactic A/B variant."""
+
+    ACTIVE = "active"       # collecting data
+    PAUSED = "paused"       # temporarily stopped
+    CONCLUDED = "concluded" # winner declared, variant archived
+
+
 class OpportunityStatus(str, Enum):
     """Lifecycle of a detected opportunity.
 

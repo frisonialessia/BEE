@@ -15,6 +15,33 @@ from app.schemas.feedback import (
     SuccessHint,
     SuccessPatternOut,
 )
+from app.schemas.insights import MarketInsightOut, MarketInsightRef, TrendAnalysisResult
+from app.schemas.orchestrator import (
+    ApprovalIn,
+    OrchestratorStatusOut,
+    PendingActionOut,
+    RejectionIn,
+)
+from app.schemas.predictor import OutcomeWithPrediction, ResourcePrediction
+from app.schemas.signal import (
+    CompanyRef,
+    LeadRef,
+    OpportunityOut,
+    SignalIngestResult,
+    SignalOut,
+    SignalWebhookIn,
+)
+from app.schemas.simulator import RevenueSimulation, SimulatorScenario
+from app.schemas.strategy import (
+    BattlecardCompany,
+    BattlecardLead,
+    BattlecardOut,
+    BattlecardSignal,
+    StrategySchema,
+    TimingWindow,
+)
+from app.schemas.variants import ActiveVariantRef, VariantCreateIn, VariantOut
+from app.schemas.workflow import BeeEvent, WorkflowStatusOut, WorkflowTaskOut
 
 __all__ = [
     # executive
@@ -30,6 +57,15 @@ __all__ = [
     "OutcomeOut",
     "SuccessHint",
     "SuccessPatternOut",
+    # insights
+    "MarketInsightOut",
+    "MarketInsightRef",
+    "TrendAnalysisResult",
+    # orchestrator
+    "ApprovalIn",
+    "OrchestratorStatusOut",
+    "PendingActionOut",
+    "RejectionIn",
     # signal
     "CompanyRef",
     "LeadRef",
@@ -44,35 +80,18 @@ __all__ = [
     "BattlecardSignal",
     "StrategySchema",
     "TimingWindow",
-]
-from app.schemas.signal import (
-    CompanyRef,
-    LeadRef,
-    OpportunityOut,
-    SignalIngestResult,
-    SignalOut,
-    SignalWebhookIn,
-)
-from app.schemas.strategy import (
-    BattlecardCompany,
-    BattlecardLead,
-    BattlecardOut,
-    BattlecardSignal,
-    StrategySchema,
-    TimingWindow,
-)
-
-__all__ = [
-    "CompanyRef",
-    "LeadRef",
-    "OpportunityOut",
-    "SignalIngestResult",
-    "SignalOut",
-    "SignalWebhookIn",
-    "BattlecardCompany",
-    "BattlecardLead",
-    "BattlecardOut",
-    "BattlecardSignal",
-    "StrategySchema",
-    "TimingWindow",
+    # variants
+    "ActiveVariantRef",
+    "VariantCreateIn",
+    "VariantOut",
+    # predictor
+    "OutcomeWithPrediction",
+    "ResourcePrediction",
+    # simulator
+    "RevenueSimulation",
+    "SimulatorScenario",
+    # workflow
+    "BeeEvent",
+    "WorkflowStatusOut",
+    "WorkflowTaskOut",
 ]

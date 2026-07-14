@@ -1,5 +1,6 @@
 import {
   AlertCircle,
+  AlertTriangle,
   Bot,
   Building2,
   Calendar,
@@ -56,6 +57,12 @@ export function BattlecardView({ card }: { card: Battlecard }) {
                 🔥 HOT
               </Badge>
             )}
+            {card.manual_review_required && (
+              <Badge variant="destructive" className="gap-1">
+                <AlertTriangle className="size-3" />
+                Review Required
+              </Badge>
+            )}
             <Badge variant="outline">{signalTypeLabels[signal.signal_type as keyof typeof signalTypeLabels] ?? signal.signal_type}</Badge>
           </div>
           <h2 className="text-base font-semibold leading-snug">
@@ -64,7 +71,20 @@ export function BattlecardView({ card }: { card: Battlecard }) {
           <p className="text-xs text-muted-foreground">
             Signal detected {timeAgo(signal.detected_at)} · via{" "}
             <span className="font-medium">{strategy.generator}</span>
+            {strategy.confidence_score !== undefined && (
+              <span className={`ml-2 ${strategy.manual_review_required ? "text-amber-600" : "text-emerald-600"}`}>
+                · {Math.round(strategy.confidence_score * 100)}% confidence
+              </span>
+            )}
           </p>
+          {card.manual_review_required && (
+            <div className="mt-1.5 flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-xs text-amber-800">
+              <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
+              <span>
+                Strategy confidence is below threshold. CEO review required before execution.
+              </span>
+            </div>
+          )}
         </div>
       </div>
 

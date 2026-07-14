@@ -20,7 +20,8 @@ from app.core.database import get_session
 from app.models.base import OpportunityStatus
 from app.repositories.opportunity import OpportunityRepository
 from app.schemas.executive import ArtifactBundle
-from app.schemas.feedback import OutcomeIn, OutcomeOut
+from app.schemas.feedback import OutcomeIn
+from app.schemas.predictor import OutcomeWithPrediction
 from app.schemas.strategy import (
     BattlecardCompany,
     BattlecardLead,
@@ -30,6 +31,8 @@ from app.schemas.strategy import (
 )
 from app.services.executive_agent.service import ExecutiveAgent
 from app.services.feedback_loop.service import FeedbackLoopService
+from app.services.resource_predictor import ResourcePredictorService
+from app.services.workflow_orchestrator import BeeEvent, WorkflowOrchestrator
 
 router = APIRouter(prefix="/opportunities", tags=["Opportunities"])
 
@@ -150,6 +153,7 @@ def get_battlecard(
         score=opportunity.score,
         ready_to_action=opportunity.status == OpportunityStatus.READY_TO_ACTION,
         hot_lead=strategy_dict.get("hot_lead", False),
+        manual_review_required=strategy_dict.get("manual_review_required", False),
         company=company_out,
         lead=lead_out,
         signal=signal_out,
@@ -161,31 +165,100 @@ def get_battlecard(
 
 @router.patch(
     "/{opportunity_id}/outcome",
-    response_model=OutcomeOut,
-    summary="Record WON/LOST outcome (triggers adaptive learning)",
+    response_model=OutcomeWithPrediction,
+    summary="Record WON/LOST outcome (resource gate + event bus + adaptive learning)",
 )
 def record_outcome(
     opportunity_id: uuid.UUID,
     body: OutcomeIn,
     session: Session = Depends(get_session),
-) -> OutcomeOut:
+) -> OutcomeWithPrediction:
     """Mark an opportunity as WON or LOST.
 
-    This triggers the FeedbackLoopService to:
-    1. Update the opportunity status.
-    2. Create a ``StrategyOutcome`` row capturing the full context (signal type,
-       channel, playbook, generator version).
-    3. Contribute to the win-rate statistics that future ``StrategyGeneratorService``
-       calls will query when building new battlecards.
+    **When outcome = WON**, the request goes through three layers:
 
-    This is how BEE learns: every closed deal becomes a data point that biases
-    future strategy generation toward proven approaches.
+    1. **Resource Gate** (opt-in, ``RESOURCE_PREDICTION_ENABLED``): evaluates
+       operational impact. In STRICT mode, HIGH-risk deals block confirmation.
+
+    2. **FeedbackLoopService**: records the outcome, updates the opportunity
+       status, and trains the adaptive learning system.
+
+    3. **WorkflowOrchestrator**: publishes an ``opportunity.won`` event that
+       triggers all registered handlers (CRM update, service delivery, billing).
+       Handlers run in mock mode if URLs are not configured.
     """
+    from app.core.config import get_settings
+    settings = get_settings()
+
+    # ── Step 1: Resource Gate (opt-in) ────────────────────────────────────────
+    prediction = None
+    if body.outcome == "won" and settings.RESOURCE_PREDICTION_ENABLED:
+        repo = OpportunityRepository(session)
+        opp = repo.get(opportunity_id)
+        if opp is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
+
+        predictor = ResourcePredictorService()
+        prediction = predictor.predict(opp)
+
+        if settings.RESOURCE_PREDICTION_STRICT and prediction.blocks_confirmation:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail={
+                    "error": "resource_conflict",
+                    "message": prediction.summary,
+                    "warnings": prediction.warnings,
+                    "recommended_actions": prediction.recommended_actions,
+                },
+            )
+
+    # ── Step 2: Record outcome ─────────────────────────────────────────────────
     svc = FeedbackLoopService(session)
     try:
-        return svc.record_outcome(opportunity_id, body)
+        outcome_out = svc.record_outcome(opportunity_id, body)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+    # ── Step 3: Publish event to WorkflowOrchestrator ─────────────────────────
+    workflow_tasks_dispatched = 0
+    if body.outcome == "won":
+        try:
+            # Resolve company name for the event payload
+            repo2 = OpportunityRepository(session)
+            opp2 = repo2.get(opportunity_id)
+            company_name = None
+            if opp2 and opp2.company_id:
+                from app.models.company import Company
+                co = session.get(Company, opp2.company_id)
+                company_name = co.name if co else None
+
+            event = BeeEvent(
+                event_type="opportunity.won",
+                entity_id=opportunity_id,
+                entity_type="opportunity",
+                payload={
+                    "opportunity_id": str(opportunity_id),
+                    "company_name": company_name,
+                    "score": opp2.score if opp2 else 0,
+                    "notes": body.notes,
+                },
+            )
+            orchestrator = WorkflowOrchestrator(session)
+            tasks = orchestrator.publish(event)
+            session.commit()
+            workflow_tasks_dispatched = len(tasks)
+        except Exception:  # noqa: BLE001
+            import logging
+            logging.getLogger(__name__).exception("WorkflowOrchestrator dispatch failed for opp %s", opportunity_id)
+
+    return OutcomeWithPrediction(
+        opportunity_id=str(outcome_out.opportunity_id),
+        outcome=outcome_out.outcome,
+        closed_at=outcome_out.closed_at.isoformat(),
+        message=outcome_out.message,
+        resource_prediction=prediction,
+        workflow_tasks_dispatched=workflow_tasks_dispatched,
+    )
 
 
 @router.get(

@@ -145,6 +145,30 @@ class StrategySchema(BaseModel):
         description="UTC timestamp of when this strategy was generated.",
     )
 
+    # ── Observability / quality gate ──────────────────────────────────────────
+    confidence_score: float = Field(
+        default=0.85,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Confidence that this strategy is correct for the context. "
+            "Rule-based generators set 0.85 (deterministic but templated). "
+            "LLM generators derive this from model uncertainty. "
+            "Values below 0.80 trigger manual_review_required."
+        ),
+    )
+    manual_review_required: bool = Field(
+        default=False,
+        description=(
+            "True when confidence_score < 0.80. The CEO must review "
+            "and approve before the AgentOrchestrator permits execution. "
+            "Displayed as a warning badge on the battlecard."
+        ),
+    )
+    # A/B testing: which variant arm produced this strategy (null = no variant)
+    variant_id: str | None = Field(default=None)
+    variant_arm: str | None = Field(default=None)  # "a" | "b"
+
     def is_battlecard_complete(self) -> bool:
         """Return True when the three mandatory CEO fields are non-empty strings.
 
@@ -208,6 +232,7 @@ class BattlecardOut(BaseModel):
     score: float
     ready_to_action: bool
     hot_lead: bool = False  # True when BehavioralCollector detects buying intent
+    manual_review_required: bool = False  # True when strategy confidence < 0.80
 
     company: BattlecardCompany
     lead: BattlecardLead

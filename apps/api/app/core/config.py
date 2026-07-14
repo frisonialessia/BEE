@@ -73,6 +73,20 @@ class Settings(BaseSettings):
     # task, or trigger any downstream action.
     WEBHOOK_EXECUTION_URL: str | None = None
 
+    # ----- ResourcePredictorService (opt-in) -------------------------------------
+    # When enabled, BEE evaluates operational impact before confirming WON.
+    # STRICT mode blocks the confirmation when risk_level is HIGH.
+    RESOURCE_PREDICTION_ENABLED: bool = False
+    RESOURCE_PREDICTION_STRICT: bool = False
+
+    # ----- WorkflowOrchestrator webhooks (all opt-in) ---------------------------
+    # Set any of these to activate the corresponding workflow handler.
+    # Leave unset (None) to run in mock mode (full audit trail, no real calls).
+    WORKFLOW_CRM_URL: str | None = None
+    WORKFLOW_DELIVERY_URL: str | None = None
+    WORKFLOW_BILLING_URL: str | None = None
+    WORKFLOW_NOTIFY_URL: str | None = None
+
     # ----- AI providers (reserved for future intelligence layer) ---------------
     # Present now so the credential-management contract is defined up front.
     AI_PROVIDER: Literal["openai", "anthropic", "none"] = "none"

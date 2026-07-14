@@ -2,8 +2,11 @@ import { Activity, Bot, Flame, Radio, ShieldCheck, TrendingUp } from "lucide-rea
 
 import { BattlecardView } from "@/components/battlecard";
 import { MetricCard } from "@/components/metric-card";
+import { PendingActionsPanel } from "@/components/pending-actions";
+import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
 import { SignalCard } from "@/components/signal-card";
 import { SiteHeader } from "@/components/site-header";
+import { WorkflowStatusPanel } from "@/components/workflow-status";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getBattlecards, getSignals } from "@/lib/api";
@@ -81,6 +84,21 @@ export default async function DashboardPage() {
             </div>
           </section>
         )}
+
+        {/* BOS Intelligence Layer */}
+        <section className="mt-10">
+          <div className="mb-4">
+            <h2 className="text-base font-semibold">Business Operating System</h2>
+            <p className="text-sm text-muted-foreground">
+              Event-driven automation · Resource intelligence · Revenue projections
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <RevenueSimulatorWidget />
+            <WorkflowStatusPanel />
+            <PendingActionsPanel />
+          </div>
+        </section>
 
         {/* Signals feed */}
         <section className="mt-10">

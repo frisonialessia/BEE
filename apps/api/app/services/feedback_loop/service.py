@@ -1,52 +1,58 @@
-"""FeedbackLoopService — BEE's adaptive memory.
+"""FeedbackLoopService — BEE's adaptive memory with A/B tactic testing.
 
-This service is the learning brain of BEE. It does two things:
+This service does three things:
 
-1. **Record**: When a sales rep closes an opportunity (WON or LOST), this
-   service captures the full context — the signal type, company profile, lead
-   seniority, channel, playbook, and generator version — as a ``StrategyOutcome``
-   row. This builds a labeled training dataset over time.
+1. **Record**: When an opportunity closes (WON/LOST), captures the full context
+   as a ``StrategyOutcome`` row — and if an A/B variant was active, tags the
+   outcome with ``variant_id`` and ``variant_arm`` so win rates can be compared
+   per arm.
 
-2. **Query**: Given a new enrichment context, this service computes the
-   statistically best (playbook, channel) combination for similar past deals and
-   returns ``SuccessHint`` objects that the ``StrategyGeneratorService`` injects
-   into the ``EnrichmentContext`` before generating the next battlecard.
+2. **Query hints**: Returns historical win-rate patterns as ``SuccessHint``
+   objects injected into ``EnrichmentContext`` before strategy generation.
 
-The learning feedback loop
---------------------------
+3. **A/B variant management**: Creates ``TacticVariant`` experiments, randomly
+   assigns arms to new enrichments, and concludes variants when statistically
+   significant differences emerge.
+
+The learning feedback loop (now with A/B testing)
+--------------------------------------------------
 ::
 
-    [Rep closes WON] → record_outcome() → StrategyOutcome table
-                                                   ↓
-    [New signal arrives] → get_success_hints() ← Win-rate aggregation
+    [Rep closes WON] → record_outcome(variant_id, arm) → StrategyOutcome + VariantOutcome
+                                                                   ↓
+    [New signal arrives] ←── get_success_hints() ← Win-rate aggregation per arm
+                         ←── get_active_variant() ← Active variant assignment
                                    ↓
-    [StrategyGeneratorService] → EnrichmentContext.success_hints
+    [StrategyGeneratorService] → EnrichmentContext.success_hints + active_variant
                                    ↓
-    [Rule-based generator] → prefers highest win_rate playbook/channel
-    [LLM generator]        → injects hint text into system prompt
-
-Over time, as more deals are closed, the hints become statistically reliable
-(``confidence = "high"``) and the system autonomously improves its battlecard
-quality without any code changes.
+    [Generator] → overrides channel/playbook from variant config
+                → tags strategy with variant_id + variant_arm
+                                   ↓
+    [Outcome recorded] → VariantOutcome.won = True/False
+                       → auto-conclude when Δ win_rate ≥ 10pp + min samples
 """
 
 from __future__ import annotations
 
+import random
+import uuid as _uuid_module
 from datetime import UTC, datetime
 
 from sqlmodel import Session
 
 from app.core.logging import get_logger
-from app.models.base import OpportunityStatus
+from app.models.base import OpportunityStatus, VariantStatus
 from app.models.opportunity import Opportunity
 from app.models.strategy_outcome import StrategyOutcome
 from app.repositories.opportunity import OpportunityRepository
 from app.repositories.strategy_outcome import StrategyOutcomeRepository
+from app.repositories.tactic_variant import TacticVariantRepository
 from app.schemas.feedback import OutcomeIn, OutcomeOut, SuccessHint
+from app.schemas.variants import ActiveVariantRef, VariantCreateIn, VariantOut
 
 logger = get_logger(__name__)
 
-_CONFIDENCE_THRESHOLDS = (5, 20)  # (low→medium, medium→high) sample boundaries
+_CONFIDENCE_THRESHOLDS = (5, 20)
 
 
 def _confidence(n: int) -> str:
@@ -58,38 +64,32 @@ def _confidence(n: int) -> str:
 
 
 class FeedbackLoopService:
-    """Records sales outcomes and queries historical success patterns.
-
-    Injected into ``StrategyGeneratorService`` so that the strategy layer can
-    ask: 'What has worked for similar deals in the past?' before generating
-    the next battlecard. The engine and endpoints never touch this service
-    directly — it is strictly a dependency of the strategy layer.
-    """
+    """Records outcomes, queries patterns, and manages A/B tactic variants."""
 
     def __init__(self, session: Session) -> None:
         self.session = session
         self._outcomes = StrategyOutcomeRepository(session)
         self._opps = OpportunityRepository(session)
+        self._variants = TacticVariantRepository(session)
+
+    # ── Outcome recording ─────────────────────────────────────────────────────
 
     def record_outcome(
         self, opportunity_id: str | object, body: OutcomeIn
     ) -> OutcomeOut:
-        """Persist a WON/LOST outcome for an opportunity.
+        """Persist a WON/LOST outcome.
 
-        Also updates the opportunity's status in the main table and writes a
-        fully denormalized ``StrategyOutcome`` for analytics.
+        Automatically tags variant outcomes if the strategy has a variant_id.
+        Auto-concludes the variant if the statistical stopping criteria are met.
         """
-        import uuid as _uuid
-
-        opp_id = _uuid.UUID(str(opportunity_id))
+        opp_id = _uuid_module.UUID(str(opportunity_id))
         opportunity = self._opps.get(opp_id)
         if opportunity is None:
             raise ValueError(f"Opportunity {opp_id} not found")
 
-        # Idempotency: don't create a second outcome record.
         existing = self._outcomes.get_by_opportunity(opp_id)
         if existing is not None:
-            logger.info("Outcome already recorded for opportunity %s", opp_id)
+            logger.info("Outcome already recorded for opportunity %s (idempotent)", opp_id)
             return OutcomeOut(
                 opportunity_id=opp_id,
                 outcome=existing.outcome,
@@ -97,22 +97,21 @@ class FeedbackLoopService:
                 message="Outcome already recorded (idempotent)",
             )
 
-        # Update opportunity status.
         new_status = (
             OpportunityStatus.WON if body.outcome == "won" else OpportunityStatus.LOST
         )
         opportunity.status = new_status
         self.session.add(opportunity)
 
-        # Compute days_to_close from opportunity creation.
         now = datetime.now(UTC)
         created = opportunity.created_at
         if created.tzinfo is None:
             created = created.replace(tzinfo=UTC)
         days = max(0, (now - created).days)
 
-        # Extract strategy fields for denormalization.
         strat = opportunity.strategy or {}
+        won = body.outcome == "won"
+
         outcome_row = StrategyOutcome(
             opportunity_id=opp_id,
             signal_id=opportunity.signal_id,
@@ -131,17 +130,37 @@ class FeedbackLoopService:
             strategy_snapshot=strat,
         )
         self._outcomes.add(outcome_row)
-        self.session.commit()
+        self.session.flush()
 
-        logger.info(
-            "Outcome recorded: opportunity=%s outcome=%s days=%d",
-            opp_id, body.outcome, days,
-        )
+        # ── A/B variant tracking ──────────────────────────────────────────────
+        variant_id_str = strat.get("variant_id")
+        variant_arm = strat.get("variant_arm")
+        if variant_id_str and variant_arm:
+            try:
+                vid = _uuid_module.UUID(variant_id_str)
+                self._variants.record_outcome(vid, outcome_row.id, variant_arm, won)
+                # Check if we can auto-conclude the variant
+                variant = self._variants.get(vid)
+                if variant and variant.status == VariantStatus.ACTIVE and variant.is_ready_to_conclude:
+                    self._variants.conclude(vid)
+                    winner = variant.winner_arm
+                    logger.info(
+                        "Variant %s auto-concluded: winner=arm_%s (a=%.0f%% b=%.0f%%)",
+                        vid, winner, variant.arm_a_win_rate * 100, variant.arm_b_win_rate * 100,
+                    )
+            except (ValueError, Exception) as exc:
+                logger.warning("Failed to record variant outcome: %s", exc)
+
+        self.session.commit()
+        logger.info("Outcome: opp=%s result=%s days=%d variant=%s", opp_id, body.outcome, days, variant_id_str)
+
         return OutcomeOut(
             opportunity_id=opp_id,
             outcome=body.outcome,
             closed_at=now,
         )
+
+    # ── Success hints (adaptive memory query) ────────────────────────────────
 
     def get_success_hints(
         self,
@@ -149,12 +168,7 @@ class FeedbackLoopService:
         industry: str | None = None,
         max_hints: int = 3,
     ) -> list[SuccessHint]:
-        """Return ranked success hints for strategy generation.
-
-        Called by ``StrategyGeneratorService`` before building the
-        ``EnrichmentContext``. Returns an empty list when there is not enough
-        historical data — generators fall back to their default logic.
-        """
+        """Return ranked success hints for strategy generation."""
         rows = self._outcomes.get_win_rates(signal_type, industry=industry)
         hints: list[SuccessHint] = []
         for row in rows[:max_hints]:
@@ -170,18 +184,79 @@ class FeedbackLoopService:
                 )
             )
         if hints:
-            logger.debug(
-                "Found %d success hints for signal_type=%s industry=%s",
-                len(hints), signal_type, industry,
-            )
+            logger.debug("Found %d hints for signal_type=%s industry=%s", len(hints), signal_type, industry)
         return hints
 
-    # ── Private helpers ──────────────────────────────────────────────────────
+    # ── A/B variant management ────────────────────────────────────────────────
+
+    def create_variant(self, body: VariantCreateIn) -> VariantOut:
+        """Create a new A/B tactic experiment."""
+        from app.models.tactic_variant import TacticVariant
+
+        variant = TacticVariant(
+            name=body.name,
+            description=body.description,
+            hypothesis=body.hypothesis,
+            signal_type=body.signal_type,
+            industry=body.industry,
+            arm_a_config=body.arm_a_config.model_dump(exclude_none=True),
+            arm_b_config=body.arm_b_config.model_dump(exclude_none=True),
+            traffic_split=body.traffic_split,
+            min_samples_per_arm=body.min_samples_per_arm,
+        )
+        self._variants.add(variant)
+        self.session.commit()
+        self.session.refresh(variant)
+        logger.info("Created TacticVariant %s (%s) for signal_type=%s", variant.id, body.name, body.signal_type)
+        return self._to_variant_out(variant)
+
+    def get_active_variant(
+        self, signal_type: str, industry: str | None = None
+    ) -> ActiveVariantRef | None:
+        """Return a randomly-assigned arm for an active variant, or None.
+
+        The arm assignment is random (not sticky per-lead) to ensure unbiased
+        traffic splitting. Each new enrichment is an independent Bernoulli trial.
+        """
+        variant = self._variants.get_active_for_signal_type(signal_type, industry=industry)
+        if variant is None:
+            return None
+
+        arm = "a" if random.random() < variant.traffic_split else "b"
+        config = variant.arm_a_config if arm == "a" else variant.arm_b_config
+
+        logger.debug("Variant %s assigned arm_%s for signal_type=%s", variant.id, arm, signal_type)
+        return ActiveVariantRef(
+            variant_id=variant.id,
+            arm=arm,
+            config=config,
+        )
+
+    def conclude_variant(self, variant_id: _uuid_module.UUID) -> VariantOut:
+        """Manually conclude a variant and declare a winner."""
+        variant = self._variants.conclude(variant_id)
+        if variant is None:
+            raise ValueError(f"Variant {variant_id} not found")
+        self.session.commit()
+        self.session.refresh(variant)
+        return self._to_variant_out(variant)
+
+    def list_variants(self) -> list[VariantOut]:
+        return [self._to_variant_out(v) for v in self._variants.list()]
+
+    def get_variant(self, variant_id: _uuid_module.UUID) -> VariantOut:
+        variant = self._variants.get(variant_id)
+        if variant is None:
+            raise ValueError(f"Variant {variant_id} not found")
+        return self._to_variant_out(variant)
+
+    # ── Private helpers ────────────────────────────────────────────────────────
+
+    def _to_variant_out(self, variant: object) -> VariantOut:
+        return VariantOut.model_validate(variant)
 
     def _extract_signal_type(self, opp: Opportunity) -> str:
-        """Pull signal_type from the related signal's analysis if available."""
         from app.models.signal import Signal
-
         if opp.signal_id:
             sig = self.session.get(Signal, opp.signal_id)
             if sig:
@@ -190,7 +265,6 @@ class FeedbackLoopService:
 
     def _extract_industry(self, opp: Opportunity) -> str | None:
         from app.models.company import Company
-
         if opp.company_id:
             co = self.session.get(Company, opp.company_id)
             return co.industry if co else None
@@ -198,7 +272,6 @@ class FeedbackLoopService:
 
     def _extract_seniority(self, opp: Opportunity) -> str | None:
         from app.models.lead import Lead
-
         if opp.lead_id:
             lead = self.session.get(Lead, opp.lead_id)
             return lead.seniority if lead else None

@@ -36,18 +36,44 @@ def _lead(ctx: EnrichmentContext) -> str:
     return ctx.lead_name or ctx.lead_title or "the decision-maker"
 
 
-def _apply_hints(ctx: EnrichmentContext, default_channel: str, default_playbook: str) -> tuple[str, str]:
-    """Return (channel, playbook) biased by adaptive memory hints.
+def _apply_hints_and_variant(
+    ctx: EnrichmentContext, default_channel: str, default_playbook: str
+) -> tuple[str, str]:
+    """Return (channel, playbook) biased by A/B variant config, then adaptive hints.
 
-    If we have a statistically reliable hint (confidence ≥ medium), prefer its
-    channel + playbook combination. This is how BEE gets smarter over time:
-    closing more deals in one channel causes future battlecards to recommend
-    that channel automatically — no code change required.
+    Priority order:
+    1. Active A/B variant config (experiment in progress — always honor it)
+    2. Adaptive memory hints (statistical evidence from closed deals)
+    3. Generator defaults (fallback)
     """
+    # 1. A/B variant overrides take highest priority to ensure clean experiment data.
+    if ctx.active_variant:
+        cfg = ctx.active_variant.config
+        channel = cfg.get("channel", default_channel)
+        playbook = cfg.get("playbook", default_playbook)
+        return channel, playbook
+
+    # 2. Adaptive memory hints (confidence ≥ medium).
     hint = ctx.best_hint
     if hint is not None:
         return hint.channel, hint.playbook
+
     return default_channel, default_playbook
+
+
+def _variant_tag(ctx: EnrichmentContext) -> dict:
+    """Return variant_id and variant_arm for strategy tagging, if active."""
+    if ctx.active_variant:
+        return {
+            "variant_id": str(ctx.active_variant.variant_id),
+            "variant_arm": ctx.active_variant.arm,
+        }
+    return {}
+
+
+# Keep old name as alias for backward compat with tests that call it directly.
+def _apply_hints(ctx: EnrichmentContext, default_channel: str, default_playbook: str) -> tuple[str, str]:
+    return _apply_hints_and_variant(ctx, default_channel, default_playbook)
 
 
 @register_strategy_generator
