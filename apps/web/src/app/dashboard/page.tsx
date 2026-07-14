@@ -1,0 +1,97 @@
+import { Activity, Bot, Radio, ShieldCheck, TrendingUp } from "lucide-react";
+
+import { BattlecardView } from "@/components/battlecard";
+import { MetricCard } from "@/components/metric-card";
+import { SignalCard } from "@/components/signal-card";
+import { SiteHeader } from "@/components/site-header";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { getBattlecards, getSignals } from "@/lib/api";
+
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  const [{ data: signals, live: signalsLive }, { data: battlecards, live: battlecardsLive }] =
+    await Promise.all([getSignals(), getBattlecards()]);
+
+  const live = signalsLive || battlecardsLive;
+  const avgScore =
+    signals.length > 0
+      ? Math.round(signals.reduce((sum, s) => sum + s.score, 0) / signals.length)
+      : 0;
+  const hotSignals = signals.filter((s) => s.score >= 75).length;
+  const readyCount = battlecards.filter((b) => b.ready_to_action).length;
+
+  return (
+    <div className="flex min-h-full flex-col">
+      <SiteHeader />
+
+      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10">
+        {/* Page header */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Signal Intelligence</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Real-time market triggers → CEO battlecards → closed deals.
+            </p>
+          </div>
+          <Badge variant={live ? "success" : "warning"}>
+            {live ? "Live · connected to API" : "Demo data · API offline"}
+          </Badge>
+        </div>
+
+        {/* KPIs */}
+        <section className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <MetricCard label="Signals tracked" value={signals.length} icon={Radio} />
+          <MetricCard label="High-intent" value={hotSignals} hint="score ≥ 75" icon={TrendingUp} />
+          <MetricCard
+            label="Ready to action"
+            value={readyCount}
+            hint="battlecard complete"
+            icon={ShieldCheck}
+          />
+          <MetricCard label="Avg. score" value={avgScore} icon={Activity} />
+        </section>
+
+        {/* Battlecards */}
+        {battlecards.length > 0 && (
+          <section className="mt-10">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-semibold">CEO Battlecards</h2>
+                <p className="text-sm text-muted-foreground">
+                  Fully enriched briefs — pain point · closing argument · timing window.
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Bot className="size-3.5" />
+                Strategy generated · rule_based
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {battlecards.map((card) => (
+                <Card key={card.opportunity_id}>
+                  <CardContent className="p-6">
+                    <BattlecardView card={card} />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Signals feed */}
+        <section className="mt-10">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-medium text-muted-foreground">All signals</h2>
+          </div>
+          <div className="flex flex-col gap-3">
+            {signals.map((signal) => (
+              <SignalCard key={signal.id} signal={signal} />
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}

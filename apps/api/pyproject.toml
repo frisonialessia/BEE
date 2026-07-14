@@ -1,0 +1,38 @@
+[project]
+name = "bee-api"
+version = "0.1.0"
+description = "BEE — Sales Force Intelligence backend (FastAPI, SQLModel, PostgreSQL)."
+requires-python = ">=3.11"
+readme = "README.md"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["app", "tests"]
+
+[tool.ruff.lint]
+# A pragmatic, strict-but-not-noisy rule set.
+select = ["E", "F", "I", "UP", "B", "ARG", "SIM", "C4"]
+ignore = [
+    "E501",   # line length is handled by the formatter
+    "B008",   # Depends() in defaults is the idiomatic FastAPI dependency pattern
+    "UP042",  # str + Enum is intentional for stable Pydantic/JSON serialization
+]
+
+[tool.ruff.lint.per-file-ignores]
+# The FastAPI lifespan signature requires the `app` argument even if unused.
+"app/main.py" = ["ARG001"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.mypy]
+python_version = "3.11"
+plugins = []
+ignore_missing_imports = true
+warn_unused_ignores = false

@@ -1,0 +1,48 @@
+# =============================================================================
+# BEE — local development stack.
+# Brings up PostgreSQL and the FastAPI backend. The Next.js frontend runs
+# separately with `pnpm dev` (or add a service here once containerized).
+#
+#   docker compose up --build
+# =============================================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: bee-postgres
+    environment:
+      POSTGRES_USER: bee
+      POSTGRES_PASSWORD: bee
+      POSTGRES_DB: bee
+    ports:
+      - "5432:5432"
+    volumes:
+      - bee_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bee -d bee"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./apps/api
+    container_name: bee-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Point the API at the compose Postgres service.
+      DATABASE_URL: postgresql+psycopg://bee:bee@db:5432/bee
+      ENVIRONMENT: local
+      WEBHOOK_SIGNATURE_REQUIRED: "false"
+      BACKEND_CORS_ORIGINS: "http://localhost:3000"
+    ports:
+      - "8000:8000"
+    # Live-reload during development.
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./apps/api:/app
+
+volumes:
+  bee_pgdata:

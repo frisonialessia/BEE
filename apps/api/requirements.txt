@@ -1,0 +1,14 @@
+# BEE API runtime dependencies.
+# Pinned to recent, stable releases. Regenerate a lockfile in CI as needed.
+
+fastapi>=0.115.0,<1.0.0
+uvicorn[standard]>=0.30.0,<1.0.0
+sqlmodel>=0.0.22,<0.1.0
+pydantic>=2.8.0,<3.0.0
+pydantic-settings>=2.4.0,<3.0.0
+
+# PostgreSQL driver (psycopg 3). Use the binary build for easy installs.
+psycopg[binary]>=3.2.0,<4.0.0
+
+# Database migrations (schema versioning for production).
+alembic>=1.13.0,<2.0.0
