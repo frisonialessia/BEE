@@ -72,6 +72,24 @@ class SignalSource(str, Enum):
     CRAWLER = "crawler"
     CRM = "crm"
     ENRICHMENT = "enrichment"
+    BEHAVIORAL = "behavioral"  # BehavioralCollector intent events
+
+
+class BehavioralEventType(str, Enum):
+    """Types of buying-intent events the BehavioralCollector processes.
+
+    These translate directly to ENGAGEMENT signals and can hot-flag an
+    existing opportunity when the lead shows high-value intent behavior.
+    """
+
+    PAGE_VISIT = "page_visit"           # visited a tracked page (e.g. /pricing)
+    RESOURCE_DOWNLOAD = "resource_download"  # downloaded a whitepaper / demo
+    DEMO_REQUEST = "demo_request"       # explicitly requested a demo
+    PRICING_VIEW = "pricing_view"       # viewed pricing (strongest intent signal)
+    CASE_STUDY_VIEW = "case_study_view"
+    WEBINAR_ATTENDANCE = "webinar_attendance"
+    PRODUCT_TRIAL = "product_trial"     # started a free trial
+    REPEAT_VISIT = "repeat_visit"       # returned ≥ 3 times in 7 days
 
 
 class OpportunityStatus(str, Enum):

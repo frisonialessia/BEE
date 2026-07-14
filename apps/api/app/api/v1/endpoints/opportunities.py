@@ -4,20 +4,23 @@ Exposes the battlecard — BEE's flagship output: a fully synthesized, CEO-ready
 sales brief assembled from lead + signal + generated strategy, returned in a
 single HTTP call with no post-processing required by the frontend.
 
-The battlecard is the answer to the question every salesperson has:
-"I have 30 seconds — what do I say, to whom, and why right now?"
+New endpoints in this release:
+* ``PATCH /{id}/outcome`` — record WON/LOST (triggers FeedbackLoopService)
+* ``GET  /{id}/artifacts`` — get or generate execution artifacts (ExecutiveAgent)
 """
 
 from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
 from app.core.database import get_session
 from app.models.base import OpportunityStatus
 from app.repositories.opportunity import OpportunityRepository
+from app.schemas.executive import ArtifactBundle
+from app.schemas.feedback import OutcomeIn, OutcomeOut
 from app.schemas.strategy import (
     BattlecardCompany,
     BattlecardLead,
@@ -25,6 +28,8 @@ from app.schemas.strategy import (
     BattlecardSignal,
     StrategySchema,
 )
+from app.services.executive_agent.service import ExecutiveAgent
+from app.services.feedback_loop.service import FeedbackLoopService
 
 router = APIRouter(prefix="/opportunities", tags=["Opportunities"])
 
@@ -35,14 +40,14 @@ router = APIRouter(prefix="/opportunities", tags=["Opportunities"])
     summary="List opportunities ready to action",
 )
 def list_opportunities(
-    status: str | None = None,
+    opp_status: str | None = Query(default=None, alias="status"),
     limit: int = 50,
     offset: int = 0,
     session: Session = Depends(get_session),
 ) -> list[dict]:
     """Return opportunities, defaulting to READY_TO_ACTION sorted by score."""
     repo = OpportunityRepository(session)
-    if status is None or status == "ready_to_action":
+    if opp_status is None or opp_status == "ready_to_action":
         items = repo.list_ready_to_action(limit=limit, offset=offset)
     else:
         items = repo.list(limit=limit, offset=offset)
@@ -51,11 +56,12 @@ def list_opportunities(
         {
             "id": str(item.id),
             "title": item.title,
-            "status": item.status,
+            "status": str(item.status.value if hasattr(item.status, "value") else item.status),
             "score": item.score,
             "signal_id": str(item.signal_id) if item.signal_id else None,
             "lead_id": str(item.lead_id) if item.lead_id else None,
             "company_id": str(item.company_id) if item.company_id else None,
+            "hot_lead": (item.strategy or {}).get("hot_lead", False),
         }
         for item in items
     ]
@@ -92,14 +98,10 @@ def get_battlecard(
 
     opportunity, signal, company, lead = result
 
-    # Parse the strategy JSON into the typed schema for validation.
-    # If the strategy is incomplete (e.g. still DETECTED), we build a stub so
-    # the battlecard endpoint always returns a usable structure.
     strategy_dict = opportunity.strategy or {}
     try:
         strategy = StrategySchema.model_validate(strategy_dict)
     except Exception:
-        # Incomplete strategy — build a minimal stub so the endpoint doesn't 500.
         strategy = StrategySchema(
             pain_point=strategy_dict.get("pain_point", ""),
             closing_argument=strategy_dict.get("closing_argument", ""),
@@ -140,9 +142,14 @@ def get_battlecard(
     return BattlecardOut(
         opportunity_id=opportunity.id,
         title=opportunity.title,
-        status=str(opportunity.status.value if hasattr(opportunity.status, "value") else opportunity.status),
+        status=str(
+            opportunity.status.value
+            if hasattr(opportunity.status, "value")
+            else opportunity.status
+        ),
         score=opportunity.score,
         ready_to_action=opportunity.status == OpportunityStatus.READY_TO_ACTION,
+        hot_lead=strategy_dict.get("hot_lead", False),
         company=company_out,
         lead=lead_out,
         signal=signal_out,
@@ -150,3 +157,58 @@ def get_battlecard(
         created_at=opportunity.created_at,
         updated_at=opportunity.updated_at,
     )
+
+
+@router.patch(
+    "/{opportunity_id}/outcome",
+    response_model=OutcomeOut,
+    summary="Record WON/LOST outcome (triggers adaptive learning)",
+)
+def record_outcome(
+    opportunity_id: uuid.UUID,
+    body: OutcomeIn,
+    session: Session = Depends(get_session),
+) -> OutcomeOut:
+    """Mark an opportunity as WON or LOST.
+
+    This triggers the FeedbackLoopService to:
+    1. Update the opportunity status.
+    2. Create a ``StrategyOutcome`` row capturing the full context (signal type,
+       channel, playbook, generator version).
+    3. Contribute to the win-rate statistics that future ``StrategyGeneratorService``
+       calls will query when building new battlecards.
+
+    This is how BEE learns: every closed deal becomes a data point that biases
+    future strategy generation toward proven approaches.
+    """
+    svc = FeedbackLoopService(session)
+    try:
+        return svc.record_outcome(opportunity_id, body)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+
+
+@router.get(
+    "/{opportunity_id}/artifacts",
+    response_model=ArtifactBundle,
+    summary="Get (or generate) execution artifacts for an opportunity",
+)
+def get_artifacts(
+    opportunity_id: uuid.UUID,
+    force: bool = Query(default=False, description="Force re-generation even if cached"),
+    session: Session = Depends(get_session),
+) -> ArtifactBundle:
+    """Return the execution artifact bundle for an opportunity.
+
+    On first call, the ExecutiveAgent generates: email draft, meeting agenda,
+    and next steps. The result is cached in ``opportunity.execution_artifacts``
+    and returned instantly on subsequent calls (unless ``force=true``).
+
+    When artifacts are generated, BEE fires a webhook to ``WEBHOOK_EXECUTION_URL``
+    (if configured) so n8n / Zapier can execute the email send, CRM update, etc.
+    """
+    agent = ExecutiveAgent(session)
+    try:
+        return agent.get_or_generate(opportunity_id, force=force)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc

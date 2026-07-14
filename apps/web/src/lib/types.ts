@@ -113,10 +113,97 @@ export interface Battlecard {
   status: OpportunityStatus;
   score: number;
   ready_to_action: boolean;
+  hot_lead: boolean;  // true when BehavioralCollector detects buying intent
   company: BattlecardCompany;
   lead: BattlecardLead;
   signal: BattlecardSignal;
   strategy: BattlecardStrategy;
   created_at: string;
   updated_at: string;
+}
+
+// ── Execution Artifacts (ExecutiveAgent output) ───────────────────────────────
+
+export interface EmailDraftArtifact {
+  artifact_type: "email_draft";
+  subject: string;
+  body: string;
+  ps_line: string | null;
+  recommended_send_time: string | null;
+  estimated_read_time_seconds: number;
+}
+
+export interface AgendaItem {
+  duration_minutes: number;
+  title: string;
+  notes: string | null;
+}
+
+export interface MeetingStructureArtifact {
+  artifact_type: "meeting_structure";
+  meeting_title: string;
+  total_duration_minutes: number;
+  objective: string;
+  agenda_items: AgendaItem[];
+  pre_meeting_prep: string[];
+  success_criteria: string;
+}
+
+export interface ActionItem {
+  action: string;
+  owner: "rep" | "lead" | "both";
+  timing: string;
+  priority: "high" | "medium" | "low";
+}
+
+export interface NextStepsArtifact {
+  artifact_type: "next_steps";
+  horizon: string;
+  actions: ActionItem[];
+  key_risk: string | null;
+  success_milestone: string | null;
+}
+
+export interface ArtifactBundle {
+  opportunity_id: string;
+  generated_at: string;
+  generator: string;
+  email_draft: EmailDraftArtifact;
+  meeting_structure: MeetingStructureArtifact;
+  next_steps: NextStepsArtifact;
+  context_snapshot: Record<string, unknown>;
+}
+
+// ── Feedback (FeedbackLoopService) ────────────────────────────────────────────
+
+export interface OutcomeIn {
+  outcome: "won" | "lost";
+  notes?: string;
+}
+
+export interface OutcomeOut {
+  opportunity_id: string;
+  outcome: string;
+  closed_at: string;
+  message: string;
+}
+
+// ── Behavioral intent (BehavioralCollector) ────────────────────────────────────
+
+export type BehavioralEventType =
+  | "page_visit"
+  | "resource_download"
+  | "demo_request"
+  | "pricing_view"
+  | "case_study_view"
+  | "webinar_attendance"
+  | "product_trial"
+  | "repeat_visit";
+
+export interface IntentEventResult {
+  signal_id: string;
+  opportunity_id: string | null;
+  hot_lead: boolean;
+  score: number;
+  message: string;
 }

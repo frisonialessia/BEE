@@ -1,4 +1,4 @@
-import { Activity, Bot, Radio, ShieldCheck, TrendingUp } from "lucide-react";
+import { Activity, Bot, Flame, Radio, ShieldCheck, TrendingUp } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
 import { MetricCard } from "@/components/metric-card";
@@ -21,6 +21,7 @@ export default async function DashboardPage() {
       : 0;
   const hotSignals = signals.filter((s) => s.score >= 75).length;
   const readyCount = battlecards.filter((b) => b.ready_to_action).length;
+  const hotLeads = battlecards.filter((b) => b.hot_lead).length;
 
   return (
     <div className="flex min-h-full flex-col">
@@ -41,7 +42,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* KPIs */}
-        <section className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <section className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
           <MetricCard label="Signals tracked" value={signals.length} icon={Radio} />
           <MetricCard label="High-intent" value={hotSignals} hint="score ≥ 75" icon={TrendingUp} />
           <MetricCard
@@ -50,6 +51,7 @@ export default async function DashboardPage() {
             hint="battlecard complete"
             icon={ShieldCheck}
           />
+          <MetricCard label="Hot leads 🔥" value={hotLeads} hint="buying intent detected" icon={Flame} />
           <MetricCard label="Avg. score" value={avgScore} icon={Activity} />
         </section>
 

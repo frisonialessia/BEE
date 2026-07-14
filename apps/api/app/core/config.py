@@ -67,6 +67,12 @@ class Settings(BaseSettings):
     # Comma-separated list of origins allowed to call the API (the Next.js app).
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
 
+    # ----- ExecutiveAgent webhook (n8n / Zapier / Make) -------------------------
+    # When set, BEE fires a POST to this URL every time execution artifacts are
+    # generated. The receiving workflow can then send the email, create a CRM
+    # task, or trigger any downstream action.
+    WEBHOOK_EXECUTION_URL: str | None = None
+
     # ----- AI providers (reserved for future intelligence layer) ---------------
     # Present now so the credential-management contract is defined up front.
     AI_PROVIDER: Literal["openai", "anthropic", "none"] = "none"

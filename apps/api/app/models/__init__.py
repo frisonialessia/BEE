@@ -6,6 +6,7 @@ relies on to create the schema.
 """
 
 from app.models.base import (
+    BehavioralEventType,
     LeadStatus,
     OpportunityStatus,
     SignalSource,
@@ -15,12 +16,15 @@ from app.models.company import Company
 from app.models.lead import Lead
 from app.models.opportunity import Opportunity
 from app.models.signal import Signal
+from app.models.strategy_outcome import StrategyOutcome
 
 __all__ = [
     "Company",
     "Lead",
     "Signal",
     "Opportunity",
+    "StrategyOutcome",
+    "BehavioralEventType",
     "LeadStatus",
     "OpportunityStatus",
     "SignalSource",
