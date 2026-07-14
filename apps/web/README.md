@@ -84,10 +84,11 @@ Open http://localhost:3000/dashboard
 
 ## Vercel deployment
 
-This app lives in a monorepo. In Vercel **Project Settings → General → Root Directory**, set:
+This app lives in a monorepo. Recommended Vercel settings:
 
-```
-apps/web
-```
+| Setting | Value |
+|---------|-------|
+| Root Directory | `apps/web` |
+| Output Directory | `.next` *(never `apps/web/.next`)* |
 
-See `vercel.json` in this folder and `DEPLOY_CHECKLIST.md` §6 at the repo root for full setup.
+See `apps/web/vercel.json` and `DEPLOY_CHECKLIST.md` §6 at the repo root.

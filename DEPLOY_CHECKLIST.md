@@ -114,28 +114,33 @@ El frontend Next.js vive en **`apps/web/`**. El repo **no** tiene `app/` en la r
 
 ### Configuración obligatoria en Vercel
 
-**Opción A — Root Directory = repo root (recomendada con los comandos actuales):**
+> **Error común:** si Root Directory = `apps/web` y Output Directory = `apps/web/.next`,
+> Vercel busca `apps/web/apps/web/.next` → 404 / build failed.
+> Output Directory debe ser **`.next`** (o vacío) cuando Root Directory = `apps/web`.
+
+**Opción A — Root Directory = `apps/web` (recomendada para Next.js):**
+
+| Setting | Valor |
+|---------|-------|
+| **Root Directory** | `apps/web` |
+| **Install Command** | `cd .. && pnpm install --frozen-lockfile --filter web` |
+| **Build Command** | `pnpm build` |
+| **Output Directory** | `.next` *(o dejar vacío — nunca `apps/web/.next`)* |
+
+Config en repo: `apps/web/vercel.json`
+
+**Opción B — Root Directory = repo root:**
 
 | Setting | Valor |
 |---------|-------|
 | **Root Directory** | *(vacío / `.`)* |
 | **Install Command** | `pnpm install --frozen-lockfile` |
 | **Build Command** | `pnpm --dir apps/web build` |
-| **Node.js Version** | 20.x |
+| **Output Directory** | `apps/web/.next` |
 
-El lockfile vive en la **raíz** (`pnpm-lock.yaml`). No uses `apps/web/pnpm-lock.yaml` (eliminado).
+Config en repo: `vercel.json` (raíz)
 
-**Opción B — Root Directory = `apps/web`:**
-
-Requiere lockfile local o install desde el monorepo root:
-
-| Setting | Valor |
-|---------|-------|
-| **Root Directory** | `apps/web` |
-| **Install Command** | `cd ../.. && pnpm install --frozen-lockfile --filter web` |
-| **Build Command** | `pnpm build` |
-
-> Preferir **Opción A** — el lockfile canónico está en la raíz del repo (`pnpm-lock.yaml`).
+El lockfile canónico está en la **raíz** del repo (`pnpm-lock.yaml`).
 
 ### Variables de entorno (Production + Preview)
 
