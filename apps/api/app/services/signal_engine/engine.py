@@ -77,12 +77,15 @@ class SignalEngine:
         self.signals = SignalRepository(session)
         self.opportunities = OpportunityRepository(session)
 
-    def ingest(self, payload: SignalWebhookIn) -> IngestOutcome:
+    def ingest(self, payload: SignalWebhookIn, *, commit: bool = True) -> IngestOutcome:
         """Process an inbound webhook payload end-to-end.
 
         Returns an :class:`IngestOutcome`. If a signal with the same
         ``external_id`` already exists, ingestion is short-circuited (idempotency)
         and the existing signal is returned with ``deduplicated=True``.
+
+        When ``commit=False`` (used by background workers), the caller owns the
+        transaction boundary so follow-up enrichment can persist atomically.
         """
         # 1. Idempotency guard.
         if payload.external_id:
@@ -133,11 +136,16 @@ class SignalEngine:
             # 6. Enrich battlecard — the engine delegates fully; no strategy logic here.
             strategy_enriched = self.strategy_service.enrich(signal, opportunity)
 
-        # 7. Commit the whole unit of work atomically.
-        self.session.commit()
-        self.session.refresh(signal)
-        if opportunity is not None:
-            self.session.refresh(opportunity)
+        # 7. Commit the whole unit of work atomically (unless caller manages txn).
+        if commit:
+            self.session.commit()
+            self.session.refresh(signal)
+            if opportunity is not None:
+                self.session.refresh(opportunity)
+        else:
+            self.session.flush()
+            if opportunity is not None:
+                self.session.refresh(opportunity)
 
         logger.info(
             "Ingested signal %s (type=%s score=%.1f analyzers=%s opportunity=%s ready=%s)",

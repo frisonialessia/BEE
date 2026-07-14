@@ -229,9 +229,90 @@ curl -X POST http://localhost:8000/api/v1/signals/webhook \
   }'
 ```
 
+### Dry run — External Ingestion (LinkedIn webhook)
+
+Simulates a signed LinkedIn webhook through the full async pipeline
+(`IngestionWorker` → `ExternalAPIOrchestrator` → `EnrichmentContext`):
+
+```bash
+# In-process (SQLite, no server required):
+python scripts/simulate_signal.py
+
+# Against running API (docker compose):
+python scripts/simulate_signal.py --mode http --base-url http://localhost:8000
+
+# Validate failure logs (LinkedIn API down) — no secrets leaked:
+python scripts/simulate_signal.py --failure
+```
+
 ---
 
-## 6. Tech stack
+## 7. Production deployment checklist
+
+BEE is **deployable** after the External Ingestion + Security layers. Before enabling
+real webhook traffic, complete this checklist:
+
+### Required (security)
+
+| Variable | Action |
+|----------|--------|
+| `API_SECRET_KEY` | Generate with `python -c "import secrets; print(secrets.token_hex(32))"` — protects all REST endpoints |
+| `WEBHOOK_SIGNATURE_REQUIRED` | Set to `true` in production |
+| `WEBHOOK_SIGNING_SECRET` | Strong random secret — default `change-me-in-production` is **not** safe |
+| `LINKEDIN_WEBHOOK_SECRET` | Per-provider HMAC secret for `/api/v1/webhooks/receive` |
+| `G2_WEBHOOK_SECRET` / `GOOGLE_WEBHOOK_SECRET` | Set when those providers are active |
+| `ENVIRONMENT` | Set to `production` (enables HSTS security headers) |
+
+### Required (database)
+
+```bash
+# Run migrations (includes pgvector Sales DNA table):
+cd apps/api && alembic upgrade head
+
+# Enable pgvector extension (one-time, on managed Postgres):
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+Use `init_db()` only for local dev — production must use Alembic.
+
+### Recommended (competitive advantage)
+
+| Variable | Purpose |
+|----------|---------|
+| `VECTOR_STORE_BACKEND=pgvector` | Persistent Sales DNA memory |
+| `AI_PROVIDER=openai` + `AI_API_KEY` | LLM strategy/artifact generation |
+| `LINKEDIN_ACCESS_TOKEN` | Real LinkedIn profile enrichment (mock fallback without it) |
+| `EXTERNAL_INGESTION_ENABLED=true` | Starts `IngestionWorker` on app boot |
+
+### Gotchas (manual steps)
+
+1. **`/api/v1/webhooks/receive` is exempt from API key auth** — it uses HMAC per provider instead. Do not remove this exemption; external systems cannot send `X-API-Key`.
+
+2. **`IngestionWorker` is in-process (asyncio.Queue)** — it starts automatically on app boot when `EXTERNAL_INGESTION_ENABLED=true`. For multi-instance deployments, consider a Redis-backed queue (future) so enrichment tasks are not lost on restart.
+
+3. **Docker Compose Postgres does not include pgvector by default** — use `pgvector/pgvector:pg16` image or run `CREATE EXTENSION vector` manually before `VECTOR_STORE_BACKEND=pgvector`.
+
+4. **LinkedIn API requires OAuth app approval** — without `LINKEDIN_ACCESS_TOKEN`, BEE uses deterministic mock profiles (safe for staging, not for production enrichment).
+
+5. **Frontend must send `X-API-Key`** on all API calls when `API_SECRET_KEY` is set — configure `NEXT_PUBLIC_BEE_API_KEY` in the Next.js app (see `apps/web/.env.example`).
+
+6. **Run the dry run after deploy** to verify the pipeline:
+   ```bash
+   python scripts/simulate_signal.py --mode http --base-url https://your-api.example.com
+   ```
+
+### Health checks
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/v1/health` | Liveness (no auth) |
+| `GET /api/v1/ready` | DB connectivity |
+| `GET /api/v1/status` | Deep subsystem check (DB, vector store, DLQ, security) |
+| `GET /api/v1/webhooks/status` | Ingestion worker queue depth + provider config |
+
+---
+
+## 8. Tech stack
 
 | Layer     | Technology                                        |
 | --------- | ------------------------------------------------- |

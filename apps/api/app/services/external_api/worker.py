@@ -136,12 +136,26 @@ class IngestionWorker:
             orchestrator = ExternalAPIOrchestrator(session)
             enrichment = orchestrator.enrich_lead_from_signal(payload)
 
-            # 4. Re-enrich strategy if we have a signal/opportunity
-            if signal_outcome and signal_outcome.opportunity:
+            linkedin_data = enrichment.get("linkedin") or {}
+            logger.info(
+                "IngestionWorker: external enrichment task=%s providers=%s "
+                "linkedin_success=%s lead_title=%s mock=%s",
+                task.task_id,
+                enrichment.get("providers_called"),
+                linkedin_data.get("success"),
+                linkedin_data.get("lead_title"),
+                linkedin_data.get("mock"),
+            )
+
+            # 4. Persist enrichment on signal + re-enrich strategy when opportunity exists
+            if signal_outcome:
+                opp_id = (
+                    signal_outcome.opportunity.id if signal_outcome.opportunity else None
+                )
                 self._apply_enrichment_and_reenrich(
                     session,
                     signal_outcome.signal.id,
-                    signal_outcome.opportunity.id,
+                    opp_id,
                     enrichment,
                 )
             elif task.signal_id:
@@ -227,7 +241,7 @@ class IngestionWorker:
             lead=LeadRef(**lead) if lead else None,
             data=payload.get("data") or {},
         )
-        return SignalEngine(session).ingest(webhook)
+        return SignalEngine(session).ingest(webhook, commit=False)
 
     def _apply_enrichment_and_reenrich(
         self,
@@ -249,17 +263,46 @@ class IngestionWorker:
         raw["company"] = enrichment.get("company", raw.get("company", {}))
         signal.raw_payload = raw
         session.add(signal)
+        session.flush()
 
         if opportunity_id:
             opp = session.get(Opportunity, opportunity_id)
-            self._reenrich_opportunity(session, signal, opp)
+            enriched = self._reenrich_opportunity(session, signal, opp)
+            if enriched:
+                logger.info(
+                    "IngestionWorker: EnrichmentContext applied signal=%s "
+                    "lead_title=%s external_keywords=%d strategy_channel=%s",
+                    signal_id,
+                    enriched.get("lead_title"),
+                    len(enriched.get("external_intent_keywords") or []),
+                    enriched.get("strategy_channel"),
+                )
+        else:
+            logger.info(
+                "IngestionWorker: enrichment persisted on signal=%s lead_title=%s providers=%s",
+                signal_id,
+                enrichment.get("lead", {}).get("title") or (enrichment.get("linkedin") or {}).get("lead_title"),
+                enrichment.get("providers_called"),
+            )
 
-    def _reenrich_opportunity(self, session, signal, opportunity) -> None:
+    def _reenrich_opportunity(self, session, signal, opportunity) -> dict | None:
         if not opportunity:
-            return
+            return None
         from app.services.strategy_generator.service import StrategyGeneratorService
 
-        StrategyGeneratorService(session).enrich(signal, opportunity)
+        svc = StrategyGeneratorService(session)
+        svc.enrich(signal, opportunity)
+
+        # Build EnrichmentContext snapshot for observability (not persisted separately)
+        ctx = svc._build_context(signal)  # noqa: SLF001
+        return {
+            "lead_title": ctx.lead_title,
+            "lead_name": ctx.lead_name,
+            "external_profile": ctx.external_profile,
+            "external_intent_keywords": ctx.external_intent_keywords,
+            "external_providers_called": ctx.external_providers_called,
+            "strategy_channel": (opportunity.strategy or {}).get("channel"),
+        }
 
 
 def _is_dark_funnel_event(event_type: str, provider: str) -> bool:
@@ -302,3 +345,9 @@ def get_ingestion_worker() -> IngestionWorker:
 
         _worker = IngestionWorker(queue_size=get_settings().EXTERNAL_WORKER_QUEUE_SIZE)
     return _worker
+
+
+def reset_ingestion_worker() -> None:
+    """Reset the worker singleton (scripts/tests)."""
+    global _worker  # noqa: PLW0603
+    _worker = None

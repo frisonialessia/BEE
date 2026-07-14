@@ -71,12 +71,45 @@ class LinkedInProvider(IExternalProvider):
 
             return self._parse_profile(data, linkedin_url)
 
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("LinkedInProvider API call failed: %s", exc)
+        except httpx.HTTPStatusError as exc:
+            lookup = "member_id" if member_id else "email"
+            status = exc.response.status_code
+            logger.warning(
+                "LinkedInProvider: HTTP %s from LinkedIn API (lookup=%s) — profile enrichment skipped",
+                status,
+                lookup,
+            )
             return ExternalProfileResult(
                 provider="linkedin",
                 success=False,
-                error=str(exc),
+                error=f"LinkedIn API returned HTTP {status}",
+                linkedin_url=linkedin_url,
+            )
+        except httpx.RequestError as exc:
+            lookup = "member_id" if member_id else "email"
+            logger.warning(
+                "LinkedInProvider: network error reaching LinkedIn API "
+                "(lookup=%s error_type=%s) — %s",
+                lookup,
+                type(exc).__name__,
+                exc,
+            )
+            return ExternalProfileResult(
+                provider="linkedin",
+                success=False,
+                error=f"LinkedIn API unreachable ({type(exc).__name__})",
+                linkedin_url=linkedin_url,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "LinkedInProvider: unexpected error (error_type=%s) — %s",
+                type(exc).__name__,
+                exc,
+            )
+            return ExternalProfileResult(
+                provider="linkedin",
+                success=False,
+                error=f"LinkedIn enrichment failed ({type(exc).__name__})",
                 linkedin_url=linkedin_url,
             )
 
