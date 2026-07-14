@@ -111,12 +111,14 @@ class OpportunityOut(BaseModel):
 class SignalIngestResult(BaseModel):
     """Response returned after processing an inbound webhook.
 
-    Bundles the persisted signal, any opportunity that was generated, and the
-    list of analyzers that contributed, giving integrators full observability
-    into how their payload was interpreted.
+    Bundles the persisted signal, any opportunity that was generated, the
+    analyzers that contributed, and whether the battlecard was fully enriched —
+    so integrators have complete observability into how their payload was
+    interpreted and what state the opportunity is in.
     """
 
     signal: SignalOut
     opportunity: OpportunityOut | None = None
     analyzers_applied: list[str] = Field(default_factory=list)
+    strategy_enriched: bool = False
     message: str = "Signal ingested"

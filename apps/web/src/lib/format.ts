@@ -1,6 +1,5 @@
-import type { OpportunityStatus, SignalType } from "@/lib/types";
+import type { OpportunityStatus, SignalType, TimingUrgency } from "@/lib/types";
 
-/** Human-readable labels for signal types (single source of truth for the UI). */
 export const signalTypeLabels: Record<SignalType, string> = {
   funding_round: "Funding round",
   hiring: "Hiring",
@@ -15,6 +14,7 @@ export const signalTypeLabels: Record<SignalType, string> = {
 
 export const opportunityStatusLabels: Record<OpportunityStatus, string> = {
   detected: "Detected",
+  ready_to_action: "Ready to action",
   prioritized: "Prioritized",
   in_progress: "In progress",
   won: "Won",
@@ -22,14 +22,26 @@ export const opportunityStatusLabels: Record<OpportunityStatus, string> = {
   dismissed: "Dismissed",
 };
 
-/** Map a 0-100 score to a semantic badge variant for consistent color coding. */
+export const urgencyLabels: Record<TimingUrgency, string> = {
+  immediate: "Contact immediately",
+  this_week: "Contact this week",
+  this_month: "Contact this month",
+  watch: "Monitor",
+};
+
+export const urgencyColors: Record<TimingUrgency, string> = {
+  immediate: "text-[var(--success)]",
+  this_week: "text-[var(--warning)]",
+  this_month: "text-muted-foreground",
+  watch: "text-muted-foreground",
+};
+
 export function scoreVariant(score: number): "success" | "warning" | "secondary" {
   if (score >= 75) return "success";
   if (score >= 50) return "warning";
   return "secondary";
 }
 
-/** Compact relative-time formatter (e.g. "42m ago", "3h ago"). */
 export function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diffMs / 60000);

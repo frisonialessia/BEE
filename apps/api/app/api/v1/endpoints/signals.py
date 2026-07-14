@@ -94,6 +94,7 @@ async def ingest_signal_webhook(
             else OpportunityOut.model_validate(outcome.opportunity)
         ),
         analyzers_applied=outcome.analyzers_applied,
+        strategy_enriched=outcome.strategy_enriched,
         message=message,
     )
 

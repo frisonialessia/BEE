@@ -75,9 +75,23 @@ class SignalSource(str, Enum):
 
 
 class OpportunityStatus(str, Enum):
-    """Lifecycle of a detected opportunity."""
+    """Lifecycle of a detected opportunity.
+
+    State machine::
+
+        DETECTED ──► READY_TO_ACTION ──► IN_PROGRESS ──► WON
+                            │                 │
+                            ▼                 ▼
+                        PRIORITIZED        LOST / DISMISSED
+
+    ``READY_TO_ACTION`` is the gate that the StrategyGeneratorService controls.
+    An opportunity may not reach this state until the ``strategy`` field has been
+    fully enriched (pain_point, closing_argument, timing_window all present). This
+    guarantees the battlecard is complete before it surfaces to the salesperson.
+    """
 
     DETECTED = "detected"
+    READY_TO_ACTION = "ready_to_action"
     PRIORITIZED = "prioritized"
     IN_PROGRESS = "in_progress"
     WON = "won"
