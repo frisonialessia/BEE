@@ -57,6 +57,8 @@ class ArtifactContext:
     signal_type: str = "other"
     signal_title: str = ""
     opportunity_title: str = ""
+    # Learned CEO writing style preferences — auto-injected from CorrectionLearningService
+    style_hint: str = ""
 
 
 class ArtifactGenerator(ABC):

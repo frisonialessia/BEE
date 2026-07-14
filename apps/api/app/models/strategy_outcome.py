@@ -57,9 +57,14 @@ class StrategyOutcome(TimestampMixin, table=True):
 
     # ── Entity context ──────────────────────────────────────────────────────
     company_industry: str | None = Field(default=None, index=True)
+    industry: str | None = Field(default=None, index=True, description="Alias for company_industry — used by analytics queries")
     company_domain: str | None = Field(default=None)
     lead_seniority: str | None = Field(default=None, index=True)
     lead_title: str | None = Field(default=None)
+
+    # ── Deal financials ──────────────────────────────────────────────────────
+    deal_value: float | None = Field(default=None, description="Deal value in EUR when closed WON")
+    cycle_days: int | None = Field(default=None, description="Total days from signal to close")
 
     # ── Strategy that was used ──────────────────────────────────────────────
     playbook: str = Field(index=True, nullable=False)

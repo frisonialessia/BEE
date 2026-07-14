@@ -600,6 +600,85 @@ export async function getAuditSummary(): Promise<FetchResult<AuditSummary | null
   }
 }
 
+// ─── Correction Learning ──────────────────────────────────────────────────────
+
+export async function recordCorrection(data: {
+  original_content: string;
+  edited_content: string;
+  artifact_type: string;
+  opportunity_id?: string;
+  psychographic_style?: string;
+}): Promise<FetchResult<import("@/lib/types").CorrectionOut>> {
+  const res = await fetch(`${API_URL}/api/v1/learning/corrections`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: await res.json(), live: true };
+}
+
+export async function getStyleProfile(): Promise<FetchResult<import("@/lib/types").StyleProfileOut | null>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/learning/style-profile`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: await res.json(), live: true };
+  } catch {
+    return { data: null, live: false };
+  }
+}
+
+// ─── Scenario Simulator ───────────────────────────────────────────────────────
+
+export async function runScenario(params: {
+  sector?: string;
+  signal_type?: string;
+  channel?: string;
+  psychographic_style?: string;
+  target_monthly_signals: number;
+  additional_prospecting_reps?: number;
+  dark_funnel_heat?: number;
+}): Promise<FetchResult<import("@/lib/types").ScenarioResult>> {
+  const res = await fetch(`${API_URL}/api/v1/analytics/scenarios`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: await res.json(), live: true };
+}
+
+// ─── Anomaly Detector ─────────────────────────────────────────────────────────
+
+export async function getAnomalyAlerts(params?: { status?: string; severity?: string }): Promise<FetchResult<import("@/lib/types").AnomalyAlert[]>> {
+  try {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.severity) query.set("severity", params.severity);
+    const res = await fetch(`${API_URL}/api/v1/analytics/anomalies?${query}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: await res.json(), live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+export async function checkAnomalies(): Promise<FetchResult<import("@/lib/types").AnomalyCheckResult>> {
+  const res = await fetch(`${API_URL}/api/v1/analytics/anomalies/check`, { method: "POST" });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: await res.json(), live: true };
+}
+
+export async function acknowledgeAnomaly(alertId: string, notes?: string): Promise<FetchResult<import("@/lib/types").AnomalyAlert>> {
+  const res = await fetch(`${API_URL}/api/v1/analytics/anomalies/${alertId}/acknowledge`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ notes }),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: await res.json(), live: true };
+}
+
 export async function getAuditDecisions(params?: {
   agent_type?: string;
   manual_review_required?: boolean;

@@ -5,6 +5,7 @@ shared ``SQLModel.metadata`` object, which :func:`app.core.database.init_db`
 relies on to create the schema.
 """
 
+from app.models.anomaly import AnomalyAlert
 from app.models.audit_trail import AuditEntry
 from app.models.base import (
     ActionStatus,
@@ -19,6 +20,7 @@ from app.models.base import (
 )
 from app.models.brand_profile import BrandFragment, VoiceProfile
 from app.models.company import Company
+from app.models.correction import ArtifactCorrection, UserStyleProfile
 from app.models.dark_funnel import DarkFunnelSignal, HotLeadScore
 from app.models.dead_letter import FailedEvent
 from app.models.engagement_event import IncomingEngagementEvent
@@ -56,6 +58,9 @@ __all__ = [
     "NetworkConnection",
     "AuditEntry",
     "FailedEvent",
+    "AnomalyAlert",
+    "ArtifactCorrection",
+    "UserStyleProfile",
     "ActionStatus",
     "ActionType",
     "BehavioralEventType",

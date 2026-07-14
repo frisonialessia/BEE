@@ -98,6 +98,9 @@ class ExecutiveAgent:
         except Exception as exc:
             raise ValueError(f"Could not parse strategy for opportunity {opp.id}: {exc}") from exc
 
+        # Inject learned CEO style preferences into the generation context
+        style_hint = self._get_style_injection(opp)
+
         ctx = ArtifactContext(
             strategy=strategy,
             company_name=self._resolve_company_name(opp),
@@ -106,6 +109,7 @@ class ExecutiveAgent:
             signal_type=self._resolve_signal_type(opp),
             signal_title=self._resolve_signal_title(opp),
             opportunity_title=opp.title,
+            style_hint=style_hint,
         )
 
         generators = get_artifact_generators()
@@ -166,6 +170,14 @@ class ExecutiveAgent:
             )
         except Exception:  # noqa: BLE001
             logger.exception("Failed to create orchestrator actions for %s", bundle.opportunity_id)
+
+    def _get_style_injection(self, opp: Opportunity) -> str:  # noqa: ARG002
+        """Retrieve the learned CEO style summary to inject into generation context."""
+        try:
+            from app.services.correction_learning import CorrectionLearningService
+            return CorrectionLearningService(self.session).get_style_summary_for_injection()
+        except Exception:  # noqa: BLE001
+            return ""
 
     def _audit_bundle(self, opp: Opportunity, bundle: ArtifactBundle) -> None:
         """Record the artifact generation in the audit trail."""

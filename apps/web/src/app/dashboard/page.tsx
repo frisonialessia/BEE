@@ -1,4 +1,4 @@
-import { Activity, Bot, Flame, Network, Radio, ShieldCheck, TrendingUp, Zap } from "lucide-react";
+import { Activity, Bot, Brain, Flame, Network, Radio, ShieldCheck, TrendingUp, Zap } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
 import { BrandVoicePanel } from "@/components/brand-voice";
@@ -7,6 +7,7 @@ import { EngagementInboxPanel } from "@/components/engagement-inbox";
 import { MetricCard } from "@/components/metric-card";
 import { NetworkNavigatorPanel } from "@/components/network-navigator";
 import { PendingActionsPanel } from "@/components/pending-actions";
+import { DeepLearningPanel } from "@/components/deep-learning-panel";
 import { ResiliencePanel } from "@/components/resilience-panel";
 import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
 import { SignalCard } from "@/components/signal-card";
@@ -144,6 +145,20 @@ export default async function DashboardPage() {
             Find the shortest, strongest path to any target company.
           </p>
           <NetworkNavigatorPanel />
+        </section>
+
+        {/* Deep Learning & Intuition */}
+        <section className="mt-10">
+          <div className="mb-3 flex items-center gap-2">
+            <Brain className="h-4 w-4 text-indigo-500" />
+            <h2 className="text-sm font-semibold text-white">Deep Learning & Intuition</h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-4">
+            BEE learns from every CEO correction, simulates revenue scenarios with historical data,
+            and monitors conversion rates in real-time. All learning is transparent — every adjustment
+            is logged in the Audit Trail.
+          </p>
+          <DeepLearningPanel />
         </section>
 
         {/* Resilience & Observability */}

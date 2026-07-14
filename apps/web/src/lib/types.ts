@@ -746,3 +746,98 @@ export interface AuditSummary {
   entries_by_agent: Record<string, number>;
   entries_by_decision: Record<string, number>;
 }
+
+// ─── Correction Learning ──────────────────────────────────────────────────────
+
+export interface CorrectionOut {
+  correction_id: string;
+  artifact_type: string;
+  diff_ops: Array<{ type: string; content: string; detail: string; ratio?: number }>;
+  extracted_rules: string[];
+  change_ratio: number;
+  style_summary: string;
+  authoritative_rules_count: number;
+  total_corrections: number;
+  profile_version: number;
+}
+
+export interface StyleProfileOut {
+  total_corrections: number;
+  authoritative_rules_count: number;
+  style_summary: string;
+  profile_version: number;
+  last_correction_at: string | null;
+  rules_by_type: Record<string, Record<string, { weight: number; count: number; authoritative: boolean }>>;
+}
+
+// ─── Scenario Simulator ───────────────────────────────────────────────────────
+
+export interface ScenarioVariant {
+  label: string;
+  win_rate: number;
+  monthly_wins: number;
+  monthly_revenue: number;
+  quarterly_revenue: number;
+  annual_revenue: number;
+}
+
+export interface ScenarioResult {
+  scenario_id: string;
+  sector: string | null;
+  signal_type: string | null;
+  channel: string | null;
+  psychographic_style: string | null;
+  base_win_rate: number;
+  effective_win_rate: number;
+  channel_modifier: number;
+  disc_modifier: number;
+  dark_funnel_modifier: number;
+  target_monthly_signals: number;
+  adjusted_monthly_signals: number;
+  avg_deal_value: number;
+  median_cycle_days: number;
+  conservative: ScenarioVariant;
+  realistic: ScenarioVariant;
+  optimistic: ScenarioVariant;
+  key_drivers: string[];
+  risk_factors: string[];
+  recommended_actions: string[];
+  historical_sample_size: number;
+  low_data_confidence: boolean;
+}
+
+// ─── Anomaly Detector ─────────────────────────────────────────────────────────
+
+export type AlertSeverity = "low" | "medium" | "high" | "critical";
+export type AlertStatus = "open" | "acknowledged" | "acted_upon" | "dismissed" | "auto_resolved";
+
+export interface AnomalyAlert {
+  id: string;
+  alert_type: string;
+  severity: AlertSeverity;
+  status: AlertStatus;
+  segment_type: string;
+  segment_value: string | null;
+  rolling_rate: number;
+  baseline_rate: number;
+  deviation_pct: number;
+  sample_size: number;
+  title: string;
+  description: string;
+  recommendation: string;
+  suggested_actions: string[];
+  pending_action_id: string | null;
+  acknowledged_at: string | null;
+  resolution_notes: string | null;
+  auto_resolved: boolean;
+  created_at: string;
+}
+
+export interface AnomalyCheckResult {
+  checked_at: string;
+  new_alerts: AnomalyAlert[];
+  resolved_alerts: AnomalyAlert[];
+  open_alerts: AnomalyAlert[];
+  summary: string;
+  checked_segments: number;
+}
