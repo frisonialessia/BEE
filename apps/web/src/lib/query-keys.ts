@@ -28,4 +28,11 @@ export const queryKeys = {
     tasks: (entityId?: string) => ["workflow", "tasks", entityId] as const,
     status: () => ["workflow", "status"] as const,
   },
+  control: {
+    all: ["control"] as const,
+    systemHealth: () => [...queryKeys.control.all, "system-health"] as const,
+    ingestion: () => [...queryKeys.control.all, "ingestion"] as const,
+    signalStream: (limit?: number) =>
+      [...queryKeys.control.all, "signal-stream", limit] as const,
+  },
 } as const;

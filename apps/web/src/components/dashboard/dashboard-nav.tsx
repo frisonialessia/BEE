@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Radio, LayoutDashboard, Target } from "lucide-react";
+import { Radio, LayoutDashboard, Target, SlidersHorizontal } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,7 @@ const NAV_ITEMS: Array<{
   icon: typeof LayoutDashboard;
   exact?: boolean;
 }> = [
+  { href: "/dashboard/control", label: "Control", icon: SlidersHorizontal, exact: true },
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/signals", label: "Signals", icon: Radio },
   { href: "/dashboard/strategies", label: "Strategies", icon: Target },

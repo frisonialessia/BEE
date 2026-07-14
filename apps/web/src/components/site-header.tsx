@@ -13,6 +13,9 @@ export function SiteHeader() {
         </Link>
         <nav className="flex items-center gap-1">
           <Button asChild variant="ghost" size="sm">
+            <Link href="/dashboard/control">Control</Link>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
             <Link href="/dashboard">Overview</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">
