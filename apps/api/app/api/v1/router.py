@@ -10,8 +10,10 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     analytics,
+    audit,
     brand,
     dark_funnel,
+    dead_letter,
     engagement,
     health,
     insights,
@@ -36,3 +38,5 @@ api_router.include_router(sequences.router)
 api_router.include_router(psychographic.router)
 api_router.include_router(dark_funnel.router)
 api_router.include_router(network.router)
+api_router.include_router(dead_letter.router)
+api_router.include_router(audit.router)

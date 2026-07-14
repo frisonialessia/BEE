@@ -1,4 +1,4 @@
-import { Activity, Bot, Flame, Network, Radio, ShieldCheck, TrendingUp } from "lucide-react";
+import { Activity, Bot, Flame, Network, Radio, ShieldCheck, TrendingUp, Zap } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
 import { BrandVoicePanel } from "@/components/brand-voice";
@@ -7,6 +7,7 @@ import { EngagementInboxPanel } from "@/components/engagement-inbox";
 import { MetricCard } from "@/components/metric-card";
 import { NetworkNavigatorPanel } from "@/components/network-navigator";
 import { PendingActionsPanel } from "@/components/pending-actions";
+import { ResiliencePanel } from "@/components/resilience-panel";
 import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
 import { SignalCard } from "@/components/signal-card";
 import { SiteHeader } from "@/components/site-header";
@@ -143,6 +144,20 @@ export default async function DashboardPage() {
             Find the shortest, strongest path to any target company.
           </p>
           <NetworkNavigatorPanel />
+        </section>
+
+        {/* Resilience & Observability */}
+        <section className="mt-10">
+          <div className="mb-3 flex items-center gap-2">
+            <Zap className="h-4 w-4 text-purple-500" />
+            <h2 className="text-sm font-semibold text-white">Resilience & Observability</h2>
+          </div>
+          <p className="text-xs text-muted-foreground mb-4">
+            Dead Letter Queue monitors failed external actions with automatic exponential-backoff retry.
+            Audit Trail records every agent decision — context used, market data consulted, strategy reasoning,
+            and confidence score. Low-confidence decisions (&lt;80%) are flagged for manual CEO review.
+          </p>
+          <ResiliencePanel />
         </section>
 
         {/* Signals feed */}

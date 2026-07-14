@@ -2,15 +2,20 @@ import type {
   AdaptedContent,
   AdvanceResult,
   ArtifactBundle,
+  AuditEntry,
+  AuditSummary,
   Battlecard,
   BrandContextResult,
   BrandFragment,
   ChannelStatus,
   DarkFunnelSignal,
   DarkFunnelSummary,
+  DLQRetryResult,
+  DLQSummary,
   DynamicSequence,
   EngagementAnalysis,
   EngagementEvent,
+  FailedEvent,
   HotLeadScore,
   LeadPsychographic,
   MarketInsight,
@@ -539,5 +544,78 @@ export async function getNetworkStats(): Promise<FetchResult<NetworkStats | null
     return { data: (await res.json()) as NetworkStats, live: true };
   } catch {
     return { data: null, live: false };
+  }
+}
+
+// ─── Dead Letter Queue ────────────────────────────────────────────────────────
+
+export async function getDLQSummary(): Promise<FetchResult<DLQSummary | null>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/workflow/dlq/summary`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as DLQSummary, live: true };
+  } catch {
+    return { data: null, live: false };
+  }
+}
+
+export async function getDLQEvents(params?: { status?: string; limit?: number }): Promise<FetchResult<FailedEvent[]>> {
+  try {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    if (params?.limit) query.set("limit", String(params.limit));
+    const res = await fetch(`${API_URL}/api/v1/workflow/dlq?${query}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as FailedEvent[], live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+export async function retryDLQEvent(eventId: string): Promise<FetchResult<DLQRetryResult>> {
+  const res = await fetch(`${API_URL}/api/v1/workflow/dlq/${eventId}/retry`, { method: "POST" });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: (await res.json()) as DLQRetryResult, live: true };
+}
+
+export async function resolveDLQEvent(eventId: string, notes?: string): Promise<FetchResult<FailedEvent>> {
+  const res = await fetch(`${API_URL}/api/v1/workflow/dlq/${eventId}/resolve`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ notes }),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: (await res.json()) as FailedEvent, live: true };
+}
+
+// ─── Audit Trail ─────────────────────────────────────────────────────────────
+
+export async function getAuditSummary(): Promise<FetchResult<AuditSummary | null>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/audit/summary`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as AuditSummary, live: true };
+  } catch {
+    return { data: null, live: false };
+  }
+}
+
+export async function getAuditDecisions(params?: {
+  agent_type?: string;
+  manual_review_required?: boolean;
+  opportunity_id?: string;
+  limit?: number;
+}): Promise<FetchResult<AuditEntry[]>> {
+  try {
+    const query = new URLSearchParams();
+    if (params?.agent_type) query.set("agent_type", params.agent_type);
+    if (params?.manual_review_required !== undefined) query.set("manual_review_required", String(params.manual_review_required));
+    if (params?.opportunity_id) query.set("opportunity_id", params.opportunity_id);
+    if (params?.limit) query.set("limit", String(params.limit));
+    const res = await fetch(`${API_URL}/api/v1/audit/decisions?${query}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as AuditEntry[], live: true };
+  } catch {
+    return { data: [], live: false };
   }
 }

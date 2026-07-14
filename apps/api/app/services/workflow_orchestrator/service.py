@@ -83,9 +83,9 @@ class WorkflowOrchestrator:
                     task.status,
                     task.mock,
                 )
-            except Exception:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
                 logger.exception(
-                    "Handler '%s' raised during event '%s' — creating FAILED task.",
+                    "Handler '%s' raised during event '%s' — creating FAILED task + DLQ entry.",
                     handler.name,
                     event.event_type,
                 )
@@ -98,14 +98,50 @@ class WorkflowOrchestrator:
                     handler_version=handler.version,
                     status=WorkflowTaskStatus.FAILED,
                     payload=event.payload,
-                    error_message="Handler raised an unhandled exception.",
+                    error_message=str(exc) or "Handler raised an unhandled exception.",
                     dispatched_at=datetime.now(UTC),
                 )
                 self.session.add(failed_task)
                 self.session.flush()
                 tasks.append(failed_task)
 
+                # ── Dead Letter Queue: capture the failure for retry ─────────────
+                self._enqueue_to_dlq(event, handler.name, str(exc), failed_task.id)
+
         return tasks
+
+    # ── Dead Letter Queue integration ────────────────────────────────────────
+
+    def _enqueue_to_dlq(
+        self,
+        event: BeeEvent,
+        handler_name: str,
+        error: str,
+        workflow_task_id: uuid.UUID | None = None,
+    ) -> None:
+        """Capture a failed handler dispatch into the Dead Letter Queue."""
+        try:
+            from app.models.dead_letter import DLQEventType
+            from app.services.dead_letter import DeadLetterQueueService
+
+            dlq = DeadLetterQueueService(self.session)
+            dlq.enqueue(
+                event_name=event.event_type,
+                event_type=DLQEventType.WORKFLOW_HANDLER,
+                original_event={
+                    "event_type": event.event_type,
+                    "entity_id": str(event.entity_id) if event.entity_id else None,
+                    "entity_type": event.entity_type,
+                    "handler_name": handler_name,
+                    "payload": event.payload,
+                    "published_at": event.published_at.isoformat() if event.published_at else None,
+                },
+                error=error,
+                workflow_task_id=workflow_task_id,
+            )
+            logger.info("DLQ: captured failed handler=%s event=%s", handler_name, event.event_type)
+        except Exception:  # noqa: BLE001
+            logger.exception("DLQ: failed to enqueue failure for handler=%s", handler_name)
 
     # ── Query interface ──────────────────────────────────────────────────────
 

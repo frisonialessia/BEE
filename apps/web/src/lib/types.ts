@@ -673,3 +673,76 @@ export interface NetworkStats {
   avg_relationship_strength: number;
   companies_covered: number;
 }
+
+// ─── Dead Letter Queue ────────────────────────────────────────────────────────
+
+export type DLQStatus = "pending" | "retrying" | "resolved" | "permanently_failed";
+
+export interface FailedEvent {
+  id: string;
+  event_type: string;
+  event_name: string;
+  opportunity_id: string | null;
+  lead_id: string | null;
+  pending_action_id: string | null;
+  attempt_count: number;
+  last_error: string | null;
+  error_history: Array<{ attempt: number; error: string; timestamp: string }>;
+  status: DLQStatus;
+  next_retry_at: string | null;
+  last_attempted_at: string | null;
+  resolved_at: string | null;
+  resolution_notes: string | null;
+  ceo_alerted: boolean;
+  created_at: string;
+}
+
+export interface DLQSummary {
+  total_events: number;
+  pending_count: number;
+  retrying_count: number;
+  resolved_count: number;
+  permanently_failed_count: number;
+  due_for_retry_count: number;
+  ceo_alerted_count: number;
+}
+
+export interface DLQRetryResult {
+  event_id: string;
+  success: boolean;
+  status: DLQStatus;
+  message: string;
+  attempt_count: number;
+  next_retry_at: string | null;
+}
+
+// ─── Audit Trail ─────────────────────────────────────────────────────────────
+
+export interface AuditEntry {
+  id: string;
+  agent_type: string;
+  decision_type: string;
+  session_id: string | null;
+  opportunity_id: string | null;
+  lead_id: string | null;
+  signal_id: string | null;
+  pending_action_id: string | null;
+  context_snapshot: Record<string, unknown>;
+  market_data_used: Record<string, unknown>;
+  strategy_reasoning: string | null;
+  output_snapshot: Record<string, unknown>;
+  confidence_score: number;
+  manual_review_required: boolean;
+  processing_ms: number | null;
+  generator_name: string | null;
+  generator_version: string | null;
+  created_at: string;
+}
+
+export interface AuditSummary {
+  total_entries: number;
+  manual_review_count: number;
+  avg_confidence_score: number;
+  entries_by_agent: Record<string, number>;
+  entries_by_decision: Record<string, number>;
+}
