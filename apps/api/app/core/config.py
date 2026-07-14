@@ -87,6 +87,19 @@ class Settings(BaseSettings):
     WORKFLOW_BILLING_URL: str | None = None
     WORKFLOW_NOTIFY_URL: str | None = None
 
+    # ----- OmnichannelGateway — channel credentials (all opt-in) ---------------
+    # LinkedIn (REST API v2)
+    LINKEDIN_ACCESS_TOKEN: str | None = None
+    # X / Twitter (API v2)
+    TWITTER_BEARER_TOKEN: str | None = None
+    TWITTER_API_KEY: str | None = None
+    # Email (SMTP)
+    EMAIL_SMTP_HOST: str | None = None
+    EMAIL_SMTP_PORT: int = 587
+    EMAIL_SMTP_USER: str | None = None
+    EMAIL_SMTP_PASSWORD: str | None = None
+    EMAIL_FROM_ADDRESS: str | None = None
+
     # ----- AI providers (reserved for future intelligence layer) ---------------
     # Present now so the credential-management contract is defined up front.
     AI_PROVIDER: Literal["openai", "anthropic", "none"] = "none"

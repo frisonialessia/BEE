@@ -1,0 +1,81 @@
+"""Schemas for the PersonalBrandService API."""
+
+from __future__ import annotations
+
+import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, Field
+
+
+class VoiceProfileCreate(BaseModel):
+    display_name: str
+    title: str | None = None
+    language: str = "en"
+    tone_descriptors: list[str] = Field(default_factory=list)
+    authority_topics: list[str] = Field(default_factory=list)
+    forbidden_phrases: list[str] = Field(default_factory=list)
+    max_sentence_words: int = 25
+    use_emojis: bool = False
+    preferred_cta: str | None = None
+    bio_summary: str | None = None
+
+
+class VoiceProfileOut(BaseModel):
+    id: uuid.UUID
+    display_name: str
+    title: str | None
+    language: str
+    tone_descriptors: list[str]
+    authority_topics: list[str]
+    forbidden_phrases: list[str]
+    max_sentence_words: int
+    use_emojis: bool
+    preferred_cta: str | None
+    bio_summary: str | None
+    is_active: bool
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class BrandFragmentCreate(BaseModel):
+    content: str = Field(min_length=10, max_length=5000)
+    category: str = Field(description="BrandFragmentCategory value")
+    tags: list[str] = Field(default_factory=list)
+    source: str | None = None
+    performance_score: float | None = Field(default=None, ge=0, le=100)
+
+
+class BrandFragmentOut(BaseModel):
+    id: uuid.UUID
+    profile_id: uuid.UUID
+    content: str
+    category: str
+    tags: list[str]
+    source: str | None
+    performance_score: float | None
+    used_count: int
+    last_used_at: datetime | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class BrandContextQuery(BaseModel):
+    """Query the PersonalBrandService for relevant context."""
+
+    query: str = Field(description="The topic or content we need brand context for")
+    top_k: int = Field(default=5, ge=1, le=20)
+    category_filter: str | None = None
+    tag_filter: list[str] = Field(default_factory=list)
+
+
+class BrandContextResult(BaseModel):
+    """The enriched brand context returned for a query."""
+
+    voice_profile: VoiceProfileOut | None
+    relevant_fragments: list[BrandFragmentOut]
+    brand_brief: str = Field(description="Natural-language brief injected into AI prompts")
+    fragment_count_total: int

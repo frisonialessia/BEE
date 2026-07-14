@@ -397,3 +397,150 @@ export interface IntentEventResult {
   score: number;
   message: string;
 }
+
+// ── PersonalBrandService ───────────────────────────────────────────────────────
+
+export interface VoiceProfile {
+  id: string;
+  display_name: string;
+  title: string | null;
+  language: string;
+  tone_descriptors: string[];
+  authority_topics: string[];
+  forbidden_phrases: string[];
+  max_sentence_words: number;
+  use_emojis: boolean;
+  preferred_cta: string | null;
+  bio_summary: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BrandFragment {
+  id: string;
+  profile_id: string;
+  content: string;
+  category: string;
+  tags: string[];
+  source: string | null;
+  performance_score: number | null;
+  used_count: number;
+  last_used_at: string | null;
+  created_at: string;
+}
+
+export interface BrandContextResult {
+  voice_profile: VoiceProfile | null;
+  relevant_fragments: BrandFragment[];
+  brand_brief: string;
+  fragment_count_total: number;
+}
+
+export interface ChannelStatus {
+  channel: string;
+  authenticated: boolean;
+  mock: boolean;
+  tokens_remaining: number | null;
+  rate_limit: {
+    requests_per_day: number;
+    requests_per_hour: number;
+    min_interval_seconds: number;
+  };
+}
+
+// ── SmartEngagementEngine ─────────────────────────────────────────────────────
+
+export type EngagementSentiment = "positive" | "neutral" | "negative" | "question" | "unknown";
+export type EngagementIntent =
+  | "sales_interest"
+  | "objection"
+  | "referral"
+  | "follow_up"
+  | "compliment"
+  | "spam"
+  | "other";
+
+export interface EngagementEvent {
+  id: string;
+  source: string;
+  author_name: string | null;
+  author_handle: string | null;
+  content: string;
+  sentiment: EngagementSentiment;
+  intent: EngagementIntent;
+  analysis_confidence: number;
+  analysis_notes: string | null;
+  response_draft: string | null;
+  pending_action_id: string | null;
+  processed: boolean;
+  ignored: boolean;
+  created_at: string;
+}
+
+export interface EngagementAnalysis extends EngagementEvent {
+  event_id: string;
+}
+
+// ── DynamicSequenceEngine ─────────────────────────────────────────────────────
+
+export type SequenceStatus = "draft" | "active" | "paused" | "archived";
+export type ExecutionStatus = "running" | "waiting" | "paused" | "completed" | "failed" | "cancelled";
+
+export interface StepTransition {
+  condition: string;
+  next_step_id: string | null;
+  delay_days: number;
+}
+
+export interface StepDefinition {
+  id: string;
+  name: string;
+  action: string;
+  artifact_type: string | null;
+  channel: string | null;
+  transitions: StepTransition[];
+  fallback_step_id: string | null;
+  max_wait_days: number;
+  notes: string | null;
+}
+
+export interface DynamicSequence {
+  id: string;
+  name: string;
+  description: string | null;
+  signal_type: string | null;
+  industry: string | null;
+  entry_step_id: string;
+  steps: StepDefinition[];
+  max_days: number;
+  status: SequenceStatus;
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SequenceExecution {
+  id: string;
+  sequence_id: string;
+  opportunity_id: string | null;
+  lead_id: string | null;
+  current_step_id: string;
+  status: ExecutionStatus;
+  events: Array<{ event: string; timestamp: string; metadata: Record<string, unknown> }>;
+  pending_action_ids: string[];
+  started_at: string;
+  last_advanced_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface AdvanceResult {
+  execution_id: string;
+  previous_step: string;
+  current_step: string | null;
+  status: ExecutionStatus;
+  transition_triggered: string | null;
+  pending_action_created: boolean;
+  message: string;
+}

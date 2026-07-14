@@ -1,6 +1,8 @@
 import { Activity, Bot, Flame, Radio, ShieldCheck, TrendingUp } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
+import { BrandVoicePanel } from "@/components/brand-voice";
+import { EngagementInboxPanel } from "@/components/engagement-inbox";
 import { MetricCard } from "@/components/metric-card";
 import { PendingActionsPanel } from "@/components/pending-actions";
 import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
@@ -97,6 +99,20 @@ export default async function DashboardPage() {
             <RevenueSimulatorWidget />
             <WorkflowStatusPanel />
             <PendingActionsPanel />
+          </div>
+        </section>
+
+        {/* Autonomous Growth Layer */}
+        <section className="mt-10">
+          <div className="mb-3">
+            <h2 className="text-sm font-semibold text-white">Autonomous Growth</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Personal brand + omnichannel prospecting — all actions require CEO approval before firing
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <BrandVoicePanel />
+            <EngagementInboxPanel />
           </div>
         </section>
 

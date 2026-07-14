@@ -1,5 +1,14 @@
 """API-facing Pydantic schemas (DTOs)."""
 
+from app.schemas.brand import (
+    BrandContextQuery,
+    BrandContextResult,
+    BrandFragmentCreate,
+    BrandFragmentOut,
+    VoiceProfileCreate,
+    VoiceProfileOut,
+)
+from app.schemas.engagement import EngagementAnalysis, EngagementEventOut, IncomingEventIn
 from app.schemas.executive import (
     ActionItem,
     AgendaItem,
@@ -23,6 +32,16 @@ from app.schemas.orchestrator import (
     RejectionIn,
 )
 from app.schemas.predictor import OutcomeWithPrediction, ResourcePrediction
+from app.schemas.sequence import (
+    AdvanceResult,
+    ExecutionAdvance,
+    ExecutionCreate,
+    ExecutionOut,
+    SequenceCreate,
+    SequenceOut,
+    StepDefinition,
+    StepTransition,
+)
 from app.schemas.signal import (
     CompanyRef,
     LeadRef,
@@ -94,4 +113,24 @@ __all__ = [
     "BeeEvent",
     "WorkflowStatusOut",
     "WorkflowTaskOut",
+    # brand
+    "BrandContextQuery",
+    "BrandContextResult",
+    "BrandFragmentCreate",
+    "BrandFragmentOut",
+    "VoiceProfileCreate",
+    "VoiceProfileOut",
+    # engagement
+    "EngagementAnalysis",
+    "EngagementEventOut",
+    "IncomingEventIn",
+    # sequence
+    "AdvanceResult",
+    "ExecutionAdvance",
+    "ExecutionCreate",
+    "ExecutionOut",
+    "SequenceCreate",
+    "SequenceOut",
+    "StepDefinition",
+    "StepTransition",
 ]

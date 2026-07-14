@@ -1,13 +1,22 @@
 import type {
+  AdvanceResult,
   ArtifactBundle,
   Battlecard,
+  BrandContextResult,
+  BrandFragment,
+  ChannelStatus,
+  DynamicSequence,
+  EngagementAnalysis,
+  EngagementEvent,
   MarketInsight,
   OrchestratorStatus,
   OutcomeIn,
   OutcomeWithPrediction,
   PendingAction,
   RevenueSimulation,
+  SequenceExecution,
   Signal,
+  VoiceProfile,
   WorkflowStatus,
   WorkflowTask,
 } from "@/lib/types";
@@ -234,4 +243,152 @@ export async function getMarketInsights(
   } catch {
     return { data: [], live: false };
   }
+}
+
+// ── PersonalBrandService ────────────────────────────────────────────────────
+
+export async function getBrandProfile(): Promise<FetchResult<VoiceProfile | null>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/brand/profile`, { cache: "no-store" });
+    if (res.status === 404) return { data: null, live: true };
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as VoiceProfile, live: true };
+  } catch {
+    return { data: null, live: false };
+  }
+}
+
+export async function createBrandProfile(data: {
+  display_name: string;
+  title?: string;
+  language?: string;
+  tone_descriptors?: string[];
+  authority_topics?: string[];
+  forbidden_phrases?: string[];
+  preferred_cta?: string;
+  bio_summary?: string;
+}): Promise<FetchResult<VoiceProfile>> {
+  const res = await fetch(`${API_URL}/api/v1/brand/profile`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: (await res.json()) as VoiceProfile, live: true };
+}
+
+export async function addBrandFragment(
+  profileId: string,
+  data: { content: string; category: string; tags?: string[]; source?: string }
+): Promise<FetchResult<BrandFragment>> {
+  const res = await fetch(`${API_URL}/api/v1/brand/profile/${profileId}/fragments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: (await res.json()) as BrandFragment, live: true };
+}
+
+export async function getBrandContext(query: string, top_k = 5): Promise<FetchResult<BrandContextResult>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/brand/context`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, top_k }),
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as BrandContextResult, live: true };
+  } catch {
+    return {
+      data: { voice_profile: null, relevant_fragments: [], brand_brief: "", fragment_count_total: 0 },
+      live: false,
+    };
+  }
+}
+
+export async function getChannelStatus(): Promise<FetchResult<ChannelStatus[]>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/brand/channels/status`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as ChannelStatus[], live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+// ── SmartEngagementEngine ───────────────────────────────────────────────────
+
+export async function getEngagementEvents(params?: {
+  source?: string;
+  processed?: boolean;
+}): Promise<FetchResult<EngagementEvent[]>> {
+  try {
+    const query = new URLSearchParams();
+    if (params?.source) query.set("source", params.source);
+    if (params?.processed != null) query.set("processed", String(params.processed));
+    const res = await fetch(`${API_URL}/api/v1/engagement/events?${query}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as EngagementEvent[], live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+export async function submitEngagementEvent(data: {
+  source: string;
+  content: string;
+  author_name?: string;
+  author_handle?: string;
+  context_post?: string;
+  source_event_id?: string;
+}): Promise<FetchResult<EngagementAnalysis>> {
+  const res = await fetch(`${API_URL}/api/v1/engagement/events`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: (await res.json()) as EngagementAnalysis, live: true };
+}
+
+// ── DynamicSequenceEngine ───────────────────────────────────────────────────
+
+export async function getSequences(): Promise<FetchResult<DynamicSequence[]>> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/sequences`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as DynamicSequence[], live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+export async function getSequenceExecutions(params?: {
+  status?: string;
+}): Promise<FetchResult<SequenceExecution[]>> {
+  try {
+    const query = new URLSearchParams();
+    if (params?.status) query.set("status", params.status);
+    const res = await fetch(`${API_URL}/api/v1/sequences/executions?${query}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as SequenceExecution[], live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+export async function advanceSequenceExecution(
+  executionId: string,
+  event: string,
+  metadata?: Record<string, unknown>
+): Promise<FetchResult<AdvanceResult>> {
+  const res = await fetch(`${API_URL}/api/v1/sequences/executions/${executionId}/advance`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ event, metadata: metadata ?? {} }),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: (await res.json()) as AdvanceResult, live: true };
 }

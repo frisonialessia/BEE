@@ -46,7 +46,7 @@ class PendingAction(TimestampMixin, table=True):
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
     # ── Origin ──────────────────────────────────────────────────────────────
-    opportunity_id: uuid.UUID = Field(index=True, nullable=False)
+    opportunity_id: uuid.UUID | None = Field(default=None, index=True, nullable=True)
     artifact_bundle_id: str | None = Field(default=None)  # reference to ArtifactBundle
 
     # ── Classification ────────────────────────────────────────────────────────
