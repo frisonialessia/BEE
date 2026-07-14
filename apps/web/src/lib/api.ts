@@ -446,7 +446,8 @@ export async function getDarkFunnelHotLeads(params?: {
     if (!res.ok) throw new Error(`API responded ${res.status}`);
     return { data: (await res.json()) as HotLeadScore[], live: true };
   } catch {
-    return { data: [], live: false };
+    const { sampleHotLeads } = await import("@/lib/sample-data");
+    return { data: sampleHotLeads.slice(0, params?.limit ?? 50), live: false };
   }
 }
 

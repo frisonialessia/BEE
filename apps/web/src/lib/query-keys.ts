@@ -34,5 +34,7 @@ export const queryKeys = {
     ingestion: () => [...queryKeys.control.all, "ingestion"] as const,
     signalStream: (limit?: number) =>
       [...queryKeys.control.all, "signal-stream", limit] as const,
+    hiveLeads: (limit?: number) =>
+      [...queryKeys.control.all, "hive-leads", limit] as const,
   },
 } as const;

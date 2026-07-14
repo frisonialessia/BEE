@@ -1,4 +1,5 @@
 import type { ArtifactBundle, Battlecard, Opportunity, Signal } from "@/lib/types";
+import type { HotLeadScore } from "@/types/extended";
 
 /**
  * Illustrative data used when the backend API is not reachable (e.g. static
@@ -299,4 +300,55 @@ Best,
       channel: "email",
     },
   },
+];
+
+export const sampleHotLeads: HotLeadScore[] = [
+  {
+    id: "h1",
+    company_domain: "northwindlabs.com",
+    company_name: "Northwind Labs",
+    lead_id: "l1",
+    research_intensity_score: 92,
+    buying_stage: "ready_to_buy",
+    signal_count: 8,
+    signal_types_seen: ["pricing_view", "demo_watch"],
+    top_intent_keywords: ["sales automation", "pipeline"],
+    last_signal_at: new Date(Date.now() - 3600000).toISOString(),
+    is_hot: true,
+    hot_since: new Date(Date.now() - 86400000).toISOString(),
+    alerted: true,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "h2",
+    company_domain: "acme.com",
+    company_name: "Acme Corp",
+    lead_id: "l2",
+    research_intensity_score: 74,
+    buying_stage: "decision",
+    signal_count: 5,
+    signal_types_seen: ["competitor_compare", "review_visit"],
+    top_intent_keywords: ["revops", "crm integration"],
+    last_signal_at: new Date(Date.now() - 7200000).toISOString(),
+    is_hot: true,
+    hot_since: null,
+    alerted: false,
+    created_at: new Date().toISOString(),
+  },
+  ...Array.from({ length: 38 }, (_, i) => ({
+    id: `h-gen-${i}`,
+    company_domain: `company-${i}.io`,
+    company_name: `Company ${i}`,
+    lead_id: null,
+    research_intensity_score: 20 + ((i * 17) % 75),
+    buying_stage: (["awareness", "consideration", "decision", "ready_to_buy"] as const)[i % 4],
+    signal_count: 1 + (i % 6),
+    signal_types_seen: ["search", "pricing_view"].slice(0, 1 + (i % 2)),
+    top_intent_keywords: ["intent", "research"],
+    last_signal_at: new Date(Date.now() - i * 3600000).toISOString(),
+    is_hot: i % 5 === 0,
+    hot_since: i % 5 === 0 ? new Date().toISOString() : null,
+    alerted: false,
+    created_at: new Date().toISOString(),
+  })),
 ];

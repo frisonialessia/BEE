@@ -1,11 +1,9 @@
 "use client";
 
-import { LeadWorkspace, SignalStream, SystemHealth } from "@/features/control";
+import { LeadWorkspace, SignalHexMap, SignalStream, SystemHealth } from "@/features/control";
 
 /**
  * BEE Control — primary operator interface.
- *
- * Layout: SystemHealth (top) · SignalStream (left) · LeadWorkspace (main)
  */
 export default function ControlPage() {
   return (
@@ -18,6 +16,8 @@ export default function ControlPage() {
       </header>
 
       <SystemHealth />
+
+      <SignalHexMap height={300} maxLeads={200} />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(280px,320px)_1fr]">
         <SignalStream />

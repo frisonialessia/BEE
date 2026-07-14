@@ -9,7 +9,8 @@ src/features/control/
 ├── components/
 │   ├── SystemHealth.tsx    ✅ Worker + provider status (live polling)
 │   ├── SignalStream.tsx    ✅ Live pipeline feed + proactive toasts
-│   └── LeadWorkspace.tsx   ⏳ Kanban lead cards + strategy
+│   ├── LeadWorkspace.tsx   ✅ Kanban · 12s poll
+│   └── SignalHexMap.tsx    ✅ Colmena · d3-hexbin + Canvas
 ├── hooks/                  (future: useSignalStream, useLeadBoard)
 └── index.ts
 
