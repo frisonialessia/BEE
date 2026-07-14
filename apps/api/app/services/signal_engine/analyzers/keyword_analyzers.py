@@ -11,7 +11,7 @@ pick it up automatically via the registry with no other changes.
 
 from __future__ import annotations
 
-from app.models.base import SignalType
+from app.models.base import SignalSource, SignalType
 from app.schemas.signal import SignalWebhookIn
 from app.services.signal_engine.analyzers.base import AnalysisResult, SignalAnalyzer
 from app.services.signal_engine.analyzers.registry import register_analyzer
@@ -152,6 +152,43 @@ class TechAdoptionAnalyzer(SignalAnalyzer):
                 "rationale": "A stack change can create integration or replacement needs.",
             },
             metadata={"matched_keywords": matched},
+        )
+
+
+@register_analyzer
+class BehavioralAnalyzer(SignalAnalyzer):
+    """Analyzes behavioral/intent signals from the BehavioralCollector.
+
+    Runs at higher priority than the generic fallback so intent events get
+    a properly scored ENGAGEMENT signal rather than the default 20.0 score.
+    The actual score is pre-computed by the endpoint and stored in
+    ``payload.data["intent_score"]`` — this analyzer just reads it back.
+
+    Note: behavioral signals do NOT produce a ``strategy`` (``strategy=None``)
+    because the BehavioralCollector hot-flags an *existing* opportunity rather
+    than creating a new one.
+    """
+
+    name = "behavioral"
+    priority = -50  # Below specialized analyzers, above fallback
+
+    def supports(self, payload: SignalWebhookIn) -> bool:
+        return (
+            payload.source == SignalSource.BEHAVIORAL
+            or payload.signal_type == SignalType.ENGAGEMENT
+            or payload.event.startswith("behavioral.")
+        )
+
+    def analyze(self, payload: SignalWebhookIn) -> AnalysisResult:
+        score = float(payload.data.get("intent_score", 50.0))
+        event_type = payload.data.get("event_type", "page_visit")
+        return AnalysisResult(
+            signal_type=SignalType.ENGAGEMENT,
+            score=score,
+            confidence=0.9,  # behavioral events are high-confidence by nature
+            tags=["behavioral", event_type, "intent"],
+            strategy=None,  # no new opportunity — hot-flag the existing one
+            metadata={"event_type": event_type, "behavioral": True},
         )
 
 

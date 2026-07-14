@@ -51,6 +51,11 @@ export function BattlecardView({ card }: { card: Battlecard }) {
                 Ready to action
               </Badge>
             )}
+            {card.hot_lead && (
+              <Badge className="gap-1 bg-orange-500 hover:bg-orange-600 text-white border-0">
+                🔥 HOT
+              </Badge>
+            )}
             <Badge variant="outline">{signalTypeLabels[signal.signal_type as keyof typeof signalTypeLabels] ?? signal.signal_type}</Badge>
           </div>
           <h2 className="text-base font-semibold leading-snug">

@@ -207,6 +207,7 @@ class BattlecardOut(BaseModel):
     status: str
     score: float
     ready_to_action: bool
+    hot_lead: bool = False  # True when BehavioralCollector detects buying intent
 
     company: BattlecardCompany
     lead: BattlecardLead

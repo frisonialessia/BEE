@@ -36,6 +36,20 @@ def _lead(ctx: EnrichmentContext) -> str:
     return ctx.lead_name or ctx.lead_title or "the decision-maker"
 
 
+def _apply_hints(ctx: EnrichmentContext, default_channel: str, default_playbook: str) -> tuple[str, str]:
+    """Return (channel, playbook) biased by adaptive memory hints.
+
+    If we have a statistically reliable hint (confidence ≥ medium), prefer its
+    channel + playbook combination. This is how BEE gets smarter over time:
+    closing more deals in one channel causes future battlecards to recommend
+    that channel automatically — no code change required.
+    """
+    hint = ctx.best_hint
+    if hint is not None:
+        return hint.channel, hint.playbook
+    return default_channel, default_playbook
+
+
 @register_strategy_generator
 class FundingStrategyGenerator(StrategyGenerator):
     """Battlecard generator for funding-round signals.
@@ -56,7 +70,7 @@ class FundingStrategyGenerator(StrategyGenerator):
         lead = _lead(ctx)
         score = ctx.signal_score
         stage = "Series B/C" if score >= 85 else "seed/Series A"
-        channel = "email" if score >= 85 else "linkedin"
+        default_channel = "email" if score >= 85 else "linkedin"
 
         # Extract amount hint from raw payload if available.
         amount = ctx.raw_payload.get("data", {})
@@ -66,6 +80,14 @@ class FundingStrategyGenerator(StrategyGenerator):
             amount_str = f" (${m}M)" if m else ""
         _rl = ctx.raw_payload.get("data", {})
         round_label = _rl.get("round", stage) if isinstance(_rl, dict) else stage
+
+        channel, playbook = _apply_hints(ctx, default_channel, "post_funding_outreach")
+
+        hint_note = ""
+        if ctx.best_hint and ctx.best_hint.is_actionable:
+            hint_note = (
+                f" [Adaptive: {ctx.best_hint.to_prompt_text()}]"
+            )
 
         return StrategySchema(
             pain_point=(
@@ -89,12 +111,12 @@ class FundingStrategyGenerator(StrategyGenerator):
                 ),
                 expires_at="60 days post-funding close",
             ),
-            playbook="post_funding_outreach",
+            playbook=playbook,
             next_best_action="reach_out",
             channel=channel,
             rationale=(
                 f"Signal score {score:.0f}/100 — {company} raised {round_label}{amount_str}. "
-                f"Lead: {lead}."
+                f"Lead: {lead}.{hint_note}"
             ),
             generator="rule_based",
             generator_version="1.0.0",
@@ -143,7 +165,8 @@ class HiringStrategyGenerator(StrategyGenerator):
             )
             expires = "90 days post-hire"
             action = "reach_out"
-            channel = "linkedin"
+            default_channel = "linkedin"
+            default_playbook = "leadership_change_outreach"
         else:
             pain_point = (
                 f"{company} is in active hiring mode — new team members mean new "
@@ -163,7 +186,10 @@ class HiringStrategyGenerator(StrategyGenerator):
             )
             expires = "before next hiring batch onboards"
             action = "monitor"
-            channel = "linkedin"
+            default_channel = "linkedin"
+            default_playbook = "hiring_growth_outreach"
+
+        channel, playbook = _apply_hints(ctx, default_channel, default_playbook)
 
         return StrategySchema(
             pain_point=pain_point,
@@ -173,7 +199,7 @@ class HiringStrategyGenerator(StrategyGenerator):
                 reason=window_reason,
                 expires_at=expires,
             ),
-            playbook="hiring_growth_outreach" if not is_leadership else "leadership_change_outreach",
+            playbook=playbook,
             next_best_action=action,
             channel=channel,
             rationale=f"Signal score {ctx.signal_score:.0f}/100 — {company} / {lead}.",

@@ -41,9 +41,12 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from app.models.base import SignalType
+
+if TYPE_CHECKING:
+    from app.schemas.feedback import SuccessHint
 
 
 @dataclass(slots=True)
@@ -58,6 +61,11 @@ class EnrichmentContext:
     Every field maps to an LLM prompt variable. When building a GPT-4o generator,
     format the system prompt with these fields and parse the response into a
     :class:`~app.schemas.strategy.StrategySchema`.
+
+    ``success_hints`` is the adaptive memory input: ranked patterns from closed
+    deals that tell the generator "for this kind of signal, email + this playbook
+    wins 74% of the time." Rule-based generators check hints to bias their output;
+    LLM generators insert them verbatim into the system prompt.
     """
 
     # ── Signal classification (from the SignalAnalyzer layer) ────────────────
@@ -83,6 +91,17 @@ class EnrichmentContext:
     # ── Analyzer metadata (tags, primary analyzer, etc.) ─────────────────────
     analysis_tags: list[str] = field(default_factory=list)
     primary_analyzer: str | None = None
+
+    # ── Adaptive memory: learned success patterns from closed deals ───────────
+    # Injected by StrategyGeneratorService after querying FeedbackLoopService.
+    # Empty list = no historical data yet; generators use their default logic.
+    success_hints: list[SuccessHint] = field(default_factory=list)
+
+    @property
+    def best_hint(self) -> SuccessHint | None:
+        """Return the highest win-rate actionable hint, or None."""
+        actionable = [h for h in self.success_hints if h.is_actionable]
+        return actionable[0] if actionable else None
 
 
 class StrategyGenerator(ABC):

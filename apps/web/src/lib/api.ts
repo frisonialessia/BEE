@@ -1,5 +1,5 @@
-import type { Battlecard, Signal } from "@/lib/types";
-import { sampleBattlecards, sampleSignals } from "@/lib/sample-data";
+import type { ArtifactBundle, Battlecard, OutcomeIn, OutcomeOut, Signal } from "@/lib/types";
+import { sampleArtifacts, sampleBattlecards, sampleSignals } from "@/lib/sample-data";
 
 /**
  * Thin client for the BEE API.
@@ -50,4 +50,45 @@ export async function getBattlecards(): Promise<FetchResult<Battlecard[]>> {
   } catch {
     return { data: sampleBattlecards, live: false };
   }
+}
+
+/**
+ * Fetch execution artifacts for an opportunity.
+ * Triggers ExecutiveAgent generation on first call; subsequent calls return cached data.
+ */
+export async function getArtifacts(
+  opportunityId: string,
+  force = false,
+): Promise<FetchResult<ArtifactBundle>> {
+  try {
+    const url = `${API_URL}/api/v1/opportunities/${opportunityId}/artifacts${force ? "?force=true" : ""}`;
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    const data = (await res.json()) as ArtifactBundle;
+    return { data, live: true };
+  } catch {
+    const sample = sampleArtifacts.find((a) => a.opportunity_id === opportunityId);
+    if (sample) return { data: sample, live: false };
+    throw new Error(`No artifacts found for opportunity ${opportunityId}`);
+  }
+}
+
+/**
+ * Record a WON or LOST outcome for an opportunity.
+ * This triggers the FeedbackLoopService and BEE's adaptive learning.
+ */
+export async function recordOutcome(
+  opportunityId: string,
+  body: OutcomeIn,
+): Promise<OutcomeOut> {
+  const res = await fetch(`${API_URL}/api/v1/opportunities/${opportunityId}/outcome`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error((err as { detail?: string }).detail ?? `API error ${res.status}`);
+  }
+  return res.json() as Promise<OutcomeOut>;
 }

@@ -1,4 +1,4 @@
-import type { Battlecard, Opportunity, Signal } from "@/lib/types";
+import type { ArtifactBundle, Battlecard, Opportunity, Signal } from "@/lib/types";
 
 /**
  * Illustrative data used when the backend API is not reachable (e.g. static
@@ -119,6 +119,7 @@ export const sampleBattlecards: Battlecard[] = [
     status: "ready_to_action",
     score: 92,
     ready_to_action: true,
+    hot_lead: true,
     company: {
       name: "Northwind Labs",
       domain: "northwindlabs.com",
@@ -169,6 +170,7 @@ export const sampleBattlecards: Battlecard[] = [
     status: "ready_to_action",
     score: 74,
     ready_to_action: true,
+    hot_lead: false,
     company: {
       name: "Acme Corp",
       domain: "acme.com",
@@ -212,5 +214,67 @@ export const sampleBattlecards: Battlecard[] = [
     },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+  },
+];
+
+export const sampleArtifacts: ArtifactBundle[] = [
+  {
+    opportunity_id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    generated_at: new Date().toISOString(),
+    generator: "rule_based_artifacts",
+    email_draft: {
+      artifact_type: "email_draft",
+      subject: "Quick question re: congrats on the funding",
+      body: `Hi Alice,
+
+Congrats on the Series B — companies at this stage typically need to 2-3× their go-to-market capacity in the next 90 days. We've helped Northwind-sized teams do exactly that without the usual ramp-time penalty. Would a 20-minute call this week make sense?
+
+Best,
+[Your name]`,
+      ps_line: "P.S. The timing window here is 60 days post-funding close — worth a quick chat before then.",
+      recommended_send_time: "Tuesday–Thursday, 8–10 AM recipient local time",
+      estimated_read_time_seconds: 30,
+    },
+    meeting_structure: {
+      artifact_type: "meeting_structure",
+      meeting_title: "BEE × Northwind Labs — Discovery Call",
+      total_duration_minutes: 20,
+      objective: "Qualify Northwind Labs as a fit and establish a clear next step before the 60 days post-funding window closes.",
+      agenda_items: [
+        { duration_minutes: 3, title: "Rapport & context-setting", notes: "Reference their recent Series B news." },
+        { duration_minutes: 5, title: "Discovery: understand their current pain", notes: "Probe on: scale-up paradox and capital deployment challenges." },
+        { duration_minutes: 7, title: "Our value prop (signal-specific)", notes: "Tie directly to what you heard in discovery." },
+        { duration_minutes: 3, title: "Next steps & timeline", notes: "Aim for a clear commitment before day 60." },
+        { duration_minutes: 2, title: "Q&A and close", notes: null },
+      ],
+      pre_meeting_prep: [
+        "Review Northwind Labs' recent Series B announcement.",
+        "Research VP of Sales background and LinkedIn activity.",
+        "Prepare 2–3 case studies for companies in a similar post-funding stage.",
+        "Know BEE's answer to: 'Why now, specifically for Northwind Labs?'",
+      ],
+      success_criteria: "VP of Sales shares their top challenge and agrees to a follow-up meeting or trial within the week.",
+    },
+    next_steps: {
+      artifact_type: "next_steps",
+      horizon: "Next 7 days",
+      actions: [
+        { action: "Send the drafted email to Northwind Labs via email", owner: "rep", timing: "within 24h", priority: "high" },
+        { action: "Connect on LinkedIn and engage with recent post (warm the lead)", owner: "rep", timing: "same day as email", priority: "medium" },
+        { action: "Research Northwind Labs deeply — recent news, tech stack, team size", owner: "rep", timing: "before sending email", priority: "high" },
+        { action: "If no reply in 3 days: follow up with a relevant case study", owner: "rep", timing: "3 days after initial outreach", priority: "medium" },
+        { action: "Log all touchpoints in CRM with outcome tags for BEE's learning loop", owner: "rep", timing: "after each interaction", priority: "medium" },
+        { action: "Hard deadline: must be in conversation before 60 days post-funding close", owner: "rep", timing: "60 days post-funding close", priority: "high" },
+      ],
+      key_risk: "Competitor reaches out first. Timing window: Budget allocation decisions are made in the first 60 days post-Series B close.",
+      success_milestone: "First meeting booked with a decision-maker at Northwind Labs.",
+    },
+    context_snapshot: {
+      company: "Northwind Labs",
+      lead: "Alice Mercer",
+      signal_type: "funding_round",
+      playbook: "post_funding_outreach",
+      channel: "email",
+    },
   },
 ];
