@@ -123,33 +123,28 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
 
 // ── Self-contained panel (fetches own data) ────────────────────────────────────
 
-import { useEffect } from "react";
-import { getPendingActions, approveAction, rejectAction } from "@/lib/api";
 import { ShieldCheck } from "lucide-react";
 
-export function PendingActionsPanel() {
-  const [actions, setActions] = useState<PendingAction[]>([]);
-  const [loading, setLoading] = useState(true);
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  useApproveAction,
+  usePendingActions,
+  useRejectAction,
+} from "@/hooks/queries/use-pending-actions";
 
-  useEffect(() => {
-    getPendingActions(20).then((res) => {
-      setActions(res.data);
-      setLoading(false);
-    });
-  }, []);
+export function PendingActionsPanel() {
+  const { data: result, isLoading } = usePendingActions(20);
+  const approve = useApproveAction();
+  const reject = useRejectAction();
+
+  const actions = result?.data ?? [];
 
   async function handleApprove(id: string) {
-    await approveAction(id, "CEO");
-    setActions((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "approved" as const } : a))
-    );
+    await approve.mutateAsync({ id, approvedBy: "CEO" });
   }
 
   async function handleReject(id: string) {
-    await rejectAction(id);
-    setActions((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "rejected" as const } : a))
-    );
+    await reject.mutateAsync({ id });
   }
 
   const pendingCount = actions.filter((a) => a.status === "pending_approval").length;
@@ -173,10 +168,10 @@ export function PendingActionsPanel() {
         )}
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <div className="space-y-2">
           {[1, 2].map((i) => (
-            <div key={i} className="h-12 bg-zinc-800 rounded-md animate-pulse" />
+            <Skeleton key={i} className="h-12 rounded-md" />
           ))}
         </div>
       ) : actions.length === 0 ? (

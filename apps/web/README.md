@@ -1,51 +1,83 @@
-# BEE web — Sales Force Intelligence frontend
+# BEE Frontend — Señales y Estrategia Dashboard
 
-Next.js (App Router) · TypeScript · Tailwind CSS · shadcn/ui.
+Next.js App Router frontend for the BEE Sales Force Intelligence platform.
 
-A premium, minimalist interface for BEE: a marketing landing page and a live
-**Signal Intelligence** dashboard that visualizes the market signals detected by
-the backend Signal Engine and the opportunities generated from them.
+## Stack
 
-## Structure
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16 (App Router, React 19) |
+| Styling | Tailwind CSS v4 + shadcn/ui (new-york) |
+| Data fetching | TanStack Query v5 |
+| Types | TypeScript — mirrored from `apps/api/app/schemas/` |
+
+## Folder structure
 
 ```
-src/
+apps/web/src/
 ├── app/
-│   ├── page.tsx            Landing (hero · pipeline · features)
-│   ├── dashboard/page.tsx  Signal Intelligence dashboard
-│   ├── layout.tsx          Root layout (fonts, dark theme)
-│   └── globals.css         BEE design tokens (shadcn/ui, Tailwind v4)
+│   ├── dashboard/                # /dashboard/* routes
+│   │   ├── layout.tsx            # Shell + DashboardNav
+│   │   ├── page.tsx              # Overview (KPIs + subsystems)
+│   │   ├── signals/page.tsx      # Signal feed
+│   │   ├── strategies/page.tsx     # Battlecards + pipeline
+│   │   └── opportunities/[id]/    # Detail + execution artifacts
+│   ├── layout.tsx                # Root + AppProviders
+│   └── page.tsx                  # Marketing landing
+├── types/
+│   ├── domain.ts                 # ★ Master types (Signal, Opportunity, StrategySchema, Battlecard)
+│   ├── api.ts                    # FetchResult, ApiError
+│   ├── extended.ts               # Subsystem types (orchestrator, DLQ, etc.)
+│   └── index.ts                  # Single import surface
+├── lib/
+│   ├── api/
+│   │   ├── client.ts             # apiFetch + X-API-Key headers
+│   │   ├── signals.ts
+│   │   └── opportunities.ts
+│   ├── api.ts                    # Legacy barrel (migrating to lib/api/*)
+│   ├── query-keys.ts             # TanStack Query key factory
+│   └── env.ts                    # Zod-validated public env
+├── hooks/
+│   ├── queries/                  # useSignals, useBattlecards, useArtifacts…
+│   └── mutations/                # useRecordOutcome
+├── features/
+│   ├── dashboard/                # Overview feature module
+│   ├── signals/                  # Signals dashboard
+│   └── strategy/                 # Strategies dashboard
 ├── components/
-│   ├── ui/                 shadcn/ui primitives (button, card, badge)
-│   ├── signal-card.tsx     A detected market signal
-│   ├── opportunity-card.tsx  Lead + signal + strategy
-│   ├── metric-card.tsx     KPI tile
-│   ├── site-header.tsx     Top navigation
-│   └── logo.tsx            BEE hexagon wordmark
-└── lib/
-    ├── api.ts              API client (graceful fallback to sample data)
-    ├── types.ts            Domain types (mirror the API contract)
-    ├── format.ts           Labels & formatting helpers
-    └── sample-data.ts      Illustrative data for offline previews
+│   ├── dashboard/                # DashboardNav, shared shell
+│   └── ui/                       # shadcn primitives
+└── providers/
+    └── app-providers.tsx         # QueryClient + Theme + Toaster
 ```
 
-## Getting started
+## Master types
+
+Import domain types from `@/types`:
+
+```typescript
+import type { Signal, Opportunity, StrategySchema, Battlecard } from "@/types";
+```
+
+These mirror:
+
+- `apps/api/app/schemas/signal.py` → `Signal`, `Opportunity`
+- `apps/api/app/schemas/strategy.py` → `StrategySchema`, `Battlecard`
+
+## Development
 
 ```bash
-cp .env.example .env.local     # set NEXT_PUBLIC_API_URL
+cd apps/web
+cp .env.example .env.local
 pnpm install
-pnpm dev                       # http://localhost:3000
+pnpm dev
 ```
 
-The dashboard automatically connects to the API at `NEXT_PUBLIC_API_URL`. When
-the API is unreachable it renders illustrative sample data and shows a
-"Demo data · API offline" badge, so the UI is always viewable.
+Open http://localhost:3000/dashboard
 
-## Scripts
+## Environment
 
-```bash
-pnpm dev      # dev server
-pnpm build    # production build
-pnpm start    # serve the production build
-pnpm lint     # eslint
-```
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_API_URL` | Yes | BEE API base URL |
+| `NEXT_PUBLIC_BEE_API_KEY` | Prod | Matches backend `API_SECRET_KEY` |
