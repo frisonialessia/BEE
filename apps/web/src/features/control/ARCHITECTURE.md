@@ -48,5 +48,6 @@ Future: toast via Sonner when `ready_to_action` count increases.
 CSS scope `.bee-control` on dashboard layout:
 
 - `--bee-canvas` — warm off-white background
-- `--bee-terracotta` / `--bee-ochre` — accent palette (placeholder until brand assets)
+- `--bee-surface-primary` / `--bee-surface-secondary` — box backgrounds (#c8d7f8 / #dbdeff)
+- `--bee-chart-*` — graph palette (#ffb213 … #c197ff)
 - `.bee-surface` — soft shadow panels, no borders

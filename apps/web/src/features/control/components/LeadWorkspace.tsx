@@ -18,7 +18,7 @@ function KanbanCard({ card }: { card: LeadCard }) {
   return (
     <Link
       href={`/dashboard/opportunities/${card.opportunity_id}`}
-      className="block rounded-xl bg-background/60 p-4 shadow-[0_1px_8px_-2px_rgba(139,69,19,0.08)] transition-shadow hover:shadow-[0_4px_16px_-4px_rgba(139,69,19,0.15)]"
+      className="block rounded-xl bg-[var(--bee-surface-primary)]/40 p-4 shadow-[var(--bee-shadow)] transition-shadow hover:shadow-[0_4px_20px_-4px_rgba(138,158,255,0.35)]"
     >
       <div className="flex items-start justify-between gap-2">
         <p className="line-clamp-2 text-sm font-light leading-snug tracking-tight">
@@ -31,13 +31,13 @@ function KanbanCard({ card }: { card: LeadCard }) {
           {Math.round(card.score)}
         </Badge>
         {card.hot_lead && (
-          <span className="inline-flex items-center gap-1 text-[10px] text-[var(--bee-terracotta)]">
+          <span className="inline-flex items-center gap-1 text-[10px] text-[var(--bee-accent-hot)]">
             <Flame className="size-3" />
             Hot
           </span>
         )}
         {card.manual_review_required && (
-          <AlertCircle className="size-3 text-[var(--bee-ochre)]" aria-label="Review required" />
+          <AlertCircle className="size-3 text-[var(--bee-accent-warm)]" aria-label="Review required" />
         )}
       </div>
       {pain && (

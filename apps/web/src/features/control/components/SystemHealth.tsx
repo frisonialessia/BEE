@@ -15,8 +15,8 @@ const PROVIDER_LABELS: Record<string, string> = {
 };
 
 const HEALTH_DOT: Record<ProviderHealthState, string> = {
-  online: "bg-[var(--bee-terracotta)]",
-  degraded: "bg-[var(--bee-ochre)]",
+  online: "bg-[var(--bee-accent)]",
+  degraded: "bg-[var(--bee-accent-warm)]",
   mock: "bg-muted-foreground/40",
   offline: "bg-destructive/70",
 };
@@ -55,7 +55,7 @@ function ProviderRow({ provider }: { provider: ProviderStatus }) {
         </p>
         <div className="mt-1.5 h-1 w-20 overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full bg-[var(--bee-terracotta)] transition-all duration-500"
+            className="h-full rounded-full bg-[var(--bee-accent)] transition-all duration-500"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -168,7 +168,7 @@ export function SystemHealth() {
         <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
             {live ? (
-              <Wifi className="size-3.5 text-[var(--bee-terracotta)]" />
+              <Wifi className="size-3.5 text-[var(--bee-accent)]" />
             ) : (
               <WifiOff className="size-3.5" />
             )}

@@ -6,12 +6,16 @@ import { hashDomain } from "@/lib/control/lead-board";
 import type { HotLeadScore } from "@/types/extended";
 import type { BuyingStage } from "@/types/extended";
 
-/** Terracotta → ochre closing-temperature scale (BEE hive palette). */
+import { BEE_COLORS, TEMPERATURE_SCALE } from "@/lib/brand/colors";
+
+/** Closing-temperature scale for Colmena (re-export for components). */
 export const TEMPERATURE_COLORS = {
-  cool: "#f0e6dc",
-  warm: "#d4a574",
-  hot: "#c4724a",
-  blaze: "#8b4513",
+  cool: TEMPERATURE_SCALE[0],
+  mild: TEMPERATURE_SCALE[1],
+  warm: TEMPERATURE_SCALE[2],
+  hot: TEMPERATURE_SCALE[3],
+  blaze: TEMPERATURE_SCALE[4],
+  peak: TEMPERATURE_SCALE[5],
 } as const;
 
 const STAGE_X: Record<string, number> = {
@@ -39,13 +43,8 @@ export interface HiveHexCell {
 
 export function createTemperatureColorScale() {
   return scaleLinear<string>()
-    .domain([0, 35, 65, 100])
-    .range([
-      TEMPERATURE_COLORS.cool,
-      TEMPERATURE_COLORS.warm,
-      TEMPERATURE_COLORS.hot,
-      TEMPERATURE_COLORS.blaze,
-    ])
+    .domain([0, 20, 45, 65, 85, 100])
+    .range([...TEMPERATURE_SCALE])
     .interpolate(interpolateRgb);
 }
 
@@ -163,7 +162,7 @@ export function renderHiveCanvas(
     ctx.globalAlpha = isHovered ? 1 : 0.88;
     ctx.fill();
     ctx.globalAlpha = 1;
-    ctx.strokeStyle = isHovered ? TEMPERATURE_COLORS.blaze : "rgba(139, 69, 19, 0.12)";
+    ctx.strokeStyle = isHovered ? BEE_COLORS.chart.magenta : "rgba(138, 158, 255, 0.2)";
     ctx.lineWidth = isHovered ? 2 : 0.5;
     ctx.stroke();
   }

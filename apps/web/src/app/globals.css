@@ -4,90 +4,95 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * BEE design system.
- * A premium, minimalist palette: near-black canvas with a signature amber/honey
- * accent (a nod to the "hive"). Tokens follow the shadcn/ui contract so any
- * shadcn component works out of the box.
+ * BEE design system — brand palette
+ * Background #f7f7f7 · Text #222222 · Surfaces #c8d7f8 / #dbdeff
+ * Charts: #ffb213 #fca000 #ffbe55 #8a9eff #d567ff #c197ff
  */
 
 :root {
   --radius: 0.75rem;
 
-  --background: oklch(0.99 0.004 95);
-  --foreground: oklch(0.2 0.02 260);
+  /* Brand primitives */
+  --bee-bg: #f7f7f7;
+  --bee-text: #222222;
+  --bee-surface-primary: #c8d7f8;
+  --bee-surface-secondary: #dbdeff;
+  --bee-chart-amber: #ffb213;
+  --bee-chart-orange: #fca000;
+  --bee-chart-gold: #ffbe55;
+  --bee-chart-blue: #8a9eff;
+  --bee-chart-magenta: #d567ff;
+  --bee-chart-violet: #c197ff;
+  --bee-accent: #8a9eff;
+  --bee-accent-warm: #ffb213;
+  --bee-accent-hot: #d567ff;
+  --bee-shadow: 0 2px 24px -6px rgba(138, 158, 255, 0.18);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.02 260);
+  /* shadcn semantic tokens */
+  --background: #f7f7f7;
+  --foreground: #222222;
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.02 260);
+  --card: #dbdeff;
+  --card-foreground: #222222;
 
-  --primary: oklch(0.78 0.16 78);
-  --primary-foreground: oklch(0.22 0.03 70);
+  --popover: #dbdeff;
+  --popover-foreground: #222222;
 
-  --secondary: oklch(0.96 0.01 95);
-  --secondary-foreground: oklch(0.25 0.02 260);
+  --primary: #8a9eff;
+  --primary-foreground: #222222;
 
-  --muted: oklch(0.96 0.01 95);
-  --muted-foreground: oklch(0.52 0.02 260);
+  --secondary: #c8d7f8;
+  --secondary-foreground: #222222;
 
-  --accent: oklch(0.95 0.03 90);
-  --accent-foreground: oklch(0.25 0.03 70);
+  --muted: #c8d7f8;
+  --muted-foreground: #555555;
 
-  --destructive: oklch(0.58 0.22 27);
-  --destructive-foreground: oklch(0.98 0 0);
+  --accent: #dbdeff;
+  --accent-foreground: #222222;
 
-  --success: oklch(0.7 0.16 155);
-  --warning: oklch(0.8 0.16 78);
+  --destructive: #fca000;
+  --destructive-foreground: #222222;
 
-  --border: oklch(0.9 0.01 95);
-  --input: oklch(0.9 0.01 95);
-  --ring: oklch(0.78 0.16 78);
+  --success: #8a9eff;
+  --warning: #ffb213;
 
-  --chart-1: oklch(0.78 0.16 78);
-  --chart-2: oklch(0.6 0.13 200);
-  --chart-3: oklch(0.7 0.16 155);
-  --chart-4: oklch(0.65 0.2 15);
-  --chart-5: oklch(0.6 0.16 300);
+  --border: rgba(34, 34, 34, 0.08);
+  --input: rgba(34, 34, 34, 0.1);
+  --ring: #8a9eff;
+
+  --chart-1: #ffb213;
+  --chart-2: #fca000;
+  --chart-3: #ffbe55;
+  --chart-4: #8a9eff;
+  --chart-5: #d567ff;
+  --chart-6: #c197ff;
 }
 
 .dark {
-  --background: oklch(0.16 0.01 260);
-  --foreground: oklch(0.96 0.005 95);
+  --background: #1a1a1e;
+  --foreground: #f7f7f7;
 
-  --card: oklch(0.2 0.012 260);
-  --card-foreground: oklch(0.96 0.005 95);
+  --card: #2a2a32;
+  --card-foreground: #f7f7f7;
 
-  --popover: oklch(0.2 0.012 260);
-  --popover-foreground: oklch(0.96 0.005 95);
+  --popover: #2a2a32;
+  --popover-foreground: #f7f7f7;
 
-  --primary: oklch(0.82 0.16 82);
-  --primary-foreground: oklch(0.2 0.03 70);
+  --primary: #8a9eff;
+  --primary-foreground: #222222;
 
-  --secondary: oklch(0.26 0.015 260);
-  --secondary-foreground: oklch(0.96 0.005 95);
+  --secondary: #3a3a44;
+  --secondary-foreground: #f7f7f7;
 
-  --muted: oklch(0.26 0.015 260);
-  --muted-foreground: oklch(0.68 0.015 260);
+  --muted: #3a3a44;
+  --muted-foreground: #aaaaaa;
 
-  --accent: oklch(0.28 0.02 260);
-  --accent-foreground: oklch(0.96 0.005 95);
+  --accent: #3a3a44;
+  --accent-foreground: #f7f7f7;
 
-  --destructive: oklch(0.62 0.21 25);
-  --destructive-foreground: oklch(0.98 0 0);
-
-  --success: oklch(0.72 0.16 155);
-  --warning: oklch(0.82 0.16 82);
-
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.82 0.16 82);
-
-  --chart-1: oklch(0.82 0.16 82);
-  --chart-2: oklch(0.65 0.13 200);
-  --chart-3: oklch(0.72 0.16 155);
-  --chart-4: oklch(0.7 0.2 15);
-  --chart-5: oklch(0.68 0.16 300);
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #8a9eff;
 }
 
 @theme inline {
@@ -127,19 +132,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* ── BEE Control dashboard — editorial terracotta/ochre (placeholder palette) ── */
+/* BEE Control dashboard shell */
 .bee-control {
-  --bee-canvas: oklch(0.975 0.014 78);
-  --bee-terracotta: oklch(0.55 0.11 42);
-  --bee-ochre: oklch(0.72 0.12 72);
-  --bee-shadow: 0 2px 28px -6px oklch(0.45 0.06 42 / 0.12);
+  --bee-canvas: var(--bee-bg);
   background-color: var(--bee-canvas);
+  color: var(--bee-text);
 }
 
 .bee-control .bee-surface {
-  background: oklch(1 0.004 85 / 0.72);
+  background: var(--bee-surface-secondary);
   border-radius: 1.25rem;
   box-shadow: var(--bee-shadow);
+  color: var(--bee-text);
 }
 
 @layer base {

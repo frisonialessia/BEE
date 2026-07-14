@@ -45,14 +45,14 @@ function HiveTooltip({
 
   return (
     <div
-      className="pointer-events-none absolute z-20 w-56 rounded-xl bg-background/95 p-3 shadow-[0_8px_32px_-8px_rgba(139,69,19,0.25)] backdrop-blur-sm"
+      className="pointer-events-none absolute z-20 w-56 rounded-xl bg-[var(--bee-surface-secondary)] p-3 shadow-[var(--bee-shadow)] backdrop-blur-sm"
       style={{
         left: Math.min(Math.max(x + 12, 8), containerWidth - 240),
         top: Math.max(y - 8, 8),
         transform: "translateY(-100%)",
       }}
     >
-      <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--bee-terracotta)]">
+      <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--bee-accent-hot)]">
         Closing temp · {Math.round(cell.temperature)}°
       </p>
       <p className="mt-1 text-sm font-light leading-snug">
@@ -64,7 +64,7 @@ function HiveTooltip({
           {STAGE_LABELS[lead.buying_stage] ?? lead.buying_stage}
         </span>
         {lead.is_hot && (
-          <span className="rounded-md bg-[var(--bee-terracotta)]/15 px-1.5 py-0.5 text-[var(--bee-terracotta)]">
+          <span className="rounded-md bg-[var(--bee-surface-primary)] px-1.5 py-0.5 text-[var(--bee-accent-hot)]">
             HOT
           </span>
         )}
@@ -183,7 +183,7 @@ export function SignalHexMap({
           <div
             className="h-2 w-24 rounded-full"
             style={{
-              background: `linear-gradient(90deg, ${TEMPERATURE_COLORS.cool}, ${TEMPERATURE_COLORS.warm}, ${TEMPERATURE_COLORS.hot}, ${TEMPERATURE_COLORS.blaze})`,
+              background: `linear-gradient(90deg, ${TEMPERATURE_COLORS.cool}, ${TEMPERATURE_COLORS.mild}, ${TEMPERATURE_COLORS.warm}, ${TEMPERATURE_COLORS.hot}, ${TEMPERATURE_COLORS.peak})`,
             }}
           />
           <span>Hot</span>

@@ -36,8 +36,8 @@ export function DashboardNav() {
             className={cn(
               "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               active
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                ? "bg-[var(--bee-surface-primary)] text-[var(--bee-text)]"
+                : "text-muted-foreground hover:bg-[var(--bee-surface-primary)]/50 hover:text-foreground",
             )}
           >
             <Icon className="size-4" />
