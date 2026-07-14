@@ -147,8 +147,15 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
         path = request.url.path
 
-        # Check exact match first, then prefix match
-        if path in self._exempt or any(path.startswith(ep) for ep in self._exempt if ep != path):
+        # Check exact match first, then prefix match.
+        # NOTE: Only paths with len > 1 participate in prefix matching.
+        # "/" is exact-only — if it were a prefix it would exempt every path
+        # (since every URL starts with "/"), which would defeat all authentication.
+        if path in self._exempt or any(
+            path.startswith(ep)
+            for ep in self._exempt
+            if ep != path and len(ep) > 1
+        ):
             return await call_next(request)
 
         provided_key = request.headers.get(self._HEADER)
