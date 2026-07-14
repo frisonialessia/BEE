@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { useHiveLeads } from "@/hooks/queries/use-lead-board";
+import { useHiveLeads, useLeadBoard } from "@/hooks/queries/use-lead-board";
+import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import {
   binLeadPoints,
   findHexAt,
@@ -105,7 +106,20 @@ export function SignalHexMap({
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
 
   const { data: result, isLoading } = useHiveLeads(maxLeads);
+  const { data: boardResult } = useLeadBoard(200);
+  const { openOpportunity } = useOpportunityDrawer();
   const leads: HotLeadScore[] = result?.data ?? [];
+
+  const domainToOpportunity = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const card of boardResult?.cards ?? []) {
+      if (card.company_name) {
+        map.set(card.company_name.toLowerCase(), card.opportunity_id);
+      }
+      map.set(card.title.toLowerCase(), card.opportunity_id);
+    }
+    return map;
+  }, [boardResult?.cards]);
 
   const hexRadius = useMemo(() => {
     if (leads.length > 150) return 14;
@@ -202,20 +216,37 @@ export function SignalHexMap({
     setHovered(findHexAt(cells, mx, my, hexRadius));
   };
 
+  const onClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+    const cell = findHexAt(cells, mx, my, hexRadius);
+    if (!cell) return;
+    const lead = cell.leads[0];
+    const keys = [
+      lead.company_domain.toLowerCase(),
+      (lead.company_name ?? "").toLowerCase(),
+    ].filter(Boolean);
+    let oppId: string | undefined;
+    for (const k of keys) {
+      oppId = domainToOpportunity.get(k);
+      if (oppId) break;
+    }
+    if (oppId) openOpportunity(oppId);
+  };
+
   const onMouseLeave = () => setHovered(null);
 
   return (
     <section
-      className={cn("bee-surface flex h-full flex-col", className)}
+      className={cn("bee-surface flex flex-col p-5", className)}
       aria-label="Signal hex map — hive heatmap"
     >
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="bee-eyebrow">Performance</h2>
-          <p className="bee-kpi mt-2">Colmena</p>
-          <p className="bee-caption mt-1">
-            Closing temperature · DarkFunnelService · {leads.length} leads
-          </p>
+          <h2 className="bee-eyebrow">Colmena</h2>
+          <p className="bee-caption mt-0.5">{leads.length} leads · click cell to inspect</p>
         </div>
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
           <span>Cool</span>
@@ -249,6 +280,7 @@ export function SignalHexMap({
               )}
               onMouseMove={onMouseMove}
               onMouseLeave={onMouseLeave}
+              onClick={onClick}
               role="img"
               aria-label={`Hexagonal heatmap of ${leads.length} leads by closing temperature`}
             />

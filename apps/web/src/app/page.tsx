@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Activity, ArrowRight, Boxes, ShieldCheck, Zap } from "lucide-react";
 
-import { SiteHeader } from "@/components/site-header";
+import { MarketingHeader } from "@/components/marketing-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -42,7 +42,7 @@ const pipeline = [
 export default function Home() {
   return (
     <div className="flex min-h-full flex-col">
-      <SiteHeader />
+      <MarketingHeader />
 
       <main className="flex-1">
         {/* Hero */}
@@ -65,13 +65,11 @@ export default function Home() {
             </p>
             <div className="mt-9 flex items-center justify-center gap-3">
               <Button asChild size="lg">
-                <Link href="/dashboard">
-                  Open the hive <ArrowRight className="size-4" />
-                </Link>
+                <Link href="/dashboard">Log In</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <a href="http://localhost:8000/docs" target="_blank" rel="noreferrer">
-                  Explore the API
+                <a href="#features">
+                  Features <ArrowRight className="size-4" />
                 </a>
               </Button>
             </div>
@@ -94,7 +92,7 @@ export default function Home() {
         </section>
 
         {/* Features */}
-        <section className="mx-auto w-full max-w-6xl px-6 py-16">
+        <section id="features" className="mx-auto w-full max-w-6xl px-6 py-16 scroll-mt-20">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {features.map((f) => (
               <Card key={f.title}>

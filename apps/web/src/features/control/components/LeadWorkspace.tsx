@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowUpRight, Flame, AlertCircle } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useLeadBoard } from "@/hooks/queries/use-lead-board";
 import { scoreVariant } from "@/lib/format";
 import { KANBAN_COLUMNS, groupLeadCards } from "@/lib/control/lead-board";
@@ -20,15 +20,27 @@ const CHART_ACCENT = [
   "bee-kanban-card--chart-6",
 ] as const;
 
-function KanbanCard({ card, index }: { card: LeadCard; index: number }) {
+function KanbanCard({
+  card,
+  index,
+  onOpen,
+}: {
+  card: LeadCard;
+  index: number;
+  onOpen: (id: string) => void;
+}) {
   const channel = card.strategy?.channel;
   const pain = card.strategy?.pain_point;
   const accent = CHART_ACCENT[index % CHART_ACCENT.length];
 
   return (
-    <Link
-      href={`/dashboard/opportunities/${card.opportunity_id}`}
-      className={cn("bee-kanban-card group block", accent)}
+    <button
+      type="button"
+      onClick={() => onOpen(card.opportunity_id)}
+      className={cn(
+        "bee-kanban-card group w-full text-left",
+        accent,
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <p className="line-clamp-2 text-sm font-medium leading-snug tracking-tight">
@@ -60,25 +72,31 @@ function KanbanCard({ card, index }: { card: LeadCard; index: number }) {
           via {channel}
         </p>
       )}
-    </Link>
+    </button>
   );
 }
 
-function KanbanColumn({ label, cards }: { label: string; cards: LeadCard[] }) {
+function KanbanColumn({
+  label,
+  cards,
+  onOpen,
+}: {
+  label: string;
+  cards: LeadCard[];
+  onOpen: (id: string) => void;
+}) {
   return (
-    <div className="flex w-[min(100%,240px)] shrink-0 flex-col">
+    <div className="flex w-[min(100%,260px)] shrink-0 flex-col">
       <div className="mb-3 flex items-baseline justify-between px-1">
         <h3 className="bee-eyebrow">{label}</h3>
         <span className="font-mono text-[10px] text-[var(--color-text-muted)]">{cards.length}</span>
       </div>
-      <div className="flex min-h-[140px] flex-1 flex-col gap-2.5 rounded-2xl bg-[var(--color-primary)]/30 p-2.5">
+      <div className="flex min-h-[120px] flex-1 flex-col gap-2.5 rounded-2xl bg-[var(--color-primary)]/25 p-2.5">
         {cards.length === 0 ? (
           <p className="px-2 py-8 text-center text-[11px] font-light text-[var(--color-text-muted)]">—</p>
         ) : (
           cards.map((card, i) => (
-            <div key={card.opportunity_id}>
-              <KanbanCard card={card} index={i} />
-            </div>
+            <KanbanCard key={card.opportunity_id} card={card} index={i} onOpen={onOpen} />
           ))
         )}
       </div>
@@ -86,45 +104,41 @@ function KanbanColumn({ label, cards }: { label: string; cards: LeadCard[] }) {
   );
 }
 
-function WorkspaceSkeleton() {
-  return (
-    <div className="flex gap-4 overflow-hidden">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-64 w-56 shrink-0 rounded-2xl" />
-      ))}
-    </div>
-  );
-}
-
-/** LeadWorkspace — Kanban for leads with BEE-generated closing strategies. */
+/** LeadWorkspace — primary CRM action column (Kanban). */
 export function LeadWorkspace() {
   const { data: result, isLoading } = useLeadBoard(100);
+  const { openOpportunity } = useOpportunityDrawer();
   const cards = result?.cards ?? [];
   const grouped = groupLeadCards(cards);
 
   return (
-    <section
-      className="bee-surface flex h-full min-h-[var(--bee-zone-footer)] flex-col p-6"
-      aria-label="Lead workspace"
-    >
-      <div className="mb-6 flex shrink-0 items-end justify-between gap-4">
+    <section className="bee-surface flex h-full min-h-0 flex-col p-5" aria-label="Lead workspace">
+      <div className="mb-4 flex shrink-0 items-end justify-between gap-4">
         <div>
-          <h2 className="bee-eyebrow">Lead Workspace</h2>
-          <p className="bee-kpi-sm mt-2">Daily Operation</p>
-          <p className="bee-caption mt-1">Strategies by pipeline stage · updates automatically</p>
+          <h2 className="bee-eyebrow">Action Zone</h2>
+          <p className="bee-kpi-sm mt-1">Lead Workspace</p>
         </div>
         {result?.live === false && (
           <span className="text-[10px] text-[var(--color-text-muted)]">Demo / offline</span>
         )}
       </div>
 
-      <div className="min-h-0 flex-1">
+      <div className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden pb-1">
         {isLoading ? (
-          <WorkspaceSkeleton />
+          <div className="flex gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-64 w-56 shrink-0 rounded-2xl" />
+            ))}
+          </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          <div className="flex h-full gap-4">
             {KANBAN_COLUMNS.map((col) => (
-              <KanbanColumn key={col.id} label={col.label} cards={grouped[col.id] ?? []} />
+              <KanbanColumn
+                key={col.id}
+                label={col.label}
+                cards={grouped[col.id] ?? []}
+                onOpen={openOpportunity}
+              />
             ))}
           </div>
         )}

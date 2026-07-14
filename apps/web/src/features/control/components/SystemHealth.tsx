@@ -160,11 +160,11 @@ export function SystemHealth() {
   });
 
   return (
-    <section className="bee-surface flex h-full flex-col p-8" aria-label="System health">
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+    <section className="bee-surface flex h-full flex-col p-5" aria-label="System health">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="bee-eyebrow">System Health</h2>
-          <p className="bee-kpi mt-2">{live ? "Connected" : "Offline"}</p>
+          <h2 className="bee-eyebrow">Intelligence</h2>
+          <p className="bee-kpi-sm mt-1">{live ? "Connected" : "Offline"}</p>
         </div>
         <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
@@ -189,12 +189,12 @@ export function SystemHealth() {
       <WorkerKpis worker={snapshot.worker} />
 
       {snapshot.providers.length > 0 && (
-        <div className="mt-8 flex-1">
-          <div className="mb-2 flex items-center gap-2">
-            <Radio className="size-3.5 text-muted-foreground" />
+        <div className="mt-4 flex-1 overflow-hidden">
+          <div className="mb-1 flex items-center gap-2">
+            <Radio className="size-3.5 text-[var(--color-text-muted)]" />
             <p className="bee-eyebrow">External APIs</p>
           </div>
-          <div className="divide-y divide-border/40">
+          <div className="max-h-24 overflow-y-auto">
             {snapshot.providers.map((p) => (
               <ProviderRow key={p.name} provider={p} />
             ))}
