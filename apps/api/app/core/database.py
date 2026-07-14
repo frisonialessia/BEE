@@ -13,6 +13,7 @@ the API-facing models.
 from __future__ import annotations
 
 from collections.abc import Generator
+from contextlib import contextmanager
 
 from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
@@ -62,3 +63,18 @@ def get_session() -> Generator[Session, None, None]:
     """
     with Session(engine) as session:
         yield session
+
+
+@contextmanager
+def session_scope() -> Generator[Session, None, None]:
+    """Context manager for background workers and non-request code paths.
+
+    Commits on success, rolls back on exception, always closes the session.
+    """
+    with Session(engine) as session:
+        try:
+            yield session
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise

@@ -26,9 +26,8 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan hook.
 
-    On startup we configure logging and ensure the schema exists (convenient for
-    local/dev; production should rely on migrations). Cleanup logic can be added
-    after the ``yield`` as the platform grows (closing pools, flushing metrics).
+    On startup we configure logging, ensure the schema exists, and start the
+    async external ingestion worker. Cleanup stops the worker gracefully.
     """
     configure_logging()
     logger.info("Starting %s v%s (env=%s)", settings.PROJECT_NAME, __version__, settings.ENVIRONMENT)
@@ -36,7 +35,22 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         init_db()
     except Exception:  # noqa: BLE001 - never crash startup if DB is unavailable in dev
         logger.exception("Database initialization skipped/failed; check DATABASE_URL.")
+
+    # Start background ingestion worker (asyncio.Queue — non-blocking external API calls)
+    # Disabled during pytest — worker uses the production DB engine, not the test SQLite engine.
+    import sys
+
+    worker = None
+    if settings.EXTERNAL_INGESTION_ENABLED and "pytest" not in sys.modules:
+        from app.services.external_api.worker import get_ingestion_worker
+
+        worker = get_ingestion_worker()
+        await worker.start()
+
     yield
+
+    if worker is not None:
+        await worker.stop()
     logger.info("Shutting down %s", settings.PROJECT_NAME)
 
 

@@ -45,3 +45,34 @@ def verify_webhook_signature(payload: bytes, signature: str | None) -> bool:
 
     expected = compute_signature(payload)
     return hmac.compare_digest(expected, signature)
+
+
+def verify_provider_webhook_signature(
+    payload: bytes,
+    signature: str | None,
+    provider: str,
+) -> bool:
+    """Verify HMAC signature for an inbound external-provider webhook.
+
+    Uses the provider-specific secret from :class:`SecretManager` when configured,
+    falling back to the global ``WEBHOOK_SIGNING_SECRET``.
+
+    When ``WEBHOOK_SIGNATURE_REQUIRED`` is False (local dev), verification is
+    skipped — same behaviour as :func:`verify_webhook_signature`.
+    """
+    if not settings.WEBHOOK_SIGNATURE_REQUIRED:
+        return True
+
+    if not signature:
+        return False
+
+    from app.services.secret_manager import get_secret_manager
+
+    secret = get_secret_manager().get_webhook_secret(provider)  # type: ignore[arg-type]
+    if not secret:
+        return False
+
+    expected = compute_signature(payload, secret=secret)
+    # Accept with or without sha256= prefix
+    sig = signature if signature.startswith("sha256=") else f"sha256={signature}"
+    return hmac.compare_digest(expected, sig)

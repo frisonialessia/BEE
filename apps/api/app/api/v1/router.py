@@ -26,6 +26,7 @@ from app.api.v1.endpoints import (
     scenarios,
     sequences,
     signals,
+    webhooks,
 )
 
 api_router = APIRouter()
@@ -46,3 +47,4 @@ api_router.include_router(audit.router)
 api_router.include_router(corrections.router)
 api_router.include_router(scenarios.router)
 api_router.include_router(anomalies.router)
+api_router.include_router(webhooks.router)

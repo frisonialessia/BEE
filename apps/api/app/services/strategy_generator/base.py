@@ -141,6 +141,13 @@ class EnrichmentContext:
     # Empty list = no similar wins yet; generators use their default logic.
     similar_wins: list[dict] = field(default_factory=list)
 
+    # ── External enrichment: LinkedIn / G2 / Google (ExternalAPIOrchestrator) ─
+    # Populated from signal.raw_payload["external_enrichment"] after the async
+    # ingestion worker fetches lead profiles and intent signals.
+    external_profile: dict[str, Any] = field(default_factory=dict)
+    external_intent_keywords: list[str] = field(default_factory=list)
+    external_providers_called: list[str] = field(default_factory=list)
+
     @property
     def best_hint(self) -> SuccessHint | None:
         """Return the highest win-rate actionable hint, or None."""

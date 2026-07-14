@@ -212,7 +212,24 @@ Tone instruction: {disc_instruction}"""
     else:
         sections.append("=== PSYCHOGRAPHIC PROFILE ===\nNo DISC profile available. Use a balanced tone.")
 
-    # ── 10. A/B variant instruction ───────────────────────────────────────────
+    # ── 10. External profile enrichment (LinkedIn / G2 / Google) ─────────────
+    if ctx.external_profile:
+        ep = ctx.external_profile
+        sections.append(
+            f"""=== EXTERNAL PROFILE (LinkedIn enrichment) ===
+Name: {ep.get('lead_name') or ctx.lead_name or 'Unknown'}
+Title: {ep.get('lead_title') or ctx.lead_title or 'Unknown'}
+Headline: {ep.get('headline') or 'N/A'}
+Location: {ep.get('location') or 'N/A'}
+LinkedIn: {ep.get('linkedin_url') or 'N/A'}"""
+        )
+    if ctx.external_intent_keywords:
+        sections.append(
+            "=== EXTERNAL INTENT SIGNALS ===\n"
+            + ", ".join(ctx.external_intent_keywords[:15])
+        )
+
+    # ── 11. A/B variant instruction ───────────────────────────────────────────
     if ctx.active_variant:
         cfg = ctx.active_variant.config
         sections.append(

@@ -159,19 +159,32 @@ class StrategyGeneratorService:
         # ── 4. VectorKnowledgeBase: retrieve similar winning strategies ────────
         similar_wins = self._query_similar_wins(signal_type.value, industry, signal.title)
 
+        # ── 5. External enrichment (LinkedIn / G2 / Google) ───────────────────
+        ext = raw.get("external_enrichment") or {}
+        linkedin = ext.get("linkedin") or {}
+        g2 = ext.get("g2") or {}
+        google = ext.get("google_search") or {}
+        intent_keywords: list[str] = []
+        intent_keywords.extend(g2.get("intent_keywords") or [])
+        intent_keywords.extend(google.get("intent_keywords") or [])
+
+        # Prefer externally enriched lead fields when present
+        enriched_lead = ext.get("lead") or lead_ref
+        enriched_company = ext.get("company") or company_ref
+
         return EnrichmentContext(
             signal_type=signal_type,
             signal_title=signal.title,
             signal_score=signal.score,
             signal_description=signal.description,
-            company_name=company_ref.get("name"),
-            company_domain=company_ref.get("domain"),
-            company_industry=industry,
-            company_country=company_ref.get("country"),
-            lead_name=lead_ref.get("full_name"),
-            lead_title=lead_ref.get("title"),
-            lead_email=lead_ref.get("email"),
-            lead_seniority=lead_ref.get("seniority"),
+            company_name=enriched_company.get("name"),
+            company_domain=enriched_company.get("domain"),
+            company_industry=enriched_company.get("industry") or industry,
+            company_country=enriched_company.get("country"),
+            lead_name=enriched_lead.get("full_name"),
+            lead_title=enriched_lead.get("title") or linkedin.get("lead_title"),
+            lead_email=enriched_lead.get("email"),
+            lead_seniority=enriched_lead.get("seniority") or linkedin.get("lead_seniority"),
             raw_payload=raw,
             analysis_tags=analysis.get("tags", []),
             primary_analyzer=analysis.get("primary_analyzer"),
@@ -179,6 +192,9 @@ class StrategyGeneratorService:
             market_insights=market_insights,
             active_variant=variant_ref,
             similar_wins=similar_wins,
+            external_profile=linkedin,
+            external_intent_keywords=list(dict.fromkeys(intent_keywords)),
+            external_providers_called=ext.get("providers_called") or [],
         )
 
     def _query_similar_wins(

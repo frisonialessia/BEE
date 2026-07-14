@@ -40,6 +40,14 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/signals", tags=["Signal Engine"])
 
 
+def _needs_external_enrichment(payload: SignalWebhookIn) -> bool:
+    """Return True when async external enrichment would add value."""
+    lead = payload.lead
+    if lead is None:
+        return True
+    return not lead.title or not lead.linkedin_url or not lead.seniority
+
+
 @router.post(
     "/webhook",
     response_model=SignalIngestResult,
@@ -85,6 +93,31 @@ async def ingest_signal_webhook(
 
     # 3. Delegate to the engine.
     outcome = engine.ingest(payload)
+
+    # 4. Queue async LinkedIn enrichment when lead profile is incomplete
+    if (
+        not outcome.deduplicated
+        and outcome.opportunity is not None
+        and _needs_external_enrichment(payload)
+    ):
+        from app.core.config import get_settings
+        from app.services.external_api.worker import (
+            IngestionTask,
+            IngestionTaskType,
+            get_ingestion_worker,
+        )
+
+        if get_settings().EXTERNAL_INGESTION_ENABLED:
+            worker = get_ingestion_worker()
+            await worker.enqueue(
+                IngestionTask(
+                    task_type=IngestionTaskType.SIGNAL_ENRICHMENT,
+                    provider="linkedin",
+                    signal_id=str(outcome.signal.id),
+                    opportunity_id=str(outcome.opportunity.id),
+                    payload=payload.model_dump(mode="json"),
+                )
+            )
 
     message = (
         "Signal already ingested (deduplicated)"

@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     API_SECRET_KEY: str | None = None
     # Comma-separated list of paths exempt from API key auth (exact prefix match).
     # /api/v1/health and /api/v1/ready are always exempt.
-    API_KEY_EXEMPT_PATHS: str = "/api/v1/health,/api/v1/ready"
+    API_KEY_EXEMPT_PATHS: str = "/api/v1/health,/api/v1/ready,/api/v1/webhooks/receive"
 
     # ----- CORS ----------------------------------------------------------------
     # Comma-separated list of origins allowed to call the API (the Next.js app).
@@ -133,6 +133,28 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     # Embedding dimension must match the model above.
     EMBEDDING_DIMENSIONS: int = 1536
+
+    # ----- External Ingestion Layer -------------------------------------------
+    EXTERNAL_INGESTION_ENABLED: bool = True
+    EXTERNAL_WORKER_QUEUE_SIZE: int = 1000
+
+    # LinkedIn Sales Navigator / REST API (profile enrichment)
+    LINKEDIN_CLIENT_ID: str | None = None
+    LINKEDIN_CLIENT_SECRET: str | None = None
+    LINKEDIN_WEBHOOK_SECRET: str | None = None
+
+    # G2 intent signals
+    G2_API_KEY: str | None = None
+    G2_WEBHOOK_SECRET: str | None = None
+
+    # Google Custom Search (company research)
+    GOOGLE_SEARCH_API_KEY: str | None = None
+    GOOGLE_SEARCH_CX: str | None = None
+    GOOGLE_WEBHOOK_SECRET: str | None = None
+
+    # Capterra (future)
+    CAPTERRA_API_KEY: str | None = None
+    CAPTERRA_WEBHOOK_SECRET: str | None = None
 
     @property
     def sqlalchemy_database_uri(self) -> str:
