@@ -24,28 +24,28 @@ const STAGE_META: Record<
 > = {
   webhook: {
     icon: Radio,
-    accent: "text-[var(--bee-chart-blue)]",
-    line: "bg-[var(--bee-chart-blue)]",
+    accent: "text-[var(--color-chart-4)]",
+    line: "bg-[var(--color-chart-4)]",
   },
   ingestion: {
     icon: ArrowDownToLine,
-    accent: "text-[var(--bee-chart-gold)]",
-    line: "bg-[var(--bee-chart-gold)]",
+    accent: "text-[var(--color-chart-3)]",
+    line: "bg-[var(--color-chart-3)]",
   },
   enrichment: {
     icon: Sparkles,
-    accent: "text-[var(--bee-chart-violet)]",
-    line: "bg-[var(--bee-chart-violet)]",
+    accent: "text-[var(--color-chart-6)]",
+    line: "bg-[var(--color-chart-6)]",
   },
   strategy: {
     icon: Target,
-    accent: "text-[var(--bee-text)]",
-    line: "bg-[var(--bee-text)]/30",
+    accent: "text-[var(--color-text)]",
+    line: "bg-[var(--color-text)]/20",
   },
   ready: {
     icon: CheckCircle2,
-    accent: "text-[var(--bee-accent-hot)]",
-    line: "bg-[var(--bee-accent-hot)]",
+    accent: "text-[var(--color-chart-5)]",
+    line: "bg-[var(--color-chart-5)]",
   },
 };
 
@@ -58,7 +58,7 @@ function StreamItem({ event }: { event: SignalPipelineEvent }) {
     <div
       className={cn(
         "group relative flex gap-3 py-3 pl-1 transition-opacity duration-200",
-        isReady && "rounded-xl bg-[var(--bee-surface-primary)]/50 px-2 -mx-2",
+        isReady && "rounded-xl bg-[var(--color-primary)]/60 px-2 -mx-2",
       )}
     >
       <div className="flex flex-col items-center pt-0.5">
@@ -136,8 +136,8 @@ export function SignalStream() {
           {live ? (
             <>
               <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-[var(--bee-accent)] opacity-40" />
-                <span className="relative inline-flex size-2 rounded-full bg-[var(--bee-accent)]" />
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-[var(--color-chart-4)] opacity-40" />
+                <span className="relative inline-flex size-2 rounded-full bg-[var(--color-chart-4)]" />
               </span>
               <Wifi className="size-3" />
             </>
@@ -148,7 +148,7 @@ export function SignalStream() {
       </div>
 
       {readyCount > 0 && (
-        <p className="mb-3 shrink-0 text-xs font-light text-[var(--bee-accent-hot)]">
+        <p className="mb-3 shrink-0 text-xs font-light text-[var(--color-chart-5)]">
           {readyCount} strateg{readyCount === 1 ? "y" : "ies"} ready to action
         </p>
       )}

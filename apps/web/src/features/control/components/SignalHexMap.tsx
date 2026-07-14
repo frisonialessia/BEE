@@ -47,14 +47,14 @@ function HiveTooltip({
 
   return (
     <div
-      className="bee-hex-tooltip pointer-events-none absolute z-20 w-56 rounded-2xl bg-[var(--bee-surface-secondary)] p-4 shadow-[var(--bee-shadow)] backdrop-blur-sm"
+      className="bee-hex-tooltip pointer-events-none absolute z-20 w-56 rounded-2xl bg-[var(--color-card)] p-4 shadow-[var(--bee-shadow)]"
       style={{
         left: Math.min(Math.max(x + 12, 8), containerWidth - 240),
         top: Math.max(y - 8, 8),
         transform: "translateY(-100%)",
       }}
     >
-      <p className="bee-eyebrow text-[var(--bee-accent-hot)]">
+      <p className="bee-eyebrow text-[var(--color-chart-5)]">
         Closing temp · {Math.round(cell.temperature)}°
       </p>
       <p className="mt-1.5 text-sm font-light leading-snug">
@@ -66,7 +66,7 @@ function HiveTooltip({
           {STAGE_LABELS[lead.buying_stage] ?? lead.buying_stage}
         </span>
         {lead.is_hot && (
-          <span className="rounded-lg bg-[var(--bee-surface-primary)] px-2 py-0.5 text-[var(--bee-accent-hot)]">
+          <span className="rounded-lg bg-[var(--color-primary)] px-2 py-0.5 text-[var(--color-chart-5)]">
             HOT
           </span>
         )}
@@ -234,7 +234,7 @@ export function SignalHexMap({
           <Skeleton className="h-full w-full rounded-2xl" style={{ height }} />
         ) : leads.length === 0 ? (
           <div
-            className="flex h-full items-center justify-center rounded-2xl bg-muted/20 text-sm font-light text-muted-foreground"
+            className="flex h-full items-center justify-center rounded-2xl bg-[var(--color-primary)]/40 text-sm font-light text-[var(--color-text-muted)]"
             style={{ height }}
           >
             No dark funnel leads yet — intent signals will populate the hive.

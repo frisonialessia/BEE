@@ -18,13 +18,13 @@ const NAV_ITEMS: Array<{
   { href: "/dashboard/strategies", label: "Strategies", icon: Target },
 ];
 
-/** Secondary nav for the Señales y Estrategia dashboard shell. */
+/** Secondary nav for the BEE dashboard shell. */
 export function DashboardNav() {
   const pathname = usePathname();
 
   return (
     <nav
-      className="flex flex-wrap gap-1 border-b border-border/60 pb-4"
+      className="flex flex-wrap gap-2 pb-6"
       aria-label="Dashboard sections"
     >
       {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
@@ -33,14 +33,9 @@ export function DashboardNav() {
           <Link
             key={href}
             href={href}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              active
-                ? "bg-[var(--bee-surface-primary)] text-[var(--bee-text)]"
-                : "text-muted-foreground hover:bg-[var(--bee-surface-primary)]/50 hover:text-foreground",
-            )}
+            className={cn("bee-nav-pill", active && "bee-nav-pill--active")}
           >
-            <Icon className="size-4" />
+            <Icon className="size-4" strokeWidth={1.75} />
             {label}
           </Link>
         );
