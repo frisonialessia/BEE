@@ -249,6 +249,8 @@ python scripts/simulate_signal.py --failure
 
 ## 7. Production deployment checklist
 
+> **Full deploy bible:** see [`DEPLOY_CHECKLIST.md`](./DEPLOY_CHECKLIST.md) at repo root.
+
 BEE is **deployable** after the External Ingestion + Security layers. Before enabling
 real webhook traffic, complete this checklist:
 
