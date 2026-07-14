@@ -109,11 +109,30 @@ class Settings(BaseSettings):
     EMAIL_SMTP_PASSWORD: str | None = None
     EMAIL_FROM_ADDRESS: str | None = None
 
-    # ----- AI providers (reserved for future intelligence layer) ---------------
-    # Present now so the credential-management contract is defined up front.
+    # ----- AI providers -------------------------------------------------------
+    # AI_PROVIDER controls which LLM is used for strategy + artifact generation.
+    # When "none", BEE falls back to rule-based generators (zero cost, instant).
     AI_PROVIDER: Literal["openai", "anthropic", "none"] = "none"
     AI_API_KEY: str | None = None
     AI_MODEL: str = "gpt-4o-mini"
+    # Anthropic-specific model (used when AI_PROVIDER=anthropic)
+    ANTHROPIC_MODEL: str = "claude-3-5-sonnet-20241022"
+    # LLM generation timeouts (seconds)
+    AI_TIMEOUT_SECONDS: int = 30
+    AI_MAX_RETRIES: int = 2
+
+    # ----- VectorKnowledgeBase (Sales DNA) ------------------------------------
+    # VECTOR_STORE_BACKEND controls persistence of the Sales DNA memory:
+    #   mock    — in-memory TF-IDF (default; resets on restart; zero deps)
+    #   pgvector — persistent, semantic, production-grade (requires pgvector ext)
+    VECTOR_STORE_BACKEND: Literal["mock", "pgvector"] = "mock"
+
+    # Embedding model for pgvector (used when VECTOR_STORE_BACKEND=pgvector).
+    # text-embedding-3-small: 1536 dims, ~$0.02/1M tokens (recommended)
+    # text-embedding-3-large: 3072 dims, higher quality, higher cost
+    EMBEDDING_MODEL: str = "text-embedding-3-small"
+    # Embedding dimension must match the model above.
+    EMBEDDING_DIMENSIONS: int = 1536
 
     @property
     def sqlalchemy_database_uri(self) -> str:

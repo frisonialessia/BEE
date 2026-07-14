@@ -12,3 +12,12 @@ psycopg[binary]>=3.2.0,<4.0.0
 
 # Database migrations (schema versioning for production).
 alembic>=1.13.0,<2.0.0
+
+# pgvector — vector similarity search in PostgreSQL (Sales DNA persistent memory).
+pgvector>=0.3.0,<1.0.0
+
+# AI providers — LLM strategy generation + text embeddings.
+# openai: GPT-4o strategy generation + text-embedding-3-small for Sales DNA.
+# anthropic: Claude 3.5 Sonnet strategy generation (alternative provider).
+openai>=2.0.0,<3.0.0
+anthropic>=0.30.0,<1.0.0

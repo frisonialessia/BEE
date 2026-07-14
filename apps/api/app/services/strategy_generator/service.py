@@ -33,7 +33,8 @@ from __future__ import annotations
 
 from sqlmodel import Session
 
-import app.services.strategy_generator.rule_based  # noqa: F401
+import app.services.strategy_generator.llm_generator  # noqa: F401  (registers LLM generator at priority=1000)
+import app.services.strategy_generator.rule_based  # noqa: F401  (registers rule-based generator)
 from app.core.logging import get_logger
 from app.models.base import OpportunityStatus, SignalType
 from app.models.opportunity import Opportunity

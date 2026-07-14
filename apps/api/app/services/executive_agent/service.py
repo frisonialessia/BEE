@@ -26,8 +26,9 @@ from datetime import UTC, datetime
 
 from sqlmodel import Session
 
-# Triggers registration of all built-in artifact generators as a side effect.
-import app.services.executive_agent.generators  # noqa: F401
+# Triggers registration of all artifact generators as a side effect.
+import app.services.executive_agent.generators  # noqa: F401   (rule-based, priority=0)
+import app.services.executive_agent.llm_generator  # noqa: F401  (LLM, priority=1000)
 from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.models.opportunity import Opportunity
