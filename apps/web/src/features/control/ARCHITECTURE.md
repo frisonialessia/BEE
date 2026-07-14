@@ -8,7 +8,7 @@ Minimalist editorial UI for the Señales y Estrategia control plane.
 src/features/control/
 ├── components/
 │   ├── SystemHealth.tsx    ✅ Worker + provider status (live polling)
-│   ├── SignalStream.tsx    ⏳ Webhook → Enrichment → Strategy feed
+│   ├── SignalStream.tsx    ✅ Live pipeline feed + proactive toasts
 │   └── LeadWorkspace.tsx   ⏳ Kanban lead cards + strategy
 ├── hooks/                  (future: useSignalStream, useLeadBoard)
 └── index.ts

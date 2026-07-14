@@ -20,7 +20,7 @@ export {
   fetchOpportunities,
   recordOutcome,
 } from "./opportunities";
-export { fetchIngestionStatus, fetchSystemHealth } from "./control";
+export { fetchIngestionStatus, fetchSignalStream, fetchSystemHealth } from "./control";
 
 export const beeApi = {
   fetch: apiFetch,

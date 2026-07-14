@@ -83,9 +83,15 @@ export const sampleOpportunities: Opportunity[] = [
     status: "ready_to_action",
     score: 92,
     strategy: {
+      pain_point: "Post-funding teams must scale outbound before the 90-day hiring plan stalls.",
+      closing_argument:
+        "Congratulations on the Series B — we help funded teams ramp pipeline 2× faster in the first quarter.",
+      timing_window: { urgency: "immediate" as const, reason: "Budget allocation window", expires_at: "90 days" },
       playbook: "post_funding_outreach",
       next_best_action: "reach_out",
       channel: "email",
+      generator: "rule_based",
+      generated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
       rationale:
         "Northwind Labs recently secured funding — a prime window to engage while budgets are being allocated.",
     },
@@ -99,9 +105,15 @@ export const sampleOpportunities: Opportunity[] = [
     status: "ready_to_action",
     score: 74,
     strategy: {
+      pain_point: "New RevOps leader is evaluating the entire sales stack in their first 90 days.",
+      closing_argument:
+        "Saw you joined as VP RevOps — teams at your stage typically rebuild pipeline infrastructure in Q1.",
+      timing_window: { urgency: "this_week" as const, reason: "New hire evaluation window", expires_at: null },
       playbook: "leadership_change_outreach",
       next_best_action: "reach_out",
       channel: "linkedin",
+      generator: "rule_based",
+      generated_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
       rationale:
         "A new RevOps leader is actively shaping tooling decisions in their first 90 days.",
     },

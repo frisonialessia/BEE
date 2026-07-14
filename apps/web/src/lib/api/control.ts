@@ -1,4 +1,12 @@
 import { apiFetch } from "@/lib/api/client";
+import { fetchOpportunities } from "@/lib/api/opportunities";
+import { fetchSignals } from "@/lib/api/signals";
+import {
+  buildSignalPipelineEvents,
+  countReadyEvents,
+  type SignalStreamSnapshot,
+} from "@/lib/control/pipeline-builder";
+import { sampleOpportunities, sampleSignals } from "@/lib/sample-data";
 import type { FetchResult } from "@/types/api";
 import type {
   ApiConnectivity,
@@ -140,6 +148,53 @@ export async function fetchIngestionStatus(): Promise<
         error_count: 0,
         providers: [],
         rate_limits: {},
+      },
+    };
+  }
+}
+
+/** Pipeline feed: signals × opportunities × worker queue → stream events. */
+export async function fetchSignalStream(limit = 40): Promise<FetchResult<SignalStreamSnapshot>> {
+  const fetched_at = new Date().toISOString();
+
+  try {
+    const [signalsRes, oppsRes, workerRes] = await Promise.all([
+      fetchSignals(limit),
+      fetchOpportunities(undefined, limit),
+      fetchIngestionStatus(),
+    ]);
+
+    const events = buildSignalPipelineEvents(
+      signalsRes.data,
+      oppsRes.data,
+      workerRes.data,
+    );
+
+    return {
+      live: signalsRes.live || oppsRes.live,
+      data: {
+        events,
+        live: signalsRes.live || oppsRes.live,
+        ready_count: countReadyEvents(events),
+        fetched_at,
+      },
+    };
+  } catch {
+    const events = buildSignalPipelineEvents(sampleSignals, sampleOpportunities, {
+      running: true,
+      queue_depth: 0,
+      processed_count: 12,
+      error_count: 0,
+      providers: [],
+      rate_limits: {},
+    });
+    return {
+      live: false,
+      data: {
+        events,
+        live: false,
+        ready_count: countReadyEvents(events),
+        fetched_at,
       },
     };
   }
