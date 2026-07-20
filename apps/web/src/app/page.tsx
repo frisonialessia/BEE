@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { Activity, ArrowRight, Boxes, ShieldCheck, Zap } from "lucide-react";
 
-import { SiteHeader } from "@/components/site-header";
+import { MarketingHeader } from "@/components/marketing-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 
 const features = [
   {
@@ -11,24 +10,28 @@ const features = [
     title: "Motor de Señales",
     description:
       "A webhook-native engine ingests market triggers in real time — funding, hiring, tech adoption — and scores them instantly.",
+    tone: "bee-bento",
   },
   {
     icon: Boxes,
     title: "Pluggable analyzers",
     description:
       "Add new intelligence by dropping in an analyzer. The engine, API, and schema never change — built on SOLID from day one.",
+    tone: "bee-bento bee-bento--primary",
   },
   {
     icon: Zap,
     title: "Signal → Opportunity",
     description:
       "Every qualified signal is fused with a lead and a recommended strategy into an actionable, prioritized opportunity.",
+    tone: "bee-bento bee-bento--warm",
   },
   {
     icon: ShieldCheck,
     title: "Secure by design",
     description:
       "HMAC-signed webhooks and environment-based secrets. Credentials never touch the codebase.",
+    tone: "bee-bento bee-bento--muted",
   },
 ];
 
@@ -41,30 +44,22 @@ const pipeline = [
 
 export default function Home() {
   return (
-    <div className="flex min-h-full flex-col">
-      <SiteHeader />
+    <div className="flex min-h-full flex-col bg-background">
+      <MarketingHeader />
 
       <main className="flex-1">
-        {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 -z-10 opacity-70 [background:radial-gradient(60%_50%_at_50%_-10%,color-mix(in_oklch,var(--primary)_18%,transparent),transparent)]"
-          />
-          <div className="mx-auto w-full max-w-6xl px-6 py-24 text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/50 px-3 py-1 text-xs text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-primary" />
-              Sales Force Intelligence
-            </span>
-            <h1 className="mx-auto mt-6 max-w-3xl text-balance text-5xl font-semibold tracking-tight sm:text-6xl">
+        <section className="border-b border-border">
+          <div className="mx-auto w-full max-w-6xl px-6 py-20">
+            <p className="bee-eyebrow">Sales Force Intelligence</p>
+            <h1 className="bee-display mt-3 max-w-3xl text-balance">
               The living system that turns market signals into revenue.
             </h1>
-            <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-muted-foreground">
+            <p className="bee-caption mt-4 max-w-2xl text-base">
               BEE detects the moments that matter — a funding round, a key hire, a
               new tool — and executes the right play, automatically.
             </p>
-            <div className="mt-9 flex items-center justify-center gap-3">
-              <Button asChild size="lg">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Button asChild size="lg" className="bee-btn--dark">
                 <Link href="/dashboard">
                   Open the hive <ArrowRight className="size-4" />
                 </Link>
@@ -78,44 +73,48 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Pipeline */}
-        <section className="mx-auto w-full max-w-6xl px-6 pb-8">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {pipeline.map((p) => (
-              <Card key={p.step}>
-                <CardContent className="p-5">
-                  <div className="font-mono text-xs text-primary">{p.step}</div>
-                  <div className="mt-2 text-base font-medium">{p.label}</div>
-                  <div className="text-sm text-muted-foreground">{p.detail}</div>
-                </CardContent>
-              </Card>
+        <section className="mx-auto w-full max-w-6xl px-6 py-10">
+          <div className="bee-bento-grid">
+            {pipeline.map((p, i) => (
+              <div
+                key={p.step}
+                className={`bee-span-3 bee-bento bee-bento-pad ${
+                  i % 2 === 0 ? "bee-bento--primary" : ""
+                }`}
+              >
+                <div className="bee-eyebrow">{p.step}</div>
+                <div className="mt-2 text-base font-semibold">{p.label}</div>
+                <div className="bee-caption">{p.detail}</div>
+              </div>
             ))}
           </div>
         </section>
 
-        {/* Features */}
-        <section className="mx-auto w-full max-w-6xl px-6 py-16">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <section id="features" className="mx-auto w-full max-w-6xl px-6 py-12">
+          <p className="bee-eyebrow">Platform</p>
+          <h2 className="mt-2 text-xl font-semibold">Built for revenue teams</h2>
+          <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
             {features.map((f) => (
-              <Card key={f.title}>
-                <CardContent className="flex gap-4 p-6">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <f.icon className="size-5" />
+              <div key={f.title} className={`${f.tone} bee-bento-pad`}>
+                <div className="flex gap-4">
+                  <div
+                    className="flex size-10 shrink-0 items-center justify-center border border-border bg-background"
+                    style={{ borderRadius: "var(--radius-md)" }}
+                  >
+                    <f.icon className="size-5 stroke-[1.25]" />
                   </div>
                   <div>
-                    <h3 className="font-medium">{f.title}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {f.description}
-                    </p>
+                    <h3 className="font-semibold">{f.title}</h3>
+                    <p className="bee-caption mt-1">{f.description}</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-border/60">
+      <footer className="border-t border-border">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-2 px-6 py-8 text-sm text-muted-foreground sm:flex-row">
           <span>BEE — Sales Force Intelligence</span>
           <span>Modular · Efficient · Market-aware</span>

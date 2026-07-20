@@ -24,9 +24,9 @@ export function Logo({
         </svg>
       </span>
       {withText && (
-        <span className="text-lg font-semibold tracking-tight">
+        <span className="text-base font-semibold tracking-tight">
           BEE
-          <span className="text-muted-foreground font-normal"> Intelligence</span>
+          <span className="font-normal text-muted-foreground"> Intelligence</span>
         </span>
       )}
     </div>

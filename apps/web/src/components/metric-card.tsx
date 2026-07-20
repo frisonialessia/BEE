@@ -1,29 +1,34 @@
 import type { LucideIcon } from "lucide-react";
 
-import { Card, CardContent } from "@/components/ui/card";
-
-/** A compact KPI tile for the dashboard summary row. */
+/** Compact KPI tile for inline bento grids. */
 export function MetricCard({
   label,
   value,
   hint,
   icon: Icon,
+  tone = "default",
 }: {
   label: string;
   value: string | number;
   hint?: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  tone?: "default" | "warm" | "muted";
 }) {
+  const toneClass =
+    tone === "warm"
+      ? "bee-bento--warm"
+      : tone === "muted"
+        ? "bee-bento--muted"
+        : "";
+
   return (
-    <Card>
-      <CardContent className="p-5">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{label}</span>
-          <Icon className="size-4 text-primary" />
-        </div>
-        <div className="mt-2 text-2xl font-semibold tracking-tight">{value}</div>
-        {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
-      </CardContent>
-    </Card>
+    <div className={`bee-bento bee-bento-pad ${toneClass}`}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="bee-kpi-tile__label">{label}</span>
+        {Icon && <Icon className="size-3.5 text-muted-foreground stroke-[1.25]" />}
+      </div>
+      <div className="bee-kpi mt-2">{value}</div>
+      {hint && <p className="bee-caption mt-1">{hint}</p>}
+    </div>
   );
 }
