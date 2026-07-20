@@ -29,3 +29,11 @@ export const CHART_PALETTE = [
 
 /** Closing-temperature scale — maps cool → hot across the closed palette. */
 export const TEMPERATURE_SCALE = [...CHART_PALETTE] as const;
+
+/** Rotación de tonos para bloques Bento. */
+export const BENTO_TONES = [
+  BEE_COLORS.card,
+  BEE_COLORS.primary,
+  "#ede4f7",
+  BEE_COLORS.chart.gold,
+] as const;

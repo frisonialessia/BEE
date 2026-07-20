@@ -8,26 +8,27 @@ import {
   SystemHealth,
 } from "@/features/control";
 
-/** BEE Control — CRM operator workspace. */
+/** BEE Control — workspace operativo CRM. */
 export default function ControlPage() {
   return (
     <ControlLayout
       header={
         <>
-          <h1 className="bee-display">Control</h1>
+          <p className="bee-eyebrow">Operaciones</p>
+          <h1 className="bee-display mt-1">Control</h1>
           <p className="bee-caption mt-1">
-            Action zone · Kanban left · Intelligence right
+            Kanban de acción · inteligencia hexagonal · métricas del sistema
           </p>
         </>
       }
       workspace={<LeadWorkspace />}
-      health={<SystemHealth />}
       intelligence={
         <>
-          <SignalHexMap height={280} maxLeads={200} className="h-full" />
+          <SignalHexMap height={240} maxLeads={200} className="h-full" />
           <SignalStream />
         </>
       }
+      health={<SystemHealth />}
     />
   );
 }

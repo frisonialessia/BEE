@@ -4,6 +4,7 @@ import { Activity, Bot, Flame, ShieldCheck, TrendingUp } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
 import { BrandVoicePanel } from "@/components/brand-voice";
+import { PaginationBar } from "@/components/dashboard/pagination-bar";
 import { DarkFunnelDashboard } from "@/components/dark-funnel-dashboard";
 import { EngagementInboxPanel } from "@/components/engagement-inbox";
 import { MetricCard } from "@/components/metric-card";
@@ -12,21 +13,27 @@ import { PendingActionsPanel } from "@/components/pending-actions";
 import { DeepLearningPanel } from "@/components/deep-learning-panel";
 import { ResiliencePanel } from "@/components/resilience-panel";
 import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
+import { SignalCard } from "@/components/signal-card";
 import { WorkflowStatusPanel } from "@/components/workflow-status";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
+import { usePagination } from "@/hooks/use-pagination";
 import { useBattlecards } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 
 export function DashboardOverview() {
   const { data: signalsResult, isLoading: signalsLoading } = useSignals();
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
+  const { openOpportunity } = useOpportunityDrawer();
 
   const signals = signalsResult?.data ?? [];
   const battlecards = battlecardsResult?.data ?? [];
   const live = Boolean(signalsResult?.live || battlecardsResult?.live);
   const loading = signalsLoading || battlecardsLoading;
+
+  const battlecardPagination = usePagination(battlecards);
+  const signalPagination = usePagination(signals);
 
   const avgScore =
     signals.length > 0
@@ -40,9 +47,9 @@ export function DashboardOverview() {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-72" />
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-xl" />
+            <Skeleton key={i} className="h-24" />
           ))}
         </div>
       </div>
@@ -51,99 +58,135 @@ export function DashboardOverview() {
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Signal Intelligence</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Real-time market triggers → CEO battlecards → closed deals.
-          </p>
-        </div>
-        <Badge variant={live ? "success" : "warning"}>
-          {live ? "Live · connected to API" : "Demo data · API offline"}
-        </Badge>
-      </div>
-
-      <section className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <MetricCard label="Signals tracked" value={signals.length} icon={Activity} />
-        <MetricCard label="High-intent" value={hotSignals} hint="score ≥ 75" icon={TrendingUp} />
-        <MetricCard
-          label="Ready to action"
-          value={readyCount}
-          hint="battlecard complete"
-          icon={ShieldCheck}
-        />
-        <MetricCard label="Hot leads" value={hotLeads} hint="buying intent detected" icon={Flame} />
-        <MetricCard label="Avg. score" value={avgScore} icon={Activity} />
-      </section>
-
-      {battlecards.length > 0 && (
-        <section className="mt-10">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold">CEO Battlecards</h2>
-              <p className="text-sm text-muted-foreground">
-                Fully enriched briefs — pain point · closing argument · timing window.
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Bot className="size-3.5" />
-              Strategy generated · rule_based
-            </div>
+      <header className="bee-topbar -mx-5 -mt-4 mb-4 px-5 pt-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="bee-eyebrow">Inteligencia de señales</p>
+            <h1 className="bee-display mt-1">Operación diaria</h1>
+            <p className="bee-caption mt-1">
+              Señales de mercado en tiempo real → battlecards CEO → cierre de deals
+            </p>
           </div>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {battlecards.slice(0, 4).map((card) => (
-              <Card key={card.opportunity_id}>
-                <CardContent className="p-6">
+          <Badge variant={live ? "success" : "warning"}>
+            {live ? "En vivo · API conectada" : "Demo · API desconectada"}
+          </Badge>
+        </div>
+
+        <div className="bee-kpi-strip">
+          <MetricCard label="Señales" value={signals.length} icon={Activity} />
+          <MetricCard label="Alta intención" value={hotSignals} hint="score ≥ 75" icon={TrendingUp} />
+          <MetricCard label="Listas para acción" value={readyCount} hint="battlecard completo" icon={ShieldCheck} />
+          <MetricCard label="Leads calientes" value={hotLeads} hint="intención de compra" icon={Flame} />
+          <MetricCard label="Score medio" value={avgScore} icon={Activity} />
+        </div>
+      </header>
+
+      <div className="bee-bento-grid">
+        {battlecards.length > 0 && (
+          <section className="bee-span-8 space-y-3">
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="bee-eyebrow">Battlecards CEO</p>
+                <h2 className="mt-1 text-base font-semibold">Briefs enriquecidos</h2>
+                <p className="bee-caption">Pain point · argumento de cierre · ventana de timing</p>
+              </div>
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Bot className="size-3.5" />
+                Estrategia · rule_based
+              </span>
+            </div>
+
+            <div className="grid gap-3">
+              {battlecardPagination.pageItems.map((card, i) => (
+                <button
+                  key={card.opportunity_id}
+                  type="button"
+                  onClick={() => openOpportunity(card.opportunity_id)}
+                  className={`bee-bento bee-bento-pad-lg text-left transition-colors hover:border-[var(--color-chart-4)] ${
+                    i % 2 === 0 ? "bee-bento--primary" : ""
+                  }`}
+                >
                   <BattlecardView card={card} />
-                </CardContent>
-              </Card>
-            ))}
+                </button>
+              ))}
+            </div>
+
+            <PaginationBar
+              page={battlecardPagination.page}
+              pageSize={battlecardPagination.pageSize}
+              totalPages={battlecardPagination.totalPages}
+              totalItems={battlecardPagination.totalItems}
+              onPageChange={battlecardPagination.goToPage}
+              onPageSizeChange={battlecardPagination.changePageSize}
+              itemLabel="battlecards"
+            />
+          </section>
+        )}
+
+        <section className={`${battlecards.length > 0 ? "bee-span-4" : "bee-span-12"} space-y-3`}>
+          <div>
+            <p className="bee-eyebrow">Business Operating System</p>
+            <h2 className="mt-1 text-base font-semibold">Capa de automatización</h2>
+            <p className="bee-caption">Ingresos · workflows · cola de ejecución</p>
+          </div>
+          <div className="space-y-3">
+            <RevenueSimulatorWidget />
+            <WorkflowStatusPanel />
+            <PendingActionsPanel />
           </div>
         </section>
-      )}
 
-      <section className="mt-10">
-        <div className="mb-4">
-          <h2 className="text-base font-semibold">Business Operating System</h2>
-          <p className="text-sm text-muted-foreground">
-            Event-driven automation · Resource intelligence · Revenue projections
-          </p>
-        </div>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <RevenueSimulatorWidget />
-          <WorkflowStatusPanel />
-          <PendingActionsPanel />
-        </div>
-      </section>
+        <section className="bee-span-12 space-y-3">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="bee-eyebrow">Feed de señales</p>
+              <h2 className="mt-1 text-base font-semibold">Todas las señales</h2>
+            </div>
+            <span className="bee-caption">{signals.length} total</span>
+          </div>
 
-      <section className="mt-10">
-        <div className="mb-3">
-          <h2 className="text-sm font-semibold">Autonomous Growth</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Personal brand + omnichannel prospecting — CEO approval required
-          </p>
-        </div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <BrandVoicePanel />
-          <EngagementInboxPanel />
-        </div>
-      </section>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {signalPagination.pageItems.map((signal, i) => (
+              <SignalCard key={signal.id} signal={signal} toneIndex={i} />
+            ))}
+          </div>
 
-      <section className="mt-10">
-        <DarkFunnelDashboard />
-      </section>
+          <PaginationBar
+            page={signalPagination.page}
+            pageSize={signalPagination.pageSize}
+            totalPages={signalPagination.totalPages}
+            totalItems={signalPagination.totalItems}
+            onPageChange={signalPagination.goToPage}
+            onPageSizeChange={signalPagination.changePageSize}
+            itemLabel="señales"
+          />
+        </section>
 
-      <section className="mt-10">
-        <NetworkNavigatorPanel />
-      </section>
+        <section className="bee-span-12 space-y-3">
+          <p className="bee-eyebrow">Crecimiento autónomo</p>
+          <h2 className="text-base font-semibold">Marca personal y prospección omnicanal</h2>
+          <div className="grid gap-3 md:grid-cols-2">
+            <BrandVoicePanel />
+            <EngagementInboxPanel />
+          </div>
+        </section>
 
-      <section className="mt-10">
-        <DeepLearningPanel />
-      </section>
+        <section className="bee-span-12">
+          <DarkFunnelDashboard />
+        </section>
 
-      <section className="mt-10">
-        <ResiliencePanel />
-      </section>
+        <section className="bee-span-12">
+          <NetworkNavigatorPanel />
+        </section>
+
+        <section className="bee-span-6">
+          <DeepLearningPanel />
+        </section>
+
+        <section className="bee-span-6">
+          <ResiliencePanel />
+        </section>
+      </div>
     </>
   );
 }

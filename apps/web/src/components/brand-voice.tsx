@@ -95,7 +95,7 @@ export function BrandVoicePanel() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+      <div className="rounded-none border border-zinc-800 bg-zinc-900 p-5">
         <div className="h-4 w-32 animate-pulse rounded bg-zinc-800 mb-3" />
         <div className="h-3 w-full animate-pulse rounded bg-zinc-800" />
       </div>
@@ -103,17 +103,17 @@ export function BrandVoicePanel() {
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 space-y-4">
+    <div className="rounded-none border border-zinc-800 bg-zinc-900 p-5 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-white">Voice Brain</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-background)]">Voice Brain</h3>
           <p className="text-xs text-zinc-500 mt-0.5">CEO personal brand profile — grounds all AI-generated content</p>
         </div>
         {!profile && (
           <button
             onClick={() => setShowCreate(true)}
-            className="text-xs px-3 py-1.5 rounded-lg bg-amber-500 text-black font-medium hover:bg-amber-400"
+            className="text-xs px-3 py-1.5 rounded-sm bg-amber-500 text-black font-medium hover:bg-amber-400"
           >
             Setup Voice
           </button>
@@ -121,7 +121,7 @@ export function BrandVoicePanel() {
         {profile && (
           <button
             onClick={() => setShowAddFragment(true)}
-            className="text-xs px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700"
+            className="text-xs px-3 py-1.5 rounded-sm bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700"
           >
             + Add Fragment
           </button>
@@ -130,31 +130,31 @@ export function BrandVoicePanel() {
 
       {/* Create profile form */}
       {showCreate && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-950/20 p-4 space-y-3">
+        <div className="rounded-sm border border-amber-500/30 bg-amber-950/20 p-4 space-y-3">
           <p className="text-xs font-semibold text-amber-400">Configure Voice Profile</p>
           <input
             value={createName}
             onChange={(e) => setCreateName(e.target.value)}
             placeholder="Your full name"
-            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
+            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-[var(--color-background)] placeholder-zinc-500 focus:outline-none focus:border-amber-500"
           />
           <input
             value={createTone}
             onChange={(e) => setCreateTone(e.target.value)}
             placeholder="Tone descriptors (comma-separated)"
-            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
+            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-[var(--color-background)] placeholder-zinc-500 focus:outline-none focus:border-amber-500"
           />
           <input
             value={createTopics}
             onChange={(e) => setCreateTopics(e.target.value)}
             placeholder="Authority topics (comma-separated)"
-            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
+            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-[var(--color-background)] placeholder-zinc-500 focus:outline-none focus:border-amber-500"
           />
           <input
             value={createCTA}
             onChange={(e) => setCreateCTA(e.target.value)}
             placeholder="Preferred CTA (e.g. Let's talk.)"
-            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
+            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-[var(--color-background)] placeholder-zinc-500 focus:outline-none focus:border-amber-500"
           />
           <div className="flex gap-2">
             <button
@@ -178,11 +178,11 @@ export function BrandVoicePanel() {
       {profile && (
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-sm bg-amber-500/20 flex items-center justify-center">
               <span className="text-lg">{profile.display_name[0]}</span>
             </div>
             <div>
-              <p className="text-sm font-medium text-white">{profile.display_name}</p>
+              <p className="text-sm font-medium text-[var(--color-background)]">{profile.display_name}</p>
               <p className="text-xs text-zinc-500">{profile.title ?? "CEO"}</p>
             </div>
           </div>
@@ -191,7 +191,7 @@ export function BrandVoicePanel() {
           {profile.tone_descriptors.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {profile.tone_descriptors.map((t) => (
-                <span key={t} className="text-xs px-2 py-0.5 bg-zinc-800 rounded-full text-zinc-300 border border-zinc-700">
+                <span key={t} className="text-xs px-2 py-0.5 bg-zinc-800 rounded-sm text-zinc-300 border border-zinc-700">
                   {t}
                 </span>
               ))}
@@ -204,7 +204,7 @@ export function BrandVoicePanel() {
               <p className="text-xs text-zinc-500 mb-1.5">Authority topics</p>
               <div className="flex flex-wrap gap-1.5">
                 {profile.authority_topics.map((t) => (
-                  <span key={t} className="text-xs px-2 py-0.5 bg-amber-500/10 rounded-full text-amber-400 border border-amber-500/20">
+                  <span key={t} className="text-xs px-2 py-0.5 bg-amber-500/10 rounded-sm text-amber-400 border border-amber-500/20">
                     {t}
                   </span>
                 ))}
@@ -221,12 +221,12 @@ export function BrandVoicePanel() {
 
       {/* Add fragment form */}
       {showAddFragment && profile && (
-        <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 p-4 space-y-3">
-          <p className="text-xs font-semibold text-white">Add Brand Fragment</p>
+        <div className="rounded-sm border border-zinc-700 bg-zinc-800/50 p-4 space-y-3">
+          <p className="text-xs font-semibold text-[var(--color-background)]">Add Brand Fragment</p>
           <select
             value={fragmentCategory}
             onChange={(e) => setFragmentCategory(e.target.value)}
-            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-[var(--color-background)] focus:outline-none focus:border-amber-500"
           >
             {FRAGMENT_CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>{c.label}</option>
@@ -237,13 +237,13 @@ export function BrandVoicePanel() {
             onChange={(e) => setFragmentContent(e.target.value)}
             placeholder="Paste an example post, key insight, or signature phrase..."
             rows={4}
-            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 resize-none"
+            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-[var(--color-background)] placeholder-zinc-500 focus:outline-none focus:border-amber-500 resize-none"
           />
           <input
             value={fragmentTags}
             onChange={(e) => setFragmentTags(e.target.value)}
             placeholder="Tags (comma-separated): funding, SaaS, leadership"
-            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
+            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-[var(--color-background)] placeholder-zinc-500 focus:outline-none focus:border-amber-500"
           />
           <div className="flex gap-2">
             <button
@@ -271,13 +271,13 @@ export function BrandVoicePanel() {
             {channels.map((ch) => (
               <div
                 key={ch.channel}
-                className={`rounded-lg p-3 border text-center ${
+                className={`rounded-sm p-3 border text-center ${
                   ch.mock
                     ? "border-zinc-700 bg-zinc-800/50"
                     : "border-green-500/30 bg-green-950/20"
                 }`}
               >
-                <p className="text-sm font-bold text-white">{CHANNEL_ICONS[ch.channel] ?? ch.channel}</p>
+                <p className="text-sm font-bold text-[var(--color-background)]">{CHANNEL_ICONS[ch.channel] ?? ch.channel}</p>
                 <p className="text-xs text-zinc-400 capitalize mt-0.5">{ch.channel}</p>
                 <p className={`text-xs mt-1 ${ch.mock ? "text-zinc-600" : "text-green-400"}`}>
                   {ch.mock ? "not connected" : "active"}

@@ -56,14 +56,14 @@ function EventCard({ event }: { event: EngagementEvent }) {
   if (event.ignored) return null;
 
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 space-y-2">
+    <div className="rounded-sm border border-zinc-800 bg-zinc-900/50 p-3 space-y-2">
       {/* Header row */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-zinc-500 w-5 text-center">
             {SOURCE_ICONS[event.source] ?? "?"}
           </span>
-          <span className="text-xs font-medium text-white">
+          <span className="text-xs font-medium text-[var(--color-background)]">
             {event.author_name ?? event.author_handle ?? "Anonymous"}
           </span>
         </div>
@@ -139,18 +139,18 @@ export function EngagementInboxPanel() {
   const actionable = events.filter((e) => !e.ignored && e.pending_action_id);
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 space-y-4">
+    <div className="rounded-none border border-zinc-800 bg-zinc-900 p-5 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-white">Engagement Inbox</h3>
+          <h3 className="text-sm font-semibold text-[var(--color-background)]">Engagement Inbox</h3>
           <p className="text-xs text-zinc-500 mt-0.5">
             Incoming comments, DMs, and replies — classified and drafted by AI
           </p>
         </div>
         <button
           onClick={() => setShowSubmit(!showSubmit)}
-          className="text-xs px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700"
+          className="text-xs px-3 py-1.5 rounded-sm bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-zinc-700"
         >
           + Simulate Event
         </button>
@@ -158,15 +158,15 @@ export function EngagementInboxPanel() {
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="rounded-lg bg-zinc-800/50 p-2">
-          <p className="text-lg font-bold text-white">{events.length}</p>
+        <div className="rounded-sm bg-zinc-800/50 p-2">
+          <p className="text-lg font-bold text-[var(--color-background)]">{events.length}</p>
           <p className="text-xs text-zinc-500">Total</p>
         </div>
-        <div className="rounded-lg bg-amber-500/10 p-2">
+        <div className="rounded-sm bg-amber-500/10 p-2">
           <p className="text-lg font-bold text-amber-400">{actionable.length}</p>
           <p className="text-xs text-zinc-500">Need approval</p>
         </div>
-        <div className="rounded-lg bg-green-500/10 p-2">
+        <div className="rounded-sm bg-green-500/10 p-2">
           <p className="text-lg font-bold text-green-400">
             {events.filter((e) => e.intent === "sales_interest").length}
           </p>
@@ -176,12 +176,12 @@ export function EngagementInboxPanel() {
 
       {/* Submit form */}
       {showSubmit && (
-        <div className="rounded-lg border border-zinc-700 bg-zinc-800/50 p-4 space-y-3">
-          <p className="text-xs font-semibold text-white">Simulate Incoming Event</p>
+        <div className="rounded-sm border border-zinc-700 bg-zinc-800/50 p-4 space-y-3">
+          <p className="text-xs font-semibold text-[var(--color-background)]">Simulate Incoming Event</p>
           <select
             value={source}
             onChange={(e) => setSource(e.target.value)}
-            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-[var(--color-background)] focus:outline-none focus:border-amber-500"
           >
             <option value="linkedin">LinkedIn</option>
             <option value="twitter">X (Twitter)</option>
@@ -191,14 +191,14 @@ export function EngagementInboxPanel() {
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             placeholder="Author name (optional)"
-            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
+            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-[var(--color-background)] placeholder-zinc-500 focus:outline-none focus:border-amber-500"
           />
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Paste a comment or message..."
             rows={3}
-            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 resize-none"
+            className="w-full text-xs bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-[var(--color-background)] placeholder-zinc-500 focus:outline-none focus:border-amber-500 resize-none"
           />
           <div className="flex gap-2">
             <button
@@ -222,7 +222,7 @@ export function EngagementInboxPanel() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-lg bg-zinc-800" />
+            <div key={i} className="h-20 animate-pulse rounded-sm bg-zinc-800" />
           ))}
         </div>
       ) : events.filter((e) => !e.ignored).length === 0 ? (

@@ -12,7 +12,7 @@ import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context"
 import { useArtifacts, useBattlecard } from "@/hooks/queries/use-artifacts";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 
-/** CRM detail drawer — opens in-place, no page navigation. */
+/** Drawer CRM — detalle in-place sin navegación. */
 export function OpportunityDrawer() {
   const { opportunityId, closeOpportunity } = useOpportunityDrawer();
 
@@ -45,60 +45,60 @@ export function OpportunityDrawer() {
       <button
         type="button"
         className="bee-drawer-overlay"
-        aria-label="Close detail panel"
+        aria-label="Cerrar panel de detalle"
         onClick={closeOpportunity}
       />
       <aside
         className="bee-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label="Opportunity detail"
+        aria-label="Detalle de oportunidad"
       >
-        <div className="flex items-center justify-between gap-3 border-b border-[color-mix(in_srgb,var(--color-text)_6%,transparent)] px-6 py-4">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-6 py-4">
           <div>
-            <p className="bee-eyebrow">Opportunity</p>
-            <h2 className="mt-1 text-lg font-semibold tracking-tight text-[var(--color-text)]">
-              {opportunity?.title.replace(/^Opportunity:\s*/, "") ?? "Loading…"}
+            <p className="bee-eyebrow">Oportunidad</p>
+            <h2 className="mt-1 text-lg font-semibold tracking-tight">
+              {opportunity?.title.replace(/^Opportunity:\s*/, "") ?? "Cargando…"}
             </h2>
           </div>
           <button
             type="button"
             onClick={closeOpportunity}
-            className="rounded-lg p-2 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-primary)] hover:text-[var(--color-text)]"
-            aria-label="Close"
+            className="rounded-sm p-2 text-muted-foreground transition-colors hover:bg-primary hover:text-foreground"
+            aria-label="Cerrar"
           >
-            <X className="size-5" />
+            <X className="size-5 stroke-[1.25]" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
           {battlecardResult?.live === false && (
-            <Badge variant="warning">Demo data</Badge>
+            <Badge variant="warning">Datos demo</Badge>
           )}
 
           {opportunity && <OpportunityCard opportunity={opportunity} />}
 
           {loadingBattlecard ? (
-            <Skeleton className="h-64 rounded-2xl" />
+            <Skeleton className="h-64" />
           ) : battlecard ? (
             <div className="bee-surface p-5">
               <BattlecardView card={battlecard} />
             </div>
           ) : (
-            <p className="text-sm text-[var(--color-text-muted)]">
-              Battlecard not available — opportunity may still be enriching.
+            <p className="text-sm text-muted-foreground">
+              Battlecard no disponible — la oportunidad puede estar enriqueciéndose.
             </p>
           )}
 
           <section>
-            <h3 className="mb-3 text-sm font-semibold">Execution Artifacts</h3>
+            <h3 className="mb-3 text-sm font-semibold">Artefactos de ejecución</h3>
             {loadingArtifacts ? (
-              <Skeleton className="h-48 rounded-2xl" />
+              <Skeleton className="h-48" />
             ) : artifacts ? (
               <ExecutionArtifacts bundle={artifacts} opportunityId={opportunityId!} />
             ) : (
-              <p className="text-sm text-[var(--color-text-muted)]">
-                Artifacts will generate on first request via the Executive Agent.
+              <p className="text-sm text-muted-foreground">
+                Los artefactos se generarán en la primera solicitud vía Executive Agent.
               </p>
             )}
           </section>

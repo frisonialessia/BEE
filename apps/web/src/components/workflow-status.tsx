@@ -1,35 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Zap, CheckCircle2, Clock, XCircle, AlertTriangle, Layers } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Layers,
+  XCircle,
+  Zap,
+} from "lucide-react";
+
 import { getWorkflowStatus, getWorkflowTasks } from "@/lib/api";
+import { CHART_PALETTE } from "@/lib/brand/colors";
 import type { WorkflowStatus, WorkflowTask } from "@/lib/types";
 
-const STATUS_ICON = {
-  mock_dispatched: <Layers className="h-3 w-3 text-zinc-400" />,
-  dispatched: <Zap className="h-3 w-3 text-blue-400" />,
-  completed: <CheckCircle2 className="h-3 w-3 text-green-400" />,
-  failed: <XCircle className="h-3 w-3 text-red-400" />,
-  pending: <Clock className="h-3 w-3 text-yellow-400" />,
-  skipped: <AlertTriangle className="h-3 w-3 text-zinc-500" />,
+const STATUS_ICON: Record<string, React.ReactNode> = {
+  mock_dispatched: <Layers className="size-3 stroke-[1.25] text-muted-foreground" />,
+  dispatched: <Zap className="size-3 stroke-[1.25]" style={{ color: CHART_PALETTE[3] }} />,
+  completed: <CheckCircle2 className="size-3 stroke-[1.25]" style={{ color: CHART_PALETTE[4] }} />,
+  failed: <XCircle className="size-3 stroke-[1.25]" style={{ color: CHART_PALETTE[1] }} />,
+  pending: <Clock className="size-3 stroke-[1.25]" style={{ color: CHART_PALETTE[0] }} />,
+  skipped: <AlertTriangle className="size-3 stroke-[1.25] text-muted-foreground" />,
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  mock_dispatched: "Mock",
-  dispatched: "Dispatched",
-  completed: "Completed",
-  failed: "Failed",
-  pending: "Pending",
-  skipped: "Skipped",
-};
-
-const STATUS_BADGE: Record<string, string> = {
-  mock_dispatched: "bg-zinc-700 text-zinc-400",
-  dispatched: "bg-blue-500/20 text-blue-400",
-  completed: "bg-green-500/20 text-green-400",
-  failed: "bg-red-500/20 text-red-400",
-  pending: "bg-yellow-500/20 text-yellow-400",
-  skipped: "bg-zinc-700 text-zinc-500",
+  mock_dispatched: "Simulado",
+  dispatched: "Despachado",
+  completed: "Completado",
+  failed: "Fallido",
+  pending: "Pendiente",
+  skipped: "Omitido",
 };
 
 function HandlerIcon({ name }: { name: string }) {
@@ -40,7 +40,7 @@ function HandlerIcon({ name }: { name: string }) {
     ready_to_action_notify: "NTF",
   };
   return (
-    <span className="rounded bg-zinc-700 px-1 py-0.5 text-[9px] font-mono text-zinc-400">
+    <span className="rounded-sm border border-border bg-background px-1 py-0.5 text-[9px] font-medium text-muted-foreground">
       {map[name] ?? name.slice(0, 3).toUpperCase()}
     </span>
   );
@@ -48,18 +48,22 @@ function HandlerIcon({ name }: { name: string }) {
 
 function TaskRow({ task }: { task: WorkflowTask }) {
   return (
-    <div className="flex items-center justify-between py-1.5 border-b border-zinc-800 last:border-0">
-      <div className="flex items-center gap-2 min-w-0">
-        {STATUS_ICON[task.status] ?? <Clock className="h-3 w-3 text-zinc-500" />}
+    <div className="flex items-center justify-between border-b border-border py-1.5 last:border-0">
+      <div className="flex min-w-0 items-center gap-2">
+        {STATUS_ICON[task.status] ?? (
+          <Clock className="size-3 stroke-[1.25] text-muted-foreground" />
+        )}
         <HandlerIcon name={task.handler_name} />
-        <span className="text-xs text-zinc-400 truncate max-w-[140px]">{task.event_type}</span>
+        <span className="max-w-[140px] truncate text-xs text-muted-foreground">
+          {task.event_type}
+        </span>
         {task.mock && (
-          <span className="text-[9px] text-zinc-600 border border-zinc-700 rounded px-1">mock</span>
+          <span className="rounded-sm border border-border px-1 text-[9px] text-muted-foreground">
+            simulado
+          </span>
         )}
       </div>
-      <span
-        className={`text-[10px] rounded-full px-2 py-0.5 font-medium ${STATUS_BADGE[task.status] ?? "bg-zinc-700 text-zinc-400"}`}
-      >
+      <span className="bee-eyebrow text-[10px] normal-case tracking-normal">
         {STATUS_LABEL[task.status] ?? task.status}
       </span>
     </div>
@@ -73,7 +77,10 @@ export function WorkflowStatusPanel() {
 
   useEffect(() => {
     async function load() {
-      const [s, t] = await Promise.all([getWorkflowStatus(), getWorkflowTasks(undefined, 10)]);
+      const [s, t] = await Promise.all([
+        getWorkflowStatus(),
+        getWorkflowTasks(undefined, 10),
+      ]);
       setStatus(s.data);
       setTasks(t.data);
       setLoading(false);
@@ -83,76 +90,70 @@ export function WorkflowStatusPanel() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5">
-        <div className="h-4 w-32 bg-zinc-800 rounded animate-pulse" />
+      <div className="bee-bento bee-bento-pad">
+        <div className="h-4 w-32 animate-pulse rounded-sm bg-primary" />
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 space-y-4">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="space-y-0.5">
-          <h3 className="text-sm font-semibold text-white flex items-center gap-1.5">
-            <Zap className="h-4 w-4 text-yellow-400" />
-            Workflow Bus
+    <div className="bee-bento bee-bento-pad space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+            <Zap className="size-4 stroke-[1.25]" style={{ color: CHART_PALETTE[0] }} />
+            Bus de workflows
           </h3>
-          <p className="text-xs text-zinc-500">
-            Automated tasks dispatched on business events
+          <p className="bee-caption mt-0.5">
+            Tareas automatizadas despachadas en eventos de negocio
           </p>
         </div>
         {status && (
-          <span className="text-xs text-zinc-400">
-            {status.total_tasks} total
-          </span>
+          <span className="text-xs text-muted-foreground">{status.total_tasks} en total</span>
         )}
       </div>
 
-      {/* Stats */}
       {status && (
-        <div className="grid grid-cols-4 gap-1.5">
+        <div className="bee-stat-grid">
           {[
-            { label: "Mock", value: status.mock_dispatched, color: "text-zinc-400" },
-            { label: "Live", value: status.dispatched + status.completed, color: "text-blue-400" },
-            { label: "Failed", value: status.failed, color: "text-red-400" },
-            { label: "Pending", value: status.pending, color: "text-yellow-400" },
+            { label: "Simulado", value: status.mock_dispatched },
+            { label: "En vivo", value: status.dispatched + status.completed },
+            { label: "Fallido", value: status.failed },
+            { label: "Pendiente", value: status.pending },
           ].map((stat) => (
-            <div key={stat.label} className="bg-zinc-800 rounded-md text-center py-2">
-              <div className={`text-sm font-semibold ${stat.color}`}>{stat.value}</div>
-              <div className="text-[10px] text-zinc-600">{stat.label}</div>
+            <div key={stat.label} className="bee-stat">
+              <div className="bee-stat__val">{stat.value}</div>
+              <div className="bee-stat__lbl">{stat.label}</div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Mock mode notice */}
       {status && status.mock_dispatched > 0 && status.dispatched === 0 && (
-        <div className="flex items-start gap-2 text-xs text-zinc-500 bg-zinc-800/40 rounded-md px-3 py-2 border border-zinc-700/50">
-          <Layers className="h-3.5 w-3.5 shrink-0 mt-0.5 text-zinc-400" />
+        <div className="flex items-start gap-2 border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
+          <Layers className="mt-0.5 size-3.5 shrink-0 stroke-[1.25]" />
           <span>
-            All tasks are running in mock mode. Set{" "}
-            <code className="text-zinc-300 font-mono text-[10px]">WORKFLOW_CRM_URL</code>,{" "}
-            <code className="text-zinc-300 font-mono text-[10px]">WORKFLOW_DELIVERY_URL</code>, or{" "}
-            <code className="text-zinc-300 font-mono text-[10px]">WORKFLOW_BILLING_URL</code>{" "}
-            to activate live integrations.
+            Todas las tareas se ejecutan en modo simulado. Configura{" "}
+            <code className="text-[10px] text-foreground">WORKFLOW_CRM_URL</code>,{" "}
+            <code className="text-[10px] text-foreground">WORKFLOW_DELIVERY_URL</code> o{" "}
+            <code className="text-[10px] text-foreground">WORKFLOW_BILLING_URL</code>{" "}
+            para integraciones en vivo.
           </span>
         </div>
       )}
 
-      {/* Recent tasks */}
       {tasks.length > 0 ? (
-        <div className="space-y-0">
-          <p className="text-[10px] text-zinc-600 uppercase tracking-wide mb-2">Recent tasks</p>
+        <div>
+          <p className="bee-kpi-tile__label mb-2">Tareas recientes</p>
           {tasks.map((t) => (
             <TaskRow key={t.id} task={t} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-4">
-          <p className="text-xs text-zinc-600">No tasks dispatched yet.</p>
-          <p className="text-[10px] text-zinc-700 mt-1">
-            Close an opportunity as WON to trigger the event bus.
+        <div className="py-4 text-center">
+          <p className="text-xs text-muted-foreground">Aún no se han despachado tareas.</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            Cierra una oportunidad como GANADA para activar el bus de eventos.
           </p>
         </div>
       )}

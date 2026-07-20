@@ -68,7 +68,7 @@ function CollapsibleSection({
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <div className="border border-slate-200 rounded-xl overflow-hidden">
+    <div className="border border-slate-200 rounded-none overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
@@ -77,7 +77,7 @@ function CollapsibleSection({
           <Icon className="w-4 h-4 text-slate-500" />
           <span className="text-sm font-semibold text-slate-800">{title}</span>
           {badge && (
-            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-medium">
+            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-sm font-medium">
               {badge}
             </span>
           )}
@@ -135,7 +135,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
                 }
               />
             </div>
-            <pre className="text-sm text-slate-700 bg-slate-50 rounded-lg p-3 whitespace-pre-wrap font-sans leading-relaxed border border-slate-100">
+            <pre className="text-sm text-slate-700 bg-slate-50 rounded-sm p-3 whitespace-pre-wrap font-sans leading-relaxed border border-slate-100">
               {email_draft.body}
             </pre>
             {email_draft.ps_line && (
@@ -199,7 +199,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
             </div>
           )}
 
-          <div className="text-xs text-slate-500 bg-emerald-50 rounded-lg p-2.5 border border-emerald-100">
+          <div className="text-xs text-slate-500 bg-emerald-50 rounded-sm p-2.5 border border-emerald-100">
             <span className="font-medium text-emerald-700">Success criteria: </span>
             {meeting_structure.success_criteria}
           </div>
@@ -217,7 +217,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
             {next_steps.actions.map((action, i) => (
               <div
                 key={i}
-                className={`flex items-start gap-3 text-xs rounded-lg border px-3 py-2 ${priorityColors[action.priority]}`}
+                className={`flex items-start gap-3 text-xs rounded-sm border px-3 py-2 ${priorityColors[action.priority]}`}
               >
                 <div className="flex-1">
                   <p className="font-medium">{action.action}</p>
@@ -234,7 +234,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
           </div>
 
           {next_steps.key_risk && (
-            <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+            <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-sm p-2.5">
               <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
               <div>
                 <span className="font-medium">Key risk: </span>
@@ -244,7 +244,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
           )}
 
           {next_steps.success_milestone && (
-            <div className="flex items-start gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-2.5">
+            <div className="flex items-start gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-sm p-2.5">
               <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
               <div>
                 <span className="font-medium">Success milestone: </span>

@@ -4,34 +4,28 @@ import type { ReactNode } from "react";
 
 interface ControlLayoutProps {
   header: ReactNode;
-  /** Left — primary action zone (Kanban) */
+  /** Columna A — Kanban / acción */
   workspace: ReactNode;
-  /** Right top — system metrics */
-  health: ReactNode;
-  /** Right — intelligence (hex map + signal stream) */
+  /** Columna B — HexMap + stream */
   intelligence: ReactNode;
+  /** Columna C — métricas / salud */
+  health: ReactNode;
 }
 
-/**
- * CRM proximity layout:
- *  Left  → LeadWorkspace (action)
- *  Right → SystemHealth + SignalHexMap + SignalStream (intelligence)
- */
+/** Layout Control — 3 columnas: Acción | Inteligencia | Métricas. */
 export function ControlLayout({
   header,
   workspace,
-  health,
   intelligence,
+  health,
 }: ControlLayoutProps) {
   return (
     <div className="bee-crm-control">
       <header className="bee-crm-control__header">{header}</header>
       <div className="bee-crm-control__body">
         <div className="bee-crm-control__action">{workspace}</div>
-        <div className="bee-crm-control__intel">
-          <div className="bee-crm-control__metrics">{health}</div>
-          <div className="bee-crm-control__viz">{intelligence}</div>
-        </div>
+        <div className="bee-crm-control__viz">{intelligence}</div>
+        <div className="bee-crm-control__metrics">{health}</div>
       </div>
     </div>
   );

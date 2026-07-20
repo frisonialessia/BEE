@@ -28,10 +28,10 @@ function ScoreBar({ score }: { score: number }) {
   const color = score >= 80 ? "bg-red-500" : score >= 55 ? "bg-orange-500" : score >= 30 ? "bg-yellow-500" : "bg-blue-400";
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-        <div className={`h-2 rounded-full transition-all ${color}`} style={{ width: `${Math.min(100, score)}%` }} />
+      <div className="flex-1 h-2 bg-[var(--color-primary)] rounded-sm overflow-hidden">
+        <div className={`h-2 rounded-sm transition-all ${color}`} style={{ width: `${Math.min(100, score)}%` }} />
       </div>
-      <span className="text-xs font-mono font-bold text-gray-700 w-8 text-right">{score.toFixed(0)}</span>
+      <span className="text-xs font-mono font-bold text-foreground w-8 text-right">{score.toFixed(0)}</span>
     </div>
   );
 }
@@ -40,13 +40,13 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
   const stage = STAGE_CONFIG[lead.buying_stage] ?? STAGE_CONFIG.awareness;
 
   return (
-    <div className={`rounded-xl border p-4 space-y-3 ${lead.is_hot ? "border-red-200 bg-red-50/30" : "border-gray-200 bg-white"}`}>
+    <div className={`rounded-none border p-4 space-y-3 ${lead.is_hot ? "border-red-200 bg-red-50/30" : "border-border bg-[var(--color-card)]"}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             {lead.is_hot && (
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full border border-red-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-sm border border-red-200">
+                <span className="w-1.5 h-1.5 rounded-sm bg-red-500 animate-pulse" />
                 HOT
               </span>
             )}
@@ -54,9 +54,9 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
               {lead.company_name ?? lead.company_domain}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{lead.company_domain}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{lead.company_domain}</p>
         </div>
-        <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full border font-medium ${stage.color}`}>
+        <span className={`shrink-0 text-xs px-2 py-0.5 rounded-sm border font-medium ${stage.color}`}>
           {stage.label}
         </span>
       </div>
@@ -65,23 +65,23 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
 
       <div className="flex flex-wrap gap-1">
         {lead.signal_types_seen.slice(0, 4).map((t) => (
-          <span key={t} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">
+          <span key={t} className="text-xs bg-[var(--color-primary)] text-muted-foreground px-2 py-0.5 rounded-md">
             {t.replace(/_/g, " ")}
           </span>
         ))}
         {lead.signal_types_seen.length > 4 && (
-          <span className="text-xs text-gray-400">+{lead.signal_types_seen.length - 4} more</span>
+          <span className="text-xs text-muted-foreground">+{lead.signal_types_seen.length - 4} more</span>
         )}
       </div>
 
       {lead.top_intent_keywords.length > 0 && (
-        <p className="text-xs text-gray-500">
-          <span className="font-medium text-gray-700">Intent: </span>
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Intent: </span>
           {lead.top_intent_keywords.slice(0, 4).join(", ")}
         </p>
       )}
 
-      <div className="flex items-center justify-between text-xs text-gray-400">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{lead.signal_count} signal{lead.signal_count !== 1 ? "s" : ""}</span>
         {lead.last_signal_at && (
           <span>Last: {new Date(lead.last_signal_at).toLocaleDateString()}</span>
@@ -156,9 +156,9 @@ export function DarkFunnelDashboard() {
             { label: "Decision Stage", value: summary.decision_stage_count, accent: "text-yellow-600" },
             { label: "Today's Signals", value: summary.total_signals_today, accent: "text-blue-600" },
           ].map(({ label, value, accent }) => (
-            <div key={label} className="rounded-xl border border-gray-200 bg-white p-3 text-center">
+            <div key={label} className="rounded-none border border-border bg-[var(--color-card)] p-3 text-center">
               <p className={`text-2xl font-bold ${accent}`}>{value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
             </div>
           ))}
         </div>
@@ -171,10 +171,10 @@ export function DarkFunnelDashboard() {
             <button
               key={stage}
               onClick={() => setStageFilter(stage)}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+              className={`text-xs px-3 py-1.5 rounded-sm border transition-colors ${
                 stageFilter === stage
-                  ? "bg-gray-900 text-white border-gray-900"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
+                  ? "bg-[var(--color-text)] text-[var(--color-background)] border-gray-900"
+                  : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-gray-400"
               }`}
             >
               {stage === "" ? "All" : STAGE_CONFIG[stage]?.label ?? stage}
@@ -183,7 +183,7 @@ export function DarkFunnelDashboard() {
         </div>
         <button
           onClick={() => setShowSimulate((v) => !v)}
-          className="ml-auto text-xs px-3 py-1.5 rounded-lg border border-dashed border-gray-300 text-gray-500 hover:border-gray-500 hover:text-gray-700 transition-colors"
+          className="ml-auto text-xs px-3 py-1.5 rounded-sm border border-dashed border-border text-muted-foreground hover:border-gray-500 hover:text-foreground transition-colors"
         >
           + Simulate Signal
         </button>
@@ -191,20 +191,20 @@ export function DarkFunnelDashboard() {
 
       {/* Simulate form */}
       {showSimulate && (
-        <form onSubmit={handleSimulate} className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 space-y-3">
-          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Simulate an Intent Signal</p>
+        <form onSubmit={handleSimulate} className="rounded-none border border-dashed border-border bg-[var(--color-primary)] p-4 space-y-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Simulate an Intent Signal</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input
               value={simDomain}
               onChange={(e) => setSimDomain(e.target.value)}
               placeholder="company-domain.com"
-              className="col-span-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
               required
             />
             <select
               value={simSignalType}
               onChange={(e) => setSimSignalType(e.target.value)}
-              className="col-span-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white"
+              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-[var(--color-card)]"
             >
               {SIGNAL_TYPES.map((t) => (
                 <option key={t} value={t}>{t.replace(/_/g, " ")}</option>
@@ -214,13 +214,13 @@ export function DarkFunnelDashboard() {
               value={simKeywords}
               onChange={(e) => setSimKeywords(e.target.value)}
               placeholder="intent keywords (comma-separated)"
-              className="col-span-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
           </div>
           <button
             type="submit"
             disabled={simLoading}
-            className="text-xs px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-700 disabled:opacity-50 transition-colors"
+            className="text-xs px-4 py-2 rounded-sm bg-[var(--color-text)] text-[var(--color-background)] hover:opacity-90 disabled:opacity-50 transition-colors"
           >
             {simLoading ? "Sending…" : "Send Signal"}
           </button>
@@ -231,13 +231,13 @@ export function DarkFunnelDashboard() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-36 rounded-xl bg-gray-100 animate-pulse" />
+            <div key={i} className="h-36 rounded-none bg-[var(--color-primary)] animate-pulse" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-xl border-2 border-dashed border-gray-200 p-10 text-center">
-          <p className="text-gray-500 text-sm">No intent signals yet.</p>
-          <p className="text-gray-400 text-xs mt-1">Use the simulator above to send a test signal.</p>
+        <div className="rounded-none border-2 border-dashed border-border p-10 text-center">
+          <p className="text-muted-foreground text-sm">No intent signals yet.</p>
+          <p className="text-muted-foreground text-xs mt-1">Use the simulator above to send a test signal.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

@@ -1,32 +1,28 @@
 "use client";
 
 /**
- * PendingActionsPanel — displays the AgentOrchestrator approval queue.
- *
- * Shows all actions waiting for explicit human approval before BEE can
- * execute any outbound interaction (email send, CRM update, etc.). The CEO
- * can review, approve, or reject each action from this panel.
- *
- * Security principle: no action is auto-executed. Every card in this panel
- * requires a deliberate click on "Approve" before anything happens externally.
+ * PendingActionsPanel — AgentOrchestrator approval queue.
+ * No action executes without explicit CEO approval.
  */
 
-import { useState } from "react";
-import { CheckCircle, Clock, Mail, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { CheckCircle, Clock, Mail, ShieldCheck, XCircle } from "lucide-react";
 
+import { approveAction, getPendingActions, rejectAction } from "@/lib/api";
+import { CHART_PALETTE } from "@/lib/brand/colors";
 import type { PendingAction } from "@/lib/types";
 
 const ACTION_TYPE_ICONS: Record<string, React.ReactNode> = {
-  send_email: <Mail className="h-4 w-4" />,
+  send_email: <Mail className="size-4 stroke-[1.25]" />,
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  pending_approval: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  approved: "bg-green-100 text-green-800 border-green-200",
-  rejected: "bg-red-100 text-red-800 border-red-200",
-  executing: "bg-blue-100 text-blue-800 border-blue-200",
-  completed: "bg-gray-100 text-gray-700 border-gray-200",
-  failed: "bg-red-50 text-red-700 border-red-200",
+const STATUS_STYLES: Record<string, string> = {
+  pending_approval: "bg-[color-mix(in_srgb,var(--color-chart-1)_25%,var(--color-background))]",
+  approved: "bg-[color-mix(in_srgb,var(--color-chart-5)_20%,var(--color-background))]",
+  rejected: "bg-[color-mix(in_srgb,var(--color-chart-2)_20%,var(--color-background))]",
+  executing: "bg-[color-mix(in_srgb,var(--color-chart-4)_20%,var(--color-background))]",
+  completed: "bg-primary",
+  failed: "bg-[color-mix(in_srgb,var(--color-chart-2)_20%,var(--color-background))]",
 };
 
 interface PendingActionCardProps {
@@ -60,126 +56,142 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
   const statusLabel = action.status.replace(/_/g, " ");
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
+    <div className="bee-bento bee-bento--primary bee-bento-pad space-y-3">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-zinc-500 flex-shrink-0">
-            {ACTION_TYPE_ICONS[action.action_type] ?? <Clock className="h-4 w-4" />}
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="shrink-0 text-muted-foreground">
+            {ACTION_TYPE_ICONS[action.action_type] ?? (
+              <Clock className="size-4 stroke-[1.25]" />
+            )}
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-zinc-900 truncate">{action.title}</p>
+            <p className="truncate text-sm font-semibold">{action.title}</p>
             {action.description && (
-              <p className="text-xs text-zinc-500 mt-0.5 line-clamp-2">{action.description}</p>
+              <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                {action.description}
+              </p>
             )}
           </div>
         </div>
         <span
-          className={`flex-shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[action.status] ?? "bg-zinc-100 text-zinc-700"}`}
+          className={`shrink-0 rounded-sm border border-border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${STATUS_STYLES[action.status] ?? "bg-background"}`}
         >
           {statusLabel}
         </span>
       </div>
 
       {action.preview && isPending && (
-        <div className="mt-3 rounded bg-zinc-50 p-2.5 text-xs text-zinc-600 font-mono whitespace-pre-wrap line-clamp-4 border border-zinc-100">
+        <div className="whitespace-pre-wrap border border-border bg-background p-2.5 font-mono text-xs leading-relaxed text-muted-foreground line-clamp-4">
           {action.preview}
         </div>
       )}
 
       {action.retry_count > 0 && (
-        <p className="mt-2 text-xs text-orange-600">Retry #{action.retry_count}</p>
+        <p className="text-xs" style={{ color: CHART_PALETTE[1] }}>
+          Reintento #{action.retry_count}
+        </p>
       )}
 
       {isPending && (
-        <div className="mt-3 flex gap-2">
+        <div className="flex gap-2">
           <button
+            type="button"
             onClick={handleApprove}
             disabled={!!loading}
-            className="flex items-center gap-1.5 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
+            className="bee-btn flex-1"
           >
-            <CheckCircle className="h-3.5 w-3.5" />
-            {loading === "approve" ? "Approving…" : "Approve"}
+            <CheckCircle className="size-3.5" />
+            {loading === "approve" ? "Aprobando…" : "Aprobar"}
           </button>
           <button
+            type="button"
             onClick={handleReject}
             disabled={!!loading}
-            className="flex items-center gap-1.5 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50 transition-colors"
+            className="bee-btn flex-1 bg-background"
           >
-            <XCircle className="h-3.5 w-3.5" />
-            {loading === "reject" ? "Rejecting…" : "Reject"}
+            <XCircle className="size-3.5" />
+            {loading === "reject" ? "Rechazando…" : "Rechazar"}
           </button>
         </div>
       )}
 
       {action.approved_by && (
-        <p className="mt-2 text-xs text-zinc-400">
-          Approved by {action.approved_by}
-          {action.approved_at && ` · ${new Date(action.approved_at).toLocaleDateString()}`}
+        <p className="text-[10px] text-muted-foreground">
+          Aprobado por {action.approved_by}
+          {action.approved_at &&
+            ` · ${new Date(action.approved_at).toLocaleDateString()}`}
         </p>
       )}
     </div>
   );
 }
 
-// ── Self-contained panel (fetches own data) ────────────────────────────────────
-
-import { ShieldCheck } from "lucide-react";
-
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  useApproveAction,
-  usePendingActions,
-  useRejectAction,
-} from "@/hooks/queries/use-pending-actions";
-
 export function PendingActionsPanel() {
-  const { data: result, isLoading } = usePendingActions(20);
-  const approve = useApproveAction();
-  const reject = useRejectAction();
+  const [actions, setActions] = useState<PendingAction[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const actions = result?.data ?? [];
+  useEffect(() => {
+    getPendingActions(20).then((res) => {
+      setActions(res.data);
+      setLoading(false);
+    });
+  }, []);
 
   async function handleApprove(id: string) {
-    await approve.mutateAsync({ id, approvedBy: "CEO" });
+    await approveAction(id, "CEO");
+    setActions((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, status: "approved" as const } : a))
+    );
   }
 
   async function handleReject(id: string) {
-    await reject.mutateAsync({ id });
+    await rejectAction(id);
+    setActions((prev) =>
+      prev.map((a) => (a.id === id ? { ...a, status: "rejected" as const } : a))
+    );
   }
 
   const pendingCount = actions.filter((a) => a.status === "pending_approval").length;
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 space-y-4">
-      <div className="flex items-start justify-between">
-        <div className="space-y-0.5">
-          <h3 className="text-sm font-semibold text-white flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-emerald-400" />
-            Execution Queue
+    <div className="bee-bento bee-bento--muted bee-bento-pad space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+            <ShieldCheck className="size-4 stroke-[1.25]" style={{ color: CHART_PALETTE[4] }} />
+            Cola de ejecución
           </h3>
-          <p className="text-xs text-zinc-500">
-            Actions awaiting approval before BEE executes externally
+          <p className="bee-caption mt-0.5">
+            Acciones en espera de aprobación antes de que BEE las ejecute externamente
           </p>
         </div>
         {pendingCount > 0 && (
-          <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-xs font-medium text-yellow-400">
-            {pendingCount} pending
+          <span
+            className="rounded-sm border border-border px-2 py-0.5 text-xs font-semibold"
+            style={{
+              background: `color-mix(in srgb, ${CHART_PALETTE[0]} 25%, var(--color-background))`,
+            }}
+          >
+            {pendingCount} pendientes
           </span>
         )}
       </div>
 
-      {isLoading ? (
+      {loading ? (
         <div className="space-y-2">
           {[1, 2].map((i) => (
-            <Skeleton key={i} className="h-12 rounded-md" />
+            <div key={i} className="h-12 animate-pulse rounded-sm bg-primary" />
           ))}
         </div>
       ) : actions.length === 0 ? (
-        <div className="text-center py-6">
-          <CheckCircle className="mx-auto h-6 w-6 text-emerald-500 mb-2" />
-          <p className="text-xs text-zinc-400">No pending actions.</p>
-          <p className="text-[10px] text-zinc-600 mt-1">
-            Execution artifacts will appear here when BEE generates them.
+        <div className="py-6 text-center">
+          <CheckCircle
+            className="mx-auto mb-2 size-6 stroke-[1.25]"
+            style={{ color: CHART_PALETTE[4] }}
+          />
+          <p className="text-xs text-muted-foreground">No hay acciones pendientes.</p>
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            Los artefactos de ejecución aparecerán aquí cuando BEE los genere.
           </p>
         </div>
       ) : (
@@ -195,9 +207,12 @@ export function PendingActionsPanel() {
         </div>
       )}
 
-      <p className="text-[10px] text-zinc-600 flex items-center gap-1">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-yellow-400" />
-        Security gate: no action executes without explicit CEO approval.
+      <p className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+        <span
+          className="inline-block size-1.5"
+          style={{ background: CHART_PALETTE[0] }}
+        />
+        Puerta de seguridad: ninguna acción se ejecuta sin la aprobación explícita del CEO.
       </p>
     </div>
   );

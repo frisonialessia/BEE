@@ -15,33 +15,22 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   signalTypeLabels,
   scoreVariant,
   timeAgo,
-  urgencyColors,
   urgencyLabels,
 } from "@/lib/format";
 import type { Battlecard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-/**
- * The CEO Battlecard — BEE's flagship output.
- *
- * Renders the full synthesized brief: company + lead context, the triggering
- * signal, and the three mandatory strategy fields (pain_point,
- * closing_argument, timing_window) plus the recommended play.
- *
- * Frontend-ready: no post-processing, one API call.
- */
+/** CEO Battlecard — full synthesized brief in Bento editorial layout. */
 export function BattlecardView({ card }: { card: Battlecard }) {
   const { strategy, company, lead, signal } = card;
   const urgency = strategy.timing_window.urgency;
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -52,18 +41,17 @@ export function BattlecardView({ card }: { card: Battlecard }) {
                 Ready to action
               </Badge>
             )}
-            {card.hot_lead && (
-              <Badge className="gap-1 bg-orange-500 hover:bg-orange-600 text-white border-0">
-                🔥 HOT
-              </Badge>
-            )}
+            {card.hot_lead && <Badge variant="warning">Hot lead</Badge>}
             {card.manual_review_required && (
               <Badge variant="destructive" className="gap-1">
                 <AlertTriangle className="size-3" />
                 Review Required
               </Badge>
             )}
-            <Badge variant="outline">{signalTypeLabels[signal.signal_type as keyof typeof signalTypeLabels] ?? signal.signal_type}</Badge>
+            <Badge variant="outline">
+              {signalTypeLabels[signal.signal_type as keyof typeof signalTypeLabels] ??
+                signal.signal_type}
+            </Badge>
           </div>
           <h2 className="text-base font-semibold leading-snug">
             {card.title.replace(/^Opportunity:\s*/, "")}
@@ -72,142 +60,129 @@ export function BattlecardView({ card }: { card: Battlecard }) {
             Signal detected {timeAgo(signal.detected_at)} · via{" "}
             <span className="font-medium">{strategy.generator}</span>
             {strategy.confidence_score !== undefined && (
-              <span className={`ml-2 ${strategy.manual_review_required ? "text-amber-600" : "text-emerald-600"}`}>
+              <span className="ml-2">
                 · {Math.round(strategy.confidence_score * 100)}% confidence
               </span>
             )}
           </p>
           {card.manual_review_required && (
-            <div className="mt-1.5 flex items-start gap-1.5 rounded-md bg-amber-50 border border-amber-200 px-2.5 py-1.5 text-xs text-amber-800">
-              <AlertTriangle className="mt-0.5 h-3 w-3 flex-shrink-0" />
+            <div className="mt-1.5 flex items-start gap-1.5 border border-border bg-background px-2.5 py-1.5 text-xs">
+              <AlertTriangle className="mt-0.5 size-3 shrink-0" />
               <span>
-                Strategy confidence is below threshold. CEO review required before execution.
+                Strategy confidence is below threshold. CEO review required before
+                execution.
               </span>
             </div>
           )}
         </div>
       </div>
 
-      {/* Context row: company + lead */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Card className="border-dashed">
-          <CardContent className="p-4">
-            <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <Building2 className="size-3" />
-              Company
-            </div>
-            <p className="font-semibold">{company.name ?? "—"}</p>
-            <p className="text-sm text-muted-foreground">{company.domain}</p>
-            {company.industry && (
-              <p className="text-xs text-muted-foreground">{company.industry}</p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="border border-dashed border-border bg-background p-3">
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <Building2 className="size-3 stroke-[1.25]" />
+            Company
+          </div>
+          <p className="font-semibold">{company.name ?? "—"}</p>
+          <p className="text-sm text-muted-foreground">{company.domain}</p>
+          {company.industry && (
+            <p className="text-xs text-muted-foreground">{company.industry}</p>
+          )}
+        </div>
+        <div className="border border-dashed border-border bg-background p-3">
+          <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+            <User className="size-3 stroke-[1.25]" />
+            Lead
+          </div>
+          <p className="font-semibold">{lead.full_name ?? "—"}</p>
+          <p className="text-sm text-muted-foreground">{lead.title}</p>
+          <div className="mt-2 flex gap-2">
+            {lead.email && (
+              <a
+                href={`mailto:${lead.email}`}
+                className="text-muted-foreground hover:text-foreground"
+                title={lead.email}
+              >
+                <Mail className="size-3.5 stroke-[1.25]" />
+              </a>
             )}
-          </CardContent>
-        </Card>
-        <Card className="border-dashed">
-          <CardContent className="p-4">
-            <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-              <User className="size-3" />
-              Lead
-            </div>
-            <p className="font-semibold">{lead.full_name ?? "—"}</p>
-            <p className="text-sm text-muted-foreground">{lead.title}</p>
-            <div className="mt-2 flex gap-2">
-              {lead.email && (
-                <a
-                  href={`mailto:${lead.email}`}
-                  className="text-muted-foreground hover:text-foreground"
-                  title={lead.email}
-                >
-                  <Mail className="size-3.5" />
-                </a>
-              )}
-              {lead.linkedin_url && (
-                <a
-                  href={lead.linkedin_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-muted-foreground hover:text-foreground"
-                  title="LinkedIn"
-                >
-                  <ExternalLink className="size-3.5" />
-                </a>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            {lead.linkedin_url && (
+              <a
+                href={lead.linkedin_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-muted-foreground hover:text-foreground"
+                title="LinkedIn"
+              >
+                <ExternalLink className="size-3.5 stroke-[1.25]" />
+              </a>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Pain point */}
-      <Card>
-        <CardHeader className="pb-2 pt-4">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <AlertCircle className="size-4 text-[var(--warning)]" />
-            Pain point
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pb-4">
-          <p className="text-sm leading-relaxed">{strategy.pain_point}</p>
-        </CardContent>
-      </Card>
+      <div className="border border-border bg-background p-4">
+        <h3 className="flex items-center gap-2 text-sm font-semibold">
+          <AlertCircle className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-1)" }} />
+          Pain point
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed">{strategy.pain_point}</p>
+      </div>
 
-      {/* Closing argument */}
-      <Card className="border-primary/30 bg-primary/5">
-        <CardHeader className="pb-2 pt-4">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Zap className="size-4 text-primary" />
-            Closing argument
-            <span className="ml-auto text-xs font-normal text-muted-foreground">
-              via {strategy.channel}
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pb-4">
-          <blockquote className="border-l-2 border-primary/60 pl-3 text-sm italic leading-relaxed">
-            {strategy.closing_argument}
-          </blockquote>
-        </CardContent>
-      </Card>
+      <div className="border border-border bg-primary/40 p-4">
+        <h3 className="flex items-center gap-2 text-sm font-semibold">
+          <Zap className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-4)" }} />
+          Closing argument
+          <span className="ml-auto text-xs font-normal text-muted-foreground">
+            via {strategy.channel}
+          </span>
+        </h3>
+        <blockquote className="mt-2 border-l-2 border-[var(--color-chart-4)] pl-3 text-sm italic leading-relaxed">
+          {strategy.closing_argument}
+        </blockquote>
+      </div>
 
-      {/* Timing window */}
-      <Card>
-        <CardHeader className="pb-2 pt-4">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Clock className="size-4" />
-            Timing window
-            <span className={cn("ml-auto text-xs font-medium", urgencyColors[urgency])}>
-              {urgencyLabels[urgency]}
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 pb-4">
-          <p className="text-sm leading-relaxed">{strategy.timing_window.reason}</p>
-          {strategy.timing_window.expires_at && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Calendar className="size-3" />
-              Window closes: {strategy.timing_window.expires_at}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="border border-border bg-background p-4">
+        <h3 className="flex items-center gap-2 text-sm font-semibold">
+          <Clock className="size-4 stroke-[1.25]" />
+          Timing window
+          <span
+            className={cn(
+              "ml-auto text-xs font-medium",
+              urgency === "immediate" && "text-[var(--color-chart-2)]",
+              urgency === "this_week" && "text-[var(--color-chart-1)]",
+              (urgency === "this_month" || urgency === "watch") && "text-muted-foreground"
+            )}
+          >
+            {urgencyLabels[urgency]}
+          </span>
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed">{strategy.timing_window.reason}</p>
+        {strategy.timing_window.expires_at && (
+          <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Calendar className="size-3 stroke-[1.25]" />
+            Window closes: {strategy.timing_window.expires_at}
+          </div>
+        )}
+      </div>
 
-      {/* Recommended play */}
       <div className="flex flex-wrap gap-2 pt-1">
-        <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
+        <span className="inline-flex items-center gap-1.5 border border-border bg-background px-3 py-1.5 text-xs font-medium">
           {strategy.next_best_action === "reach_out" ? (
-            <Phone className="size-3" />
+            <Phone className="size-3 stroke-[1.25]" />
           ) : (
-            <Radio className="size-3" />
+            <Radio className="size-3 stroke-[1.25]" />
           )}
           {String(strategy.next_best_action).replace(/_/g, " ")}
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5 border border-border bg-primary px-3 py-1.5 text-xs">
           {String(strategy.channel)}
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-3 py-1.5 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5 border border-border bg-primary px-3 py-1.5 text-xs">
           {String(strategy.playbook).replace(/_/g, " ")}
         </span>
         <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Bot className="size-3" />
+          <Bot className="size-3 stroke-[1.25]" />
           {strategy.generator} v{strategy.generator_version}
         </span>
       </div>
