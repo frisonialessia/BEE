@@ -1,11 +1,18 @@
 import { ApiError } from "@/types/api";
 import { getPublicEnv } from "@/lib/env";
+import { getStoredToken } from "@/lib/auth-storage";
 
 export function getApiBaseUrl(): string {
   return getPublicEnv().NEXT_PUBLIC_API_URL.replace(/\/$/, "");
 }
 
-/** Build default headers for BEE API requests (includes X-API-Key when configured). */
+/**
+ * Build default headers for BEE API requests: X-API-Key when configured
+ * (service-level auth, shared by every browser session), plus an
+ * Authorization bearer token when the caller is logged in (per-user session
+ * — see app.core.security on the backend). Both can be present at once; the
+ * backend treats them as independent trust boundaries.
+ */
 export function buildApiHeaders(extra?: HeadersInit): HeadersInit {
   const headers: Record<string, string> = {
     Accept: "application/json",
@@ -14,6 +21,11 @@ export function buildApiHeaders(extra?: HeadersInit): HeadersInit {
   const apiKey = getPublicEnv().NEXT_PUBLIC_BEE_API_KEY;
   if (apiKey) {
     headers["X-API-Key"] = apiKey;
+  }
+
+  const token = getStoredToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   if (extra) {

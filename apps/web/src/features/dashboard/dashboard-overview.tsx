@@ -3,18 +3,10 @@
 import { Activity, Bot, Flame, ShieldCheck, TrendingUp } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
-import { BrandVoicePanel } from "@/components/brand-voice";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
-import { DarkFunnelDashboard } from "@/components/dark-funnel-dashboard";
-import { EngagementInboxPanel } from "@/components/engagement-inbox";
 import { MetricCard } from "@/components/metric-card";
-import { NetworkNavigatorPanel } from "@/components/network-navigator";
-import { PendingActionsPanel } from "@/components/pending-actions";
-import { DeepLearningPanel } from "@/components/deep-learning-panel";
-import { ResiliencePanel } from "@/components/resilience-panel";
 import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
 import { SignalCard } from "@/components/signal-card";
-import { WorkflowStatusPanel } from "@/components/workflow-status";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
@@ -22,6 +14,13 @@ import { usePagination } from "@/hooks/use-pagination";
 import { useBattlecards } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 
+/**
+ * Resumen — the analytics tool: KPI strip, enriched battlecards, and the
+ * live signal feed. The operational panels (brand, network, dark funnel,
+ * sequences, resilience) each have their own dedicated route — see the
+ * rail nav — so this page stays a focused overview rather than a
+ * kitchen-sink dashboard.
+ */
 export function DashboardOverview() {
   const { data: signalsResult, isLoading: signalsLoading } = useSignals();
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
@@ -62,7 +61,7 @@ export function DashboardOverview() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="bee-eyebrow">Inteligencia de señales</p>
-            <h1 className="bee-display mt-1">Operación diaria</h1>
+            <h1 className="bee-display mt-1">Resumen</h1>
             <p className="bee-caption mt-1">
               Señales de mercado en tiempo real → battlecards CEO → cierre de deals
             </p>
@@ -126,14 +125,10 @@ export function DashboardOverview() {
         <section className={`${battlecards.length > 0 ? "bee-span-4" : "bee-span-12"} space-y-3`}>
           <div>
             <p className="bee-eyebrow">Business Operating System</p>
-            <h2 className="mt-1 text-base font-semibold">Capa de automatización</h2>
-            <p className="bee-caption">Ingresos · workflows · cola de ejecución</p>
+            <h2 className="mt-1 text-base font-semibold">Proyección de ingresos</h2>
+            <p className="bee-caption">Qué pasaría si invertimos más en prospección</p>
           </div>
-          <div className="space-y-3">
-            <RevenueSimulatorWidget />
-            <WorkflowStatusPanel />
-            <PendingActionsPanel />
-          </div>
+          <RevenueSimulatorWidget />
         </section>
 
         <section className="bee-span-12 space-y-3">
@@ -160,31 +155,6 @@ export function DashboardOverview() {
             onPageSizeChange={signalPagination.changePageSize}
             itemLabel="señales"
           />
-        </section>
-
-        <section className="bee-span-12 space-y-3">
-          <p className="bee-eyebrow">Crecimiento autónomo</p>
-          <h2 className="text-base font-semibold">Marca personal y prospección omnicanal</h2>
-          <div className="grid gap-3 md:grid-cols-2">
-            <BrandVoicePanel />
-            <EngagementInboxPanel />
-          </div>
-        </section>
-
-        <section className="bee-span-12">
-          <DarkFunnelDashboard />
-        </section>
-
-        <section className="bee-span-12">
-          <NetworkNavigatorPanel />
-        </section>
-
-        <section className="bee-span-6">
-          <DeepLearningPanel />
-        </section>
-
-        <section className="bee-span-6">
-          <ResiliencePanel />
         </section>
       </div>
     </>

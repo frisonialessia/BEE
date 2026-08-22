@@ -28,6 +28,18 @@ export const queryKeys = {
     tasks: (entityId?: string) => ["workflow", "tasks", entityId] as const,
     status: () => ["workflow", "status"] as const,
   },
+  leads: {
+    all: ["leads"] as const,
+    list: (limit?: number) => [...queryKeys.leads.all, "list", limit] as const,
+  },
+  teams: {
+    all: ["teams"] as const,
+    list: () => [...queryKeys.teams.all, "list"] as const,
+  },
+  users: {
+    all: ["users"] as const,
+    list: () => [...queryKeys.users.all, "list"] as const,
+  },
   control: {
     all: ["control"] as const,
     systemHealth: () => [...queryKeys.control.all, "system-health"] as const,

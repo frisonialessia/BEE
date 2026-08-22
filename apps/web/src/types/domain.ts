@@ -234,3 +234,23 @@ export interface OutcomeOut {
   closed_at: string;
   message: string;
 }
+
+// ── LeadOut ───────────────────────────────────────────────────────────────────
+
+export type LeadStatus = "new" | "qualified" | "engaged" | "converted" | "disqualified";
+
+export interface Lead {
+  id: string;
+  company_id: string | null;
+  organization_id: string | null;
+  assigned_to_user_id: string | null;
+  full_name: string;
+  email: string | null;
+  title: string | null;
+  seniority: string | null;
+  linkedin_url: string | null;
+  phone: string | null;
+  status: LeadStatus;
+  score: number;
+  attributes: Record<string, unknown>;
+}
