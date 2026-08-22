@@ -45,28 +45,39 @@ fully separated, keeping the domain logic independently testable.
 - **Single Responsibility** — config, security, persistence, and each analyzer
   each own exactly one concern.
 - **Liskov Substitution** — the engine treats every analyzer through one
-  interface, so a future `LLMAnalyzer` drops in interchangeably with the
-  rule-based ones.
+  interface, so `LLMAnalyzer` drops in interchangeably with the rule-based ones.
 - **Security** — all secrets come from the environment; webhooks are
   authenticated with HMAC-SHA256 signatures.
 
-### Adding an AI-powered analyzer later
+### The AI-powered analyzer
+
+`app/services/signal_engine/analyzers/llm_analyzer.py` registers `LLMAnalyzer`
+(`priority=200`) alongside the keyword analyzers. It's active whenever
+`AI_PROVIDER` (`openai`/`anthropic`) and `AI_API_KEY` are set; otherwise
+`supports()` returns `False` and the engine falls back to the keyword
+analyzers exactly as before. It asks the configured LLM to classify the raw
+payload (`signal_type`, `score`, `confidence`, `tags`, and optionally a
+`strategy` seed) — the SignalEngine runs every analyzer that supports the
+payload and keeps whichever result scores highest, so the LLM classification
+competes with, never replaces, the keyword ones.
+
+Adding a further analyzer follows the same shape:
 
 ```python
 from app.services.signal_engine.analyzers.base import AnalysisResult, SignalAnalyzer
 from app.services.signal_engine.analyzers.registry import register_analyzer
 
 @register_analyzer
-class LLMAnalyzer(SignalAnalyzer):
-    name = "llm"
-    priority = 200  # run before rule-based analyzers
+class MyAnalyzer(SignalAnalyzer):
+    name = "my_analyzer"
+    priority = 150
 
     def supports(self, payload) -> bool:
-        return True  # let the model look at everything
+        return True  # decide when this analyzer should run
 
     def analyze(self, payload) -> AnalysisResult:
-        # call your LLM (settings.AI_API_KEY / settings.AI_MODEL) and return a
-        # rich, generated strategy in AnalysisResult.strategy
+        # inspect payload and return a classification, optionally with a
+        # strategy seed in AnalysisResult.strategy
         ...
 ```
 

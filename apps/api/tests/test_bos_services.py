@@ -377,6 +377,49 @@ class TestRevenueSimulator:
 
         assert len(result.disclaimer) > 10
 
+    def test_count_open_opportunities_filters_by_segment(self, session: Session) -> None:
+        """Regression test: pipeline counts must be scoped to the requested
+        signal_type/industry segment, not the whole READY_TO_ACTION pipeline
+        (previously _count_open_opportunities ignored both filters).
+        """
+        from app.models.company import Company
+        from app.models.signal import Signal
+        from app.services.revenue_simulator import RevenueSimulator
+
+        saas_co = Company(name="SaaSCo", domain="saasco.com", industry="SaaS")
+        fintech_co = Company(name="FinCo", domain="finco.com", industry="Fintech")
+        session.add(saas_co)
+        session.add(fintech_co)
+        session.flush()
+
+        funding_signal = Signal(
+            company_id=saas_co.id, signal_type="funding_round", title="SaaSCo raised a round", score=80.0
+        )
+        hiring_signal = Signal(
+            company_id=fintech_co.id, signal_type="hiring", title="FinCo hired a VP", score=60.0
+        )
+        session.add(funding_signal)
+        session.add(hiring_signal)
+        session.flush()
+
+        session.add(Opportunity(
+            signal_id=funding_signal.id, company_id=saas_co.id, title="Opp1",
+            status=OpportunityStatus.READY_TO_ACTION, score=80.0,
+        ))
+        session.add(Opportunity(
+            signal_id=hiring_signal.id, company_id=fintech_co.id, title="Opp2",
+            status=OpportunityStatus.READY_TO_ACTION, score=60.0,
+        ))
+        session.flush()
+
+        sim = RevenueSimulator(session)
+        assert sim._count_open_opportunities("funding_round", "SaaS") == 1
+        assert sim._count_open_opportunities("funding_round", None) == 1
+        assert sim._count_open_opportunities("hiring", "SaaS") == 0
+        assert sim._count_open_opportunities("hiring", "Fintech") == 1
+        assert sim._count_open_opportunities("hiring", None) == 1
+        assert sim._count_open_opportunities("tech_adoption", None) == 0
+
 
 # ══════════════════════════════════════════════════════════════════
 # Analytics API endpoints (integration tests via TestClient)

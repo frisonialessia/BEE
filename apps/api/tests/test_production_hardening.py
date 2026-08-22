@@ -225,8 +225,14 @@ class TestAnomalyDetectorAutoTrigger:
 class TestPersonalBrandIntegration:
     """Test that ExecutiveAgent fetches and injects brand_brief."""
 
-    def test_get_brand_brief_returns_empty_when_no_profile(self, session):
-        """Returns empty string gracefully when no VoiceProfile exists."""
+    def test_get_brand_brief_returns_neutral_message_when_no_profile(self, session):
+        """No VoiceProfile configured: PersonalBrandService itself returns a
+        neutral fallback message (not an empty string). This only reaches the
+        caller if ``PersonalBrandService(...)`` was constructed successfully —
+        it previously raised (missing required ``vector_store`` arg) and was
+        silently swallowed by the broad ``except Exception``, which an
+        ``isinstance(str)``-only assertion could never catch.
+        """
         from app.models.opportunity import Opportunity
 
         opp = Opportunity(
@@ -240,8 +246,38 @@ class TestPersonalBrandIntegration:
 
         agent = ExecutiveAgent(session)
         brief = agent._get_brand_brief(opp)
-        # With no VoiceProfile, should return empty string
-        assert isinstance(brief, str)
+        assert "no brand profile" in brief.lower()
+
+    def test_get_brand_brief_injects_real_voice_profile(self, session):
+        """Regression test for the PersonalBrandService → ExecutiveAgent bug:
+        with an active VoiceProfile, the brand brief actually reaches the
+        artifact-generation context instead of silently coming back empty.
+        """
+        from app.models.opportunity import Opportunity
+        from app.schemas.brand import VoiceProfileCreate
+        from app.services.executive_agent.service import ExecutiveAgent
+        from app.services.personal_brand import PersonalBrandService
+        from app.services.vector_store import get_vector_store
+
+        brand_svc = PersonalBrandService(session, get_vector_store())
+        brand_svc.create_or_update_profile(
+            VoiceProfileCreate(
+                display_name="Jordan CEO",
+                title="CEO",
+                tone_descriptors=["direct", "no-nonsense"],
+                authority_topics=["revenue operations"],
+            )
+        )
+        session.commit()
+
+        opp = Opportunity(title="Acme Corp deal", status="detected", score=0.5)
+        opp.strategy = {"pain_point": "scaling sales ops"}
+
+        agent = ExecutiveAgent(session)
+        brief = agent._get_brand_brief(opp)
+
+        assert "Jordan CEO" in brief
+        assert "direct" in brief.lower()
 
     def test_artifact_context_has_brand_brief_field(self):
         """ArtifactContext now includes brand_brief."""

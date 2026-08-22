@@ -74,6 +74,64 @@ def test_context_built_from_funding_signal(session):
     assert ctx.lead_title == "VP Sales"
 
 
+def test_context_wires_dark_funnel_psychographic_and_network(session):
+    """Regression test: EnrichmentContext must be populated with DarkFunnel,
+    Psychographic, and NetworkNavigator intelligence when available.
+
+    Previously ``_build_context`` never queried these three services — the
+    fields existed on ``EnrichmentContext`` (and were read by the LLM
+    generator's confidence estimator and prompt builder) but always stayed at
+    their empty defaults, so none of these signals ever influenced strategy
+    generation in practice.
+    """
+    from app.schemas.dark_funnel import DarkFunnelSignalIn
+    from app.schemas.network import NetworkConnectionCreate
+    from app.services.dark_funnel import DarkFunnelService
+    from app.services.network_navigator import NetworkNavigator
+
+    # Seed enough pricing-page intent signals on acme.com to cross the "hot" threshold.
+    dark_funnel = DarkFunnelService(session)
+    for _ in range(3):
+        dark_funnel.ingest_signal(
+            DarkFunnelSignalIn(
+                company_domain="acme.com",
+                company_name="Acme Corp",
+                signal_type="pricing_view",
+                source_platform="website",
+            )
+        )
+
+    # Seed a direct network connection at acme.com for a warm intro path.
+    NetworkNavigator(session).add_connection(
+        NetworkConnectionCreate(
+            contact_name="Sam Connector",
+            contact_company="Acme Corp",
+            contact_domain="acme.com",
+            relationship_strength=9,
+        )
+    )
+    session.flush()
+
+    engine = SignalEngine(session)
+    outcome = engine.ingest(_funding_payload("funding-wiring-01"))
+
+    svc = StrategyGeneratorService(session)
+    ctx = svc._build_context(outcome.signal)
+
+    # Psychographic: the lead has a title, so get_or_classify always produces a profile.
+    assert ctx.psychographic_style in ("D", "I", "S", "C")
+    assert ctx.psychographic_tone
+
+    # Dark funnel: score/stage populated from the seeded intent signals.
+    assert ctx.dark_funnel_score is not None
+    assert ctx.dark_funnel_score > 0
+    assert ctx.is_dark_funnel_hot is True
+
+    # Network: the direct connection surfaces as a warm intro path.
+    assert ctx.has_warm_intro is True
+    assert ctx.intro_paths[0].connector_name == "Sam Connector"
+
+
 # ── Rule-based generators ──────────────────────────────────────────────────────
 
 def test_funding_generator_produces_complete_battlecard(session):

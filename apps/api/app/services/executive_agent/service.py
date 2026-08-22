@@ -196,6 +196,7 @@ class ExecutiveAgent:
         """
         try:
             from app.services.personal_brand import PersonalBrandService
+            from app.services.vector_store import get_vector_store
 
             # Use the company/opportunity context as the semantic query
             query = (
@@ -204,8 +205,11 @@ class ExecutiveAgent:
                 or "sales outreach"
             ) if opp.strategy else opp.title or "sales outreach"
 
-            svc = PersonalBrandService(self.session)
-            return svc.get_brand_context(query[:200])
+            # PersonalBrandService requires a vector store for semantic fragment
+            # retrieval; generate_brand_brief() returns the ready-to-inject string
+            # (get_brand_context() returns the full BrandContextResult object).
+            svc = PersonalBrandService(self.session, get_vector_store())
+            return svc.generate_brand_brief(topic=query[:200])
         except Exception:  # noqa: BLE001
             logger.debug("PersonalBrandService unavailable — brand_brief will be empty", exc_info=True)
             return ""

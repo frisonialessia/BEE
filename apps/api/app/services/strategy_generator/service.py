@@ -31,6 +31,8 @@ leaves the opportunity at ``DETECTED``, and returns ``False``.
 
 from __future__ import annotations
 
+import uuid
+
 from sqlmodel import Session
 
 import app.services.strategy_generator.llm_generator  # noqa: F401  (registers LLM generator at priority=1000)
@@ -171,6 +173,18 @@ class StrategyGeneratorService:
         # Prefer externally enriched lead fields when present
         enriched_lead = ext.get("lead") or lead_ref
         enriched_company = ext.get("company") or company_ref
+        company_domain = enriched_company.get("domain")
+
+        # ── 6. Psychographic profile (DISC style) ─────────────────────────────
+        psychographic_style, psychographic_tone = self._query_psychographic(signal.lead_id)
+
+        # ── 7. Dark funnel intent score ────────────────────────────────────────
+        dark_funnel_score, dark_funnel_stage = self._query_dark_funnel(company_domain)
+
+        # ── 8. Network intelligence: warm intro paths ─────────────────────────
+        intro_paths = self._query_intro_paths(
+            company_domain, enriched_company.get("name"), enriched_lead.get("full_name")
+        )
 
         return EnrichmentContext(
             signal_type=signal_type,
@@ -195,7 +209,80 @@ class StrategyGeneratorService:
             external_profile=linkedin,
             external_intent_keywords=list(dict.fromkeys(intent_keywords)),
             external_providers_called=ext.get("providers_called") or [],
+            psychographic_style=psychographic_style,
+            psychographic_tone=psychographic_tone,
+            dark_funnel_score=dark_funnel_score,
+            dark_funnel_stage=dark_funnel_stage,
+            intro_paths=intro_paths,
         )
+
+    def _query_psychographic(self, lead_id: uuid.UUID | None) -> tuple[str | None, str | None]:
+        """Retrieve the lead's DISC style from PsychographicAnalyzer.
+
+        Non-blocking: returns ``(None, None)`` when there's no lead, or the
+        analyzer is unavailable, so a failure here never blocks strategy
+        generation.
+        """
+        if not lead_id:
+            return None, None
+        try:
+            from app.models.lead import Lead
+            from app.services.psychographic import PsychographicAnalyzer
+
+            lead = self.session.get(Lead, lead_id)
+            if not lead:
+                return None, None
+            profile = PsychographicAnalyzer(self.session).get_or_classify(lead)
+            return profile.dominant_style, profile.preferred_tone
+        except Exception:  # noqa: BLE001
+            logger.warning("PsychographicAnalyzer query failed; proceeding without DISC style", exc_info=True)
+            return None, None
+
+    def _query_dark_funnel(self, company_domain: str | None) -> tuple[float | None, str | None]:
+        """Retrieve the company's research-intent score from DarkFunnelService.
+
+        Non-blocking: returns ``(None, None)`` when there's no domain to look
+        up, or the service is unavailable.
+        """
+        if not company_domain:
+            return None, None
+        try:
+            from app.services.dark_funnel import DarkFunnelService
+
+            score = DarkFunnelService(self.session).get_company_score(company_domain)
+            if not score:
+                return None, None
+            return score.research_intensity_score, score.buying_stage
+        except Exception:  # noqa: BLE001
+            logger.warning("DarkFunnelService query failed; proceeding without intent score", exc_info=True)
+            return None, None
+
+    def _query_intro_paths(
+        self,
+        company_domain: str | None,
+        company_name: str | None,
+        lead_name: str | None,
+    ) -> list:
+        """Retrieve warm introduction paths from NetworkNavigator.
+
+        Non-blocking: returns ``[]`` when there's no domain to look up, or
+        the navigator is unavailable — the generator then falls back to a
+        cold-outreach recommendation, exactly as if no path had been found.
+        """
+        if not company_domain:
+            return []
+        try:
+            from app.services.network_navigator import NetworkNavigator
+
+            result = NetworkNavigator(self.session).find_intro_paths(
+                target_domain=company_domain,
+                target_company=company_name,
+                target_name=lead_name,
+            )
+            return result.paths_found
+        except Exception:  # noqa: BLE001
+            logger.warning("NetworkNavigator query failed; proceeding without intro paths", exc_info=True)
+            return []
 
     def _query_similar_wins(
         self,

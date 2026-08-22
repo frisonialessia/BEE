@@ -6,8 +6,11 @@ create a module here, decorate the class, and import it below — or rely on the
 engine's autoloading in :mod:`app.services.signal_engine.engine`.
 """
 
-# Importing the module triggers registration of the built-in analyzers.
-from app.services.signal_engine.analyzers import keyword_analyzers  # noqa: F401
+# Importing these modules triggers registration of the built-in analyzers.
+from app.services.signal_engine.analyzers import (
+    keyword_analyzers,  # noqa: F401
+    llm_analyzer,  # noqa: F401  (registers LLMAnalyzer; no-op if AI disabled)
+)
 from app.services.signal_engine.analyzers.base import (
     AnalysisResult,
     SignalAnalyzer,

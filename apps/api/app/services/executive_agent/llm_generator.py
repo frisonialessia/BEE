@@ -137,16 +137,25 @@ class LLMArtifactGenerator(ArtifactGenerator):
     def supports(self, ctx: ArtifactContext) -> bool:  # type: ignore[override]  # noqa: ARG002
         return self.enabled
 
-    # The ArtifactGenerator interface requires three separate methods.
-    # For the LLM generator we call the API once and cache the result.
-    # We use a simple instance-level cache keyed by opportunity_id.
-
+    # The ArtifactGenerator interface requires three separate methods, but a
+    # generator instance is a process-wide singleton (registered once at import
+    # time — see registry.py), shared by every concurrent request. We still want
+    # to call the LLM only once per opportunity and split the response across
+    # generate_email/generate_meeting/generate_next_steps, so we cache the raw
+    # result — but keyed by the *identity* of the ArtifactContext object, not by
+    # opportunity_title. ExecutiveAgent._generate() builds a fresh ArtifactContext
+    # once per request, so id(ctx) is guaranteed unique per opportunity even when
+    # two different opportunities happen to share the same title (which a
+    # title-keyed cache could not distinguish, and could return one opportunity's
+    # artifacts for another's).
     _last_bundle: dict | None = None
-    _last_opportunity_title: str | None = None
+    _last_ctx_id: int | None = None
 
     def _get_or_call_llm(self, ctx: ArtifactContext) -> dict:
-        """Call the LLM once and cache the result for the three artifact methods."""
-        if self._last_opportunity_title == ctx.opportunity_title and self._last_bundle:
+        """Call the LLM once per ArtifactContext and cache the result for the
+        three artifact methods.
+        """
+        if self._last_ctx_id == id(ctx) and self._last_bundle is not None:
             return self._last_bundle
 
         t0 = time.monotonic()
@@ -160,7 +169,7 @@ class LLMArtifactGenerator(ArtifactGenerator):
         logger.info("LLMArtifactGenerator: artifacts generated in %dms", elapsed_ms)
 
         self._last_bundle = data
-        self._last_opportunity_title = ctx.opportunity_title
+        self._last_ctx_id = id(ctx)
         return data
 
     def generate_email(self, ctx: ArtifactContext) -> EmailDraftArtifact:

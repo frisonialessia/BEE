@@ -1,12 +1,13 @@
 """Built-in rule-based analyzers.
 
-These ship with BEE to make the Signal Engine useful on day one, before any AI
-model is wired in. Each is a self-contained example of the analyzer contract and
-a template for building your own.
+These ship with BEE to make the Signal Engine useful even when no AI provider
+is configured. Each is a self-contained example of the analyzer contract and a
+template for building your own.
 
-They are deliberately simple (keyword/rule based) and cheap to run. When the AI
-layer arrives, an ``LLMAnalyzer`` can be added alongside these — the engine will
-pick it up automatically via the registry with no other changes.
+They are deliberately simple (keyword/rule based) and cheap to run. An
+``LLMAnalyzer`` runs alongside them (see ``llm_analyzer.py``) whenever
+``AI_PROVIDER``/``AI_API_KEY`` are configured, picked up automatically via the
+registry with no changes needed here.
 """
 
 from __future__ import annotations

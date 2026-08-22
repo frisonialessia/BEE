@@ -619,6 +619,40 @@ class TestLLMArtifactGenerator:
 
         assert call_count == 1  # Only called once — results cached
 
+    def test_no_cross_opportunity_bleed_with_same_title(self):
+        """Regression test: two different opportunities sharing the same title
+        must never share a cached LLM bundle.
+
+        The cache used to be keyed by ``ctx.opportunity_title``, and the
+        generator instance is a process-wide singleton (registered once at
+        import time) shared by every concurrent request — so two unrelated
+        opportunities with identical titles could silently receive each
+        other's artifacts. Keying by the ArtifactContext object's identity
+        instead closes this.
+        """
+        from app.services.executive_agent.llm_generator import LLMArtifactGenerator
+
+        gen = LLMArtifactGenerator()
+        ctx1 = _make_artifact_ctx()
+        ctx1.opportunity_title = "Q4 Deal"
+        ctx2 = _make_artifact_ctx()
+        ctx2.opportunity_title = "Q4 Deal"  # same title, different object
+
+        base = json.loads(self._MOCK_RESPONSE)
+        response_1 = json.dumps({**base, "email_draft": {**base["email_draft"], "subject": "Subject One"}})
+        response_2 = json.dumps({**base, "email_draft": {**base["email_draft"], "subject": "Subject Two"}})
+
+        with patch("app.services.executive_agent.llm_generator._settings") as mock_cfg:
+            mock_cfg.AI_PROVIDER = "openai"
+            mock_cfg.AI_API_KEY = "sk-test"
+
+            with patch.object(gen, "_call_llm", side_effect=[response_1, response_2]):
+                email1 = gen.generate_email(ctx1)
+                email2 = gen.generate_email(ctx2)
+
+        assert email1.subject == "Subject One"
+        assert email2.subject == "Subject Two"
+
 
 # ---------------------------------------------------------------------------
 # 6. Fallback chain: LLM disabled → rule-based
@@ -672,3 +706,108 @@ class TestFallbackChain:
         assert opp.strategy is not None
         assert opp.strategy.get("pain_point")
         assert opp.strategy.get("channel")
+
+
+# ---------------------------------------------------------------------------
+# 7. LLMAnalyzer (Signal Engine classification)
+# ---------------------------------------------------------------------------
+
+
+class TestLLMAnalyzer:
+    """LLMAnalyzer with mocked LLM API calls.
+
+    Unlike LLMStrategyGenerator/LLMArtifactGenerator, this analyzer never
+    existed before — it was only a `...`-placeholder example in the README.
+    """
+
+    @staticmethod
+    def _payload():
+        from app.schemas.signal import CompanyRef, SignalWebhookIn
+
+        return SignalWebhookIn(
+            title="Acme Corp adopted a new observability platform",
+            event="tech.stack.update",
+            company=CompanyRef(name="Acme Corp", domain="acme.com"),
+        )
+
+    def test_supports_true_when_configured(self):
+        from app.services.signal_engine.analyzers.llm_analyzer import LLMAnalyzer
+
+        analyzer = LLMAnalyzer()
+        with patch("app.services.signal_engine.analyzers.llm_analyzer._settings") as mock_cfg:
+            mock_cfg.AI_PROVIDER = "openai"
+            mock_cfg.AI_API_KEY = "sk-test"
+            assert analyzer.supports(self._payload()) is True
+
+    def test_supports_false_when_disabled(self):
+        from app.services.signal_engine.analyzers.llm_analyzer import LLMAnalyzer
+
+        analyzer = LLMAnalyzer()
+        with patch("app.services.signal_engine.analyzers.llm_analyzer._settings") as mock_cfg:
+            mock_cfg.AI_PROVIDER = "none"
+            mock_cfg.AI_API_KEY = None
+            assert analyzer.supports(self._payload()) is False
+
+    def test_analyze_parses_llm_classification(self):
+        from app.models.base import SignalType
+        from app.services.signal_engine.analyzers.llm_analyzer import LLMAnalyzer
+
+        analyzer = LLMAnalyzer()
+        mock_response = json.dumps({
+            "signal_type": "tech_adoption",
+            "score": 65.0,
+            "confidence": 0.8,
+            "tags": ["observability", "stack_change"],
+            "propose_strategy": True,
+            "playbook": "complementary_tech_pitch",
+            "channel": "email",
+            "rationale": "New tooling adoption creates an integration opening.",
+        })
+        with patch.object(analyzer, "_call_llm", return_value=mock_response):
+            result = analyzer.analyze(self._payload())
+
+        assert result.signal_type == SignalType.TECH_ADOPTION
+        assert result.score == 65.0
+        assert result.confidence == 0.8
+        assert "observability" in result.tags
+        assert result.strategy is not None
+        assert result.strategy["channel"] == "email"
+
+    def test_analyze_no_strategy_when_not_proposed(self):
+        from app.services.signal_engine.analyzers.llm_analyzer import LLMAnalyzer
+
+        analyzer = LLMAnalyzer()
+        mock_response = json.dumps({
+            "signal_type": "news_mention",
+            "score": 10.0,
+            "confidence": 0.4,
+            "tags": ["mention"],
+            "propose_strategy": False,
+        })
+        with patch.object(analyzer, "_call_llm", return_value=mock_response):
+            result = analyzer.analyze(self._payload())
+
+        assert result.strategy is None
+
+    def test_analyze_never_raises_on_llm_failure(self):
+        """A failing LLM call must degrade to a zero-score result, never propagate —
+        a zero score never wins the SignalEngine's max-score aggregation, so this
+        is a safe no-op rather than breaking ingestion.
+        """
+        from app.services.signal_engine.analyzers.llm_analyzer import LLMAnalyzer
+
+        analyzer = LLMAnalyzer()
+        with patch.object(analyzer, "_call_llm", side_effect=RuntimeError("API down")):
+            result = analyzer.analyze(self._payload())
+
+        assert result.score == 0.0
+        assert result.confidence == 0.0
+        assert result.strategy is None
+
+    def test_registered_in_analyzer_registry(self):
+        """LLMAnalyzer must be discoverable through the same registry as the
+        keyword analyzers — the whole point of the plugin pattern."""
+        from app.services.signal_engine.analyzers import get_analyzers
+
+        names = [a.name for a in get_analyzers()]
+        assert "llm_classifier" in names

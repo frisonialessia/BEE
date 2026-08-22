@@ -30,8 +30,10 @@ import math
 from sqlmodel import Session, func, select
 
 from app.core.logging import get_logger
-from app.models.base import OpportunityStatus
+from app.models.base import OpportunityStatus, SignalType
+from app.models.company import Company
 from app.models.opportunity import Opportunity
+from app.models.signal import Signal
 from app.repositories.strategy_outcome import StrategyOutcomeRepository
 from app.schemas.simulator import RevenueSimulation, SimulatorScenario
 
@@ -151,15 +153,33 @@ class RevenueSimulator:
             recommendation=recommendation,
         )
 
-    def _count_open_opportunities(self, signal_type: str, industry: str | None) -> int:  # noqa: ARG002
-        """Count READY_TO_ACTION opportunities in the segment."""
-        stmt = select(func.count(Opportunity.id)).where(
-            Opportunity.status == OpportunityStatus.READY_TO_ACTION
+    def _count_open_opportunities(self, signal_type: str, industry: str | None) -> int:
+        """Count READY_TO_ACTION opportunities matching the segment.
+
+        Joins to ``Signal.signal_type`` (always) and, when requested, to
+        ``Company.industry`` — so the pipeline count is scoped to the exact
+        segment being simulated, not the whole READY_TO_ACTION pipeline.
+        """
+        try:
+            sig_type = SignalType(signal_type)
+        except ValueError:
+            # Unknown signal_type string: no opportunity can match it.
+            logger.warning("RevenueSimulator: unknown signal_type=%s; count=0", signal_type)
+            return 0
+
+        stmt = (
+            select(func.count(Opportunity.id))
+            .select_from(Opportunity)
+            .join(Signal, Signal.id == Opportunity.signal_id)
+            .where(Opportunity.status == OpportunityStatus.READY_TO_ACTION)
+            .where(Signal.signal_type == sig_type)
         )
+        if industry:
+            stmt = stmt.join(Company, Company.id == Opportunity.company_id).where(
+                Company.industry == industry
+            )
+
         count = self.session.exec(stmt).one()
-        # Note: full implementation would join to Signal.signal_type and Company.industry.
-        # For now, return the total count as a conservative estimate when no filter is set.
-        # When signal_type/industry filter is supported at the join level, this becomes exact.
         return int(count or 0)
 
     def _build_recommendation(
