@@ -20,6 +20,7 @@ from app.api.v1.endpoints import (
     engagement,
     health,
     insights,
+    leads,
     network,
     opportunities,
     orchestrator,
@@ -38,6 +39,7 @@ api_router.include_router(auth.router)
 api_router.include_router(teams.router)
 api_router.include_router(users.router)
 api_router.include_router(signals.router)
+api_router.include_router(leads.router)
 api_router.include_router(opportunities.router)
 api_router.include_router(orchestrator.router)
 api_router.include_router(insights.router)

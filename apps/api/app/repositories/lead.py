@@ -46,3 +46,20 @@ class LeadRepository(BaseRepository[Lead]):
             linkedin_url=ref.linkedin_url,
         )
         return self.add(lead)
+
+    def list_scoped(
+        self,
+        *,
+        limit: int = 100,
+        offset: int = 0,
+        visible_user_ids: set[uuid.UUID] | None = None,
+    ) -> list[Lead]:
+        """Same paging as :meth:`BaseRepository.list`, with the same optional
+        visibility filter used by ``OpportunityRepository`` — see
+        ``app.services.permissions`` for how the filter set is computed.
+        """
+        statement = select(Lead).order_by(Lead.created_at.desc())  # type: ignore[union-attr]
+        if visible_user_ids is not None:
+            statement = statement.where(Lead.assigned_to_user_id.in_(visible_user_ids))
+        statement = statement.limit(limit).offset(offset)
+        return list(self.session.exec(statement).all())

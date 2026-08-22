@@ -493,3 +493,131 @@ class TestOpportunitiesVisibilityScoping:
         token = create_access_token(owner.id, organization_id=org.id, role=owner.role.value)
         resp = client.get("/api/v1/opportunities", headers=_auth_headers(token))
         assert len(resp.json()) == 1
+
+    def test_member_gets_404_for_battlecard_of_unassigned_opportunity(
+        self, client: TestClient, session: Session
+    ):
+        """A MEMBER hitting another rep's opportunity by id gets 404, not the data."""
+        org = _make_org(session)
+        member = _make_user(session, org, UserRole.MEMBER, email="rep3@scoped.io")
+        other = _make_user(session, org, UserRole.MEMBER, email="rep4@scoped.io")
+        opp = Opportunity(
+            title="Not yours", status=OpportunityStatus.READY_TO_ACTION, score=70.0,
+            organization_id=org.id, assigned_to_user_id=other.id,
+            strategy={"pain_point": "x", "closing_argument": "y", "timing_window": {"urgency": "watch", "reason": "z"}},
+        )
+        session.add(opp)
+        session.commit()
+        session.refresh(opp)
+
+        token = create_access_token(member.id, organization_id=org.id, role=member.role.value)
+        resp = client.get(f"/api/v1/opportunities/{opp.id}/battlecard", headers=_auth_headers(token))
+        assert resp.status_code == 404
+
+    def test_owner_can_view_any_opportunity_battlecard(self, client: TestClient, session: Session):
+        org = _make_org(session)
+        owner = _make_user(session, org, UserRole.OWNER, email="boss2@scoped.io")
+        member = _make_user(session, org, UserRole.MEMBER, email="rep5@scoped.io")
+        opp = Opportunity(
+            title="Someone's deal", status=OpportunityStatus.READY_TO_ACTION, score=70.0,
+            organization_id=org.id, assigned_to_user_id=member.id,
+            strategy={"pain_point": "x", "closing_argument": "y", "timing_window": {"urgency": "watch", "reason": "z"}},
+        )
+        session.add(opp)
+        session.commit()
+        session.refresh(opp)
+
+        token = create_access_token(owner.id, organization_id=org.id, role=owner.role.value)
+        resp = client.get(f"/api/v1/opportunities/{opp.id}/battlecard", headers=_auth_headers(token))
+        assert resp.status_code == 200
+
+
+class TestLeadsVisibilityScoping:
+    def test_unauthenticated_sees_all_leads(self, client: TestClient, session: Session):
+        from app.models.lead import Lead
+
+        org = _make_org(session)
+        session.add(Lead(full_name="Jane Doe", organization_id=org.id))
+        session.add(Lead(full_name="John Roe", organization_id=org.id))
+        session.commit()
+
+        resp = client.get("/api/v1/leads")
+        assert resp.status_code == 200
+        assert len(resp.json()) == 2
+
+    def test_member_only_sees_own_assigned_leads(self, client: TestClient, session: Session):
+        from app.models.lead import Lead
+
+        org = _make_org(session)
+        member = _make_user(session, org, UserRole.MEMBER, email="leadrep@scoped.io")
+        other = _make_user(session, org, UserRole.MEMBER, email="leadother@scoped.io")
+        session.add(Lead(full_name="Mine", organization_id=org.id, assigned_to_user_id=member.id))
+        session.add(Lead(full_name="Not mine", organization_id=org.id, assigned_to_user_id=other.id))
+        session.commit()
+
+        token = create_access_token(member.id, organization_id=org.id, role=member.role.value)
+        resp = client.get("/api/v1/leads", headers=_auth_headers(token))
+        names = [lead["full_name"] for lead in resp.json()]
+        assert names == ["Mine"]
+
+    def test_member_gets_404_for_unassigned_lead_detail(self, client: TestClient, session: Session):
+        from app.models.lead import Lead
+
+        org = _make_org(session)
+        member = _make_user(session, org, UserRole.MEMBER, email="leadrep2@scoped.io")
+        other = _make_user(session, org, UserRole.MEMBER, email="leadother2@scoped.io")
+        lead = Lead(full_name="Not yours", organization_id=org.id, assigned_to_user_id=other.id)
+        session.add(lead)
+        session.commit()
+        session.refresh(lead)
+
+        token = create_access_token(member.id, organization_id=org.id, role=member.role.value)
+        resp = client.get(f"/api/v1/leads/{lead.id}", headers=_auth_headers(token))
+        assert resp.status_code == 404
+
+
+class TestSignalsOrganizationScoping:
+    def test_member_only_sees_own_organization_signals(self, client: TestClient, session: Session):
+        from app.models.signal import Signal
+
+        org_a = _make_org(session)
+        org_b = _make_org(session)
+        member_a = _make_user(session, org_a, UserRole.MEMBER, email="siga@scoped.io")
+        session.add(Signal(title="Org A signal", organization_id=org_a.id))
+        session.add(Signal(title="Org B signal", organization_id=org_b.id))
+        session.commit()
+
+        token = create_access_token(member_a.id, organization_id=org_a.id, role=member_a.role.value)
+        resp = client.get("/api/v1/signals", headers=_auth_headers(token))
+        titles = [s["title"] for s in resp.json()]
+        assert titles == ["Org A signal"]
+
+    def test_untagged_signal_visible_to_everyone(self, client: TestClient, session: Session):
+        """A signal with no organization_id (legacy/un-migrated data) stays
+        visible to any authenticated user — see Organization's docstring."""
+        from app.models.signal import Signal
+
+        org = _make_org(session)
+        member = _make_user(session, org, UserRole.MEMBER, email="siglegacy@scoped.io")
+        session.add(Signal(title="Legacy signal", organization_id=None))
+        session.commit()
+
+        token = create_access_token(member.id, organization_id=org.id, role=member.role.value)
+        resp = client.get("/api/v1/signals", headers=_auth_headers(token))
+        titles = [s["title"] for s in resp.json()]
+        assert "Legacy signal" in titles
+
+    def test_get_signal_from_other_org_returns_404(self, client: TestClient, session: Session):
+        from app.models.signal import Signal
+
+        org_a = _make_org(session)
+        org_b = _make_org(session)
+        member_a = _make_user(session, org_a, UserRole.MEMBER, email="siga2@scoped.io")
+        other_signal = Signal(title="Org B signal", organization_id=org_b.id)
+        session.add(other_signal)
+        session.commit()
+        session.refresh(other_signal)
+
+        token = create_access_token(member_a.id, organization_id=org_a.id, role=member_a.role.value)
+        resp = client.get(f"/api/v1/signals/{other_signal.id}", headers=_auth_headers(token))
+        assert resp.status_code == 404

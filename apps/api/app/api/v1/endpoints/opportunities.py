@@ -33,7 +33,7 @@ from app.schemas.strategy import (
 )
 from app.services.executive_agent.service import ExecutiveAgent
 from app.services.feedback_loop.service import FeedbackLoopService
-from app.services.permissions import get_visible_user_ids
+from app.services.permissions import get_visible_user_ids, user_can_view_assignment
 from app.services.resource_predictor import ResourcePredictorService
 from app.services.workflow_orchestrator import BeeEvent, WorkflowOrchestrator
 
@@ -93,6 +93,7 @@ def list_opportunities(
 def get_battlecard(
     opportunity_id: uuid.UUID,
     session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> BattlecardOut:
     """Return the fully synthesized battlecard for a single opportunity.
 
@@ -104,6 +105,10 @@ def get_battlecard(
     ``ready_to_action`` is ``True`` only when the strategy is complete. The
     endpoint returns the battlecard regardless of status so the frontend can
     display in-progress cards with a clear incomplete state.
+
+    When the caller is authenticated, a MANAGER/MEMBER who can't see this
+    opportunity (per ``app.services.permissions``) gets a 404, same as if it
+    didn't exist — this is a battlecard, not a public listing.
     """
     repo = OpportunityRepository(session)
     result = repo.get_with_relations(opportunity_id)
@@ -115,6 +120,11 @@ def get_battlecard(
         )
 
     opportunity, signal, company, lead = result
+
+    if current_user is not None and not user_can_view_assignment(
+        session, current_user, opportunity.assigned_to_user_id
+    ):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
 
     strategy_dict = opportunity.strategy or {}
     try:
@@ -187,6 +197,7 @@ def record_outcome(
     opportunity_id: uuid.UUID,
     body: OutcomeIn,
     session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> OutcomeWithPrediction:
     """Mark an opportunity as WON or LOST.
 
@@ -204,6 +215,13 @@ def record_outcome(
     """
     from app.core.config import get_settings
     settings = get_settings()
+
+    if current_user is not None:
+        target = OpportunityRepository(session).get(opportunity_id)
+        if target is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
+        if not user_can_view_assignment(session, current_user, target.assigned_to_user_id):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
 
     # ── Step 1: Resource Gate (opt-in) ────────────────────────────────────────
     prediction = None
@@ -314,6 +332,7 @@ def get_artifacts(
     opportunity_id: uuid.UUID,
     force: bool = Query(default=False, description="Force re-generation even if cached"),
     session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> ArtifactBundle:
     """Return the execution artifact bundle for an opportunity.
 
@@ -324,6 +343,13 @@ def get_artifacts(
     When artifacts are generated, BEE fires a webhook to ``WEBHOOK_EXECUTION_URL``
     (if configured) so n8n / Zapier can execute the email send, CRM update, etc.
     """
+    if current_user is not None:
+        target = OpportunityRepository(session).get(opportunity_id)
+        if target is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
+        if not user_can_view_assignment(session, current_user, target.assigned_to_user_id):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
+
     agent = ExecutiveAgent(session)
     try:
         return agent.get_or_generate(opportunity_id, force=force)

@@ -17,12 +17,14 @@ import uuid
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlmodel import Session, select
 
-from app.api.deps import get_signal_engine
+from app.api.deps import get_current_user_optional, get_signal_engine
 from app.core.database import get_session
 from app.core.logging import get_logger
 from app.core.security import verify_webhook_signature
 from app.models.base import BehavioralEventType, OpportunityStatus, SignalSource, SignalType
 from app.models.opportunity import Opportunity
+from app.models.signal import Signal
+from app.models.user import User
 from app.repositories.signal import SignalRepository
 from app.schemas.behavioral import EVENT_INTENT_SCORES, BuyingIntentEvent, IntentEventResult
 from app.schemas.signal import (
@@ -33,6 +35,7 @@ from app.schemas.signal import (
     SignalOut,
     SignalWebhookIn,
 )
+from app.services.permissions import scope_to_organization
 from app.services.signal_engine import SignalEngine
 
 logger = get_logger(__name__)
@@ -146,10 +149,20 @@ def list_signals(
     limit: int = 50,
     offset: int = 0,
     session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> list[SignalOut]:
-    """Return a page of signals, most recent first."""
-    repo = SignalRepository(session)
-    return [SignalOut.model_validate(s) for s in repo.list(limit=limit, offset=offset)]
+    """Return a page of signals, most recent first.
+
+    Signals aren't assigned to an individual rep (they're shared market
+    intelligence within an organization), so — unlike leads/opportunities —
+    this scopes by organization only, not by user: every role sees the same
+    signals. Unauthenticated/API-key-only requests are unrestricted, same
+    backward-compatibility contract as ``GET /opportunities``.
+    """
+    statement = select(Signal).order_by(Signal.created_at.desc())  # type: ignore[union-attr]
+    statement = scope_to_organization(statement, Signal.organization_id, current_user)
+    statement = statement.limit(limit).offset(offset)
+    return [SignalOut.model_validate(s) for s in session.exec(statement).all()]
 
 
 @router.get(
@@ -160,11 +173,21 @@ def list_signals(
 def get_signal(
     signal_id: uuid.UUID,
     session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> SignalOut:
-    """Return one signal or ``404`` if it does not exist."""
+    """Return one signal or ``404`` if it does not exist (or belongs to
+    another organization when the caller is authenticated).
+    """
     repo = SignalRepository(session)
     signal = repo.get(signal_id)
     if signal is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Signal not found.")
+    if (
+        current_user is not None
+        and signal.organization_id is not None
+        and signal.organization_id != current_user.organization_id
+    ):
+        # 404, not 403 — don't confirm a cross-tenant signal id exists.
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Signal not found.")
     return SignalOut.model_validate(signal)
 
