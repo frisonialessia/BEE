@@ -72,6 +72,18 @@ class Settings(BaseSettings):
     # /api/v1/health and /api/v1/ready are always exempt.
     API_KEY_EXEMPT_PATHS: str = "/api/v1/health,/api/v1/ready,/api/v1/webhooks/receive"
 
+    # ----- Multi-tenant user auth (Organization / Team / User) ------------------
+    # Distinct from API_SECRET_KEY above: API_SECRET_KEY gates service-to-service
+    # calls (the frontend, integrations) with one shared secret. JWT_SECRET_KEY
+    # signs per-user session tokens issued at login, carrying the user's identity
+    # and role so endpoints can enforce organization/team-scoped visibility.
+    JWT_SECRET_KEY: str = "change-me-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
+    # bcrypt work factor. 12 is bcrypt's own default — a good balance of
+    # brute-force resistance vs. login latency; raise only with load testing.
+    PASSWORD_HASH_ROUNDS: int = 12
+
     # ----- CORS ----------------------------------------------------------------
     # Comma-separated list of origins allowed to call the API (the Next.js app).
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"

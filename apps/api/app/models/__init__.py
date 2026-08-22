@@ -16,6 +16,7 @@ from app.models.base import (
     OpportunityStatus,
     SignalSource,
     SignalType,
+    UserRole,
     VariantStatus,
 )
 from app.models.brand_profile import BrandFragment, VoiceProfile
@@ -28,12 +29,15 @@ from app.models.lead import Lead
 from app.models.market_insight import MarketInsight
 from app.models.network import NetworkConnection
 from app.models.opportunity import Opportunity
+from app.models.organization import Organization
 from app.models.pending_action import PendingAction
 from app.models.psychographic import LeadPsychographic
 from app.models.sequence import DynamicSequence, SequenceExecution
 from app.models.signal import Signal
 from app.models.strategy_outcome import StrategyOutcome
 from app.models.tactic_variant import TacticVariant, VariantOutcome
+from app.models.team import Team
+from app.models.user import User
 from app.models.workflow_task import WorkflowTask
 
 __all__ = [
@@ -61,6 +65,9 @@ __all__ = [
     "AnomalyAlert",
     "ArtifactCorrection",
     "UserStyleProfile",
+    "Organization",
+    "Team",
+    "User",
     "ActionStatus",
     "ActionType",
     "BehavioralEventType",
@@ -69,5 +76,6 @@ __all__ = [
     "OpportunityStatus",
     "SignalSource",
     "SignalType",
+    "UserRole",
     "VariantStatus",
 ]

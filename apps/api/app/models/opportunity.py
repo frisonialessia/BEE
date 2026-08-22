@@ -39,6 +39,16 @@ class Opportunity(TimestampMixin, table=True):
     company_id: uuid.UUID | None = Field(
         default=None, foreign_key="companies.id", index=True
     )
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+    # The rep this opportunity is assigned to — the primary field
+    # app.services.permissions filters on for manager/member visibility.
+    assigned_to_user_id: uuid.UUID | None = Field(
+        default=None, foreign_key="users.id", index=True
+    )
 
     title: str = Field(nullable=False)
     status: OpportunityStatus = Field(default=OpportunityStatus.DETECTED, index=True)

@@ -45,15 +45,47 @@ class OpportunityRepository(BaseRepository[Opportunity]):
 
         return opportunity, signal, company, lead
 
-    def list_ready_to_action(self, *, limit: int = 50, offset: int = 0) -> list[Opportunity]:
-        """Return opportunities that have a complete battlecard, ranked by score."""
+    def list_ready_to_action(
+        self,
+        *,
+        limit: int = 50,
+        offset: int = 0,
+        visible_user_ids: set[uuid.UUID] | None = None,
+    ) -> list[Opportunity]:
+        """Return opportunities that have a complete battlecard, ranked by score.
+
+        ``visible_user_ids``, when given, restricts results to opportunities
+        assigned to one of those users — see ``app.services.permissions`` for
+        how a caller's manager/member visibility scope is computed. ``None``
+        (the default) applies no restriction, preserving existing behavior for
+        callers that don't have an authenticated user in context.
+        """
         from app.models.base import OpportunityStatus
 
         statement = (
             select(Opportunity)
             .where(Opportunity.status == OpportunityStatus.READY_TO_ACTION)
             .order_by(Opportunity.score.desc())  # type: ignore[union-attr]
-            .limit(limit)
-            .offset(offset)
         )
+        if visible_user_ids is not None:
+            statement = statement.where(Opportunity.assigned_to_user_id.in_(visible_user_ids))
+        statement = statement.limit(limit).offset(offset)
+        return list(self.session.exec(statement).all())
+
+    def list_scoped(
+        self,
+        *,
+        limit: int = 100,
+        offset: int = 0,
+        visible_user_ids: set[uuid.UUID] | None = None,
+    ) -> list[Opportunity]:
+        """Same paging/ordering as :meth:`BaseRepository.list`, with the same
+        optional visibility filter as :meth:`list_ready_to_action`. Used by
+        callers that need every status (not just READY_TO_ACTION) but must
+        still respect a logged-in caller's visibility scope.
+        """
+        statement = select(Opportunity).order_by(Opportunity.created_at.desc())  # type: ignore[union-attr]
+        if visible_user_ids is not None:
+            statement = statement.where(Opportunity.assigned_to_user_id.in_(visible_user_ids))
+        statement = statement.limit(limit).offset(offset)
         return list(self.session.exec(statement).all())

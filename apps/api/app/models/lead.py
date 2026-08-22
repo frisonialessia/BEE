@@ -30,6 +30,16 @@ class Lead(TimestampMixin, table=True):
     company_id: uuid.UUID | None = Field(
         default=None, foreign_key="companies.id", index=True
     )
+    # Tenant boundary. Nullable for backward compatibility with data ingested
+    # before multi-tenancy existed — see app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+    # The rep this lead is assigned to — drives manager/member visibility
+    # scoping (see app.services.permissions).
+    assigned_to_user_id: uuid.UUID | None = Field(
+        default=None, foreign_key="users.id", index=True
+    )
 
     full_name: str = Field(nullable=False)
     email: str | None = Field(default=None, index=True)

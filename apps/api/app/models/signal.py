@@ -45,6 +45,11 @@ class Signal(TimestampMixin, table=True):
         default=None, foreign_key="companies.id", index=True
     )
     lead_id: uuid.UUID | None = Field(default=None, foreign_key="leads.id", index=True)
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
 
     signal_type: SignalType = Field(default=SignalType.OTHER, index=True)
     source: SignalSource = Field(default=SignalSource.WEBHOOK, index=True)

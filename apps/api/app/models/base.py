@@ -36,6 +36,28 @@ def new_uuid() -> uuid.UUID:
     return uuid.uuid4()
 
 
+class UserRole(str, Enum):
+    """A user's authority level within their organization.
+
+    Role hierarchy (each level implies the previous)::
+
+        MEMBER  — sees only records assigned to themselves.
+        MANAGER — sees their own records plus every record assigned to a user
+                  in their team or any descendant team (see Team.parent_team_id).
+        ADMIN   — sees every record in the organization, and manages teams/users.
+        OWNER   — same visibility as ADMIN; reserved for the user who created
+                  the organization (billing/deletion actions, cannot be
+                  demoted by another admin).
+
+    See ``app.services.permissions`` for how this drives query-level filtering.
+    """
+
+    OWNER = "owner"
+    ADMIN = "admin"
+    MANAGER = "manager"
+    MEMBER = "member"
+
+
 class LeadStatus(str, Enum):
     """Lifecycle stages of a lead within the sales intelligence pipeline."""
 

@@ -16,8 +16,10 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
+from app.api.deps import get_current_user_optional
 from app.core.database import get_session
 from app.models.base import OpportunityStatus
+from app.models.user import User
 from app.repositories.opportunity import OpportunityRepository
 from app.schemas.executive import ArtifactBundle
 from app.schemas.feedback import OutcomeIn
@@ -31,6 +33,7 @@ from app.schemas.strategy import (
 )
 from app.services.executive_agent.service import ExecutiveAgent
 from app.services.feedback_loop.service import FeedbackLoopService
+from app.services.permissions import get_visible_user_ids
 from app.services.resource_predictor import ResourcePredictorService
 from app.services.workflow_orchestrator import BeeEvent, WorkflowOrchestrator
 
@@ -47,13 +50,25 @@ def list_opportunities(
     limit: int = 50,
     offset: int = 0,
     session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> list[dict]:
-    """Return opportunities, defaulting to READY_TO_ACTION sorted by score."""
+    """Return opportunities, defaulting to READY_TO_ACTION sorted by score.
+
+    When the request carries a valid session token (a logged-in dashboard
+    user, as opposed to the shared X-API-Key used by service integrations),
+    results are scoped to what that user is allowed to see: everything in
+    their organization for OWNER/ADMIN, their team's subtree for MANAGER, or
+    only their own assignments for MEMBER (see ``app.services.permissions``).
+    Requests without a session token are unaffected — this keeps existing
+    API-key-only integrations working exactly as before.
+    """
     repo = OpportunityRepository(session)
+    visible_user_ids = get_visible_user_ids(session, current_user) if current_user else None
+
     if opp_status is None or opp_status == "ready_to_action":
-        items = repo.list_ready_to_action(limit=limit, offset=offset)
+        items = repo.list_ready_to_action(limit=limit, offset=offset, visible_user_ids=visible_user_ids)
     else:
-        items = repo.list(limit=limit, offset=offset)
+        items = repo.list_scoped(limit=limit, offset=offset, visible_user_ids=visible_user_ids)
 
     return [
         {

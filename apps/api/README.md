@@ -149,13 +149,53 @@ X-BEE-Signature: sha256=<hex digest>
 Signature enforcement is controlled by `WEBHOOK_SIGNATURE_REQUIRED` (off locally,
 **on in production**).
 
+## Multi-tenant auth (Organization / Team / User)
+
+Distinct from the `X-API-Key`/HMAC auth above — those gate *service-to-service*
+calls (the frontend, integrations) with a shared secret. This is per-*human*
+session auth for the dashboard, with role-based visibility:
+
+* **Organization** — the tenant boundary. Created once, via `POST /auth/register`,
+  which also creates its first user as `OWNER`. There is no self-serve "join an
+  existing org" flow — every other teammate is added by an OWNER/ADMIN via
+  `POST /users`.
+* **Team** — a node in the manager hierarchy (`parent_team_id`, self-referential).
+* **User** — belongs to one Organization and (optionally) one Team, with a role:
+
+  | Role | Sees |
+  |------|------|
+  | `OWNER` / `ADMIN` | Everything in the organization |
+  | `MANAGER` | Their own assignments + everyone in their team or any descendant team |
+  | `MEMBER` | Only records assigned to themselves |
+
+```bash
+curl -X POST localhost:8000/api/v1/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"organization_name":"Acme","full_name":"Alice","email":"alice@acme.com","password":"..."}'
+# → {"access_token": "...", "user": {...}}
+
+curl localhost:8000/api/v1/opportunities -H 'Authorization: Bearer <access_token>'
+# → only opportunities this user can see, per the table above
+```
+
+Sessions are stateless JWTs (`JWT_SECRET_KEY`, 7-day default expiry) — no
+server-side session store, so this scales horizontally without sticky
+sessions. A request with no `Authorization` header behaves exactly as before
+this system existed (unrestricted, API-key-gated) — the retrofit onto
+`GET /opportunities` is additive, not a breaking change for existing
+integrations. See `app/services/permissions/service.py` for the visibility
+rule and `app/api/deps.py` for `get_current_user`/`require_roles`.
+
 ## Migrations
 
 Schema changes are versioned with Alembic:
 
 ```bash
 alembic revision --autogenerate -m "add table"
-alembic upgrade head
+alembic upgrade head        # or: make api-migrate
 ```
 
-For local dev, `init_db()` auto-creates tables on startup as a convenience.
+For local/staging dev, `init_db()` auto-creates tables on startup as a
+convenience. In production (`ENVIRONMENT=production`), `init_db()` is skipped
+entirely — schema there is Alembic-only, so a missing migration fails loudly
+instead of being silently papered over by `create_all()`.
