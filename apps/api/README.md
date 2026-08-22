@@ -114,7 +114,7 @@ docker compose up --build
 ### Tests & quality
 
 ```bash
-pytest            # 11 tests, hermetic (in-memory SQLite, no Postgres needed)
+pytest            # 480+ tests, hermetic (in-memory SQLite, no Postgres needed)
 ruff check app tests
 mypy app
 ```

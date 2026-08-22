@@ -21,10 +21,11 @@ Estado del backend tras External Ingestion: **Ready**.
 ### Base de datos
 
 ```bash
-# Migraciones (incluye tabla pgvector Sales DNA):
-cd apps/api && alembic upgrade head
+# Migraciones (las ~24 tablas de dominio + la tabla pgvector Sales DNA):
+cd apps/api && alembic upgrade head   # o: make api-migrate
 
-# Extensión pgvector (one-time, Postgres gestionado):
+# Extensión pgvector (one-time, solo si el Postgres de destino no la trae
+# preinstalada — docker-compose.yml y la migración 001 ya la habilitan):
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
@@ -55,9 +56,9 @@ Autenticación por **HMAC por provider**, no por `X-API-Key`. No eliminar esta e
 
 Arranca automáticamente al boot cuando `EXTERNAL_INGESTION_ENABLED=true`. En despliegues **multi-instancia**, considerar una cola respaldada por Redis (futuro) para que las tareas de enriquecimiento no se pierdan al reiniciar.
 
-### 3. Docker Compose Postgres no incluye pgvector por defecto
+### 3. pgvector en Postgres gestionado (fuera de docker-compose)
 
-Usar imagen `pgvector/pgvector:pg16` o ejecutar `CREATE EXTENSION vector` manualmente **antes** de `VECTOR_STORE_BACKEND=pgvector`.
+`docker-compose.yml` ya usa la imagen `pgvector/pgvector:pg16` (con la extensión preinstalada), así que `make up` / `docker compose up --build` funciona sin pasos extra. Si el despliegue de producción usa un Postgres **gestionado** (RDS, Cloud SQL, Supabase, etc.) en vez de esta imagen, confirmar que soporta pgvector y ejecutar `CREATE EXTENSION IF NOT EXISTS vector;` (la migración `001_pgvector_sales_dna` también lo intenta, pero solo funciona si la extensión está disponible en el servidor) **antes** de fijar `VECTOR_STORE_BACKEND=pgvector`.
 
 ### 4. LinkedIn API requiere aprobación OAuth de la app
 

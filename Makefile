@@ -2,7 +2,7 @@
 # Run `make help` to list targets.
 
 .DEFAULT_GOAL := help
-.PHONY: help up down api-install api-dev api-test api-lint web-install web-dev web-build
+.PHONY: help up down api-install api-dev api-test api-lint api-migrate api-revision web-install web-dev web-build
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -25,6 +25,12 @@ api-test: ## Run backend tests
 
 api-lint: ## Lint the backend
 	cd apps/api && ruff check .
+
+api-migrate: ## Apply pending Alembic migrations (DATABASE_URL must point at a real Postgres)
+	cd apps/api && alembic upgrade head
+
+api-revision: ## Generate a new Alembic migration from model changes (usage: make api-revision m="add foo")
+	cd apps/api && alembic revision --autogenerate -m "$(m)"
 
 web-install: ## Install frontend dependencies
 	cd apps/web && pnpm install

@@ -1,7 +1,9 @@
 # syntax=docker/dockerfile:1
 # ----------------------------------------------------------------------------
 # BEE API container image.
-# Multi-stage-friendly, slim base, non-root runtime user.
+# Single-stage, slim base, dev deps excluded, non-root runtime user.
+# See .dockerignore for what's excluded from the build context (secrets,
+# tests, caches).
 # ----------------------------------------------------------------------------
 FROM python:3.12-slim AS base
 

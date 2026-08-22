@@ -1,14 +1,23 @@
 # =============================================================================
 # BEE — local development stack.
-# Brings up PostgreSQL and the FastAPI backend. The Next.js frontend runs
-# separately with `pnpm dev` (or add a service here once containerized).
+# Brings up PostgreSQL (with pgvector) and the FastAPI backend. The Next.js
+# frontend runs separately with `pnpm dev` (or add a service here once
+# containerized).
 #
 #   docker compose up --build
+#
+# This file is for LOCAL DEVELOPMENT ONLY. It intentionally ships with auth
+# disabled (API_SECRET_KEY empty, WEBHOOK_SIGNATURE_REQUIRED=false) and the
+# default webhook secret — never reuse these values, or this file as-is, for
+# a real deployment. See DEPLOY_CHECKLIST.md for the production checklist.
 # =============================================================================
 
 services:
   db:
-    image: postgres:16-alpine
+    # pgvector/pgvector ships the `vector` extension pre-installed on top of
+    # the official postgres image — plain postgres:16 does NOT include it, so
+    # `CREATE EXTENSION vector` (run by alembic migration 001) would fail.
+    image: pgvector/pgvector:pg16
     container_name: bee-postgres
     environment:
       POSTGRES_USER: bee
@@ -35,6 +44,10 @@ services:
       # Point the API at the compose Postgres service.
       DATABASE_URL: postgresql+psycopg://bee:bee@db:5432/bee
       ENVIRONMENT: local
+      # Dev-only defaults — auth disabled. See the file header before reusing
+      # this compose file anywhere real traffic could reach it.
+      API_SECRET_KEY: ""
+      WEBHOOK_SIGNING_SECRET: "change-me-in-production"
       WEBHOOK_SIGNATURE_REQUIRED: "false"
       BACKEND_CORS_ORIGINS: "http://localhost:3000"
     ports:
@@ -43,6 +56,13 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./apps/api:/app
+    healthcheck:
+      # python -c avoids depending on curl/wget being present in the image.
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   bee_pgdata:

@@ -31,10 +31,20 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     configure_logging()
     logger.info("Starting %s v%s (env=%s)", settings.PROJECT_NAME, __version__, settings.ENVIRONMENT)
-    try:
-        init_db()
-    except Exception:  # noqa: BLE001 - never crash startup if DB is unavailable in dev
-        logger.exception("Database initialization skipped/failed; check DATABASE_URL.")
+
+    # Schema provisioning: in local/staging, create_all() is a zero-friction
+    # convenience so the app is usable straight out of `docker compose up`. In
+    # production, schema changes must go through Alembic (see
+    # `alembic/versions/000_baseline_domain_models.py` onward) so they're
+    # versioned and reversible — running create_all() there too would silently
+    # paper over a missing/failed migration instead of failing loudly.
+    if settings.ENVIRONMENT == "production":
+        logger.info("ENVIRONMENT=production — skipping init_db(); schema is managed by Alembic.")
+    else:
+        try:
+            init_db()
+        except Exception:  # noqa: BLE001 - never crash startup if DB is unavailable in dev
+            logger.exception("Database initialization skipped/failed; check DATABASE_URL.")
 
     # Start background ingestion worker (asyncio.Queue — non-blocking external API calls)
     # Disabled during pytest — worker uses the production DB engine, not the test SQLite engine.

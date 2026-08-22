@@ -1,0 +1,41 @@
+# =============================================================================
+# BEE API — Docker build context exclusions
+# -----------------------------------------------------------------------------
+# `docker build` sends everything under this directory to the daemon before
+# .gitignore is even consulted, so without this file `COPY . .` in the
+# Dockerfile bakes in a local `.env` (secrets), test suites, and caches into
+# the image — bigger, slower, and a real secret-leak risk on any machine that
+# happens to have a `.env` sitting next to the Dockerfile when it builds.
+# =============================================================================
+
+# ----- Secrets (NEVER bake into the image) -----------------------------------
+.env
+.env.*
+!.env.example
+
+# ----- Python caches / local envs --------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ----- Tests (not needed at runtime) ------------------------------------------
+tests/
+
+# ----- VCS / editor / OS ------------------------------------------------------
+.git/
+.gitignore
+.github/
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# ----- Docs (not needed at runtime) -------------------------------------------
+README.md

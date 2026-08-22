@@ -1,7 +1,7 @@
 """Add pgvector extension and vector_embeddings table for Sales DNA.
 
 Revision ID: 001_pgvector_sales_dna
-Revises: (base — first migration)
+Revises: 000_baseline_domain_models
 Create Date: 2026-07-14
 
 This migration enables the pgvector extension and creates the
@@ -49,11 +49,11 @@ For production at scale, consider replacing IVFFlat with HNSW:
 
 from __future__ import annotations
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 
 revision = "001_pgvector_sales_dna"
-down_revision = None
+down_revision = "000_baseline_domain_models"
 branch_labels = None
 depends_on = None
 

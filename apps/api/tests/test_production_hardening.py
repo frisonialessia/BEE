@@ -525,3 +525,45 @@ class TestDeepStatusEndpoint:
         response = client.get("/api/v1/status")
         body = response.json()
         assert body["checks"]["vector_store"]["documents"] >= 1
+
+
+# ---------------------------------------------------------------------------
+# 8. Lifespan — init_db() gated by ENVIRONMENT
+# ---------------------------------------------------------------------------
+
+
+class TestLifespanSchemaProvisioning:
+    """In production, schema must come from Alembic — not create_all()."""
+
+    @staticmethod
+    def _run_lifespan(environment: str) -> MagicMock:
+        """Drive the lifespan context manager once and return the init_db mock."""
+        import asyncio
+
+        from app.main import lifespan
+
+        async def _run() -> MagicMock:
+            with (
+                patch("app.main.settings") as mock_settings,
+                patch("app.main.init_db") as mock_init_db,
+            ):
+                mock_settings.PROJECT_NAME = "BEE"
+                mock_settings.ENVIRONMENT = environment
+                mock_settings.EXTERNAL_INGESTION_ENABLED = False
+                async with lifespan(None):
+                    pass
+                return mock_init_db
+
+        return asyncio.run(_run())
+
+    def test_init_db_skipped_in_production(self):
+        mock_init_db = self._run_lifespan("production")
+        mock_init_db.assert_not_called()
+
+    def test_init_db_runs_in_local(self):
+        mock_init_db = self._run_lifespan("local")
+        mock_init_db.assert_called_once()
+
+    def test_init_db_runs_in_staging(self):
+        mock_init_db = self._run_lifespan("staging")
+        mock_init_db.assert_called_once()
