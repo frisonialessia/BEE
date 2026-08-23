@@ -10,19 +10,8 @@ import { useCompany } from "@/hooks/queries/use-companies";
 import { useBulkCreateLeads, useCreateLead, useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
-import { opportunityStatusLabels } from "@/lib/format";
+import { opportunityStatusLabels, validationFlagLabels } from "@/lib/format";
 import { parseCsv } from "@/lib/csv";
-
-/** Etiquetas en español para las banderas que arma DataValidator en el backend. */
-const VALIDATION_FLAG_LABELS: Record<string, string> = {
-  email_missing: "Sin email",
-  email_invalid: "Email inválido",
-  linkedin_invalid: "LinkedIn inválido",
-  title_missing: "Sin cargo",
-  stale_data: "Datos desactualizados",
-  seniority_mismatch: "Cargo y seniority no coinciden",
-  name_too_short: "Nombre incompleto",
-};
 
 /** Toma la primera cabecera que exista de una lista de nombres posibles (español o inglés). */
 function pick(row: Record<string, string>, keys: string[]): string | undefined {
@@ -276,7 +265,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
                     {hasIssues && (
                       <span
                         title={[
-                          ...lead.validation_flags.map((f) => VALIDATION_FLAG_LABELS[f] ?? f),
+                          ...lead.validation_flags.map((f) => validationFlagLabels[f] ?? f),
                           ...(lead.stale_risk ? ["Sin validar en más de 90 días"] : []),
                         ].join(" · ")}
                       >

@@ -8,6 +8,7 @@ import {
   fetchLeadDuplicates,
   fetchLeads,
   mergeLeads,
+  validateLead,
   type LeadCreateIn,
 } from "@/lib/api/leads";
 import { queryKeys } from "@/lib/query-keys";
@@ -51,6 +52,16 @@ export function useMergeLeads() {
   return useMutation({
     mutationFn: ({ keepId, mergeId }: { keepId: string; mergeId: string }) =>
       mergeLeads(keepId, mergeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+    },
+  });
+}
+
+export function useValidateLead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (leadId: string) => validateLead(leadId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
     },

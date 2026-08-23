@@ -1,4 +1,5 @@
 import type { OpportunityStatus, SignalType, TimingUrgency } from "@/lib/types";
+import type { LeadStatus } from "@/types/domain";
 
 export const signalTypeLabels: Record<SignalType, string> = {
   funding_round: "Funding round",
@@ -34,6 +35,25 @@ export const urgencyColors: Record<TimingUrgency, string> = {
   this_week: "text-[var(--warning)]",
   this_month: "text-muted-foreground",
   watch: "text-muted-foreground",
+};
+
+export const leadStatusLabels: Record<LeadStatus, string> = {
+  new: "Nuevo",
+  qualified: "Calificado",
+  engaged: "En conversación",
+  converted: "Convertido",
+  disqualified: "Descartado",
+};
+
+/** Etiquetas en español para las banderas que arma DataValidator en el backend. */
+export const validationFlagLabels: Record<string, string> = {
+  email_missing: "Sin email",
+  email_invalid: "Email inválido",
+  linkedin_invalid: "LinkedIn inválido",
+  title_missing: "Sin cargo",
+  stale_data: "Datos desactualizados",
+  seniority_mismatch: "Cargo y seniority no coinciden",
+  name_too_short: "Nombre incompleto",
 };
 
 export function scoreVariant(score: number): "success" | "warning" | "secondary" {

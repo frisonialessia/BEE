@@ -67,3 +67,17 @@ export async function mergeLeads(keepId: string, mergeId: string): Promise<Lead>
     body: JSON.stringify({ keep_id: keepId, merge_id: mergeId }),
   });
 }
+
+export interface LeadValidationOut {
+  lead_id: string;
+  flags: string[];
+  freshness_score: number;
+  stale_risk: boolean;
+  validated_at: string;
+}
+
+export async function validateLead(leadId: string): Promise<LeadValidationOut> {
+  return apiFetch<LeadValidationOut>(`/api/v1/leads/${leadId}/validate`, {
+    method: "POST",
+  });
+}

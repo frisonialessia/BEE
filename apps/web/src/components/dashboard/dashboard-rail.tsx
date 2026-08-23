@@ -13,6 +13,7 @@ import {
   SlidersHorizontal,
   Target,
   TrendingUp,
+  Users,
   Workflow,
   Zap,
 } from "lucide-react";
@@ -37,6 +38,7 @@ const GROUPS = [
     label: "CRM",
     items: [
       { href: "/dashboard/companies", icon: Building2, label: "Empresas" },
+      { href: "/dashboard/leads", icon: Users, label: "Leads" },
       { href: "/dashboard/opportunities", icon: Target, label: "Oportunidades" },
     ],
   },
