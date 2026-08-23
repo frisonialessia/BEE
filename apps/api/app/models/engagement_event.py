@@ -59,6 +59,12 @@ class IncomingEngagementEvent(TimestampMixin, table=True):
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+
     # ── Source ────────────────────────────────────────────────────────────────
     source: str = Field(index=True, description="Platform: linkedin | twitter | email")
     source_event_id: str | None = Field(default=None, unique=True, description="Native event ID from the platform")

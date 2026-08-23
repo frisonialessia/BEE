@@ -41,6 +41,12 @@ class WorkflowTask(TimestampMixin, table=True):
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+
     # ── Event origin ──────────────────────────────────────────────────────────
     event_type: str = Field(index=True, nullable=False)
     # The entity that triggered the event (e.g., opportunity_id for opportunity.won)

@@ -62,6 +62,12 @@ class NetworkConnection(TimestampMixin, table=True):
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+
     # ── Contact identity ──────────────────────────────────────────────────────
     contact_name: str = Field(nullable=False, index=True)
     contact_company: str = Field(nullable=False, index=True)

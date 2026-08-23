@@ -50,6 +50,12 @@ class VoiceProfile(TimestampMixin, table=True):
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+
     # ── Identity ───────────────────────────────────────────────────────────────
     display_name: str = Field(nullable=False, description="CEO's name as it appears on social")
     title: str | None = Field(default=None, description="Professional title shown in content")
@@ -101,6 +107,12 @@ class BrandFragment(TimestampMixin, table=True):
     __tablename__ = "brand_fragments"
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
+
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
     profile_id: uuid.UUID = Field(foreign_key="voice_profiles.id", index=True)
 
     # ── Content ───────────────────────────────────────────────────────────────

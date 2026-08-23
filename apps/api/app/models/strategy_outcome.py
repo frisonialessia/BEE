@@ -40,6 +40,12 @@ class StrategyOutcome(TimestampMixin, table=True):
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+
     # ── Origin ─────────────────────────────────────────────────────────────
     opportunity_id: uuid.UUID = Field(index=True, nullable=False)
     signal_id: uuid.UUID | None = Field(default=None, index=True)

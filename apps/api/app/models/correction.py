@@ -87,6 +87,12 @@ class ArtifactCorrection(TimestampMixin, table=True):
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+
     # ── Traceability ──────────────────────────────────────────────────────────
     opportunity_id: uuid.UUID | None = Field(default=None, index=True)
     lead_id: uuid.UUID | None = Field(default=None, index=True)
@@ -136,6 +142,12 @@ class UserStyleProfile(TimestampMixin, table=True):
     __tablename__ = "user_style_profiles"
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
+
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
 
     # ── Accumulated rules per artifact type ──────────────────────────────────
     # Dict: artifact_type → { rule_type → {weight, confirmation_count, last_seen} }

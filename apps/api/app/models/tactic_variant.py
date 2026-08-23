@@ -43,6 +43,12 @@ class TacticVariant(TimestampMixin, table=True):
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+
     # ── Experiment definition ────────────────────────────────────────────────
     name: str = Field(nullable=False, index=True)
     description: str | None = Field(default=None)

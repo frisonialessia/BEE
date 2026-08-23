@@ -92,6 +92,12 @@ class FailedEvent(TimestampMixin, table=True):
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+
     # ── Event identity ─────────────────────────────────────────────────────────
     event_type: str = Field(index=True, default=DLQEventType.WEBHOOK)
     event_name: str = Field(index=True, description="e.g. 'opportunity.won', 'send_email'")

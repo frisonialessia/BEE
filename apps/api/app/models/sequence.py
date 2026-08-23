@@ -32,7 +32,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, UniqueConstraint
 from sqlmodel import Field
 
 from app.models.base import TimestampMixin, new_uuid
@@ -63,9 +63,21 @@ class DynamicSequence(TimestampMixin, table=True):
     """
 
     __tablename__ = "dynamic_sequences"
+    # Uniqueness scoped per-org, not global — two organizations should each be
+    # able to have their own "Standard Onboarding" sequence. Postgres treats
+    # NULL as distinct in a unique constraint, so untagged (organization_id
+    # is NULL) legacy rows are exempt from the name collision check entirely
+    # — acceptable since new sequences are always created with an org id.
+    __table_args__ = (UniqueConstraint("organization_id", "name", name="uq_dynamic_sequences_org_name"),)
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
-    name: str = Field(index=True, unique=True, nullable=False)
+
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+    name: str = Field(index=True, nullable=False)
     description: str | None = Field(default=None)
 
     # Target segment
@@ -102,6 +114,12 @@ class SequenceExecution(TimestampMixin, table=True):
     __tablename__ = "sequence_executions"
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
+
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
     sequence_id: uuid.UUID = Field(foreign_key="dynamic_sequences.id", index=True)
     opportunity_id: uuid.UUID | None = Field(default=None, index=True)
     lead_id: uuid.UUID | None = Field(default=None, index=True)

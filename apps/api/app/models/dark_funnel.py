@@ -31,7 +31,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, Column
+from sqlalchemy import JSON, Column, UniqueConstraint
 from sqlmodel import Field
 
 from app.models.base import TimestampMixin, new_uuid
@@ -96,6 +96,12 @@ class DarkFunnelSignal(TimestampMixin, table=True):
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+
     # ── Identity ───────────────────────────────────────────────────────────────
     company_domain: str = Field(index=True, nullable=False)
     company_name: str | None = Field(default=None)
@@ -141,9 +147,21 @@ class HotLeadScore(TimestampMixin, table=True):
     """
 
     __tablename__ = "hot_lead_scores"
+    # Uniqueness scoped per-org, not global — same fix as Company.domain
+    # (app.models.company): two organizations independently tracking intent
+    # signals for the same company domain must each get their own score row.
+    __table_args__ = (
+        UniqueConstraint("organization_id", "company_domain", name="uq_hot_lead_scores_org_domain"),
+    )
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
-    company_domain: str = Field(unique=True, index=True, nullable=False)
+
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+    company_domain: str = Field(index=True, nullable=False)
     company_name: str | None = Field(default=None)
     lead_id: uuid.UUID | None = Field(default=None, index=True)
 

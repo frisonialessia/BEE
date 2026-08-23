@@ -88,6 +88,12 @@ class AuditEntry(TimestampMixin, table=True):
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
+    # Tenant boundary. Nullable for backward compatibility — see
+    # app.models.organization's docstring.
+    organization_id: uuid.UUID | None = Field(
+        default=None, foreign_key="organizations.id", index=True
+    )
+
     # ── Decision identity ─────────────────────────────────────────────────────
     agent_type: str = Field(index=True, description="Which BEE agent made this decision")
     decision_type: str = Field(index=True, description="Category of decision")
