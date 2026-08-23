@@ -43,3 +43,27 @@ export async function bulkCreateLeads(leads: LeadCreateIn[]): Promise<LeadBulkRe
     body: JSON.stringify({ leads }),
   });
 }
+
+export interface LeadDuplicateGroup {
+  key: string;
+  leads: Lead[];
+}
+
+export async function fetchLeadDuplicates(): Promise<FetchResult<LeadDuplicateGroup[]>> {
+  try {
+    const data = await apiFetch<LeadDuplicateGroup[]>("/api/v1/leads/duplicates", {
+      cache: "no-store",
+    });
+    return { data, live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+export async function mergeLeads(keepId: string, mergeId: string): Promise<Lead> {
+  return apiFetch<Lead>("/api/v1/leads/merge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ keep_id: keepId, merge_id: mergeId }),
+  });
+}

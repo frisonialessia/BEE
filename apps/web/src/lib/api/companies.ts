@@ -41,3 +41,27 @@ export async function fetchCompany(companyId: string): Promise<FetchResult<Compa
     return { data: null, live: false };
   }
 }
+
+export interface CompanyDuplicateGroup {
+  key: string;
+  companies: Company[];
+}
+
+export async function fetchCompanyDuplicates(): Promise<FetchResult<CompanyDuplicateGroup[]>> {
+  try {
+    const data = await apiFetch<CompanyDuplicateGroup[]>("/api/v1/companies/duplicates", {
+      cache: "no-store",
+    });
+    return { data, live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+export async function mergeCompanies(keepId: string, mergeId: string): Promise<Company> {
+  return apiFetch<Company>("/api/v1/companies/merge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ keep_id: keepId, merge_id: mergeId }),
+  });
+}

@@ -112,6 +112,8 @@ def list_opportunities(
             "amount": item.amount,
             "expected_close_date": item.expected_close_date.isoformat() if item.expected_close_date else None,
             "qualification": item.qualification or {},
+            "created_at": item.created_at.isoformat(),
+            "updated_at": item.updated_at.isoformat(),
         }
         for item in items
     ]

@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import uuid
+from collections import defaultdict
 
 from sqlmodel import or_, select
 
 from app.models.company import Company
+from app.models.lead import Lead
+from app.models.opportunity import Opportunity
+from app.models.signal import Signal
 from app.repositories.base import BaseRepository
 from app.schemas.signal import CompanyRef
 from app.services.permissions import scope_by_organization_id
@@ -97,3 +101,63 @@ class CompanyRepository(BaseRepository[Company]):
             country=ref.country,
         )
         return self.add(company)
+
+    def find_duplicate_groups(self, organization_id: uuid.UUID | None = None) -> list[tuple[str, list[Company]]]:
+        """Group companies that are very likely the same real-world account.
+
+        The unique constraint on (organization_id, domain) blocks *exact*
+        duplicate domains going forward, but doesn't catch: different casing
+        ("Acme.com" vs "acme.com" — Postgres text comparison is
+        case-sensitive), a stray "www." prefix, companies entered without a
+        domain at all (manual entry, CSV import — neither dedupes today), or
+        rows created before the constraint existed. Two keys, in priority
+        order: normalized domain first, then exact name for the domain-less
+        remainder — a company only ever appears in one group.
+        """
+        statement = select(Company)
+        statement = scope_by_organization_id(statement, Company.organization_id, organization_id)
+        companies = list(self.session.exec(statement).all())
+
+        by_domain: dict[str, list[Company]] = defaultdict(list)
+        no_domain: list[Company] = []
+        for c in companies:
+            if c.domain:
+                key = c.domain.strip().lower().removeprefix("www.")
+                by_domain[key].append(c)
+            else:
+                no_domain.append(c)
+
+        by_name: dict[str, list[Company]] = defaultdict(list)
+        for c in no_domain:
+            by_name[c.name.strip().lower()].append(c)
+
+        groups: list[tuple[str, list[Company]]] = [
+            (key, items) for key, items in by_domain.items() if len(items) > 1
+        ]
+        groups += [(key, items) for key, items in by_name.items() if len(items) > 1]
+        return groups
+
+    def merge(self, keep_id: uuid.UUID, merge_id: uuid.UUID) -> Company:
+        """Fold ``merge_id`` into ``keep_id``: repoint every lead, signal, and
+        opportunity, then delete the now-empty duplicate. Caller commits."""
+        keep = self.get(keep_id)
+        merge_target = self.get(merge_id)
+        if keep is None or merge_target is None:
+            raise ValueError("Both companies must exist to merge.")
+        if keep_id == merge_id:
+            raise ValueError("Cannot merge a company into itself.")
+
+        for lead in self.session.exec(select(Lead).where(Lead.company_id == merge_id)).all():
+            lead.company_id = keep_id
+            self.session.add(lead)
+        for opp in self.session.exec(select(Opportunity).where(Opportunity.company_id == merge_id)).all():
+            opp.company_id = keep_id
+            self.session.add(opp)
+        for sig in self.session.exec(select(Signal).where(Signal.company_id == merge_id)).all():
+            sig.company_id = keep_id
+            self.session.add(sig)
+
+        self.session.delete(merge_target)
+        self.session.flush()
+        self.session.refresh(keep)
+        return keep

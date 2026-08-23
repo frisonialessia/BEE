@@ -109,6 +109,8 @@ export const sampleOpportunities: Opportunity[] = [
       economic_buyer: true,
       identify_pain: true,
     },
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
   },
   {
     id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
@@ -139,6 +141,8 @@ export const sampleOpportunities: Opportunity[] = [
     qualification: {
       identify_pain: true,
     },
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
   },
 ];
 

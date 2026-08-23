@@ -119,6 +119,8 @@ export interface Opportunity {
   amount: number | null;
   expected_close_date: string | null;
   qualification: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
 }
 
 // ── SignalIngestResult ────────────────────────────────────────────────────────
@@ -255,6 +257,7 @@ export interface Company {
   website: string | null;
   description: string | null;
   attributes: Record<string, unknown>;
+  created_at: string;
 }
 
 export type LeadStatus = "new" | "qualified" | "engaged" | "converted" | "disqualified";
@@ -273,6 +276,7 @@ export interface Lead {
   status: LeadStatus;
   score: number;
   attributes: Record<string, unknown>;
+  created_at: string;
   // Populated by DataValidator on the backend (create + on-demand re-check).
   data_freshness_score: number;
   validation_flags: string[];

@@ -19,6 +19,7 @@ from app.models.company import Company
 from app.models.user import User
 from app.repositories.company import CompanyRepository
 from app.schemas.company import CompanyCreateIn, CompanyOut
+from app.schemas.dedup import CompanyDuplicateGroup, MergeIn
 
 router = APIRouter(prefix="/companies", tags=["Companies"])
 
@@ -75,6 +76,59 @@ def list_companies(
     organization_id = current_user.organization_id if current_user else None
     companies = repo.list_scoped(limit=limit, offset=offset, organization_id=organization_id)
     return [CompanyOut.model_validate(c) for c in companies]
+
+
+@router.get(
+    "/duplicates",
+    response_model=list[CompanyDuplicateGroup],
+    summary="Find likely-duplicate companies (same domain or name)",
+)
+def list_duplicate_companies(
+    session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
+) -> list[CompanyDuplicateGroup]:
+    """Registered before ``/{company_id}`` on purpose — a static path segment
+    must come before a dynamic one, or Starlette matches "duplicates" as a
+    company_id and fails UUID validation before this handler ever runs."""
+    repo = CompanyRepository(session)
+    organization_id = current_user.organization_id if current_user else None
+    groups = repo.find_duplicate_groups(organization_id)
+    return [
+        CompanyDuplicateGroup(key=key, companies=[CompanyOut.model_validate(c) for c in items])
+        for key, items in groups
+    ]
+
+
+@router.post(
+    "/merge",
+    response_model=CompanyOut,
+    summary="Merge one duplicate company into another",
+)
+def merge_companies(
+    body: MergeIn,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> CompanyOut:
+    """Repoints every lead/opportunity/signal from ``merge_id`` onto
+    ``keep_id`` and deletes ``merge_id``. Both companies must belong to the
+    caller's organization — this isn't a superpower for touching other
+    tenants' data."""
+    repo = CompanyRepository(session)
+    for company_id in (body.keep_id, body.merge_id):
+        company = repo.get(company_id)
+        if company is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found.")
+        if company.organization_id is not None and company.organization_id != current_user.organization_id:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found.")
+
+    try:
+        merged = repo.merge(body.keep_id, body.merge_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+
+    session.commit()
+    session.refresh(merged)
+    return CompanyOut.model_validate(merged)
 
 
 @router.get(

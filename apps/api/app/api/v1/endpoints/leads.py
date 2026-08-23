@@ -20,6 +20,7 @@ from app.core.logging import get_logger
 from app.models.lead import Lead
 from app.models.user import User
 from app.repositories.lead import LeadRepository
+from app.schemas.dedup import LeadDuplicateGroup, MergeIn
 from app.schemas.lead import (
     LeadBulkCreateIn,
     LeadBulkError,
@@ -154,6 +155,56 @@ def _hidden_from(session: Session, current_user: User | None, lead: Lead) -> boo
     return (
         lead.organization_id is not None and lead.organization_id != current_user.organization_id
     ) or not user_can_view_assignment(session, current_user, lead.assigned_to_user_id)
+
+
+@router.get(
+    "/duplicates",
+    response_model=list[LeadDuplicateGroup],
+    summary="Find likely-duplicate leads (same email)",
+)
+def list_duplicate_leads(
+    session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
+) -> list[LeadDuplicateGroup]:
+    """Registered before ``/{lead_id}`` on purpose — see the equivalent note
+    on ``GET /companies/duplicates``."""
+    repo = LeadRepository(session)
+    organization_id = current_user.organization_id if current_user else None
+    groups = repo.find_duplicate_groups(organization_id)
+    return [
+        LeadDuplicateGroup(key=key, leads=[LeadOut.model_validate(l) for l in items])
+        for key, items in groups
+    ]
+
+
+@router.post(
+    "/merge",
+    response_model=LeadOut,
+    summary="Merge one duplicate lead into another",
+)
+def merge_leads(
+    body: MergeIn,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> LeadOut:
+    """Repoints every signal/opportunity from ``merge_id`` onto ``keep_id``
+    and deletes ``merge_id``. Both leads must be visible to the caller."""
+    repo = LeadRepository(session)
+    for lead_id in (body.keep_id, body.merge_id):
+        lead = repo.get(lead_id)
+        if lead is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found.")
+        if _hidden_from(session, current_user, lead):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found.")
+
+    try:
+        merged = repo.merge(body.keep_id, body.merge_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+
+    session.commit()
+    session.refresh(merged)
+    return LeadOut.model_validate(merged)
 
 
 @router.get(

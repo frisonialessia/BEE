@@ -59,6 +59,7 @@ class LeadOut(BaseModel):
     status: LeadStatus
     score: float
     attributes: dict[str, Any]
+    created_at: datetime
     # Populated by DataValidator — see app.services.data_validator.
     data_freshness_score: float
     validation_flags: list[str]

@@ -113,6 +113,10 @@ class OpportunityOut(BaseModel):
     amount: float | None = None
     expected_close_date: date | None = None
     qualification: dict[str, bool] = Field(default_factory=dict)
+    # Needed for trend/cohort BI (created_at) — was tracked on the model
+    # (TimestampMixin) but never returned to clients.
+    created_at: datetime
+    updated_at: datetime
 
 
 class OpportunityUpdateIn(BaseModel):

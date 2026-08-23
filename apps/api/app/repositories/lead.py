@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import uuid
+from collections import defaultdict
 
 from sqlmodel import or_, select
 
 from app.models.lead import Lead
+from app.models.opportunity import Opportunity
+from app.models.signal import Signal
 from app.repositories.base import BaseRepository
 from app.schemas.signal import LeadRef
 from app.services.permissions import scope_by_organization_id
@@ -90,3 +93,41 @@ class LeadRepository(BaseRepository[Lead]):
         statement = scope_by_organization_id(statement, Lead.organization_id, organization_id)
         statement = statement.limit(limit).offset(offset)
         return list(self.session.exec(statement).all())
+
+    def find_duplicate_groups(self, organization_id: uuid.UUID | None = None) -> list[tuple[str, list[Lead]]]:
+        """Group leads that share a normalized email — the same dedup key
+        ``get_or_create_from_ref`` uses going forward, but manual entry and
+        CSV bulk import (neither checks ``get_by_email`` first) can still
+        create a true duplicate, and casing differences slip past an exact
+        match too ("Jane@Acme.com" vs "jane@acme.com")."""
+        statement = select(Lead).where(Lead.email.is_not(None))
+        statement = scope_by_organization_id(statement, Lead.organization_id, organization_id)
+        leads = list(self.session.exec(statement).all())
+
+        by_email: dict[str, list[Lead]] = defaultdict(list)
+        for lead in leads:
+            by_email[lead.email.strip().lower()].append(lead)
+
+        return [(key, items) for key, items in by_email.items() if len(items) > 1]
+
+    def merge(self, keep_id: uuid.UUID, merge_id: uuid.UUID) -> Lead:
+        """Fold ``merge_id`` into ``keep_id``: repoint every signal and
+        opportunity, then delete the now-empty duplicate. Caller commits."""
+        keep = self.get(keep_id)
+        merge_target = self.get(merge_id)
+        if keep is None or merge_target is None:
+            raise ValueError("Both leads must exist to merge.")
+        if keep_id == merge_id:
+            raise ValueError("Cannot merge a lead into itself.")
+
+        for opp in self.session.exec(select(Opportunity).where(Opportunity.lead_id == merge_id)).all():
+            opp.lead_id = keep_id
+            self.session.add(opp)
+        for sig in self.session.exec(select(Signal).where(Signal.lead_id == merge_id)).all():
+            sig.lead_id = keep_id
+            self.session.add(sig)
+
+        self.session.delete(merge_target)
+        self.session.flush()
+        self.session.refresh(keep)
+        return keep
