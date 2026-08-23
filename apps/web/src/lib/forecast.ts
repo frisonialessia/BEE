@@ -34,6 +34,69 @@ export const STAGE_PROBABILITY: Record<OpportunityStatus, number> = {
 
 const CLOSED_STATUSES: OpportunityStatus[] = ["won", "lost", "dismissed"];
 
+// ── Riesgo de deal basado en histórico real ─────────────────────────────────
+
+/** Ancho de cada rango de score para agrupar el histórico — más angosto que
+ *  esto y casi ningún rango junta suficientes deals cerrados para ser
+ *  confiable; más ancho y deja de distinguir "70 de score" de "89". */
+const SCORE_BUCKET_WIDTH = 20;
+/** Bajo esta cantidad de deals cerrados en el rango, no hay suficiente
+ *  historia para confiar en el porcentaje — se usa la probabilidad fija por
+ *  etapa en su lugar. Es la diferencia entre un dato real y uno inventado. */
+const MIN_SAMPLE_SIZE = 5;
+
+export interface ScoreBucketStat {
+  bucketStart: number; // 0, 20, 40, 60, 80
+  won: number;
+  lost: number;
+  sampleSize: number;
+  winRate: number;
+}
+
+function scoreBucketStart(score: number): number {
+  return Math.min(80, Math.max(0, Math.floor(score / SCORE_BUCKET_WIDTH) * SCORE_BUCKET_WIDTH));
+}
+
+/** Tasa de cierre real por rango de score, calculada de los deals ya
+ *  cerrados (ganados o perdidos) — el histórico que BEE ya tiene, en vez de
+ *  asumir que todo lo que llega a "in_progress" cierra siempre igual. */
+export function computeScoreBucketStats(opportunities: Opportunity[]): ScoreBucketStat[] {
+  const closed = opportunities.filter((o) => o.status === "won" || o.status === "lost");
+  const buckets = new Map<number, { won: number; lost: number }>();
+
+  for (const o of closed) {
+    const start = scoreBucketStart(o.score);
+    const b = buckets.get(start) ?? { won: 0, lost: 0 };
+    if (o.status === "won") b.won += 1;
+    else b.lost += 1;
+    buckets.set(start, b);
+  }
+
+  return [...buckets.entries()]
+    .map(([bucketStart, { won, lost }]) => ({
+      bucketStart,
+      won,
+      lost,
+      sampleSize: won + lost,
+      winRate: won / (won + lost),
+    }))
+    .sort((a, b) => a.bucketStart - b.bucketStart);
+}
+
+/** Probabilidad de cierre para una oportunidad abierta: la tasa real de
+ *  cierre de deals históricos con score parecido, cuando hay suficientes
+ *  (≥ MIN_SAMPLE_SIZE) — si no, cae de vuelta a STAGE_PROBABILITY en vez de
+ *  fingir una precisión que los datos todavía no sostienen. */
+export function closeProbability(opportunity: Opportunity, bucketStats: ScoreBucketStat[]): number {
+  if (opportunity.status === "won") return 1;
+  if (opportunity.status === "lost" || opportunity.status === "dismissed") return 0;
+
+  const start = scoreBucketStart(opportunity.score);
+  const stat = bucketStats.find((s) => s.bucketStart === start);
+  if (stat && stat.sampleSize >= MIN_SAMPLE_SIZE) return stat.winRate;
+  return STAGE_PROBABILITY[opportunity.status];
+}
+
 export interface ForecastMonthBucket {
   key: string; // "2026-09" o "sin_fecha"
   label: string;
@@ -50,12 +113,17 @@ export interface AtRiskOpportunity {
 export interface ForecastSummary {
   /** Suma de amount de todo lo abierto (sin ponderar). */
   pipelineValue: number;
-  /** Suma de amount * probabilidad de la etapa — el número real del pronóstico. */
+  /** Suma de amount * probabilidad de cierre — el número real del pronóstico. */
   weightedForecast: number;
   openCount: number;
   wonValue: number;
   byMonth: ForecastMonthBucket[];
   atRisk: AtRiskOpportunity[];
+  /** Tasas de cierre reales por rango de score — solo los rangos con
+   *  suficiente histórico para ser confiables (ver MIN_SAMPLE_SIZE). Vacío
+   *  hasta que haya suficientes deals cerrados; hasta entonces el pronóstico
+   *  usa la probabilidad fija por etapa. */
+  scoreBucketStats: ScoreBucketStat[];
 }
 
 const MONTH_LABEL = new Intl.DateTimeFormat("es-MX", { month: "short", year: "2-digit" });
@@ -76,10 +144,13 @@ function parseLocalDate(value: string): Date {
 export function computeForecast(opportunities: Opportunity[], today: Date): ForecastSummary {
   const open = opportunities.filter((o) => !CLOSED_STATUSES.includes(o.status));
   const won = opportunities.filter((o) => o.status === "won");
+  const bucketStats = computeScoreBucketStats(opportunities).filter(
+    (s) => s.sampleSize >= MIN_SAMPLE_SIZE,
+  );
 
   const pipelineValue = open.reduce((sum, o) => sum + (o.amount ?? 0), 0);
   const weightedForecast = open.reduce(
-    (sum, o) => sum + (o.amount ?? 0) * STAGE_PROBABILITY[o.status],
+    (sum, o) => sum + (o.amount ?? 0) * closeProbability(o, bucketStats),
     0,
   );
   const wonValue = won.reduce((sum, o) => sum + (o.amount ?? 0), 0);
@@ -98,7 +169,7 @@ export function computeForecast(opportunities: Opportunity[], today: Date): Fore
   const atRisk: AtRiskOpportunity[] = [];
 
   for (const o of open) {
-    const weighted = (o.amount ?? 0) * STAGE_PROBABILITY[o.status];
+    const weighted = (o.amount ?? 0) * closeProbability(o, bucketStats);
 
     if (!o.expected_close_date) {
       sinFecha.weighted += weighted;
@@ -138,5 +209,6 @@ export function computeForecast(opportunities: Opportunity[], today: Date): Fore
     wonValue,
     byMonth,
     atRisk,
+    scoreBucketStats: bucketStats,
   };
 }

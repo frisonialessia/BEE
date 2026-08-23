@@ -3,6 +3,7 @@
 import { AlertTriangle, DollarSign, TrendingUp, Trophy } from "lucide-react";
 
 import { ForecastBarChart } from "@/components/forecast/forecast-bar-chart";
+import { TrendsChart } from "@/components/forecast/trends-chart";
 import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +11,7 @@ import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context"
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { computeForecast, qualificationScore, type AtRiskOpportunity } from "@/lib/forecast";
+import { computeMonthlyTrends } from "@/lib/trends";
 
 const currency = new Intl.NumberFormat("es-MX", {
   style: "currency",
@@ -35,8 +37,11 @@ export function ForecastView() {
   const live = oppsResult?.live ?? false;
   const companyById = new Map((companiesResult?.data ?? []).map((c) => [c.id, c]));
 
-  const forecast = computeForecast(opportunities, new Date());
+  const today = new Date();
+  const forecast = computeForecast(opportunities, today);
+  const trends = computeMonthlyTrends(opportunities, today);
   const withAmount = opportunities.some((o) => o.amount !== null);
+  const hasClosedHistory = trends.some((t) => t.won + t.lost > 0);
 
   return (
     <div>
@@ -84,7 +89,11 @@ export function ForecastView() {
             <MetricCard
               label="Pronóstico ponderado"
               value={currency.format(forecast.weightedForecast)}
-              hint="Monto × probabilidad de cierre por etapa"
+              hint={
+                forecast.scoreBucketStats.length > 0
+                  ? "Monto × probabilidad real de cierre (histórico) o por etapa"
+                  : "Monto × probabilidad de cierre por etapa"
+              }
               icon={TrendingUp}
             />
             <MetricCard
@@ -106,6 +115,37 @@ export function ForecastView() {
             <h3 className="mb-4 text-sm font-semibold">Pronóstico por mes</h3>
             <ForecastBarChart buckets={forecast.byMonth} />
           </section>
+
+          {hasClosedHistory && (
+            <section className="bee-surface p-5">
+              <h3 className="mb-1 text-sm font-semibold">Tendencia de cierre</h3>
+              <p className="bee-caption mb-4">
+                Oportunidades creadas por mes (barra) y tasa de cierre de lo que se resolvió ese mes (número arriba)
+              </p>
+              <TrendsChart points={trends} />
+            </section>
+          )}
+
+          {forecast.scoreBucketStats.length > 0 && (
+            <section className="bee-surface p-5">
+              <h3 className="mb-1 text-sm font-semibold">Precisión del pronóstico</h3>
+              <p className="bee-caption mb-4">
+                Ya hay suficiente histórico para calcular la probabilidad de cierre real por rango de score, en vez
+                de la fija por etapa — esto es lo que se está usando ahora mismo:
+              </p>
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
+                {forecast.scoreBucketStats.map((s) => (
+                  <div key={s.bucketStart} className="rounded-[var(--radius-md)] bg-[var(--color-primary)]/25 p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      Score {s.bucketStart}-{s.bucketStart + 19}
+                    </p>
+                    <p className="mt-1 text-lg font-semibold">{Math.round(s.winRate * 100)}%</p>
+                    <p className="text-[10px] text-muted-foreground">{s.sampleSize} deals cerrados</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className="bee-surface p-5">
             <h3 className="mb-3 text-sm font-semibold">Deals en riesgo</h3>
