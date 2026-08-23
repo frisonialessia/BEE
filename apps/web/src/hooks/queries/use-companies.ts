@@ -2,13 +2,38 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createCompany, fetchCompanies, fetchCompany, type CompanyCreateIn } from "@/lib/api/companies";
+import {
+  createCompany,
+  fetchCompanies,
+  fetchCompany,
+  fetchCompanyDuplicates,
+  mergeCompanies,
+  type CompanyCreateIn,
+} from "@/lib/api/companies";
 import { queryKeys } from "@/lib/query-keys";
 
 export function useCompanies(limit = 100) {
   return useQuery({
     queryKey: queryKeys.companies.list(limit),
     queryFn: async () => fetchCompanies(limit),
+  });
+}
+
+export function useCompanyDuplicates() {
+  return useQuery({
+    queryKey: queryKeys.companies.duplicates(),
+    queryFn: async () => fetchCompanyDuplicates(),
+  });
+}
+
+export function useMergeCompanies() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ keepId, mergeId }: { keepId: string; mergeId: string }) =>
+      mergeCompanies(keepId, mergeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+    },
   });
 }
 

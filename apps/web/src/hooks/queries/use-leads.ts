@@ -2,7 +2,14 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { bulkCreateLeads, createLead, fetchLeads, type LeadCreateIn } from "@/lib/api/leads";
+import {
+  bulkCreateLeads,
+  createLead,
+  fetchLeadDuplicates,
+  fetchLeads,
+  mergeLeads,
+  type LeadCreateIn,
+} from "@/lib/api/leads";
 import { queryKeys } from "@/lib/query-keys";
 
 export function useLeads(limit = 50) {
@@ -26,6 +33,24 @@ export function useBulkCreateLeads() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (leads: LeadCreateIn[]) => bulkCreateLeads(leads),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+    },
+  });
+}
+
+export function useLeadDuplicates() {
+  return useQuery({
+    queryKey: queryKeys.leads.duplicates(),
+    queryFn: async () => fetchLeadDuplicates(),
+  });
+}
+
+export function useMergeLeads() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ keepId, mergeId }: { keepId: string; mergeId: string }) =>
+      mergeLeads(keepId, mergeId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
     },
