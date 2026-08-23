@@ -11,6 +11,7 @@ import {
   Radio,
   ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
   Target,
   Users,
   Workflow,
@@ -23,6 +24,7 @@ import { cn } from "@/lib/utils";
 
 const VIEWS = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Resumen", exact: true },
+  { href: "/dashboard/assistant", icon: Sparkles, label: "Asistente BEE" },
   { href: "/dashboard/control", icon: SlidersHorizontal, label: "Control", exact: true },
   { href: "/dashboard/opportunities", icon: Target, label: "Oportunidades" },
   { href: "/dashboard/signals", icon: Radio, label: "Señales" },

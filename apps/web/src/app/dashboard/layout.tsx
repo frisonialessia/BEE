@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { AskBeeFab } from "@/components/assistant/ask-bee-fab";
 import { DashboardRail } from "@/components/dashboard/dashboard-rail";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
@@ -41,6 +42,7 @@ export default function DashboardLayout({
           <div className="bee-scroll">{children}</div>
         </div>
         <OpportunityDrawer />
+        <AskBeeFab />
       </div>
     </OpportunityDrawerProvider>
   );
