@@ -7,6 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
+from app.api.deps import get_organization_id
 from app.core.database import get_session
 from app.schemas.anomaly import AnomalyAcknowledgeRequest, AnomalyAlertOut, AnomalyCheckResult
 from app.services.anomaly_detector import AnomalyDetector
@@ -26,6 +27,7 @@ def _get_detector(session: Session = Depends(get_session)) -> AnomalyDetector:
 def check_anomalies(
     detector: AnomalyDetector = Depends(_get_detector),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> AnomalyCheckResult:
     """Trigger a full anomaly detection run.
 
@@ -47,7 +49,7 @@ def check_anomalies(
     - After every WON/LOST outcome recording (via FeedbackLoopService hook)
     - By a scheduled job every hour
     """
-    result = detector.check_all()
+    result = detector.check_all(organization_id)
     session.commit()
     return result
 
@@ -62,6 +64,7 @@ def list_anomaly_alerts(
     severity: str | None = Query(default=None, description="Filter by severity: low | medium | high | critical"),
     limit: int = Query(default=50, le=200),
     detector: AnomalyDetector = Depends(_get_detector),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> list[AnomalyAlertOut]:
     """List anomaly alerts.
 
@@ -69,7 +72,7 @@ def list_anomaly_alerts(
     Filter by ``status=open`` to see only unresolved alerts.
     Filter by ``severity=critical`` to see only critical alerts.
     """
-    alerts = detector.list_alerts(status=status, severity=severity, limit=limit)
+    alerts = detector.list_alerts(status=status, severity=severity, limit=limit, organization_id=organization_id)
     return [AnomalyAlertOut.model_validate(a) for a in alerts]
 
 
@@ -83,6 +86,7 @@ def acknowledge_alert(
     body: AnomalyAcknowledgeRequest,
     detector: AnomalyDetector = Depends(_get_detector),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> AnomalyAlertOut:
     """CEO acknowledges an alert — marks it as reviewed without taking action.
 
@@ -95,7 +99,7 @@ def acknowledge_alert(
     from fastapi import HTTPException
     from fastapi import status as http_status
 
-    alert = detector.acknowledge_alert(alert_id, notes=body.notes)
+    alert = detector.acknowledge_alert(alert_id, notes=body.notes, organization_id=organization_id)
     if not alert:
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Alert not found")
     session.commit()

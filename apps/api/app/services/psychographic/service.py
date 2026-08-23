@@ -31,6 +31,7 @@ from app.core.logging import get_logger
 from app.models.lead import Lead
 from app.models.psychographic import ClassificationSource, LeadPsychographic
 from app.schemas.psychographic import AdaptedContent
+from app.services.permissions import scope_by_organization_id as _scope
 from app.services.psychographic.classifier import STYLE_PREFERENCES, classify_from_title
 from app.services.psychographic.middleware import ContentStyleMiddleware
 
@@ -76,8 +77,11 @@ class PsychographicAnalyzer:
 
         return self._classify_and_persist(lead)
 
-    def list_profiles(self, limit: int = 50) -> list[LeadPsychographic]:
+    def list_profiles(
+        self, limit: int = 50, organization_id: uuid.UUID | None = None
+    ) -> list[LeadPsychographic]:
         stmt = select(LeadPsychographic).order_by(LeadPsychographic.classified_at.desc()).limit(limit)
+        stmt = _scope(stmt, LeadPsychographic.organization_id, organization_id)
         return list(self.session.exec(stmt).all())
 
     # ── Content middleware (the core middleware method) ────────────────────────
@@ -155,6 +159,7 @@ class PsychographicAnalyzer:
         prefs = STYLE_PREFERENCES.get(result["dominant"], {})
 
         profile = LeadPsychographic(
+            organization_id=lead.organization_id,
             lead_id=lead.id,
             d_score=result["d"],
             i_score=result["i"],

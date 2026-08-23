@@ -1,8 +1,11 @@
 """ScenarioSimulator API — What-If revenue projection endpoint."""
 
+import uuid
+
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
+from app.api.deps import get_organization_id
 from app.core.database import get_session
 from app.schemas.scenario import ScenarioRequest, ScenarioResult
 from app.services.scenario_simulator import ScenarioSimulator
@@ -18,6 +21,7 @@ router = APIRouter(prefix="/analytics", tags=["Scenario Simulator (What-If)"])
 def run_scenario(
     request: ScenarioRequest,
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> ScenarioResult:
     """Execute a predictive revenue simulation.
 
@@ -52,6 +56,6 @@ def run_scenario(
     ```
     """
     simulator = ScenarioSimulator(session)
-    result = simulator.run(request)
+    result = simulator.run(request, organization_id)
     session.commit()
     return result

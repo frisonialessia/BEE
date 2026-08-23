@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import UTC, datetime
 
 from sqlmodel import select
 
 from app.models.market_insight import MarketInsight
 from app.repositories.base import BaseRepository
+from app.services.permissions import scope_by_organization_id
 
 
 class MarketInsightRepository(BaseRepository[MarketInsight]):
@@ -18,6 +20,7 @@ class MarketInsightRepository(BaseRepository[MarketInsight]):
         signal_type: str | None = None,
         industry: str | None = None,
         limit: int = 5,
+        organization_id: uuid.UUID | None = None,
     ) -> list[MarketInsight]:
         """Return fresh active insights, optionally filtered by signal type / industry."""
         now = datetime.now(UTC)
@@ -38,18 +41,20 @@ class MarketInsightRepository(BaseRepository[MarketInsight]):
             stmt = stmt.where(
                 (MarketInsight.industry == industry) | MarketInsight.industry.is_(None)  # type: ignore[attr-defined]
             )
+        stmt = scope_by_organization_id(stmt, MarketInsight.organization_id, organization_id)
         return list(self.session.exec(stmt).all())
 
-    def expire_stale(self) -> int:
+    def expire_stale(self, organization_id: uuid.UUID | None = None) -> int:
         """Mark insights past their TTL as inactive. Returns count expired."""
         now = datetime.now(UTC)
-        stale = list(
-            self.session.exec(
-                select(MarketInsight)
-                .where(MarketInsight.is_active.is_(True))  # type: ignore[attr-defined]
-                .where(MarketInsight.expires_at <= now)  # type: ignore[attr-defined]
-            ).all()
+        stmt = scope_by_organization_id(
+            select(MarketInsight)
+            .where(MarketInsight.is_active.is_(True))  # type: ignore[attr-defined]
+            .where(MarketInsight.expires_at <= now),  # type: ignore[attr-defined]
+            MarketInsight.organization_id,
+            organization_id,
         )
+        stale = list(self.session.exec(stmt).all())
         for insight in stale:
             insight.is_active = False
             self.session.add(insight)

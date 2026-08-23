@@ -70,6 +70,7 @@ from sqlmodel import Session, select
 from app.core.logging import get_logger
 from app.models.audit_trail import AgentType, AuditEntry, DecisionType
 from app.schemas.audit_trail import AuditSummary
+from app.services.permissions import scope_by_organization_id as _scope
 
 logger = get_logger(__name__)
 
@@ -102,8 +103,16 @@ class AuditTrailService:
         generator_name: str | None = None,
         generator_version: str | None = None,
         processing_ms: int | None = None,
+        organization_id: uuid.UUID | None = None,
     ) -> AuditEntry | None:
         """Record an agent decision. Non-blocking — never raises on failure.
+
+        ``organization_id`` is optional and, today, only passed by a handful
+        of callers that already have tenant context in scope (e.g.
+        CorrectionLearningService) — most internal agent-to-agent decision
+        logging doesn't yet thread it through, so the majority of entries
+        stay untagged (globally visible, same as before this field existed)
+        until each caller is migrated.
 
         Returns:
             The persisted ``AuditEntry``, or ``None`` if recording failed.
@@ -111,6 +120,7 @@ class AuditTrailService:
         try:
             clamped_confidence = max(0.0, min(1.0, float(confidence_score)))
             entry = AuditEntry(
+                organization_id=organization_id,
                 agent_type=agent_type,
                 decision_type=decision_type,
                 session_id=session_id,
@@ -172,8 +182,17 @@ class AuditTrailService:
 
     # ── Queries ───────────────────────────────────────────────────────────────
 
-    def get_entry(self, entry_id: uuid.UUID) -> AuditEntry | None:
-        return self.session.get(AuditEntry, entry_id)
+    def get_entry(self, entry_id: uuid.UUID, organization_id: uuid.UUID | None = None) -> AuditEntry | None:
+        entry = self.session.get(AuditEntry, entry_id)
+        if entry is None:
+            return None
+        if (
+            organization_id is not None
+            and entry.organization_id is not None
+            and entry.organization_id != organization_id
+        ):
+            return None
+        return entry
 
     def list_entries(
         self,
@@ -184,6 +203,7 @@ class AuditTrailService:
         manual_review_required: bool | None = None,
         session_id: str | None = None,
         limit: int = 50,
+        organization_id: uuid.UUID | None = None,
     ) -> list[AuditEntry]:
         stmt = select(AuditEntry).order_by(AuditEntry.created_at.desc()).limit(limit)
         if agent_type:
@@ -198,25 +218,33 @@ class AuditTrailService:
             stmt = stmt.where(AuditEntry.manual_review_required == manual_review_required)
         if session_id:
             stmt = stmt.where(AuditEntry.session_id == session_id)
+        stmt = _scope(stmt, AuditEntry.organization_id, organization_id)
         return list(self.session.exec(stmt).all())
 
-    def get_decisions_for_opportunity(self, opportunity_id: uuid.UUID) -> list[AuditEntry]:
+    def get_decisions_for_opportunity(
+        self, opportunity_id: uuid.UUID, organization_id: uuid.UUID | None = None
+    ) -> list[AuditEntry]:
         """Return the full decision chain for an opportunity, chronological order."""
         stmt = (
             select(AuditEntry)
             .where(AuditEntry.opportunity_id == opportunity_id)
             .order_by(AuditEntry.created_at.asc())
         )
+        stmt = _scope(stmt, AuditEntry.organization_id, organization_id)
         return list(self.session.exec(stmt).all())
 
-    def count_manual_review_needed(self) -> int:
-        entries = self.session.exec(
-            select(AuditEntry).where(AuditEntry.manual_review_required)
-        ).all()
+    def count_manual_review_needed(self, organization_id: uuid.UUID | None = None) -> int:
+        stmt = _scope(
+            select(AuditEntry).where(AuditEntry.manual_review_required),
+            AuditEntry.organization_id,
+            organization_id,
+        )
+        entries = self.session.exec(stmt).all()
         return len(list(entries))
 
-    def get_summary(self) -> AuditSummary:
-        all_entries = list(self.session.exec(select(AuditEntry)).all())
+    def get_summary(self, organization_id: uuid.UUID | None = None) -> AuditSummary:
+        stmt = _scope(select(AuditEntry), AuditEntry.organization_id, organization_id)
+        all_entries = list(self.session.exec(stmt).all())
 
         agent_counts: dict[str, int] = {}
         decision_counts: dict[str, int] = {}

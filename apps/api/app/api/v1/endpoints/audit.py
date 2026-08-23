@@ -7,6 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
+from app.api.deps import get_organization_id
 from app.core.database import get_session
 from app.schemas.audit_trail import AuditDecisionChain, AuditEntryOut, AuditSummary
 from app.services.audit_trail import AuditTrailService
@@ -32,6 +33,7 @@ def list_decisions(
     session_id: str | None = Query(default=None),
     limit: int = Query(default=50, le=500),
     audit: AuditTrailService = Depends(_get_audit),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> list[AuditEntryOut]:
     """Browse the audit trail of all agent decisions.
 
@@ -58,6 +60,7 @@ def list_decisions(
         manual_review_required=manual_review_required,
         session_id=session_id,
         limit=limit,
+        organization_id=organization_id,
     )
     return [AuditEntryOut.model_validate(e) for e in entries]
 
@@ -70,8 +73,9 @@ def list_decisions(
 def get_decision(
     entry_id: uuid.UUID,
     audit: AuditTrailService = Depends(_get_audit),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> AuditEntryOut:
-    entry = audit.get_entry(entry_id)
+    entry = audit.get_entry(entry_id, organization_id)
     if not entry:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audit entry not found")
     return AuditEntryOut.model_validate(entry)
@@ -85,6 +89,7 @@ def get_decision(
 def get_opportunity_chain(
     opportunity_id: uuid.UUID,
     audit: AuditTrailService = Depends(_get_audit),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> AuditDecisionChain:
     """Return all agent decisions for an opportunity in chronological order.
 
@@ -92,7 +97,7 @@ def get_opportunity_chain(
     → DISC adaptation → artifact creation → orchestrator action. The CEO can
     trace exactly why BEE recommended a specific approach for this deal.
     """
-    entries = audit.get_decisions_for_opportunity(opportunity_id)
+    entries = audit.get_decisions_for_opportunity(opportunity_id, organization_id)
     has_low_confidence = any(e.confidence_score < 0.8 for e in entries)
     requires_review = any(e.manual_review_required for e in entries)
 
@@ -110,6 +115,9 @@ def get_opportunity_chain(
     response_model=AuditSummary,
     summary="Audit trail overview statistics",
 )
-def get_audit_summary(audit: AuditTrailService = Depends(_get_audit)) -> AuditSummary:
+def get_audit_summary(
+    audit: AuditTrailService = Depends(_get_audit),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
+) -> AuditSummary:
     """Return aggregate statistics about the audit trail."""
-    return audit.get_summary()
+    return audit.get_summary(organization_id)

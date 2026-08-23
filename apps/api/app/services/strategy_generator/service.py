@@ -142,10 +142,14 @@ class StrategyGeneratorService:
         industry = company_ref.get("industry")
 
         # ── 1. Adaptive memory hints ──────────────────────────────────────────
-        hints = self._feedback.get_success_hints(signal_type=signal_type.value, industry=industry)
+        hints = self._feedback.get_success_hints(
+            signal_type=signal_type.value, industry=industry, organization_id=signal.organization_id
+        )
 
         # ── 2. A/B variant assignment ─────────────────────────────────────────
-        variant_ref = self._feedback.get_active_variant(signal_type=signal_type.value, industry=industry)
+        variant_ref = self._feedback.get_active_variant(
+            signal_type=signal_type.value, industry=industry, organization_id=signal.organization_id
+        )
 
         # ── 3. Market insights from TrendAnalyst ──────────────────────────────
         market_insights = []

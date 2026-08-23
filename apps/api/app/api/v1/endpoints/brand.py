@@ -7,6 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
+from app.api.deps import get_organization_id
 from app.core.database import get_session
 from app.schemas.brand import (
     BrandContextQuery,
@@ -36,13 +37,15 @@ def create_or_update_profile(
     data: VoiceProfileCreate,
     svc: PersonalBrandService = Depends(_get_service),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> VoiceProfileOut:
     """Define the CEO's brand DNA (tone, authority topics, forbidden phrases).
 
-    Only one active profile exists at a time. Calling this endpoint replaces the
-    previous one. The old profile is kept for audit but deactivated.
+    Only one active profile exists at a time *per organization*. Calling this
+    endpoint replaces the caller's own previous one. The old profile is kept
+    for audit but deactivated.
     """
-    profile = svc.create_or_update_profile(data)
+    profile = svc.create_or_update_profile(data, organization_id)
     session.commit()
     session.refresh(profile)
     return VoiceProfileOut.model_validate(profile)
@@ -53,8 +56,11 @@ def create_or_update_profile(
     response_model=VoiceProfileOut,
     summary="Get the active CEO voice profile",
 )
-def get_profile(svc: PersonalBrandService = Depends(_get_service)) -> VoiceProfileOut:
-    profile = svc.get_active_profile()
+def get_profile(
+    svc: PersonalBrandService = Depends(_get_service),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
+) -> VoiceProfileOut:
+    profile = svc.get_active_profile(organization_id)
     if not profile:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active voice profile. Create one first.")
     return VoiceProfileOut.model_validate(profile)
@@ -71,6 +77,7 @@ def add_fragment(
     data: BrandFragmentCreate,
     svc: PersonalBrandService = Depends(_get_service),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> BrandFragmentOut:
     """Add an example post, key insight, or signature phrase to the knowledge base.
 
@@ -78,7 +85,9 @@ def add_fragment(
     * The relational DB (for CRUD and audit)
     * The VectorStore (for semantic search during content generation)
     """
-    fragment = svc.add_fragment(profile_id, data)
+    fragment = svc.add_fragment(profile_id, data, organization_id)
+    if fragment is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Voice profile not found.")
     session.commit()
     session.refresh(fragment)
     return BrandFragmentOut.model_validate(fragment)
@@ -94,8 +103,9 @@ def list_fragments(
     category: str | None = Query(default=None),
     limit: int = Query(default=50, le=200),
     svc: PersonalBrandService = Depends(_get_service),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> list[BrandFragmentOut]:
-    fragments = svc.list_fragments(profile_id, category=category, limit=limit)
+    fragments = svc.list_fragments(profile_id, category=category, limit=limit, organization_id=organization_id)
     return [BrandFragmentOut.model_validate(f) for f in fragments]
 
 
@@ -108,8 +118,9 @@ def delete_fragment(
     fragment_id: uuid.UUID,
     svc: PersonalBrandService = Depends(_get_service),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> None:
-    ok = svc.delete_fragment(fragment_id)
+    ok = svc.delete_fragment(fragment_id, organization_id)
     if not ok:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Fragment not found")
     session.commit()
@@ -123,6 +134,7 @@ def delete_fragment(
 def get_brand_context(
     query: BrandContextQuery,
     svc: PersonalBrandService = Depends(_get_service),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> BrandContextResult:
     """Retrieve semantically relevant brand fragments for a given topic.
 
@@ -139,6 +151,7 @@ def get_brand_context(
         top_k=query.top_k,
         category_filter=query.category_filter,
         tag_filter=query.tag_filter or None,
+        organization_id=organization_id,
     )
 
 

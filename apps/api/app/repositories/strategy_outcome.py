@@ -8,6 +8,7 @@ from sqlmodel import func, select
 
 from app.models.strategy_outcome import StrategyOutcome
 from app.repositories.base import BaseRepository
+from app.services.permissions import scope_by_organization_id
 
 
 class StrategyOutcomeRepository(BaseRepository[StrategyOutcome]):
@@ -27,6 +28,7 @@ class StrategyOutcomeRepository(BaseRepository[StrategyOutcome]):
         signal_type: str,
         industry: str | None = None,
         min_samples: int = 3,
+        organization_id: uuid.UUID | None = None,
     ) -> list[dict]:
         """Aggregate win rates by (playbook, channel, generator) for a signal type.
 
@@ -63,6 +65,7 @@ class StrategyOutcomeRepository(BaseRepository[StrategyOutcome]):
         )
         if industry:
             stmt = stmt.where(StrategyOutcome.company_industry == industry)
+        stmt = scope_by_organization_id(stmt, StrategyOutcome.organization_id, organization_id)
 
         rows = self.session.exec(stmt).all()
         results = []

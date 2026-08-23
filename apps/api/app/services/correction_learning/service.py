@@ -32,10 +32,9 @@ from app.services.correction_learning.prompt_adjuster import (
     generate_style_summary,
     merge_rules_into_profile,
 )
+from app.services.permissions import scope_by_organization_id as _scope
 
 logger = get_logger(__name__)
-
-_SINGLETON_PROFILE_NOTE = "global"  # One style profile per BEE installation
 
 
 class CorrectionLearningService:
@@ -56,6 +55,7 @@ class CorrectionLearningService:
         generator_name: str | None = None,
         psychographic_style: str | None = None,
         channel: str | None = None,
+        organization_id: uuid.UUID | None = None,
     ) -> CorrectionOut:
         """Process a CEO edit and update the style profile.
 
@@ -92,6 +92,7 @@ class CorrectionLearningService:
 
         # ── Step 2: Persist correction ────────────────────────────────────────
         correction = ArtifactCorrection(
+            organization_id=organization_id,
             opportunity_id=opportunity_id,
             lead_id=lead_id,
             artifact_type=artifact_type,
@@ -108,7 +109,7 @@ class CorrectionLearningService:
         self.session.flush()
 
         # ── Step 3: Update UserStyleProfile ──────────────────────────────────
-        profile = self._get_or_create_profile()
+        profile = self._get_or_create_profile(organization_id)
         if extracted_rules:
             updated_rules = merge_rules_into_profile(
                 profile.rules,
@@ -142,9 +143,9 @@ class CorrectionLearningService:
 
     # ── Style profile access ─────────────────────────────────────────────────
 
-    def get_style_profile(self) -> StyleProfileOut:
+    def get_style_profile(self, organization_id: uuid.UUID | None = None) -> StyleProfileOut:
         """Return the current style profile for dashboard display."""
-        profile = self._get_or_create_profile()
+        profile = self._get_or_create_profile(organization_id)
         return StyleProfileOut(
             total_corrections=profile.total_corrections,
             authoritative_rules_count=profile.authoritative_rules_count,
@@ -154,13 +155,15 @@ class CorrectionLearningService:
             rules_by_type=profile.rules,
         )
 
-    def get_style_summary_for_injection(self, artifact_type: str | None = None) -> str:
+    def get_style_summary_for_injection(
+        self, artifact_type: str | None = None, organization_id: uuid.UUID | None = None
+    ) -> str:
         """Return the prompt-ready style summary for the ExecutiveAgent.
 
         Called by the ExecutiveAgent before generating any artifact.
         Returns empty string if no corrections have been made yet.
         """
-        profile = self._get_or_create_profile()
+        profile = self._get_or_create_profile(organization_id)
         if not profile.style_summary:
             return ""
         if artifact_type:
@@ -177,6 +180,7 @@ class CorrectionLearningService:
         artifact_type: str | None = None,
         opportunity_id: uuid.UUID | None = None,
         limit: int = 50,
+        organization_id: uuid.UUID | None = None,
     ) -> list[ArtifactCorrection]:
         stmt = (
             select(ArtifactCorrection)
@@ -187,16 +191,30 @@ class CorrectionLearningService:
             stmt = stmt.where(ArtifactCorrection.artifact_type == artifact_type)
         if opportunity_id:
             stmt = stmt.where(ArtifactCorrection.opportunity_id == opportunity_id)
+        stmt = _scope(stmt, ArtifactCorrection.organization_id, organization_id)
         return list(self.session.exec(stmt).all())
 
     # ── Internal helpers ─────────────────────────────────────────────────────
 
-    def _get_or_create_profile(self) -> UserStyleProfile:
-        """Return the singleton UserStyleProfile, creating it if it doesn't exist."""
-        profiles = list(self.session.exec(select(UserStyleProfile)).all())
+    def _get_or_create_profile(self, organization_id: uuid.UUID | None = None) -> UserStyleProfile:
+        """Return the org's UserStyleProfile, creating it if it doesn't exist.
+
+        One profile per organization — each tenant's CEO has their own
+        learned writing style, not a single style shared across every
+        customer using BEE. Deliberately an *exact* match on
+        ``organization_id`` rather than the usual untagged-is-shared
+        fallback: adopting a pre-existing untagged/legacy singleton here
+        would let one organization's future corrections silently overwrite
+        what may have been a shared profile, so a tagged caller always gets
+        (or creates) its own row instead.
+        """
+        stmt = select(UserStyleProfile).where(UserStyleProfile.organization_id == organization_id)
+        profiles = list(self.session.exec(stmt).all())
         if profiles:
             return profiles[0]
-        profile = UserStyleProfile(rules={}, style_summary="", total_corrections=0)
+        profile = UserStyleProfile(
+            organization_id=organization_id, rules={}, style_summary="", total_corrections=0
+        )
         self.session.add(profile)
         self.session.flush()
         return profile
@@ -210,6 +228,7 @@ class CorrectionLearningService:
             AuditTrailService(self.session).record_decision(
                 agent_type=AgentType.STRATEGY_GENERATOR,
                 decision_type=DecisionType.CONTENT_ADAPTED,
+                organization_id=correction.organization_id,
                 opportunity_id=correction.opportunity_id,
                 lead_id=correction.lead_id,
                 context_snapshot={

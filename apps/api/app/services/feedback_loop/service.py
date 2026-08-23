@@ -113,6 +113,7 @@ class FeedbackLoopService:
         won = body.outcome == "won"
 
         outcome_row = StrategyOutcome(
+            organization_id=opportunity.organization_id,
             opportunity_id=opp_id,
             signal_id=opportunity.signal_id,
             outcome=body.outcome,
@@ -174,9 +175,10 @@ class FeedbackLoopService:
         signal_type: str,
         industry: str | None = None,
         max_hints: int = 3,
+        organization_id: _uuid_module.UUID | None = None,
     ) -> list[SuccessHint]:
         """Return ranked success hints for strategy generation."""
-        rows = self._outcomes.get_win_rates(signal_type, industry=industry)
+        rows = self._outcomes.get_win_rates(signal_type, industry=industry, organization_id=organization_id)
         hints: list[SuccessHint] = []
         for row in rows[:max_hints]:
             hints.append(
@@ -196,11 +198,14 @@ class FeedbackLoopService:
 
     # ── A/B variant management ────────────────────────────────────────────────
 
-    def create_variant(self, body: VariantCreateIn) -> VariantOut:
+    def create_variant(
+        self, body: VariantCreateIn, organization_id: _uuid_module.UUID | None = None
+    ) -> VariantOut:
         """Create a new A/B tactic experiment."""
         from app.models.tactic_variant import TacticVariant
 
         variant = TacticVariant(
+            organization_id=organization_id,
             name=body.name,
             description=body.description,
             hypothesis=body.hypothesis,
@@ -218,14 +223,16 @@ class FeedbackLoopService:
         return self._to_variant_out(variant)
 
     def get_active_variant(
-        self, signal_type: str, industry: str | None = None
+        self, signal_type: str, industry: str | None = None, organization_id: _uuid_module.UUID | None = None
     ) -> ActiveVariantRef | None:
         """Return a randomly-assigned arm for an active variant, or None.
 
         The arm assignment is random (not sticky per-lead) to ensure unbiased
         traffic splitting. Each new enrichment is an independent Bernoulli trial.
         """
-        variant = self._variants.get_active_for_signal_type(signal_type, industry=industry)
+        variant = self._variants.get_active_for_signal_type(
+            signal_type, industry=industry, organization_id=organization_id
+        )
         if variant is None:
             return None
 
@@ -239,23 +246,38 @@ class FeedbackLoopService:
             config=config,
         )
 
-    def conclude_variant(self, variant_id: _uuid_module.UUID) -> VariantOut:
+    def conclude_variant(
+        self, variant_id: _uuid_module.UUID, organization_id: _uuid_module.UUID | None = None
+    ) -> VariantOut:
         """Manually conclude a variant and declare a winner."""
-        variant = self._variants.conclude(variant_id)
-        if variant is None:
+        existing = self._variants.get(variant_id)
+        if existing is None or self._hidden(existing, organization_id):
             raise ValueError(f"Variant {variant_id} not found")
+        variant = self._variants.conclude(variant_id)
         self.session.commit()
         self.session.refresh(variant)
         return self._to_variant_out(variant)
 
-    def list_variants(self) -> list[VariantOut]:
-        return [self._to_variant_out(v) for v in self._variants.list()]
+    def list_variants(self, organization_id: _uuid_module.UUID | None = None) -> list[VariantOut]:
+        return [
+            self._to_variant_out(v)
+            for v in self._variants.list_scoped(organization_id=organization_id)
+        ]
 
-    def get_variant(self, variant_id: _uuid_module.UUID) -> VariantOut:
+    def get_variant(
+        self, variant_id: _uuid_module.UUID, organization_id: _uuid_module.UUID | None = None
+    ) -> VariantOut:
         variant = self._variants.get(variant_id)
-        if variant is None:
+        if variant is None or self._hidden(variant, organization_id):
             raise ValueError(f"Variant {variant_id} not found")
         return self._to_variant_out(variant)
+
+    @staticmethod
+    def _hidden(variant: object, organization_id: _uuid_module.UUID | None) -> bool:
+        if organization_id is None:
+            return False
+        variant_org = getattr(variant, "organization_id", None)
+        return variant_org is not None and variant_org != organization_id
 
     # ── VectorKnowledgeBase integration ───────────────────────────────────────
 

@@ -24,6 +24,7 @@ configurable number of ingestions.
 
 from __future__ import annotations
 
+import uuid
 from datetime import UTC, datetime, timedelta
 
 from sqlmodel import Session, func, select
@@ -34,6 +35,7 @@ from app.models.market_insight import MarketInsight
 from app.models.signal import Signal
 from app.repositories.market_insight import MarketInsightRepository
 from app.schemas.insights import MarketInsightRef, TrendAnalysisResult
+from app.services.permissions import scope_by_organization_id as _scope
 
 logger = get_logger(__name__)
 
@@ -52,23 +54,27 @@ class TrendAnalyst:
         self.session = session
         self._insights = MarketInsightRepository(session)
 
-    def analyze(self, window_days: int = 7) -> TrendAnalysisResult:
+    def analyze(self, window_days: int = 7, organization_id: uuid.UUID | None = None) -> TrendAnalysisResult:
         """Run a full trend analysis cycle.
 
         1. Expire stale insights from the previous cycle.
         2. Count signals by type and industry for the current window.
         3. Compare to the prior window to detect volume spikes.
         4. Create new MarketInsight records for detected patterns.
+
+        ``organization_id`` scopes both the signals analyzed and the
+        insights created/expired to one tenant — each organization's market
+        patterns are its own, not blended with every other customer's.
         """
-        expired = self._insights.expire_stale()
+        expired = self._insights.expire_stale(organization_id)
         now = datetime.now(UTC)
         current_start = now - timedelta(days=window_days)
         prior_start = now - timedelta(days=window_days * 2)
 
         # Fetch aggregate counts for both windows.
-        current_by_type = self._count_by_type(current_start, now)
-        prior_by_type = self._count_by_type(prior_start, current_start)
-        current_by_industry = self._count_by_industry(current_start, now)
+        current_by_type = self._count_by_type(current_start, now, organization_id)
+        prior_by_type = self._count_by_type(prior_start, current_start, organization_id)
+        current_by_industry = self._count_by_industry(current_start, now, organization_id)
 
         created = 0
 
@@ -90,6 +96,7 @@ class TrendAnalyst:
                     pct_label=pct,
                     window_days=window_days,
                     expires_at=now + timedelta(days=window_days),
+                    organization_id=organization_id,
                 )
                 self._insights.add(insight)
                 created += 1
@@ -102,6 +109,7 @@ class TrendAnalyst:
                     count=count,
                     window_days=window_days,
                     expires_at=now + timedelta(days=window_days),
+                    organization_id=organization_id,
                 )
                 self._insights.add(insight)
                 created += 1
@@ -134,10 +142,12 @@ class TrendAnalyst:
         )
 
     def get_active_insights_for_context(
-        self, signal_type: str, industry: str | None = None
+        self, signal_type: str, industry: str | None = None, organization_id: uuid.UUID | None = None
     ) -> list[MarketInsightRef]:
         """Return fresh insights as lightweight refs for EnrichmentContext injection."""
-        rows = self._insights.get_active_insights(signal_type=signal_type, industry=industry)
+        rows = self._insights.get_active_insights(
+            signal_type=signal_type, industry=industry, organization_id=organization_id
+        )
         return [
             MarketInsightRef(
                 insight_type=row.insight_type.value,
@@ -152,26 +162,34 @@ class TrendAnalyst:
 
     # ── Private builders ──────────────────────────────────────────────────────
 
-    def _count_by_type(self, start: datetime, end: datetime) -> dict[str, int]:
-        rows = self.session.exec(
+    def _count_by_type(
+        self, start: datetime, end: datetime, organization_id: uuid.UUID | None = None
+    ) -> dict[str, int]:
+        stmt = (
             select(Signal.signal_type, func.count(Signal.id).label("n"))
             .where(Signal.detected_at >= start)
             .where(Signal.detected_at < end)
             .group_by(Signal.signal_type)
-        ).all()
+        )
+        stmt = _scope(stmt, Signal.organization_id, organization_id)
+        rows = self.session.exec(stmt).all()
         return {str(r[0].value if hasattr(r[0], "value") else r[0]): int(r[1]) for r in rows}
 
-    def _count_by_industry(self, start: datetime, end: datetime) -> dict[str, int]:
+    def _count_by_industry(
+        self, start: datetime, end: datetime, organization_id: uuid.UUID | None = None
+    ) -> dict[str, int]:
         from app.models.company import Company
 
-        rows = self.session.exec(
+        stmt = (
             select(Company.industry, func.count(Signal.id).label("n"))
             .join(Signal, Signal.company_id == Company.id)
             .where(Signal.detected_at >= start)
             .where(Signal.detected_at < end)
             .where(Company.industry.is_not(None))  # type: ignore[attr-defined]
             .group_by(Company.industry)
-        ).all()
+        )
+        stmt = _scope(stmt, Signal.organization_id, organization_id)
+        rows = self.session.exec(stmt).all()
         return {str(r[0]): int(r[1]) for r in rows if r[0]}
 
     def _build_volume_spike_insight(
@@ -182,6 +200,7 @@ class TrendAnalyst:
         pct_label: str,
         window_days: int,
         expires_at: datetime,
+        organization_id: uuid.UUID | None = None,
     ) -> MarketInsight:
         if prior_count == 0:
             desc = (
@@ -200,6 +219,7 @@ class TrendAnalyst:
             )
 
         return MarketInsight(
+            organization_id=organization_id,
             insight_type=InsightType.VOLUME_SPIKE,
             signal_type=sig_type,
             title=f"{sig_type.replace('_', ' ').title()} signals spiking",
@@ -218,8 +238,10 @@ class TrendAnalyst:
         count: int,
         window_days: int,
         expires_at: datetime,
+        organization_id: uuid.UUID | None = None,
     ) -> MarketInsight:
         return MarketInsight(
+            organization_id=organization_id,
             insight_type=InsightType.SECTOR_MOMENTUM,
             industry=industry,
             title=f"{industry} sector in motion",

@@ -7,6 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
+from app.api.deps import get_organization_id
 from app.core.database import get_session
 from app.schemas.psychographic import AdaptedContent, ContentAdaptRequest, LeadPsychographicOut
 from app.services.psychographic import PsychographicAnalyzer
@@ -16,6 +17,17 @@ router = APIRouter(prefix="/psychographic", tags=["Psychographic Analyzer (DISC)
 
 def _get_analyzer(session: Session = Depends(get_session)) -> PsychographicAnalyzer:
     return PsychographicAnalyzer(session)
+
+
+def _hidden_lead_or_404(lead, organization_id: uuid.UUID | None) -> None:
+    if lead is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found")
+    if (
+        organization_id is not None
+        and lead.organization_id is not None
+        and lead.organization_id != organization_id
+    ):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found")
 
 
 @router.get(
@@ -28,6 +40,7 @@ def get_or_classify(
     force: bool = Query(default=False, description="Force reclassification even if cached"),
     analyzer: PsychographicAnalyzer = Depends(_get_analyzer),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> LeadPsychographicOut:
     """Return the DISC communication style profile for a lead.
 
@@ -42,8 +55,7 @@ def get_or_classify(
     """
     from app.models.lead import Lead
     lead = session.get(Lead, lead_id)
-    if not lead:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found")
+    _hidden_lead_or_404(lead, organization_id)
 
     profile = analyzer.reclassify(lead) if force else analyzer.get_or_classify(lead)
 
@@ -61,6 +73,7 @@ def adapt_content(
     body: ContentAdaptRequest,
     analyzer: PsychographicAnalyzer = Depends(_get_analyzer),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> AdaptedContent:
     """Run the content style middleware on a piece of text.
 
@@ -75,8 +88,7 @@ def adapt_content(
     """
     from app.models.lead import Lead
     lead = session.get(Lead, body.lead_id)
-    if not lead:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found")
+    _hidden_lead_or_404(lead, organization_id)
 
     result = analyzer.adapt_content(body.content, lead, body.artifact_type)
     session.commit()
@@ -91,6 +103,7 @@ def adapt_content(
 def list_profiles(
     limit: int = Query(default=50, le=200),
     analyzer: PsychographicAnalyzer = Depends(_get_analyzer),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> list[LeadPsychographicOut]:
-    profiles = analyzer.list_profiles(limit=limit)
+    profiles = analyzer.list_profiles(limit=limit, organization_id=organization_id)
     return [LeadPsychographicOut.model_validate(p) for p in profiles]

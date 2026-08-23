@@ -41,6 +41,7 @@ from sqlmodel import Session, select
 
 from app.core.logging import get_logger
 from app.schemas.scenario import ScenarioRequest, ScenarioResult, ScenarioVariant
+from app.services.permissions import scope_by_organization_id as _scope
 
 logger = get_logger(__name__)
 
@@ -86,11 +87,15 @@ class ScenarioSimulator:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def run(self, request: ScenarioRequest) -> ScenarioResult:
+    def run(self, request: ScenarioRequest, organization_id: uuid.UUID | None = None) -> ScenarioResult:
         """Execute a scenario simulation.
 
         Returns three projections (conservative, realistic, optimistic),
         key win-rate drivers, risk factors, and recommended actions.
+
+        ``organization_id`` scopes the historical StrategyOutcome data this
+        projection is built from — each tenant's revenue projection reflects
+        its own pipeline history, not a blend across every BEE customer.
         """
         logger.info(
             "ScenarioSimulator: running scenario sector=%s signal=%s channel=%s signals=%d",
@@ -98,7 +103,7 @@ class ScenarioSimulator:
         )
 
         # ── Pull historical data ──────────────────────────────────────────────
-        historical = self._get_historical_stats(request.sector, request.signal_type)
+        historical = self._get_historical_stats(request.sector, request.signal_type, organization_id)
         base_win_rate = historical["win_rate"]
         avg_deal_value = historical["avg_deal_value"]
         median_cycle_days = historical["median_cycle_days"]
@@ -171,7 +176,7 @@ class ScenarioSimulator:
         )
 
         # ── Audit trail ───────────────────────────────────────────────────────
-        self._audit_simulation(request, result)
+        self._audit_simulation(request, result, organization_id)
 
         return result
 
@@ -196,11 +201,17 @@ class ScenarioSimulator:
             annual_revenue=round(annual_revenue, 2),
         )
 
-    def _get_historical_stats(self, sector: str | None, signal_type: str | None) -> dict[str, Any]:
+    def _get_historical_stats(
+        self, sector: str | None, signal_type: str | None, organization_id: uuid.UUID | None = None
+    ) -> dict[str, Any]:
         """Fetch historical win rate data from StrategyOutcome table."""
         from app.models.strategy_outcome import StrategyOutcome
 
-        stmt = select(StrategyOutcome).where(StrategyOutcome.outcome == "WON")
+        stmt = _scope(
+            select(StrategyOutcome).where(StrategyOutcome.outcome == "WON"),
+            StrategyOutcome.organization_id,
+            organization_id,
+        )
         all_won = list(self.session.exec(stmt).all())
 
         # Apply filters
@@ -211,7 +222,7 @@ class ScenarioSimulator:
             filtered_won = [o for o in filtered_won if (o.signal_type or "").lower() == signal_type.lower()]
 
         # Get total outcomes for the same filters
-        all_stmt = select(StrategyOutcome)
+        all_stmt = _scope(select(StrategyOutcome), StrategyOutcome.organization_id, organization_id)
         all_outcomes = list(self.session.exec(all_stmt).all())
         filtered_all = all_outcomes
         if sector:
@@ -316,7 +327,9 @@ class ScenarioSimulator:
 
         return actions
 
-    def _audit_simulation(self, request: ScenarioRequest, result: ScenarioResult) -> None:
+    def _audit_simulation(
+        self, request: ScenarioRequest, result: ScenarioResult, organization_id: uuid.UUID | None = None
+    ) -> None:
         """Log the simulation to AuditTrailService."""
         try:
             from app.models.audit_trail import AgentType, DecisionType
@@ -325,6 +338,7 @@ class ScenarioSimulator:
             AuditTrailService(self.session).record_decision(
                 agent_type=AgentType.STRATEGY_GENERATOR,
                 decision_type=DecisionType.MARKET_INSIGHT_APPLIED,
+                organization_id=organization_id,
                 context_snapshot={
                     "sector": request.sector,
                     "signal_type": request.signal_type,

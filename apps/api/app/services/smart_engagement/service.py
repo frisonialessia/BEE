@@ -54,6 +54,7 @@ from app.models.engagement_event import (
 )
 from app.schemas.engagement import EngagementAnalysis, IncomingEventIn
 from app.services.omnichannel.gateway import OmnichannelGateway
+from app.services.permissions import scope_by_organization_id as _scope
 from app.services.personal_brand.service import PersonalBrandService
 
 logger = get_logger(__name__)
@@ -95,11 +96,15 @@ class SmartEngagementEngine:
         self._brand = brand_service
         self._gateway = gateway
 
-    def process(self, data: IncomingEventIn) -> EngagementAnalysis:
+    def process(
+        self, data: IncomingEventIn, organization_id: uuid.UUID | None = None
+    ) -> EngagementAnalysis:
         """Full pipeline: classify → brand context → draft → approval gate.
 
         Args:
             data: The incoming engagement event payload from the API.
+            organization_id: Tenant to stamp on the event and to scope both
+                the dedup check and the brand voice used for the draft.
 
         Returns:
             An :class:`EngagementAnalysis` with the generated draft (if any)
@@ -107,11 +112,14 @@ class SmartEngagementEngine:
         """
         # ── Dedup check ───────────────────────────────────────────────────────
         if data.source_event_id:
-            existing = self.session.exec(
+            existing_stmt = _scope(
                 select(IncomingEngagementEvent).where(
                     IncomingEngagementEvent.source_event_id == data.source_event_id
-                )
-            ).first()
+                ),
+                IncomingEngagementEvent.organization_id,
+                organization_id,
+            )
+            existing = self.session.exec(existing_stmt).first()
             if existing:
                 logger.info("Duplicate engagement event %s, skipping.", data.source_event_id)
                 return self._to_analysis(existing)
@@ -121,6 +129,7 @@ class SmartEngagementEngine:
 
         # ── Step 2: Persist event ─────────────────────────────────────────────
         event = IncomingEngagementEvent(
+            organization_id=organization_id,
             source=data.source,
             source_event_id=data.source_event_id,
             author_name=data.author_name,
@@ -151,6 +160,7 @@ class SmartEngagementEngine:
             query=data.content,
             top_k=3,
             category_filter=None,
+            organization_id=organization_id,
         )
 
         # ── Step 5: Generate response draft ───────────────────────────────────

@@ -69,6 +69,7 @@ from app.models.dead_letter import (
     compute_next_retry_delay,
 )
 from app.schemas.dead_letter import DLQRetryResult, DLQSummary
+from app.services.permissions import scope_by_organization_id as _scope
 
 logger = get_logger(__name__)
 
@@ -121,6 +122,7 @@ class DeadLetterQueueService:
         lead_id: uuid.UUID | None = None,
         pending_action_id: uuid.UUID | None = None,
         workflow_task_id: uuid.UUID | None = None,
+        organization_id: uuid.UUID | None = None,
     ) -> FailedEvent:
         """Capture a failed event in the DLQ for later retry.
 
@@ -133,6 +135,11 @@ class DeadLetterQueueService:
             lead_id:           Associated lead UUID.
             pending_action_id: Associated PendingAction UUID.
             workflow_task_id:  Associated WorkflowTask UUID.
+            organization_id:   Tenant this failure belongs to. Most internal
+                callers (WorkflowOrchestrator, OmnichannelGateway) don't yet
+                have tenant context threaded through to their failure paths,
+                so this stays optional and most enqueued events remain
+                untagged (globally visible to DLQ operators) for now.
 
         Returns:
             The persisted ``FailedEvent`` record.
@@ -141,6 +148,7 @@ class DeadLetterQueueService:
         next_retry = datetime.now(UTC) + timedelta(seconds=delay)
 
         event = FailedEvent(
+            organization_id=organization_id,
             event_type=event_type,
             event_name=event_name,
             opportunity_id=opportunity_id,
@@ -247,10 +255,16 @@ class DeadLetterQueueService:
         logger.info("DLQ: retried %d due events", len(results))
         return results
 
-    def resolve(self, event_id: uuid.UUID, notes: str | None = None) -> FailedEvent | None:
+    def resolve(
+        self, event_id: uuid.UUID, notes: str | None = None, organization_id: uuid.UUID | None = None
+    ) -> FailedEvent | None:
         """Manually mark an event as resolved (e.g. fixed externally)."""
         event = self.session.get(FailedEvent, event_id)
-        if not event:
+        if not event or (
+            organization_id is not None
+            and event.organization_id is not None
+            and event.organization_id != organization_id
+        ):
             return None
         event.status = DLQStatus.RESOLVED
         event.resolved_at = datetime.now(UTC)
@@ -262,24 +276,34 @@ class DeadLetterQueueService:
 
     # ── Queries ───────────────────────────────────────────────────────────────
 
-    def get_event(self, event_id: uuid.UUID) -> FailedEvent | None:
-        return self.session.get(FailedEvent, event_id)
+    def get_event(self, event_id: uuid.UUID, organization_id: uuid.UUID | None = None) -> FailedEvent | None:
+        event = self.session.get(FailedEvent, event_id)
+        if not event or (
+            organization_id is not None
+            and event.organization_id is not None
+            and event.organization_id != organization_id
+        ):
+            return None
+        return event
 
     def list_events(
         self,
         status: str | None = None,
         event_type: str | None = None,
         limit: int = 50,
+        organization_id: uuid.UUID | None = None,
     ) -> list[FailedEvent]:
         stmt = select(FailedEvent).order_by(FailedEvent.created_at.desc()).limit(limit)
         if status:
             stmt = stmt.where(FailedEvent.status == status)
         if event_type:
             stmt = stmt.where(FailedEvent.event_type == event_type)
+        stmt = _scope(stmt, FailedEvent.organization_id, organization_id)
         return list(self.session.exec(stmt).all())
 
-    def get_summary(self) -> DLQSummary:
-        all_events = list(self.session.exec(select(FailedEvent)).all())
+    def get_summary(self, organization_id: uuid.UUID | None = None) -> DLQSummary:
+        stmt = _scope(select(FailedEvent), FailedEvent.organization_id, organization_id)
+        all_events = list(self.session.exec(stmt).all())
         now = datetime.now(UTC)
 
         pending = [e for e in all_events if e.status == DLQStatus.PENDING]
@@ -371,6 +395,7 @@ class DeadLetterQueueService:
             from app.models.pending_action import PendingAction
 
             alert = PendingAction(
+                organization_id=event.organization_id,
                 opportunity_id=event.opportunity_id,
                 action_type=ActionType.WEBHOOK_CALL,
                 status=ActionStatus.PENDING_APPROVAL,

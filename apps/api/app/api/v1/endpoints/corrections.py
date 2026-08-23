@@ -7,6 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
+from app.api.deps import get_organization_id
 from app.core.database import get_session
 from app.schemas.correction import CorrectionIn, CorrectionOut, StyleProfileOut
 from app.services.correction_learning import CorrectionLearningService
@@ -27,6 +28,7 @@ def record_correction(
     body: CorrectionIn,
     service: CorrectionLearningService = Depends(_get_service),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> CorrectionOut:
     """Submit a corrected artifact for learning.
 
@@ -51,6 +53,7 @@ def record_correction(
         generator_name=body.generator_name,
         psychographic_style=body.psychographic_style,
         channel=body.channel,
+        organization_id=organization_id,
     )
     session.commit()
     return result
@@ -63,6 +66,7 @@ def record_correction(
 )
 def get_style_profile(
     service: CorrectionLearningService = Depends(_get_service),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> StyleProfileOut:
     """Return the accumulated CEO writing style preferences.
 
@@ -72,7 +76,7 @@ def get_style_profile(
     - The current prompt injection string used by BEE's AI
     - Total corrections processed and profile version
     """
-    return service.get_style_profile()
+    return service.get_style_profile(organization_id)
 
 
 @router.get(
@@ -85,12 +89,14 @@ def list_corrections(
     opportunity_id: uuid.UUID | None = Query(default=None),
     limit: int = Query(default=20, le=100),
     service: CorrectionLearningService = Depends(_get_service),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> list[CorrectionOut]:
     """Browse the history of CEO artifact corrections."""
     corrections = service.list_corrections(
         artifact_type=artifact_type,
         opportunity_id=opportunity_id,
         limit=limit,
+        organization_id=organization_id,
     )
     return [
         CorrectionOut(

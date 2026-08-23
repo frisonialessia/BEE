@@ -7,6 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
+from app.api.deps import get_organization_id
 from app.core.database import get_session
 from app.schemas.insights import MarketInsightOut, TrendAnalysisResult
 from app.schemas.variants import VariantCreateIn, VariantOut
@@ -29,6 +30,7 @@ insights_router = APIRouter(prefix="/insights")
 def run_trend_analysis(
     window_days: int = Query(default=7, ge=1, le=90),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> TrendAnalysisResult:
     """Run the TrendAnalyst to detect aggregate signal patterns.
 
@@ -37,7 +39,7 @@ def run_trend_analysis(
     ``StrategyGeneratorService`` uses to sharpen battlecards.
     """
     analyst = TrendAnalyst(session)
-    return analyst.analyze(window_days=window_days)
+    return analyst.analyze(window_days=window_days, organization_id=organization_id)
 
 
 @insights_router.get(
@@ -50,10 +52,13 @@ def list_insights(
     industry: str | None = Query(default=None),
     limit: int = Query(default=20, le=100),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> list[MarketInsightOut]:
     from app.repositories.market_insight import MarketInsightRepository
     repo = MarketInsightRepository(session)
-    rows = repo.get_active_insights(signal_type=signal_type, industry=industry, limit=limit)
+    rows = repo.get_active_insights(
+        signal_type=signal_type, industry=industry, limit=limit, organization_id=organization_id
+    )
     return [MarketInsightOut.model_validate(r) for r in rows]
 
 
@@ -74,6 +79,7 @@ variants_router = APIRouter(prefix="/variants")
 def create_variant(
     body: VariantCreateIn,
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> VariantOut:
     """Create a new A/B experiment comparing two tactical approaches.
 
@@ -81,7 +87,7 @@ def create_variant(
     enrichments to arm_a or arm_b based on ``traffic_split``.
     """
     svc = FeedbackLoopService(session)
-    return svc.create_variant(body)
+    return svc.create_variant(body, organization_id)
 
 
 @variants_router.get(
@@ -89,9 +95,12 @@ def create_variant(
     response_model=list[VariantOut],
     summary="List all tactic variants",
 )
-def list_variants(session: Session = Depends(get_session)) -> list[VariantOut]:
+def list_variants(
+    session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
+) -> list[VariantOut]:
     svc = FeedbackLoopService(session)
-    return svc.list_variants()
+    return svc.list_variants(organization_id)
 
 
 @variants_router.get(
@@ -102,10 +111,11 @@ def list_variants(session: Session = Depends(get_session)) -> list[VariantOut]:
 def get_variant(
     variant_id: uuid.UUID,
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> VariantOut:
     svc = FeedbackLoopService(session)
     try:
-        return svc.get_variant(variant_id)
+        return svc.get_variant(variant_id, organization_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
@@ -118,10 +128,11 @@ def get_variant(
 def conclude_variant(
     variant_id: uuid.UUID,
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> VariantOut:
     svc = FeedbackLoopService(session)
     try:
-        return svc.conclude_variant(variant_id)
+        return svc.conclude_variant(variant_id, organization_id)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 

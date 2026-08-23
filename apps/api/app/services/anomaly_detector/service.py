@@ -45,6 +45,7 @@ from sqlmodel import Session, select
 from app.core.logging import get_logger
 from app.models.anomaly import AlertSeverity, AlertStatus, AlertType, AnomalyAlert
 from app.schemas.anomaly import AnomalyAlertOut, AnomalyCheckResult
+from app.services.permissions import scope_by_organization_id as _scope
 
 logger = get_logger(__name__)
 
@@ -80,13 +81,17 @@ class AnomalyDetector:
 
     # ── Main detection entry point ────────────────────────────────────────────
 
-    def check_all(self) -> AnomalyCheckResult:
+    def check_all(self, organization_id: uuid.UUID | None = None) -> AnomalyCheckResult:
         """Run all anomaly checks and return a comprehensive report.
 
         Checks:
         * Overall conversion rate
         * Per-channel breakdown
         * Per-sector breakdown
+
+        ``organization_id`` scopes which tenant's outcomes/alerts this run
+        analyzes — untagged (legacy) data is still included, same shared
+        convention as everywhere else.
         """
         from app.models.strategy_outcome import StrategyOutcome
 
@@ -94,7 +99,8 @@ class AnomalyDetector:
         baseline_start = now - timedelta(days=_BASELINE_DAYS)
 
         # Load all outcomes for analysis
-        all_outcomes = list(self.session.exec(select(StrategyOutcome)).all())
+        outcomes_stmt = _scope(select(StrategyOutcome), StrategyOutcome.organization_id, organization_id)
+        all_outcomes = list(self.session.exec(outcomes_stmt).all())
 
         if len(all_outcomes) < _MIN_SAMPLE:
             logger.info("AnomalyDetector: insufficient data (n=%d), skipping", len(all_outcomes))
@@ -102,7 +108,7 @@ class AnomalyDetector:
                 checked_at=now.isoformat(),
                 new_alerts=[],
                 resolved_alerts=[],
-                open_alerts=self._get_open_alerts(),
+                open_alerts=self._get_open_alerts(organization_id),
                 summary="Insufficient historical data for anomaly detection (need at least 3 outcomes).",
                 checked_segments=0,
             )
@@ -115,6 +121,7 @@ class AnomalyDetector:
             all_outcomes, baseline_start,
             segment_type="overall", segment_value=None,
             alert_type=AlertType.CONVERSION_DROP,
+            organization_id=organization_id,
         )
         if overall_alert:
             new_alerts.append(overall_alert)
@@ -129,6 +136,7 @@ class AnomalyDetector:
                 channel_outcomes, baseline_start,
                 segment_type="channel", segment_value=channel,
                 alert_type=AlertType.CHANNEL_UNDERPERFORMANCE,
+                organization_id=organization_id,
             )
             if alert:
                 new_alerts.append(alert)
@@ -143,12 +151,13 @@ class AnomalyDetector:
                 sector_outcomes, baseline_start,
                 segment_type="sector", segment_value=sector,
                 alert_type=AlertType.SECTOR_ANOMALY,
+                organization_id=organization_id,
             )
             if alert:
                 new_alerts.append(alert)
 
         # ── Auto-resolve recovered alerts ─────────────────────────────────────
-        resolved_count = self._auto_resolve_recovered(all_outcomes, baseline_start)
+        resolved_count = self._auto_resolve_recovered(all_outcomes, baseline_start, organization_id)
 
         # ── Flush new alerts ──────────────────────────────────────────────────
         for alert in new_alerts:
@@ -164,7 +173,7 @@ class AnomalyDetector:
         if new_alerts:
             self._audit_detection(new_alerts)
 
-        open_alerts = self._get_open_alerts()
+        open_alerts = self._get_open_alerts(organization_id)
         segments_checked = 1 + len(channels) + len(sectors)
 
         return AnomalyCheckResult(
@@ -185,6 +194,7 @@ class AnomalyDetector:
         segment_type: str,
         segment_value: str | None,
         alert_type: str,
+        organization_id: uuid.UUID | None = None,
     ) -> AnomalyAlert | None:
         """Check one segment for anomalies. Returns an AnomalyAlert or None."""
         # Separate rolling (recent) from baseline (historical)
@@ -216,7 +226,7 @@ class AnomalyDetector:
             return None
 
         # Check if an active alert already exists for this segment
-        existing = self._get_active_alert(segment_type, segment_value)
+        existing = self._get_active_alert(segment_type, segment_value, organization_id)
         if existing:
             return None  # Alert already open — don't duplicate
 
@@ -226,6 +236,7 @@ class AnomalyDetector:
         )
 
         return AnomalyAlert(
+            organization_id=organization_id,
             alert_type=alert_type,
             severity=severity,
             status=AlertStatus.OPEN,
@@ -307,9 +318,14 @@ class AnomalyDetector:
 
     # ── Auto-resolution ───────────────────────────────────────────────────────
 
-    def _auto_resolve_recovered(self, all_outcomes: list, baseline_start: datetime) -> int:  # noqa: ARG002
+    def _auto_resolve_recovered(
+        self,
+        all_outcomes: list,
+        baseline_start: datetime,  # noqa: ARG002
+        organization_id: uuid.UUID | None = None,
+    ) -> int:
         """Auto-resolve alerts where the segment has recovered to within 10% of baseline."""
-        open_alerts = self._get_open_alerts()
+        open_alerts = self._get_open_alerts(organization_id)
         resolved = 0
         now = datetime.now(UTC)
 
@@ -343,7 +359,9 @@ class AnomalyDetector:
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
-    def _get_active_alert(self, segment_type: str, segment_value: str | None) -> AnomalyAlert | None:
+    def _get_active_alert(
+        self, segment_type: str, segment_value: str | None, organization_id: uuid.UUID | None = None
+    ) -> AnomalyAlert | None:
         stmt = (
             select(AnomalyAlert)
             .where(AnomalyAlert.segment_type == segment_type)
@@ -351,34 +369,46 @@ class AnomalyDetector:
         )
         if segment_value:
             stmt = stmt.where(AnomalyAlert.segment_value == segment_value)
+        stmt = _scope(stmt, AnomalyAlert.organization_id, organization_id)
         return self.session.exec(stmt).first()
 
-    def _get_open_alerts(self) -> list[AnomalyAlert]:
-        return list(
-            self.session.exec(
-                select(AnomalyAlert)
-                .where(AnomalyAlert.status == AlertStatus.OPEN)
-                .order_by(AnomalyAlert.created_at.desc())
-            ).all()
+    def _get_open_alerts(self, organization_id: uuid.UUID | None = None) -> list[AnomalyAlert]:
+        stmt = _scope(
+            select(AnomalyAlert).where(AnomalyAlert.status == AlertStatus.OPEN).order_by(
+                AnomalyAlert.created_at.desc()
+            ),
+            AnomalyAlert.organization_id,
+            organization_id,
         )
+        return list(self.session.exec(stmt).all())
 
     def list_alerts(
         self,
         status: str | None = None,
         severity: str | None = None,
         limit: int = 50,
+        organization_id: uuid.UUID | None = None,
     ) -> list[AnomalyAlert]:
         stmt = select(AnomalyAlert).order_by(AnomalyAlert.created_at.desc()).limit(limit)
         if status:
             stmt = stmt.where(AnomalyAlert.status == status)
         if severity:
             stmt = stmt.where(AnomalyAlert.severity == severity)
+        stmt = _scope(stmt, AnomalyAlert.organization_id, organization_id)
         return list(self.session.exec(stmt).all())
 
-    def acknowledge_alert(self, alert_id: uuid.UUID, notes: str | None = None) -> AnomalyAlert | None:
+    def acknowledge_alert(
+        self, alert_id: uuid.UUID, notes: str | None = None, organization_id: uuid.UUID | None = None
+    ) -> AnomalyAlert | None:
         """CEO acknowledges an alert — marks as reviewed but no action taken."""
         alert = self.session.get(AnomalyAlert, alert_id)
         if not alert:
+            return None
+        if (
+            organization_id is not None
+            and alert.organization_id is not None
+            and alert.organization_id != organization_id
+        ):
             return None
         alert.status = AlertStatus.ACKNOWLEDGED
         alert.acknowledged_at = datetime.now(UTC)
@@ -403,6 +433,7 @@ class AnomalyDetector:
             from app.models.pending_action import PendingAction
 
             action = PendingAction(
+                organization_id=alert.organization_id,
                 action_type=ActionType.WEBHOOK_CALL,
                 status=ActionStatus.PENDING_APPROVAL,
                 title=alert.title,
@@ -429,6 +460,7 @@ class AnomalyDetector:
                 audit.record_decision(
                     agent_type=AgentType.WORKFLOW_ORCHESTRATOR,
                     decision_type=DecisionType.REVIEW_FLAGGED,
+                    organization_id=alert.organization_id,
                     context_snapshot={
                         "segment_type": alert.segment_type,
                         "segment_value": alert.segment_value,

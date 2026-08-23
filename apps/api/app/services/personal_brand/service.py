@@ -44,6 +44,7 @@ from app.schemas.brand import (
     VoiceProfileCreate,
     VoiceProfileOut,
 )
+from app.services.permissions import scope_by_organization_id as _scope
 from app.services.vector_store import IVectorStore, ScoredDocument
 
 logger = get_logger(__name__)
@@ -77,17 +78,26 @@ class PersonalBrandService:
 
     # ── VoiceProfile management ───────────────────────────────────────────────
 
-    def create_or_update_profile(self, data: VoiceProfileCreate) -> VoiceProfile:
-        """Create a new VoiceProfile or replace the existing active one."""
-        # Deactivate existing profiles
-        existing = self.session.exec(
-            select(VoiceProfile).where(VoiceProfile.is_active)
-        ).all()
+    def create_or_update_profile(
+        self, data: VoiceProfileCreate, organization_id: uuid.UUID | None = None
+    ) -> VoiceProfile:
+        """Create a new VoiceProfile or replace the existing active one.
+
+        "The existing active one" is scoped per-organization — each tenant
+        has its own single active voice profile, not one shared globally.
+        """
+        existing_stmt = _scope(
+            select(VoiceProfile).where(VoiceProfile.is_active),
+            VoiceProfile.organization_id,
+            organization_id,
+        )
+        existing = self.session.exec(existing_stmt).all()
         for prof in existing:
             prof.is_active = False
             self.session.add(prof)
 
         profile = VoiceProfile(
+            organization_id=organization_id,
             display_name=data.display_name,
             title=data.title,
             language=data.language,
@@ -105,15 +115,34 @@ class PersonalBrandService:
         logger.info("VoiceProfile created: id=%s name=%s", profile.id, profile.display_name)
         return profile
 
-    def get_active_profile(self) -> VoiceProfile | None:
-        return self.session.exec(
-            select(VoiceProfile).where(VoiceProfile.is_active)
-        ).first()
+    def get_active_profile(self, organization_id: uuid.UUID | None = None) -> VoiceProfile | None:
+        stmt = _scope(
+            select(VoiceProfile).where(VoiceProfile.is_active), VoiceProfile.organization_id, organization_id
+        )
+        return self.session.exec(stmt).first()
 
     # ── BrandFragment management ───────────────────────────────────────────────
 
-    def add_fragment(self, profile_id: uuid.UUID, data: BrandFragmentCreate) -> BrandFragment:
-        """Store a brand fragment in both the DB and the vector store."""
+    def add_fragment(
+        self,
+        profile_id: uuid.UUID,
+        data: BrandFragmentCreate,
+        organization_id: uuid.UUID | None = None,
+    ) -> BrandFragment | None:
+        """Store a brand fragment in both the DB and the vector store.
+
+        Returns ``None`` (rather than raising) when ``profile_id`` doesn't
+        exist or belongs to another organization, so the endpoint can 404
+        without confirming a cross-tenant profile id exists.
+        """
+        profile = self.session.get(VoiceProfile, profile_id)
+        if profile is None or (
+            organization_id is not None
+            and profile.organization_id is not None
+            and profile.organization_id != organization_id
+        ):
+            return None
+
         vector_doc_id = f"frag_{uuid.uuid4().hex}"
 
         # Upsert into vector store
@@ -125,6 +154,7 @@ class PersonalBrandService:
         self._store.upsert(vector_doc_id, data.content, metadata)
 
         fragment = BrandFragment(
+            organization_id=organization_id,
             profile_id=profile_id,
             content=data.content,
             category=data.category,
@@ -147,17 +177,25 @@ class PersonalBrandService:
         profile_id: uuid.UUID,
         category: str | None = None,
         limit: int = 50,
+        organization_id: uuid.UUID | None = None,
     ) -> list[BrandFragment]:
         stmt = select(BrandFragment).where(BrandFragment.profile_id == profile_id)
         if category:
             stmt = stmt.where(BrandFragment.category == category)
+        stmt = _scope(stmt, BrandFragment.organization_id, organization_id)
         stmt = stmt.limit(limit).order_by(BrandFragment.created_at.desc())
         return list(self.session.exec(stmt).all())
 
-    def delete_fragment(self, fragment_id: uuid.UUID) -> bool:
+    def delete_fragment(self, fragment_id: uuid.UUID, organization_id: uuid.UUID | None = None) -> bool:
         """Remove fragment from DB and vector store."""
         frag = self.session.get(BrandFragment, fragment_id)
         if not frag:
+            return False
+        if (
+            organization_id is not None
+            and frag.organization_id is not None
+            and frag.organization_id != organization_id
+        ):
             return False
         self._store.delete(frag.vector_doc_id)
         self.session.delete(frag)
@@ -172,6 +210,7 @@ class PersonalBrandService:
         top_k: int = 5,
         category_filter: str | None = None,
         tag_filter: list[str] | None = None,
+        organization_id: uuid.UUID | None = None,
     ) -> BrandContextResult:
         """Retrieve relevant brand context for a given query.
 
@@ -184,11 +223,12 @@ class PersonalBrandService:
             top_k:           Number of fragments to retrieve.
             category_filter: Limit search to this category.
             tag_filter:      Limit search to fragments with these tags.
+            organization_id: Which tenant's active voice profile to use.
 
         Returns:
             A :class:`BrandContextResult` ready for injection into AI prompts.
         """
-        profile = self.get_active_profile()
+        profile = self.get_active_profile(organization_id)
         if not profile:
             return BrandContextResult(
                 voice_profile=None,
@@ -197,10 +237,12 @@ class PersonalBrandService:
                 fragment_count_total=0,
             )
 
-        # Vector search
-        metadata_filter: dict[str, Any] | None = None
+        # Vector search — scoped to this org's active profile (the vector
+        # store is a single shared index across all tenants, so without this
+        # a semantic match could surface another organization's fragment).
+        metadata_filter: dict[str, Any] = {"profile_id": str(profile.id)}
         if category_filter:
-            metadata_filter = {"category": category_filter}
+            metadata_filter["category"] = category_filter
 
         scored_docs: list[ScoredDocument] = self._store.query(query, top_k=top_k, filter_metadata=metadata_filter)
 
@@ -211,11 +253,19 @@ class PersonalBrandService:
                 if any(t in d.metadata.get("tags", []) for t in tag_filter)
             ]
 
-        # Resolve DB fragments from scored docs
+        # Resolve DB fragments from scored docs. This is also the isolation
+        # backstop for PgVectorStore specifically: its query() ignores
+        # filter_metadata entirely (pgvector has no per-row metadata index),
+        # so the vector search itself can surface another organization's
+        # fragment id — belongs-to-this-profile is re-checked here before
+        # anything reaches the brief, even though it costs a few dropped
+        # results when that happens.
         fragments: list[BrandFragment] = []
         for doc in scored_docs:
             frag = self.session.exec(
-                select(BrandFragment).where(BrandFragment.vector_doc_id == doc.id)
+                select(BrandFragment).where(
+                    BrandFragment.vector_doc_id == doc.id, BrandFragment.profile_id == profile.id
+                )
             ).first()
             if frag:
                 frag.mark_used()
@@ -240,9 +290,11 @@ class PersonalBrandService:
             fragment_count_total=len(total),
         )
 
-    def generate_brand_brief(self, artifact_type: str = "general", topic: str = "") -> str:
+    def generate_brand_brief(
+        self, artifact_type: str = "general", topic: str = "", organization_id: uuid.UUID | None = None
+    ) -> str:
         """Quick brief for prompt injection without returning full context object."""
-        context = self.get_brand_context(query=topic or artifact_type, top_k=3)
+        context = self.get_brand_context(query=topic or artifact_type, top_k=3, organization_id=organization_id)
         return context.brand_brief
 
     # ── Internal helpers ──────────────────────────────────────────────────────

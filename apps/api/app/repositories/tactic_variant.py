@@ -9,13 +9,17 @@ from sqlmodel import select
 from app.models.base import VariantStatus
 from app.models.tactic_variant import TacticVariant, VariantOutcome
 from app.repositories.base import BaseRepository
+from app.services.permissions import scope_by_organization_id
 
 
 class TacticVariantRepository(BaseRepository[TacticVariant]):
     model = TacticVariant
 
     def get_active_for_signal_type(
-        self, signal_type: str, industry: str | None = None  # noqa: ARG002
+        self,
+        signal_type: str,
+        industry: str | None = None,  # noqa: ARG002
+        organization_id: uuid.UUID | None = None,
     ) -> TacticVariant | None:
         """Return the first active variant for a given signal type."""
         stmt = (
@@ -25,7 +29,16 @@ class TacticVariantRepository(BaseRepository[TacticVariant]):
             .order_by(TacticVariant.created_at.desc())
             .limit(1)
         )
+        stmt = scope_by_organization_id(stmt, TacticVariant.organization_id, organization_id)
         return self.session.exec(stmt).first()
+
+    def list_scoped(
+        self, *, limit: int = 100, offset: int = 0, organization_id: uuid.UUID | None = None
+    ) -> list[TacticVariant]:
+        stmt = select(TacticVariant).order_by(TacticVariant.created_at.desc())  # type: ignore[union-attr]
+        stmt = scope_by_organization_id(stmt, TacticVariant.organization_id, organization_id)
+        stmt = stmt.limit(limit).offset(offset)
+        return list(self.session.exec(stmt).all())
 
     def record_outcome(
         self,
