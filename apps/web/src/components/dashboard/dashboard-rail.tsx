@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { Logo } from "@/components/logo";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useAuth } from "@/providers/auth-provider";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,8 @@ export function DashboardRail() {
       <Link href="/dashboard" className="mb-4 px-1.5" aria-label="Inicio BEE">
         <Logo />
       </Link>
+
+      <NotificationBell />
 
       <nav className="flex flex-1 flex-col gap-0.5">
         {VIEWS.map(({ href, icon: Icon, label, ...rest }) => {
