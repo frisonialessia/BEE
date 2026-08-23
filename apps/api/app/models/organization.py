@@ -13,8 +13,9 @@ globally visible — a deliberate, narrow exception, not the general rule.
 """
 
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship
 
 from app.models.base import TimestampMixin, new_uuid
@@ -36,6 +37,13 @@ class Organization(TimestampMixin, table=True):
     slug: str = Field(index=True, unique=True)
     plan: str = Field(default="free")
     is_active: bool = Field(default=True, index=True)
+
+    # Ideal Customer Profile — what "a good fit" means for this org, so the
+    # priority matrix (fit × intent) has something real to compute against.
+    # Empty lists = "not configured", which every consumer must treat as
+    # "no opinion" (neutral/unknown fit), never as "matches nothing" — see
+    # app.services.icp / lib/icp.ts on the frontend for how this is read.
+    icp_criteria: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
 
     # ----- Relationships -------------------------------------------------------
     teams: list["Team"] = Relationship(back_populates="organization")

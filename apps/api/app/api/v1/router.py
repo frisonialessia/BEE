@@ -25,6 +25,7 @@ from app.api.v1.endpoints import (
     leads,
     network,
     opportunities,
+    organizations,
     orchestrator,
     psychographic,
     quotas,
@@ -55,6 +56,7 @@ api_router.include_router(engagement.router)
 api_router.include_router(sequences.router)
 api_router.include_router(templates.router)
 api_router.include_router(quotas.router)
+api_router.include_router(organizations.router)
 api_router.include_router(psychographic.router)
 api_router.include_router(dark_funnel.router)
 api_router.include_router(network.router)

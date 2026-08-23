@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Building2,
+  Crosshair,
   Fingerprint,
   Flame,
   LayoutDashboard,
@@ -45,6 +46,7 @@ const GROUPS = [
   {
     label: "Inteligencia",
     items: [
+      { href: "/dashboard/priority", icon: Crosshair, label: "Priorización" },
       { href: "/dashboard/signals", icon: Radio, label: "Señales" },
       { href: "/dashboard/strategies", icon: Lightbulb, label: "Estrategias" },
       { href: "/dashboard/dark-funnel", icon: Flame, label: "Pipeline oculto" },

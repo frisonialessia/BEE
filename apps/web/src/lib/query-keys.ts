@@ -59,6 +59,10 @@ export const queryKeys = {
     all: ["quotas"] as const,
     list: () => [...queryKeys.quotas.all, "list"] as const,
   },
+  icp: {
+    all: ["icp"] as const,
+    criteria: () => [...queryKeys.icp.all, "criteria"] as const,
+  },
   control: {
     all: ["control"] as const,
     systemHealth: () => [...queryKeys.control.all, "system-health"] as const,
