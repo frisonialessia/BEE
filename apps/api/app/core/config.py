@@ -19,10 +19,11 @@ Design rationale
 from __future__ import annotations
 
 import logging
+import secrets
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import PostgresDsn, field_validator, model_validator
+from pydantic import Field, PostgresDsn, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -60,9 +61,19 @@ class Settings(BaseSettings):
     # ----- Security ------------------------------------------------------------
     # Shared secret used to verify HMAC signatures on incoming webhooks so that
     # only trusted upstream integrations can push signals into the engine.
-    WEBHOOK_SIGNING_SECRET: str = "change-me-in-production"
-    # Toggle allows local development without signing while enforcing it in prod.
-    WEBHOOK_SIGNATURE_REQUIRED: bool = False
+    #
+    # Defaults to a fresh random secret generated at process start rather than
+    # a static placeholder: since nothing knows this value, every unsigned (or
+    # wrongly-signed) request is rejected out of the box. Wiring up a real
+    # provider webhook later requires explicitly setting this to whatever
+    # shared secret that provider signs with anyway — this default only
+    # closes the gap where NEITHER var was ever configured (see
+    # WEBHOOK_SIGNATURE_REQUIRED below and .env.example for local dev, which
+    # explicitly sets both so this random default never applies there).
+    WEBHOOK_SIGNING_SECRET: str = Field(default_factory=lambda: secrets.token_hex(32))
+    # Secure by default: unsigned webhooks are rejected unless a deployment
+    # explicitly opts out (local dev's .env.example/docker-compose already do).
+    WEBHOOK_SIGNATURE_REQUIRED: bool = True
 
     # API Key authentication for REST endpoints.
     # When set, all non-health endpoints require the header:
@@ -195,27 +206,19 @@ class Settings(BaseSettings):
         """Parse the comma-separated CORS origins into a list."""
         return [origin.strip() for origin in self.BACKEND_CORS_ORIGINS.split(",") if origin.strip()]
 
-    @field_validator("WEBHOOK_SIGNING_SECRET")
-    @classmethod
-    def _warn_on_default_secret(cls, value: str) -> str:
-        # We deliberately do not raise here so local dev stays frictionless —
-        # the actual production hardening is the model-level check below,
-        # which is the one that can see ENVIRONMENT alongside these secrets.
-        return value
-
     @model_validator(mode="after")
     def _warn_on_production_hardening_gaps(self) -> "Settings":
-        """Loudly flag dev-only defaults left in place in production.
+        """Loudly flag dev-only settings left in place in production.
 
-        ``security.py``'s webhook signature check is a silent no-op whenever
-        ``WEBHOOK_SIGNATURE_REQUIRED`` is left at its default ``False`` — it
-        returns ``True`` before ever looking at the signature header. Nothing
-        else in the codebase previously enforced turning that flag on for a
-        real deployment, so a production instance could sit there accepting
-        unsigned, unauthenticated webhook payloads indefinitely. Same story
-        for the two secrets that ship with an obviously-fake placeholder
-        value: leaving either in production defeats webhook/session auth
-        entirely.
+        ``WEBHOOK_SIGNATURE_REQUIRED`` now defaults to ``True`` and
+        ``WEBHOOK_SIGNING_SECRET`` to a fresh random value per process start
+        (see their field definitions above), so the common failure mode —
+        nobody configuring either one — is closed by default rather than
+        silently accepting unsigned webhooks. This check exists for the
+        remaining way to end up insecure: someone *explicitly* setting
+        ``WEBHOOK_SIGNATURE_REQUIRED=false``, or copy-pasting the
+        ``.env.example`` placeholder secrets (``change-me-in-production``)
+        into a real production environment.
 
         This logs a ``CRITICAL`` line rather than raising: a hard startup
         failure here is only safe once we know every real deployment already

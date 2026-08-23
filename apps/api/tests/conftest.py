@@ -17,6 +17,7 @@ from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
 
 import app.models  # noqa: F401 - register table metadata
+from app.core.config import settings as app_settings
 from app.core.database import get_session
 from app.main import create_app
 from app.models.base import OpportunityStatus, SignalType
@@ -129,6 +130,17 @@ def client_fixture(engine) -> Generator[TestClient, None, None]:
 
     app = create_app()
     app.dependency_overrides[get_session] = _get_session_override
-    with TestClient(app) as client:
-        yield client
-    app.dependency_overrides.clear()
+    # WEBHOOK_SIGNATURE_REQUIRED now defaults to True (secure-by-default in
+    # production) — tests exercising /signals/webhook and /webhooks/receive
+    # without computing a real signature are effectively running as "local
+    # dev", so mirror that explicitly here instead of relying on the class
+    # default. Restored after the test so this doesn't leak across the
+    # session (the settings object is a process-wide singleton).
+    original_required = app_settings.WEBHOOK_SIGNATURE_REQUIRED
+    app_settings.WEBHOOK_SIGNATURE_REQUIRED = False
+    try:
+        with TestClient(app) as client:
+            yield client
+    finally:
+        app_settings.WEBHOOK_SIGNATURE_REQUIRED = original_required
+        app.dependency_overrides.clear()
