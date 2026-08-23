@@ -27,22 +27,22 @@ const VIEWS = [
   { href: "/dashboard/opportunities", icon: Target, label: "Oportunidades" },
   { href: "/dashboard/signals", icon: Radio, label: "Señales" },
   { href: "/dashboard/strategies", icon: Lightbulb, label: "Estrategias" },
-  { href: "/dashboard/dark-funnel", icon: Flame, label: "Dark Funnel" },
+  { href: "/dashboard/dark-funnel", icon: Flame, label: "Pipeline oculto" },
   { href: "/dashboard/network", icon: Zap, label: "Red" },
   { href: "/dashboard/brand", icon: Fingerprint, label: "Voz de marca" },
   { href: "/dashboard/sequences", icon: Workflow, label: "Secuencias" },
   { href: "/dashboard/resilience", icon: ShieldCheck, label: "Resiliencia" },
 ] as const;
 
-/** Rail lateral 52px — iconos de línea fina, máxima superficie de trabajo. */
+/** Sidebar lateral con nombre de página visible en cada ítem de navegación. */
 export function DashboardRail() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
   return (
     <aside className="bee-rail" aria-label="Navegación principal">
-      <Link href="/dashboard" className="mb-3" aria-label="Inicio BEE">
-        <Logo withText={false} />
+      <Link href="/dashboard" className="mb-4 px-1.5" aria-label="Inicio BEE">
+        <Logo />
       </Link>
 
       <nav className="flex flex-1 flex-col gap-0.5">
@@ -55,35 +55,30 @@ export function DashboardRail() {
               key={href}
               href={href}
               className={cn("bee-rail-link", active && "bee-rail-link--active")}
-              aria-label={label}
-              title={label}
             >
-              <Icon className="size-4 stroke-[1.25]" />
+              <Icon className="size-4 shrink-0 stroke-[1.5]" />
+              <span>{label}</span>
             </Link>
           );
         })}
       </nav>
 
-      <Link
-        href="/dashboard/team"
-        className={cn(
-          "bee-rail-link",
-          pathname.startsWith("/dashboard/team") && "bee-rail-link--active",
-        )}
-        aria-label="Equipo"
-        title={user ? `${user.full_name} · ${user.role}` : "Equipo"}
-      >
-        <Users className="size-4 stroke-[1.25]" />
-      </Link>
-      <button
-        type="button"
-        onClick={logout}
-        className="bee-rail-link"
-        aria-label="Cerrar sesión"
-        title={user ? `Cerrar sesión (${user.email})` : "Cerrar sesión"}
-      >
-        <LogOut className="size-4 stroke-[1.25]" />
-      </button>
+      <div className="mt-2 flex flex-col gap-0.5 border-t border-border pt-2">
+        <Link
+          href="/dashboard/team"
+          className={cn(
+            "bee-rail-link",
+            pathname.startsWith("/dashboard/team") && "bee-rail-link--active",
+          )}
+        >
+          <Users className="size-4 shrink-0 stroke-[1.5]" />
+          <span>{user ? `${user.full_name}` : "Equipo"}</span>
+        </Link>
+        <button type="button" onClick={logout} className="bee-rail-link">
+          <LogOut className="size-4 shrink-0 stroke-[1.5]" />
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
     </aside>
   );
 }

@@ -59,7 +59,7 @@ export default function Home() {
               una nueva herramienta — y ejecuta el play correcto, automáticamente.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button asChild size="lg" className="bee-btn--dark">
+              <Button asChild size="lg" className="bee-btn--primary">
                 <Link href="/dashboard">
                   Abrir el hive <ArrowRight className="size-4" />
                 </Link>

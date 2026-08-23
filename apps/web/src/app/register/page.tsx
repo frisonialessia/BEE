@@ -123,7 +123,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bee-btn bee-btn--dark w-full"
+              className="bee-btn bee-btn--primary w-full"
             >
               {isSubmitting ? "Creando…" : "Crear organización"}
             </button>

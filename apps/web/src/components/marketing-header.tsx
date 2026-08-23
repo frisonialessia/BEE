@@ -18,7 +18,7 @@ export function MarketingHeader() {
           <Button asChild variant="ghost" size="sm">
             <Link href="/dashboard">Iniciar sesión</Link>
           </Button>
-          <Button asChild size="sm" className="bee-btn--dark">
+          <Button asChild size="sm" className="bee-btn--primary">
             <Link href="/dashboard">Abrir el hive</Link>
           </Button>
         </nav>

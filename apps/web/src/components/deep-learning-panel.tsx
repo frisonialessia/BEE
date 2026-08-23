@@ -86,7 +86,7 @@ function CorrectionLearningPanel() {
           />
         </div>
 
-        <button onClick={handleSubmit} disabled={loading} className="bee-btn bee-btn--dark">
+        <button onClick={handleSubmit} disabled={loading} className="bee-btn bee-btn--primary">
           {loading ? "Learning..." : "Submit Correction"}
         </button>
       </div>
@@ -226,7 +226,7 @@ function ScenarioSimulatorPanel() {
             className="w-full" />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Dark Funnel Heat: {heat}</label>
+          <label className="text-xs text-muted-foreground mb-1 block">Calor de pipeline oculto: {heat}</label>
           <input type="range" min={0} max={100} value={heat} onChange={(e) => setHeat(+e.target.value)}
             className="w-full" />
         </div>
@@ -237,7 +237,7 @@ function ScenarioSimulatorPanel() {
         </div>
       </div>
 
-      <button onClick={handleRun} disabled={loading} className="w-full bee-btn bee-btn--dark">
+      <button onClick={handleRun} disabled={loading} className="w-full bee-btn bee-btn--primary">
         {loading ? "Simulating…" : "Run Scenario"}
       </button>
 
@@ -397,7 +397,7 @@ function AnomalyAlertsPanel() {
         Anomalous drops trigger strategy alerts requiring CEO review before any change is made.
       </p>
 
-      <button onClick={handleCheck} disabled={checking} className="bee-btn bee-btn--dark">
+      <button onClick={handleCheck} disabled={checking} className="bee-btn bee-btn--primary">
         {checking ? "Scanning…" : "Run Anomaly Scan"}
       </button>
 
@@ -445,7 +445,7 @@ export function DeepLearningPanel() {
             onClick={() => setTab(id)}
             className={`text-xs px-3 py-1.5 rounded-sm border font-medium transition-colors ${
               tab === id
-                ? "bg-[var(--color-text)] text-[var(--color-background)] border-[var(--color-text)]"
+                ? "bg-[var(--color-cta)] text-white border-[var(--color-cta)]"
                 : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-[var(--color-text-muted)]"
             }`}
           >

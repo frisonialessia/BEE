@@ -115,7 +115,7 @@ export function BrandVoicePanel() {
           </p>
         </div>
         {!profile && (
-          <button onClick={() => setShowCreate(true)} className="bee-btn bee-btn--dark">
+          <button onClick={() => setShowCreate(true)} className="bee-btn bee-btn--primary">
             Setup Voice
           </button>
         )}
@@ -158,7 +158,7 @@ export function BrandVoicePanel() {
             <button
               onClick={() => void handleCreateProfile()}
               disabled={saving || !createName}
-              className="bee-btn bee-btn--dark"
+              className="bee-btn bee-btn--primary"
             >
               {saving ? "Saving..." : "Create Profile"}
             </button>
@@ -244,7 +244,7 @@ export function BrandVoicePanel() {
             <button
               onClick={() => void handleAddFragment()}
               disabled={saving || !fragmentContent}
-              className="bee-btn bee-btn--dark"
+              className="bee-btn bee-btn--primary"
             >
               {saving ? "Adding..." : "Add Fragment"}
             </button>

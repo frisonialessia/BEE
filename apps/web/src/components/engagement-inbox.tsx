@@ -203,7 +203,7 @@ export function EngagementInboxPanel() {
             <button
               onClick={() => void handleSubmit()}
               disabled={submitting || !content}
-              className="bee-btn bee-btn--dark"
+              className="bee-btn bee-btn--primary"
             >
               {submitting ? "Processing..." : "Analyse & Draft"}
             </button>

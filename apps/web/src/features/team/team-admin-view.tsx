@@ -99,7 +99,7 @@ function CreateTeamForm({ teams }: { teams: TeamOut[] }) {
           ))}
         </select>
       </div>
-      <button type="submit" disabled={createTeam.isPending} className="bee-btn bee-btn--dark">
+      <button type="submit" disabled={createTeam.isPending} className="bee-btn bee-btn--primary">
         {createTeam.isPending ? "Creando…" : "Crear equipo"}
       </button>
     </form>
@@ -184,7 +184,7 @@ function InviteUserForm({ teams }: { teams: TeamOut[] }) {
       <button
         type="submit"
         disabled={createUser.isPending}
-        className="bee-btn bee-btn--dark sm:col-span-2 lg:col-span-5"
+        className="bee-btn bee-btn--primary sm:col-span-2 lg:col-span-5"
       >
         {createUser.isPending ? "Agregando…" : "Agregar teammate"}
       </button>

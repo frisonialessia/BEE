@@ -181,7 +181,7 @@ function DLQPanel() {
             onClick={() => setStatusFilter(s)}
             className={`text-xs px-2 py-1 rounded-sm border transition-colors ${
               statusFilter === s
-                ? "bg-[var(--color-text)] text-[var(--color-background)] border-[var(--color-text)]"
+                ? "bg-[var(--color-cta)] text-white border-[var(--color-cta)]"
                 : "bg-[var(--color-card)] text-muted-foreground border-border"
             }`}
           >
@@ -216,7 +216,7 @@ const AGENT_LABELS: Record<string, string> = {
   strategy_generator: "Strategy Generator",
   executive_agent: "Executive Agent",
   psychographic_analyzer: "Psychographic",
-  dark_funnel: "Dark Funnel",
+  dark_funnel: "Pipeline oculto",
   smart_engagement: "Engagement",
   agent_orchestrator: "Orchestrator",
   workflow_orchestrator: "Workflow",
@@ -385,7 +385,7 @@ export function ResiliencePanel() {
             onClick={() => setActiveTab(tab)}
             className={`text-xs px-4 py-2 rounded-sm border font-medium transition-colors ${
               activeTab === tab
-                ? "bg-[var(--color-text)] text-[var(--color-background)] border-[var(--color-text)]"
+                ? "bg-[var(--color-cta)] text-white border-[var(--color-cta)]"
                 : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-[var(--color-text-muted)]"
             }`}
           >

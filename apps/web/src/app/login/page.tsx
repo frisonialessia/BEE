@@ -83,7 +83,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bee-btn bee-btn--dark w-full"
+              className="bee-btn bee-btn--primary w-full"
             >
               {isSubmitting ? "Ingresando…" : "Ingresar"}
             </button>

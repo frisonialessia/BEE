@@ -163,7 +163,7 @@ export function RevenueSimulatorWidget() {
         type="button"
         onClick={handleRun}
         disabled={loading}
-        className="bee-btn bee-btn--dark w-full"
+        className="bee-btn bee-btn--primary w-full"
       >
         {loading ? "Simulando…" : `Simular prospección ${factor}×`}
       </button>

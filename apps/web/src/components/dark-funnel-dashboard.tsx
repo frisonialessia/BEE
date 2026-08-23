@@ -209,7 +209,7 @@ export function DarkFunnelDashboard() {
               onClick={() => setStageFilter(stage)}
               className={`text-xs px-3 py-1.5 rounded-sm border transition-colors ${
                 stageFilter === stage
-                  ? "bg-[var(--color-text)] text-[var(--color-background)] border-[var(--color-text)]"
+                  ? "bg-[var(--color-cta)] text-white border-[var(--color-cta)]"
                   : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-[var(--color-text-muted)]"
               }`}
             >
@@ -256,7 +256,7 @@ export function DarkFunnelDashboard() {
           <button
             type="submit"
             disabled={simLoading}
-            className="text-xs px-4 py-2 rounded-sm bg-[var(--color-text)] text-[var(--color-background)] hover:opacity-90 disabled:opacity-50 transition-colors"
+            className="text-xs px-4 py-2 rounded-sm bg-[var(--color-cta)] text-white hover:opacity-90 disabled:opacity-50 transition-colors"
           >
             {simLoading ? "Sending…" : "Send Signal"}
           </button>

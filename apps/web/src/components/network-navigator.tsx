@@ -212,7 +212,7 @@ export function NetworkNavigatorPanel() {
           <button
             type="submit"
             disabled={pathLoading}
-            className="px-4 py-2 rounded-sm bg-[var(--color-text)] text-[var(--color-background)] text-sm hover:opacity-90 disabled:opacity-50 transition-colors"
+            className="px-4 py-2 rounded-sm bg-[var(--color-cta)] text-white text-sm hover:opacity-90 disabled:opacity-50 transition-colors"
           >
             {pathLoading ? "Searching…" : "Find Paths"}
           </button>
@@ -236,7 +236,7 @@ export function NetworkNavigatorPanel() {
 
             {pathResult.cold_outreach_fallback && (
               <div className="rounded-sm border p-3 text-xs" style={{ borderColor: "var(--color-chart-1)", background: "color-mix(in srgb, var(--color-chart-1) 15%, var(--color-background))", color: "var(--color-text)" }}>
-                No warm intro paths found. Use DarkFunnel intent signals to personalise cold outreach instead.
+                No se encontraron presentaciones cálidas. Usa las señales del pipeline oculto para personalizar el contacto en frío.
               </div>
             )}
 
@@ -272,7 +272,7 @@ export function NetworkNavigatorPanel() {
             <label className="text-xs text-muted-foreground shrink-0">Relationship strength: <span className="font-bold text-foreground">{addStrength}/10</span></label>
             <input type="range" min={1} max={10} value={addStrength} onChange={(e) => setAddStrength(Number(e.target.value))} className="flex-1" />
           </div>
-          <button type="submit" disabled={addLoading} className="text-xs px-4 py-2 rounded-sm bg-[var(--color-text)] text-[var(--color-background)] hover:opacity-90 disabled:opacity-50 transition-colors">
+          <button type="submit" disabled={addLoading} className="text-xs px-4 py-2 rounded-sm bg-[var(--color-cta)] text-white hover:opacity-90 disabled:opacity-50 transition-colors">
             {addLoading ? "Adding…" : "Add Connection"}
           </button>
         </form>

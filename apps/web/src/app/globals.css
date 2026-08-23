@@ -4,14 +4,18 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * BEE — Editorial Bento Grid · Swiss Minimal
+ * BEE — Editorial Bento Grid · Soft Rounded
  * Background #f7f7f7 · Text #222222 · Cards #dbdeff · Primary #c8d7f8
- * Containers: rounded-none · Inputs/buttons/badges: 2px · No shadows
+ * Containers: rounded-lg · Inputs/buttons/badges: rounded-md · No shadows
  */
 
 :root {
   --radius-none: 0px;
-  --radius-sm: 2px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
 
   --color-background: #f7f7f7;
   --color-text: #222222;
@@ -21,6 +25,18 @@
   --color-accent-warm: #ffbe55;
   --color-block-muted: #ede4f7;
   --color-divider: rgba(34, 34, 34, 0.08);
+
+  /* The app's one strong, saturated action color — used for every primary
+     button/CTA instead of near-black. Never use --color-text as a button
+     background; it's for text only. */
+  --color-cta: var(--color-chart-4);
+  --color-cta-hover: color-mix(in srgb, var(--color-chart-4) 85%, var(--color-text) 15%);
+
+  /* Real traffic-light semantics, distinct from the decorative chart
+     palette (chart-1..6 are for categorical data — pipeline stages,
+     channels — not status feedback). */
+  --color-success: #3fbb72;
+  --color-danger: #ef5b5b;
 
   --color-chart-1: #ffb213;
   --color-chart-2: #fca000;
@@ -71,10 +87,12 @@
   --muted-foreground: var(--color-text-muted);
   --accent: var(--color-accent-warm);
   --accent-foreground: var(--color-text);
-  --destructive: var(--color-chart-2);
-  --destructive-foreground: var(--color-text);
-  --success: var(--color-chart-5);
+  --destructive: var(--color-danger);
+  --destructive-foreground: #ffffff;
+  --success: var(--color-success);
+  --success-foreground: #ffffff;
   --warning: var(--color-chart-1);
+  --warning-foreground: var(--color-text);
   --border: var(--color-divider);
   --input: var(--color-divider);
   --ring: var(--color-chart-4);
@@ -84,15 +102,15 @@
   --chart-4: var(--color-chart-4);
   --chart-5: var(--color-chart-5);
   --chart-6: var(--color-chart-6);
-  --radius: var(--radius-sm);
+  --radius: var(--radius-lg);
 }
 
 @theme inline {
-  --radius-sm: 2px;
-  --radius-md: 2px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
 
   --color-background: var(--color-background);
   --color-foreground: var(--color-text);
@@ -108,7 +126,10 @@
   --color-muted-foreground: var(--color-text-muted);
   --color-accent: var(--color-accent-warm);
   --color-accent-foreground: var(--color-text);
-  --color-destructive: var(--color-chart-2);
+  --color-destructive: var(--color-danger);
+  --color-success: var(--color-success);
+  --color-warning: var(--color-chart-1);
+  --color-cta: var(--color-cta);
   --color-border: var(--color-divider);
   --color-input: var(--color-divider);
   --color-ring: var(--color-chart-4);
@@ -166,7 +187,7 @@
   background: var(--color-card);
   color: var(--color-text);
   border: 1px solid var(--color-divider);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   box-shadow: none;
 }
 
@@ -181,7 +202,7 @@
   background: var(--color-card);
   color: var(--color-text);
   border: 1px solid var(--color-divider);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   padding: var(--bee-pad-surface);
   box-shadow: none;
   font-family: var(--bee-font);
@@ -204,19 +225,19 @@
 .bee-inset {
   background: var(--color-primary);
   border: 1px solid var(--color-divider);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   color: var(--color-text);
 }
 
 .bee-surface {
   background: var(--color-card);
   border: 1px solid var(--color-divider);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   box-shadow: none;
   color: var(--color-text);
 }
 
-/* ── CRM shell (52px rail) ─────────────────────────────────────────── */
+/* ── CRM shell (labelled sidebar) ─────────────────────────────────────── */
 
 .bee-app {
   display: flex;
@@ -230,24 +251,34 @@
 .bee-rail {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 52px;
+  align-items: stretch;
+  width: 232px;
   shrink: 0;
-  padding: 1rem 0;
+  padding: 1rem 0.75rem;
   background: var(--color-background);
   border-right: 1px solid var(--color-divider);
   gap: 0.25rem;
+  overflow-y: auto;
 }
 
 .bee-rail-link {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-sm);
+  gap: 0.625rem;
+  width: 100%;
+  height: 38px;
+  padding: 0 0.625rem;
+  border-radius: var(--radius-md);
   color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
   transition: background 120ms ease, color 120ms ease;
+}
+
+.bee-rail-link span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .bee-rail-link:hover {
@@ -256,9 +287,8 @@
 }
 
 .bee-rail-link--active {
-  background: var(--color-card);
-  color: var(--color-text);
-  border: 1px solid var(--color-divider);
+  background: var(--color-cta);
+  color: #ffffff;
 }
 
 .bee-main {
@@ -293,7 +323,7 @@
   padding: 0.75rem 1rem;
   background: var(--color-card);
   border: 1px solid var(--color-divider);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
 }
 
 .bee-kpi-tile__label {
@@ -317,7 +347,7 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem 1.25rem;
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   background: var(--color-primary);
   border: 1px solid var(--color-divider);
   min-height: 5rem;
@@ -393,10 +423,15 @@
 .bee-btn:hover:not(:disabled) { background: var(--color-card); }
 .bee-btn:disabled { opacity: 0.5; }
 
-.bee-btn--dark {
-  background: var(--color-text);
-  color: var(--color-background);
-  border-color: var(--color-text);
+.bee-btn--primary {
+  background: var(--color-cta);
+  color: #ffffff;
+  border-color: var(--color-cta);
+}
+
+.bee-btn--primary:hover:not(:disabled) {
+  background: var(--color-cta-hover);
+  border-color: var(--color-cta-hover);
 }
 
 .bee-btn-ghost {
@@ -425,7 +460,7 @@
   text-align: center;
   background: var(--color-background);
   border: 1px solid var(--color-divider);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
 }
 
 .bee-stat__val, .bee-stat__value {
@@ -478,7 +513,7 @@
 .bee-inner-card {
   background: var(--color-primary);
   border: 1px solid var(--color-divider);
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   padding: 1rem;
 }
 
@@ -510,7 +545,7 @@
 /* Kanban */
 .bee-kanban-card {
   position: relative;
-  border-radius: var(--radius-none);
+  border-radius: var(--radius-lg);
   padding: 1rem 1rem 1rem 1.25rem;
   background: var(--color-card);
   border: 1px solid var(--color-divider);
@@ -573,9 +608,9 @@
 .bee-pagination__btn:hover:not(:disabled) { background: var(--color-primary); }
 .bee-pagination__btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .bee-pagination__btn--active {
-  background: var(--color-text);
-  color: var(--color-background);
-  border-color: var(--color-text);
+  background: var(--color-cta);
+  color: #ffffff;
+  border-color: var(--color-cta);
 }
 
 .bee-pagination__select {
@@ -655,7 +690,7 @@
   to { transform: translateX(0); }
 }
 
-.bee-hex-canvas { border-radius: var(--radius-none); }
+.bee-hex-canvas { border-radius: var(--radius-lg); }
 .bee-hex-tooltip {
   background: var(--color-card);
   border: 1px solid var(--color-divider);
