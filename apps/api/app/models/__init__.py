@@ -30,6 +30,7 @@ from app.models.market_insight import MarketInsight
 from app.models.network import NetworkConnection
 from app.models.opportunity import Opportunity
 from app.models.organization import Organization
+from app.models.organization_api_key import OrganizationApiKey
 from app.models.pending_action import PendingAction
 from app.models.psychographic import LeadPsychographic
 from app.models.sequence import DynamicSequence, SequenceExecution
@@ -66,6 +67,7 @@ __all__ = [
     "ArtifactCorrection",
     "UserStyleProfile",
     "Organization",
+    "OrganizationApiKey",
     "Team",
     "User",
     "ActionStatus",

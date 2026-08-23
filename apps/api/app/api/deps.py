@@ -9,14 +9,16 @@ from __future__ import annotations
 
 import uuid
 from collections.abc import Generator
+from datetime import UTC, datetime
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.core.database import get_session
-from app.core.security import InvalidTokenError, decode_access_token
+from app.core.security import InvalidTokenError, decode_access_token, hash_api_key
 from app.models.base import UserRole
+from app.models.organization_api_key import OrganizationApiKey
 from app.models.user import User
 from app.services.signal_engine import SignalEngine
 
@@ -88,6 +90,37 @@ def get_current_user_optional(
     if credentials is None:
         return None
     return _load_user_from_token(credentials.credentials, session)
+
+
+def get_organization_from_api_key(
+    x_bee_org_key: str | None = Header(default=None, alias="X-BEE-Org-Key"),
+    session: Session = Depends(get_session),
+) -> uuid.UUID | None:
+    """Resolve the tenant for a webhook/integration call from an org API key.
+
+    Returns ``None`` when no key is presented at all — ingestion stays
+    backward-compatible with the single-shared-secret model (the created
+    records simply stay untagged, same as before organization API keys
+    existed). A *presented but invalid/inactive* key still 401s rather than
+    silently falling back to untagged, so a typo'd or revoked key fails
+    loudly instead of quietly leaking data into the global pool.
+    """
+    if x_bee_org_key is None:
+        return None
+
+    key = session.exec(
+        select(OrganizationApiKey).where(
+            OrganizationApiKey.key_hash == hash_api_key(x_bee_org_key),
+            OrganizationApiKey.is_active,
+        )
+    ).first()
+    if key is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or revoked API key.")
+
+    key.last_used_at = datetime.now(UTC)
+    session.add(key)
+    session.flush()
+    return key.organization_id
 
 
 def require_roles(*roles: UserRole):

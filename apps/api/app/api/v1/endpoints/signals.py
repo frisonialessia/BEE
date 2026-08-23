@@ -15,9 +15,9 @@ import json
 import uuid
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
-from sqlmodel import Session, select
+from sqlmodel import Session, or_, select
 
-from app.api.deps import get_current_user_optional, get_signal_engine
+from app.api.deps import get_current_user_optional, get_organization_from_api_key, get_signal_engine
 from app.core.database import get_session
 from app.core.logging import get_logger
 from app.core.security import verify_webhook_signature
@@ -61,6 +61,7 @@ async def ingest_signal_webhook(
     request: Request,
     x_bee_signature: str | None = Header(default=None, alias="X-BEE-Signature"),
     engine: SignalEngine = Depends(get_signal_engine),
+    organization_id: uuid.UUID | None = Depends(get_organization_from_api_key),
 ) -> SignalIngestResult:
     """Receive, verify, and process an inbound market signal.
 
@@ -71,6 +72,12 @@ async def ingest_signal_webhook(
 
     We read and verify the *raw* body before parsing so the signature is computed
     over exactly the bytes the sender signed.
+
+    An optional ``X-BEE-Org-Key`` header (see
+    ``app.api.deps.get_organization_from_api_key``) identifies which
+    organization this data belongs to. Without one, everything created stays
+    untagged/globally visible — the same behavior as before organization API
+    keys existed.
     """
     raw_body = await request.body()
 
@@ -95,7 +102,7 @@ async def ingest_signal_webhook(
         ) from exc
 
     # 3. Delegate to the engine.
-    outcome = engine.ingest(payload)
+    outcome = engine.ingest(payload, organization_id=organization_id)
 
     # 4. Queue async LinkedIn enrichment when lead profile is incomplete
     if (
@@ -202,6 +209,7 @@ def ingest_intent_event(
     event: BuyingIntentEvent,
     engine: SignalEngine = Depends(get_signal_engine),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_from_api_key),
 ) -> IntentEventResult:
     """Process a buying-intent behavioral event from a tracked lead.
 
@@ -214,7 +222,9 @@ def ingest_intent_event(
        strategy (``hot_lead: true``, urgency bumped to ``immediate``) so the
        CEO dashboard surfaces the lead with a "🔥 HOT" badge.
 
-    Typical callers: website tracker, product analytics, marketing automation.
+    Typical callers: website tracker, product analytics, marketing automation —
+    same optional ``X-BEE-Org-Key`` header as ``/signals/webhook`` when the
+    tracker is scoped to a specific organization's site.
     """
     # Build a synthetic signal payload from the intent event.
     score = EVENT_INTENT_SCORES.get(event.event_type, 50.0)
@@ -262,7 +272,7 @@ def ingest_intent_event(
         },
     )
 
-    outcome = engine.ingest(signal_payload)
+    outcome = engine.ingest(signal_payload, organization_id=organization_id)
 
     # ── Hot-lead flagging ──────────────────────────────────────────────────
     # If this lead/company has an existing open opportunity, update its
@@ -282,6 +292,10 @@ def ingest_intent_event(
             .order_by(Opportunity.created_at.desc())
             .limit(1)
         )
+        if organization_id is not None:
+            stmt = stmt.where(
+                or_(Opportunity.organization_id == organization_id, Opportunity.organization_id.is_(None))
+            )
         if outcome.opportunity and outcome.opportunity.company_id:
             stmt = stmt.where(Opportunity.company_id == outcome.opportunity.company_id)
         elif outcome.opportunity and outcome.opportunity.lead_id:

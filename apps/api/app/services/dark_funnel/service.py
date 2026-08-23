@@ -37,7 +37,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from sqlmodel import Session, select
+from sqlmodel import Session, or_, select
 
 from app.core.logging import get_logger
 from app.models.dark_funnel import (
@@ -59,6 +59,19 @@ _HOT_THRESHOLD = 50.0    # Score above this → is_hot = True
 _WINDOW_DAYS = 30         # Rolling window for signal aggregation
 
 
+def _scope(statement, column, organization_id: uuid.UUID | None):
+    """Restrict ``statement`` to ``organization_id``, same untagged-is-shared
+    convention as ``app.services.permissions.scope_to_organization`` — but
+    taking a raw id instead of a ``User``, since dark funnel ingestion is
+    reached by both dashboard users (JWT) and org API keys (no User at all).
+    A no-op when ``organization_id`` is ``None`` so unscoped/legacy callers
+    keep seeing everything, unchanged from before organization tagging existed.
+    """
+    if organization_id is None:
+        return statement
+    return statement.where(or_(column == organization_id, column.is_(None)))
+
+
 class DarkFunnelService:
     """Processes and aggregates dark funnel intent signals to surface hot leads."""
 
@@ -67,7 +80,9 @@ class DarkFunnelService:
 
     # ── Signal ingestion ──────────────────────────────────────────────────────
 
-    def ingest_signal(self, data: DarkFunnelSignalIn) -> DarkFunnelSignalOut:
+    def ingest_signal(
+        self, data: DarkFunnelSignalIn, organization_id: uuid.UUID | None = None
+    ) -> DarkFunnelSignalOut:
         """Ingest a single intent signal and update the company's hot lead score.
 
         This is the primary ingestion point. After persisting the signal,
@@ -75,6 +90,9 @@ class DarkFunnelService:
 
         Args:
             data: The incoming signal payload.
+            organization_id: Tenant to stamp on the signal and its recomputed
+                score, and to scope the dedup lookup — from the caller's JWT
+                (dashboard "Simulate Signal") or org API key (webhook/pixel).
 
         Returns:
             A :class:`DarkFunnelSignalOut` representing the persisted signal.
@@ -82,6 +100,7 @@ class DarkFunnelService:
         weight = SIGNAL_WEIGHTS.get(data.signal_type, 5.0)
 
         signal = DarkFunnelSignal(
+            organization_id=organization_id,
             company_domain=data.company_domain.lower().strip(),
             company_name=data.company_name,
             lead_id=data.lead_id,
@@ -99,7 +118,9 @@ class DarkFunnelService:
         self.session.flush()
 
         # Recompute hot lead score for this company
-        self._recompute_score(data.company_domain.lower().strip(), data.company_name, data.lead_id)
+        self._recompute_score(
+            data.company_domain.lower().strip(), data.company_name, data.lead_id, organization_id
+        )
 
         signal.processed = True
         self.session.add(signal)
@@ -112,7 +133,9 @@ class DarkFunnelService:
         )
         return DarkFunnelSignalOut.model_validate(signal)
 
-    def ingest_batch(self, signals: list[DarkFunnelSignalIn]) -> list[DarkFunnelSignalOut]:
+    def ingest_batch(
+        self, signals: list[DarkFunnelSignalIn], organization_id: uuid.UUID | None = None
+    ) -> list[DarkFunnelSignalOut]:
         """Ingest multiple signals in one transaction."""
         results = []
         domains_affected: set[str] = set()
@@ -120,6 +143,7 @@ class DarkFunnelService:
         for data in signals:
             weight = SIGNAL_WEIGHTS.get(data.signal_type, 5.0)
             signal = DarkFunnelSignal(
+                organization_id=organization_id,
                 company_domain=data.company_domain.lower().strip(),
                 company_name=data.company_name,
                 lead_id=data.lead_id,
@@ -144,6 +168,7 @@ class DarkFunnelService:
                 domain,
                 relevant.company_name if relevant else None,
                 relevant.lead_id if relevant else None,
+                organization_id,
             )
 
         for signal in results:
@@ -161,6 +186,7 @@ class DarkFunnelService:
         buying_stage: str | None = None,
         limit: int = 50,
         hot_only: bool = False,
+        organization_id: uuid.UUID | None = None,
     ) -> list[HotLeadOut]:
         """Return the hot lead list, sorted by research_intensity_score descending."""
         stmt = (
@@ -174,41 +200,50 @@ class DarkFunnelService:
             stmt = stmt.where(HotLeadScore.buying_stage == buying_stage)
         if hot_only:
             stmt = stmt.where(HotLeadScore.is_hot)
+        stmt = _scope(stmt, HotLeadScore.organization_id, organization_id)
 
         scores = list(self.session.exec(stmt).all())
         return [HotLeadOut.model_validate(s) for s in scores]
 
-    def get_company_score(self, company_domain: str) -> HotLeadOut | None:
-        score = self.session.exec(
-            select(HotLeadScore).where(HotLeadScore.company_domain == company_domain.lower().strip())
-        ).first()
+    def get_company_score(
+        self, company_domain: str, organization_id: uuid.UUID | None = None
+    ) -> HotLeadOut | None:
+        stmt = select(HotLeadScore).where(HotLeadScore.company_domain == company_domain.lower().strip())
+        stmt = _scope(stmt, HotLeadScore.organization_id, organization_id)
+        score = self.session.exec(stmt).first()
         return HotLeadOut.model_validate(score) if score else None
 
-    def get_signals_for_domain(self, company_domain: str, limit: int = 50) -> list[DarkFunnelSignalOut]:
-        signals = list(
-            self.session.exec(
-                select(DarkFunnelSignal)
-                .where(DarkFunnelSignal.company_domain == company_domain.lower().strip())
-                .order_by(DarkFunnelSignal.created_at.desc())
-                .limit(limit)
-            ).all()
+    def get_signals_for_domain(
+        self, company_domain: str, limit: int = 50, organization_id: uuid.UUID | None = None
+    ) -> list[DarkFunnelSignalOut]:
+        stmt = (
+            select(DarkFunnelSignal)
+            .where(DarkFunnelSignal.company_domain == company_domain.lower().strip())
+            .order_by(DarkFunnelSignal.created_at.desc())
+            .limit(limit)
         )
+        stmt = _scope(stmt, DarkFunnelSignal.organization_id, organization_id)
+        signals = list(self.session.exec(stmt).all())
         return [DarkFunnelSignalOut.model_validate(s) for s in signals]
 
-    def get_summary(self) -> DarkFunnelSummary:
+    def get_summary(self, organization_id: uuid.UUID | None = None) -> DarkFunnelSummary:
         """Return aggregate statistics for the dark funnel dashboard."""
         now = datetime.now(UTC)
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
-        all_scores = list(self.session.exec(select(HotLeadScore)).all())
+        all_scores = list(
+            self.session.exec(_scope(select(HotLeadScore), HotLeadScore.organization_id, organization_id)).all()
+        )
 
-        total_signals_today = len(list(
-            self.session.exec(
-                select(DarkFunnelSignal).where(DarkFunnelSignal.created_at >= today_start)
-            ).all()
-        ))
+        today_stmt = _scope(
+            select(DarkFunnelSignal).where(DarkFunnelSignal.created_at >= today_start),
+            DarkFunnelSignal.organization_id,
+            organization_id,
+        )
+        total_signals_today = len(list(self.session.exec(today_stmt).all()))
 
-        all_signals = list(self.session.exec(select(DarkFunnelSignal)).all())
+        all_signals_stmt = _scope(select(DarkFunnelSignal), DarkFunnelSignal.organization_id, organization_id)
+        all_signals = list(self.session.exec(all_signals_stmt).all())
         signal_type_counts: dict[str, int] = {}
         for sig in all_signals:
             signal_type_counts[sig.signal_type] = signal_type_counts.get(sig.signal_type, 0) + 1
@@ -231,19 +266,25 @@ class DarkFunnelService:
         domain: str,
         company_name: str | None,
         lead_id: uuid.UUID | None,
+        organization_id: uuid.UUID | None = None,
     ) -> HotLeadScore:
-        """Recompute the HotLeadScore for a company domain using the 30-day window."""
+        """Recompute the HotLeadScore for a company domain using the 30-day window.
+
+        Scoped to ``organization_id`` — two organizations independently
+        tracking intent signals for the same domain get independent scores,
+        never a blended one (``DarkFunnelSignal.company_domain`` has no
+        cross-org uniqueness constraint, so both organizations' signal rows
+        for the same domain legitimately coexist).
+        """
         window_start = datetime.now(UTC) - timedelta(days=_WINDOW_DAYS)
 
         # Fetch all signals in the window
-        signals = list(
-            self.session.exec(
-                select(DarkFunnelSignal).where(
-                    DarkFunnelSignal.company_domain == domain,
-                    DarkFunnelSignal.created_at >= window_start,
-                )
-            ).all()
+        signals_stmt = select(DarkFunnelSignal).where(
+            DarkFunnelSignal.company_domain == domain,
+            DarkFunnelSignal.created_at >= window_start,
         )
+        signals_stmt = _scope(signals_stmt, DarkFunnelSignal.organization_id, organization_id)
+        signals = list(self.session.exec(signals_stmt).all())
 
         # Compute weighted score with recency factor
         now = datetime.now(UTC)
@@ -274,9 +315,9 @@ class DarkFunnelService:
         top_keywords = sorted(kw_counts.keys(), key=lambda k: kw_counts[k], reverse=True)[:10]
 
         # Get or create the HotLeadScore record
-        existing = self.session.exec(
-            select(HotLeadScore).where(HotLeadScore.company_domain == domain)
-        ).first()
+        existing_stmt = select(HotLeadScore).where(HotLeadScore.company_domain == domain)
+        existing_stmt = _scope(existing_stmt, HotLeadScore.organization_id, organization_id)
+        existing = self.session.exec(existing_stmt).first()
 
         if existing:
             existing.research_intensity_score = round(total_score, 1)
@@ -298,6 +339,7 @@ class DarkFunnelService:
             return existing
 
         score_record = HotLeadScore(
+            organization_id=organization_id,
             company_domain=domain,
             company_name=company_name,
             lead_id=lead_id,

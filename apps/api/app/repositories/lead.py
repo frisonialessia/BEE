@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlmodel import select
+from sqlmodel import or_, select
 
 from app.models.lead import Lead
 from app.repositories.base import BaseRepository
@@ -16,13 +16,30 @@ class LeadRepository(BaseRepository[Lead]):
 
     model = Lead
 
-    def get_by_email(self, email: str) -> Lead | None:
-        """Look up a lead by email (the most reliable person-level key)."""
+    def get_by_email(self, email: str, organization_id: uuid.UUID | None = None) -> Lead | None:
+        """Look up a lead by email, scoped to ``organization_id`` when given.
+
+        Without organization scoping, two different organizations' leads
+        that happen to share an email address (a common contact, or just
+        coincidence) would silently merge into one Lead row — a real
+        cross-tenant leak once ingestion starts tagging organization_id. Same
+        "untagged = shared" convention as ``CompanyRepository`` when no
+        organization context is available.
+        """
         statement = select(Lead).where(Lead.email == email)
+        if organization_id is not None:
+            statement = statement.where(
+                or_(Lead.organization_id == organization_id, Lead.organization_id.is_(None))
+            )
+        else:
+            statement = statement.where(Lead.organization_id.is_(None))
         return self.session.exec(statement).first()
 
     def get_or_create_from_ref(
-        self, ref: LeadRef | None, company_id: uuid.UUID | None
+        self,
+        ref: LeadRef | None,
+        company_id: uuid.UUID | None,
+        organization_id: uuid.UUID | None = None,
     ) -> Lead | None:
         """Resolve a :class:`LeadRef` from a webhook to a persisted lead.
 
@@ -33,11 +50,12 @@ class LeadRepository(BaseRepository[Lead]):
             return None
 
         if ref.email:
-            existing = self.get_by_email(ref.email)
+            existing = self.get_by_email(ref.email, organization_id)
             if existing is not None:
                 return existing
 
         lead = Lead(
+            organization_id=organization_id,
             company_id=company_id,
             full_name=ref.full_name or (ref.email or "Unknown"),
             email=ref.email,

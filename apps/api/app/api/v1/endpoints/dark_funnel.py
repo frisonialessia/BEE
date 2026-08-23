@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import uuid
+
 from fastapi import APIRouter, Depends, Query, status
 from sqlmodel import Session
 
+from app.api.deps import get_current_user_optional, get_organization_from_api_key
 from app.core.database import get_session
+from app.models.user import User
 from app.schemas.dark_funnel import (
     DarkFunnelSignalIn,
     DarkFunnelSignalOut,
@@ -21,6 +25,19 @@ def _get_service(session: Session = Depends(get_session)) -> DarkFunnelService:
     return DarkFunnelService(session)
 
 
+def _resolve_org(
+    current_user: User | None = Depends(get_current_user_optional),
+    api_key_org_id: uuid.UUID | None = Depends(get_organization_from_api_key),
+) -> uuid.UUID | None:
+    """Tenant for this request: the caller's JWT session org, or their org API
+    key, whichever is present. Dashboard calls ("Simulate Signal") carry a JWT;
+    pixel/webhook calls carry an org key instead — either identifies the tenant.
+    """
+    if current_user is not None:
+        return current_user.organization_id
+    return api_key_org_id
+
+
 @router.post(
     "/signals",
     response_model=DarkFunnelSignalOut,
@@ -31,6 +48,7 @@ def ingest_signal(
     data: DarkFunnelSignalIn,
     svc: DarkFunnelService = Depends(_get_service),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(_resolve_org),
 ) -> DarkFunnelSignalOut:
     """Submit an external intent signal from any source.
 
@@ -48,7 +66,7 @@ def ingest_signal(
     After ingesting the signal, the company's ``research_intensity_score``
     is immediately recomputed and the ``buying_stage`` is updated.
     """
-    result = svc.ingest_signal(data)
+    result = svc.ingest_signal(data, organization_id)
     session.commit()
     return result
 
@@ -63,8 +81,9 @@ def ingest_batch(
     signals: list[DarkFunnelSignalIn],
     svc: DarkFunnelService = Depends(_get_service),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(_resolve_org),
 ) -> list[DarkFunnelSignalOut]:
-    results = svc.ingest_batch(signals)
+    results = svc.ingest_batch(signals, organization_id)
     session.commit()
     return results
 
@@ -80,6 +99,7 @@ def get_hot_leads(
     hot_only: bool = Query(default=False, description="Return only is_hot=True leads"),
     limit: int = Query(default=50, le=200),
     svc: DarkFunnelService = Depends(_get_service),
+    organization_id: uuid.UUID | None = Depends(_resolve_org),
 ) -> list[HotLeadOut]:
     """Return companies showing active buying intent, sorted by intensity score.
 
@@ -94,7 +114,13 @@ def get_hot_leads(
     Use ``?hot_only=true`` to see only companies above the hot threshold.
     Use ``?buying_stage=ready_to_buy`` to filter by stage.
     """
-    return svc.get_hot_leads(min_score=min_score, buying_stage=buying_stage, limit=limit, hot_only=hot_only)
+    return svc.get_hot_leads(
+        min_score=min_score,
+        buying_stage=buying_stage,
+        limit=limit,
+        hot_only=hot_only,
+        organization_id=organization_id,
+    )
 
 
 @router.get(
@@ -105,8 +131,9 @@ def get_hot_leads(
 def get_company_score(
     company_domain: str,
     svc: DarkFunnelService = Depends(_get_service),
+    organization_id: uuid.UUID | None = Depends(_resolve_org),
 ) -> HotLeadOut | None:
-    return svc.get_company_score(company_domain)
+    return svc.get_company_score(company_domain, organization_id)
 
 
 @router.get(
@@ -118,8 +145,9 @@ def get_domain_signals(
     company_domain: str,
     limit: int = Query(default=50, le=200),
     svc: DarkFunnelService = Depends(_get_service),
+    organization_id: uuid.UUID | None = Depends(_resolve_org),
 ) -> list[DarkFunnelSignalOut]:
-    return svc.get_signals_for_domain(company_domain, limit=limit)
+    return svc.get_signals_for_domain(company_domain, limit=limit, organization_id=organization_id)
 
 
 @router.get(
@@ -127,6 +155,9 @@ def get_domain_signals(
     response_model=DarkFunnelSummary,
     summary="Dark funnel pipeline overview",
 )
-def get_summary(svc: DarkFunnelService = Depends(_get_service)) -> DarkFunnelSummary:
+def get_summary(
+    svc: DarkFunnelService = Depends(_get_service),
+    organization_id: uuid.UUID | None = Depends(_resolve_org),
+) -> DarkFunnelSummary:
     """Return aggregate statistics for the dark funnel dashboard."""
-    return svc.get_summary()
+    return svc.get_summary(organization_id)

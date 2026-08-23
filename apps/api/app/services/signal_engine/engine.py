@@ -24,6 +24,7 @@ stays at ``DETECTED``, which is visible in the pipeline as an incomplete record.
 
 from __future__ import annotations
 
+import uuid
 from dataclasses import dataclass
 
 from sqlmodel import Session
@@ -77,7 +78,13 @@ class SignalEngine:
         self.signals = SignalRepository(session)
         self.opportunities = OpportunityRepository(session)
 
-    def ingest(self, payload: SignalWebhookIn, *, commit: bool = True) -> IngestOutcome:
+    def ingest(
+        self,
+        payload: SignalWebhookIn,
+        *,
+        commit: bool = True,
+        organization_id: uuid.UUID | None = None,
+    ) -> IngestOutcome:
         """Process an inbound webhook payload end-to-end.
 
         Returns an :class:`IngestOutcome`. If a signal with the same
@@ -86,6 +93,14 @@ class SignalEngine:
 
         When ``commit=False`` (used by background workers), the caller owns the
         transaction boundary so follow-up enrichment can persist atomically.
+
+        ``organization_id`` — resolved by the caller from an
+        :class:`~app.models.organization_api_key.OrganizationApiKey` (see
+        ``app.api.deps.get_organization_from_api_key``) — is stamped on every
+        record this ingestion run creates or resolves, and used to scope
+        company/lead dedup lookups so two organizations never merge into each
+        other's data. ``None`` (no key presented) preserves the pre-multi-tenant
+        behavior: everything stays untagged and globally visible.
         """
         # 1. Idempotency guard.
         if payload.external_id:
@@ -97,9 +112,9 @@ class SignalEngine:
                 )
 
         # 2. Entity resolution.
-        company = self.companies.get_or_create_from_ref(payload.company)
+        company = self.companies.get_or_create_from_ref(payload.company, organization_id)
         lead = self.leads.get_or_create_from_ref(
-            payload.lead, company.id if company else None
+            payload.lead, company.id if company else None, organization_id
         )
 
         # 3. Signal classification via analyzers.
@@ -107,6 +122,7 @@ class SignalEngine:
 
         # 4. Persist the signal.
         signal = Signal(
+            organization_id=organization_id,
             company_id=company.id if company else None,
             lead_id=lead.id if lead else None,
             signal_type=aggregate.signal_type,
@@ -131,7 +147,7 @@ class SignalEngine:
         opportunity: Opportunity | None = None
         strategy_enriched = False
         if aggregate.strategy is not None:
-            opportunity = self._create_opportunity(signal, aggregate)
+            opportunity = self._create_opportunity(signal, aggregate, organization_id)
 
             # 6. Enrich battlecard — the engine delegates fully; no strategy logic here.
             strategy_enriched = self.strategy_service.enrich(signal, opportunity)
@@ -199,7 +215,10 @@ class SignalEngine:
         return applied, aggregate
 
     def _create_opportunity(
-        self, signal: Signal, aggregate: AnalysisResult
+        self,
+        signal: Signal,
+        aggregate: AnalysisResult,
+        organization_id: uuid.UUID | None = None,
     ) -> Opportunity:
         """Build and persist an opportunity in DETECTED state.
 
@@ -207,6 +226,7 @@ class SignalEngine:
         after enrichment, not here.
         """
         opportunity = Opportunity(
+            organization_id=organization_id,
             signal_id=signal.id,
             lead_id=signal.lead_id,
             company_id=signal.company_id,

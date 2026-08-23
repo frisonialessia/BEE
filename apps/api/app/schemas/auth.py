@@ -91,3 +91,26 @@ class UserUpdate(BaseModel):
     role: UserRole | None = None
     team_id: uuid.UUID | None = None
     is_active: bool | None = None
+
+
+class ApiKeyCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+
+
+class ApiKeyOut(BaseModel):
+    """Listing view — never carries the plaintext key, only ``key_prefix``."""
+
+    id: uuid.UUID
+    name: str
+    key_prefix: str
+    is_active: bool
+    last_used_at: datetime | None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ApiKeyCreated(ApiKeyOut):
+    """Returned once, at creation time — the only moment the plaintext exists."""
+
+    api_key: str

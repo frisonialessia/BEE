@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -153,6 +154,43 @@ def create_access_token(
         "exp": now + expires_delta,
     }
     return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+# ---------------------------------------------------------------------------
+# Organization API keys — per-tenant ingestion auth
+# ---------------------------------------------------------------------------
+#
+# Distinct from both boundaries above: WEBHOOK_SIGNING_SECRET / API_SECRET_KEY
+# are single, shared secrets that authenticate "some trusted integration" but
+# carry no tenant identity, and JWTs authenticate a human dashboard session.
+# An organization API key answers a third question — "which organization does
+# this ingested signal belong to?" — for integrations (Zapier, a customer's
+# own scripts, enrichment pipelines) that push data via
+# ``POST /signals/webhook`` without a logged-in user. See
+# ``app.models.organization_api_key`` for the storage model.
+
+_API_KEY_PREFIX = "bee_org_"
+
+
+def generate_api_key() -> tuple[str, str]:
+    """Generate a new organization API key.
+
+    Returns ``(plaintext, key_hash)``. The plaintext is shown to the caller
+    exactly once at creation time and is never itself stored — only its
+    SHA-256 hash is persisted, so a database leak alone can't be replayed as
+    a live key. Unlike :func:`hash_password`, this uses a fast deterministic
+    hash (not bcrypt): the token is already high-entropy and machine-
+    generated rather than user-chosen, and verification must be a hash
+    lookup (not a per-row salted compare) since it runs on every ingestion
+    request.
+    """
+    plaintext = _API_KEY_PREFIX + secrets.token_urlsafe(32)
+    return plaintext, hash_api_key(plaintext)
+
+
+def hash_api_key(plaintext: str) -> str:
+    """Hash an API key for storage or lookup. See :func:`generate_api_key`."""
+    return hashlib.sha256(plaintext.encode("utf-8")).hexdigest()
 
 
 class InvalidTokenError(Exception):
