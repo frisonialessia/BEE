@@ -284,6 +284,34 @@
   color: #ffffff;
 }
 
+/* Pantallas chicas: el rail vive fuera de cuadro y entra como panel
+ * superpuesto (mismo mecanismo que .bee-drawer) en vez de compartir el
+ * ancho fijo de 232px con un viewport que no lo tiene. */
+@media (max-width: 768px) {
+  .bee-rail {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 70;
+    box-shadow: none;
+    transform: translateX(-100%);
+    transition: transform 200ms ease;
+  }
+
+  .bee-rail--open {
+    transform: translateX(0);
+    box-shadow: 12px 0 32px color-mix(in srgb, var(--color-text) 14%, transparent);
+  }
+
+  .bee-rail-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 69;
+    background: color-mix(in srgb, var(--color-text) 15%, transparent);
+    border: none;
+    cursor: pointer;
+  }
+}
+
 .bee-main {
   flex: 1;
   min-width: 0;

@@ -22,7 +22,7 @@ export function AssistantHeaderLink() {
       )}
     >
       <Sparkles className="size-3.5 shrink-0" />
-      Asistente
+      <span className="hidden sm:inline">Asistente</span>
     </Link>
   );
 }

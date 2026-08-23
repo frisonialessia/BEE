@@ -8,6 +8,7 @@ import { useCompanies } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { buildSearchIndex, searchIndex, type SearchResult } from "@/lib/search/build-search-index";
+import { cn } from "@/lib/utils";
 
 const KIND_ICON: Record<SearchResult["kind"], typeof Building2> = {
   company: Building2,
@@ -22,7 +23,7 @@ const KIND_LABEL: Record<SearchResult["kind"], string> = {
 };
 
 /** Búsqueda global — empresas, oportunidades y contactos, todo desde un solo campo. */
-export function GlobalSearch() {
+export function GlobalSearch({ className }: { className?: string }) {
   const { data: companiesResult } = useCompanies(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);
   const { data: leadsResult } = useLeads(200);
@@ -52,7 +53,7 @@ export function GlobalSearch() {
   }, []);
 
   return (
-    <div ref={ref} className="relative w-full max-w-sm">
+    <div ref={ref} className={cn("relative w-full min-w-0 max-w-sm", className)}>
       <div className="flex items-center gap-2 rounded-full border border-border bg-[var(--color-card)]/60 px-3 py-1.5">
         <Search className="size-3.5 shrink-0 text-muted-foreground" />
         <input
@@ -68,7 +69,7 @@ export function GlobalSearch() {
       </div>
 
       {open && query.trim() && (
-        <div className="bee-glass absolute left-0 top-full z-50 mt-2 max-h-96 w-full min-w-[20rem] overflow-y-auto rounded-[var(--radius-lg)]">
+        <div className="bee-glass absolute left-0 top-full z-50 mt-2 max-h-96 w-full min-w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-[var(--radius-lg)]">
           {results.length === 0 ? (
             <p className="px-4 py-4 text-center text-xs text-muted-foreground">
               Sin resultados para &quot;{query}&quot;.

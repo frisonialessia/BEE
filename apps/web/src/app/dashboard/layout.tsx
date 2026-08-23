@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { AskBeeFab } from "@/components/assistant/ask-bee-fab";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { DashboardRail } from "@/components/dashboard/dashboard-rail";
+import { MobileNavProvider } from "@/components/dashboard/mobile-nav-context";
 import { FloatingCursors } from "@/components/presence/floating-cursors";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
@@ -38,16 +39,18 @@ export default function DashboardLayout({
 
   return (
     <OpportunityDrawerProvider>
-      <div className="bee-app">
-        <DashboardRail />
-        <div className="bee-main">
-          <DashboardHeader />
-          <div className="bee-scroll">{children}</div>
+      <MobileNavProvider>
+        <div className="bee-app">
+          <DashboardRail />
+          <div className="bee-main">
+            <DashboardHeader />
+            <div className="bee-scroll">{children}</div>
+          </div>
+          <OpportunityDrawer />
+          <AskBeeFab />
+          <FloatingCursors />
         </div>
-        <OpportunityDrawer />
-        <AskBeeFab />
-        <FloatingCursors />
-      </div>
+      </MobileNavProvider>
     </OpportunityDrawerProvider>
   );
 }

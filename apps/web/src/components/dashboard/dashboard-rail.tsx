@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 
 import { Logo } from "@/components/logo";
+import { useMobileNav } from "@/components/dashboard/mobile-nav-context";
 import { cn } from "@/lib/utils";
 
 /** El Resumen va primero — es lo más importante, la vista que responde
@@ -60,44 +61,58 @@ const GROUPS = [
   },
 ] as const;
 
-/** Sidebar lateral con nombre de página visible en cada ítem de navegación. */
+/** Sidebar lateral con nombre de página visible en cada ítem de navegación.
+ *  En pantallas chicas (<768px) vive fuera de cuadro y entra como panel
+ *  superpuesto — ver useMobileNav y .bee-rail en globals.css. */
 export function DashboardRail() {
   const pathname = usePathname();
+  const { open, close } = useMobileNav();
 
   return (
-    <aside className="bee-rail" aria-label="Navegación principal">
-      <Link href="/dashboard" className="mb-4 px-1.5" aria-label="Inicio BEE">
-        <Logo />
-      </Link>
+    <>
+      {open && (
+        <button
+          type="button"
+          className="bee-rail-overlay"
+          aria-label="Cerrar menú de navegación"
+          onClick={close}
+        />
+      )}
+      <aside className={cn("bee-rail", open && "bee-rail--open")} aria-label="Navegación principal">
+        <Link href="/dashboard" className="mb-4 px-1.5" aria-label="Inicio BEE" onClick={close}>
+          <Logo />
+        </Link>
 
-      <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
-        {GROUPS.map((group, gi) => (
-          <div key={group.label ?? `group-${gi}`} className={gi > 0 ? "mt-3" : undefined}>
-            {group.label && (
-              <p className="mb-1 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                {group.label}
-              </p>
-            )}
-            <div className="flex flex-col gap-0.5">
-              {group.items.map(({ href, icon: Icon, label, ...rest }) => {
-                const exact = "exact" in rest && rest.exact;
-                const active = exact ? pathname === href : pathname.startsWith(href);
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
+          {GROUPS.map((group, gi) => (
+            <div key={group.label ?? `group-${gi}`} className={gi > 0 ? "mt-3" : undefined}>
+              {group.label && (
+                <p className="mb-1 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  {group.label}
+                </p>
+              )}
+              <div className="flex flex-col gap-0.5">
+                {group.items.map(({ href, icon: Icon, label, ...rest }) => {
+                  const exact = "exact" in rest && rest.exact;
+                  const active = exact ? pathname === href : pathname.startsWith(href);
 
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={cn("bee-rail-link", active && "bee-rail-link--active")}
-                  >
-                    <Icon className="size-4 shrink-0 stroke-[1.5]" />
-                    <span>{label}</span>
-                  </Link>
-                );
-              })}
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={close}
+                      className={cn("bee-rail-link", active && "bee-rail-link--active")}
+                    >
+                      <Icon className="size-4 shrink-0 stroke-[1.5]" />
+                      <span>{label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
-      </nav>
-    </aside>
+          ))}
+        </nav>
+      </aside>
+    </>
   );
 }
