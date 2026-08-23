@@ -86,3 +86,21 @@ export async function recordOutcome(
     },
   );
 }
+
+export interface OpportunityUpdateIn {
+  amount?: number | null;
+  expected_close_date?: string | null;
+  qualification?: Record<string, boolean> | null;
+}
+
+/** Actualiza monto, fecha esperada de cierre y/o checklist MEDDIC. */
+export async function updateOpportunity(
+  opportunityId: string,
+  body: OpportunityUpdateIn,
+): Promise<Opportunity> {
+  return apiFetch<Opportunity>(`/api/v1/opportunities/${opportunityId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}

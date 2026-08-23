@@ -100,6 +100,9 @@ export const sampleOpportunities: Opportunity[] = [
     lead_id: "l1",
     company_id: "c1",
     assigned_to_user_id: null,
+    amount: null,
+    expected_close_date: null,
+    qualification: {},
   },
   {
     id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
@@ -123,6 +126,9 @@ export const sampleOpportunities: Opportunity[] = [
     lead_id: "l2",
     company_id: "c2",
     assigned_to_user_id: null,
+    amount: null,
+    expected_close_date: null,
+    qualification: {},
   },
 ];
 

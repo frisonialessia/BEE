@@ -1,0 +1,106 @@
+"use client";
+
+import { useState } from "react";
+
+import { useUpdateOpportunity } from "@/hooks/queries/use-opportunities";
+import { MEDDIC_CRITERIA, qualificationScore } from "@/lib/forecast";
+import type { Opportunity } from "@/types/domain";
+
+/** Calificación MEDDIC + datos de pronóstico (monto, fecha esperada de
+ *  cierre) — editable desde el drawer de oportunidad. Cada cambio se
+ *  guarda de inmediato; no hay botón de "guardar" aparte.
+ *
+ *  Se monta con `key={opportunity.id}` desde el drawer: cambiar de
+ *  oportunidad crea una instancia nueva (con su propio estado inicial) en
+ *  vez de sincronizar props → estado en un efecto. */
+export function QualificationPanel({ opportunity }: { opportunity: Opportunity }) {
+  const updateOpportunity = useUpdateOpportunity();
+
+  const [amount, setAmount] = useState(opportunity.amount?.toString() ?? "");
+  const [closeDate, setCloseDate] = useState(opportunity.expected_close_date ?? "");
+
+  const score = qualificationScore(opportunity.qualification);
+  const confirmedCount = Math.round(score * MEDDIC_CRITERIA.length);
+
+  function toggleCriterion(key: string) {
+    const next = { ...opportunity.qualification, [key]: !opportunity.qualification[key] };
+    updateOpportunity.mutate({ id: opportunity.id, body: { qualification: next } });
+  }
+
+  function commitAmount() {
+    const parsed = amount.trim() === "" ? null : Number(amount);
+    if (parsed !== null && Number.isNaN(parsed)) return;
+    if (parsed === opportunity.amount) return;
+    updateOpportunity.mutate({ id: opportunity.id, body: { amount: parsed } });
+  }
+
+  function commitCloseDate(value: string) {
+    setCloseDate(value);
+    updateOpportunity.mutate({
+      id: opportunity.id,
+      body: { expected_close_date: value.trim() === "" ? null : value },
+    });
+  }
+
+  return (
+    <section className="bee-surface p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Calificación (MEDDIC)</h3>
+        <span className="font-mono text-[11px] text-muted-foreground">
+          {confirmedCount}/{MEDDIC_CRITERIA.length}
+        </span>
+      </div>
+
+      <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-primary)]/40">
+        <div
+          className="h-full rounded-full bg-[var(--color-chart-4)] transition-[width]"
+          style={{ width: `${score * 100}%` }}
+        />
+      </div>
+
+      <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {MEDDIC_CRITERIA.map((c) => {
+          const checked = Boolean(opportunity.qualification[c.key]);
+          return (
+            <label
+              key={c.key}
+              title={c.hint}
+              className="flex cursor-pointer items-start gap-2 rounded-[var(--radius-md)] px-2 py-1.5 text-xs transition-colors hover:bg-[var(--color-primary)]/25"
+            >
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={() => toggleCriterion(c.key)}
+                className="mt-0.5 size-3.5 shrink-0 accent-[var(--color-chart-4)]"
+              />
+              <span className={checked ? "text-foreground" : "text-muted-foreground"}>{c.label}</span>
+            </label>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 gap-2 border-t border-border pt-3 sm:grid-cols-2">
+        <label className="text-xs text-muted-foreground">
+          Monto estimado
+          <input
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            onBlur={commitAmount}
+            inputMode="decimal"
+            placeholder="USD"
+            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+          />
+        </label>
+        <label className="text-xs text-muted-foreground">
+          Cierre esperado
+          <input
+            type="date"
+            value={closeDate}
+            onChange={(e) => commitCloseDate(e.target.value)}
+            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+          />
+        </label>
+      </div>
+    </section>
+  );
+}

@@ -9,7 +9,7 @@ of the database schema and shields internal fields from clients.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -109,6 +109,24 @@ class OpportunityOut(BaseModel):
     # Exposed for the frontend rep leaderboard — was already tracked on the
     # model (permissions filtering reads it) but never returned to clients.
     assigned_to_user_id: uuid.UUID | None = None
+    # Forecasting & MEDDIC qualification — see app.models.opportunity.
+    amount: float | None = None
+    expected_close_date: date | None = None
+    qualification: dict[str, bool] = Field(default_factory=dict)
+
+
+class OpportunityUpdateIn(BaseModel):
+    """Partial update for forecasting/qualification fields.
+
+    Every field is optional and only the ones actually present in the request
+    body are applied (``exclude_unset`` at the call site) — sending
+    ``{"amount": 5000}`` never clobbers ``expected_close_date`` or
+    ``qualification`` set by a previous call.
+    """
+
+    amount: float | None = None
+    expected_close_date: date | None = None
+    qualification: dict[str, bool] | None = None
 
 
 class SignalIngestResult(BaseModel):

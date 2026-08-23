@@ -10,6 +10,7 @@ timing, next best action) without further schema migrations.
 """
 
 import uuid
+from datetime import date
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import JSON, Column
@@ -64,6 +65,20 @@ class Opportunity(TimestampMixin, table=True):
     execution_artifacts: dict[str, Any] | None = Field(
         default=None, sa_column=Column(JSON)
     )
+
+    # ----- Forecasting & qualification (revenue intelligence) ------------------
+    # Estimated deal value — the input every weighted-forecast calculation
+    # needs. Optional: many opportunities start without a number attached.
+    amount: float | None = Field(default=None)
+    # When the rep expects to close. Drives which forecast month/quarter a
+    # deal lands in; also the basis for flagging a stale "at risk" deal.
+    expected_close_date: date | None = Field(default=None, index=True)
+    # MEDDIC qualification checklist — one bool per pillar (metric,
+    # economic_buyer, decision_criteria, decision_process, identify_pain,
+    # champion). A JSON map (not fixed columns) so the set of criteria can
+    # evolve — e.g. swapping in BANT — without another migration. Missing
+    # keys read as "not yet confirmed", never as "disqualified".
+    qualification: dict[str, bool] = Field(default_factory=dict, sa_column=Column(JSON))
 
     # ----- Relationships -------------------------------------------------------
     signal: "Signal" = Relationship(back_populates="opportunities")

@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { BattlecardView } from "@/components/battlecard";
 import { DiscRadar } from "@/components/disc-radar";
 import { ExecutionArtifacts } from "@/components/execution-artifacts";
+import { QualificationPanel } from "@/components/forecast/qualification-panel";
 import { OpportunityCard } from "@/components/opportunity-card";
 import { OpportunityTimeline } from "@/components/timeline/opportunity-timeline";
 import { Badge } from "@/components/ui/badge";
@@ -91,6 +92,8 @@ export function OpportunityDrawer() {
           )}
 
           {opportunity && <OpportunityCard opportunity={opportunity} />}
+
+          {opportunity && <QualificationPanel key={opportunity.id} opportunity={opportunity} />}
 
           {loadingBattlecard ? (
             <Skeleton className="h-64" />

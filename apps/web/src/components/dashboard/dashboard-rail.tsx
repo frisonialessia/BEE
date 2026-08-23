@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Target,
+  TrendingUp,
   Workflow,
   Zap,
 } from "lucide-react";
@@ -44,6 +45,7 @@ const GROUPS = [
       { href: "/dashboard/signals", icon: Radio, label: "Señales" },
       { href: "/dashboard/strategies", icon: Lightbulb, label: "Estrategias" },
       { href: "/dashboard/dark-funnel", icon: Flame, label: "Pipeline oculto" },
+      { href: "/dashboard/forecast", icon: TrendingUp, label: "Pronóstico" },
     ],
   },
   {
