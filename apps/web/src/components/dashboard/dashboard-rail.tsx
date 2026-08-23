@@ -11,7 +11,6 @@ import {
   Radio,
   ShieldCheck,
   SlidersHorizontal,
-  Sparkles,
   Target,
   Workflow,
   Zap,
@@ -21,18 +20,16 @@ import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 
 /** El Resumen va primero — es lo más importante, la vista que responde
- *  "¿cómo va todo?" de un vistazo. Cuenta y notificaciones viven en el
- *  encabezado (DashboardHeader), no aquí — este rail es solo navegación.
+ *  "¿cómo va todo?" de un vistazo. Cuenta, notificaciones y el asistente
+ *  viven en el encabezado (DashboardHeader), no aquí — este rail es solo
+ *  navegación.
  *
  *  Agrupado por lo que cada sección realmente es (CRM / Inteligencia /
  *  Operaciones), para que no haya que adivinar dónde vive cada cosa. */
 const GROUPS = [
   {
     label: null,
-    items: [
-      { href: "/dashboard", icon: LayoutDashboard, label: "Resumen", exact: true },
-      { href: "/dashboard/assistant", icon: Sparkles, label: "Asistente" },
-    ],
+    items: [{ href: "/dashboard", icon: LayoutDashboard, label: "Resumen", exact: true }],
   },
   {
     label: "CRM",
