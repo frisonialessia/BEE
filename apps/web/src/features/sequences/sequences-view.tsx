@@ -1,9 +1,12 @@
 "use client";
 
 import { EngagementInboxPanel } from "@/components/engagement-inbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkflowStatusPanel } from "@/components/workflow-status";
+import { MessageLibrary } from "@/features/sequences/message-library";
 
-/** Secuencias — estado de DynamicSequence y bandeja de engagement entrante. */
+/** Secuencias — estado de DynamicSequence, bandeja de engagement entrante,
+ *  y la biblioteca de mensajes reutilizables para armarlas. */
 export function SequencesView() {
   return (
     <div>
@@ -12,15 +15,32 @@ export function SequencesView() {
         <div className="mt-1">
           <h1 className="bee-display">Secuencias</h1>
           <p className="bee-caption mt-1">
-            Cadencias multicanal en curso y eventos entrantes que requieren respuesta
+            Cadencias multicanal en curso, eventos entrantes que requieren respuesta, y el contenido con el que arrancarlas
           </p>
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <WorkflowStatusPanel />
-        <EngagementInboxPanel />
-      </div>
+      <Tabs defaultValue="estado">
+        <TabsList className="border border-border bg-background">
+          <TabsTrigger value="estado" className="rounded-sm">
+            Estado
+          </TabsTrigger>
+          <TabsTrigger value="biblioteca" className="rounded-sm">
+            Biblioteca de mensajes
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="estado" className="mt-6">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <WorkflowStatusPanel />
+            <EngagementInboxPanel />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="biblioteca" className="mt-6">
+          <MessageLibrary />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -27,6 +27,7 @@ from app.models.dead_letter import FailedEvent
 from app.models.engagement_event import IncomingEngagementEvent
 from app.models.lead import Lead
 from app.models.market_insight import MarketInsight
+from app.models.message_template import MessageTemplate
 from app.models.network import NetworkConnection
 from app.models.opportunity import Opportunity
 from app.models.organization import Organization
@@ -45,6 +46,7 @@ __all__ = [
     "Company",
     "Lead",
     "MarketInsight",
+    "MessageTemplate",
     "PendingAction",
     "Signal",
     "Opportunity",

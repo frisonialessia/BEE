@@ -31,6 +31,7 @@ from app.api.v1.endpoints import (
     sequences,
     signals,
     teams,
+    templates,
     users,
     webhooks,
 )
@@ -51,6 +52,7 @@ api_router.include_router(analytics.router)
 api_router.include_router(brand.router)
 api_router.include_router(engagement.router)
 api_router.include_router(sequences.router)
+api_router.include_router(templates.router)
 api_router.include_router(psychographic.router)
 api_router.include_router(dark_funnel.router)
 api_router.include_router(network.router)
