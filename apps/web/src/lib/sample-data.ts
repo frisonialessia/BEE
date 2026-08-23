@@ -100,9 +100,15 @@ export const sampleOpportunities: Opportunity[] = [
     lead_id: "l1",
     company_id: "c1",
     assigned_to_user_id: null,
-    amount: null,
-    expected_close_date: null,
-    qualification: {},
+    amount: 48000,
+    expected_close_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 21)
+      .toISOString()
+      .slice(0, 10),
+    qualification: {
+      metric: true,
+      economic_buyer: true,
+      identify_pain: true,
+    },
   },
   {
     id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
@@ -126,9 +132,13 @@ export const sampleOpportunities: Opportunity[] = [
     lead_id: "l2",
     company_id: "c2",
     assigned_to_user_id: null,
-    amount: null,
-    expected_close_date: null,
-    qualification: {},
+    amount: 21500,
+    expected_close_date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3)
+      .toISOString()
+      .slice(0, 10),
+    qualification: {
+      identify_pain: true,
+    },
   },
 ];
 

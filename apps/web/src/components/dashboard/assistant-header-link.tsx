@@ -16,6 +16,7 @@ export function AssistantHeaderLink() {
   return (
     <Link
       href="/dashboard/assistant"
+      aria-label="Asistente"
       className={cn(
         "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-[var(--color-primary)] hover:text-foreground",
         active && "bg-[var(--color-primary)] text-foreground",

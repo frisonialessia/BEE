@@ -139,6 +139,12 @@ def update_opportunity(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
 
     updates = body.model_dump(exclude_unset=True)
+    if updates.get("qualification") is None and "qualification" in updates:
+        # ``qualification`` is NOT NULL at the DB layer (missing keys already
+        # mean "not yet confirmed" — see the model docstring), so an explicit
+        # null clears it back to that same "nothing confirmed" state instead
+        # of attempting to write a null into a non-nullable column.
+        updates["qualification"] = {}
     for field, value in updates.items():
         setattr(opportunity, field, value)
 

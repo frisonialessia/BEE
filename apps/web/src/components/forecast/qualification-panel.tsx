@@ -18,12 +18,19 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
 
   const [amount, setAmount] = useState(opportunity.amount?.toString() ?? "");
   const [closeDate, setCloseDate] = useState(opportunity.expected_close_date ?? "");
+  // Fuente de verdad local para el checklist — igual que amount/closeDate.
+  // Si leyéramos de `opportunity.qualification` (prop) en cada toggle,
+  // dos clics rápidos antes de que el refetch de la mutación anterior
+  // resuelva usarían el mismo valor stale de partida y el PATCH (que
+  // reemplaza el dict completo) perdería el primer cambio.
+  const [qualification, setQualification] = useState(opportunity.qualification);
 
-  const score = qualificationScore(opportunity.qualification);
+  const score = qualificationScore(qualification);
   const confirmedCount = Math.round(score * MEDDIC_CRITERIA.length);
 
   function toggleCriterion(key: string) {
-    const next = { ...opportunity.qualification, [key]: !opportunity.qualification[key] };
+    const next = { ...qualification, [key]: !qualification[key] };
+    setQualification(next);
     updateOpportunity.mutate({ id: opportunity.id, body: { qualification: next } });
   }
 
@@ -60,7 +67,7 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
 
       <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {MEDDIC_CRITERIA.map((c) => {
-          const checked = Boolean(opportunity.qualification[c.key]);
+          const checked = Boolean(qualification[c.key]);
           return (
             <label
               key={c.key}

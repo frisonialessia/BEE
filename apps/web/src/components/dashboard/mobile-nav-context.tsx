@@ -1,6 +1,15 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 interface MobileNavContextValue {
   open: boolean;
@@ -16,9 +25,17 @@ const MobileNavContext = createContext<MobileNavContextValue | null>(null);
  *  se abre (no hay botón que lo dispare), así que no cambia nada ahí. */
 export function MobileNavProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   const toggle = useCallback(() => setOpen((v) => !v), []);
   const close = useCallback(() => setOpen(false), []);
+
+  // Los links del rail ya cierran el menú en su onClick, pero eso no cubre
+  // la navegación que no pasa por un click (atrás/adelante del navegador,
+  // router.push desde otro lado): cerrar también cuando cambia la ruta.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   const value = useMemo(() => ({ open, toggle, close }), [open, toggle, close]);
 

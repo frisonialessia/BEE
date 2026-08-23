@@ -60,6 +60,15 @@ export interface ForecastSummary {
 
 const MONTH_LABEL = new Intl.DateTimeFormat("es-MX", { month: "short", year: "2-digit" });
 
+/** Parsea un "YYYY-MM-DD" como fecha local — `new Date("YYYY-MM-DD")` lo
+ *  interpreta como medianoche UTC, y con offsets negativos (América) eso
+ *  cae en el día/mes anterior en hora local, corriendo el bucket y el
+ *  chequeo de "vencida" un día para atrás. */
+function parseLocalDate(value: string): Date {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
 /** Arma el pronóstico completo a partir de la lista de oportunidades ya
  *  cargada — mismo patrón que el resto de la BI de BEE: todo el cálculo
  *  vive en el cliente, sin endpoint de agregación aparte. `today` se recibe
@@ -99,7 +108,7 @@ export function computeForecast(opportunities: Opportunity[], today: Date): Fore
       continue;
     }
 
-    const closeDate = new Date(o.expected_close_date);
+    const closeDate = parseLocalDate(o.expected_close_date);
     if (closeDate < todayStart) {
       atRisk.push({ opportunity: o, reason: "fecha_vencida" });
     } else if (qualificationScore(o.qualification) < 0.5 && o.status !== "detected") {
