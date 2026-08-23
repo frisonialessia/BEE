@@ -153,6 +153,12 @@ class AuditTrailService:
                 )
             return entry
         except Exception:  # noqa: BLE001
+            # A failed add()/flush() leaves the shared request-scoped session
+            # invalidated — anything else reusing it later in the same
+            # request (audit trail is called from several call sites right
+            # after another commit) would then fail too, silently, unless
+            # this rolls back first.
+            self.session.rollback()
             logger.exception("AUDIT: failed to record decision — agent=%s type=%s", agent_type, decision_type)
             return None
 

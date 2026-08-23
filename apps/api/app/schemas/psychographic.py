@@ -47,11 +47,6 @@ class LeadPsychographicOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-    @property
-    def style_label(self) -> str:
-        labels = {"D": "Driver (Dominant)", "I": "Influencer", "S": "Supporter (Steady)", "C": "Analyst (Conscientious)", "UNKNOWN": "Unknown"}
-        return labels.get(self.dominant_style, self.dominant_style)
-
 
 class ContentAdaptRequest(BaseModel):
     """Request to adapt content to a lead's DISC style."""

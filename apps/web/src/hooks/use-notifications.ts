@@ -20,13 +20,17 @@ function readLastSeen(): string {
 }
 
 export function useNotifications() {
-  const { data: hiveResult } = useHiveLeads(200);
-  const { data: signalsResult } = useSignals(100);
-  const { data: reviewResult } = useQuery({
+  const { data: hiveResult, isLoading: hiveLoading } = useHiveLeads(200);
+  const { data: signalsResult, isLoading: signalsLoading } = useSignals(100);
+  const { data: reviewResult, isLoading: reviewLoading } = useQuery({
     queryKey: ["notifications", "review-required"],
     queryFn: async () => getAuditDecisions({ manual_review_required: true, limit: 20 }),
     refetchInterval: 30_000,
   });
+  // Sin esto, la campana muestra "no hay novedades" en el primer render —
+  // antes de que las tres queries de arriba respondan — como si ya
+  // hubiera confirmado que no hay nada, en vez de seguir cargando.
+  const isLoading = hiveLoading || signalsLoading || reviewLoading;
 
   const [lastSeen, setLastSeen] = useState<string>(() => readLastSeen());
 
@@ -50,5 +54,5 @@ export function useNotifications() {
     }
   }, []);
 
-  return { notifications, unreadCount, markAllSeen };
+  return { notifications, unreadCount, markAllSeen, isLoading };
 }

@@ -103,6 +103,12 @@ def list_opportunities(
             "company_id": str(item.company_id) if item.company_id else None,
             "assigned_to_user_id": str(item.assigned_to_user_id) if item.assigned_to_user_id else None,
             "hot_lead": (item.strategy or {}).get("hot_lead", False),
+            # The frontend's Opportunity type expects this on every item (it's
+            # what PipelineBoard/SignalStream read pain_point/channel/hot_lead/
+            # timing_window from) — omitting it silently zeroed out the hot-lead
+            # flame badge, the "ready" pipeline stage, and enrichment status for
+            # every real (non-demo) opportunity.
+            "strategy": item.strategy or {},
             "amount": item.amount,
             "expected_close_date": item.expected_close_date.isoformat() if item.expected_close_date else None,
             "qualification": item.qualification or {},
@@ -139,12 +145,23 @@ def update_opportunity(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
 
     updates = body.model_dump(exclude_unset=True)
-    if updates.get("qualification") is None and "qualification" in updates:
-        # ``qualification`` is NOT NULL at the DB layer (missing keys already
-        # mean "not yet confirmed" — see the model docstring), so an explicit
-        # null clears it back to that same "nothing confirmed" state instead
-        # of attempting to write a null into a non-nullable column.
-        updates["qualification"] = {}
+    if "qualification" in updates:
+        if updates["qualification"] is None:
+            # ``qualification`` is NOT NULL at the DB layer (missing keys
+            # already mean "not yet confirmed" — see the model docstring),
+            # so an explicit null clears it back to that same "nothing
+            # confirmed" state instead of attempting to write a null into a
+            # non-nullable column.
+            updates["qualification"] = {}
+        else:
+            # Merge, don't replace: the frontend can send just the one
+            # criterion it toggled. A full-replace here made two rapid
+            # toggles (each PATCH racing independently on the network) able
+            # to lose one another — whichever request's stale snapshot
+            # committed last would silently wipe out the other's change.
+            # Merging against the current DB value at write time makes
+            # toggling different keys commute regardless of arrival order.
+            updates["qualification"] = {**(opportunity.qualification or {}), **updates["qualification"]}
     for field, value in updates.items():
         setattr(opportunity, field, value)
 
@@ -349,6 +366,11 @@ def record_outcome(
             workflow_tasks_dispatched = len(tasks)
         except Exception:  # noqa: BLE001
             import logging
+            # A failed commit leaves the session invalidated — anything reusing
+            # it afterwards (the AnomalyDetector check right below) would raise
+            # too and silently no-op. Roll back so the rest of the request can
+            # still use this session normally.
+            session.rollback()
             logging.getLogger(__name__).exception("WorkflowOrchestrator dispatch failed for opp %s", opportunity_id)
 
     # ── Step 4: Trigger AnomalyDetector after every outcome ───────────────────
@@ -385,6 +407,10 @@ def _trigger_anomaly_check(session: Session) -> None:
             )
     except Exception:  # noqa: BLE001
         import logging
+        # Same reasoning as the WorkflowOrchestrator dispatch above: a DB
+        # error mid-check leaves the shared session unusable for whatever
+        # runs after this in the request unless it's rolled back here.
+        session.rollback()
         logging.getLogger(__name__).exception(
             "AnomalyDetector post-outcome check failed — outcome was recorded successfully"
         )

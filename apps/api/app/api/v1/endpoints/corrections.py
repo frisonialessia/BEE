@@ -98,6 +98,11 @@ def list_corrections(
         limit=limit,
         organization_id=organization_id,
     )
+    # Same profile for every row (it's the org's current style state, not a
+    # per-correction snapshot) — fetch it once rather than hardcoding zeros,
+    # which previously made every row claim "0 corrections / 0 authoritative
+    # rules" even when the profile genuinely had both.
+    profile = service.get_style_profile(organization_id)
     return [
         CorrectionOut(
             correction_id=c.id,
@@ -105,10 +110,10 @@ def list_corrections(
             diff_ops=c.diff_ops,
             extracted_rules=c.extracted_rules,
             change_ratio=c.change_ratio,
-            style_summary="",
-            authoritative_rules_count=0,
-            total_corrections=0,
-            profile_version=0,
+            style_summary=profile.style_summary,
+            authoritative_rules_count=profile.authoritative_rules_count,
+            total_corrections=profile.total_corrections,
+            profile_version=profile.profile_version,
         )
         for c in corrections
     ]

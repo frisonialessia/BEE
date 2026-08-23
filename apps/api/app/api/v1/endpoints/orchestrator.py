@@ -34,7 +34,7 @@ from app.schemas.orchestrator import (
     PendingActionOut,
     RejectionIn,
 )
-from app.services.orchestrator import AgentOrchestrator
+from app.services.orchestrator import AgentOrchestrator, PendingActionNotFoundError
 
 router = APIRouter(prefix="/orchestrator", tags=["AgentOrchestrator"])
 
@@ -146,6 +146,8 @@ def approve_action(
     try:
         action = orchestrator.approve(action_id, body)
         return PendingActionOut.model_validate(action)
+    except PendingActionNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
@@ -163,6 +165,8 @@ def reject_action(
     try:
         action = orchestrator.reject(action_id, body)
         return PendingActionOut.model_validate(action)
+    except PendingActionNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
@@ -180,6 +184,8 @@ def start_execution(
     try:
         action = orchestrator.start_execution(action_id, body)
         return PendingActionOut.model_validate(action)
+    except PendingActionNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
@@ -197,6 +203,8 @@ def complete_action(
     try:
         action = orchestrator.complete(action_id, body)
         return PendingActionOut.model_validate(action)
+    except PendingActionNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
@@ -220,5 +228,7 @@ def fail_action(
     try:
         action = orchestrator.fail(action_id, body)
         return PendingActionOut.model_validate(action)
+    except PendingActionNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc

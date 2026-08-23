@@ -24,9 +24,10 @@ const KIND_LABEL: Record<SearchResult["kind"], string> = {
 
 /** Búsqueda global — empresas, oportunidades y contactos, todo desde un solo campo. */
 export function GlobalSearch({ className }: { className?: string }) {
-  const { data: companiesResult } = useCompanies(200);
-  const { data: oppsResult } = useOpportunities(undefined, 200);
-  const { data: leadsResult } = useLeads(200);
+  const { data: companiesResult, isLoading: companiesLoading } = useCompanies(200);
+  const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 200);
+  const { data: leadsResult, isLoading: leadsLoading } = useLeads(200);
+  const loading = companiesLoading || oppsLoading || leadsLoading;
 
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -70,7 +71,9 @@ export function GlobalSearch({ className }: { className?: string }) {
 
       {open && query.trim() && (
         <div className="bee-glass absolute left-0 top-full z-50 mt-2 max-h-96 w-full min-w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-[var(--radius-lg)]">
-          {results.length === 0 ? (
+          {loading ? (
+            <p className="px-4 py-4 text-center text-xs text-muted-foreground">Buscando…</p>
+          ) : results.length === 0 ? (
             <p className="px-4 py-4 text-center text-xs text-muted-foreground">
               Sin resultados para &quot;{query}&quot;.
             </p>

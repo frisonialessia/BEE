@@ -29,9 +29,14 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
   const confirmedCount = Math.round(score * MEDDIC_CRITERIA.length);
 
   function toggleCriterion(key: string) {
-    const next = { ...qualification, [key]: !qualification[key] };
-    setQualification(next);
-    updateOpportunity.mutate({ id: opportunity.id, body: { qualification: next } });
+    const value = !qualification[key];
+    setQualification((prev) => ({ ...prev, [key]: value }));
+    // Send only the one key that changed — the backend merges it into
+    // whatever's currently stored server-side. Sending the whole local dict
+    // here would put us back to a full replace: two toggles in flight at once
+    // could still race and the one that commits last would win outright,
+    // silently dropping the other (see PATCH /opportunities/{id}).
+    updateOpportunity.mutate({ id: opportunity.id, body: { qualification: { [key]: value } } });
   }
 
   function commitAmount() {

@@ -53,6 +53,13 @@ _INVALID_TRANSITIONS: dict[ActionStatus, set[ActionStatus]] = {
 }
 
 
+class PendingActionNotFoundError(ValueError):
+    """Raised when an action ID doesn't exist — distinct from an invalid
+    state transition on an action that DOES exist, so callers (the API layer)
+    can map the two to different HTTP statuses (404 vs 409) instead of both
+    collapsing into 409 CONFLICT."""
+
+
 class AgentOrchestrator:
     """Creates and manages the lifecycle of execution actions.
 
@@ -196,7 +203,7 @@ class AgentOrchestrator:
     def _get_or_raise(self, action_id: uuid.UUID) -> PendingAction:
         action = self._repo.get(action_id)
         if action is None:
-            raise ValueError(f"PendingAction {action_id} not found")
+            raise PendingActionNotFoundError(f"PendingAction {action_id} not found")
         return action
 
     def _assert_status(

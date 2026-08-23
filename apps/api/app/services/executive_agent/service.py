@@ -173,6 +173,10 @@ class ExecutiveAgent:
                 len(actions), bundle.opportunity_id,
             )
         except Exception:  # noqa: BLE001
+            # Roll back so a failed write here (e.g. a constraint violation in
+            # create_from_bundle) doesn't leave the shared session poisoned
+            # for _audit_bundle, which runs right after this in get_or_generate.
+            self.session.rollback()
             logger.exception("Failed to create orchestrator actions for %s", bundle.opportunity_id)
 
     def _get_style_injection(self, opp: Opportunity) -> str:  # noqa: ARG002

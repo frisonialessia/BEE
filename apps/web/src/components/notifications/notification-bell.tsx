@@ -32,7 +32,7 @@ function timeAgo(iso: string): string {
 
 /** Campana de notificaciones — vive en el encabezado, no en el sidebar. */
 export function NotificationBell() {
-  const { notifications, unreadCount, markAllSeen } = useNotifications();
+  const { notifications, unreadCount, markAllSeen, isLoading } = useNotifications();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -73,7 +73,9 @@ export function NotificationBell() {
           <div className="sticky top-0 border-b border-border bg-[var(--color-background)]/80 px-4 py-3 backdrop-blur">
             <p className="text-sm font-semibold">Notificaciones</p>
           </div>
-          {notifications.length === 0 ? (
+          {isLoading ? (
+            <p className="px-4 py-6 text-center text-xs text-muted-foreground">Cargando…</p>
+          ) : notifications.length === 0 ? (
             <p className="px-4 py-6 text-center text-xs text-muted-foreground">
               No hay novedades por ahora.
             </p>

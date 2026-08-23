@@ -18,10 +18,11 @@ Design rationale
 
 from __future__ import annotations
 
+import logging
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import PostgresDsn, field_validator
+from pydantic import PostgresDsn, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -197,10 +198,49 @@ class Settings(BaseSettings):
     @field_validator("WEBHOOK_SIGNING_SECRET")
     @classmethod
     def _warn_on_default_secret(cls, value: str) -> str:
-        # We deliberately do not raise here so local dev stays frictionless, but
-        # the value is validated for presence. Production hardening is enforced
-        # in ``security.py`` where signature verification actually runs.
+        # We deliberately do not raise here so local dev stays frictionless —
+        # the actual production hardening is the model-level check below,
+        # which is the one that can see ENVIRONMENT alongside these secrets.
         return value
+
+    @model_validator(mode="after")
+    def _warn_on_production_hardening_gaps(self) -> "Settings":
+        """Loudly flag dev-only defaults left in place in production.
+
+        ``security.py``'s webhook signature check is a silent no-op whenever
+        ``WEBHOOK_SIGNATURE_REQUIRED`` is left at its default ``False`` — it
+        returns ``True`` before ever looking at the signature header. Nothing
+        else in the codebase previously enforced turning that flag on for a
+        real deployment, so a production instance could sit there accepting
+        unsigned, unauthenticated webhook payloads indefinitely. Same story
+        for the two secrets that ship with an obviously-fake placeholder
+        value: leaving either in production defeats webhook/session auth
+        entirely.
+
+        This logs a ``CRITICAL`` line rather than raising: a hard startup
+        failure here is only safe once we know every real deployment already
+        sets these correctly, which we can't confirm from the repo alone.
+        Until then, a loud, unmissable log line beats a silent gap — flip
+        this to raise once existing deployments are confirmed compliant.
+        """
+        if self.ENVIRONMENT != "production":
+            return self
+
+        problems: list[str] = []
+        if not self.WEBHOOK_SIGNATURE_REQUIRED:
+            problems.append("WEBHOOK_SIGNATURE_REQUIRED must be true in production")
+        if self.WEBHOOK_SIGNING_SECRET == "change-me-in-production":
+            problems.append("WEBHOOK_SIGNING_SECRET is still the default placeholder value")
+        if self.JWT_SECRET_KEY == "change-me-in-production":
+            problems.append("JWT_SECRET_KEY is still the default placeholder value")
+
+        if problems:
+            logging.getLogger(__name__).critical(
+                "INSECURE PRODUCTION CONFIG — %s. Webhooks/sessions are not properly "
+                "authenticated until this is fixed.",
+                "; ".join(problems),
+            )
+        return self
 
 
 @lru_cache

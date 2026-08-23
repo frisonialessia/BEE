@@ -46,12 +46,14 @@ export async function fetchBattlecard(
 export async function fetchBattlecards(): Promise<FetchResult<Battlecard[]>> {
   try {
     const { data: list } = await fetchOpportunities("ready_to_action");
-    const cards = await Promise.all(
-      list.map(async (item) => {
-        const { data } = await fetchBattlecard(item.id);
-        return data;
-      }),
-    );
+    // allSettled, not all: one opportunity's battlecard failing (a stale ID,
+    // a transient 5xx) shouldn't throw away every other one that succeeded —
+    // Promise.all would reject the whole batch and fall back to 100% demo
+    // data for what could otherwise be an almost-fully-live dashboard.
+    const settled = await Promise.allSettled(list.map((item) => fetchBattlecard(item.id)));
+    const cards = settled
+      .filter((r): r is PromiseFulfilledResult<FetchResult<Battlecard>> => r.status === "fulfilled")
+      .map((r) => r.value.data);
     return { data: cards, live: true };
   } catch {
     return { data: sampleBattlecards, live: false };

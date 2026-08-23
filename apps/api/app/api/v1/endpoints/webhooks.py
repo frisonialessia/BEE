@@ -86,7 +86,12 @@ async def receive_external_webhook(
     except json.JSONDecodeError as exc:
         raise HTTPException(status_code=400, detail="Invalid JSON payload.") from exc
 
-    webhook = ExternalWebhookIn.model_validate(payload_dict)
+    try:
+        webhook = ExternalWebhookIn.model_validate(payload_dict)
+    except ValueError as exc:  # pydantic ValidationError is a ValueError subclass
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
     provider = webhook.provider
 
     signature = _resolve_signature(x_bee_signature, x_provider_signature)

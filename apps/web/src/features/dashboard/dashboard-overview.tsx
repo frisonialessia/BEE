@@ -28,14 +28,17 @@ import { bucketByDay } from "@/lib/trend";
 export function DashboardOverview() {
   const { data: signalsResult, isLoading: signalsLoading } = useSignals();
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
-  const { data: allOppsResult } = useOpportunities(undefined, 200);
-  const { data: usersResult } = useUsers();
+  const { data: allOppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 200);
+  const { data: usersResult, isLoading: usersLoading } = useUsers();
   const { openOpportunity } = useOpportunityDrawer();
 
   const signals = signalsResult?.data ?? [];
   const battlecards = battlecardsResult?.data ?? [];
   const live = Boolean(signalsResult?.live || battlecardsResult?.live);
-  const loading = signalsLoading || battlecardsLoading;
+  // Incluye opps/users: sin esto, el Leaderboard alcanza a renderizar su
+  // "todavía no hay ganadas" antes de que esas dos queries respondan —
+  // un vacío que parece confirmado sin serlo.
+  const loading = signalsLoading || battlecardsLoading || oppsLoading || usersLoading;
 
   const battlecardPagination = usePagination(battlecards);
   const signalPagination = usePagination(signals);
