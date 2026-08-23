@@ -41,6 +41,21 @@ class LeadBulkResult(BaseModel):
     errors: list[LeadBulkError]
 
 
+class LeadBulkUpdateIn(BaseModel):
+    """Bulk action from the leads directory — reassign or change status for
+    several leads at once, without a round trip per row. Only the fields
+    actually sent are applied (``exclude_unset`` at the call site)."""
+
+    ids: list[uuid.UUID] = Field(min_length=1, max_length=500)
+    status: LeadStatus | None = None
+    assigned_to_user_id: uuid.UUID | None = None
+
+
+class LeadBulkUpdateResult(BaseModel):
+    updated_count: int
+    errors: list[LeadBulkError]
+
+
 class LeadOut(BaseModel):
     """API representation of a persisted lead."""
 

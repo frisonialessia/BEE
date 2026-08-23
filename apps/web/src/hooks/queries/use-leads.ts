@@ -4,11 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   bulkCreateLeads,
+  bulkUpdateLeads,
   createLead,
   fetchLeadDuplicates,
   fetchLeads,
   mergeLeads,
   validateLead,
+  type LeadBulkUpdateIn,
   type LeadCreateIn,
 } from "@/lib/api/leads";
 import { queryKeys } from "@/lib/query-keys";
@@ -62,6 +64,16 @@ export function useValidateLead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (leadId: string) => validateLead(leadId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+    },
+  });
+}
+
+export function useBulkUpdateLeads() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: LeadBulkUpdateIn) => bulkUpdateLeads(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
     },

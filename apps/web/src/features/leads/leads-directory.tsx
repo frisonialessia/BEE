@@ -10,7 +10,8 @@ import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCompanies } from "@/hooks/queries/use-companies";
-import { useLeads, useValidateLead } from "@/hooks/queries/use-leads";
+import { useBulkUpdateLeads, useLeads, useValidateLead } from "@/hooks/queries/use-leads";
+import { useUsers } from "@/hooks/queries/use-users";
 import { leadStatusLabels, scoreVariant, timeAgo, validationFlagLabels } from "@/lib/format";
 import type { Lead, LeadStatus } from "@/types/domain";
 
@@ -32,12 +33,17 @@ const STATUS_OPTIONS: LeadStatus[] = ["new", "qualified", "engaged", "converted"
 export function LeadsDirectory() {
   const { data: leadsResult, isLoading: leadsLoading } = useLeads(300);
   const { data: companiesResult, isLoading: companiesLoading } = useCompanies(300);
+  const { data: users } = useUsers();
   const validateLead = useValidateLead();
+  const bulkUpdate = useBulkUpdateLeads();
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
   const [staleOnly, setStaleOnly] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("score_desc");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkStatus, setBulkStatus] = useState<LeadStatus | "">("");
+  const [bulkAssignee, setBulkAssignee] = useState("");
 
   const leadsData = leadsResult?.data;
   const companiesData = companiesResult?.data;
@@ -66,6 +72,36 @@ export function LeadsDirectory() {
       })
       .sort(SORTERS[sortKey]);
   }, [leads, query, statusFilter, staleOnly, sortKey, companyById]);
+
+  function toggleOne(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllVisible() {
+    setSelected((prev) => {
+      const allVisibleSelected = filtered.length > 0 && filtered.every((l) => prev.has(l.id));
+      return allVisibleSelected ? new Set() : new Set(filtered.map((l) => l.id));
+    });
+  }
+
+  async function applyBulkStatus() {
+    if (!bulkStatus || selected.size === 0) return;
+    await bulkUpdate.mutateAsync({ ids: [...selected], status: bulkStatus });
+    setSelected(new Set());
+    setBulkStatus("");
+  }
+
+  async function applyBulkAssignee() {
+    if (!bulkAssignee || selected.size === 0) return;
+    await bulkUpdate.mutateAsync({ ids: [...selected], assigned_to_user_id: bulkAssignee });
+    setSelected(new Set());
+    setBulkAssignee("");
+  }
 
   const hotCount = leads.filter((l) => l.score >= 75).length;
   const staleCount = leads.filter((l) => l.stale_risk || l.validation_flags.length > 0).length;
@@ -196,10 +232,78 @@ export function LeadsDirectory() {
             </label>
           </div>
 
+          {selected.size > 0 && (
+            <div className="flex flex-wrap items-center gap-2 rounded-[var(--radius-lg)] border border-[var(--color-chart-4)]/40 bg-[var(--color-chart-4)]/10 px-4 py-2.5">
+              <p className="text-xs font-medium">
+                {selected.size} seleccionado{selected.size === 1 ? "" : "s"}
+              </p>
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={bulkStatus}
+                  onChange={(e) => setBulkStatus(e.target.value as LeadStatus | "")}
+                  className="rounded-full border border-border bg-[var(--color-card)] px-2.5 py-1 text-xs outline-none"
+                >
+                  <option value="">Cambiar estado a…</option>
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {leadStatusLabels[s]}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={applyBulkStatus}
+                  disabled={!bulkStatus || bulkUpdate.isPending}
+                  className="bee-btn bee-btn--primary text-xs"
+                >
+                  Aplicar
+                </button>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={bulkAssignee}
+                  onChange={(e) => setBulkAssignee(e.target.value)}
+                  className="rounded-full border border-border bg-[var(--color-card)] px-2.5 py-1 text-xs outline-none"
+                >
+                  <option value="">Reasignar a…</option>
+                  {(users ?? []).map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.full_name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={applyBulkAssignee}
+                  disabled={!bulkAssignee || bulkUpdate.isPending}
+                  className="bee-btn bee-btn--primary text-xs"
+                >
+                  Aplicar
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelected(new Set())}
+                className="bee-btn-ghost ml-auto text-xs"
+              >
+                Cancelar selección
+              </button>
+            </div>
+          )}
+
           <div className="bee-surface overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-xs">
               <thead>
                 <tr className="border-b border-border text-[10px] uppercase tracking-wide text-muted-foreground">
+                  <th className="w-8 px-4 py-2.5">
+                    <input
+                      type="checkbox"
+                      checked={filtered.length > 0 && filtered.every((l) => selected.has(l.id))}
+                      onChange={toggleAllVisible}
+                      className="accent-[var(--color-chart-4)]"
+                      aria-label="Seleccionar todos los visibles"
+                    />
+                  </th>
                   <th className="px-4 py-2.5 font-medium">Nombre</th>
                   <th className="px-4 py-2.5 font-medium">Empresa</th>
                   <th className="px-4 py-2.5 font-medium">Cargo</th>
@@ -212,7 +316,7 @@ export function LeadsDirectory() {
               <tbody>
                 {filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                       Ningún lead coincide con estos filtros.
                     </td>
                   </tr>
@@ -222,6 +326,15 @@ export function LeadsDirectory() {
                     const hasIssues = lead.validation_flags.length > 0 || lead.stale_risk;
                     return (
                       <tr key={lead.id} className="border-b border-border last:border-b-0 hover:bg-[var(--color-primary)]/10">
+                        <td className="px-4 py-2.5">
+                          <input
+                            type="checkbox"
+                            checked={selected.has(lead.id)}
+                            onChange={() => toggleOne(lead.id)}
+                            className="accent-[var(--color-chart-4)]"
+                            aria-label={`Seleccionar ${lead.full_name}`}
+                          />
+                        </td>
                         <td className="px-4 py-2.5">
                           <p className="font-medium text-foreground">{lead.full_name}</p>
                           {lead.email && <p className="text-[11px] text-muted-foreground">{lead.email}</p>}

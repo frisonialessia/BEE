@@ -25,6 +25,8 @@ from app.schemas.lead import (
     LeadBulkCreateIn,
     LeadBulkError,
     LeadBulkResult,
+    LeadBulkUpdateIn,
+    LeadBulkUpdateResult,
     LeadCreateIn,
     LeadOut,
     LeadValidationOut,
@@ -205,6 +207,47 @@ def merge_leads(
     session.commit()
     session.refresh(merged)
     return LeadOut.model_validate(merged)
+
+
+@router.patch(
+    "/bulk-update",
+    response_model=LeadBulkUpdateResult,
+    summary="Reassign or change status for several leads at once",
+)
+def bulk_update_leads(
+    body: LeadBulkUpdateIn,
+    session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
+) -> LeadBulkUpdateResult:
+    """The bulk-action toolbar in the leads directory — select a page of
+    rows, reassign them or move them along the pipeline in one call instead
+    of one PATCH per row. Committed per lead (not one shared transaction) so
+    one hidden/missing id doesn't roll back the rest of the batch."""
+    updates = body.model_dump(exclude_unset=True, include={"status", "assigned_to_user_id"})
+    if not updates:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Nothing to update.")
+
+    repo = LeadRepository(session)
+    updated_count = 0
+    errors: list[LeadBulkError] = []
+
+    for index, lead_id in enumerate(body.ids):
+        try:
+            lead = repo.get(lead_id)
+            if lead is None:
+                raise ValueError("Lead not found.")
+            if _hidden_from(session, current_user, lead):
+                raise ValueError("Lead not found.")
+            for field, value in updates.items():
+                setattr(lead, field, value)
+            session.add(lead)
+            session.commit()
+            updated_count += 1
+        except Exception as exc:  # noqa: BLE001 - one bad row must not abort the batch
+            session.rollback()
+            errors.append(LeadBulkError(row=index, message=str(exc)))
+
+    return LeadBulkUpdateResult(updated_count=updated_count, errors=errors)
 
 
 @router.get(

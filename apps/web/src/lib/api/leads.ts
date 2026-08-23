@@ -1,6 +1,6 @@
 import { apiFetch } from "@/lib/api/client";
 import type { FetchResult } from "@/types/api";
-import type { Lead } from "@/types/domain";
+import type { Lead, LeadStatus } from "@/types/domain";
 
 export async function fetchLeads(limit = 50): Promise<FetchResult<Lead[]>> {
   try {
@@ -79,5 +79,24 @@ export interface LeadValidationOut {
 export async function validateLead(leadId: string): Promise<LeadValidationOut> {
   return apiFetch<LeadValidationOut>(`/api/v1/leads/${leadId}/validate`, {
     method: "POST",
+  });
+}
+
+export interface LeadBulkUpdateIn {
+  ids: string[];
+  status?: LeadStatus;
+  assigned_to_user_id?: string | null;
+}
+
+export interface LeadBulkUpdateResult {
+  updated_count: number;
+  errors: Array<{ row: number; message: string }>;
+}
+
+export async function bulkUpdateLeads(body: LeadBulkUpdateIn): Promise<LeadBulkUpdateResult> {
+  return apiFetch<LeadBulkUpdateResult>("/api/v1/leads/bulk-update", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
   });
 }
