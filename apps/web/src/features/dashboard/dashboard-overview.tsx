@@ -14,6 +14,7 @@ import { SignalHexMap } from "@/features/control/components/SignalHexMap";
 import { usePagination } from "@/hooks/use-pagination";
 import { useBattlecards } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
+import { bucketByDay } from "@/lib/trend";
 
 /**
  * Resumen — the analytics tool: KPI strip, enriched battlecards, and the
@@ -39,9 +40,15 @@ export function DashboardOverview() {
     signals.length > 0
       ? Math.round(signals.reduce((sum, s) => sum + s.score, 0) / signals.length)
       : 0;
-  const hotSignals = signals.filter((s) => s.score >= 75).length;
+  const hotSignalsList = signals.filter((s) => s.score >= 75);
+  const hotSignals = hotSignalsList.length;
   const readyCount = battlecards.filter((b) => b.ready_to_action).length;
   const hotLeads = battlecards.filter((b) => b.hot_lead).length;
+
+  // Tendencia de 7 días — calculada a partir de las señales ya obtenidas
+  // (detected_at real), no inventada.
+  const signalsTrend = bucketByDay(signals.map((s) => s.detected_at), 7);
+  const hotSignalsTrend = bucketByDay(hotSignalsList.map((s) => s.detected_at), 7);
 
   if (loading) {
     return (
@@ -73,8 +80,8 @@ export function DashboardOverview() {
         </div>
 
         <div className="bee-kpi-strip">
-          <MetricCard label="Señales" value={signals.length} icon={Activity} />
-          <MetricCard label="Alta intención" value={hotSignals} hint="score ≥ 75" icon={TrendingUp} />
+          <MetricCard label="Señales" value={signals.length} icon={Activity} trend={signalsTrend} />
+          <MetricCard label="Alta intención" value={hotSignals} hint="score ≥ 75" icon={TrendingUp} trend={hotSignalsTrend} />
           <MetricCard label="Listas para acción" value={readyCount} hint="battlecard completo" icon={ShieldCheck} />
           <MetricCard label="Leads calientes" value={hotLeads} hint="intención de compra" icon={Flame} />
           <MetricCard label="Score medio" value={avgScore} icon={Activity} />
