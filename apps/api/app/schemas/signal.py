@@ -106,6 +106,9 @@ class OpportunityOut(BaseModel):
     signal_id: uuid.UUID | None
     lead_id: uuid.UUID | None
     company_id: uuid.UUID | None
+    # Exposed for the frontend rep leaderboard — was already tracked on the
+    # model (permissions filtering reads it) but never returned to clients.
+    assigned_to_user_id: uuid.UUID | None = None
 
 
 class SignalIngestResult(BaseModel):

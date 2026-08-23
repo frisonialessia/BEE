@@ -11,9 +11,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { SignalHexMap } from "@/features/control/components/SignalHexMap";
+import { Leaderboard } from "@/features/dashboard/leaderboard";
 import { usePagination } from "@/hooks/use-pagination";
-import { useBattlecards } from "@/hooks/queries/use-opportunities";
+import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
+import { useUsers } from "@/hooks/queries/use-users";
 import { bucketByDay } from "@/lib/trend";
 
 /**
@@ -26,6 +28,8 @@ import { bucketByDay } from "@/lib/trend";
 export function DashboardOverview() {
   const { data: signalsResult, isLoading: signalsLoading } = useSignals();
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
+  const { data: allOppsResult } = useOpportunities(undefined, 200);
+  const { data: usersResult } = useUsers();
   const { openOpportunity } = useOpportunityDrawer();
 
   const signals = signalsResult?.data ?? [];
@@ -139,6 +143,8 @@ export function DashboardOverview() {
             <p className="bee-caption">Qué pasaría si invertimos más en prospección</p>
           </div>
           <RevenueSimulatorWidget />
+
+          <Leaderboard opportunities={allOppsResult?.data ?? []} users={usersResult ?? []} />
         </section>
 
         <section className="bee-span-12 space-y-3">

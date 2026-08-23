@@ -113,6 +113,7 @@ export interface Opportunity {
   signal_id: string | null;
   lead_id: string | null;
   company_id: string | null;
+  assigned_to_user_id: string | null;
 }
 
 // ── SignalIngestResult ────────────────────────────────────────────────────────

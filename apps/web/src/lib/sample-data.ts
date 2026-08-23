@@ -99,6 +99,7 @@ export const sampleOpportunities: Opportunity[] = [
     signal_id: "11111111-1111-1111-1111-111111111111",
     lead_id: "l1",
     company_id: "c1",
+    assigned_to_user_id: null,
   },
   {
     id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
@@ -121,6 +122,7 @@ export const sampleOpportunities: Opportunity[] = [
     signal_id: "22222222-2222-2222-2222-222222222222",
     lead_id: "l2",
     company_id: "c2",
+    assigned_to_user_id: null,
   },
 ];
 
