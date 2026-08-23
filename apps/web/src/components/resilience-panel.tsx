@@ -13,12 +13,24 @@ import {
 
 // ── DLQ Panel ─────────────────────────────────────────────────────────────────
 
-const DLQ_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  pending:            { label: "Pending",    color: "text-yellow-700", bg: "bg-yellow-100 border-yellow-200" },
-  retrying:           { label: "Retrying",   color: "text-blue-700",   bg: "bg-blue-100 border-blue-200" },
-  resolved:           { label: "Resolved",   color: "text-green-700",  bg: "bg-green-100 border-green-200" },
-  permanently_failed: { label: "Failed",     color: "text-red-700",    bg: "bg-red-100 border-red-200" },
+// BEE's palette has no red/green/yellow scales — severity maps onto the chart
+// accents instead: amber (pending/caution) → blue (in progress/info) →
+// var(--success), magenta (resolved) → orange (permanently failed, the most
+// severe state BEE has a color for).
+const DLQ_STATUS_CONFIG: Record<string, { label: string; varColor: string }> = {
+  pending: { label: "Pending", varColor: "var(--warning)" },
+  retrying: { label: "Retrying", varColor: "var(--color-chart-4)" },
+  resolved: { label: "Resolved", varColor: "var(--success)" },
+  permanently_failed: { label: "Failed", varColor: "var(--color-chart-2)" },
 };
+
+function statusChipStyle(varColor: string) {
+  return {
+    color: varColor,
+    borderColor: varColor,
+    background: `color-mix(in srgb, ${varColor} 15%, var(--color-background))`,
+  };
+}
 
 function DLQEventRow({ event, onRetry, onResolve }: {
   event: FailedEvent;
@@ -27,11 +39,19 @@ function DLQEventRow({ event, onRetry, onResolve }: {
 }) {
   const cfg = DLQ_STATUS_CONFIG[event.status] ?? DLQ_STATUS_CONFIG.pending;
   const [expanded, setExpanded] = useState(false);
+  const isFailed = event.status === "permanently_failed";
 
   return (
-    <div className={`rounded-none border p-3 space-y-2 ${event.status === "permanently_failed" ? "border-red-200 bg-red-50/30" : "border-border bg-[var(--color-card)]"}`}>
+    <div
+      className="rounded-none border p-3 space-y-2"
+      style={
+        isFailed
+          ? { borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 8%, var(--color-card))" }
+          : { borderColor: "var(--color-divider)", background: "var(--color-card)" }
+      }
+    >
       <div className="flex items-center gap-2">
-        <span className={`text-xs px-2 py-0.5 rounded-sm border font-medium ${cfg.bg} ${cfg.color}`}>
+        <span className="text-xs px-2 py-0.5 rounded-sm border font-medium" style={statusChipStyle(cfg.varColor)}>
           {cfg.label}
         </span>
         <span className="text-sm font-medium text-foreground truncate flex-1">{event.event_name}</span>
@@ -39,7 +59,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
       </div>
 
       {event.last_error && (
-        <p className="text-xs text-red-600 truncate">{event.last_error}</p>
+        <p className="text-xs truncate" style={{ color: "var(--color-chart-2)" }}>{event.last_error}</p>
       )}
 
       <div className="flex items-center gap-2 flex-wrap">
@@ -53,7 +73,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
         {event.status !== "resolved" && event.status !== "permanently_failed" && (
           <button
             onClick={() => onRetry(event.id)}
-            className="text-xs px-2 py-1 rounded-sm bg-blue-600 text-[var(--color-background)] hover:bg-blue-700 transition-colors"
+            className="text-xs px-2 py-1 rounded-sm bg-[var(--color-chart-4)] text-[var(--color-background)] hover:opacity-90 transition-opacity"
           >
             Retry Now
           </button>
@@ -61,13 +81,14 @@ function DLQEventRow({ event, onRetry, onResolve }: {
         {event.status !== "resolved" && (
           <button
             onClick={() => onResolve(event.id)}
-            className="text-xs px-2 py-1 rounded-sm border border-green-300 text-green-700 hover:bg-green-50 transition-colors"
+            className="text-xs px-2 py-1 rounded-sm border transition-colors"
+            style={{ borderColor: "var(--success)", color: "var(--success)" }}
           >
             Resolve
           </button>
         )}
         {event.ceo_alerted && (
-          <span className="text-xs text-red-600 font-medium">⚠ CEO Alerted</span>
+          <span className="text-xs font-medium" style={{ color: "var(--color-chart-2)" }}>⚠ CEO Alerted</span>
         )}
       </div>
 
@@ -111,7 +132,12 @@ function DLQPanel() {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    // one-time mount fetch; load()'s setState calls happen after the async
+    // response, not synchronously in the effect body.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    load();
+  }, []);
 
   async function handleRetry(id: string) {
     try {
@@ -134,14 +160,14 @@ function DLQPanel() {
       {summary && (
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {[
-            { label: "Total", value: summary.total_events, color: "text-foreground" },
-            { label: "Pending", value: summary.pending_count, color: "text-yellow-600" },
-            { label: "Resolved", value: summary.resolved_count, color: "text-green-600" },
-            { label: "Failed", value: summary.permanently_failed_count, color: "text-red-600" },
-            { label: "Due Now", value: summary.due_for_retry_count, color: "text-blue-600" },
+            { label: "Total", value: summary.total_events, color: "var(--color-text)" },
+            { label: "Pending", value: summary.pending_count, color: "var(--warning)" },
+            { label: "Resolved", value: summary.resolved_count, color: "var(--success)" },
+            { label: "Failed", value: summary.permanently_failed_count, color: "var(--color-chart-2)" },
+            { label: "Due Now", value: summary.due_for_retry_count, color: "var(--color-chart-4)" },
           ].map(({ label, value, color }) => (
             <div key={label} className="rounded-none border border-border bg-[var(--color-card)] p-2 text-center">
-              <p className={`text-lg font-bold ${color}`}>{value}</p>
+              <p className="text-lg font-bold" style={{ color }}>{value}</p>
               <p className="text-xs text-muted-foreground">{label}</p>
             </div>
           ))}
@@ -154,7 +180,9 @@ function DLQPanel() {
             key={s}
             onClick={() => setStatusFilter(s)}
             className={`text-xs px-2 py-1 rounded-sm border transition-colors ${
-              statusFilter === s ? "bg-[var(--color-text)] text-[var(--color-background)] border-gray-900" : "bg-[var(--color-card)] text-muted-foreground border-border"
+              statusFilter === s
+                ? "bg-[var(--color-text)] text-[var(--color-background)] border-[var(--color-text)]"
+                : "bg-[var(--color-card)] text-muted-foreground border-border"
             }`}
           >
             {s === "" ? "All" : DLQ_STATUS_CONFIG[s]?.label ?? s}
@@ -196,11 +224,9 @@ const AGENT_LABELS: Record<string, string> = {
 };
 
 function ConfidenceBadge({ score }: { score: number }) {
-  const color = score >= 0.8 ? "bg-green-100 text-green-700 border-green-200"
-    : score >= 0.5 ? "bg-yellow-100 text-yellow-700 border-yellow-200"
-    : "bg-red-100 text-red-700 border-red-200";
+  const varColor = score >= 0.8 ? "var(--success)" : score >= 0.5 ? "var(--warning)" : "var(--color-chart-2)";
   return (
-    <span className={`text-xs px-2 py-0.5 rounded-sm border font-mono ${color}`}>
+    <span className="text-xs px-2 py-0.5 rounded-sm border font-mono" style={statusChipStyle(varColor)}>
       {(score * 100).toFixed(0)}%
     </span>
   );
@@ -210,7 +236,14 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className={`rounded-none border p-3 space-y-2 ${entry.manual_review_required ? "border-orange-200 bg-orange-50/30" : "border-border bg-[var(--color-card)]"}`}>
+    <div
+      className="rounded-none border p-3 space-y-2"
+      style={
+        entry.manual_review_required
+          ? { borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 8%, var(--color-card))" }
+          : { borderColor: "var(--color-divider)", background: "var(--color-card)" }
+      }
+    >
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs bg-[var(--color-primary)] text-muted-foreground px-2 py-0.5 rounded-md">
           {AGENT_LABELS[entry.agent_type] ?? entry.agent_type}
@@ -220,7 +253,7 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
         </span>
         <ConfidenceBadge score={entry.confidence_score} />
         {entry.manual_review_required && (
-          <span className="text-xs text-orange-700 font-medium">Review Required</span>
+          <span className="text-xs font-medium" style={{ color: "var(--color-chart-2)" }}>Review Required</span>
         )}
         <span className="text-xs text-muted-foreground shrink-0">
           {new Date(entry.created_at).toLocaleTimeString()}
@@ -233,7 +266,7 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
 
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="text-xs text-muted-foreground hover:text-muted-foreground underline underline-offset-2"
+        className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
       >
         {expanded ? "Hide" : "Full snapshot"}
       </button>
@@ -247,8 +280,11 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
             </div>
           )}
           {Object.keys(entry.market_data_used).length > 0 && (
-            <div className="p-2 bg-blue-50 rounded-sm">
-              <p className="text-xs font-medium text-blue-600 mb-1">Market Data Used</p>
+            <div
+              className="p-2 rounded-sm"
+              style={{ background: "color-mix(in srgb, var(--color-chart-4) 12%, var(--color-background))" }}
+            >
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--color-chart-4)" }}>Market Data Used</p>
               <pre className="text-xs text-foreground overflow-auto">{JSON.stringify(entry.market_data_used, null, 2)}</pre>
             </div>
           )}
@@ -286,15 +322,18 @@ function AuditPanel() {
       {summary && (
         <div className="grid grid-cols-3 gap-2">
           <div className="rounded-none border border-border bg-[var(--color-card)] p-2 text-center">
-            <p className="text-lg font-bold text-gray-900">{summary.total_entries}</p>
+            <p className="text-lg font-bold">{summary.total_entries}</p>
             <p className="text-xs text-muted-foreground">Total Decisions</p>
           </div>
-          <div className="rounded-none border border-orange-200 bg-orange-50 p-2 text-center">
-            <p className="text-lg font-bold text-orange-600">{summary.manual_review_count}</p>
+          <div
+            className="rounded-none border p-2 text-center"
+            style={{ borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 12%, var(--color-background))" }}
+          >
+            <p className="text-lg font-bold" style={{ color: "var(--color-chart-2)" }}>{summary.manual_review_count}</p>
             <p className="text-xs text-muted-foreground">Need Review</p>
           </div>
           <div className="rounded-none border border-border bg-[var(--color-card)] p-2 text-center">
-            <p className="text-lg font-bold text-green-600">{(summary.avg_confidence_score * 100).toFixed(0)}%</p>
+            <p className="text-lg font-bold" style={{ color: "var(--success)" }}>{(summary.avg_confidence_score * 100).toFixed(0)}%</p>
             <p className="text-xs text-muted-foreground">Avg Confidence</p>
           </div>
         </div>
@@ -345,7 +384,9 @@ export function ResiliencePanel() {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`text-xs px-4 py-2 rounded-sm border font-medium transition-colors ${
-              activeTab === tab ? "bg-[var(--color-text)] text-[var(--color-background)] border-gray-900" : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-gray-400"
+              activeTab === tab
+                ? "bg-[var(--color-text)] text-[var(--color-background)] border-[var(--color-text)]"
+                : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-[var(--color-text-muted)]"
             }`}
           >
             {tab === "dlq" ? "Dead Letter Queue" : "Audit Trail"}

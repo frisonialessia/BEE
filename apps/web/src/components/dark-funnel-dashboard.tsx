@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import type { DarkFunnelSummary, HotLeadScore } from "@/lib/types";
 import { getDarkFunnelHotLeads, getDarkFunnelSummary, ingestDarkFunnelSignal } from "@/lib/api";
 
-const STAGE_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
-  ready_to_buy: { label: "Ready to Buy", color: "bg-red-100 text-red-800 border-red-200", dot: "bg-red-500" },
-  decision:     { label: "Decision",     color: "bg-orange-100 text-orange-800 border-orange-200", dot: "bg-orange-500" },
-  consideration:{ label: "Consideration",color: "bg-yellow-100 text-yellow-800 border-yellow-200", dot: "bg-yellow-500" },
-  awareness:    { label: "Awareness",    color: "bg-blue-100 text-blue-800 border-blue-200", dot: "bg-blue-400" },
+// BEE's palette has no red — the heat gradient (hottest → coolest) maps onto
+// the chart accents instead: orange (2) → amber (1) → gold (3) → blue (4).
+const STAGE_CONFIG: Record<string, { label: string; varColor: string }> = {
+  ready_to_buy: { label: "Ready to Buy", varColor: "var(--color-chart-2)" },
+  decision: { label: "Decision", varColor: "var(--color-chart-1)" },
+  consideration: { label: "Consideration", varColor: "var(--color-chart-3)" },
+  awareness: { label: "Awareness", varColor: "var(--color-chart-4)" },
 };
 
 const SIGNAL_TYPES = [
@@ -25,11 +27,21 @@ const SIGNAL_TYPES = [
 ];
 
 function ScoreBar({ score }: { score: number }) {
-  const color = score >= 80 ? "bg-red-500" : score >= 55 ? "bg-orange-500" : score >= 30 ? "bg-yellow-500" : "bg-blue-400";
+  const varColor =
+    score >= 80
+      ? "var(--color-chart-2)"
+      : score >= 55
+        ? "var(--color-chart-1)"
+        : score >= 30
+          ? "var(--color-chart-3)"
+          : "var(--color-chart-4)";
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-2 bg-[var(--color-primary)] rounded-sm overflow-hidden">
-        <div className={`h-2 rounded-sm transition-all ${color}`} style={{ width: `${Math.min(100, score)}%` }} />
+        <div
+          className="h-2 rounded-sm transition-all"
+          style={{ width: `${Math.min(100, score)}%`, background: varColor }}
+        />
       </div>
       <span className="text-xs font-mono font-bold text-foreground w-8 text-right">{score.toFixed(0)}</span>
     </div>
@@ -40,23 +52,47 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
   const stage = STAGE_CONFIG[lead.buying_stage] ?? STAGE_CONFIG.awareness;
 
   return (
-    <div className={`rounded-none border p-4 space-y-3 ${lead.is_hot ? "border-red-200 bg-red-50/30" : "border-border bg-[var(--color-card)]"}`}>
+    <div
+      className="rounded-none border p-4 space-y-3"
+      style={
+        lead.is_hot
+          ? { borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 8%, var(--color-card))" }
+          : { borderColor: "var(--color-divider)", background: "var(--color-card)" }
+      }
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             {lead.is_hot && (
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-sm border border-red-200">
-                <span className="w-1.5 h-1.5 rounded-sm bg-red-500 animate-pulse" />
+              <span
+                className="inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-xs font-bold"
+                style={{
+                  color: "var(--color-chart-2)",
+                  borderColor: "var(--color-chart-2)",
+                  background: "color-mix(in srgb, var(--color-chart-2) 15%, var(--color-background))",
+                }}
+              >
+                <span
+                  className="h-1.5 w-1.5 animate-pulse rounded-sm"
+                  style={{ background: "var(--color-chart-2)" }}
+                />
                 HOT
               </span>
             )}
-            <span className="text-sm font-semibold text-gray-900 truncate">
+            <span className="text-sm font-semibold truncate">
               {lead.company_name ?? lead.company_domain}
             </span>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">{lead.company_domain}</p>
         </div>
-        <span className={`shrink-0 text-xs px-2 py-0.5 rounded-sm border font-medium ${stage.color}`}>
+        <span
+          className="shrink-0 rounded-sm border px-2 py-0.5 text-xs font-medium"
+          style={{
+            color: stage.varColor,
+            borderColor: stage.varColor,
+            background: `color-mix(in srgb, ${stage.varColor} 15%, var(--color-background))`,
+          }}
+        >
           {stage.label}
         </span>
       </div>
@@ -151,13 +187,13 @@ export function DarkFunnelDashboard() {
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Hot Leads", value: summary.total_hot_leads, accent: "text-red-600" },
-            { label: "Ready to Buy", value: summary.ready_to_buy_count, accent: "text-orange-600" },
-            { label: "Decision Stage", value: summary.decision_stage_count, accent: "text-yellow-600" },
-            { label: "Today's Signals", value: summary.total_signals_today, accent: "text-blue-600" },
+            { label: "Hot Leads", value: summary.total_hot_leads, accent: "var(--color-chart-2)" },
+            { label: "Ready to Buy", value: summary.ready_to_buy_count, accent: "var(--color-chart-1)" },
+            { label: "Decision Stage", value: summary.decision_stage_count, accent: "var(--color-chart-3)" },
+            { label: "Today's Signals", value: summary.total_signals_today, accent: "var(--color-chart-4)" },
           ].map(({ label, value, accent }) => (
             <div key={label} className="rounded-none border border-border bg-[var(--color-card)] p-3 text-center">
-              <p className={`text-2xl font-bold ${accent}`}>{value}</p>
+              <p className="text-2xl font-bold" style={{ color: accent }}>{value}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
             </div>
           ))}
@@ -173,8 +209,8 @@ export function DarkFunnelDashboard() {
               onClick={() => setStageFilter(stage)}
               className={`text-xs px-3 py-1.5 rounded-sm border transition-colors ${
                 stageFilter === stage
-                  ? "bg-[var(--color-text)] text-[var(--color-background)] border-gray-900"
-                  : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-gray-400"
+                  ? "bg-[var(--color-text)] text-[var(--color-background)] border-[var(--color-text)]"
+                  : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-[var(--color-text-muted)]"
               }`}
             >
               {stage === "" ? "All" : STAGE_CONFIG[stage]?.label ?? stage}
@@ -183,7 +219,7 @@ export function DarkFunnelDashboard() {
         </div>
         <button
           onClick={() => setShowSimulate((v) => !v)}
-          className="ml-auto text-xs px-3 py-1.5 rounded-sm border border-dashed border-border text-muted-foreground hover:border-gray-500 hover:text-foreground transition-colors"
+          className="ml-auto text-xs px-3 py-1.5 rounded-sm border border-dashed border-border text-muted-foreground hover:border-[var(--color-text-muted)] hover:text-foreground transition-colors"
         >
           + Simulate Signal
         </button>
@@ -198,13 +234,13 @@ export function DarkFunnelDashboard() {
               value={simDomain}
               onChange={(e) => setSimDomain(e.target.value)}
               placeholder="company-domain.com"
-              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
               required
             />
             <select
               value={simSignalType}
               onChange={(e) => setSimSignalType(e.target.value)}
-              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-[var(--color-card)]"
+              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)] bg-[var(--color-card)]"
             >
               {SIGNAL_TYPES.map((t) => (
                 <option key={t} value={t}>{t.replace(/_/g, " ")}</option>
@@ -214,7 +250,7 @@ export function DarkFunnelDashboard() {
               value={simKeywords}
               onChange={(e) => setSimKeywords(e.target.value)}
               placeholder="intent keywords (comma-separated)"
-              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
             />
           </div>
           <button

@@ -70,7 +70,8 @@ function CorrectionLearningPanel() {
             value={original}
             onChange={(e) => setOriginal(e.target.value)}
             rows={3}
-            className="w-full text-xs border border-border rounded-sm p-2 resize-none font-mono text-foreground bg-red-50/30"
+            className="w-full text-xs border border-border rounded-sm p-2 resize-none font-mono text-foreground"
+            style={{ background: "color-mix(in srgb, var(--color-chart-2) 10%, var(--color-background))" }}
           />
         </div>
 
@@ -80,34 +81,37 @@ function CorrectionLearningPanel() {
             value={edited}
             onChange={(e) => setEdited(e.target.value)}
             rows={3}
-            className="w-full text-xs border border-border rounded-sm p-2 resize-none font-mono text-foreground bg-green-50/30"
+            className="w-full text-xs border border-border rounded-sm p-2 resize-none font-mono text-foreground"
+            style={{ background: "color-mix(in srgb, var(--success) 10%, var(--color-background))" }}
           />
         </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="px-4 py-2 text-xs rounded-none bg-indigo-600 text-[var(--color-background)] hover:bg-indigo-700 disabled:opacity-50 transition-colors font-medium"
-        >
+        <button onClick={handleSubmit} disabled={loading} className="bee-btn bee-btn--dark">
           {loading ? "Learning..." : "Submit Correction"}
         </button>
       </div>
 
       {result && (
-        <div className="rounded-none border border-indigo-200 bg-indigo-50/50 p-3 space-y-2">
+        <div
+          className="rounded-none border p-3 space-y-2"
+          style={{ borderColor: "var(--color-chart-6)", background: "color-mix(in srgb, var(--color-chart-6) 10%, var(--color-background))" }}
+        >
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-indigo-800">Learning Result</span>
-            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-sm">
+            <span className="text-xs font-semibold" style={{ color: "var(--color-chart-6)" }}>Learning Result</span>
+            <span
+              className="text-xs px-2 py-0.5 rounded-sm"
+              style={{ background: "color-mix(in srgb, var(--color-chart-6) 20%, var(--color-background))", color: "var(--color-chart-6)" }}
+            >
               v{result.profile_version} — {result.total_corrections} correction{result.total_corrections !== 1 ? "s" : ""}
             </span>
           </div>
           {result.extracted_rules.length > 0 && (
             <div>
-              <p className="text-xs text-indigo-600 font-medium mb-1">Rules learned from this edit:</p>
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--color-chart-6)" }}>Rules learned from this edit:</p>
               <ul className="space-y-0.5">
                 {result.extracted_rules.map((r) => (
                   <li key={r} className="text-xs text-foreground flex items-center gap-1">
-                    <span className="text-indigo-500">→</span>
+                    <span style={{ color: "var(--color-chart-6)" }}>→</span>
                     {r.replace(/_/g, " ")}
                   </li>
                 ))}
@@ -181,9 +185,9 @@ function ScenarioSimulatorPanel() {
   }
 
   const scenarios = result ? [
-    { variant: result.conservative, color: "text-red-600", bg: "bg-red-50", label: "Conservative" },
-    { variant: result.realistic, color: "text-blue-600", bg: "bg-blue-50", label: "Realistic" },
-    { variant: result.optimistic, color: "text-green-600", bg: "bg-green-50", label: "Optimistic" },
+    { variant: result.conservative, varColor: "var(--color-chart-2)", label: "Conservative" },
+    { variant: result.realistic, varColor: "var(--color-chart-4)", label: "Realistic" },
+    { variant: result.optimistic, varColor: "var(--success)", label: "Optimistic" },
   ] : [];
 
   return (
@@ -233,24 +237,30 @@ function ScenarioSimulatorPanel() {
         </div>
       </div>
 
-      <button onClick={handleRun} disabled={loading}
-        className="w-full px-4 py-2 text-xs rounded-none bg-blue-600 text-[var(--color-background)] hover:bg-blue-700 disabled:opacity-50 transition-colors font-medium">
+      <button onClick={handleRun} disabled={loading} className="w-full bee-btn bee-btn--dark">
         {loading ? "Simulating…" : "Run Scenario"}
       </button>
 
       {result && (
         <div className="space-y-3">
           {result.low_data_confidence && (
-            <div className="text-xs bg-yellow-50 border border-yellow-200 rounded-none p-2 text-yellow-700">
+            <div
+              className="text-xs rounded-none border p-2"
+              style={{ borderColor: "var(--warning)", background: "color-mix(in srgb, var(--warning) 15%, var(--color-background))", color: "var(--color-text)" }}
+            >
               ⚠ Low data confidence — only {result.historical_sample_size} historical data point(s). Projections have wide uncertainty.
             </div>
           )}
 
           <div className="grid grid-cols-3 gap-2">
-            {scenarios.map(({ variant, color, bg, label }) => (
-              <div key={label} className={`rounded-none border p-3 ${bg}`}>
+            {scenarios.map(({ variant, varColor, label }) => (
+              <div
+                key={label}
+                className="rounded-none border p-3"
+                style={{ borderColor: varColor, background: `color-mix(in srgb, ${varColor} 10%, var(--color-background))` }}
+              >
                 <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
-                <p className={`text-lg font-bold ${color}`}>{fmt(variant.annual_revenue)}</p>
+                <p className="text-lg font-bold" style={{ color: varColor }}>{fmt(variant.annual_revenue)}</p>
                 <p className="text-xs text-muted-foreground">{fmt(variant.monthly_revenue)}/mo</p>
                 <p className="text-xs text-muted-foreground">{(variant.win_rate * 100).toFixed(1)}% close rate</p>
               </div>
@@ -259,7 +269,7 @@ function ScenarioSimulatorPanel() {
 
           <div className="rounded-none border border-border bg-[var(--color-card)] p-3 space-y-2 text-xs">
             <p className="font-medium text-foreground">
-              Effective win rate: <span className="text-blue-600">{(result.effective_win_rate * 100).toFixed(1)}%</span>
+              Effective win rate: <span style={{ color: "var(--color-chart-4)" }}>{(result.effective_win_rate * 100).toFixed(1)}%</span>
               {" "}(base {(result.base_win_rate * 100).toFixed(1)}%)
             </p>
             {result.key_drivers.length > 0 && (
@@ -287,19 +297,28 @@ function ScenarioSimulatorPanel() {
 
 // ── Anomaly Alerts Panel ──────────────────────────────────────────────────────
 
-const SEVERITY_STYLE: Record<string, string> = {
-  critical: "border-red-300 bg-red-50/50 text-red-700",
-  high:     "border-orange-300 bg-orange-50/50 text-orange-700",
-  medium:   "border-yellow-300 bg-yellow-50/50 text-yellow-700",
-  low:      "border-border bg-[var(--color-primary)] text-foreground",
+// No red/orange/yellow scale in BEE — severity maps onto the chart accents:
+// orange (critical, the most severe color the palette has) → amber (high)
+// → gold (medium) → the neutral primary tint (low).
+const SEVERITY_VAR: Record<string, string | null> = {
+  critical: "var(--color-chart-2)",
+  high: "var(--color-chart-1)",
+  medium: "var(--color-chart-3)",
+  low: null,
 };
 
 function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAcknowledge: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false);
-  const style = SEVERITY_STYLE[alert.severity] ?? SEVERITY_STYLE.low;
+  const varColor = SEVERITY_VAR[alert.severity] ?? null;
+  const cardStyle = varColor
+    ? { borderColor: varColor, background: `color-mix(in srgb, ${varColor} 8%, var(--color-card))`, color: "var(--color-text)" }
+    : { borderColor: "var(--color-divider)", background: "var(--color-primary)", color: "var(--color-text)" };
+  const chipStyle = varColor
+    ? { color: varColor, borderColor: varColor, background: `color-mix(in srgb, ${varColor} 15%, var(--color-background))` }
+    : { color: "var(--color-text)", borderColor: "var(--color-divider)" };
 
   return (
-    <div className={`rounded-none border p-3 space-y-2 ${style}`}>
+    <div className="rounded-none border p-3 space-y-2" style={cardStyle}>
       <div className="flex items-start gap-2">
         <div className="flex-1">
           <p className="text-xs font-semibold leading-tight">{alert.title}</p>
@@ -308,7 +327,7 @@ function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAck
             {" "}({alert.deviation_pct.toFixed(1)}%)
           </p>
         </div>
-        <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded-sm border ${SEVERITY_STYLE[alert.severity]}`}>
+        <span className="text-xs font-bold uppercase px-2 py-0.5 rounded-sm border" style={chipStyle}>
           {alert.severity}
         </span>
       </div>
@@ -378,8 +397,7 @@ function AnomalyAlertsPanel() {
         Anomalous drops trigger strategy alerts requiring CEO review before any change is made.
       </p>
 
-      <button onClick={handleCheck} disabled={checking}
-        className="text-xs px-4 py-2 rounded-none bg-orange-600 text-[var(--color-background)] hover:bg-orange-700 disabled:opacity-50 transition-colors font-medium">
+      <button onClick={handleCheck} disabled={checking} className="bee-btn bee-btn--dark">
         {checking ? "Scanning…" : "Run Anomaly Scan"}
       </button>
 
@@ -426,7 +444,9 @@ export function DeepLearningPanel() {
             key={id}
             onClick={() => setTab(id)}
             className={`text-xs px-3 py-1.5 rounded-sm border font-medium transition-colors ${
-              tab === id ? "bg-[var(--color-text)] text-[var(--color-background)] border-gray-900" : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-gray-400"
+              tab === id
+                ? "bg-[var(--color-text)] text-[var(--color-background)] border-[var(--color-text)]"
+                : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-[var(--color-text-muted)]"
             }`}
           >
             {label}
