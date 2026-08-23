@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ExportCsvButton } from "@/components/export/export-csv-button";
 import { useCompanies, useCreateCompany } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -105,6 +106,17 @@ export function CompaniesList() {
     oppCountByCompany.set(opp.company_id, (oppCountByCompany.get(opp.company_id) ?? 0) + 1);
   }
 
+  const exportRows = companies.map((c) => ({
+    nombre: c.name,
+    dominio: c.domain ?? "",
+    industria: c.industry ?? "",
+    tamano: c.size ?? "",
+    pais: c.country ?? "",
+    sitio_web: c.website ?? "",
+    contactos: leadCountByCompany.get(c.id) ?? 0,
+    oportunidades: oppCountByCompany.get(c.id) ?? 0,
+  }));
+
   return (
     <div>
       <header className="mb-6">
@@ -118,6 +130,20 @@ export function CompaniesList() {
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+            <ExportCsvButton
+              rows={exportRows}
+              filename="bee-empresas.csv"
+              columns={[
+                { key: "nombre", header: "Nombre" },
+                { key: "dominio", header: "Dominio" },
+                { key: "industria", header: "Industria" },
+                { key: "tamano", header: "Tamaño" },
+                { key: "pais", header: "País" },
+                { key: "sitio_web", header: "Sitio web" },
+                { key: "contactos", header: "Contactos" },
+                { key: "oportunidades", header: "Oportunidades" },
+              ]}
+            />
             <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary">
               + Nueva empresa
             </button>

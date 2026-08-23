@@ -7,16 +7,32 @@ import { PaginationBar } from "@/components/dashboard/pagination-bar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ExportCsvButton } from "@/components/export/export-csv-button";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { PipelineBoard } from "@/features/opportunities/pipeline-board";
 import { PipelineFlow } from "@/features/opportunities/pipeline-flow";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
+import { useUsers } from "@/hooks/queries/use-users";
+
+/** Etiquetas en español para el estado de la oportunidad, para el CSV exportado. */
+const STATUS_LABELS: Record<string, string> = {
+  detected: "Detectada",
+  ready_to_action: "Lista para actuar",
+  prioritized: "Priorizada",
+  in_progress: "En progreso",
+  won: "Ganada",
+  lost: "Perdida",
+  dismissed: "Descartada",
+};
 
 /** Oportunidades y battlecards — plays listos para el CEO. */
 export function OpportunitiesDashboard() {
   const { data: battlecardsResult, isLoading: loadingBattlecards } = useBattlecards();
   const { data: allOppsResult, isLoading: loadingOpps } = useOpportunities(undefined, 200);
+  const { data: companiesResult } = useCompanies(200);
+  const { data: users } = useUsers();
   const { openOpportunity } = useOpportunityDrawer();
 
   const battlecards = battlecardsResult?.data ?? [];
@@ -25,6 +41,17 @@ export function OpportunitiesDashboard() {
   const loading = loadingBattlecards || loadingOpps;
 
   const battlecardPagination = usePagination(battlecards);
+
+  const companyById = new Map((companiesResult?.data ?? []).map((c) => [c.id, c]));
+  const userById = new Map((users ?? []).map((u) => [u.id, u]));
+
+  const exportRows = opportunities.map((o) => ({
+    titulo: o.title.replace(/^Opportunity:\s*/, ""),
+    estado: STATUS_LABELS[o.status] ?? o.status,
+    puntaje: Math.round(o.score),
+    empresa: o.company_id ? (companyById.get(o.company_id)?.name ?? "") : "",
+    responsable: o.assigned_to_user_id ? (userById.get(o.assigned_to_user_id)?.full_name ?? "") : "",
+  }));
 
   return (
     <div>
@@ -37,9 +64,22 @@ export function OpportunitiesDashboard() {
               Oportunidades enriquecidas con pain point, argumento de cierre y ventana de timing
             </p>
           </div>
-          <Badge variant={live ? "success" : "warning"}>
-            {live ? "En vivo" : "Datos demo"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant={live ? "success" : "warning"}>
+              {live ? "En vivo" : "Datos demo"}
+            </Badge>
+            <ExportCsvButton
+              rows={exportRows}
+              filename="bee-oportunidades.csv"
+              columns={[
+                { key: "titulo", header: "Título" },
+                { key: "estado", header: "Estado" },
+                { key: "puntaje", header: "Puntaje" },
+                { key: "empresa", header: "Empresa" },
+                { key: "responsable", header: "Responsable" },
+              ]}
+            />
+          </div>
         </div>
       </header>
 

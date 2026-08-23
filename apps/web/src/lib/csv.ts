@@ -54,3 +54,36 @@ export function parseCsv(text: string): Record<string, string>[] {
     return row;
   });
 }
+
+/** Escapa un valor para CSV: lo entrecomilla si contiene coma, comilla o salto de línea. */
+function escapeCsvField(value: unknown): string {
+  const str = value === null || value === undefined ? "" : String(value);
+  if (/[",\n\r]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+/** Arma un CSV (con encabezado) a partir de filas y columnas — el inverso de parseCsv. */
+export function toCsv<T extends Record<string, unknown>>(
+  rows: T[],
+  columns: { key: keyof T; header: string }[],
+): string {
+  const headerLine = columns.map((c) => escapeCsvField(c.header)).join(",");
+  const bodyLines = rows.map((row) => columns.map((c) => escapeCsvField(row[c.key])).join(","));
+  return [headerLine, ...bodyLines].join("\r\n");
+}
+
+/** Dispara la descarga de un CSV en el navegador — sin backend, todo en el cliente. */
+export function downloadCsv(filename: string, csvContent: string): void {
+  // BOM UTF-8 para que Excel reconozca acentos/ñ correctamente al abrir el archivo.
+  const blob = new Blob(["﻿" + csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
