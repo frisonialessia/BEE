@@ -71,8 +71,8 @@ function ProviderRow({ provider }: { provider: ProviderStatus }) {
         <div className="min-w-0">
           <p className="text-sm font-medium tracking-tight">{label}</p>
           <p className="text-xs text-muted-foreground">
-            {provider.configured ? "API configured" : "Mock mode"}
-            {provider.webhook_configured ? " · Webhook ✓" : " · No webhook secret"}
+            {provider.configured ? "API configurada" : "Modo simulado"}
+            {provider.webhook_configured ? " · Webhook ✓" : " · Sin secreto de webhook"}
           </p>
         </div>
       </div>
@@ -93,19 +93,19 @@ function ProviderRow({ provider }: { provider: ProviderStatus }) {
 
 function WorkerKpis({ worker }: { worker: WorkerHealth }) {
   const stateLabel = {
-    idle: "Idle",
-    busy: "Processing",
-    stopped: "Stopped",
-    error: "Errors",
+    idle: "Inactivo",
+    busy: "Procesando",
+    stopped: "Detenido",
+    error: "Con errores",
   }[worker.state];
 
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-      <KpiCard label="IngestionWorker" value={worker.running ? stateLabel : "Off"} />
-      <KpiCard label="Queue" value={String(worker.queue_depth)} mono />
-      <KpiCard label="Processed" value={String(worker.processed_count)} mono />
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <KpiCard label="Ingesta" value={worker.running ? stateLabel : "Apagado"} />
+      <KpiCard label="Cola" value={String(worker.queue_depth)} mono />
+      <KpiCard label="Procesados" value={String(worker.processed_count)} mono />
       <KpiCard
-        label="Errors"
+        label="Errores"
         value={String(worker.error_count)}
         mono
         warn={worker.error_count > 0}
@@ -147,7 +147,7 @@ export function SystemHealth() {
       <section className="bee-surface flex h-full items-center p-8">
         <div className="flex items-center gap-2 text-destructive">
           <WifiOff className="size-4" />
-          <p className="text-sm">Unable to reach BEE API — check NEXT_PUBLIC_API_URL</p>
+          <p className="text-sm">No se pudo conectar con la API de BEE — revisa NEXT_PUBLIC_API_URL</p>
         </div>
       </section>
     );
@@ -163,8 +163,8 @@ export function SystemHealth() {
     <section className="bee-surface flex h-full flex-col p-5" aria-label="System health">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="bee-eyebrow">Intelligence</h2>
-          <p className="bee-kpi-sm mt-1">{live ? "Connected" : "Offline"}</p>
+          <h2 className="bee-eyebrow">Inteligencia</h2>
+          <p className="bee-kpi-sm mt-1">{live ? "Conectado" : "Sin conexión"}</p>
         </div>
         <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">
@@ -173,15 +173,15 @@ export function SystemHealth() {
             ) : (
               <WifiOff className="size-3.5" />
             )}
-            {snapshot.connectivity.environment ?? "unknown env"}
+            {snapshot.connectivity.environment ?? "entorno desconocido"}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Database className="size-3.5" />
-            DB {snapshot.connectivity.db_ready ? "ready" : "unavailable"}
+            BD {snapshot.connectivity.db_ready ? "lista" : "no disponible"}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <Activity className="size-3.5" />
-            Updated {updatedLabel}
+            Actualizado {updatedLabel}
           </span>
         </div>
       </div>
@@ -192,7 +192,7 @@ export function SystemHealth() {
         <div className="mt-4 flex-1 overflow-hidden">
           <div className="mb-1 flex items-center gap-2">
             <Radio className="size-3.5 text-[var(--color-text-muted)]" />
-            <p className="bee-eyebrow">External APIs</p>
+            <p className="bee-eyebrow">APIs externas</p>
           </div>
           <div className="max-h-24 overflow-y-auto">
             {snapshot.providers.map((p) => (
@@ -204,8 +204,8 @@ export function SystemHealth() {
 
       {!live && (
         <p className="mt-4 text-xs text-muted-foreground">
-          Showing fallback state — start the API or set{" "}
-          <code className="rounded bg-muted px-1 py-0.5">NEXT_PUBLIC_API_URL</code> in{" "}
+          Mostrando estado de respaldo — inicia la API o configura{" "}
+          <code className="rounded bg-muted px-1 py-0.5">NEXT_PUBLIC_API_URL</code> en{" "}
           <code className="rounded bg-muted px-1 py-0.5">.env.local</code>
         </p>
       )}

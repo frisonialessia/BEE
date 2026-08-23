@@ -10,6 +10,7 @@ import { SignalCard } from "@/components/signal-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
+import { SignalHexMap } from "@/features/control/components/SignalHexMap";
 import { usePagination } from "@/hooks/use-pagination";
 import { useBattlecards } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
@@ -79,6 +80,8 @@ export function DashboardOverview() {
           <MetricCard label="Score medio" value={avgScore} icon={Activity} />
         </div>
       </header>
+
+      <SignalHexMap className="mb-3" height={320} />
 
       <div className="bee-bento-grid">
         {battlecards.length > 0 && (

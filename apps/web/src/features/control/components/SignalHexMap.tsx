@@ -17,10 +17,10 @@ import { cn } from "@/lib/utils";
 import type { HotLeadScore } from "@/types/extended";
 
 const STAGE_LABELS: Record<string, string> = {
-  awareness: "Awareness",
-  consideration: "Consideration",
-  decision: "Decision",
-  ready_to_buy: "Ready to buy",
+  awareness: "Conocimiento",
+  consideration: "Consideración",
+  decision: "Decisión",
+  ready_to_buy: "Listo para comprar",
 };
 
 const HOVER_LERP_MS = 180;
@@ -56,7 +56,7 @@ function HiveTooltip({
       }}
     >
       <p className="bee-eyebrow text-[var(--color-chart-5)]">
-        Closing temp · {Math.round(cell.temperature)}°
+        Temperatura de cierre · {Math.round(cell.temperature)}°
       </p>
       <p className="mt-1.5 text-sm font-light leading-snug">
         {lead.company_name ?? lead.company_domain}
@@ -68,7 +68,7 @@ function HiveTooltip({
         </span>
         {lead.is_hot && (
           <span className="rounded-lg bg-[var(--color-primary)] px-2 py-0.5 text-[var(--color-chart-5)]">
-            HOT
+            CALIENTE
           </span>
         )}
       </div>
@@ -78,7 +78,7 @@ function HiveTooltip({
         </p>
       )}
       {extra > 0 && (
-        <p className="mt-1.5 text-[10px] text-muted-foreground">+{extra} more in cell</p>
+        <p className="mt-1.5 text-[10px] text-muted-foreground">+{extra} más en esta celda</p>
       )}
     </div>
   );
@@ -241,22 +241,22 @@ export function SignalHexMap({
   return (
     <section
       className={cn("bee-surface flex flex-col p-5", className)}
-      aria-label="Signal hex map — hive heatmap"
+      aria-label="Mapa hexagonal de señales — mapa de calor de la colmena"
     >
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="bee-eyebrow">Colmena</h2>
-          <p className="bee-caption mt-0.5">{leads.length} leads · click cell to inspect</p>
+          <p className="bee-caption mt-0.5">{leads.length} leads · haz clic en una celda para ver detalles</p>
         </div>
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          <span>Cool</span>
+          <span>Frío</span>
           <div
             className="h-2 w-28 rounded-full"
             style={{
               background: `linear-gradient(90deg, ${TEMPERATURE_COLORS.cool}, ${TEMPERATURE_COLORS.mild}, ${TEMPERATURE_COLORS.warm}, ${TEMPERATURE_COLORS.hot}, ${TEMPERATURE_COLORS.peak})`,
             }}
           />
-          <span>Hot</span>
+          <span>Caliente</span>
         </div>
       </div>
 
@@ -268,7 +268,7 @@ export function SignalHexMap({
             className="flex h-full items-center justify-center rounded-2xl bg-[var(--color-primary)]/40 text-sm font-light text-[var(--color-text-muted)]"
             style={{ height }}
           >
-            No dark funnel leads yet — intent signals will populate the hive.
+            Todavía no hay leads del pipeline oculto — las señales de intención van a poblar la colmena.
           </div>
         ) : (
           <div ref={containerRef} className="relative h-full w-full" style={{ height }}>
@@ -282,7 +282,7 @@ export function SignalHexMap({
               onMouseLeave={onMouseLeave}
               onClick={onClick}
               role="img"
-              aria-label={`Hexagonal heatmap of ${leads.length} leads by closing temperature`}
+              aria-label={`Mapa de calor hexagonal de ${leads.length} leads por temperatura de cierre`}
             />
             {hovered && (
               <HiveTooltip
