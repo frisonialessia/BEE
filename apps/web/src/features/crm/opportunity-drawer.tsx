@@ -7,6 +7,7 @@ import { BattlecardView } from "@/components/battlecard";
 import { DiscRadar } from "@/components/disc-radar";
 import { ExecutionArtifacts } from "@/components/execution-artifacts";
 import { OpportunityCard } from "@/components/opportunity-card";
+import { OpportunityTimeline } from "@/components/timeline/opportunity-timeline";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
@@ -137,6 +138,11 @@ export function OpportunityDrawer() {
               )}
             </section>
           )}
+
+          <section className="bee-surface p-5">
+            <h3 className="mb-3 text-sm font-semibold">Historial</h3>
+            {opportunityId && <OpportunityTimeline opportunityId={opportunityId} />}
+          </section>
 
           <section>
             <h3 className="mb-3 text-sm font-semibold">Artefactos de ejecución</h3>
