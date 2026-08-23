@@ -238,6 +238,20 @@ export interface OutcomeOut {
 
 // ── LeadOut ───────────────────────────────────────────────────────────────────
 
+// ── CompanyOut ────────────────────────────────────────────────────────────────
+
+export interface Company {
+  id: string;
+  name: string;
+  domain: string | null;
+  industry: string | null;
+  size: string | null;
+  country: string | null;
+  website: string | null;
+  description: string | null;
+  attributes: Record<string, unknown>;
+}
+
 export type LeadStatus = "new" | "qualified" | "engaged" | "converted" | "disqualified";
 
 export interface Lead {

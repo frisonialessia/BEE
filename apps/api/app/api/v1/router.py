@@ -15,6 +15,7 @@ from app.api.v1.endpoints import (
     audit,
     auth,
     brand,
+    companies,
     corrections,
     dark_funnel,
     dead_letter,
@@ -42,6 +43,7 @@ api_router.include_router(users.router)
 api_router.include_router(api_keys.router)
 api_router.include_router(signals.router)
 api_router.include_router(leads.router)
+api_router.include_router(companies.router)
 api_router.include_router(opportunities.router)
 api_router.include_router(orchestrator.router)
 api_router.include_router(insights.router)

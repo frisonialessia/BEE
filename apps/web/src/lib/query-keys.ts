@@ -32,6 +32,11 @@ export const queryKeys = {
     all: ["leads"] as const,
     list: (limit?: number) => [...queryKeys.leads.all, "list", limit] as const,
   },
+  companies: {
+    all: ["companies"] as const,
+    list: (limit?: number) => [...queryKeys.companies.all, "list", limit] as const,
+    detail: (id: string) => [...queryKeys.companies.all, "detail", id] as const,
+  },
   teams: {
     all: ["teams"] as const,
     list: () => [...queryKeys.teams.all, "list"] as const,

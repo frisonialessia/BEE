@@ -9,12 +9,29 @@ from sqlmodel import or_, select
 from app.models.company import Company
 from app.repositories.base import BaseRepository
 from app.schemas.signal import CompanyRef
+from app.services.permissions import scope_by_organization_id
 
 
 class CompanyRepository(BaseRepository[Company]):
     """Data-access operations for :class:`Company`."""
 
     model = Company
+
+    def list_scoped(
+        self,
+        *,
+        limit: int = 100,
+        offset: int = 0,
+        organization_id: uuid.UUID | None = None,
+    ) -> list[Company]:
+        """Same tenant-scoping convention as ``LeadRepository.list_scoped`` —
+        companies have no per-user assignment, so this only applies the
+        organization boundary, not a visibility filter.
+        """
+        statement = select(Company).order_by(Company.created_at.desc())  # type: ignore[union-attr]
+        statement = scope_by_organization_id(statement, Company.organization_id, organization_id)
+        statement = statement.limit(limit).offset(offset)
+        return list(self.session.exec(statement).all())
 
     def get_by_domain(self, domain: str, organization_id: uuid.UUID | None = None) -> Company | None:
         """Look up a company by domain, scoped to ``organization_id`` when given.

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Building2,
   Fingerprint,
   Flame,
   LayoutDashboard,
@@ -26,6 +27,7 @@ const VIEWS = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Resumen", exact: true },
   { href: "/dashboard/assistant", icon: Sparkles, label: "Asistente BEE" },
   { href: "/dashboard/control", icon: SlidersHorizontal, label: "Control", exact: true },
+  { href: "/dashboard/companies", icon: Building2, label: "Empresas" },
   { href: "/dashboard/opportunities", icon: Target, label: "Oportunidades" },
   { href: "/dashboard/signals", icon: Radio, label: "Señales" },
   { href: "/dashboard/strategies", icon: Lightbulb, label: "Estrategias" },
