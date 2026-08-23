@@ -709,7 +709,6 @@
 /* ── Glass surfaces — translucent + blurred, only the existing palette ───── */
 
 .bee-glass {
-  position: relative;
   background: color-mix(in srgb, var(--color-card) 55%, transparent);
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);

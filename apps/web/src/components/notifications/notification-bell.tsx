@@ -30,7 +30,7 @@ function timeAgo(iso: string): string {
   return `hace ${Math.round(hours / 24)}d`;
 }
 
-/** Centro de notificaciones — se arma de datos reales (leads calientes, señales de alta intención, decisiones que requieren revisión). */
+/** Campana de notificaciones — vive en el encabezado, no en el sidebar. */
 export function NotificationBell() {
   const { notifications, unreadCount, markAllSeen } = useNotifications();
   const [open, setOpen] = useState(false);
@@ -57,21 +57,20 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={toggle}
-        className="bee-rail-link relative"
+        className="relative flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[var(--color-primary)] hover:text-foreground"
         aria-label={`Notificaciones${unreadCount > 0 ? ` (${unreadCount} sin leer)` : ""}`}
       >
-        <Bell className="size-4 shrink-0 stroke-[1.5]" />
-        <span>Notificaciones</span>
+        <Bell className="size-4 stroke-[1.5]" />
         {unreadCount > 0 && (
-          <span className="absolute right-2 top-1.5 flex size-4 items-center justify-center rounded-full bg-[var(--color-chart-2)] text-[9px] font-bold text-white">
+          <span className="absolute right-1 top-1 flex size-4 items-center justify-center rounded-full bg-[var(--color-chart-2)] text-[9px] font-bold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute left-full top-0 z-50 ml-2 max-h-[70vh] w-80 overflow-y-auto rounded-[var(--radius-lg)] border border-border bg-[var(--color-background)] shadow-[0_8px_32px_rgba(34,34,34,0.16)]">
-          <div className="sticky top-0 border-b border-border bg-[var(--color-background)] px-4 py-3">
+        <div className="bee-glass absolute right-0 top-full z-50 mt-2 max-h-[70vh] w-80 overflow-y-auto rounded-[var(--radius-lg)]">
+          <div className="sticky top-0 border-b border-border bg-[var(--color-background)]/80 px-4 py-3 backdrop-blur">
             <p className="text-sm font-semibold">Notificaciones</p>
           </div>
           {notifications.length === 0 ? (

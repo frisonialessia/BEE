@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { AskBeeFab } from "@/components/assistant/ask-bee-fab";
+import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { DashboardRail } from "@/components/dashboard/dashboard-rail";
 import { FloatingCursors } from "@/components/presence/floating-cursors";
-import { PresenceBar } from "@/components/presence/presence-bar";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
 import { useAuth } from "@/providers/auth-provider";
@@ -41,11 +41,11 @@ export default function DashboardLayout({
       <div className="bee-app">
         <DashboardRail />
         <div className="bee-main">
+          <DashboardHeader />
           <div className="bee-scroll">{children}</div>
         </div>
         <OpportunityDrawer />
         <AskBeeFab />
-        <PresenceBar />
         <FloatingCursors />
       </div>
     </OpportunityDrawerProvider>

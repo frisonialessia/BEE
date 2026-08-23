@@ -262,7 +262,7 @@ export function SignalHexMap({
 
   return (
     <section
-      className={cn("bee-glass flex flex-col overflow-hidden rounded-[var(--radius-lg)] p-5", className)}
+      className={cn("bee-glass relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] p-5", className)}
       aria-label="Mapa hexagonal de señales — mapa de calor de la colmena"
     >
       {/* Hexágonos flotantes decorativos — puro CSS, no interactúan. */}
