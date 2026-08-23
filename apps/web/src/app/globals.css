@@ -32,12 +32,6 @@
   --color-cta: var(--color-chart-4);
   --color-cta-hover: color-mix(in srgb, var(--color-chart-4) 85%, var(--color-text) 15%);
 
-  /* Real traffic-light semantics, distinct from the decorative chart
-     palette (chart-1..6 are for categorical data — pipeline stages,
-     channels — not status feedback). */
-  --color-success: #3fbb72;
-  --color-danger: #ef5b5b;
-
   --color-chart-1: #ffb213;
   --color-chart-2: #fca000;
   --color-chart-3: #ffbe55;
@@ -87,12 +81,10 @@
   --muted-foreground: var(--color-text-muted);
   --accent: var(--color-accent-warm);
   --accent-foreground: var(--color-text);
-  --destructive: var(--color-danger);
-  --destructive-foreground: #ffffff;
-  --success: var(--color-success);
-  --success-foreground: #ffffff;
+  --destructive: var(--color-chart-2);
+  --destructive-foreground: var(--color-text);
+  --success: var(--color-chart-5);
   --warning: var(--color-chart-1);
-  --warning-foreground: var(--color-text);
   --border: var(--color-divider);
   --input: var(--color-divider);
   --ring: var(--color-chart-4);
@@ -126,9 +118,7 @@
   --color-muted-foreground: var(--color-text-muted);
   --color-accent: var(--color-accent-warm);
   --color-accent-foreground: var(--color-text);
-  --color-destructive: var(--color-danger);
-  --color-success: var(--color-success);
-  --color-warning: var(--color-chart-1);
+  --color-destructive: var(--color-chart-2);
   --color-cta: var(--color-cta);
   --color-border: var(--color-divider);
   --color-input: var(--color-divider);

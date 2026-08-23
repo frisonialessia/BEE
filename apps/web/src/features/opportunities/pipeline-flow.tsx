@@ -142,11 +142,11 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
       <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
         <span className="font-medium text-foreground">Dentro de Cerradas:</span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-2 rounded-full" style={{ background: "var(--color-success)" }} />
+          <span className="size-2 rounded-full" style={{ background: "var(--success)" }} />
           {closedBreakdown.won} ganadas
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <span className="size-2 rounded-full" style={{ background: "var(--color-danger)" }} />
+          <span className="size-2 rounded-full" style={{ background: "var(--destructive)" }} />
           {closedBreakdown.lost} perdidas
         </span>
         <span className="inline-flex items-center gap-1.5">

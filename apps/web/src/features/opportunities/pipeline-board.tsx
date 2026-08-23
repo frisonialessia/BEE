@@ -43,7 +43,7 @@ function PipelineCard({
 
   // Ganada/perdida se notan de inmediato por color, no solo por texto.
   const accent = isWon
-    ? "border-l-[var(--color-success)]"
+    ? "border-l-[var(--success)]"
     : isClosedOut
       ? "border-l-[var(--color-text-muted)] opacity-70"
       : CHART_ACCENT[index % CHART_ACCENT.length];
