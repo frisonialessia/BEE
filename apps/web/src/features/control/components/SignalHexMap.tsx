@@ -262,9 +262,13 @@ export function SignalHexMap({
 
   return (
     <section
-      className={cn("bee-surface flex flex-col p-5", className)}
+      className={cn("bee-glass flex flex-col overflow-hidden rounded-[var(--radius-lg)] p-5", className)}
       aria-label="Mapa hexagonal de señales — mapa de calor de la colmena"
     >
+      {/* Hexágonos flotantes decorativos — puro CSS, no interactúan. */}
+      <span className="bee-hex-float" style={{ width: 90, height: 104, top: -30, right: -20, animationDelay: "0s" }} aria-hidden />
+      <span className="bee-hex-float" style={{ width: 56, height: 64, bottom: -16, left: 12, animationDelay: "1.4s" }} aria-hidden />
+      <span className="bee-hex-float" style={{ width: 40, height: 46, top: "40%", right: 24, animationDelay: "2.6s" }} aria-hidden />
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="bee-caption">Pipeline oculto · leads activos</p>

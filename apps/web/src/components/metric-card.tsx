@@ -27,7 +27,7 @@ export function MetricCard({
         : "";
 
   return (
-    <div className={`bee-bento bee-bento-pad ${toneClass}`}>
+    <div className={`bee-glass bee-glass--hover bee-bento-pad rounded-[var(--radius-lg)] ${toneClass}`}>
       <div className="flex items-center justify-between gap-2">
         <span className="bee-kpi-tile__label">{label}</span>
         {Icon && <Icon className="size-3.5 text-muted-foreground stroke-[1.25]" />}
