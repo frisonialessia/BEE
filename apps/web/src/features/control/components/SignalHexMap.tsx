@@ -1,5 +1,7 @@
 "use client";
 
+import { ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -127,6 +129,26 @@ export function SignalHexMap({
     return 18;
   }, [leads.length]);
 
+  // Desglose por etapa — igual patrón que "Opened/Clicked/Converted" de un
+  // dashboard de rendimiento: 3 cifras clave con su barra de color, calculadas
+  // de los leads ya obtenidos (no inventadas).
+  const stageStats = useMemo(() => {
+    if (leads.length === 0) return [];
+    const counts: Record<string, number> = {};
+    for (const l of leads) counts[l.buying_stage] = (counts[l.buying_stage] ?? 0) + 1;
+    const order: Array<{ stage: string; color: string }> = [
+      { stage: "ready_to_buy", color: "var(--color-chart-2)" },
+      { stage: "decision", color: "var(--color-chart-1)" },
+      { stage: "consideration", color: "var(--color-chart-3)" },
+    ];
+    return order.map(({ stage, color }) => ({
+      stage,
+      color,
+      label: STAGE_LABELS[stage] ?? stage,
+      pct: Math.round(((counts[stage] ?? 0) / leads.length) * 100),
+    }));
+  }, [leads]);
+
   const cells = useMemo(() => {
     if (leads.length === 0 || size.width <= 0) return [];
     const points = leadsToPoints(leads, size.width, size.height);
@@ -243,20 +265,30 @@ export function SignalHexMap({
       className={cn("bee-surface flex flex-col p-5", className)}
       aria-label="Mapa hexagonal de señales — mapa de calor de la colmena"
     >
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="bee-eyebrow">Colmena</h2>
+          <p className="bee-caption">Pipeline oculto · leads activos</p>
+          <h2 className="mt-0.5 text-base font-semibold tracking-tight">Colmena de intención</h2>
           <p className="bee-caption mt-0.5">{leads.length} leads · haz clic en una celda para ver detalles</p>
         </div>
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          <span>Frío</span>
-          <div
-            className="h-2 w-28 rounded-full"
-            style={{
-              background: `linear-gradient(90deg, ${TEMPERATURE_COLORS.cool}, ${TEMPERATURE_COLORS.mild}, ${TEMPERATURE_COLORS.warm}, ${TEMPERATURE_COLORS.hot}, ${TEMPERATURE_COLORS.peak})`,
-            }}
-          />
-          <span>Caliente</span>
+        <div className="flex flex-col items-end gap-2">
+          <Link
+            href="/dashboard/dark-funnel"
+            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
+          >
+            Ver más
+            <ArrowUpRight className="size-3" />
+          </Link>
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+            <span>Frío</span>
+            <div
+              className="h-2 w-24 rounded-full"
+              style={{
+                background: `linear-gradient(90deg, ${TEMPERATURE_COLORS.cool}, ${TEMPERATURE_COLORS.mild}, ${TEMPERATURE_COLORS.warm}, ${TEMPERATURE_COLORS.hot}, ${TEMPERATURE_COLORS.peak})`,
+              }}
+            />
+            <span>Caliente</span>
+          </div>
         </div>
       </div>
 
@@ -295,6 +327,20 @@ export function SignalHexMap({
           </div>
         )}
       </div>
+
+      {stageStats.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-border pt-3">
+          {stageStats.map((s) => (
+            <div key={s.stage} className="flex items-center gap-2.5">
+              <span className="h-7 w-[3px] shrink-0 rounded-full" style={{ background: s.color }} />
+              <div>
+                <p className="text-base font-bold leading-none tabular-nums">{s.pct}%</p>
+                <p className="mt-1 text-[11px] leading-none text-muted-foreground">{s.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

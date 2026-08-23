@@ -100,7 +100,7 @@ function WorkerKpis({ worker }: { worker: WorkerHealth }) {
   }[worker.state];
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="bee-kpi-strip !mt-0">
       <KpiCard label="Ingesta" value={worker.running ? stateLabel : "Apagado"} />
       <KpiCard label="Cola" value={String(worker.queue_depth)} mono />
       <KpiCard label="Procesados" value={String(worker.processed_count)} mono />

@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { PipelineBoard } from "@/features/opportunities/pipeline-board";
+import { PipelineFlow } from "@/features/opportunities/pipeline-flow";
 import { usePagination } from "@/hooks/use-pagination";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 
@@ -55,6 +56,9 @@ export function OpportunitiesDashboard() {
             </TabsTrigger>
             <TabsTrigger value="pipeline" className="rounded-sm">
               Pipeline ({opportunities.length})
+            </TabsTrigger>
+            <TabsTrigger value="flujo" className="rounded-sm">
+              Flujo
             </TabsTrigger>
           </TabsList>
 
@@ -107,6 +111,10 @@ export function OpportunitiesDashboard() {
             ) : (
               <PipelineBoard opportunities={opportunities} onOpen={openOpportunity} />
             )}
+          </TabsContent>
+
+          <TabsContent value="flujo" className="mt-6">
+            <PipelineFlow opportunities={opportunities} />
           </TabsContent>
         </Tabs>
       )}
