@@ -19,7 +19,7 @@ from app.core.database import get_session
 from app.models.lead import Lead
 from app.models.user import User
 from app.repositories.lead import LeadRepository
-from app.schemas.lead import LeadCreateIn, LeadOut
+from app.schemas.lead import LeadBulkCreateIn, LeadBulkError, LeadBulkResult, LeadCreateIn, LeadOut
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
 
 router = APIRouter(prefix="/leads", tags=["Leads"])
@@ -50,6 +50,49 @@ def create_lead(
     session.commit()
     session.refresh(lead)
     return LeadOut.model_validate(lead)
+
+
+@router.post(
+    "/bulk",
+    response_model=LeadBulkResult,
+    status_code=status.HTTP_201_CREATED,
+    summary="Bulk-create leads (CSV import)",
+)
+def bulk_create_leads(
+    data: LeadBulkCreateIn,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> LeadBulkResult:
+    """CSV parsing happens in the browser — this just persists the rows it
+    already validated. Each row is inserted independently so one bad row
+    (e.g. a company_id that doesn't exist) doesn't fail the whole import.
+    """
+    created_count = 0
+    errors: list[LeadBulkError] = []
+
+    # Committed per row (not batched into one transaction) so a bad row
+    # (e.g. a company_id that doesn't exist) can be rolled back on its own
+    # without losing the rows already inserted earlier in the same import.
+    for index, row in enumerate(data.leads):
+        try:
+            lead = Lead(
+                organization_id=current_user.organization_id,
+                company_id=row.company_id,
+                full_name=row.full_name,
+                email=row.email,
+                title=row.title,
+                seniority=row.seniority,
+                linkedin_url=row.linkedin_url,
+                phone=row.phone,
+            )
+            session.add(lead)
+            session.commit()
+            created_count += 1
+        except Exception as exc:  # noqa: BLE001 - one bad row must not abort the batch
+            session.rollback()
+            errors.append(LeadBulkError(row=index, message=str(exc)))
+
+    return LeadBulkResult(created_count=created_count, errors=errors)
 
 
 @router.get(

@@ -30,3 +30,16 @@ export async function createLead(body: LeadCreateIn): Promise<Lead> {
     body: JSON.stringify(body),
   });
 }
+
+export interface LeadBulkResult {
+  created_count: number;
+  errors: Array<{ row: number; message: string }>;
+}
+
+export async function bulkCreateLeads(leads: LeadCreateIn[]): Promise<LeadBulkResult> {
+  return apiFetch<LeadBulkResult>("/api/v1/leads/bulk", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ leads }),
+  });
+}

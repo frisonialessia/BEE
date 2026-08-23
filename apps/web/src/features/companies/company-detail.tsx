@@ -1,16 +1,88 @@
 "use client";
 
-import { ArrowUpRight, Building2, Globe, Mail, Radio, Target } from "lucide-react";
-import { useState } from "react";
+import { ArrowUpRight, Building2, Globe, Mail, Radio, Target, Upload } from "lucide-react";
+import { useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useCompany } from "@/hooks/queries/use-companies";
-import { useCreateLead, useLeads } from "@/hooks/queries/use-leads";
+import { useBulkCreateLeads, useCreateLead, useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { opportunityStatusLabels } from "@/lib/format";
+import { parseCsv } from "@/lib/csv";
+
+/** Toma la primera cabecera que exista de una lista de nombres posibles (español o inglés). */
+function pick(row: Record<string, string>, keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = row[key];
+    if (value) return value;
+  }
+  return undefined;
+}
+
+function CsvImportButton({ companyId }: { companyId: string }) {
+  const bulkCreate = useBulkCreateLeads();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [result, setResult] = useState<{ created: number; skipped: number; errors: number } | null>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite volver a elegir el mismo archivo después
+    if (!file) return;
+
+    const text = await file.text();
+    const rows = parseCsv(text);
+
+    const leads = rows
+      .map((row) => {
+        const full_name = pick(row, ["full_name", "nombre", "nombre completo", "name"]);
+        if (!full_name) return null;
+        return {
+          full_name,
+          company_id: companyId,
+          email: pick(row, ["email", "correo", "correo electrónico"]),
+          title: pick(row, ["title", "cargo", "puesto"]),
+          seniority: pick(row, ["seniority", "nivel"]),
+          linkedin_url: pick(row, ["linkedin_url", "linkedin"]),
+          phone: pick(row, ["phone", "telefono", "teléfono"]),
+        };
+      })
+      .filter((l): l is NonNullable<typeof l> => l !== null);
+
+    const skipped = rows.length - leads.length;
+    if (leads.length === 0) {
+      setResult({ created: 0, skipped, errors: 0 });
+      return;
+    }
+
+    const response = await bulkCreate.mutateAsync(leads);
+    setResult({ created: response.created_count, skipped, errors: response.errors.length });
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={bulkCreate.isPending}
+        className="bee-btn-ghost text-xs"
+      >
+        <Upload className="size-3.5" />
+        {bulkCreate.isPending ? "Importando…" : "Importar CSV"}
+      </button>
+      <input ref={inputRef} type="file" accept=".csv,text/csv" onChange={handleFile} className="hidden" />
+      {result && (
+        <p className="text-[11px] text-muted-foreground">
+          {result.created} contactos importados
+          {result.skipped > 0 && ` · ${result.skipped} sin nombre (omitidos)`}
+          {result.errors > 0 && ` · ${result.errors} con error`}
+        </p>
+      )}
+    </div>
+  );
+}
 
 function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () => void }) {
   const createLead = useCreateLead();
@@ -166,13 +238,16 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
             <Mail className="size-4 text-muted-foreground" />
             Contactos ({leads.length})
           </h2>
-          <button
-            type="button"
-            onClick={() => setShowNewContact((v) => !v)}
-            className="bee-btn-ghost text-xs"
-          >
-            + Agregar contacto
-          </button>
+          <div className="flex items-center gap-2">
+            <CsvImportButton companyId={companyId} />
+            <button
+              type="button"
+              onClick={() => setShowNewContact((v) => !v)}
+              className="bee-btn-ghost text-xs"
+            >
+              + Agregar contacto
+            </button>
+          </div>
         </div>
         {showNewContact && (
           <NewContactForm companyId={companyId} onDone={() => setShowNewContact(false)} />

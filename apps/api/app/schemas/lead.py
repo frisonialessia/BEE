@@ -22,6 +22,24 @@ class LeadCreateIn(BaseModel):
     phone: str | None = Field(default=None, max_length=64)
 
 
+class LeadBulkCreateIn(BaseModel):
+    """Bulk import — the CSV path. Parsing happens client-side; this just
+    takes the already-parsed rows so the backend stays format-agnostic.
+    """
+
+    leads: list[LeadCreateIn] = Field(min_length=1, max_length=1000)
+
+
+class LeadBulkError(BaseModel):
+    row: int
+    message: str
+
+
+class LeadBulkResult(BaseModel):
+    created_count: int
+    errors: list[LeadBulkError]
+
+
 class LeadOut(BaseModel):
     """API representation of a persisted lead."""
 
