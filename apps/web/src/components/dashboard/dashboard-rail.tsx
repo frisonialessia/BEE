@@ -2,25 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  Building2,
-  Crosshair,
-  Fingerprint,
-  Flame,
-  LayoutDashboard,
-  Lightbulb,
-  Radio,
-  ShieldCheck,
-  SlidersHorizontal,
-  Target,
-  TrendingUp,
-  Users,
-  Workflow,
-  Zap,
-} from "lucide-react";
 
 import { Logo } from "@/components/logo";
 import { useMobileNav } from "@/components/dashboard/mobile-nav-context";
+import { NAV_GROUPS as GROUPS } from "@/lib/nav-items";
 import { cn } from "@/lib/utils";
 
 /** El Resumen va primero — es lo más importante, la vista que responde
@@ -29,41 +14,9 @@ import { cn } from "@/lib/utils";
  *  navegación.
  *
  *  Agrupado por lo que cada sección realmente es (CRM / Inteligencia /
- *  Operaciones), para que no haya que adivinar dónde vive cada cosa. */
-const GROUPS = [
-  {
-    label: null,
-    items: [{ href: "/dashboard", icon: LayoutDashboard, label: "Resumen", exact: true }],
-  },
-  {
-    label: "CRM",
-    items: [
-      { href: "/dashboard/companies", icon: Building2, label: "Empresas" },
-      { href: "/dashboard/leads", icon: Users, label: "Leads" },
-      { href: "/dashboard/opportunities", icon: Target, label: "Oportunidades" },
-    ],
-  },
-  {
-    label: "Inteligencia",
-    items: [
-      { href: "/dashboard/priority", icon: Crosshair, label: "Priorización" },
-      { href: "/dashboard/signals", icon: Radio, label: "Señales" },
-      { href: "/dashboard/strategies", icon: Lightbulb, label: "Estrategias" },
-      { href: "/dashboard/dark-funnel", icon: Flame, label: "Pipeline oculto" },
-      { href: "/dashboard/forecast", icon: TrendingUp, label: "Pronóstico" },
-    ],
-  },
-  {
-    label: "Operaciones",
-    items: [
-      { href: "/dashboard/control", icon: SlidersHorizontal, label: "Control", exact: true },
-      { href: "/dashboard/network", icon: Zap, label: "Red" },
-      { href: "/dashboard/brand", icon: Fingerprint, label: "Voz de marca" },
-      { href: "/dashboard/sequences", icon: Workflow, label: "Secuencias" },
-      { href: "/dashboard/resilience", icon: ShieldCheck, label: "Resiliencia" },
-    ],
-  },
-] as const;
+ *  Operaciones), para que no haya que adivinar dónde vive cada cosa.
+ *  La lista misma vive en lib/nav-items.ts — el Command Palette (Cmd+K)
+ *  la comparte, para que nunca queden desincronizados. */
 
 /** Sidebar lateral con nombre de página visible en cada ítem de navegación.
  *  En pantallas chicas (<768px) vive fuera de cuadro y entra como panel

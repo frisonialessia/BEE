@@ -1,0 +1,23 @@
+"use client";
+
+import { useCommandPalette } from "@/components/command-palette/command-palette-context";
+
+/** Botón/pista para abrir el Command Palette — el atajo real es Cmd/Ctrl+K
+ *  desde cualquier pantalla; esto es solo para que se note que existe.
+ *  Oculto en celular: sin teclado físico, el atajo no aplica. */
+export function CommandPaletteHint() {
+  const { setOpen } = useCommandPalette();
+
+  return (
+    <button
+      type="button"
+      onClick={() => setOpen(true)}
+      className="hidden shrink-0 items-center gap-1 rounded-[var(--radius-sm)] border border-border px-1.5 py-1 text-[10px] text-muted-foreground transition-colors hover:bg-[var(--color-primary)] hover:text-foreground sm:flex"
+      aria-label="Abrir Command Palette"
+      title="Command Palette"
+    >
+      <kbd className="font-sans">⌘</kbd>
+      <kbd className="font-sans">K</kbd>
+    </button>
+  );
+}

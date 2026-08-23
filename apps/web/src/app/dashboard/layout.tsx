@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { AskBeeFab } from "@/components/assistant/ask-bee-fab";
+import { CommandPalette } from "@/components/command-palette/command-palette";
+import { CommandPaletteProvider } from "@/components/command-palette/command-palette-context";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { DashboardRail } from "@/components/dashboard/dashboard-rail";
 import { MobileNavProvider } from "@/components/dashboard/mobile-nav-context";
@@ -40,16 +42,19 @@ export default function DashboardLayout({
   return (
     <OpportunityDrawerProvider>
       <MobileNavProvider>
-        <div className="bee-app">
-          <DashboardRail />
-          <div className="bee-main">
-            <DashboardHeader />
-            <div className="bee-scroll">{children}</div>
+        <CommandPaletteProvider>
+          <div className="bee-app">
+            <DashboardRail />
+            <div className="bee-main">
+              <DashboardHeader />
+              <div className="bee-scroll">{children}</div>
+            </div>
+            <OpportunityDrawer />
+            <AskBeeFab />
+            <FloatingCursors />
+            <CommandPalette />
           </div>
-          <OpportunityDrawer />
-          <AskBeeFab />
-          <FloatingCursors />
-        </div>
+        </CommandPaletteProvider>
       </MobileNavProvider>
     </OpportunityDrawerProvider>
   );

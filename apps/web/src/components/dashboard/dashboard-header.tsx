@@ -3,6 +3,7 @@
 import { AccountMenu } from "@/components/dashboard/account-menu";
 import { AssistantHeaderLink } from "@/components/dashboard/assistant-header-link";
 import { MobileNavToggle } from "@/components/dashboard/mobile-nav-toggle";
+import { CommandPaletteHint } from "@/components/command-palette/command-palette-hint";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { TeamPresence } from "@/components/presence/presence-bar";
 import { GlobalSearch } from "@/components/search/global-search";
@@ -16,6 +17,7 @@ export function DashboardHeader() {
     <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 sm:gap-3 sm:px-5">
       <MobileNavToggle />
       <GlobalSearch className="max-w-[10rem] sm:max-w-xs md:max-w-sm" />
+      <CommandPaletteHint />
       <div className="ml-auto flex items-center gap-2 sm:gap-3">
         <AssistantHeaderLink />
         <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
