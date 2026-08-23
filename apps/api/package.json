@@ -1,5 +1,0 @@
-{
-  "name": "bee-api-vercel-guard",
-  "private": true,
-  "description": "Deliberately empty — this file's only job is to stop Vercel's monorepo build-command detection from climbing up to the repo root's package.json (whose \"build\" script builds the Next.js frontend, not this Python backend) when deploying apps/api as its own project. Do not add a \"scripts.build\" entry here; let Vercel's Python/FastAPI framework detection handle the build."
-}
