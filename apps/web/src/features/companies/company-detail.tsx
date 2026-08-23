@@ -1,15 +1,80 @@
 "use client";
 
 import { ArrowUpRight, Building2, Globe, Mail, Radio, Target } from "lucide-react";
+import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useCompany } from "@/hooks/queries/use-companies";
-import { useLeads } from "@/hooks/queries/use-leads";
+import { useCreateLead, useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { opportunityStatusLabels } from "@/lib/format";
+
+function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () => void }) {
+  const createLead = useCreateLead();
+  const [fullName, setFullName] = useState("");
+  const [title, setTitle] = useState("");
+  const [email, setEmail] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!fullName.trim()) return;
+    await createLead.mutateAsync({
+      full_name: fullName.trim(),
+      company_id: companyId,
+      title: title.trim() || undefined,
+      email: email.trim() || undefined,
+    });
+    setFullName("");
+    setTitle("");
+    setEmail("");
+    onDone();
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mb-3 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-3"
+    >
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <input
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Nombre completo *"
+          required
+          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+        />
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Cargo"
+          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+        />
+        <input
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Correo"
+          type="email"
+          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+        />
+      </div>
+      <div className="mt-2.5 flex items-center gap-2">
+        <button
+          type="submit"
+          disabled={!fullName.trim() || createLead.isPending}
+          className="bee-btn bee-btn--primary"
+        >
+          {createLead.isPending ? "Guardando…" : "Guardar"}
+        </button>
+        <button type="button" onClick={onDone} className="bee-btn-ghost">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
 
 /** Ficha de empresa — contactos, oportunidades y señales, todo junto. */
 export function CompanyDetail({ companyId }: { companyId: string }) {
@@ -18,6 +83,8 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
   const { data: oppsResult } = useOpportunities(undefined, 200);
   const { data: signalsResult } = useSignals(200);
   const { openOpportunity } = useOpportunityDrawer();
+
+  const [showNewContact, setShowNewContact] = useState(false);
 
   const company = companyResult?.data;
   const leads = (leadsResult?.data ?? []).filter((l) => l.company_id === companyId);
@@ -94,10 +161,22 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
       </div>
 
       <section>
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-          <Mail className="size-4 text-muted-foreground" />
-          Contactos ({leads.length})
-        </h2>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <Mail className="size-4 text-muted-foreground" />
+            Contactos ({leads.length})
+          </h2>
+          <button
+            type="button"
+            onClick={() => setShowNewContact((v) => !v)}
+            className="bee-btn-ghost text-xs"
+          >
+            + Agregar contacto
+          </button>
+        </div>
+        {showNewContact && (
+          <NewContactForm companyId={companyId} onDone={() => setShowNewContact(false)} />
+        )}
         {leads.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin contactos registrados todavía.</p>
         ) : (

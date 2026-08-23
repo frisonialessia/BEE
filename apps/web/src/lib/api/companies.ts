@@ -2,6 +2,24 @@ import { apiFetch } from "@/lib/api/client";
 import type { FetchResult } from "@/types/api";
 import type { Company } from "@/types/domain";
 
+export interface CompanyCreateIn {
+  name: string;
+  domain?: string;
+  industry?: string;
+  size?: string;
+  country?: string;
+  website?: string;
+  description?: string;
+}
+
+export async function createCompany(body: CompanyCreateIn): Promise<Company> {
+  return apiFetch<Company>("/api/v1/companies", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
 export async function fetchCompanies(limit = 50): Promise<FetchResult<Company[]>> {
   try {
     const data = await apiFetch<Company[]>(`/api/v1/companies?limit=${limit}`, {

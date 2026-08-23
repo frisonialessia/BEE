@@ -13,13 +13,45 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 
-from app.api.deps import get_current_user_optional
+from app.api.deps import get_current_user, get_current_user_optional
 from app.core.database import get_session
+from app.models.company import Company
 from app.models.user import User
 from app.repositories.company import CompanyRepository
-from app.schemas.company import CompanyOut
+from app.schemas.company import CompanyCreateIn, CompanyOut
 
 router = APIRouter(prefix="/companies", tags=["Companies"])
+
+
+@router.post(
+    "",
+    response_model=CompanyOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a company manually",
+)
+def create_company(
+    data: CompanyCreateIn,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> CompanyOut:
+    """The manual-entry counterpart to ``get_or_create_from_ref`` (which only
+    runs during signal ingestion) — any authenticated user can add a company
+    by hand, same as any real CRM lets a rep type one in.
+    """
+    company = Company(
+        organization_id=current_user.organization_id,
+        name=data.name,
+        domain=data.domain,
+        industry=data.industry,
+        size=data.size,
+        country=data.country,
+        website=data.website,
+        description=data.description,
+    )
+    session.add(company)
+    session.commit()
+    session.refresh(company)
+    return CompanyOut.model_validate(company)
 
 
 @router.get(

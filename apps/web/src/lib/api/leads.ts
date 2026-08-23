@@ -12,3 +12,21 @@ export async function fetchLeads(limit = 50): Promise<FetchResult<Lead[]>> {
     return { data: [], live: false };
   }
 }
+
+export interface LeadCreateIn {
+  full_name: string;
+  company_id?: string;
+  email?: string;
+  title?: string;
+  seniority?: string;
+  linkedin_url?: string;
+  phone?: string;
+}
+
+export async function createLead(body: LeadCreateIn): Promise<Lead> {
+  return apiFetch<Lead>("/api/v1/leads", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}

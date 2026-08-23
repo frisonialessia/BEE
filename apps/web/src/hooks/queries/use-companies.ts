@@ -1,8 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { fetchCompanies, fetchCompany } from "@/lib/api/companies";
+import { createCompany, fetchCompanies, fetchCompany, type CompanyCreateIn } from "@/lib/api/companies";
 import { queryKeys } from "@/lib/query-keys";
 
 export function useCompanies(limit = 100) {
@@ -17,5 +17,15 @@ export function useCompany(companyId: string) {
     queryKey: queryKeys.companies.detail(companyId),
     queryFn: async () => fetchCompany(companyId),
     enabled: Boolean(companyId),
+  });
+}
+
+export function useCreateCompany() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: CompanyCreateIn) => createCompany(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+    },
   });
 }

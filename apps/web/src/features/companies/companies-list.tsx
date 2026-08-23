@@ -2,18 +2,94 @@
 
 import { Building2, Globe } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCompanies } from "@/hooks/queries/use-companies";
+import { useCompanies, useCreateCompany } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
+
+function NewCompanyForm({ onDone }: { onDone: () => void }) {
+  const createCompany = useCreateCompany();
+  const [name, setName] = useState("");
+  const [domain, setDomain] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [country, setCountry] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    await createCompany.mutateAsync({
+      name: name.trim(),
+      domain: domain.trim() || undefined,
+      industry: industry.trim() || undefined,
+      country: country.trim() || undefined,
+    });
+    setName("");
+    setDomain("");
+    setIndustry("");
+    setCountry("");
+    onDone();
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mb-4 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-4"
+    >
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Nueva empresa
+      </p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Nombre *"
+          required
+          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+        />
+        <input
+          value={domain}
+          onChange={(e) => setDomain(e.target.value)}
+          placeholder="dominio.com"
+          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+        />
+        <input
+          value={industry}
+          onChange={(e) => setIndustry(e.target.value)}
+          placeholder="Industria"
+          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+        />
+        <input
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          placeholder="País"
+          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+        />
+      </div>
+      <div className="mt-3 flex items-center gap-2">
+        <button
+          type="submit"
+          disabled={!name.trim() || createCompany.isPending}
+          className="bee-btn bee-btn--primary"
+        >
+          {createCompany.isPending ? "Guardando…" : "Guardar"}
+        </button>
+        <button type="button" onClick={onDone} className="bee-btn-ghost">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
 
 /** Empresas — la cuenta como unidad, con cuántos contactos y oportunidades tiene cada una. */
 export function CompaniesList() {
   const { data: companiesResult, isLoading } = useCompanies(100);
   const { data: leadsResult } = useLeads(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);
+  const [showNew, setShowNew] = useState(false);
 
   const companies = companiesResult?.data ?? [];
   const live = companiesResult?.live ?? false;
@@ -40,9 +116,16 @@ export function CompaniesList() {
               Cada empresa con sus contactos, oportunidades y señales en un solo lugar
             </p>
           </div>
-          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+            <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary">
+              + Nueva empresa
+            </button>
+          </div>
         </div>
       </header>
+
+      {showNew && <NewCompanyForm onDone={() => setShowNew(false)} />}
 
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,9 +1,10 @@
-"""Lead endpoints — read-only for now.
+"""Lead endpoints.
 
-Leads are created via signal ingestion (get-or-create resolution — see
-``app.repositories.lead.LeadRepository.get_or_create_from_ref``), not through
-this API. This module exposes the list/detail views the dashboard needs, with
-the same visibility scoping as ``GET /opportunities``.
+Most leads are created via signal ingestion (get-or-create resolution — see
+``app.repositories.lead.LeadRepository.get_or_create_from_ref``). ``POST /leads``
+is the manual-entry counterpart for a rep adding a contact by hand. This
+module exposes the list/detail/create views the dashboard needs, with the
+same visibility scoping as ``GET /opportunities``.
 """
 
 from __future__ import annotations
@@ -13,14 +14,42 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 
-from app.api.deps import get_current_user_optional
+from app.api.deps import get_current_user, get_current_user_optional
 from app.core.database import get_session
+from app.models.lead import Lead
 from app.models.user import User
 from app.repositories.lead import LeadRepository
-from app.schemas.lead import LeadOut
+from app.schemas.lead import LeadCreateIn, LeadOut
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
 
 router = APIRouter(prefix="/leads", tags=["Leads"])
+
+
+@router.post(
+    "",
+    response_model=LeadOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a lead manually",
+)
+def create_lead(
+    data: LeadCreateIn,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> LeadOut:
+    lead = Lead(
+        organization_id=current_user.organization_id,
+        company_id=data.company_id,
+        full_name=data.full_name,
+        email=data.email,
+        title=data.title,
+        seniority=data.seniority,
+        linkedin_url=data.linkedin_url,
+        phone=data.phone,
+    )
+    session.add(lead)
+    session.commit()
+    session.refresh(lead)
+    return LeadOut.model_validate(lead)
 
 
 @router.get(
