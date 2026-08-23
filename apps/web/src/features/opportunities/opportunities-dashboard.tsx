@@ -4,11 +4,11 @@ import { Bot } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
-import { OpportunityCard } from "@/components/opportunity-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
+import { PipelineBoard } from "@/features/opportunities/pipeline-board";
 import { usePagination } from "@/hooks/use-pagination";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 
@@ -24,7 +24,6 @@ export function OpportunitiesDashboard() {
   const loading = loadingBattlecards || loadingOpps;
 
   const battlecardPagination = usePagination(battlecards);
-  const pipelinePagination = usePagination(opportunities);
 
   return (
     <div>
@@ -100,28 +99,14 @@ export function OpportunitiesDashboard() {
             )}
           </TabsContent>
 
-          <TabsContent value="pipeline" className="mt-6 space-y-4">
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {pipelinePagination.pageItems.map((opp) => (
-                <button
-                  key={opp.id}
-                  type="button"
-                  onClick={() => openOpportunity(opp.id)}
-                  className="text-left"
-                >
-                  <OpportunityCard opportunity={opp} />
-                </button>
-              ))}
-            </div>
-            <PaginationBar
-              page={pipelinePagination.page}
-              pageSize={pipelinePagination.pageSize}
-              totalPages={pipelinePagination.totalPages}
-              totalItems={pipelinePagination.totalItems}
-              onPageChange={pipelinePagination.goToPage}
-              onPageSizeChange={pipelinePagination.changePageSize}
-              itemLabel="oportunidades"
-            />
+          <TabsContent value="pipeline" className="mt-6">
+            {opportunities.length === 0 ? (
+              <div className="bee-bento bee-bento-pad py-12 text-center">
+                <p className="text-sm text-muted-foreground">Aún no hay oportunidades en el pipeline.</p>
+              </div>
+            ) : (
+              <PipelineBoard opportunities={opportunities} onOpen={openOpportunity} />
+            )}
           </TabsContent>
         </Tabs>
       )}

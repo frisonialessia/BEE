@@ -41,7 +41,7 @@ function PathCard({ path }: { path: IntroPath }) {
   const introType = INTRO_TYPE_CONFIG[path.intro_type] ?? INTRO_TYPE_CONFIG.cold;
 
   return (
-    <div className="rounded-none border border-border bg-[var(--color-card)] p-4 space-y-3">
+    <div className="rounded-lg border border-border bg-[var(--color-card)] p-4 space-y-3">
       <div className="flex items-center justify-between">
         <span
           className="text-xs px-2 py-0.5 rounded-sm border font-medium"
@@ -184,7 +184,7 @@ export function NetworkNavigatorPanel() {
             { label: "Companies Covered", value: stats.companies_covered },
             { label: "Avg Strength", value: `${stats.avg_relationship_strength}/10` },
           ].map(({ label, value }) => (
-            <div key={label} className="rounded-none border border-border bg-[var(--color-card)] p-3 text-center">
+            <div key={label} className="rounded-lg border border-border bg-[var(--color-card)] p-3 text-center">
               <p className="text-xl font-bold text-foreground">{value}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
             </div>
@@ -193,7 +193,7 @@ export function NetworkNavigatorPanel() {
       )}
 
       {/* Path finder */}
-      <div className="rounded-none border border-border bg-[var(--color-card)] p-4 space-y-3">
+      <div className="rounded-lg border border-border bg-[var(--color-card)] p-4 space-y-3">
         <h3 className="text-sm font-semibold text-foreground">Find Introduction Path</h3>
         <form onSubmit={handleFindPaths} className="flex flex-wrap gap-2">
           <input
@@ -261,7 +261,7 @@ export function NetworkNavigatorPanel() {
       </div>
 
       {showAdd && (
-        <form onSubmit={handleAddConnection} className="rounded-none border border-dashed border-border bg-[var(--color-primary)] p-4 space-y-3">
+        <form onSubmit={handleAddConnection} className="rounded-lg border border-dashed border-border bg-[var(--color-primary)] p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="Contact name" required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
             <input value={addCompany} onChange={(e) => setAddCompany(e.target.value)} placeholder="Company name" required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
@@ -281,17 +281,17 @@ export function NetworkNavigatorPanel() {
       {/* Connection list */}
       {loading ? (
         <div className="space-y-2">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-12 rounded-none bg-[var(--color-primary)] animate-pulse" />)}
+          {[...Array(4)].map((_, i) => <div key={i} className="h-12 rounded-lg bg-[var(--color-primary)] animate-pulse" />)}
         </div>
       ) : connections.length === 0 ? (
-        <div className="rounded-none border-2 border-dashed border-border p-8 text-center">
+        <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
           <p className="text-muted-foreground text-sm">No network connections yet.</p>
           <p className="text-muted-foreground text-xs mt-1">Add connections to enable warm intro path finding.</p>
         </div>
       ) : (
         <div className="space-y-2">
           {connections.slice(0, 15).map((conn) => (
-            <div key={conn.id} className="flex items-center gap-3 px-4 py-3 rounded-none border border-border bg-[var(--color-card)] hover:border-border transition-colors">
+            <div key={conn.id} className="flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-[var(--color-card)] hover:border-border transition-colors">
               <div className="w-8 h-8 rounded-sm bg-[var(--color-primary)] flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0">
                 {conn.contact_name.slice(0, 2).toUpperCase()}
               </div>

@@ -7,10 +7,10 @@ import { getDarkFunnelHotLeads, getDarkFunnelSummary, ingestDarkFunnelSignal } f
 // BEE's palette has no red — the heat gradient (hottest → coolest) maps onto
 // the chart accents instead: orange (2) → amber (1) → gold (3) → blue (4).
 const STAGE_CONFIG: Record<string, { label: string; varColor: string }> = {
-  ready_to_buy: { label: "Ready to Buy", varColor: "var(--color-chart-2)" },
-  decision: { label: "Decision", varColor: "var(--color-chart-1)" },
-  consideration: { label: "Consideration", varColor: "var(--color-chart-3)" },
-  awareness: { label: "Awareness", varColor: "var(--color-chart-4)" },
+  ready_to_buy: { label: "Listo para comprar", varColor: "var(--color-chart-2)" },
+  decision: { label: "Decisión", varColor: "var(--color-chart-1)" },
+  consideration: { label: "Consideración", varColor: "var(--color-chart-3)" },
+  awareness: { label: "Conocimiento", varColor: "var(--color-chart-4)" },
 };
 
 const SIGNAL_TYPES = [
@@ -53,7 +53,7 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
 
   return (
     <div
-      className="rounded-none border p-4 space-y-3"
+      className="rounded-lg border p-4 space-y-3"
       style={
         lead.is_hot
           ? { borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 8%, var(--color-card))" }
@@ -65,7 +65,7 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
           <div className="flex items-center gap-2">
             {lead.is_hot && (
               <span
-                className="inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-xs font-bold"
+                className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-bold"
                 style={{
                   color: "var(--color-chart-2)",
                   borderColor: "var(--color-chart-2)",
@@ -73,10 +73,10 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
                 }}
               >
                 <span
-                  className="h-1.5 w-1.5 animate-pulse rounded-sm"
+                  className="h-1.5 w-1.5 animate-pulse rounded-full"
                   style={{ background: "var(--color-chart-2)" }}
                 />
-                HOT
+                CALIENTE
               </span>
             )}
             <span className="text-sm font-semibold truncate">
@@ -106,21 +106,21 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
           </span>
         ))}
         {lead.signal_types_seen.length > 4 && (
-          <span className="text-xs text-muted-foreground">+{lead.signal_types_seen.length - 4} more</span>
+          <span className="text-xs text-muted-foreground">+{lead.signal_types_seen.length - 4} más</span>
         )}
       </div>
 
       {lead.top_intent_keywords.length > 0 && (
         <p className="text-xs text-muted-foreground">
-          <span className="font-medium text-foreground">Intent: </span>
+          <span className="font-medium text-foreground">Intención: </span>
           {lead.top_intent_keywords.slice(0, 4).join(", ")}
         </p>
       )}
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{lead.signal_count} signal{lead.signal_count !== 1 ? "s" : ""}</span>
+        <span>{lead.signal_count} señal{lead.signal_count !== 1 ? "es" : ""}</span>
         {lead.last_signal_at && (
-          <span>Last: {new Date(lead.last_signal_at).toLocaleDateString()}</span>
+          <span>Última: {new Date(lead.last_signal_at).toLocaleDateString()}</span>
         )}
       </div>
     </div>
@@ -187,12 +187,12 @@ export function DarkFunnelDashboard() {
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Hot Leads", value: summary.total_hot_leads, accent: "var(--color-chart-2)" },
-            { label: "Ready to Buy", value: summary.ready_to_buy_count, accent: "var(--color-chart-1)" },
-            { label: "Decision Stage", value: summary.decision_stage_count, accent: "var(--color-chart-3)" },
-            { label: "Today's Signals", value: summary.total_signals_today, accent: "var(--color-chart-4)" },
+            { label: "Leads calientes", value: summary.total_hot_leads, accent: "var(--color-chart-2)" },
+            { label: "Listos para comprar", value: summary.ready_to_buy_count, accent: "var(--color-chart-1)" },
+            { label: "Etapa de decisión", value: summary.decision_stage_count, accent: "var(--color-chart-3)" },
+            { label: "Señales de hoy", value: summary.total_signals_today, accent: "var(--color-chart-4)" },
           ].map(({ label, value, accent }) => (
-            <div key={label} className="rounded-none border border-border bg-[var(--color-card)] p-3 text-center">
+            <div key={label} className="rounded-lg border border-border bg-[var(--color-card)] p-3 text-center">
               <p className="text-2xl font-bold" style={{ color: accent }}>{value}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
             </div>
@@ -213,34 +213,34 @@ export function DarkFunnelDashboard() {
                   : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-[var(--color-text-muted)]"
               }`}
             >
-              {stage === "" ? "All" : STAGE_CONFIG[stage]?.label ?? stage}
+              {stage === "" ? "Todas" : STAGE_CONFIG[stage]?.label ?? stage}
             </button>
           ))}
         </div>
         <button
           onClick={() => setShowSimulate((v) => !v)}
-          className="ml-auto text-xs px-3 py-1.5 rounded-sm border border-dashed border-border text-muted-foreground hover:border-[var(--color-text-muted)] hover:text-foreground transition-colors"
+          className="ml-auto text-xs px-3 py-1.5 rounded-md border border-dashed border-border text-muted-foreground hover:border-[var(--color-text-muted)] hover:text-foreground transition-colors"
         >
-          + Simulate Signal
+          + Simular señal
         </button>
       </div>
 
-      {/* Simulate form */}
+      {/* Formulario de simulación */}
       {showSimulate && (
-        <form onSubmit={handleSimulate} className="rounded-none border border-dashed border-border bg-[var(--color-primary)] p-4 space-y-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Simulate an Intent Signal</p>
+        <form onSubmit={handleSimulate} className="rounded-lg border border-dashed border-border bg-[var(--color-primary)] p-4 space-y-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Simular una señal de intención</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input
               value={simDomain}
               onChange={(e) => setSimDomain(e.target.value)}
-              placeholder="company-domain.com"
-              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+              placeholder="dominio-empresa.com"
+              className="col-span-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
               required
             />
             <select
               value={simSignalType}
               onChange={(e) => setSimSignalType(e.target.value)}
-              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)] bg-[var(--color-card)]"
+              className="col-span-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)] bg-[var(--color-card)]"
             >
               {SIGNAL_TYPES.map((t) => (
                 <option key={t} value={t}>{t.replace(/_/g, " ")}</option>
@@ -249,31 +249,31 @@ export function DarkFunnelDashboard() {
             <input
               value={simKeywords}
               onChange={(e) => setSimKeywords(e.target.value)}
-              placeholder="intent keywords (comma-separated)"
-              className="col-span-1 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+              placeholder="palabras clave (separadas por coma)"
+              className="col-span-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
             />
           </div>
           <button
             type="submit"
             disabled={simLoading}
-            className="text-xs px-4 py-2 rounded-sm bg-[var(--color-cta)] text-white hover:opacity-90 disabled:opacity-50 transition-colors"
+            className="text-xs px-4 py-2 rounded-md bg-[var(--color-cta)] text-white hover:opacity-90 disabled:opacity-50 transition-colors"
           >
-            {simLoading ? "Sending…" : "Send Signal"}
+            {simLoading ? "Enviando…" : "Enviar señal"}
           </button>
         </form>
       )}
 
-      {/* Hot leads grid */}
+      {/* Grilla de leads calientes */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-36 rounded-none bg-[var(--color-primary)] animate-pulse" />
+            <div key={i} className="h-36 rounded-lg bg-[var(--color-primary)] animate-pulse" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-none border-2 border-dashed border-border p-10 text-center">
-          <p className="text-muted-foreground text-sm">No intent signals yet.</p>
-          <p className="text-muted-foreground text-xs mt-1">Use the simulator above to send a test signal.</p>
+        <div className="rounded-lg border-2 border-dashed border-border p-10 text-center">
+          <p className="text-muted-foreground text-sm">Todavía no hay señales de intención.</p>
+          <p className="text-muted-foreground text-xs mt-1">Usa el simulador de arriba para enviar una señal de prueba.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

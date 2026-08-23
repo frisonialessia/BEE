@@ -93,7 +93,7 @@ function CorrectionLearningPanel() {
 
       {result && (
         <div
-          className="rounded-none border p-3 space-y-2"
+          className="rounded-lg border p-3 space-y-2"
           style={{ borderColor: "var(--color-chart-6)", background: "color-mix(in srgb, var(--color-chart-6) 10%, var(--color-background))" }}
         >
           <div className="flex items-center gap-2">
@@ -129,7 +129,7 @@ function CorrectionLearningPanel() {
       </button>
 
       {profile && profile.total_corrections > 0 && (
-        <div className="rounded-none border border-border bg-[var(--color-primary)] p-3 space-y-2">
+        <div className="rounded-lg border border-border bg-[var(--color-primary)] p-3 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-foreground">Current Style Profile</span>
             <span className="text-xs text-muted-foreground">
@@ -245,7 +245,7 @@ function ScenarioSimulatorPanel() {
         <div className="space-y-3">
           {result.low_data_confidence && (
             <div
-              className="text-xs rounded-none border p-2"
+              className="text-xs rounded-lg border p-2"
               style={{ borderColor: "var(--warning)", background: "color-mix(in srgb, var(--warning) 15%, var(--color-background))", color: "var(--color-text)" }}
             >
               ⚠ Low data confidence — only {result.historical_sample_size} historical data point(s). Projections have wide uncertainty.
@@ -256,7 +256,7 @@ function ScenarioSimulatorPanel() {
             {scenarios.map(({ variant, varColor, label }) => (
               <div
                 key={label}
-                className="rounded-none border p-3"
+                className="rounded-lg border p-3"
                 style={{ borderColor: varColor, background: `color-mix(in srgb, ${varColor} 10%, var(--color-background))` }}
               >
                 <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
@@ -267,7 +267,7 @@ function ScenarioSimulatorPanel() {
             ))}
           </div>
 
-          <div className="rounded-none border border-border bg-[var(--color-card)] p-3 space-y-2 text-xs">
+          <div className="rounded-lg border border-border bg-[var(--color-card)] p-3 space-y-2 text-xs">
             <p className="font-medium text-foreground">
               Effective win rate: <span style={{ color: "var(--color-chart-4)" }}>{(result.effective_win_rate * 100).toFixed(1)}%</span>
               {" "}(base {(result.base_win_rate * 100).toFixed(1)}%)
@@ -318,7 +318,7 @@ function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAck
     : { color: "var(--color-text)", borderColor: "var(--color-divider)" };
 
   return (
-    <div className="rounded-none border p-3 space-y-2" style={cardStyle}>
+    <div className="rounded-lg border p-3 space-y-2" style={cardStyle}>
       <div className="flex items-start gap-2">
         <div className="flex-1">
           <p className="text-xs font-semibold leading-tight">{alert.title}</p>
@@ -402,15 +402,15 @@ function AnomalyAlertsPanel() {
       </button>
 
       {summary && (
-        <div className="text-xs p-2 bg-[var(--color-primary)] border border-border rounded-none text-muted-foreground">
+        <div className="text-xs p-2 bg-[var(--color-primary)] border border-border rounded-lg text-muted-foreground">
           {summary}
         </div>
       )}
 
       {loading ? (
-        <div className="space-y-2">{[...Array(2)].map((_, i) => <div key={i} className="h-14 rounded-none bg-[var(--color-primary)] animate-pulse" />)}</div>
+        <div className="space-y-2">{[...Array(2)].map((_, i) => <div key={i} className="h-14 rounded-lg bg-[var(--color-primary)] animate-pulse" />)}</div>
       ) : alerts.length === 0 ? (
-        <div className="rounded-none border-2 border-dashed border-border p-6 text-center">
+        <div className="rounded-lg border-2 border-dashed border-border p-6 text-center">
           <p className="text-sm text-muted-foreground">No open anomaly alerts.</p>
           <p className="text-xs text-muted-foreground mt-1">Run a scan to check current conversion rate health.</p>
         </div>
