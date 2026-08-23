@@ -40,6 +40,22 @@ from app.services.workflow_orchestrator import BeeEvent, WorkflowOrchestrator
 router = APIRouter(prefix="/opportunities", tags=["Opportunities"])
 
 
+def _hidden_from(session: Session, current_user: User | None, opportunity) -> bool:
+    """True if ``current_user`` should get a 404 for this single opportunity.
+
+    Combines both boundaries a single-record fetch must check: the tenant
+    itself (``organization_id`` — an OWNER/ADMIN's assignment check alone
+    never restricts this, since :func:`user_can_view_assignment` returns
+    True unconditionally for unassigned records) and the per-rep assignment
+    scope within that tenant.
+    """
+    if current_user is None:
+        return False
+    if opportunity.organization_id is not None and opportunity.organization_id != current_user.organization_id:
+        return True
+    return not user_can_view_assignment(session, current_user, opportunity.assigned_to_user_id)
+
+
 @router.get(
     "",
     response_model=list[dict],
@@ -64,11 +80,16 @@ def list_opportunities(
     """
     repo = OpportunityRepository(session)
     visible_user_ids = get_visible_user_ids(session, current_user) if current_user else None
+    organization_id = current_user.organization_id if current_user else None
 
     if opp_status is None or opp_status == "ready_to_action":
-        items = repo.list_ready_to_action(limit=limit, offset=offset, visible_user_ids=visible_user_ids)
+        items = repo.list_ready_to_action(
+            limit=limit, offset=offset, visible_user_ids=visible_user_ids, organization_id=organization_id
+        )
     else:
-        items = repo.list_scoped(limit=limit, offset=offset, visible_user_ids=visible_user_ids)
+        items = repo.list_scoped(
+            limit=limit, offset=offset, visible_user_ids=visible_user_ids, organization_id=organization_id
+        )
 
     return [
         {
@@ -121,9 +142,7 @@ def get_battlecard(
 
     opportunity, signal, company, lead = result
 
-    if current_user is not None and not user_can_view_assignment(
-        session, current_user, opportunity.assigned_to_user_id
-    ):
+    if _hidden_from(session, current_user, opportunity):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
 
     strategy_dict = opportunity.strategy or {}
@@ -220,7 +239,7 @@ def record_outcome(
         target = OpportunityRepository(session).get(opportunity_id)
         if target is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
-        if not user_can_view_assignment(session, current_user, target.assigned_to_user_id):
+        if _hidden_from(session, current_user, target):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
 
     # ── Step 1: Resource Gate (opt-in) ────────────────────────────────────────
@@ -347,7 +366,7 @@ def get_artifacts(
         target = OpportunityRepository(session).get(opportunity_id)
         if target is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
-        if not user_can_view_assignment(session, current_user, target.assigned_to_user_id):
+        if _hidden_from(session, current_user, target):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
 
     agent = ExecutiveAgent(session)

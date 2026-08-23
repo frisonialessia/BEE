@@ -3,6 +3,7 @@
 from app.services.permissions.service import (
     get_descendant_team_ids,
     get_visible_user_ids,
+    scope_by_organization_id,
     scope_to_organization,
     user_can_view_assignment,
 )
@@ -10,6 +11,7 @@ from app.services.permissions.service import (
 __all__ = [
     "get_descendant_team_ids",
     "get_visible_user_ids",
+    "scope_by_organization_id",
     "scope_to_organization",
     "user_can_view_assignment",
 ]

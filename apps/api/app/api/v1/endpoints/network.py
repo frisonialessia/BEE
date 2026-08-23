@@ -7,6 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
+from app.api.deps import get_organization_id
 from app.core.database import get_session
 from app.schemas.network import (
     NetworkConnectionCreate,
@@ -33,6 +34,7 @@ def add_connection(
     data: NetworkConnectionCreate,
     nav: NetworkNavigator = Depends(_get_navigator),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> NetworkConnectionOut:
     """Add a professional contact to the CEO's network.
 
@@ -49,7 +51,7 @@ def add_connection(
     For 2nd-degree path finding, set ``mutual_connection_ids`` to the UUIDs
     of connections who know this person (linking the graph).
     """
-    conn = nav.add_connection(data)
+    conn = nav.add_connection(data, organization_id)
     session.commit()
     session.refresh(conn)
     return NetworkConnectionOut.model_validate(conn)
@@ -65,8 +67,11 @@ def list_connections(
     min_strength: int = Query(default=1, ge=1, le=10),
     limit: int = Query(default=100, le=500),
     nav: NetworkNavigator = Depends(_get_navigator),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> list[NetworkConnectionOut]:
-    conns = nav.list_connections(connection_type=connection_type, min_strength=min_strength, limit=limit)
+    conns = nav.list_connections(
+        connection_type=connection_type, min_strength=min_strength, limit=limit, organization_id=organization_id
+    )
     return [NetworkConnectionOut.model_validate(c) for c in conns]
 
 
@@ -79,8 +84,9 @@ def delete_connection(
     connection_id: uuid.UUID,
     nav: NetworkNavigator = Depends(_get_navigator),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> None:
-    ok = nav.delete_connection(connection_id)
+    ok = nav.delete_connection(connection_id, organization_id)
     if not ok:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Connection not found")
     session.commit()
@@ -97,6 +103,7 @@ def find_intro_paths(
     target_name: str | None = Query(default=None, description="Name of the specific person to reach"),
     top_k: int = Query(default=5, ge=1, le=20),
     nav: NetworkNavigator = Depends(_get_navigator),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> NetworkQueryResult:
     """Find the strongest warm introduction paths from the CEO to a target company.
 
@@ -115,6 +122,7 @@ def find_intro_paths(
         target_company=target_company,
         target_name=target_name,
         top_k=top_k,
+        organization_id=organization_id,
     )
 
 
@@ -123,6 +131,9 @@ def find_intro_paths(
     response_model=NetworkStats,
     summary="Network coverage statistics",
 )
-def get_network_stats(nav: NetworkNavigator = Depends(_get_navigator)) -> NetworkStats:
+def get_network_stats(
+    nav: NetworkNavigator = Depends(_get_navigator),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
+) -> NetworkStats:
     """Return summary statistics about the CEO's professional network coverage."""
-    return nav.get_stats()
+    return nav.get_stats(organization_id)

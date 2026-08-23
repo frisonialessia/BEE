@@ -58,6 +58,7 @@ from app.schemas.network import (
     NetworkQueryResult,
     NetworkStats,
 )
+from app.services.permissions import scope_by_organization_id as _scope
 
 logger = get_logger(__name__)
 
@@ -72,9 +73,12 @@ class NetworkNavigator:
 
     # ── Connection management ─────────────────────────────────────────────────
 
-    def add_connection(self, data: NetworkConnectionCreate) -> NetworkConnection:
+    def add_connection(
+        self, data: NetworkConnectionCreate, organization_id: uuid.UUID | None = None
+    ) -> NetworkConnection:
         """Add a new connection to the CEO's network."""
         conn = NetworkConnection(
+            organization_id=organization_id,
             contact_name=data.contact_name,
             contact_company=data.contact_company,
             contact_domain=data.contact_domain.lower().strip(),
@@ -106,6 +110,7 @@ class NetworkNavigator:
         industry: str | None = None,  # noqa: ARG002
         min_strength: int = 1,
         limit: int = 100,
+        organization_id: uuid.UUID | None = None,
     ) -> list[NetworkConnection]:
         stmt = (
             select(NetworkConnection)
@@ -116,11 +121,19 @@ class NetworkNavigator:
         )
         if connection_type:
             stmt = stmt.where(NetworkConnection.connection_type == connection_type)
+        stmt = _scope(stmt, NetworkConnection.organization_id, organization_id)
         return list(self.session.exec(stmt).all())
 
-    def delete_connection(self, connection_id: uuid.UUID) -> bool:
+    def delete_connection(self, connection_id: uuid.UUID, organization_id: uuid.UUID | None = None) -> bool:
         conn = self.session.get(NetworkConnection, connection_id)
         if not conn:
+            return False
+        if (
+            organization_id is not None
+            and conn.organization_id is not None
+            and conn.organization_id != organization_id
+        ):
+            # Behaves like "not found" — don't confirm a cross-tenant id exists.
             return False
         conn.active = False
         self.session.add(conn)
@@ -135,6 +148,7 @@ class NetworkNavigator:
         target_company: str | None = None,
         target_name: str | None = None,
         top_k: int = 5,
+        organization_id: uuid.UUID | None = None,
     ) -> NetworkQueryResult:
         """Find warm introduction paths from the CEO to a target company.
 
@@ -143,6 +157,9 @@ class NetworkNavigator:
             target_company: Optional company name for display purposes.
             target_name:    Optional name of the specific person to reach.
             top_k:          Max number of paths to return.
+            organization_id: Scope every underlying connection lookup to this
+                tenant's network — otherwise a path could route through
+                another organization's contacts.
 
         Returns:
             A :class:`NetworkQueryResult` with ranked intro paths.
@@ -153,19 +170,19 @@ class NetworkNavigator:
         paths: list[IntroPath] = []
 
         # ── Step 1: Direct connections at the target company ──────────────────
-        direct = self._find_direct_connections(domain)
+        direct = self._find_direct_connections(domain, organization_id)
         for conn in direct:
             path = self._build_direct_path(conn, company_label, target_name)
             paths.append(path)
 
         # ── Step 2: 2nd-degree warm intro paths ───────────────────────────────
         if len(paths) < top_k:
-            warm_paths = self._find_second_degree_paths(domain, company_label, target_name)
+            warm_paths = self._find_second_degree_paths(domain, company_label, target_name, organization_id)
             paths.extend(warm_paths)
 
         # ── Step 3: Alumni / community paths ──────────────────────────────────
         if len(paths) < top_k:
-            alumni_paths = self._find_alumni_paths(domain, company_label, target_name)
+            alumni_paths = self._find_alumni_paths(domain, company_label, target_name, organization_id)
             paths.extend(alumni_paths)
 
         # Sort by strength score descending, take top_k
@@ -190,11 +207,14 @@ class NetworkNavigator:
             network_coverage=coverage,
         )
 
-    def get_stats(self) -> NetworkStats:
+    def get_stats(self, organization_id: uuid.UUID | None = None) -> NetworkStats:
         """Return summary statistics for the CEO's network."""
-        all_conns = list(self.session.exec(
-            select(NetworkConnection).where(NetworkConnection.active)
-        ).all())
+        stmt = _scope(
+            select(NetworkConnection).where(NetworkConnection.active),
+            NetworkConnection.organization_id,
+            organization_id,
+        )
+        all_conns = list(self.session.exec(stmt).all())
 
         if not all_conns:
             return NetworkStats(
@@ -221,15 +241,17 @@ class NetworkNavigator:
 
     # ── Private helpers ───────────────────────────────────────────────────────
 
-    def _find_direct_connections(self, domain: str) -> list[NetworkConnection]:
-        return list(
-            self.session.exec(
-                select(NetworkConnection)
-                .where(NetworkConnection.contact_domain == domain)
-                .where(NetworkConnection.active)
-                .order_by(NetworkConnection.relationship_strength.desc())
-            ).all()
+    def _find_direct_connections(
+        self, domain: str, organization_id: uuid.UUID | None = None
+    ) -> list[NetworkConnection]:
+        stmt = (
+            select(NetworkConnection)
+            .where(NetworkConnection.contact_domain == domain)
+            .where(NetworkConnection.active)
+            .order_by(NetworkConnection.relationship_strength.desc())
         )
+        stmt = _scope(stmt, NetworkConnection.organization_id, organization_id)
+        return list(self.session.exec(stmt).all())
 
     def _build_direct_path(
         self,
@@ -270,20 +292,21 @@ class NetworkNavigator:
         domain: str,
         company_label: str,
         target_name: str | None,
+        organization_id: uuid.UUID | None = None,
     ) -> list[IntroPath]:
         """Find 2nd-degree paths: CEO → Connector → Target Company."""
         paths: list[IntroPath] = []
 
         # All 1st-degree connections that have mutual_connection_ids listed
-        connectors = list(
-            self.session.exec(
-                select(NetworkConnection)
-                .where(NetworkConnection.active)
-                .where(NetworkConnection.contact_domain != domain)
-                .order_by(NetworkConnection.relationship_strength.desc())
-                .limit(50)
-            ).all()
+        connectors_stmt = (
+            select(NetworkConnection)
+            .where(NetworkConnection.active)
+            .where(NetworkConnection.contact_domain != domain)
+            .order_by(NetworkConnection.relationship_strength.desc())
+            .limit(50)
         )
+        connectors_stmt = _scope(connectors_stmt, NetworkConnection.organization_id, organization_id)
+        connectors = list(self.session.exec(connectors_stmt).all())
 
         for connector in connectors:
             mutual_ids = connector.mutual_connection_ids or []
@@ -299,6 +322,15 @@ class NetworkNavigator:
 
                 target_conn = self.session.get(NetworkConnection, mutual_id)
                 if not target_conn or target_conn.contact_domain != domain:
+                    continue
+                if (
+                    organization_id is not None
+                    and target_conn.organization_id is not None
+                    and target_conn.organization_id != organization_id
+                ):
+                    # A mutual_connection_id pointing outside this tenant's
+                    # network — treat as not found rather than routing a
+                    # path through another organization's contact.
                     continue
 
                 # Found a 2nd-degree path!
@@ -355,20 +387,21 @@ class NetworkNavigator:
         domain: str,
         company_label: str,
         target_name: str | None,
+        organization_id: uuid.UUID | None = None,
     ) -> list[IntroPath]:
         """Find alumni/community-based paths as a weaker warm intro option."""
         paths: list[IntroPath] = []
 
         # Look for alumni/community connections who might know the target company
-        alumni = list(
-            self.session.exec(
-                select(NetworkConnection)
-                .where(NetworkConnection.active)
-                .where(NetworkConnection.connection_type.in_([ConnectionType.ALUMNI, ConnectionType.COMMUNITY]))
-                .order_by(NetworkConnection.relationship_strength.desc())
-                .limit(10)
-            ).all()
+        alumni_stmt = (
+            select(NetworkConnection)
+            .where(NetworkConnection.active)
+            .where(NetworkConnection.connection_type.in_([ConnectionType.ALUMNI, ConnectionType.COMMUNITY]))
+            .order_by(NetworkConnection.relationship_strength.desc())
+            .limit(10)
         )
+        alumni_stmt = _scope(alumni_stmt, NetworkConnection.organization_id, organization_id)
+        alumni = list(self.session.exec(alumni_stmt).all())
 
         for conn in alumni:
             strength = conn.relationship_strength * (1 - _PATH_SCORE_DECAY * 1.5)

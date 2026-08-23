@@ -44,7 +44,10 @@ def list_leads(
     """
     repo = LeadRepository(session)
     visible_user_ids = get_visible_user_ids(session, current_user) if current_user else None
-    leads = repo.list_scoped(limit=limit, offset=offset, visible_user_ids=visible_user_ids)
+    organization_id = current_user.organization_id if current_user else None
+    leads = repo.list_scoped(
+        limit=limit, offset=offset, visible_user_ids=visible_user_ids, organization_id=organization_id
+    )
     return [LeadOut.model_validate(lead) for lead in leads]
 
 
@@ -63,11 +66,12 @@ def get_lead(
     if lead is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found.")
 
-    if current_user is not None and not user_can_view_assignment(
-        session, current_user, lead.assigned_to_user_id
+    if current_user is not None and (
+        (lead.organization_id is not None and lead.organization_id != current_user.organization_id)
+        or not user_can_view_assignment(session, current_user, lead.assigned_to_user_id)
     ):
-        # 404, not 403 — a MEMBER shouldn't learn that a lead they can't see
-        # exists at all just by guessing ids.
+        # 404, not 403 — a MEMBER (or a user from another org) shouldn't
+        # learn that a lead they can't see exists at all just by guessing ids.
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found.")
 
     return LeadOut.model_validate(lead)

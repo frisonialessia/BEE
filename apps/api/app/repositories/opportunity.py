@@ -11,6 +11,7 @@ from app.models.lead import Lead
 from app.models.opportunity import Opportunity
 from app.models.signal import Signal
 from app.repositories.base import BaseRepository
+from app.services.permissions import scope_by_organization_id
 
 
 class OpportunityRepository(BaseRepository[Opportunity]):
@@ -51,6 +52,7 @@ class OpportunityRepository(BaseRepository[Opportunity]):
         limit: int = 50,
         offset: int = 0,
         visible_user_ids: set[uuid.UUID] | None = None,
+        organization_id: uuid.UUID | None = None,
     ) -> list[Opportunity]:
         """Return opportunities that have a complete battlecard, ranked by score.
 
@@ -59,6 +61,12 @@ class OpportunityRepository(BaseRepository[Opportunity]):
         how a caller's manager/member visibility scope is computed. ``None``
         (the default) applies no restriction, preserving existing behavior for
         callers that don't have an authenticated user in context.
+
+        ``organization_id`` applies the tenant boundary itself — the
+        assignment filter above narrows *within* an org (who on the team can
+        see it), but without this an OWNER/ADMIN (whose ``visible_user_ids``
+        is ``None``, meaning "no per-user restriction") would see every
+        organization's opportunities, not just their own.
         """
         from app.models.base import OpportunityStatus
 
@@ -69,6 +77,7 @@ class OpportunityRepository(BaseRepository[Opportunity]):
         )
         if visible_user_ids is not None:
             statement = statement.where(Opportunity.assigned_to_user_id.in_(visible_user_ids))
+        statement = scope_by_organization_id(statement, Opportunity.organization_id, organization_id)
         statement = statement.limit(limit).offset(offset)
         return list(self.session.exec(statement).all())
 
@@ -78,14 +87,15 @@ class OpportunityRepository(BaseRepository[Opportunity]):
         limit: int = 100,
         offset: int = 0,
         visible_user_ids: set[uuid.UUID] | None = None,
+        organization_id: uuid.UUID | None = None,
     ) -> list[Opportunity]:
         """Same paging/ordering as :meth:`BaseRepository.list`, with the same
-        optional visibility filter as :meth:`list_ready_to_action`. Used by
-        callers that need every status (not just READY_TO_ACTION) but must
-        still respect a logged-in caller's visibility scope.
+        optional visibility filter as :meth:`list_ready_to_action` — including
+        the ``organization_id`` tenant boundary, see its docstring there.
         """
         statement = select(Opportunity).order_by(Opportunity.created_at.desc())  # type: ignore[union-attr]
         if visible_user_ids is not None:
             statement = statement.where(Opportunity.assigned_to_user_id.in_(visible_user_ids))
+        statement = scope_by_organization_id(statement, Opportunity.organization_id, organization_id)
         statement = statement.limit(limit).offset(offset)
         return list(self.session.exec(statement).all())

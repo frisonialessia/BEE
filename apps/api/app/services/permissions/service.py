@@ -107,4 +107,23 @@ def scope_to_organization(
     """
     if user is None:
         return statement
-    return statement.where(or_(organization_column == user.organization_id, organization_column.is_(None)))
+    return scope_by_organization_id(statement, organization_column, user.organization_id)
+
+
+def scope_by_organization_id(
+    statement: SelectT, organization_column: ColumnElement, organization_id: uuid.UUID | None
+) -> SelectT:
+    """Like :func:`scope_to_organization`, but takes a raw organization id.
+
+    For services reached by both a logged-in dashboard user (JWT) and an
+    :class:`~app.models.organization_api_key.OrganizationApiKey` caller (no
+    ``User`` at all) — e.g. dark funnel ingestion via the "Simulate Signal"
+    button vs. a webhook. Both resolve to a plain
+    ``organization_id: uuid.UUID | None`` via ``app.api.deps.get_organization_id``,
+    so this is the shared primitive both :func:`scope_to_organization` and
+    every such service build on. Same untagged-is-shared convention, and a
+    no-op when ``organization_id`` is ``None``.
+    """
+    if organization_id is None:
+        return statement
+    return statement.where(or_(organization_column == organization_id, organization_column.is_(None)))

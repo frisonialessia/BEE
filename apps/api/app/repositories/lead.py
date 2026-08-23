@@ -9,6 +9,7 @@ from sqlmodel import or_, select
 from app.models.lead import Lead
 from app.repositories.base import BaseRepository
 from app.schemas.signal import LeadRef
+from app.services.permissions import scope_by_organization_id
 
 
 class LeadRepository(BaseRepository[Lead]):
@@ -71,13 +72,21 @@ class LeadRepository(BaseRepository[Lead]):
         limit: int = 100,
         offset: int = 0,
         visible_user_ids: set[uuid.UUID] | None = None,
+        organization_id: uuid.UUID | None = None,
     ) -> list[Lead]:
         """Same paging as :meth:`BaseRepository.list`, with the same optional
         visibility filter used by ``OpportunityRepository`` — see
         ``app.services.permissions`` for how the filter set is computed.
+
+        ``organization_id`` applies the tenant boundary itself — see
+        ``OpportunityRepository.list_ready_to_action``'s docstring for why
+        this is needed in addition to the assignment filter above (an
+        OWNER/ADMIN's ``visible_user_ids`` is ``None``, so without this every
+        organization's leads would be visible, not just their own).
         """
         statement = select(Lead).order_by(Lead.created_at.desc())  # type: ignore[union-attr]
         if visible_user_ids is not None:
             statement = statement.where(Lead.assigned_to_user_id.in_(visible_user_ids))
+        statement = scope_by_organization_id(statement, Lead.organization_id, organization_id)
         statement = statement.limit(limit).offset(offset)
         return list(self.session.exec(statement).all())

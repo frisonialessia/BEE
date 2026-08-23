@@ -37,7 +37,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from sqlmodel import Session, or_, select
+from sqlmodel import Session, select
 
 from app.core.logging import get_logger
 from app.models.dark_funnel import (
@@ -52,24 +52,12 @@ from app.schemas.dark_funnel import (
     DarkFunnelSummary,
     HotLeadOut,
 )
+from app.services.permissions import scope_by_organization_id as _scope
 
 logger = get_logger(__name__)
 
 _HOT_THRESHOLD = 50.0    # Score above this → is_hot = True
 _WINDOW_DAYS = 30         # Rolling window for signal aggregation
-
-
-def _scope(statement, column, organization_id: uuid.UUID | None):
-    """Restrict ``statement`` to ``organization_id``, same untagged-is-shared
-    convention as ``app.services.permissions.scope_to_organization`` — but
-    taking a raw id instead of a ``User``, since dark funnel ingestion is
-    reached by both dashboard users (JWT) and org API keys (no User at all).
-    A no-op when ``organization_id`` is ``None`` so unscoped/legacy callers
-    keep seeing everything, unchanged from before organization tagging existed.
-    """
-    if organization_id is None:
-        return statement
-    return statement.where(or_(column == organization_id, column.is_(None)))
 
 
 class DarkFunnelService:

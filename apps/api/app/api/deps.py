@@ -123,6 +123,24 @@ def get_organization_from_api_key(
     return key.organization_id
 
 
+def get_organization_id(
+    current_user: User | None = Depends(get_current_user_optional),
+    api_key_org_id: uuid.UUID | None = Depends(get_organization_from_api_key),
+) -> uuid.UUID | None:
+    """The tenant for this request, from whichever caller identity is present.
+
+    Dashboard calls carry a JWT (``current_user.organization_id``);
+    webhook/pixel calls carry an org API key instead
+    (:func:`get_organization_from_api_key`). Either identifies the tenant;
+    neither present means an unscoped/legacy caller, same backward-compatible
+    ``None`` as both dependencies individually. Shared across every endpoint
+    that needs "which org is this for" without caring which identity supplied it.
+    """
+    if current_user is not None:
+        return current_user.organization_id
+    return api_key_org_id
+
+
 def require_roles(*roles: UserRole):
     """Dependency factory: 403s unless the current user has one of ``roles``."""
 
