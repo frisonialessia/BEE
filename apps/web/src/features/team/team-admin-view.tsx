@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/providers/auth-provider";
 import { useCreateTeam, useTeams } from "@/hooks/queries/use-teams";
 import { useCreateUser, useUpdateUser, useUsers } from "@/hooks/queries/use-users";
+import { QuotasSection } from "@/features/team/quotas-section";
 import { ROLE_LABELS, type TeamOut, type UserOut, type UserRole } from "@/types/auth";
 import { ApiError } from "@/types/api";
 
@@ -383,6 +384,8 @@ export function TeamAdminView() {
 
             {canManage && <InviteUserForm teams={teams ?? []} />}
           </section>
+
+          <QuotasSection users={users ?? []} teams={teams ?? []} canManage={canManage} />
         </div>
       )}
     </div>

@@ -34,6 +34,7 @@ from app.models.organization import Organization
 from app.models.organization_api_key import OrganizationApiKey
 from app.models.pending_action import PendingAction
 from app.models.psychographic import LeadPsychographic
+from app.models.quota import Quota
 from app.models.sequence import DynamicSequence, SequenceExecution
 from app.models.signal import Signal
 from app.models.strategy_outcome import StrategyOutcome
@@ -48,6 +49,7 @@ __all__ = [
     "MarketInsight",
     "MessageTemplate",
     "PendingAction",
+    "Quota",
     "Signal",
     "Opportunity",
     "StrategyOutcome",
