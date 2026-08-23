@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { useCreateQuota, useDeleteQuota, useQuotas } from "@/hooks/queries/use-quotas";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
+import { computeQuotaActual } from "@/lib/quotas";
 import type { TeamOut, UserOut } from "@/types/auth";
 
 const currency = new Intl.NumberFormat("es-MX", {
@@ -137,20 +138,7 @@ export function QuotasSection({
   const loading = quotasLoading || oppsLoading;
 
   function actualFor(quota: (typeof quotas)[number]): number {
-    const memberIds = quota.user_id
-      ? [quota.user_id]
-      : users.filter((u) => u.team_id === quota.team_id).map((u) => u.id);
-
-    return opportunities
-      .filter(
-        (o) =>
-          o.status === "won" &&
-          o.assigned_to_user_id &&
-          memberIds.includes(o.assigned_to_user_id) &&
-          o.updated_at.slice(0, 10) >= quota.period_start &&
-          o.updated_at.slice(0, 10) <= quota.period_end,
-      )
-      .reduce((sum, o) => sum + (o.amount ?? 0), 0);
+    return computeQuotaActual(quota, users, opportunities);
   }
 
   return (

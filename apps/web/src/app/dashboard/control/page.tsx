@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AnomaliesPanel,
   ControlLayout,
   LeadWorkspace,
   SignalHexMap,
@@ -28,7 +29,12 @@ export default function ControlPage() {
           <SignalStream />
         </>
       }
-      health={<SystemHealth />}
+      health={
+        <>
+          <SystemHealth />
+          <AnomaliesPanel />
+        </>
+      }
     />
   );
 }

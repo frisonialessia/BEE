@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { SignalHexMap } from "@/features/control/components/SignalHexMap";
+import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { Leaderboard } from "@/features/dashboard/leaderboard";
 import { usePagination } from "@/hooks/use-pagination";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -94,6 +95,8 @@ export function DashboardOverview() {
           <MetricCard label="Score medio" value={avgScore} icon={Activity} />
         </div>
       </header>
+
+      <DailyBrief />
 
       <SignalHexMap className="mb-3" height={320} />
 
