@@ -150,8 +150,13 @@ class DataValidator:
         lead.validation_flags = report.flags
         lead.last_validated_at = report.validated_at
         lead.stale_risk = report.stale_risk
+        # Flush (not commit): matches BaseRepository.add()'s convention — the
+        # caller owns the transaction boundary. This validator can run inside
+        # a larger unit of work (e.g. SignalEngine.ingest(), which commits
+        # once at the end so lead + signal + opportunity land atomically); a
+        # commit here would have ended that transaction early.
         self.session.add(lead)
-        self.session.commit()
+        self.session.flush()
         logger.info(
             "Lead %s validated: score=%.2f flags=%s",
             lead.id, report.freshness_score, report.flags,

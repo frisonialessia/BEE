@@ -273,4 +273,9 @@ export interface Lead {
   status: LeadStatus;
   score: number;
   attributes: Record<string, unknown>;
+  // Populated by DataValidator on the backend (create + on-demand re-check).
+  data_freshness_score: number;
+  validation_flags: string[];
+  last_validated_at: string | null;
+  stale_risk: boolean;
 }

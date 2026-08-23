@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -58,3 +59,18 @@ class LeadOut(BaseModel):
     status: LeadStatus
     score: float
     attributes: dict[str, Any]
+    # Populated by DataValidator — see app.services.data_validator.
+    data_freshness_score: float
+    validation_flags: list[str]
+    last_validated_at: datetime | None
+    stale_risk: bool
+
+
+class LeadValidationOut(BaseModel):
+    """Result of an on-demand DataValidator run against one lead."""
+
+    lead_id: uuid.UUID
+    flags: list[str]
+    freshness_score: float
+    stale_risk: bool
+    validated_at: datetime

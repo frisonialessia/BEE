@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, Building2, Globe, Mail, Radio, Target, Upload } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Building2, Globe, Mail, Radio, Target, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,17 @@ import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { opportunityStatusLabels } from "@/lib/format";
 import { parseCsv } from "@/lib/csv";
+
+/** Etiquetas en español para las banderas que arma DataValidator en el backend. */
+const VALIDATION_FLAG_LABELS: Record<string, string> = {
+  email_missing: "Sin email",
+  email_invalid: "Email inválido",
+  linkedin_invalid: "LinkedIn inválido",
+  title_missing: "Sin cargo",
+  stale_data: "Datos desactualizados",
+  seniority_mismatch: "Cargo y seniority no coinciden",
+  name_too_short: "Nombre incompleto",
+};
 
 /** Toma la primera cabecera que exista de una lista de nombres posibles (español o inglés). */
 function pick(row: Record<string, string>, keys: string[]): string | undefined {
@@ -256,15 +267,33 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
           <p className="text-sm text-muted-foreground">Sin contactos registrados todavía.</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
-            {leads.map((lead) => (
-              <div key={lead.id} className="bee-bento bee-bento-pad">
-                <p className="text-sm font-medium">{lead.full_name}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {[lead.title, lead.seniority].filter(Boolean).join(" · ") || "Sin cargo registrado"}
-                </p>
-                {lead.email && <p className="mt-1 text-xs text-muted-foreground">{lead.email}</p>}
-              </div>
-            ))}
+            {leads.map((lead) => {
+              const hasIssues = lead.validation_flags.length > 0 || lead.stale_risk;
+              return (
+                <div key={lead.id} className="bee-bento bee-bento-pad">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-medium">{lead.full_name}</p>
+                    {hasIssues && (
+                      <span
+                        title={[
+                          ...lead.validation_flags.map((f) => VALIDATION_FLAG_LABELS[f] ?? f),
+                          ...(lead.stale_risk ? ["Sin validar en más de 90 días"] : []),
+                        ].join(" · ")}
+                      >
+                        <AlertTriangle
+                          className="mt-0.5 size-3.5 shrink-0 text-[var(--color-chart-1)]"
+                          aria-label="Datos incompletos o desactualizados"
+                        />
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {[lead.title, lead.seniority].filter(Boolean).join(" · ") || "Sin cargo registrado"}
+                  </p>
+                  {lead.email && <p className="mt-1 text-xs text-muted-foreground">{lead.email}</p>}
+                </div>
+              );
+            })}
           </div>
         )}
       </section>

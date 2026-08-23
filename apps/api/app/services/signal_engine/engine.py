@@ -116,6 +116,12 @@ class SignalEngine:
         lead = self.leads.get_or_create_from_ref(
             payload.lead, company.id if company else None, organization_id
         )
+        # ``last_validated_at`` is only ever None for a lead nobody has run
+        # DataValidator against yet — a freshly-created record from the branch
+        # above, not one resolved from the email-dedup lookup. This is the
+        # "first encounter" hook DataValidator's own docstring describes.
+        if lead is not None and lead.last_validated_at is None:
+            self._validate_new_lead(lead.id)
 
         # 3. Signal classification via analyzers.
         applied, aggregate = self._run_analyzers(payload)
@@ -178,6 +184,23 @@ class SignalEngine:
             analyzers_applied=applied,
             strategy_enriched=strategy_enriched,
         )
+
+    def _validate_new_lead(self, lead_id: uuid.UUID) -> None:
+        """Run DataValidator against a just-created lead.
+
+        Best-effort: a validation failure must never block signal ingestion,
+        the same way anomaly detection and audit logging are non-blocking
+        elsewhere in the app. Also rolls back on failure so a broken
+        validation run can't poison the shared session for the rest of this
+        ingest() call (persisting the signal/opportunity right after).
+        """
+        try:
+            from app.services.data_validator import DataValidator
+
+            DataValidator(self.session).validate_lead(lead_id)
+        except Exception:  # noqa: BLE001
+            self.session.rollback()
+            logger.exception("DataValidator failed for new lead %s", lead_id)
 
     def _run_analyzers(
         self, payload: SignalWebhookIn

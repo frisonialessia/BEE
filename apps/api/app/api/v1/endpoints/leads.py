@@ -16,11 +16,22 @@ from sqlmodel import Session
 
 from app.api.deps import get_current_user, get_current_user_optional
 from app.core.database import get_session
+from app.core.logging import get_logger
 from app.models.lead import Lead
 from app.models.user import User
 from app.repositories.lead import LeadRepository
-from app.schemas.lead import LeadBulkCreateIn, LeadBulkError, LeadBulkResult, LeadCreateIn, LeadOut
+from app.schemas.lead import (
+    LeadBulkCreateIn,
+    LeadBulkError,
+    LeadBulkResult,
+    LeadCreateIn,
+    LeadOut,
+    LeadValidationOut,
+)
+from app.services.data_validator import DataValidator
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/leads", tags=["Leads"])
 
@@ -49,7 +60,21 @@ def create_lead(
     session.add(lead)
     session.commit()
     session.refresh(lead)
+    _validate_new_lead(session, lead.id)
+    session.refresh(lead)
     return LeadOut.model_validate(lead)
+
+
+def _validate_new_lead(session: Session, lead_id: uuid.UUID) -> None:
+    """Run DataValidator right after a lead is created — best-effort, the
+    same way SignalEngine does it for leads resolved from a webhook. A
+    validation failure must never fail the create request that triggered it."""
+    try:
+        DataValidator(session).validate_lead(lead_id)
+        session.commit()
+    except Exception:  # noqa: BLE001
+        session.rollback()
+        logger.exception("DataValidator failed for new lead %s", lead_id)
 
 
 @router.post(
@@ -123,6 +148,14 @@ def list_leads(
     return [LeadOut.model_validate(lead) for lead in leads]
 
 
+def _hidden_from(session: Session, current_user: User | None, lead: Lead) -> bool:
+    if current_user is None:
+        return False
+    return (
+        lead.organization_id is not None and lead.organization_id != current_user.organization_id
+    ) or not user_can_view_assignment(session, current_user, lead.assigned_to_user_id)
+
+
 @router.get(
     "/{lead_id}",
     response_model=LeadOut,
@@ -138,12 +171,43 @@ def get_lead(
     if lead is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found.")
 
-    if current_user is not None and (
-        (lead.organization_id is not None and lead.organization_id != current_user.organization_id)
-        or not user_can_view_assignment(session, current_user, lead.assigned_to_user_id)
-    ):
+    if _hidden_from(session, current_user, lead):
         # 404, not 403 — a MEMBER (or a user from another org) shouldn't
         # learn that a lead they can't see exists at all just by guessing ids.
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found.")
 
     return LeadOut.model_validate(lead)
+
+
+@router.post(
+    "/{lead_id}/validate",
+    response_model=LeadValidationOut,
+    summary="Re-run data quality checks against a lead on demand",
+)
+def validate_lead(
+    lead_id: uuid.UUID,
+    session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
+) -> LeadValidationOut:
+    """Re-check email/LinkedIn/title/staleness and refresh the quality score.
+
+    New leads are already validated once at creation time (manual entry and
+    signal ingestion both do this automatically) — this is for re-checking a
+    lead later, e.g. after 90+ days, or after a rep edits its contact info.
+    """
+    repo = LeadRepository(session)
+    lead = repo.get(lead_id)
+    if lead is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found.")
+    if _hidden_from(session, current_user, lead):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found.")
+
+    report = DataValidator(session).validate_lead(lead_id)
+    session.commit()
+    return LeadValidationOut(
+        lead_id=report.lead_id,
+        flags=report.flags,
+        freshness_score=report.freshness_score,
+        stale_risk=report.stale_risk,
+        validated_at=report.validated_at,
+    )
