@@ -54,7 +54,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bee-input"
-                placeholder="vos@empresa.com"
+                placeholder="tu@empresa.com"
               />
             </div>
 
@@ -91,7 +91,7 @@ export default function LoginPage() {
         </div>
 
         <p className="bee-caption mt-6 text-center">
-          ¿Todavía no tenés una organización?{" "}
+          ¿Todavía no tienes una organización?{" "}
           <Link href="/register" className="font-medium text-foreground underline underline-offset-4">
             Creá una
           </Link>

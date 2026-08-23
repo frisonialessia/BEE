@@ -232,7 +232,7 @@ function UserRow({
       <td className="py-2.5 pr-3">
         <div className="font-medium">
           {user.full_name}
-          {isSelf && <span className="bee-caption ml-1.5">(vos)</span>}
+          {isSelf && <span className="bee-caption ml-1.5">(tú)</span>}
         </div>
         <div className="bee-caption">{user.email}</div>
       </td>

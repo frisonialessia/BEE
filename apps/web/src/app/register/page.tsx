@@ -93,7 +93,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bee-input"
-                placeholder="vos@empresa.com"
+                placeholder="tu@empresa.com"
               />
             </div>
 
@@ -131,7 +131,7 @@ export default function RegisterPage() {
         </div>
 
         <p className="bee-caption mt-6 text-center">
-          ¿Ya tenés cuenta?{" "}
+          ¿Ya tienes cuenta?{" "}
           <Link href="/login" className="font-medium text-foreground underline underline-offset-4">
             Iniciá sesión
           </Link>
