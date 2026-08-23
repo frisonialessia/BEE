@@ -40,6 +40,10 @@ export const queryKeys = {
     all: ["users"] as const,
     list: () => [...queryKeys.users.all, "list"] as const,
   },
+  psychographic: {
+    all: ["psychographic"] as const,
+    lead: (leadId: string) => [...queryKeys.psychographic.all, "lead", leadId] as const,
+  },
   control: {
     all: ["control"] as const,
     systemHealth: () => [...queryKeys.control.all, "system-health"] as const,

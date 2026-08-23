@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { X } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
+import { DiscRadar } from "@/components/disc-radar";
 import { ExecutionArtifacts } from "@/components/execution-artifacts";
 import { OpportunityCard } from "@/components/opportunity-card";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +12,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useArtifacts, useBattlecard } from "@/hooks/queries/use-artifacts";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
+import { useLeadDiscProfile } from "@/hooks/queries/use-psychographic";
+
+const DISC_LABELS: Record<string, string> = {
+  D: "Dominante — directo y orientado a resultados",
+  I: "Influyente — entusiasta y sociable",
+  S: "Estable — paciente y confiable",
+  C: "Analítico — preciso y orientado a datos",
+  UNKNOWN: "Sin clasificar",
+};
 
 /** Drawer CRM — detalle in-place sin navegación. */
 export function OpportunityDrawer() {
@@ -28,6 +38,9 @@ export function OpportunityDrawer() {
   const battlecard = battlecardResult?.data;
   const artifacts = artifactsResult?.data;
   const open = Boolean(opportunityId);
+
+  const { data: discResult, isLoading: loadingDisc } = useLeadDiscProfile(opportunity?.lead_id);
+  const disc = discResult?.data;
 
   useEffect(() => {
     if (!open) return;
@@ -88,6 +101,41 @@ export function OpportunityDrawer() {
             <p className="text-sm text-muted-foreground">
               Battlecard no disponible — la oportunidad puede estar enriqueciéndose.
             </p>
+          )}
+
+          {opportunity?.lead_id && (
+            <section className="bee-surface p-5">
+              <h3 className="mb-3 text-sm font-semibold">Perfil de comunicación (DISC)</h3>
+              {loadingDisc ? (
+                <Skeleton className="h-48" />
+              ) : disc ? (
+                <div className="flex flex-wrap items-center gap-4">
+                  <DiscRadar d={disc.d_score} i={disc.i_score} s={disc.s_score} c={disc.c_score} className="w-full max-w-[240px]" />
+                  <div className="min-w-0 flex-1 space-y-1.5 text-xs">
+                    <p>
+                      <span className="font-medium text-foreground">Estilo dominante:</span>{" "}
+                      <span className="text-muted-foreground">{DISC_LABELS[disc.dominant_style] ?? disc.dominant_style}</span>
+                    </p>
+                    <p>
+                      <span className="font-medium text-foreground">Tono preferido:</span>{" "}
+                      <span className="text-muted-foreground">{disc.preferred_tone}</span>
+                    </p>
+                    <p>
+                      <span className="font-medium text-foreground">Mensajes:</span>{" "}
+                      <span className="text-muted-foreground">{disc.preferred_message_length}</span>
+                    </p>
+                    <p>
+                      <span className="font-medium text-foreground">Confianza:</span>{" "}
+                      <span className="text-muted-foreground">{Math.round(disc.confidence * 100)}%</span>
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Perfil DISC no disponible todavía para este lead.
+                </p>
+              )}
+            </section>
           )}
 
           <section>
