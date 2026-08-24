@@ -3,6 +3,7 @@
 import { EngagementInboxPanel } from "@/components/engagement-inbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkflowStatusPanel } from "@/components/workflow-status";
+import { AutomationBuilder } from "@/features/sequences/automation-builder";
 import { MessageLibrary } from "@/features/sequences/message-library";
 
 /** Secuencias — estado de DynamicSequence, bandeja de engagement entrante,
@@ -28,6 +29,9 @@ export function SequencesView() {
           <TabsTrigger value="biblioteca" className="rounded-sm">
             Biblioteca de mensajes
           </TabsTrigger>
+          <TabsTrigger value="automatizaciones" className="rounded-sm">
+            Automatizaciones
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="estado" className="mt-6">
@@ -39,6 +43,10 @@ export function SequencesView() {
 
         <TabsContent value="biblioteca" className="mt-6">
           <MessageLibrary />
+        </TabsContent>
+
+        <TabsContent value="automatizaciones" className="mt-6">
+          <AutomationBuilder />
         </TabsContent>
       </Tabs>
     </div>

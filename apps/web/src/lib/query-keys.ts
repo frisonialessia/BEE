@@ -86,6 +86,12 @@ export const queryKeys = {
     list: () => [...queryKeys.outboundWebhooks.all, "list"] as const,
     eventTypes: () => [...queryKeys.outboundWebhooks.all, "event-types"] as const,
   },
+  sequences: {
+    all: ["dynamic-sequences"] as const,
+    list: () => [...queryKeys.sequences.all, "list"] as const,
+    detail: (id: string) => [...queryKeys.sequences.all, "detail", id] as const,
+    channelStatus: () => [...queryKeys.sequences.all, "channel-status"] as const,
+  },
   control: {
     all: ["control"] as const,
     systemHealth: () => [...queryKeys.control.all, "system-health"] as const,
