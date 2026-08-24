@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Circle, XCircle } from "lucide-react";
+import { CheckCircle2, Circle, MinusCircle, XCircle } from "lucide-react";
 
 import { TIER_LABELS, type OpportunityLinkStatus, type RelationshipTierGroup } from "@/lib/relationship-map";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,7 @@ const STATUS_STYLE: Record<OpportunityLinkStatus, string> = {
   won: "border-[var(--success)] bg-[var(--success)]/10",
   open: "border-[var(--color-chart-4)] bg-[var(--color-chart-4)]/10",
   lost: "border-border bg-[var(--color-primary)]/10 opacity-70",
+  dismissed: "border-dashed border-border opacity-70",
   none: "border-dashed border-border",
 };
 
@@ -16,6 +17,7 @@ const STATUS_ICON: Record<OpportunityLinkStatus, typeof Circle> = {
   won: CheckCircle2,
   open: Circle,
   lost: XCircle,
+  dismissed: MinusCircle,
   none: Circle,
 };
 
@@ -23,6 +25,7 @@ const STATUS_HINT: Record<OpportunityLinkStatus, string> = {
   won: "Ligado a una oportunidad ganada",
   open: "Ligado a una oportunidad abierta",
   lost: "Solo ligado a oportunidades perdidas",
+  dismissed: "Solo ligado a oportunidades descartadas — nunca se compitió por ellas",
   none: "Sin ninguna oportunidad ligada todavía",
 };
 

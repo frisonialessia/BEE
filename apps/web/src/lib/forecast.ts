@@ -1,4 +1,4 @@
-import type { Opportunity, OpportunityStatus } from "@/types/domain";
+import { CLOSED_OPPORTUNITY_STATUSES, type Opportunity, type OpportunityStatus } from "@/types/domain";
 
 /** Checklist MEDDIC — un criterio por pilar del framework de calificación.
  *  Se guarda como mapa de booleanos (no columnas fijas) para poder ajustar
@@ -32,7 +32,6 @@ export const STAGE_PROBABILITY: Record<OpportunityStatus, number> = {
   dismissed: 0,
 };
 
-const CLOSED_STATUSES: OpportunityStatus[] = ["won", "lost", "dismissed"];
 
 // ── Riesgo de deal basado en histórico real ─────────────────────────────────
 
@@ -142,7 +141,7 @@ function parseLocalDate(value: string): Date {
  *  vive en el cliente, sin endpoint de agregación aparte. `today` se recibe
  *  como parámetro para que el cálculo sea determinista y testeable. */
 export function computeForecast(opportunities: Opportunity[], today: Date): ForecastSummary {
-  const open = opportunities.filter((o) => !CLOSED_STATUSES.includes(o.status));
+  const open = opportunities.filter((o) => !CLOSED_OPPORTUNITY_STATUSES.includes(o.status));
   const won = opportunities.filter((o) => o.status === "won");
   const bucketStats = computeScoreBucketStats(opportunities).filter(
     (s) => s.sampleSize >= MIN_SAMPLE_SIZE,

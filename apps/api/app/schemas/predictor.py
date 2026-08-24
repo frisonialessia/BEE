@@ -50,5 +50,6 @@ class OutcomeWithPrediction(BaseModel):
     competitor: str | None = None
     closed_at: str
     message: str = "Outcome recorded"
+    already_recorded: bool = False
     resource_prediction: ResourcePrediction | None = None
     workflow_tasks_dispatched: int = 0

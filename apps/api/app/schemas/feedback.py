@@ -102,6 +102,13 @@ class OutcomeOut(BaseModel):
     competitor: str | None = None
     closed_at: datetime
     message: str = "Outcome recorded"
+    # True when this call was a no-op — the outcome was already recorded
+    # earlier and the DB was left untouched (see
+    # FeedbackLoopService.record_outcome's idempotency guard). The endpoint
+    # uses this to skip re-publishing opportunity.won/lost — otherwise every
+    # duplicate/retried submission re-fires CRM/billing/outbound-webhook
+    # side effects for something that already happened.
+    already_recorded: bool = False
 
 
 # ── Internal learning dataclasses (not exposed directly via API) ───────────────

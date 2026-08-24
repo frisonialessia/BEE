@@ -97,6 +97,7 @@ class FeedbackLoopService:
                 competitor=opportunity.competitor,
                 closed_at=existing.closed_at,
                 message="Outcome already recorded (idempotent)",
+                already_recorded=True,
             )
 
         new_status = (

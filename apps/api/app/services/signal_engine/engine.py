@@ -164,6 +164,10 @@ class SignalEngine:
             self.session.refresh(signal)
             if opportunity is not None:
                 self.session.refresh(opportunity)
+            # 8. Periodically refresh market-wide trend insights (best-effort,
+            # throttled, own-transaction callers only — see the method docstring
+            # for why commit=False callers skip this entirely).
+            self._maybe_run_trend_analysis(organization_id)
         else:
             self.session.flush()
             if opportunity is not None:
@@ -201,6 +205,45 @@ class SignalEngine:
         except Exception:  # noqa: BLE001
             self.session.rollback()
             logger.exception("DataValidator failed for new lead %s", lead_id)
+
+    # Re-run TrendAnalyst every this-many signals for a tenant — cheap enough
+    # (a handful of grouped COUNT queries over a 7/14-day window) to run
+    # inline, but wasteful to redo on literally every single ingestion.
+    _TREND_ANALYSIS_INTERVAL = 20
+
+    def _maybe_run_trend_analysis(self, organization_id: uuid.UUID | None) -> None:
+        """Best-effort, throttled: refresh MarketInsight rows periodically.
+
+        There is no scheduler (cron/Celery beat) anywhere in this deployment
+        despite TrendAnalyst's own docstring describing one — signal
+        ingestion is the only regular heartbeat available, so this makes it
+        double as that trigger. Without this, ``StrategyGeneratorService``'s
+        market-context input (``ctx.market_insights``) is always empty in
+        production, since nothing else ever calls ``TrendAnalyst.analyze()``
+        outside the manual ``POST /insights/analyze`` endpoint.
+
+        Only called from the ``commit=True`` branch of :meth:`ingest` —
+        ``TrendAnalyst.analyze()`` commits internally, which would prematurely
+        end a ``commit=False`` caller's larger transaction (the same hazard
+        ``DataValidator._persist`` used to have; see its own history).
+        """
+        try:
+            from sqlmodel import func, select
+
+            from app.models.signal import Signal
+            from app.services.permissions import scope_by_organization_id
+            from app.services.trend_analyst import TrendAnalyst
+
+            count_stmt = scope_by_organization_id(
+                select(func.count(Signal.id)), Signal.organization_id, organization_id
+            )
+            total = self.session.exec(count_stmt).one()
+            if total % self._TREND_ANALYSIS_INTERVAL != 0:
+                return
+            TrendAnalyst(self.session).analyze(organization_id=organization_id)
+        except Exception:  # noqa: BLE001
+            self.session.rollback()
+            logger.warning("TrendAnalyst run failed during signal ingestion", exc_info=True)
 
     def _run_analyzers(
         self, payload: SignalWebhookIn

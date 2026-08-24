@@ -1,4 +1,4 @@
-import type { Opportunity } from "@/types/domain";
+import { CLOSED_OPPORTUNITY_STATUSES, type Opportunity } from "@/types/domain";
 import type { HotLeadScore } from "@/types/extended";
 import type { LeadCard, LeadColumnId } from "@/types/control";
 
@@ -15,7 +15,7 @@ function isBattlecardComplete(strategy: Opportunity["strategy"]): boolean {
 }
 
 export function opportunityToColumn(opp: Opportunity): LeadColumnId {
-  if (opp.status === "won" || opp.status === "lost" || opp.status === "dismissed") {
+  if (CLOSED_OPPORTUNITY_STATUSES.includes(opp.status)) {
     return "closed";
   }
   if (opp.status === "in_progress" || opp.status === "prioritized") {

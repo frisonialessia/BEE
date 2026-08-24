@@ -6,11 +6,9 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useRecordOutcome } from "@/hooks/mutations/use-record-outcome";
 import { lossReasonLabels } from "@/lib/format";
-import type { LossReason, Opportunity } from "@/types/domain";
+import { CLOSED_OPPORTUNITY_STATUSES, type LossReason, type Opportunity } from "@/types/domain";
 
 const LOSS_REASONS = Object.keys(lossReasonLabels) as LossReason[];
-
-const CLOSED_STATUSES = new Set(["won", "lost", "dismissed"]);
 
 /**
  * RecordOutcomePanel — captura el desenlace (ganada/perdida) de una
@@ -29,7 +27,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
   const [competitor, setCompetitor] = useState("");
   const [notes, setNotes] = useState("");
 
-  const isClosed = CLOSED_STATUSES.has(opportunity.status);
+  const isClosed = CLOSED_OPPORTUNITY_STATUSES.includes(opportunity.status);
 
   if (isClosed) {
     const won = opportunity.status === "won";

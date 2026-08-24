@@ -13,10 +13,12 @@ function isOverdue(task: OpportunityTask): boolean {
 
 function TaskRow({
   task,
+  toggling,
   onToggle,
   onDelete,
 }: {
   task: OpportunityTask;
+  toggling: boolean;
   onToggle: (completed: boolean) => void;
   onDelete: () => void;
 }) {
@@ -26,8 +28,9 @@ function TaskRow({
       <input
         type="checkbox"
         checked={Boolean(task.completed_at)}
+        disabled={toggling}
         onChange={(e) => onToggle(e.target.checked)}
-        className="mt-0.5 size-3.5 shrink-0 accent-[var(--color-chart-4)]"
+        className="mt-0.5 size-3.5 shrink-0 accent-[var(--color-chart-4)] disabled:opacity-50"
       />
       <div className="min-w-0 flex-1">
         <p className={cn("text-xs", task.completed_at ? "text-muted-foreground line-through" : "text-foreground")}>
@@ -100,6 +103,7 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
             <TaskRow
               key={task.id}
               task={task}
+              toggling={updateTask.isPending && updateTask.variables?.id === task.id}
               onToggle={(completed) => updateTask.mutate({ id: task.id, body: { completed } })}
               onDelete={() => deleteTask.mutate(task.id)}
             />
@@ -114,6 +118,7 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
                   <TaskRow
                     key={task.id}
                     task={task}
+                    toggling={updateTask.isPending && updateTask.variables?.id === task.id}
                     onToggle={(completed) => updateTask.mutate({ id: task.id, body: { completed } })}
                     onDelete={() => deleteTask.mutate(task.id)}
                   />

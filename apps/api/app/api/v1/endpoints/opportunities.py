@@ -347,43 +347,58 @@ def record_outcome(
     # both already subscribe to "opportunity.lost" (see
     # app.services.workflow_orchestrator.handlers), but until now nothing ever
     # published it, so a lost deal silently reached no integration at all.
+    #
+    # Skipped entirely when already_recorded=True: record_outcome() is a
+    # documented no-op on a duplicate/retried submission (the DB is left
+    # untouched), but publishing here is NOT gated on that by the DB write —
+    # without this check, a double-click on "Mark Won", a client retry after
+    # a timeout, or a resubmission with a *different* outcome than what's
+    # actually stored (e.g. "won" sent for a deal already recorded LOST)
+    # would still fire a fresh event and re-trigger CRM/billing/delivery/
+    # outbound-webhook side effects (a second invoice, a second delivery
+    # ticket, a duplicate "deal won" notification) for something that
+    # already happened — or, in the outcome-flip case, for the WRONG
+    # outcome entirely. Building the event from outcome_out (what's actually
+    # persisted) rather than body (what this particular request asked for)
+    # closes that second gap for good, not just for the duplicate-call case.
     workflow_tasks_dispatched = 0
-    try:
-        # Resolve company name for the event payload
-        repo2 = OpportunityRepository(session)
-        opp2 = repo2.get(opportunity_id)
-        company_name = None
-        if opp2 and opp2.company_id:
-            from app.models.company import Company
-            co = session.get(Company, opp2.company_id)
-            company_name = co.name if co else None
+    if not outcome_out.already_recorded:
+        try:
+            # Resolve company name for the event payload
+            repo2 = OpportunityRepository(session)
+            opp2 = repo2.get(opportunity_id)
+            company_name = None
+            if opp2 and opp2.company_id:
+                from app.models.company import Company
+                co = session.get(Company, opp2.company_id)
+                company_name = co.name if co else None
 
-        event = BeeEvent(
-            event_type=f"opportunity.{body.outcome}",
-            entity_id=opportunity_id,
-            entity_type="opportunity",
-            payload={
-                "opportunity_id": str(opportunity_id),
-                "organization_id": str(opp2.organization_id) if opp2 and opp2.organization_id else None,
-                "company_name": company_name,
-                "score": opp2.score if opp2 else 0,
-                "loss_reason": body.loss_reason,
-                "competitor": body.competitor,
-                "notes": body.notes,
-            },
-        )
-        orchestrator = WorkflowOrchestrator(session)
-        tasks = orchestrator.publish(event)
-        session.commit()
-        workflow_tasks_dispatched = len(tasks)
-    except Exception:  # noqa: BLE001
-        import logging
-        # A failed commit leaves the session invalidated — anything reusing
-        # it afterwards (the AnomalyDetector check right below) would raise
-        # too and silently no-op. Roll back so the rest of the request can
-        # still use this session normally.
-        session.rollback()
-        logging.getLogger(__name__).exception("WorkflowOrchestrator dispatch failed for opp %s", opportunity_id)
+            event = BeeEvent(
+                event_type=f"opportunity.{outcome_out.outcome}",
+                entity_id=opportunity_id,
+                entity_type="opportunity",
+                payload={
+                    "opportunity_id": str(opportunity_id),
+                    "organization_id": str(opp2.organization_id) if opp2 and opp2.organization_id else None,
+                    "company_name": company_name,
+                    "score": opp2.score if opp2 else 0,
+                    "loss_reason": outcome_out.loss_reason,
+                    "competitor": outcome_out.competitor,
+                    "notes": body.notes,
+                },
+            )
+            orchestrator = WorkflowOrchestrator(session)
+            tasks = orchestrator.publish(event)
+            session.commit()
+            workflow_tasks_dispatched = len(tasks)
+        except Exception:  # noqa: BLE001
+            import logging
+            # A failed commit leaves the session invalidated — anything reusing
+            # it afterwards (the AnomalyDetector check right below) would raise
+            # too and silently no-op. Roll back so the rest of the request can
+            # still use this session normally.
+            session.rollback()
+            logging.getLogger(__name__).exception("WorkflowOrchestrator dispatch failed for opp %s", opportunity_id)
 
     # ── Step 4: Trigger AnomalyDetector after every outcome ───────────────────
     # Run automatically (non-blocking) so the CEO is alerted if this outcome
@@ -397,6 +412,7 @@ def record_outcome(
         competitor=outcome_out.competitor,
         closed_at=outcome_out.closed_at.isoformat(),
         message=outcome_out.message,
+        already_recorded=outcome_out.already_recorded,
         resource_prediction=prediction,
         workflow_tasks_dispatched=workflow_tasks_dispatched,
     )
@@ -413,11 +429,18 @@ def _trigger_anomaly_check(session: Session) -> None:
 
         detector = AnomalyDetector(session)
         result = detector.check_all()
-        if result.alerts_created > 0:
+        # check_all() only flushes, never commits (same contract as every
+        # other service in this codebase) — the manual POST
+        # /analytics/anomalies/check endpoint commits right after calling it
+        # for the same reason. Without this, any alert it just created here
+        # was never persisted: it lived only in this request's flushed-but-
+        # uncommitted session and vanished when the request ended.
+        session.commit()
+        if len(result.new_alerts) > 0:
             import logging
             logging.getLogger(__name__).info(
                 "AnomalyDetector: %d new alert(s) created after outcome recording",
-                result.alerts_created,
+                len(result.new_alerts),
             )
     except Exception:  # noqa: BLE001
         import logging

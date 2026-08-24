@@ -116,6 +116,7 @@ export interface OutcomeWithPrediction {
   competitor: string | null;
   closed_at: string;
   message: string;
+  already_recorded: boolean;
   resource_prediction: ResourcePrediction | null;
   workflow_tasks_dispatched: number;
 }

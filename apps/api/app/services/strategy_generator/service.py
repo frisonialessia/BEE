@@ -62,8 +62,19 @@ class StrategyGeneratorService:
         self.session = session
         self._feedback = feedback_service or FeedbackLoopService(session)
         self._observability = ObservabilityService()
-        # Lazy import to avoid circular deps; pass None to disable trend injection.
-        self._trend = trend_analyst
+        # Defaults to a real TrendAnalyst, same as _feedback above — this
+        # class's own docstring documents both as auto-injecting into every
+        # new strategy "no code changes required", but until now this
+        # defaulted to bare None (no call site in the codebase ever passed
+        # trend_analyst= explicitly), so ctx.market_insights was always empty
+        # in production. Lazy import to avoid a circular dependency; pass an
+        # explicit `object()` sentinel — not None — if trend injection ever
+        # needs to be disabled on purpose (tests use a mock instead).
+        if trend_analyst is not None:
+            self._trend = trend_analyst
+        else:
+            from app.services.trend_analyst import TrendAnalyst
+            self._trend = TrendAnalyst(session)
 
     def enrich(self, signal: Signal, opportunity: Opportunity) -> bool:
         """Generate and persist a battlecard strategy for the opportunity.
@@ -159,6 +170,7 @@ class StrategyGeneratorService:
                 market_insights = self._trend.get_active_insights_for_context(
                     signal_type=signal_type.value,
                     industry=industry,
+                    organization_id=signal.organization_id,
                 )
             except Exception:  # noqa: BLE001
                 logger.warning("TrendAnalyst unavailable; proceeding without market insights.")

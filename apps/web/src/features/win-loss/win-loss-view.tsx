@@ -84,14 +84,18 @@ export function WinLossView() {
               icon={DollarSign}
             />
             <MetricCard
-              label="Días a cierre"
+              label="Días a cierre (ganados)"
               value={
                 summary.avgDaysToCloseWon !== null ? `${Math.round(summary.avgDaysToCloseWon)}d` : "—"
               }
               hint={
-                summary.avgDaysToCloseLost !== null
-                  ? `Ganados · ${Math.round(summary.avgDaysToCloseLost)}d perdidos en promedio`
-                  : "Promedio en deals ganados"
+                summary.avgDaysToCloseWon === null
+                  ? summary.avgDaysToCloseLost !== null
+                    ? `Sin ganados todavía · ${Math.round(summary.avgDaysToCloseLost)}d perdidos en promedio`
+                    : "Sin deals cerrados con fecha registrada"
+                  : summary.avgDaysToCloseLost !== null
+                    ? `${Math.round(summary.avgDaysToCloseLost)}d perdidos en promedio`
+                    : "Promedio en deals ganados"
               }
               icon={CalendarClock}
             />

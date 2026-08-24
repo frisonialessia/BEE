@@ -1,4 +1,4 @@
-import type { Lead, Opportunity } from "@/types/domain";
+import { CLOSED_OPPORTUNITY_STATUSES, type Lead, type Opportunity } from "@/types/domain";
 
 /** Niveles de seniority reales que ya usa el resto de BEE (ver
  *  app.services.resource_predictor._SENIOR_LEVELS y
@@ -19,7 +19,7 @@ export const TIER_LABELS: Record<SeniorityTier, string> = {
   unknown: "Sin clasificar",
 };
 
-export type OpportunityLinkStatus = "won" | "lost" | "open" | "none";
+export type OpportunityLinkStatus = "won" | "lost" | "open" | "dismissed" | "none";
 
 export interface RelationshipNode {
   lead: Lead;
@@ -35,8 +35,6 @@ export interface RelationshipTierGroup {
   tier: SeniorityTier;
   nodes: RelationshipNode[];
 }
-
-const CLOSED_STATUSES = new Set(["won", "lost", "dismissed"]);
 
 /** Mapa de relaciones de una cuenta: sus contactos agrupados por nivel real
  *  (no una jerarquía de reporte inventada) y si cada uno ya está ligado a
@@ -58,8 +56,13 @@ export function computeRelationshipMap(
   function statusFor(opps: Opportunity[]): OpportunityLinkStatus {
     if (opps.length === 0) return "none";
     if (opps.some((o) => o.status === "won")) return "won";
-    if (opps.some((o) => !CLOSED_STATUSES.has(o.status))) return "open";
-    return "lost";
+    if (opps.some((o) => !CLOSED_OPPORTUNITY_STATUSES.includes(o.status))) return "open";
+    // "dismissed" is a distinct, weaker signal than "lost" — BEE decided
+    // not to pursue it, nobody actually competed for and lost the deal. A
+    // contact whose only linked opportunities were dismissed shouldn't read
+    // as "we lost this account" on the map.
+    if (opps.some((o) => o.status === "lost")) return "lost";
+    return "dismissed";
   }
 
   const groups = new Map<SeniorityTier, RelationshipNode[]>();

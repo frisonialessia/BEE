@@ -209,10 +209,10 @@ class AnomalyDetector:
         if len(rolling) < _MIN_SAMPLE or len(baseline_outcomes) < _MIN_SAMPLE:
             return None
 
-        rolling_won = sum(1 for o in rolling if o.outcome == "WON")
+        rolling_won = sum(1 for o in rolling if o.outcome == "won")
         rolling_rate = rolling_won / len(rolling)
 
-        baseline_won = sum(1 for o in baseline_outcomes if o.outcome == "WON")
+        baseline_won = sum(1 for o in baseline_outcomes if o.outcome == "won")
         baseline_rate = baseline_won / len(baseline_outcomes)
 
         if baseline_rate == 0:
@@ -342,7 +342,7 @@ class AnomalyDetector:
                 continue
 
             rolling = segment_outcomes[-_ROLLING_WINDOW:]
-            rolling_won = sum(1 for o in rolling if o.outcome == "WON")
+            rolling_won = sum(1 for o in rolling if o.outcome == "won")
             rolling_rate = rolling_won / max(len(rolling), 1)
 
             # Recover if within 10% of baseline

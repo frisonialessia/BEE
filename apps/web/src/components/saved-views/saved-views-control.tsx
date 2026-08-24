@@ -1,7 +1,7 @@
 "use client";
 
 import { Bookmark, ChevronDown, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useCreateSavedView, useDeleteSavedView, useSavedViews } from "@/hooks/queries/use-saved-views";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,15 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
   const [showSaveForm, setShowSaveForm] = useState(false);
   const [name, setName] = useState("");
   const [shared, setShared] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [open]);
 
   const views = result?.data ?? [];
 
@@ -46,7 +55,7 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
   }
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

@@ -14,7 +14,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, or_, select
 
-from app.api.deps import get_current_user, get_current_user_optional
+from app.api.deps import get_current_user
 from app.core.database import get_session
 from app.models.base import UserRole
 from app.models.saved_view import SavedView
@@ -65,19 +65,26 @@ def create_saved_view(
 def list_saved_views(
     page: str = Query(..., description="Which list page these views belong to, e.g. 'leads'"),
     session: Session = Depends(get_session),
-    current_user: User | None = Depends(get_current_user_optional),
+    # Mandatory, not optional: saved views are a dashboard-only feature (no
+    # API-key/webhook integration ever needs to read them), and unlike
+    # organization_id=None (an intentional "untagged, shared" convention for
+    # legacy pre-multi-tenant records elsewhere in this codebase), an
+    # anonymous caller here has no organization to scope by at all — falling
+    # back to "every org's shared views" would leak one tenant's saved
+    # filters (segment names, criteria) to every other tenant.
+    current_user: User = Depends(get_current_user),
 ) -> list[SavedViewOut]:
-    statement = select(SavedView).where(SavedView.page == page)
-    if current_user is not None:
-        statement = statement.where(
+    statement = (
+        select(SavedView)
+        .where(SavedView.page == page)
+        .where(
             or_(
                 SavedView.created_by_user_id == current_user.id,
                 (SavedView.is_shared == True) & (SavedView.organization_id == current_user.organization_id),  # noqa: E712
             )
         )
-    else:
-        statement = statement.where(SavedView.is_shared == True)  # noqa: E712
-    statement = statement.order_by(SavedView.created_at.desc())  # type: ignore[union-attr]
+        .order_by(SavedView.created_at.desc())  # type: ignore[union-attr]
+    )
 
     views = list(session.exec(statement).all())
     return [SavedViewOut.model_validate(v) for v in views]

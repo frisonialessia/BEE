@@ -34,6 +34,17 @@ export type OpportunityStatus =
   | "lost"
   | "dismissed";
 
+/** Terminal statuses — an opportunity in any of these never moves again.
+ *  Single shared source: this used to be copy-pasted as a local constant in
+ *  forecast.ts, lead-board.ts, record-outcome-panel.tsx, and
+ *  relationship-map.ts — four places that had to be kept in lockstep by
+ *  hand, with no guardrail if one drifted. */
+export const CLOSED_OPPORTUNITY_STATUSES: readonly OpportunityStatus[] = [
+  "won",
+  "lost",
+  "dismissed",
+];
+
 export type TimingUrgency = "immediate" | "this_week" | "this_month" | "watch";
 
 // ── Inbound webhook refs (SignalWebhookIn) ───────────────────────────────────

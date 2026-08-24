@@ -136,7 +136,7 @@ def update_task(
     task_id: uuid.UUID,
     data: OpportunityTaskUpdateIn,
     session: Session = Depends(get_session),
-    current_user: User | None = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
 ) -> OpportunityTaskOut:
     task = session.get(OpportunityTask, task_id)
     if task is None or _hidden_from(session, current_user, task):
@@ -163,7 +163,7 @@ def update_task(
 def delete_task(
     task_id: uuid.UUID,
     session: Session = Depends(get_session),
-    current_user: User | None = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
 ) -> None:
     task = session.get(OpportunityTask, task_id)
     if task is None or _hidden_from(session, current_user, task):
