@@ -5,21 +5,25 @@ import { Bot } from "lucide-react";
 import { BattlecardView } from "@/components/battlecard";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
 import { OpportunityCard } from "@/components/opportunity-card";
+import { SuccessPatternsList } from "@/components/strategy/success-patterns-list";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { usePagination } from "@/hooks/use-pagination";
+import { useSuccessPatterns } from "@/hooks/queries/use-feedback";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 
 /** Estrategias y battlecards — plays listos para el CEO. */
 export function StrategiesDashboard() {
   const { data: battlecardsResult, isLoading: loadingBattlecards } = useBattlecards();
   const { data: allOppsResult, isLoading: loadingOpps } = useOpportunities(undefined, 200);
+  const { data: patternsResult, isLoading: loadingPatterns } = useSuccessPatterns();
   const { openOpportunity } = useOpportunityDrawer();
 
   const battlecards = battlecardsResult?.data ?? [];
   const opportunities = allOppsResult?.data ?? [];
+  const patterns = patternsResult?.data ?? [];
   const live = Boolean(battlecardsResult?.live || allOppsResult?.live);
   const loading = loadingBattlecards || loadingOpps;
 
@@ -56,6 +60,9 @@ export function StrategiesDashboard() {
             </TabsTrigger>
             <TabsTrigger value="pipeline" className="rounded-sm">
               Pipeline ({opportunities.length})
+            </TabsTrigger>
+            <TabsTrigger value="learning" className="rounded-sm">
+              Aprendizaje ({patterns.length})
             </TabsTrigger>
           </TabsList>
 
@@ -122,6 +129,18 @@ export function StrategiesDashboard() {
               onPageSizeChange={pipelinePagination.changePageSize}
               itemLabel="oportunidades"
             />
+          </TabsContent>
+
+          <TabsContent value="learning" className="mt-6 space-y-4">
+            <p className="bee-caption">
+              Patrones de éxito reales, aprendidos de deals ya cerrados — lo que hoy sesga
+              la generación de battlecards nuevas.
+            </p>
+            {loadingPatterns ? (
+              <Skeleton className="h-40" />
+            ) : (
+              <SuccessPatternsList patterns={patterns} />
+            )}
           </TabsContent>
         </Tabs>
       )}

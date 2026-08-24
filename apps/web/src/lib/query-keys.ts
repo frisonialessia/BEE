@@ -67,6 +67,11 @@ export const queryKeys = {
     all: ["anomalies"] as const,
     open: () => [...queryKeys.anomalies.all, "open"] as const,
   },
+  feedback: {
+    all: ["feedback"] as const,
+    patterns: (signalType?: string) =>
+      [...queryKeys.feedback.all, "patterns", signalType ?? "all"] as const,
+  },
   tasks: {
     all: ["tasks"] as const,
     list: (opportunityId?: string) => [...queryKeys.tasks.all, "list", opportunityId ?? "all"] as const,

@@ -47,7 +47,7 @@ from app.models.strategy_outcome import StrategyOutcome
 from app.repositories.opportunity import OpportunityRepository
 from app.repositories.strategy_outcome import StrategyOutcomeRepository
 from app.repositories.tactic_variant import TacticVariantRepository
-from app.schemas.feedback import OutcomeIn, OutcomeOut, SuccessHint
+from app.schemas.feedback import OutcomeIn, OutcomeOut, SuccessHint, SuccessPatternOut
 from app.schemas.variants import ActiveVariantRef, VariantCreateIn, VariantOut
 
 logger = get_logger(__name__)
@@ -203,6 +203,52 @@ class FeedbackLoopService:
         if hints:
             logger.debug("Found %d hints for signal_type=%s industry=%s", len(hints), signal_type, industry)
         return hints
+
+    # ── Learning patterns (the visible "learn" step) ─────────────────────────
+
+    def get_patterns(
+        self,
+        signal_type: str | None = None,
+        industry: str | None = None,
+        max_patterns: int = 10,
+        organization_id: _uuid_module.UUID | None = None,
+    ) -> list[SuccessPatternOut]:
+        """Return the learned success patterns behind BEE's strategy generation.
+
+        Wraps the same ``get_win_rates`` aggregation ``get_success_hints`` uses
+        internally, but exposed for the frontend ("what's working today")
+        instead of consumed by a generator — this is what makes the *learn*
+        step of perceive→judge→plan→act→learn something the operator can
+        actually see, not just something the system quietly acts on.
+
+        ``signal_type=None`` returns the org's top patterns across every
+        signal type; pass one to scope it, same as ``get_success_hints``.
+        Every row already passed the repository's ``min_samples`` floor, so
+        there is nothing to fabricate here — an org with too little closed-deal
+        history simply gets an empty list, never a guessed pattern.
+        """
+        rows = self._outcomes.get_win_rates(
+            signal_type, industry=industry, organization_id=organization_id
+        )
+        patterns = [
+            SuccessPatternOut(
+                signal_type=row["signal_type"] or "other",
+                playbook=row["playbook"],
+                channel=row["channel"],
+                generator=row["generator"],
+                win_rate=row["win_rate"],
+                sample_size=row["total"],
+                avg_days_to_close=row["avg_days"],
+                confidence=_confidence(row["total"]),  # type: ignore[arg-type]
+            )
+            for row in rows[:max_patterns]
+        ]
+        if patterns:
+            logger.debug(
+                "Found %d learning patterns for signal_type=%s industry=%s",
+                len(patterns), signal_type, industry,
+            )
+        return patterns
 
     # ── A/B variant management ────────────────────────────────────────────────
 

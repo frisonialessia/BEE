@@ -25,23 +25,27 @@ class StrategyOutcomeRepository(BaseRepository[StrategyOutcome]):
 
     def get_win_rates(
         self,
-        signal_type: str,
+        signal_type: str | None = None,
         industry: str | None = None,
         min_samples: int = 3,
         organization_id: uuid.UUID | None = None,
     ) -> list[dict]:
-        """Aggregate win rates by (playbook, channel, generator) for a signal type.
+        """Aggregate win rates by (signal_type, playbook, channel, generator).
 
         Returns a list of dicts with keys:
-        ``playbook``, ``channel``, ``generator``, ``total``, ``wins``,
-        ``win_rate``, ``avg_days``.
+        ``signal_type``, ``playbook``, ``channel``, ``generator``, ``total``,
+        ``wins``, ``win_rate``, ``avg_days``.
 
-        Filters to rows matching ``signal_type`` and optionally ``industry``.
-        Only returns groups with at least ``min_samples`` records so we don't
-        surface noise from single-data-point patterns.
+        ``signal_type=None`` aggregates across every signal type (used by the
+        org-wide "what's working" view); pass it to scope to one type, same as
+        before. Optionally filters by ``industry``. Only returns groups with
+        at least ``min_samples`` records so we don't surface noise from
+        single-data-point patterns — the same honesty guardrail regardless of
+        whether the caller scoped to one signal type or asked for all of them.
         """
         stmt = (
             select(
+                StrategyOutcome.signal_type,
                 StrategyOutcome.playbook,
                 StrategyOutcome.channel,
                 StrategyOutcome.generator,
@@ -54,8 +58,8 @@ class StrategyOutcomeRepository(BaseRepository[StrategyOutcome]):
                 ).label("wins"),
                 func.avg(StrategyOutcome.days_to_close).label("avg_days"),
             )
-            .where(StrategyOutcome.signal_type == signal_type)
             .group_by(
+                StrategyOutcome.signal_type,
                 StrategyOutcome.playbook,
                 StrategyOutcome.channel,
                 StrategyOutcome.generator,
@@ -63,6 +67,8 @@ class StrategyOutcomeRepository(BaseRepository[StrategyOutcome]):
             .having(func.count(StrategyOutcome.id) >= min_samples)
             .order_by(func.count(StrategyOutcome.id).desc())
         )
+        if signal_type:
+            stmt = stmt.where(StrategyOutcome.signal_type == signal_type)
         if industry:
             stmt = stmt.where(StrategyOutcome.company_industry == industry)
         stmt = scope_by_organization_id(stmt, StrategyOutcome.organization_id, organization_id)
@@ -74,6 +80,7 @@ class StrategyOutcomeRepository(BaseRepository[StrategyOutcome]):
             wins = int(row.wins or 0)
             results.append(
                 {
+                    "signal_type": row.signal_type,
                     "playbook": row.playbook,
                     "channel": row.channel,
                     "generator": row.generator,

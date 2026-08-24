@@ -20,14 +20,15 @@ from app.api.v1.endpoints import (
     dark_funnel,
     dead_letter,
     engagement,
+    feedback,
     health,
     insights,
     leads,
     network,
     opportunities,
     opportunity_tasks,
-    organizations,
     orchestrator,
+    organizations,
     outbound_webhooks,
     psychographic,
     quotas,
@@ -55,6 +56,7 @@ api_router.include_router(opportunity_tasks.router)
 api_router.include_router(outbound_webhooks.router)
 api_router.include_router(orchestrator.router)
 api_router.include_router(insights.router)
+api_router.include_router(feedback.router)
 api_router.include_router(analytics.router)
 api_router.include_router(brand.router)
 api_router.include_router(engagement.router)

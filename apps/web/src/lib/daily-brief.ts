@@ -2,6 +2,7 @@ import { computeForecast } from "@/lib/forecast";
 import { computePriorities, isIcpConfigured } from "@/lib/icp";
 import { computeQuotaPace, isQuotaActive } from "@/lib/quotas";
 import type { AnomalyAlert } from "@/lib/api/anomalies";
+import type { SuccessPattern } from "@/lib/api/feedback";
 import type { IcpCriteria } from "@/lib/api/organizations";
 import type { Quota } from "@/lib/api/quotas";
 import type { CompanyDuplicateGroup } from "@/lib/api/companies";
@@ -38,6 +39,7 @@ export function computeDailyBrief(input: {
   leadDuplicates: LeadDuplicateGroup[];
   anomalies: AnomalyAlert[];
   overdueTasks: OpportunityTask[];
+  successPatterns: SuccessPattern[];
 }): BriefItem[] {
   const items: BriefItem[] = [];
 
@@ -131,6 +133,23 @@ export function computeDailyBrief(input: {
       title: `${behindQuotas.length} cuota${behindQuotas.length === 1 ? "" : "s"} atrasada${behindQuotas.length === 1 ? "" : "s"}`,
       description: "Van más lento de lo que el período ya avanzó",
       href: "/dashboard/team",
+    });
+  }
+
+  // ── Aprendizaje del día (mismo dato que Estrategias → Aprendizaje) ──────
+  // Solo patrones con muestra suficiente para ser accionables (confianza
+  // media/alta, igual que el umbral que ya usa StrategyGeneratorService para
+  // sesgar la generación) — un patrón de baja confianza no amerita
+  // interrumpir el brief, se revisa en la pestaña dedicada si hace falta.
+  const actionablePatterns = input.successPatterns.filter((p) => p.confidence !== "low");
+  if (actionablePatterns.length > 0) {
+    const top = actionablePatterns[0];
+    items.push({
+      id: "learning",
+      tone: "info",
+      title: `${actionablePatterns.length} patrón${actionablePatterns.length === 1 ? "" : "es"} de éxito aprendido${actionablePatterns.length === 1 ? "" : "s"}`,
+      description: `${top.playbook} vía ${top.channel}: ${Math.round(top.win_rate * 100)}% de cierre en ${top.sample_size} deals`,
+      href: "/dashboard/strategies",
     });
   }
 
