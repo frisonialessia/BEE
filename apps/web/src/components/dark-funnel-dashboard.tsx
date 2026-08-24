@@ -202,16 +202,12 @@ export function DarkFunnelDashboard() {
 
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex gap-1">
+        <div className="bee-filter-tabs">
           {["", "ready_to_buy", "decision", "consideration", "awareness"].map((stage) => (
             <button
               key={stage}
               onClick={() => setStageFilter(stage)}
-              className={`text-xs px-3 py-1.5 rounded-sm border transition-colors ${
-                stageFilter === stage
-                  ? "bg-[var(--color-cta)] text-white border-[var(--color-cta)]"
-                  : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-[var(--color-text-muted)]"
-              }`}
+              className={`bee-filter-tab ${stageFilter === stage ? "bee-filter-tab--active" : ""}`}
             >
               {stage === "" ? "Todas" : STAGE_CONFIG[stage]?.label ?? stage}
             </button>

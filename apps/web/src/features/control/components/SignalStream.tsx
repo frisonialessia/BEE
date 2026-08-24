@@ -84,11 +84,11 @@ export function SignalStream() {
   const readyCount = result?.data.ready_count ?? 0;
 
   return (
-    <aside className="bee-surface flex min-h-[200px] flex-col p-5" aria-label="Signal stream">
+    <aside className="bee-surface flex min-h-[200px] flex-col p-5" aria-label="Flujo de señales">
       <div className="mb-3 flex shrink-0 items-start justify-between gap-2">
         <div>
-          <h2 className="bee-eyebrow">Signal Stream</h2>
-          <p className="bee-caption mt-0.5">Webhook → Strategy</p>
+          <h2 className="bee-eyebrow">Flujo de señales</h2>
+          <p className="bee-caption mt-0.5">Webhook → Estrategia</p>
         </div>
         {live ? (
           <span className="relative flex size-2">
@@ -102,7 +102,7 @@ export function SignalStream() {
 
       {readyCount > 0 && (
         <p className="mb-2 shrink-0 text-xs text-[var(--color-chart-5)]">
-          {readyCount} ready — click to open
+          {readyCount} lista{readyCount === 1 ? "" : "s"} — clic para abrir
         </p>
       )}
 
@@ -114,9 +114,9 @@ export function SignalStream() {
             ))}
           </div>
         ) : isError ? (
-          <p className="text-sm text-[var(--color-chart-2)]">Stream unavailable.</p>
+          <p className="text-sm text-[var(--color-chart-2)]">Flujo no disponible.</p>
         ) : events.length === 0 ? (
-          <p className="text-sm text-[var(--color-text-muted)]">Waiting for inbound webhooks.</p>
+          <p className="text-sm text-[var(--color-text-muted)]">Esperando webhooks entrantes.</p>
         ) : (
           <ScrollArea className="h-[220px] pr-2">
             <div>

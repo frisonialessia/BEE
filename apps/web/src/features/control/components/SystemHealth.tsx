@@ -70,22 +70,26 @@ function ProviderRow({ provider }: { provider: ProviderStatus }) {
       : 100;
 
   return (
-    <div className="flex items-center justify-between gap-4 py-3">
+    <div className="flex items-center justify-between gap-3 py-3">
       <div className="flex min-w-0 items-center gap-3">
         <StatusDot className={HEALTH_DOT[provider.health]} />
         <div className="min-w-0">
-          <p className="text-sm font-medium tracking-tight">{label}</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="truncate text-sm font-medium tracking-tight">{label}</p>
+          <p className="truncate text-xs text-muted-foreground">
             {provider.configured ? "API configurada" : "Modo simulado"}
-            {provider.webhook_configured ? " · Webhook ✓" : " · Sin secreto de webhook"}
+            {provider.webhook_configured ? " · Webhook ✓" : " · Sin secreto"}
           </p>
         </div>
       </div>
-      <div className="text-right">
+      {/* shrink-0: sin esto, en la columna angosta de Control (~300px), este
+          bloque competía por espacio con el label de la izquierda y el
+          conteo de tokens terminaba envolviéndose debajo de la barra de
+          progreso — la caja de "APIs externas" se veía rota/apretada. */}
+      <div className="shrink-0 text-right">
         <p className="font-mono text-xs tabular-nums text-muted-foreground">
           {provider.tokens_remaining}/{provider.tokens_capacity}
         </p>
-        <div className="mt-1.5 h-1 w-20 overflow-hidden rounded-full bg-muted">
+        <div className="mt-1.5 h-1 w-16 overflow-hidden rounded-full bg-muted">
           <div
             className="h-full rounded-full bg-[var(--color-primary)] transition-all duration-500"
             style={{ width: `${pct}%` }}
@@ -105,10 +109,18 @@ function WorkerKpis({ worker }: { worker: WorkerHealth }) {
   }[worker.state];
 
   return (
-    <div className="bee-kpi-strip !mt-0">
+    // grid-cols-2 fijo, no .bee-kpi-strip: esa clase usa auto-fit/minmax que
+    // en la columna angosta de Control (~300px) salta entre 1, 2 y 4
+    // columnas según el ancho exacto del viewport — mismo componente, layout
+    // distinto en cada resolución. Acá siempre son 4 tarjetas en un
+    // contenedor angosto, así que fijamos 2×2 para que sea predecible.
+    <div className="grid grid-cols-2 gap-3">
       <KpiCard label="Ingesta" value={worker.running ? stateLabel : "Apagado"} text />
       <KpiCard label="Cola" value={String(worker.queue_depth)} mono />
-      <KpiCard label="Procesados" value={String(worker.processed_count)} mono />
+      {/* "Procesados" partía a mitad de palabra en la columna angosta de
+          Control (2 columnas × ~140px) — "Hechos" cabe en una sola línea
+          sin perder claridad junto al valor. */}
+      <KpiCard label="Hechos" value={String(worker.processed_count)} mono />
       <KpiCard
         label="Errores"
         value={String(worker.error_count)}
@@ -165,7 +177,7 @@ export function SystemHealth() {
   });
 
   return (
-    <section className="bee-surface flex h-full flex-col p-5" aria-label="System health">
+    <section className="bee-surface flex h-full flex-col p-5" aria-label="Salud del sistema">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="bee-eyebrow">Inteligencia</p>

@@ -274,8 +274,8 @@ function AnomalyAlertsPanel() {
 // ── Combined Deep Learning Panel (exported) ───────────────────────────────────
 
 const TABS = [
-  { id: "correction", label: "Style Learning" },
-  { id: "anomaly", label: "Anomaly Monitor" },
+  { id: "correction", label: "Aprendizaje de estilo" },
+  { id: "anomaly", label: "Monitor de anomalías" },
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
@@ -285,16 +285,12 @@ export function DeepLearningPanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-1 flex-wrap">
+      <div className="bee-filter-tabs">
         {TABS.map(({ id, label }) => (
           <button
             key={id}
             onClick={() => setTab(id)}
-            className={`text-xs px-3 py-1.5 rounded-sm border font-medium transition-colors ${
-              tab === id
-                ? "bg-[var(--color-cta)] text-white border-[var(--color-cta)]"
-                : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-[var(--color-text-muted)]"
-            }`}
+            className={`bee-filter-tab ${tab === id ? "bee-filter-tab--active" : ""}`}
           >
             {label}
           </button>

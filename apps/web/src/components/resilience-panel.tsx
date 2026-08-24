@@ -18,10 +18,10 @@ import {
 // var(--success), magenta (resolved) → orange (permanently failed, the most
 // severe state BEE has a color for).
 const DLQ_STATUS_CONFIG: Record<string, { label: string; varColor: string }> = {
-  pending: { label: "Pending", varColor: "var(--warning)" },
-  retrying: { label: "Retrying", varColor: "var(--color-chart-4)" },
-  resolved: { label: "Resolved", varColor: "var(--success)" },
-  permanently_failed: { label: "Failed", varColor: "var(--color-chart-2)" },
+  pending: { label: "Pendiente", varColor: "var(--warning)" },
+  retrying: { label: "Reintentando", varColor: "var(--color-chart-4)" },
+  resolved: { label: "Resuelto", varColor: "var(--success)" },
+  permanently_failed: { label: "Fallido", varColor: "var(--color-chart-2)" },
 };
 
 function statusChipStyle(varColor: string) {
@@ -55,7 +55,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
           {cfg.label}
         </span>
         <span className="text-sm font-medium text-foreground truncate flex-1">{event.event_name}</span>
-        <span className="text-xs text-muted-foreground shrink-0">#{event.attempt_count} attempt{event.attempt_count !== 1 ? "s" : ""}</span>
+        <span className="text-xs text-muted-foreground shrink-0">#{event.attempt_count} intento{event.attempt_count !== 1 ? "s" : ""}</span>
       </div>
 
       {event.last_error && (
@@ -67,7 +67,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
           onClick={() => setExpanded((v) => !v)}
           className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
         >
-          {expanded ? "Hide" : "Details"}
+          {expanded ? "Ocultar" : "Detalles"}
         </button>
 
         {event.status !== "resolved" && event.status !== "permanently_failed" && (
@@ -75,7 +75,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
             onClick={() => onRetry(event.id)}
             className="text-xs px-2 py-1 rounded-sm bg-[var(--color-chart-4)] text-[var(--color-background)] hover:opacity-90 transition-opacity"
           >
-            Retry Now
+            Reintentar ahora
           </button>
         )}
         {event.status !== "resolved" && (
@@ -84,24 +84,24 @@ function DLQEventRow({ event, onRetry, onResolve }: {
             className="text-xs px-2 py-1 rounded-sm border transition-colors"
             style={{ borderColor: "var(--success)", color: "var(--success)" }}
           >
-            Resolve
+            Resolver
           </button>
         )}
         {event.ceo_alerted && (
-          <span className="text-xs font-medium" style={{ color: "var(--color-chart-2)" }}>⚠ CEO Alerted</span>
+          <span className="text-xs font-medium" style={{ color: "var(--color-chart-2)" }}>⚠ CEO alertado</span>
         )}
       </div>
 
       {expanded && (
         <div className="mt-2 p-2 bg-[var(--color-primary)] rounded-sm text-xs space-y-1">
-          <p><span className="font-medium">Type:</span> {event.event_type}</p>
-          <p><span className="font-medium">Created:</span> {new Date(event.created_at).toLocaleString()}</p>
+          <p><span className="font-medium">Tipo:</span> {event.event_type}</p>
+          <p><span className="font-medium">Creado:</span> {new Date(event.created_at).toLocaleString()}</p>
           {event.next_retry_at && (
-            <p><span className="font-medium">Next retry:</span> {new Date(event.next_retry_at).toLocaleString()}</p>
+            <p><span className="font-medium">Próximo reintento:</span> {new Date(event.next_retry_at).toLocaleString()}</p>
           )}
           {event.error_history.length > 0 && (
             <div>
-              <p className="font-medium">Error history:</p>
+              <p className="font-medium">Historial de errores:</p>
               <ul className="ml-2 space-y-0.5">
                 {event.error_history.map((h, i) => (
                   <li key={i} className="text-muted-foreground">#{h.attempt}: {h.error}</li>
@@ -148,7 +148,7 @@ function DLQPanel() {
 
   async function handleResolve(id: string) {
     try {
-      await resolveDLQEvent(id, "Manually resolved via dashboard");
+      await resolveDLQEvent(id, "Resuelto manualmente desde el panel");
       await load();
     } catch { /* handled */ }
   }
@@ -161,10 +161,10 @@ function DLQPanel() {
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {[
             { label: "Total", value: summary.total_events, color: "var(--color-text)" },
-            { label: "Pending", value: summary.pending_count, color: "var(--warning)" },
-            { label: "Resolved", value: summary.resolved_count, color: "var(--success)" },
-            { label: "Failed", value: summary.permanently_failed_count, color: "var(--color-chart-2)" },
-            { label: "Due Now", value: summary.due_for_retry_count, color: "var(--color-chart-4)" },
+            { label: "Pendientes", value: summary.pending_count, color: "var(--warning)" },
+            { label: "Resueltos", value: summary.resolved_count, color: "var(--success)" },
+            { label: "Fallidos", value: summary.permanently_failed_count, color: "var(--color-chart-2)" },
+            { label: "Vencidos ahora", value: summary.due_for_retry_count, color: "var(--color-chart-4)" },
           ].map(({ label, value, color }) => (
             <div key={label} className="bee-bento p-2 text-center">
               <p className="bee-stat__val" style={{ color }}>{value}</p>
@@ -174,18 +174,14 @@ function DLQPanel() {
         </div>
       )}
 
-      <div className="flex gap-1 flex-wrap">
+      <div className="bee-filter-tabs">
         {["", "pending", "retrying", "resolved", "permanently_failed"].map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
-            className={`text-xs px-2 py-1 rounded-sm border transition-colors ${
-              statusFilter === s
-                ? "bg-[var(--color-cta)] text-white border-[var(--color-cta)]"
-                : "bg-[var(--color-card)] text-muted-foreground border-border"
-            }`}
+            className={`bee-filter-tab ${statusFilter === s ? "bee-filter-tab--active" : ""}`}
           >
-            {s === "" ? "All" : DLQ_STATUS_CONFIG[s]?.label ?? s}
+            {s === "" ? "Todos" : DLQ_STATUS_CONFIG[s]?.label ?? s}
           </button>
         ))}
       </div>
@@ -196,8 +192,10 @@ function DLQPanel() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
-          <p className="text-muted-foreground text-sm">No failed events{statusFilter ? ` with status "${statusFilter}"` : ""}.</p>
-          <p className="text-muted-foreground text-xs mt-1">BEE is handling all external actions successfully.</p>
+          <p className="text-muted-foreground text-sm">
+            No hay eventos fallidos{statusFilter ? ` con estado "${DLQ_STATUS_CONFIG[statusFilter]?.label ?? statusFilter}"` : ""}.
+          </p>
+          <p className="text-muted-foreground text-xs mt-1">BEE está gestionando todas las acciones externas sin problemas.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -213,14 +211,14 @@ function DLQPanel() {
 // ── Audit Trail Panel ─────────────────────────────────────────────────────────
 
 const AGENT_LABELS: Record<string, string> = {
-  strategy_generator: "Strategy Generator",
-  executive_agent: "Executive Agent",
-  psychographic_analyzer: "Psychographic",
+  strategy_generator: "Generador de estrategia",
+  executive_agent: "Agente ejecutivo",
+  psychographic_analyzer: "Psicográfico",
   dark_funnel: "Pipeline oculto",
   smart_engagement: "Engagement",
-  agent_orchestrator: "Orchestrator",
-  workflow_orchestrator: "Workflow",
-  trend_analyst: "Trend Analyst",
+  agent_orchestrator: "Orquestador",
+  workflow_orchestrator: "Flujo de trabajo",
+  trend_analyst: "Analista de tendencias",
 };
 
 function ConfidenceBadge({ score }: { score: number }) {
@@ -253,7 +251,7 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
         </span>
         <ConfidenceBadge score={entry.confidence_score} />
         {entry.manual_review_required && (
-          <span className="text-xs font-medium" style={{ color: "var(--color-chart-2)" }}>Review Required</span>
+          <span className="text-xs font-medium" style={{ color: "var(--color-chart-2)" }}>Requiere revisión</span>
         )}
         <span className="text-xs text-muted-foreground shrink-0">
           {new Date(entry.created_at).toLocaleTimeString()}
@@ -268,14 +266,14 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
         onClick={() => setExpanded((v) => !v)}
         className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
       >
-        {expanded ? "Hide" : "Full snapshot"}
+        {expanded ? "Ocultar" : "Instantánea completa"}
       </button>
 
       {expanded && (
         <div className="mt-1 space-y-2">
           {Object.keys(entry.context_snapshot).length > 0 && (
             <div className="p-2 bg-[var(--color-primary)] rounded-sm">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Context</p>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Contexto</p>
               <pre className="text-xs text-foreground overflow-auto">{JSON.stringify(entry.context_snapshot, null, 2)}</pre>
             </div>
           )}
@@ -284,12 +282,12 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
               className="p-2 rounded-sm"
               style={{ background: "color-mix(in srgb, var(--color-chart-4) 12%, var(--color-background))" }}
             >
-              <p className="text-xs font-medium mb-1" style={{ color: "var(--color-chart-4)" }}>Market Data Used</p>
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--color-chart-4)" }}>Datos de mercado utilizados</p>
               <pre className="text-xs text-foreground overflow-auto">{JSON.stringify(entry.market_data_used, null, 2)}</pre>
             </div>
           )}
           {entry.processing_ms && (
-            <p className="text-xs text-muted-foreground">{entry.processing_ms}ms processing time</p>
+            <p className="text-xs text-muted-foreground">{entry.processing_ms} ms de procesamiento</p>
           )}
         </div>
       )}
@@ -323,18 +321,18 @@ function AuditPanel() {
         <div className="grid grid-cols-3 gap-2">
           <div className="bee-bento p-2 text-center">
             <p className="bee-stat__val">{summary.total_entries}</p>
-            <p className="bee-stat__lbl">Total Decisions</p>
+            <p className="bee-stat__lbl">Total de decisiones</p>
           </div>
           <div
             className="rounded-lg border p-2 text-center"
             style={{ borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 12%, var(--color-background))" }}
           >
             <p className="bee-stat__val" style={{ color: "var(--color-chart-2)" }}>{summary.manual_review_count}</p>
-            <p className="bee-stat__lbl">Need Review</p>
+            <p className="bee-stat__lbl">Requieren revisión</p>
           </div>
           <div className="bee-bento p-2 text-center">
             <p className="bee-stat__val" style={{ color: "var(--success)" }}>{(summary.avg_confidence_score * 100).toFixed(0)}%</p>
-            <p className="bee-stat__lbl">Avg Confidence</p>
+            <p className="bee-stat__lbl">Confianza promedio</p>
           </div>
         </div>
       )}
@@ -347,7 +345,7 @@ function AuditPanel() {
             onChange={(e) => setReviewOnly(e.target.checked)}
             className="rounded border-border"
           />
-          <span className="text-xs text-muted-foreground">Show only low-confidence decisions</span>
+          <span className="text-xs text-muted-foreground">Mostrar solo decisiones de baja confianza</span>
         </label>
       </div>
 
@@ -357,8 +355,8 @@ function AuditPanel() {
         </div>
       ) : entries.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
-          <p className="text-muted-foreground text-sm">No audit entries yet.</p>
-          <p className="text-muted-foreground text-xs mt-1">Agent decisions will appear here as BEE processes signals.</p>
+          <p className="text-muted-foreground text-sm">Todavía no hay entradas de auditoría.</p>
+          <p className="text-muted-foreground text-xs mt-1">Las decisiones de los agentes van a aparecer aquí a medida que BEE procese señales.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -378,18 +376,14 @@ export function ResiliencePanel() {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-1">
+      <div className="bee-filter-tabs">
         {(["dlq", "audit"] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`text-xs px-4 py-2 rounded-sm border font-medium transition-colors ${
-              activeTab === tab
-                ? "bg-[var(--color-cta)] text-white border-[var(--color-cta)]"
-                : "bg-[var(--color-card)] text-muted-foreground border-border hover:border-[var(--color-text-muted)]"
-            }`}
+            className={`bee-filter-tab ${activeTab === tab ? "bee-filter-tab--active" : ""}`}
           >
-            {tab === "dlq" ? "Dead Letter Queue" : "Audit Trail"}
+            {tab === "dlq" ? "Cola de eventos fallidos" : "Registro de auditoría"}
           </button>
         ))}
       </div>

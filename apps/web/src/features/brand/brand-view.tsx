@@ -8,7 +8,7 @@ export function BrandView() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Personal Brand · Psychographic</p>
+        <p className="bee-eyebrow">Marca personal · Psicográfico</p>
         <div className="mt-1">
           <h1 className="bee-display">Voz de marca</h1>
           <p className="bee-caption mt-1">

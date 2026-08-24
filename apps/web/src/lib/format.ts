@@ -2,32 +2,32 @@ import type { OpportunityStatus, SignalType, TimingUrgency } from "@/lib/types";
 import type { LeadStatus, LossReason } from "@/types/domain";
 
 export const signalTypeLabels: Record<SignalType, string> = {
-  funding_round: "Funding round",
-  hiring: "Hiring",
-  tech_adoption: "Tech adoption",
-  leadership_change: "Leadership change",
-  product_launch: "Product launch",
+  funding_round: "Ronda de financiación",
+  hiring: "Contratación",
+  tech_adoption: "Adopción de tecnología",
+  leadership_change: "Cambio de liderazgo",
+  product_launch: "Lanzamiento de producto",
   engagement: "Engagement",
-  news_mention: "News mention",
-  expansion: "Expansion",
-  other: "Other",
+  news_mention: "Mención en prensa",
+  expansion: "Expansión",
+  other: "Otra",
 };
 
 export const opportunityStatusLabels: Record<OpportunityStatus, string> = {
-  detected: "Detected",
-  ready_to_action: "Ready to action",
-  prioritized: "Prioritized",
-  in_progress: "In progress",
-  won: "Won",
-  lost: "Lost",
-  dismissed: "Dismissed",
+  detected: "Detectada",
+  ready_to_action: "Lista para acción",
+  prioritized: "Priorizada",
+  in_progress: "En progreso",
+  won: "Ganada",
+  lost: "Perdida",
+  dismissed: "Descartada",
 };
 
 export const urgencyLabels: Record<TimingUrgency, string> = {
-  immediate: "Contact immediately",
-  this_week: "Contact this week",
-  this_month: "Contact this month",
-  watch: "Monitor",
+  immediate: "Contactar de inmediato",
+  this_week: "Contactar esta semana",
+  this_month: "Contactar este mes",
+  watch: "Monitorear",
 };
 
 export const urgencyColors: Record<TimingUrgency, string> = {
@@ -79,10 +79,10 @@ export function scoreVariant(score: number): "success" | "warning" | "secondary"
 export function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diffMs / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return "ahora mismo";
+  if (mins < 60) return `hace ${mins}m`;
   const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return `hace ${hours}h`;
   const days = Math.round(hours / 24);
-  return `${days}d ago`;
+  return `hace ${days}d`;
 }

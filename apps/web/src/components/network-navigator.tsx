@@ -9,17 +9,17 @@ import { addNetworkConnection, findIntroPaths, getNetworkConnections, getNetwork
 // amber), and "informational" states reuse chart-4 (the palette's blue) and
 // chart-6 (violet) directly, since those already exist as brand accents.
 const COVERAGE_CONFIG: Record<string, { label: string; varColor: string }> = {
-  none: { label: "No coverage", varColor: "var(--color-text-muted)" },
-  weak: { label: "Weak", varColor: "var(--warning)" },
-  moderate: { label: "Moderate", varColor: "var(--color-chart-4)" },
-  strong: { label: "Strong", varColor: "var(--success)" },
+  none: { label: "Sin cobertura", varColor: "var(--color-text-muted)" },
+  weak: { label: "Débil", varColor: "var(--warning)" },
+  moderate: { label: "Moderada", varColor: "var(--color-chart-4)" },
+  strong: { label: "Fuerte", varColor: "var(--success)" },
 };
 
 const INTRO_TYPE_CONFIG: Record<string, { label: string; varColor: string | null }> = {
-  warm_intro: { label: "Warm Intro", varColor: "var(--success)" },
-  referral: { label: "Referral", varColor: "var(--color-chart-4)" },
-  alumni: { label: "Alumni", varColor: "var(--color-chart-6)" },
-  cold: { label: "Cold", varColor: null },
+  warm_intro: { label: "Presentación cálida", varColor: "var(--success)" },
+  referral: { label: "Referido", varColor: "var(--color-chart-4)" },
+  alumni: { label: "Exalumno", varColor: "var(--color-chart-6)" },
+  cold: { label: "Frío", varColor: null },
 };
 
 function StrengthDots({ strength }: { strength: number }) {
@@ -58,7 +58,7 @@ function PathCard({ path }: { path: IntroPath }) {
           {introType.label}
         </span>
         <span className="text-xs text-muted-foreground">
-          {path.path_length === 1 ? "Direct" : `${path.path_length}-hop`} · {path.strength_score.toFixed(1)}/10
+          {path.path_length === 1 ? "Directo" : `${path.path_length} saltos`} · {path.strength_score.toFixed(1)}/10
         </span>
       </div>
 
@@ -80,7 +80,7 @@ function PathCard({ path }: { path: IntroPath }) {
             onClick={() => setShowDraft((v) => !v)}
             className="text-xs font-medium text-[var(--color-chart-4)] hover:underline underline-offset-2"
           >
-            {showDraft ? "Hide" : "View"} intro request draft
+            {showDraft ? "Ocultar" : "Ver"} borrador de solicitud de presentación
           </button>
           {showDraft && (
             <div className="mt-2 p-3 rounded-sm border border-[var(--color-chart-4)]/25 bg-[color-mix(in_srgb,var(--color-chart-4)_10%,var(--color-background))]">
@@ -89,7 +89,7 @@ function PathCard({ path }: { path: IntroPath }) {
                 onClick={() => navigator.clipboard.writeText(path.draft_ask ?? "")}
                 className="mt-2 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
               >
-                Copy to clipboard
+                Copiar al portapapeles
               </button>
             </div>
           )}
@@ -179,10 +179,10 @@ export function NetworkNavigatorPanel() {
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Total Connections", value: stats.total_connections },
-            { label: "1st Degree", value: stats.first_degree_count },
-            { label: "Companies Covered", value: stats.companies_covered },
-            { label: "Avg Strength", value: `${stats.avg_relationship_strength}/10` },
+            { label: "Conexiones totales", value: stats.total_connections },
+            { label: "1er grado", value: stats.first_degree_count },
+            { label: "Empresas cubiertas", value: stats.companies_covered },
+            { label: "Fuerza promedio", value: `${stats.avg_relationship_strength}/10` },
           ].map(({ label, value }) => (
             <div key={label} className="bee-bento p-3 text-center">
               <p className="bee-stat__val">{value}</p>
@@ -194,19 +194,19 @@ export function NetworkNavigatorPanel() {
 
       {/* Path finder */}
       <div className="rounded-lg border border-border bg-[var(--color-card)] p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Find Introduction Path</h3>
+        <h3 className="text-sm font-semibold text-foreground">Buscar ruta de presentación</h3>
         <form onSubmit={handleFindPaths} className="flex flex-wrap gap-2">
           <input
             value={targetDomain}
             onChange={(e) => setTargetDomain(e.target.value)}
-            placeholder="target-company.com"
+            placeholder="empresa-objetivo.com"
             className="flex-1 min-w-40 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
             required
           />
           <input
             value={targetCompany}
             onChange={(e) => setTargetCompany(e.target.value)}
-            placeholder="Company name (optional)"
+            placeholder="Nombre de la empresa (opcional)"
             className="flex-1 min-w-40 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
           <button
@@ -214,7 +214,7 @@ export function NetworkNavigatorPanel() {
             disabled={pathLoading}
             className="px-4 py-2 rounded-sm bg-[var(--color-cta)] text-white text-sm hover:opacity-90 disabled:opacity-50 transition-colors"
           >
-            {pathLoading ? "Searching…" : "Find Paths"}
+            {pathLoading ? "Buscando…" : "Buscar rutas"}
           </button>
         </form>
 
@@ -224,12 +224,12 @@ export function NetworkNavigatorPanel() {
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-foreground">
                 {pathResult.paths_found.length > 0
-                  ? `${pathResult.paths_found.length} path(s) found to ${pathResult.target_company}`
-                  : `No network paths found to ${pathResult.target_company}`}
+                  ? `${pathResult.paths_found.length} ruta(s) encontrada(s) hacia ${pathResult.target_company}`
+                  : `No se encontraron rutas de red hacia ${pathResult.target_company}`}
               </p>
               {pathResult.network_coverage && (
                 <span className="text-xs font-medium" style={{ color: COVERAGE_CONFIG[pathResult.network_coverage]?.varColor }}>
-                  Coverage: {COVERAGE_CONFIG[pathResult.network_coverage]?.label}
+                  Cobertura: {COVERAGE_CONFIG[pathResult.network_coverage]?.label}
                 </span>
               )}
             </div>
@@ -251,29 +251,29 @@ export function NetworkNavigatorPanel() {
 
       {/* Add connection */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Network Connections ({connections.length})</h3>
+        <h3 className="text-sm font-semibold text-foreground">Conexiones de red ({connections.length})</h3>
         <button
           onClick={() => setShowAdd((v) => !v)}
           className="text-xs px-3 py-1.5 rounded-sm border border-dashed border-border text-muted-foreground hover:border-[var(--color-text-muted)] hover:text-foreground transition-colors"
         >
-          + Add Connection
+          + Agregar conexión
         </button>
       </div>
 
       {showAdd && (
         <form onSubmit={handleAddConnection} className="rounded-lg border border-dashed border-border bg-[var(--color-primary)] p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="Contact name" required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
-            <input value={addCompany} onChange={(e) => setAddCompany(e.target.value)} placeholder="Company name" required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
-            <input value={addDomain} onChange={(e) => setAddDomain(e.target.value)} placeholder="company.com" required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
-            <input value={addTitle} onChange={(e) => setAddTitle(e.target.value)} placeholder="Job title (optional)" className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
+            <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="Nombre del contacto" required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
+            <input value={addCompany} onChange={(e) => setAddCompany(e.target.value)} placeholder="Nombre de la empresa" required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
+            <input value={addDomain} onChange={(e) => setAddDomain(e.target.value)} placeholder="empresa.com" required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
+            <input value={addTitle} onChange={(e) => setAddTitle(e.target.value)} placeholder="Cargo (opcional)" className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
           </div>
           <div className="flex items-center gap-3">
-            <label className="text-xs text-muted-foreground shrink-0">Relationship strength: <span className="font-bold text-foreground">{addStrength}/10</span></label>
+            <label className="text-xs text-muted-foreground shrink-0">Fuerza de la relación: <span className="font-bold text-foreground">{addStrength}/10</span></label>
             <input type="range" min={1} max={10} value={addStrength} onChange={(e) => setAddStrength(Number(e.target.value))} className="flex-1" />
           </div>
           <button type="submit" disabled={addLoading} className="text-xs px-4 py-2 rounded-sm bg-[var(--color-cta)] text-white hover:opacity-90 disabled:opacity-50 transition-colors">
-            {addLoading ? "Adding…" : "Add Connection"}
+            {addLoading ? "Agregando…" : "Agregar conexión"}
           </button>
         </form>
       )}

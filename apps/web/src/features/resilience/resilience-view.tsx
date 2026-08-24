@@ -8,7 +8,7 @@ export function ResilienceView() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Audit Trail · Dead Letter · Anomaly Detector</p>
+        <p className="bee-eyebrow">Auditoría · Eventos fallidos · Detector de anomalías</p>
         <div className="mt-1">
           <h1 className="bee-display">Resiliencia</h1>
           <p className="bee-caption mt-1">

@@ -12,7 +12,7 @@ export function SequencesView() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Dynamic Sequence · Smart Engagement</p>
+        <p className="bee-eyebrow">Secuencia dinámica · Engagement inteligente</p>
         <div className="mt-1">
           <h1 className="bee-display">Secuencias</h1>
           <p className="bee-caption mt-1">

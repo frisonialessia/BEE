@@ -131,9 +131,9 @@ function InviteUserForm({ teams }: { teams: TeamOut[] }) {
       setPassword("");
       setRole("member");
       setTeamId("");
-      toast.success("Teammate agregado");
+      toast.success("Miembro del equipo agregado");
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo agregar al teammate.");
+      toast.error(err instanceof ApiError ? err.message : "No se pudo agregar al miembro del equipo.");
     }
   }
 
@@ -188,7 +188,7 @@ function InviteUserForm({ teams }: { teams: TeamOut[] }) {
         disabled={createUser.isPending}
         className="bee-btn bee-btn--primary sm:col-span-2 lg:col-span-5"
       >
-        {createUser.isPending ? "Agregando…" : "Agregar teammate"}
+        {createUser.isPending ? "Agregando…" : "Agregar miembro del equipo"}
       </button>
     </form>
   );
@@ -355,7 +355,7 @@ export function TeamAdminView() {
             <div>
               <p className="bee-eyebrow">Personas</p>
               <h2 className="mt-1 text-base font-semibold">
-                {canManage ? "Toda la organización" : "Vos y tu equipo"}
+                {canManage ? "Toda la organización" : "Tú y tu equipo"}
               </h2>
             </div>
 

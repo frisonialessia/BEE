@@ -47,7 +47,7 @@ function buildEventsForPair(signal: Signal, opportunity: Opportunity | undefined
     provider,
     score: signal.score,
     timestamp: baseTs,
-    label: signal.source === "webhook" ? "Webhook received" : "Signal captured",
+    label: signal.source === "webhook" ? "Webhook recibido" : "Señal capturada",
   });
 
   if (!opportunity) return events;
@@ -61,7 +61,7 @@ function buildEventsForPair(signal: Signal, opportunity: Opportunity | undefined
     provider: null,
     score: signal.score,
     timestamp: offsetIso(baseTs, 1),
-    label: "IngestionWorker · analyzers applied",
+    label: "IngestionWorker · analizadores aplicados",
   });
 
   const strategy = opportunity.strategy;
@@ -80,7 +80,7 @@ function buildEventsForPair(signal: Signal, opportunity: Opportunity | undefined
       provider: provider ?? "linkedin",
       score: signal.score,
       timestamp: offsetIso(baseTs, 2),
-      label: "External enrichment · LinkedIn / G2",
+      label: "Enriquecimiento externo · LinkedIn / G2",
     });
   } else if (strategy?.playbook || complete) {
     events.push({
@@ -92,7 +92,7 @@ function buildEventsForPair(signal: Signal, opportunity: Opportunity | undefined
       provider: provider ?? "linkedin",
       score: signal.score,
       timestamp: offsetIso(baseTs, 3),
-      label: "EnrichmentContext applied",
+      label: "EnrichmentContext aplicado",
     });
   }
 
@@ -108,7 +108,7 @@ function buildEventsForPair(signal: Signal, opportunity: Opportunity | undefined
       provider: null,
       score: opportunity.score,
       timestamp: generatedAt,
-      label: `Strategy · ${String(strategy.generator ?? "rule_based")}`,
+      label: `Estrategia · ${String(strategy.generator ?? "rule_based")}`,
     });
   }
 
@@ -124,7 +124,7 @@ function buildEventsForPair(signal: Signal, opportunity: Opportunity | undefined
       provider: null,
       score: opportunity.score,
       timestamp: readyTs,
-      label: "Closing strategy ready",
+      label: "Estrategia de cierre lista",
     });
   }
 
@@ -139,11 +139,11 @@ function workerPulseEvent(worker: IngestionWorkerStatus): SignalPipelineEvent | 
     signal_id: null,
     opportunity_id: null,
     stage: "ingestion",
-    title: `${worker.queue_depth} task(s) in queue`,
+    title: `${worker.queue_depth} tarea${worker.queue_depth === 1 ? "" : "s"} en cola`,
     provider: null,
     score: null,
     timestamp: new Date().toISOString(),
-    label: "IngestionWorker processing",
+    label: "IngestionWorker procesando",
   };
 }
 

@@ -37,7 +37,7 @@ export function useSignalStream(limit = 40, pollMs = 8_000) {
     const fresh = findNewReadyEvents(events, seenReadyRef.current);
     for (const event of fresh) {
       seenReadyRef.current.add(event.id);
-      toast.success("Closing strategy ready", {
+      toast.success("Estrategia de cierre lista", {
         description: event.title,
         duration: 8_000,
       });

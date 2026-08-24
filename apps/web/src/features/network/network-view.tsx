@@ -7,7 +7,7 @@ export function NetworkView() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Network Navigator</p>
+        <p className="bee-eyebrow">Navegador de red</p>
         <div className="mt-1">
           <h1 className="bee-display">Red</h1>
           <p className="bee-caption mt-1">
