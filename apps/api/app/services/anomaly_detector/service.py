@@ -50,15 +50,15 @@ from app.services.permissions import scope_by_organization_id as _scope
 logger = get_logger(__name__)
 
 # ── Detection parameters ──────────────────────────────────────────────────────
-_ROLLING_WINDOW = 10          # Last N opportunities for rolling rate
-_BASELINE_DAYS = 90           # Days of history for baseline
-_MIN_SAMPLE = 3               # Below this → skip detection (too noisy)
+_ROLLING_WINDOW = 10  # Last N opportunities for rolling rate
+_BASELINE_DAYS = 90  # Days of history for baseline
+_MIN_SAMPLE = 3  # Below this → skip detection (too noisy)
 
 _THRESHOLDS = {
     AlertSeverity.CRITICAL: 0.50,
-    AlertSeverity.HIGH:     0.35,
-    AlertSeverity.MEDIUM:   0.20,
-    AlertSeverity.LOW:      0.10,
+    AlertSeverity.HIGH: 0.35,
+    AlertSeverity.MEDIUM: 0.20,
+    AlertSeverity.LOW: 0.10,
 }
 
 
@@ -99,7 +99,9 @@ class AnomalyDetector:
         baseline_start = now - timedelta(days=_BASELINE_DAYS)
 
         # Load all outcomes for analysis
-        outcomes_stmt = _scope(select(StrategyOutcome), StrategyOutcome.organization_id, organization_id)
+        outcomes_stmt = _scope(
+            select(StrategyOutcome), StrategyOutcome.organization_id, organization_id
+        )
         all_outcomes = list(self.session.exec(outcomes_stmt).all())
 
         if len(all_outcomes) < _MIN_SAMPLE:
@@ -118,8 +120,10 @@ class AnomalyDetector:
 
         # ── Overall conversion rate ───────────────────────────────────────────
         overall_alert = self._check_segment(
-            all_outcomes, baseline_start,
-            segment_type="overall", segment_value=None,
+            all_outcomes,
+            baseline_start,
+            segment_type="overall",
+            segment_value=None,
             alert_type=AlertType.CONVERSION_DROP,
             organization_id=organization_id,
         )
@@ -133,8 +137,10 @@ class AnomalyDetector:
             if len(channel_outcomes) < _MIN_SAMPLE:
                 continue
             alert = self._check_segment(
-                channel_outcomes, baseline_start,
-                segment_type="channel", segment_value=channel,
+                channel_outcomes,
+                baseline_start,
+                segment_type="channel",
+                segment_value=channel,
                 alert_type=AlertType.CHANNEL_UNDERPERFORMANCE,
                 organization_id=organization_id,
             )
@@ -142,14 +148,23 @@ class AnomalyDetector:
                 new_alerts.append(alert)
 
         # ── Per-sector breakdown ──────────────────────────────────────────────
-        sectors = {o.industry for o in all_outcomes if o.industry}
+        # StrategyOutcome.industry ("alias for company_industry") is declared
+        # on the model but record_outcome() never writes it — only
+        # company_industry gets set. Reading .industry here silently matched
+        # nothing for every organization: `sectors` was always the empty set,
+        # so SECTOR_ANOMALY alerts were never created no matter how much real
+        # per-sector conversion data existed. Same bug class as the WON/"WON"
+        # casing bug already fixed once in this same detector.
+        sectors = {o.company_industry for o in all_outcomes if o.company_industry}
         for sector in sectors:
-            sector_outcomes = [o for o in all_outcomes if o.industry == sector]
+            sector_outcomes = [o for o in all_outcomes if o.company_industry == sector]
             if len(sector_outcomes) < _MIN_SAMPLE:
                 continue
             alert = self._check_segment(
-                sector_outcomes, baseline_start,
-                segment_type="sector", segment_value=sector,
+                sector_outcomes,
+                baseline_start,
+                segment_type="sector",
+                segment_value=sector,
                 alert_type=AlertType.SECTOR_ANOMALY,
                 organization_id=organization_id,
             )
@@ -202,7 +217,8 @@ class AnomalyDetector:
         now = datetime.now(UTC)
 
         baseline_outcomes = [
-            o for o in outcomes
+            o
+            for o in outcomes
             if o.created_at and self._is_in_baseline(o.created_at, baseline_start, now)
         ]
 
@@ -331,12 +347,11 @@ class AnomalyDetector:
 
         for alert in open_alerts:
             segment_outcomes = [
-                o for o in all_outcomes
-                if alert.segment_type == "overall" or (
-                    alert.segment_type == "channel" and o.channel == alert.segment_value
-                ) or (
-                    alert.segment_type == "sector" and o.industry == alert.segment_value
-                )
+                o
+                for o in all_outcomes
+                if alert.segment_type == "overall"
+                or (alert.segment_type == "channel" and o.channel == alert.segment_value)
+                or (alert.segment_type == "sector" and o.company_industry == alert.segment_value)
             ]
             if len(segment_outcomes) < _MIN_SAMPLE:
                 continue
@@ -353,7 +368,9 @@ class AnomalyDetector:
                 alert.resolution_notes = f"Auto-resolved: win rate recovered to {rolling_rate:.1%}"
                 self.session.add(alert)
                 resolved += 1
-                logger.info("AnomalyAlert %s auto-resolved (rate recovered to %.1%)", alert.id, rolling_rate)
+                logger.info(
+                    "AnomalyAlert %s auto-resolved (rate recovered to %.1%)", alert.id, rolling_rate
+                )
 
         return resolved
 
@@ -374,9 +391,9 @@ class AnomalyDetector:
 
     def _get_open_alerts(self, organization_id: uuid.UUID | None = None) -> list[AnomalyAlert]:
         stmt = _scope(
-            select(AnomalyAlert).where(AnomalyAlert.status == AlertStatus.OPEN).order_by(
-                AnomalyAlert.created_at.desc()
-            ),
+            select(AnomalyAlert)
+            .where(AnomalyAlert.status == AlertStatus.OPEN)
+            .order_by(AnomalyAlert.created_at.desc()),
             AnomalyAlert.organization_id,
             organization_id,
         )
@@ -398,7 +415,10 @@ class AnomalyDetector:
         return list(self.session.exec(stmt).all())
 
     def acknowledge_alert(
-        self, alert_id: uuid.UUID, notes: str | None = None, organization_id: uuid.UUID | None = None
+        self,
+        alert_id: uuid.UUID,
+        notes: str | None = None,
+        organization_id: uuid.UUID | None = None,
     ) -> AnomalyAlert | None:
         """CEO acknowledges an alert — marks as reviewed but no action taken."""
         alert = self.session.get(AnomalyAlert, alert_id)
@@ -437,7 +457,9 @@ class AnomalyDetector:
                 action_type=ActionType.WEBHOOK_CALL,
                 status=ActionStatus.PENDING_APPROVAL,
                 title=alert.title,
-                description=alert.description + f"\n\nRecommendation: {alert.recommendation}\n" + "\n".join(f"• {a}" for a in alert.suggested_actions),
+                description=alert.description
+                + f"\n\nRecommendation: {alert.recommendation}\n"
+                + "\n".join(f"• {a}" for a in alert.suggested_actions),
                 priority=1 if alert.severity == AlertSeverity.CRITICAL else 2,
                 metadata={"anomaly_alert_id": str(alert.id), "severity": alert.severity},
             )
@@ -486,7 +508,9 @@ class AnomalyDetector:
         if new_alerts:
             critical = sum(1 for a in new_alerts if a.severity == AlertSeverity.CRITICAL)
             high = sum(1 for a in new_alerts if a.severity == AlertSeverity.HIGH)
-            parts.append(f"Detected {len(new_alerts)} new anomaly alert(s) ({critical} critical, {high} high).")
+            parts.append(
+                f"Detected {len(new_alerts)} new anomaly alert(s) ({critical} critical, {high} high)."
+            )
         if resolved_count:
             parts.append(f"{resolved_count} alert(s) auto-resolved (performance recovered).")
         if open_alerts:

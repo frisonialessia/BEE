@@ -47,11 +47,17 @@ class TestNetworkOrgScoping:
         )
         client.post(
             "/api/v1/network/connections",
-            json={"contact_name": "Bob", "contact_company": "Globex", "contact_domain": "globex.com"},
+            json={
+                "contact_name": "Bob",
+                "contact_company": "Globex",
+                "contact_domain": "globex.com",
+            },
             headers=_auth_headers(owner_b["access_token"]),
         )
 
-        resp = client.get("/api/v1/network/connections", headers=_auth_headers(owner_a["access_token"]))
+        resp = client.get(
+            "/api/v1/network/connections", headers=_auth_headers(owner_a["access_token"])
+        )
         names = [c["contact_name"] for c in resp.json()]
         assert names == ["Alice"]
 
@@ -70,8 +76,12 @@ class TestBrandOrgScoping:
             headers=_auth_headers(owner_b["access_token"]),
         )
 
-        profile_a = client.get("/api/v1/brand/profile", headers=_auth_headers(owner_a["access_token"])).json()
-        profile_b = client.get("/api/v1/brand/profile", headers=_auth_headers(owner_b["access_token"])).json()
+        profile_a = client.get(
+            "/api/v1/brand/profile", headers=_auth_headers(owner_a["access_token"])
+        ).json()
+        profile_b = client.get(
+            "/api/v1/brand/profile", headers=_auth_headers(owner_b["access_token"])
+        ).json()
         assert profile_a["display_name"] == "CEO A"
         assert profile_b["display_name"] == "CEO B"
 
@@ -90,7 +100,9 @@ class TestEngagementOrgScoping:
             headers=_auth_headers(owner_b["access_token"]),
         )
 
-        resp = client.get("/api/v1/engagement/events", headers=_auth_headers(owner_a["access_token"]))
+        resp = client.get(
+            "/api/v1/engagement/events", headers=_auth_headers(owner_a["access_token"])
+        )
         contents = [e["content"] for e in resp.json()]
         assert contents == ["Love what you're building!"]
 
@@ -108,8 +120,12 @@ class TestCorrectionsOrgScoping:
             headers=_auth_headers(owner_a["access_token"]),
         )
 
-        profile_a = client.get("/api/v1/learning/style-profile", headers=_auth_headers(owner_a["access_token"])).json()
-        profile_b = client.get("/api/v1/learning/style-profile", headers=_auth_headers(owner_b["access_token"])).json()
+        profile_a = client.get(
+            "/api/v1/learning/style-profile", headers=_auth_headers(owner_a["access_token"])
+        ).json()
+        profile_b = client.get(
+            "/api/v1/learning/style-profile", headers=_auth_headers(owner_b["access_token"])
+        ).json()
         assert profile_a["total_corrections"] == 1
         assert profile_b["total_corrections"] == 0
 
@@ -128,17 +144,43 @@ class TestAnomaliesOrgScoping:
         session.commit()
         session.refresh(other_org)
 
-        session.add(AnomalyAlert(organization_id=org_a_id, alert_type="conversion_drop", status=AlertStatus.OPEN,
-                                  segment_type="overall", rolling_rate=0.1, baseline_rate=0.3, deviation_pct=-66,
-                                  sample_size=5, baseline_sample_size=10, title="Org A drop", description="d",
-                                  recommendation="monitor"))
-        session.add(AnomalyAlert(organization_id=other_org.id, alert_type="conversion_drop", status=AlertStatus.OPEN,
-                                  segment_type="overall", rolling_rate=0.1, baseline_rate=0.3, deviation_pct=-66,
-                                  sample_size=5, baseline_sample_size=10, title="Other org drop", description="d",
-                                  recommendation="monitor"))
+        session.add(
+            AnomalyAlert(
+                organization_id=org_a_id,
+                alert_type="conversion_drop",
+                status=AlertStatus.OPEN,
+                segment_type="overall",
+                rolling_rate=0.1,
+                baseline_rate=0.3,
+                deviation_pct=-66,
+                sample_size=5,
+                baseline_sample_size=10,
+                title="Org A drop",
+                description="d",
+                recommendation="monitor",
+            )
+        )
+        session.add(
+            AnomalyAlert(
+                organization_id=other_org.id,
+                alert_type="conversion_drop",
+                status=AlertStatus.OPEN,
+                segment_type="overall",
+                rolling_rate=0.1,
+                baseline_rate=0.3,
+                deviation_pct=-66,
+                sample_size=5,
+                baseline_sample_size=10,
+                title="Other org drop",
+                description="d",
+                recommendation="monitor",
+            )
+        )
         session.commit()
 
-        resp = client.get("/api/v1/analytics/anomalies", headers=_auth_headers(owner_a["access_token"]))
+        resp = client.get(
+            "/api/v1/analytics/anomalies", headers=_auth_headers(owner_a["access_token"])
+        )
         titles = [a["title"] for a in resp.json()]
         assert titles == ["Org A drop"]
 
@@ -157,10 +199,20 @@ class TestAuditOrgScoping:
         session.commit()
         session.refresh(other_org)
 
-        session.add(AuditEntry(organization_id=org_a_id, agent_type="strategy_generator",
-                                decision_type="strategy_generated"))
-        session.add(AuditEntry(organization_id=other_org.id, agent_type="strategy_generator",
-                                decision_type="strategy_generated"))
+        session.add(
+            AuditEntry(
+                organization_id=org_a_id,
+                agent_type="strategy_generator",
+                decision_type="strategy_generated",
+            )
+        )
+        session.add(
+            AuditEntry(
+                organization_id=other_org.id,
+                agent_type="strategy_generator",
+                decision_type="strategy_generated",
+            )
+        )
         session.commit()
 
         resp = client.get("/api/v1/audit/decisions", headers=_auth_headers(owner_a["access_token"]))
@@ -227,7 +279,9 @@ class TestVariantsOrgScoping:
             headers=_auth_headers(owner_a["access_token"]),
         ).json()
 
-        resp = client.get(f"/api/v1/variants/{created['id']}", headers=_auth_headers(owner_b["access_token"]))
+        resp = client.get(
+            f"/api/v1/variants/{created['id']}", headers=_auth_headers(owner_b["access_token"])
+        )
         assert resp.status_code == 404
 
 
@@ -248,20 +302,36 @@ class TestScenarioSimulatorOrgScoping:
             opp = Opportunity(organization_id=org_a_id, title=f"A win {i}")
             session.add(opp)
             session.flush()
-            session.add(StrategyOutcome(
-                organization_id=org_a_id, opportunity_id=opp.id, outcome="WON",
-                signal_type="funding_round", playbook="p", channel="email", generator="g",
-                generator_version="1", score_at_close=80.0,
-            ))
+            session.add(
+                StrategyOutcome(
+                    organization_id=org_a_id,
+                    opportunity_id=opp.id,
+                    outcome="won",
+                    signal_type="funding_round",
+                    playbook="p",
+                    channel="email",
+                    generator="g",
+                    generator_version="1",
+                    score_at_close=80.0,
+                )
+            )
         for i in range(6):
             opp = Opportunity(organization_id=org_b_id, title=f"B loss {i}")
             session.add(opp)
             session.flush()
-            session.add(StrategyOutcome(
-                organization_id=org_b_id, opportunity_id=opp.id, outcome="LOST",
-                signal_type="funding_round", playbook="p", channel="email", generator="g",
-                generator_version="1", score_at_close=80.0,
-            ))
+            session.add(
+                StrategyOutcome(
+                    organization_id=org_b_id,
+                    opportunity_id=opp.id,
+                    outcome="lost",
+                    signal_type="funding_round",
+                    playbook="p",
+                    channel="email",
+                    generator="g",
+                    generator_version="1",
+                    score_at_close=80.0,
+                )
+            )
         session.commit()
 
         resp_a = client.post(

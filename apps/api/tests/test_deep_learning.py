@@ -36,6 +36,7 @@ from app.services.scenario_simulator import ScenarioSimulator
 # DiffEngine
 # ══════════════════════════════════════════════════════════════════
 
+
 class TestDiffEngine:
     def test_detects_social_opener_removal(self) -> None:
         original = "Hope you're well! I wanted to reach out about BEE."
@@ -138,10 +139,13 @@ class TestRuleExtraction:
 # PromptAdjustmentEngine
 # ══════════════════════════════════════════════════════════════════
 
+
 class TestPromptAdjuster:
     def test_new_rule_added_with_initial_weight(self) -> None:
         rules = {}
-        updated = merge_rules_into_profile(rules, "email_draft", [StyleRuleType.AVOID_SOCIAL_OPENER])
+        updated = merge_rules_into_profile(
+            rules, "email_draft", [StyleRuleType.AVOID_SOCIAL_OPENER]
+        )
         assert "email_draft" in updated
         assert StyleRuleType.AVOID_SOCIAL_OPENER in updated["email_draft"]
         assert updated["email_draft"][StyleRuleType.AVOID_SOCIAL_OPENER]["weight"] > 0
@@ -158,7 +162,9 @@ class TestPromptAdjuster:
     def test_style_summary_generated_after_enough_rules(self) -> None:
         rules = {}
         for _ in range(4):
-            rules = merge_rules_into_profile(rules, "email_draft", [StyleRuleType.AVOID_SOCIAL_OPENER])
+            rules = merge_rules_into_profile(
+                rules, "email_draft", [StyleRuleType.AVOID_SOCIAL_OPENER]
+            )
         summary = generate_style_summary(rules)
         assert "CEO WRITING STYLE" in summary
         assert "social" in summary.lower()
@@ -184,8 +190,11 @@ class TestPromptAdjuster:
 # CorrectionLearningService
 # ══════════════════════════════════════════════════════════════════
 
+
 class TestCorrectionLearningService:
-    def test_record_correction_creates_correction_and_updates_profile(self, session: Session) -> None:
+    def test_record_correction_creates_correction_and_updates_profile(
+        self, session: Session
+    ) -> None:
         service = CorrectionLearningService(session)
         result = service.record_correction(
             original_content="Hope you're well! We are industry-leading and want to connect.",
@@ -277,15 +286,18 @@ class TestCorrectionLearningService:
 # ScenarioSimulator
 # ══════════════════════════════════════════════════════════════════
 
+
 class TestScenarioSimulator:
     def test_basic_simulation_returns_three_variants(self, session: Session) -> None:
         simulator = ScenarioSimulator(session)
-        result = simulator.run(ScenarioRequest(
-            sector="fintech",
-            signal_type="funding_round",
-            channel="email",
-            target_monthly_signals=10,
-        ))
+        result = simulator.run(
+            ScenarioRequest(
+                sector="fintech",
+                signal_type="funding_round",
+                channel="email",
+                target_monthly_signals=10,
+            )
+        )
         assert result.conservative.label == "conservative"
         assert result.realistic.label == "realistic"
         assert result.optimistic.label == "optimistic"
@@ -303,7 +315,9 @@ class TestScenarioSimulator:
     def test_warm_intro_channel_lifts_win_rate(self, session: Session) -> None:
         simulator = ScenarioSimulator(session)
         result_email = simulator.run(ScenarioRequest(target_monthly_signals=10, channel="email"))
-        result_warm = simulator.run(ScenarioRequest(target_monthly_signals=10, channel="warm_intro"))
+        result_warm = simulator.run(
+            ScenarioRequest(target_monthly_signals=10, channel="warm_intro")
+        )
         # warm_intro should have higher effective win rate
         assert result_warm.effective_win_rate >= result_email.effective_win_rate
 
@@ -315,38 +329,49 @@ class TestScenarioSimulator:
 
     def test_c_style_lifts_win_rate_highest(self, session: Session) -> None:  # noqa: ARG002
         from app.services.scenario_simulator.service import DISC_STYLE_MODIFIERS
+
         # C-style has highest modifier in our config
         assert DISC_STYLE_MODIFIERS["C"] >= DISC_STYLE_MODIFIERS["D"]
 
     def test_low_data_confidence_when_no_history(self, session: Session) -> None:
         simulator = ScenarioSimulator(session)
-        result = simulator.run(ScenarioRequest(
-            sector="extremely_rare_sector_xyz",
-            target_monthly_signals=5,
-        ))
+        result = simulator.run(
+            ScenarioRequest(
+                sector="extremely_rare_sector_xyz",
+                target_monthly_signals=5,
+            )
+        )
         assert result.low_data_confidence is True
 
     def test_additional_reps_increases_signal_volume(self, session: Session) -> None:
         simulator = ScenarioSimulator(session)
-        result_no_reps = simulator.run(ScenarioRequest(target_monthly_signals=10, additional_prospecting_reps=0))
-        result_with_reps = simulator.run(ScenarioRequest(target_monthly_signals=10, additional_prospecting_reps=3))
+        result_no_reps = simulator.run(
+            ScenarioRequest(target_monthly_signals=10, additional_prospecting_reps=0)
+        )
+        result_with_reps = simulator.run(
+            ScenarioRequest(target_monthly_signals=10, additional_prospecting_reps=3)
+        )
         assert result_with_reps.adjusted_monthly_signals > result_no_reps.adjusted_monthly_signals
 
     def test_key_drivers_returned(self, session: Session) -> None:
         simulator = ScenarioSimulator(session)
-        result = simulator.run(ScenarioRequest(
-            target_monthly_signals=10,
-            channel="warm_intro",
-            dark_funnel_heat=70,
-        ))
+        result = simulator.run(
+            ScenarioRequest(
+                target_monthly_signals=10,
+                channel="warm_intro",
+                dark_funnel_heat=70,
+            )
+        )
         assert len(result.key_drivers) >= 1
 
     def test_risk_factors_returned_for_low_data(self, session: Session) -> None:
         simulator = ScenarioSimulator(session)
-        result = simulator.run(ScenarioRequest(
-            sector="ultra_rare_sector",
-            target_monthly_signals=10,
-        ))
+        result = simulator.run(
+            ScenarioRequest(
+                sector="ultra_rare_sector",
+                target_monthly_signals=10,
+            )
+        )
         assert len(result.risk_factors) >= 1
 
     def test_recommended_actions_returned(self, session: Session) -> None:
@@ -361,7 +386,7 @@ class TestScenarioSimulator:
         for i in range(6):
             outcome = StrategyOutcome(
                 opportunity_id=uuid.uuid4(),
-                outcome="WON" if i < 4 else "LOST",
+                outcome="won" if i < 4 else "lost",
                 signal_type="funding_round",
                 company_industry="testco_industry",
                 industry="testco_industry",
@@ -376,11 +401,13 @@ class TestScenarioSimulator:
         session.commit()
 
         simulator = ScenarioSimulator(session)
-        result = simulator.run(ScenarioRequest(
-            sector="testco_industry",
-            signal_type="funding_round",
-            target_monthly_signals=10,
-        ))
+        result = simulator.run(
+            ScenarioRequest(
+                sector="testco_industry",
+                signal_type="funding_round",
+                target_monthly_signals=10,
+            )
+        )
         assert result.historical_sample_size >= 6
         assert result.base_win_rate > 0
         assert result.low_data_confidence is False
@@ -390,13 +417,17 @@ class TestScenarioSimulator:
 # AnomalyDetector
 # ══════════════════════════════════════════════════════════════════
 
-def _make_outcomes(session: Session, win_count: int, total: int, channel: str = "email", sector: str = "saas") -> None:
+
+def _make_outcomes(
+    session: Session, win_count: int, total: int, channel: str = "email", sector: str = "saas"
+) -> None:
     """Helper to create StrategyOutcome records."""
     from app.models.strategy_outcome import StrategyOutcome
+
     for i in range(total):
         outcome = StrategyOutcome(
             opportunity_id=uuid.uuid4(),
-            outcome="WON" if i < win_count else "LOST",
+            outcome="won" if i < win_count else "lost",
             signal_type="hiring",
             company_industry=sector,
             industry=sector,
@@ -424,7 +455,7 @@ class TestAnomalyDetector:
         for i in range(20):
             outcome = StrategyOutcome(
                 opportunity_id=uuid.uuid4(),
-                outcome="WON" if i % 2 == 0 else "LOST",
+                outcome="won" if i % 2 == 0 else "lost",
                 signal_type="hiring",
                 company_industry="stable_sector",
                 industry="stable_sector",
@@ -449,7 +480,7 @@ class TestAnomalyDetector:
         for i in range(30):
             outcome = StrategyOutcome(
                 opportunity_id=uuid.uuid4(),
-                outcome="WON" if i < 21 else "LOST",
+                outcome="won" if i < 21 else "lost",
                 signal_type="hiring",
                 company_industry="anomaly_test_sector",
                 industry="anomaly_test_sector",
@@ -464,7 +495,7 @@ class TestAnomalyDetector:
         for i in range(10):
             outcome = StrategyOutcome(
                 opportunity_id=uuid.uuid4(),
-                outcome="WON" if i == 0 else "LOST",
+                outcome="won" if i == 0 else "lost",
                 signal_type="hiring",
                 company_industry="anomaly_test_sector",
                 industry="anomaly_test_sector",
@@ -552,7 +583,7 @@ class TestAnomalyDetector:
         for i in range(30):
             outcome = StrategyOutcome(
                 opportunity_id=uuid.uuid4(),
-                outcome="WON" if i < 21 else "LOST",
+                outcome="won" if i < 21 else "lost",
                 signal_type="hiring",
                 company_industry="dedup_sector",
                 industry="dedup_sector",
@@ -565,7 +596,7 @@ class TestAnomalyDetector:
         for i in range(10):
             outcome = StrategyOutcome(
                 opportunity_id=uuid.uuid4(),
-                outcome="WON" if i == 0 else "LOST",
+                outcome="won" if i == 0 else "lost",
                 signal_type="hiring",
                 company_industry="dedup_sector",
                 industry="dedup_sector",
@@ -592,13 +623,17 @@ class TestAnomalyDetector:
 # API Endpoints
 # ══════════════════════════════════════════════════════════════════
 
+
 class TestCorrectionEndpoints:
     def test_record_correction(self, client) -> None:
-        resp = client.post("/api/v1/learning/corrections", json={
-            "original_content": "Hope you're well! We are industry-leading.",
-            "edited_content": "Your CAC is 40% above median. Let's fix it.",
-            "artifact_type": "email_draft",
-        })
+        resp = client.post(
+            "/api/v1/learning/corrections",
+            json={
+                "original_content": "Hope you're well! We are industry-leading.",
+                "edited_content": "Your CAC is 40% above median. Let's fix it.",
+                "artifact_type": "email_draft",
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert "correction_id" in data
@@ -618,11 +653,14 @@ class TestCorrectionEndpoints:
         assert isinstance(resp.json(), list)
 
     def test_style_profile_updates_after_correction(self, client) -> None:
-        client.post("/api/v1/learning/corrections", json={
-            "original_content": "Hope this finds you well!",
-            "edited_content": "40% of your pipeline is stalled. Here's why.",
-            "artifact_type": "email_draft",
-        })
+        client.post(
+            "/api/v1/learning/corrections",
+            json={
+                "original_content": "Hope this finds you well!",
+                "edited_content": "40% of your pipeline is stalled. Here's why.",
+                "artifact_type": "email_draft",
+            },
+        )
         resp = client.get("/api/v1/learning/style-profile")
         data = resp.json()
         assert data["total_corrections"] >= 1
@@ -630,12 +668,15 @@ class TestCorrectionEndpoints:
 
 class TestScenarioEndpoints:
     def test_run_scenario_basic(self, client) -> None:
-        resp = client.post("/api/v1/analytics/scenarios", json={
-            "sector": "fintech",
-            "signal_type": "funding_round",
-            "channel": "email",
-            "target_monthly_signals": 15,
-        })
+        resp = client.post(
+            "/api/v1/analytics/scenarios",
+            json={
+                "sector": "fintech",
+                "signal_type": "funding_round",
+                "channel": "email",
+                "target_monthly_signals": 15,
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert "conservative" in data
@@ -645,27 +686,36 @@ class TestScenarioEndpoints:
         assert "risk_factors" in data
 
     def test_scenario_with_warm_intro(self, client) -> None:
-        resp = client.post("/api/v1/analytics/scenarios", json={
-            "channel": "warm_intro",
-            "target_monthly_signals": 10,
-        })
+        resp = client.post(
+            "/api/v1/analytics/scenarios",
+            json={
+                "channel": "warm_intro",
+                "target_monthly_signals": 10,
+            },
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["channel_modifier"] == 1.45
 
     def test_scenario_projections_ordered(self, client) -> None:
-        resp = client.post("/api/v1/analytics/scenarios", json={
-            "target_monthly_signals": 10,
-        })
+        resp = client.post(
+            "/api/v1/analytics/scenarios",
+            json={
+                "target_monthly_signals": 10,
+            },
+        )
         data = resp.json()
         assert data["conservative"]["annual_revenue"] < data["realistic"]["annual_revenue"]
         assert data["realistic"]["annual_revenue"] < data["optimistic"]["annual_revenue"]
 
     def test_scenario_low_data_confidence_flagged(self, client) -> None:
-        resp = client.post("/api/v1/analytics/scenarios", json={
-            "sector": "nonexistent_sector_9999",
-            "target_monthly_signals": 5,
-        })
+        resp = client.post(
+            "/api/v1/analytics/scenarios",
+            json={
+                "sector": "nonexistent_sector_9999",
+                "target_monthly_signals": 5,
+            },
+        )
         assert resp.status_code == 200
         assert resp.json()["low_data_confidence"] is True
 
@@ -711,9 +761,10 @@ class TestAnomalyEndpoints:
         session.commit()
 
         # Acknowledge via API
-        resp = client.post(f"/api/v1/analytics/anomalies/{alert.id}/acknowledge", json={
-            "notes": "Expected seasonal dip"
-        })
+        resp = client.post(
+            f"/api/v1/analytics/anomalies/{alert.id}/acknowledge",
+            json={"notes": "Expected seasonal dip"},
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["status"] == "acknowledged"

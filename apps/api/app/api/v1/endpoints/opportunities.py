@@ -36,7 +36,7 @@ from app.schemas.strategy import (
 from app.services.executive_agent.service import ExecutiveAgent
 from app.services.feedback_loop.service import FeedbackLoopService
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
-from app.services.resource_predictor import ResourcePredictorService
+from app.services.resource_predictor import ResourcePredictorService, resolve_context
 from app.services.workflow_orchestrator import BeeEvent, WorkflowOrchestrator
 
 router = APIRouter(prefix="/opportunities", tags=["Opportunities"])
@@ -409,7 +409,7 @@ def record_outcome(
             )
 
         predictor = ResourcePredictorService()
-        prediction = predictor.predict(opp)
+        prediction = predictor.predict(opp, context=resolve_context(session, opp))
 
         if settings.RESOURCE_PREDICTION_STRICT and prediction.blocks_confirmation:
             raise HTTPException(

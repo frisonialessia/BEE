@@ -3,6 +3,7 @@
 from app.services.resource_predictor.service import (
     PredictionContext,
     ResourcePredictorService,
+    resolve_context,
 )
 
-__all__ = ["ResourcePredictorService", "PredictionContext"]
+__all__ = ["ResourcePredictorService", "PredictionContext", "resolve_context"]

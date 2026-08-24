@@ -34,15 +34,19 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from app.core.logging import get_logger
 from app.models.opportunity import Opportunity
 from app.schemas.predictor import ResourcePrediction
 
+if TYPE_CHECKING:
+    from sqlmodel import Session
+
 logger = get_logger(__name__)
 
 # Risk thresholds
-_HIGH_SCORE = 85.0      # high-score deals need more attention
+_HIGH_SCORE = 85.0  # high-score deals need more attention
 _MEDIUM_SCORE = 60.0
 
 # Industry clusters that historically require more complex onboarding
@@ -61,6 +65,63 @@ class PredictionContext:
     lead_title: str | None
     playbook: str | None
     channel: str | None
+
+
+def resolve_context(session: Session, opp: Opportunity) -> PredictionContext:
+    """Build a real ``PredictionContext`` via DB lookups on the opportunity's FKs.
+
+    ``ResourcePredictorService`` itself stays stateless/pure by design (see its
+    docstring) — this lives alongside it so the caller (``record_outcome`` in
+    ``opportunities.py``, which already holds a ``session``) can resolve real
+    context and pass it explicitly via ``predict(opp, context=...)``.
+
+    Mirrors the same lookup pattern as
+    ``FeedbackLoopService._extract_signal_type``/``_extract_industry``/
+    ``_extract_seniority`` — signal_type from the originating Signal, industry
+    from the Company, seniority/title from the Lead. Do NOT reintroduce a
+    lookup through ``opportunity.strategy["context_snapshot"]``: that key is
+    never written there (``opportunity.strategy`` is
+    ``StrategySchema.to_db_dict()``; ``context_snapshot`` only ever appears in
+    ``PendingAction.payload`` and ``AuditTrailService`` records) — see
+    ``_resolve_context`` below, which was silently reading that dead key and
+    is kept only as a context-less fallback.
+    """
+    from app.models.company import Company
+    from app.models.lead import Lead
+    from app.models.signal import Signal
+
+    strat = opp.strategy or {}
+
+    signal_type = "other"
+    if opp.signal_id:
+        sig = session.get(Signal, opp.signal_id)
+        if sig:
+            signal_type = str(
+                sig.signal_type.value if hasattr(sig.signal_type, "value") else sig.signal_type
+            )
+
+    industry = None
+    if opp.company_id:
+        co = session.get(Company, opp.company_id)
+        industry = co.industry if co else None
+
+    lead_seniority = None
+    lead_title = None
+    if opp.lead_id:
+        lead = session.get(Lead, opp.lead_id)
+        if lead:
+            lead_seniority = lead.seniority
+            lead_title = lead.title
+
+    return PredictionContext(
+        opportunity_score=opp.score,
+        signal_type=signal_type,
+        industry=industry,
+        lead_seniority=lead_seniority,
+        lead_title=lead_title,
+        playbook=strat.get("playbook"),
+        channel=strat.get("channel"),
+    )
 
 
 @dataclass
@@ -138,7 +199,9 @@ class ResourcePredictorService:
     directly so the service is trivially testable.
     """
 
-    def predict(self, opportunity: Opportunity, *, context: PredictionContext | None = None) -> ResourcePrediction:
+    def predict(
+        self, opportunity: Opportunity, *, context: PredictionContext | None = None
+    ) -> ResourcePrediction:
         """Run all rules against the opportunity context and return a prediction.
 
         Args:
@@ -189,25 +252,29 @@ class ResourcePredictorService:
         )
 
     def _resolve_context(self, opp: Opportunity) -> PredictionContext:
-        """Extract prediction context from the opportunity's strategy and score."""
-        strat = opp.strategy or {}
-        signal_type = "other"
-        industry = None
-        lead_seniority = None
-        lead_title = None
+        """Best-effort fallback context when no session/context is available.
 
-        # Try to resolve from strategy snapshot (avoids additional DB queries)
-        if "context_snapshot" in strat:
-            snap = strat["context_snapshot"]
-            signal_type = snap.get("signal_type", "other")
-            industry = snap.get("industry")
+        Only ``opportunity.strategy`` (a plain dict — ``StrategySchema.to_db_dict()``)
+        and the opportunity's own score are used here; there is no DB access,
+        which is why ``industry``/``lead_seniority``/``lead_title`` cannot be
+        resolved this way — ``opportunity.strategy`` never carries those
+        (it previously read a ``"context_snapshot"`` key that is never written
+        onto it, so those fields were always ``None`` in production).
+
+        Real callers — chiefly ``record_outcome`` in ``opportunities.py`` —
+        should use the module-level ``resolve_context(session, opp)`` instead
+        and pass the result via ``predict(opp, context=...)``. This fallback
+        exists only for context-less callers (e.g. quick scripts/tests) and
+        must never silently pretend to know industry/seniority it can't see.
+        """
+        strat = opp.strategy or {}
 
         return PredictionContext(
             opportunity_score=opp.score,
-            signal_type=strat.get("signal_type", signal_type),
-            industry=industry,
-            lead_seniority=lead_seniority,
-            lead_title=lead_title,
+            signal_type=strat.get("signal_type", "other"),
+            industry=None,
+            lead_seniority=None,
+            lead_title=None,
             playbook=strat.get("playbook"),
             channel=strat.get("channel"),
         )
@@ -217,8 +284,7 @@ class ResourcePredictorService:
             return "Low operational impact. Safe to confirm — standard onboarding applies."
         if risk == "medium":
             return (
-                f"Moderate impact (score {score:.0f}/100). "
-                "Review warnings before confirming WON."
+                f"Moderate impact (score {score:.0f}/100). Review warnings before confirming WON."
             )
         return (
             f"High operational impact (score {score:.0f}/100). "
