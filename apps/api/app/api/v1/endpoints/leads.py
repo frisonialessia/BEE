@@ -19,6 +19,7 @@ from app.core.database import get_session
 from app.core.logging import get_logger
 from app.models.lead import Lead
 from app.models.user import User
+from app.repositories.company import CompanyRepository
 from app.repositories.lead import LeadRepository
 from app.schemas.dedup import LeadDuplicateGroup, MergeIn
 from app.schemas.lead import (
@@ -28,9 +29,13 @@ from app.schemas.lead import (
     LeadBulkUpdateIn,
     LeadBulkUpdateResult,
     LeadCreateIn,
+    LeadImportIn,
+    LeadImportResult,
+    LeadImportRowOutcome,
     LeadOut,
     LeadValidationOut,
 )
+from app.schemas.signal import CompanyRef, LeadRef
 from app.services.data_validator import DataValidator
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
 
@@ -123,6 +128,138 @@ def bulk_create_leads(
     return LeadBulkResult(created_count=created_count, errors=errors)
 
 
+@router.post(
+    "/import",
+    response_model=LeadImportResult,
+    status_code=status.HTTP_201_CREATED,
+    summary="Import an external prospect list (CSV/XLSX template)",
+)
+def import_leads(
+    data: LeadImportIn,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> LeadImportResult:
+    """Resolve each row's company by name/domain and its lead by email —
+    the same get-or-create logic ``SignalEngine`` already uses for inbound
+    webhooks (``CompanyRepository``/``LeadRepository.get_or_create_from_ref``),
+    just fed from an uploaded row instead of a webhook payload. A row that
+    matches an existing lead/company is reported as matched, never as
+    created — see ``LeadImportResult``'s own docstring on why that distinction
+    is never blurred. Newly created leads get the same first-encounter
+    ``DataValidator`` pass a manually-created lead already gets (see
+    ``_validate_new_lead`` below); matched leads are left untouched — an
+    import shouldn't silently overwrite quality flags on a contact that
+    already exists.
+
+    Committed per row, same as ``POST /leads/bulk`` — one bad row (e.g. a
+    company name so long it violates a column limit) never rolls back the
+    rows already imported earlier in the same file.
+    """
+    companies = CompanyRepository(session)
+    leads = LeadRepository(session)
+    org_id = current_user.organization_id
+
+    outcomes: list[LeadImportRowOutcome] = []
+    leads_created = leads_matched = companies_created = companies_matched = skipped = 0
+
+    for index, row in enumerate(data.rows):
+        full_name = (row.full_name or "").strip() or None
+        email = (row.email or "").strip().lower() or None
+        if not full_name and not email:
+            skipped += 1
+            outcomes.append(
+                LeadImportRowOutcome(
+                    row=index,
+                    status="error",
+                    message="No full_name or email — nothing to key a lead on",
+                )
+            )
+            continue
+
+        try:
+            company_id: uuid.UUID | None = None
+            company_name = (row.company_name or "").strip() or None
+            company_domain = (row.company_domain or "").strip().lower() or None
+            if company_name or company_domain:
+                already_existed = bool(
+                    (company_domain and companies.get_by_domain(company_domain, org_id))
+                    or (
+                        not company_domain
+                        and company_name
+                        and companies.get_by_name(company_name, org_id)
+                    )
+                )
+                company = companies.get_or_create_from_ref(
+                    CompanyRef(
+                        name=company_name,
+                        domain=company_domain,
+                        industry=(row.company_industry or "").strip() or None,
+                        country=(row.company_country or "").strip() or None,
+                    ),
+                    org_id,
+                )
+                if company is not None:
+                    company_id = company.id
+                    if already_existed:
+                        companies_matched += 1
+                    else:
+                        # CompanyRepository.add() (called inside
+                        # get_or_create_from_ref for the not-found path)
+                        # already flushes — the new row is visible to the
+                        # Lead insert below within this same transaction.
+                        companies_created += 1
+
+            lead_already_existed = bool(email and leads.get_by_email(email, org_id))
+            lead = leads.get_or_create_from_ref(
+                LeadRef(
+                    full_name=full_name,
+                    email=email,
+                    title=(row.title or "").strip() or None,
+                    seniority=(row.seniority or "").strip() or None,
+                    linkedin_url=(row.linkedin_url or "").strip() or None,
+                ),
+                company_id,
+                org_id,
+            )
+            if lead is None:
+                raise ValueError("Could not resolve a lead from this row")  # noqa: TRY301
+
+            if row.phone and not lead.phone:
+                lead.phone = row.phone.strip()
+                session.add(lead)
+
+            session.commit()
+
+            if lead_already_existed:
+                leads_matched += 1
+                outcomes.append(
+                    LeadImportRowOutcome(
+                        row=index, status="matched_existing", lead_id=lead.id, company_id=company_id
+                    )
+                )
+            else:
+                leads_created += 1
+                _validate_new_lead(session, lead.id)
+                outcomes.append(
+                    LeadImportRowOutcome(
+                        row=index, status="created", lead_id=lead.id, company_id=company_id
+                    )
+                )
+        except Exception as exc:  # noqa: BLE001 - one bad row must not abort the import
+            session.rollback()
+            outcomes.append(LeadImportRowOutcome(row=index, status="error", message=str(exc)))
+
+    return LeadImportResult(
+        total_rows=len(data.rows),
+        leads_created=leads_created,
+        leads_matched=leads_matched,
+        companies_created=companies_created,
+        companies_matched=companies_matched,
+        skipped=skipped,
+        rows=outcomes,
+    )
+
+
 @router.get(
     "",
     response_model=list[LeadOut],
@@ -146,7 +283,10 @@ def list_leads(
     visible_user_ids = get_visible_user_ids(session, current_user) if current_user else None
     organization_id = current_user.organization_id if current_user else None
     leads = repo.list_scoped(
-        limit=limit, offset=offset, visible_user_ids=visible_user_ids, organization_id=organization_id
+        limit=limit,
+        offset=offset,
+        visible_user_ids=visible_user_ids,
+        organization_id=organization_id,
     )
     return [LeadOut.model_validate(lead) for lead in leads]
 
@@ -202,7 +342,9 @@ def merge_leads(
     try:
         merged = repo.merge(body.keep_id, body.merge_id)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
 
     session.commit()
     session.refresh(merged)
@@ -225,7 +367,9 @@ def bulk_update_leads(
     one hidden/missing id doesn't roll back the rest of the batch."""
     updates = body.model_dump(exclude_unset=True, include={"status", "assigned_to_user_id"})
     if not updates:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Nothing to update.")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Nothing to update."
+        )
 
     repo = LeadRepository(session)
     updated_count = 0

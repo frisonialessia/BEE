@@ -12,17 +12,8 @@ import { useBulkCreateLeads, useCreateLead, useLeads } from "@/hooks/queries/use
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { opportunityStatusLabels, validationFlagLabels } from "@/lib/format";
-import { parseCsv } from "@/lib/csv";
+import { parseCsv, pickColumn as pick } from "@/lib/csv";
 import { computeRelationshipMap } from "@/lib/relationship-map";
-
-/** Toma la primera cabecera que exista de una lista de nombres posibles (español o inglés). */
-function pick(row: Record<string, string>, keys: string[]): string | undefined {
-  for (const key of keys) {
-    const value = row[key];
-    if (value) return value;
-  }
-  return undefined;
-}
 
 function CsvImportButton({ companyId }: { companyId: string }) {
   const bulkCreate = useBulkCreateLeads();

@@ -74,6 +74,17 @@ export function toCsv<T extends Record<string, unknown>>(
   return [headerLine, ...bodyLines].join("\r\n");
 }
 
+/** Toma la primera cabecera que exista de una lista de nombres posibles
+ *  (español o inglés) — el mapeo automático de columnas para cualquier CSV
+ *  subido, sin exigir que el encabezado sea exactamente el de la plantilla. */
+export function pickColumn(row: Record<string, string>, keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = row[key];
+    if (value) return value;
+  }
+  return undefined;
+}
+
 /** Dispara la descarga de un CSV en el navegador — sin backend, todo en el cliente. */
 export function downloadCsv(filename: string, csvContent: string): void {
   // BOM UTF-8 para que Excel reconozca acentos/ñ correctamente al abrir el archivo.

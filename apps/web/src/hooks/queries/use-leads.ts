@@ -8,10 +8,12 @@ import {
   createLead,
   fetchLeadDuplicates,
   fetchLeads,
+  importLeads,
   mergeLeads,
   validateLead,
   type LeadBulkUpdateIn,
   type LeadCreateIn,
+  type LeadImportRow,
 } from "@/lib/api/leads";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -38,6 +40,17 @@ export function useBulkCreateLeads() {
     mutationFn: (leads: LeadCreateIn[]) => bulkCreateLeads(leads),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+    },
+  });
+}
+
+export function useImportLeads() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (rows: LeadImportRow[]) => importLeads(rows),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
     },
   });
 }

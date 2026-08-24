@@ -44,6 +44,49 @@ export async function bulkCreateLeads(leads: LeadCreateIn[]): Promise<LeadBulkRe
   });
 }
 
+export interface LeadImportRow {
+  full_name?: string;
+  email?: string;
+  title?: string;
+  seniority?: string;
+  linkedin_url?: string;
+  phone?: string;
+  company_name?: string;
+  company_domain?: string;
+  company_industry?: string;
+  company_country?: string;
+}
+
+export interface LeadImportRowOutcome {
+  row: number;
+  status: "created" | "matched_existing" | "error";
+  lead_id: string | null;
+  company_id: string | null;
+  message: string | null;
+}
+
+export interface LeadImportResult {
+  total_rows: number;
+  leads_created: number;
+  leads_matched: number;
+  companies_created: number;
+  companies_matched: number;
+  skipped: number;
+  rows: LeadImportRowOutcome[];
+}
+
+/** El path real para "sube tu lista de prospectos externos" — a diferencia
+ *  de `bulkCreateLeads` (que exige un `company_id` interno que quien sube
+ *  el archivo no puede tener), esto resuelve la empresa por nombre/dominio
+ *  igual que la ingesta de señales. */
+export async function importLeads(rows: LeadImportRow[]): Promise<LeadImportResult> {
+  return apiFetch<LeadImportResult>("/api/v1/leads/import", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ rows }),
+  });
+}
+
 export interface LeadDuplicateGroup {
   key: string;
   leads: Lead[];

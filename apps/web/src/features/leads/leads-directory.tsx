@@ -1,6 +1,6 @@
 "use client";
 
-import { Flame, RefreshCw, Search } from "lucide-react";
+import { Flame, RefreshCw, Search, Upload } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -10,6 +10,7 @@ import { MetricCard } from "@/components/metric-card";
 import { SavedViewsControl } from "@/components/saved-views/saved-views-control";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LeadImportPanel } from "@/features/leads/lead-import-panel";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBulkUpdateLeads, useLeads, useValidateLead } from "@/hooks/queries/use-leads";
 import { useUsers } from "@/hooks/queries/use-users";
@@ -55,6 +56,7 @@ export function LeadsDirectory() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<LeadStatus | "">("");
   const [bulkAssignee, setBulkAssignee] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
 
   const currentViewConfig: LeadsViewConfig = { query, statusFilter, staleOnly, sortKey };
   function applyViewConfig(config: LeadsViewConfig) {
@@ -155,6 +157,10 @@ export function LeadsDirectory() {
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+            <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost inline-flex items-center gap-1.5">
+              <Upload className="size-3.5" />
+              Importar prospectos
+            </button>
             <ExportCsvButton
               rows={exportRows}
               filename="bee-leads.csv"
@@ -176,6 +182,7 @@ export function LeadsDirectory() {
       </header>
 
       <LeadDuplicatesPanel />
+      <LeadImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
 
       {loading ? (
         <div className="space-y-4">
