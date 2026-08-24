@@ -31,6 +31,7 @@ from app.api.v1.endpoints import (
     outbound_webhooks,
     psychographic,
     quotas,
+    saved_views,
     scenarios,
     sequences,
     signals,
@@ -60,6 +61,7 @@ api_router.include_router(engagement.router)
 api_router.include_router(sequences.router)
 api_router.include_router(templates.router)
 api_router.include_router(quotas.router)
+api_router.include_router(saved_views.router)
 api_router.include_router(organizations.router)
 api_router.include_router(psychographic.router)
 api_router.include_router(dark_funnel.router)

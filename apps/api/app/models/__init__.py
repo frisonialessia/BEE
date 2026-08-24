@@ -37,6 +37,7 @@ from app.models.outbound_webhook import OutboundWebhook
 from app.models.pending_action import PendingAction
 from app.models.psychographic import LeadPsychographic
 from app.models.quota import Quota
+from app.models.saved_view import SavedView
 from app.models.sequence import DynamicSequence, SequenceExecution
 from app.models.signal import Signal
 from app.models.strategy_outcome import StrategyOutcome
@@ -52,6 +53,7 @@ __all__ = [
     "MessageTemplate",
     "PendingAction",
     "Quota",
+    "SavedView",
     "Signal",
     "Opportunity",
     "OpportunityTask",

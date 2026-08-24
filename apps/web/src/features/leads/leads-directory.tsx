@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { LeadDuplicatesPanel } from "@/components/dedup/lead-duplicates-panel";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
 import { MetricCard } from "@/components/metric-card";
+import { SavedViewsControl } from "@/components/saved-views/saved-views-control";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCompanies } from "@/hooks/queries/use-companies";
@@ -16,6 +17,16 @@ import { leadStatusLabels, scoreVariant, timeAgo, validationFlagLabels } from "@
 import type { Lead, LeadStatus } from "@/types/domain";
 
 type SortKey = "score_desc" | "score_asc" | "recent" | "name";
+
+/** Forma del `config` que se persiste en una vista guardada — ver
+ *  SavedViewsControl. Cambiar esta forma no rompe vistas ya guardadas con
+ *  la forma anterior: los campos ausentes simplemente no se aplican. */
+interface LeadsViewConfig extends Record<string, unknown> {
+  query?: string;
+  statusFilter?: LeadStatus | "all";
+  staleOnly?: boolean;
+  sortKey?: SortKey;
+}
 
 const SORTERS: Record<SortKey, (a: Lead, b: Lead) => number> = {
   score_desc: (a, b) => b.score - a.score,
@@ -44,6 +55,14 @@ export function LeadsDirectory() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<LeadStatus | "">("");
   const [bulkAssignee, setBulkAssignee] = useState("");
+
+  const currentViewConfig: LeadsViewConfig = { query, statusFilter, staleOnly, sortKey };
+  function applyViewConfig(config: LeadsViewConfig) {
+    if (config.query !== undefined) setQuery(config.query);
+    if (config.statusFilter !== undefined) setStatusFilter(config.statusFilter);
+    if (config.staleOnly !== undefined) setStaleOnly(config.staleOnly);
+    if (config.sortKey !== undefined) setSortKey(config.sortKey);
+  }
 
   const leadsData = leadsResult?.data;
   const companiesData = companiesResult?.data;
@@ -230,6 +249,7 @@ export function LeadsDirectory() {
               />
               Solo con datos incompletos/vencidos
             </label>
+            <SavedViewsControl page="leads" currentConfig={currentViewConfig} onApply={applyViewConfig} />
           </div>
 
           {selected.size > 0 && (

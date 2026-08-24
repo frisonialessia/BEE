@@ -72,6 +72,10 @@ export const queryKeys = {
     list: (opportunityId?: string) => [...queryKeys.tasks.all, "list", opportunityId ?? "all"] as const,
     overdue: () => [...queryKeys.tasks.all, "overdue"] as const,
   },
+  savedViews: {
+    all: ["saved-views"] as const,
+    list: (page: string) => [...queryKeys.savedViews.all, "list", page] as const,
+  },
   outboundWebhooks: {
     all: ["outbound-webhooks"] as const,
     list: () => [...queryKeys.outboundWebhooks.all, "list"] as const,
