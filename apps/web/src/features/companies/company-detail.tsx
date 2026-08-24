@@ -1,8 +1,9 @@
 "use client";
 
-import { AlertTriangle, ArrowUpRight, Building2, Globe, Mail, Radio, Target, Upload } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Building2, Globe, Mail, Radio, Target, Upload, Users } from "lucide-react";
 import { useRef, useState } from "react";
 
+import { RelationshipMap } from "@/components/companies/relationship-map";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
@@ -12,6 +13,7 @@ import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { opportunityStatusLabels, validationFlagLabels } from "@/lib/format";
 import { parseCsv } from "@/lib/csv";
+import { computeRelationshipMap } from "@/lib/relationship-map";
 
 /** Toma la primera cabecera que exista de una lista de nombres posibles (español o inglés). */
 function pick(row: Record<string, string>, keys: string[]): string | undefined {
@@ -286,6 +288,23 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
           </div>
         )}
       </section>
+
+      {leads.length > 0 && (
+        <section>
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            <Users className="size-4 text-muted-foreground" />
+            Mapa de relaciones
+          </h2>
+          <p className="bee-caption mb-3">
+            Contactos agrupados por nivel real, coloreados por si ya hay una oportunidad ligada — para ver
+            si el comité de compra está cubierto o todo el peso está en una sola persona
+          </p>
+          <RelationshipMap
+            groups={computeRelationshipMap(leads, opportunities)}
+            onOpenOpportunity={openOpportunity}
+          />
+        </section>
+      )}
 
       <section>
         <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
