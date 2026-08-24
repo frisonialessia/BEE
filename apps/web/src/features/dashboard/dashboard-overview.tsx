@@ -4,6 +4,7 @@ import { Activity, Bot, Flame, ShieldCheck, TrendingUp } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
+import { TodayImpactCard } from "@/components/dashboard/today-impact-card";
 import { MetricCard } from "@/components/metric-card";
 import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
 import { SignalCard } from "@/components/signal-card";
@@ -11,12 +12,14 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { SignalHexMap } from "@/features/control/components/SignalHexMap";
+import { CriticalAccountsDigest } from "@/features/dashboard/critical-accounts-digest";
 import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { Leaderboard } from "@/features/dashboard/leaderboard";
 import { usePagination } from "@/hooks/use-pagination";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
+import { computeTodayImpact } from "@/lib/today-impact";
 import { bucketByDay } from "@/lib/trend";
 
 /**
@@ -57,6 +60,7 @@ export function DashboardOverview() {
   // (detected_at real), no inventada.
   const signalsTrend = bucketByDay(signals.map((s) => s.detected_at), 7);
   const hotSignalsTrend = bucketByDay(hotSignalsList.map((s) => s.detected_at), 7);
+  const todayImpact = computeTodayImpact(signals, allOppsResult?.data ?? [], new Date());
 
   if (loading) {
     return (
@@ -96,6 +100,8 @@ export function DashboardOverview() {
         </div>
       </header>
 
+      <TodayImpactCard impact={todayImpact} />
+      <CriticalAccountsDigest battlecards={battlecards} today={new Date()} />
       <DailyBrief />
 
       <SignalHexMap className="mb-3" height={320} />

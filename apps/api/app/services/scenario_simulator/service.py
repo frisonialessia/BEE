@@ -48,34 +48,34 @@ logger = get_logger(__name__)
 # ── Base modifiers (tuned from industry benchmarks; replaced by learned data over time) ──
 
 CHANNEL_MODIFIERS: dict[str, float] = {
-    "warm_intro":    1.45,  # Warm intros close ~45% better than average
-    "linkedin":      1.10,  # LinkedIn: +10% for B2B
-    "email":         1.00,  # Baseline
-    "twitter":       0.85,  # Twitter: -15% for enterprise deals
-    "cold_call":     0.75,  # Cold calls: -25%
+    "warm_intro": 1.45,  # Warm intros close ~45% better than average
+    "linkedin": 1.10,  # LinkedIn: +10% for B2B
+    "email": 1.00,  # Baseline
+    "twitter": 0.85,  # Twitter: -15% for enterprise deals
+    "cold_call": 0.75,  # Cold calls: -25%
 }
 
 DISC_STYLE_MODIFIERS: dict[str, float] = {
-    "D": 1.15,   # D-style: responds well to direct pitches — if matched, +15%
-    "I": 1.10,   # I-style: responds to enthusiasm and relationships
-    "S": 1.05,   # S-style: trust-based — slower but steady
-    "C": 1.20,   # C-style: analytical — highest lift when data-backed approach is used
+    "D": 1.15,  # D-style: responds well to direct pitches — if matched, +15%
+    "I": 1.10,  # I-style: responds to enthusiasm and relationships
+    "S": 1.05,  # S-style: trust-based — slower but steady
+    "C": 1.20,  # C-style: analytical — highest lift when data-backed approach is used
     None: 1.00,  # Unknown style: no modifier
 }
 
 SIGNAL_TYPE_MODIFIERS: dict[str, float] = {
-    "funding_round":    1.25,  # Fresh money = buying intent
+    "funding_round": 1.25,  # Fresh money = buying intent
     "executive_change": 1.18,  # New exec = new budget decisions
-    "hiring_surge":     1.12,  # Growth = willingness to invest
-    "expansion":        1.15,
-    "product_launch":   1.08,
-    "default":          1.00,
+    "hiring_surge": 1.12,  # Growth = willingness to invest
+    "expansion": 1.15,
+    "product_launch": 1.08,
+    "default": 1.00,
 }
 
-_DARK_FUNNEL_HOT_MODIFIER = 1.35     # Research intensity ≥ 60 → +35%
-_DARK_FUNNEL_WARM_MODIFIER = 1.15    # Research intensity 30-60 → +15%
+_DARK_FUNNEL_HOT_MODIFIER = 1.35  # Research intensity ≥ 60 → +35%
+_DARK_FUNNEL_WARM_MODIFIER = 1.15  # Research intensity 30-60 → +15%
 _BASE_DEAL_VALUE_DEFAULT = 30_000.0  # EUR — fallback when no history
-_MIN_SAMPLE_FOR_CONFIDENCE = 5       # Below this → low_data_confidence=True
+_MIN_SAMPLE_FOR_CONFIDENCE = 5  # Below this → low_data_confidence=True
 
 _CONSERVATIVE_FACTOR = 0.70
 _OPTIMISTIC_FACTOR = 1.35
@@ -87,7 +87,9 @@ class ScenarioSimulator:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def run(self, request: ScenarioRequest, organization_id: uuid.UUID | None = None) -> ScenarioResult:
+    def run(
+        self, request: ScenarioRequest, organization_id: uuid.UUID | None = None
+    ) -> ScenarioResult:
         """Execute a scenario simulation.
 
         Returns three projections (conservative, realistic, optimistic),
@@ -99,11 +101,16 @@ class ScenarioSimulator:
         """
         logger.info(
             "ScenarioSimulator: running scenario sector=%s signal=%s channel=%s signals=%d",
-            request.sector, request.signal_type, request.channel, request.target_monthly_signals,
+            request.sector,
+            request.signal_type,
+            request.channel,
+            request.target_monthly_signals,
         )
 
         # ── Pull historical data ──────────────────────────────────────────────
-        historical = self._get_historical_stats(request.sector, request.signal_type, organization_id)
+        historical = self._get_historical_stats(
+            request.sector, request.signal_type, organization_id
+        )
         base_win_rate = historical["win_rate"]
         avg_deal_value = historical["avg_deal_value"]
         median_cycle_days = historical["median_cycle_days"]
@@ -114,12 +121,16 @@ class ScenarioSimulator:
         disc_mod = DISC_STYLE_MODIFIERS.get(request.psychographic_style, 1.0)
         signal_mod = SIGNAL_TYPE_MODIFIERS.get(request.signal_type or "default", 1.0)
         heat_mod = (
-            _DARK_FUNNEL_HOT_MODIFIER if (request.dark_funnel_heat or 0) >= 60
-            else _DARK_FUNNEL_WARM_MODIFIER if (request.dark_funnel_heat or 0) >= 30
+            _DARK_FUNNEL_HOT_MODIFIER
+            if (request.dark_funnel_heat or 0) >= 60
+            else _DARK_FUNNEL_WARM_MODIFIER
+            if (request.dark_funnel_heat or 0) >= 30
             else 1.0
         )
 
-        effective_win_rate = min(0.95, base_win_rate * channel_mod * disc_mod * signal_mod * heat_mod)
+        effective_win_rate = min(
+            0.95, base_win_rate * channel_mod * disc_mod * signal_mod * heat_mod
+        )
 
         # ── Monthly signal flow ───────────────────────────────────────────────
         monthly_signals = request.target_monthly_signals
@@ -131,14 +142,14 @@ class ScenarioSimulator:
         conservative_rate = effective_win_rate * _CONSERVATIVE_FACTOR
         optimistic_rate = min(0.95, effective_win_rate * _OPTIMISTIC_FACTOR)
 
-        conservative = self._project(conservative_rate, adjusted_signals, avg_deal_value, "conservative")
+        conservative = self._project(
+            conservative_rate, adjusted_signals, avg_deal_value, "conservative"
+        )
         realistic = self._project(effective_win_rate, adjusted_signals, avg_deal_value, "realistic")
         optimistic = self._project(optimistic_rate, adjusted_signals, avg_deal_value, "optimistic")
 
         # ── Key drivers ───────────────────────────────────────────────────────
-        drivers = self._compute_key_drivers(
-            channel_mod, disc_mod, signal_mod, heat_mod, request
-        )
+        drivers = self._compute_key_drivers(channel_mod, disc_mod, signal_mod, heat_mod, request)
 
         # ── Risk factors ──────────────────────────────────────────────────────
         risks = self._compute_risks(base_win_rate, sample_size, request)
@@ -207,48 +218,70 @@ class ScenarioSimulator:
         """Fetch historical win rate data from StrategyOutcome table."""
         from app.models.strategy_outcome import StrategyOutcome
 
+        # NOTE: StrategyOutcome.outcome is a plain string column, not the
+        # Opportunity.status enum — record_outcome() writes the Pydantic
+        # Literal value verbatim, i.e. lowercase "won"/"lost". Comparing
+        # against "WON" here silently matched nothing (same class of bug
+        # already fixed once in AnomalyDetector this session), which meant
+        # this simulator's win_rate was always ~0% regardless of real data.
         stmt = _scope(
-            select(StrategyOutcome).where(StrategyOutcome.outcome == "WON"),
+            select(StrategyOutcome).where(StrategyOutcome.outcome == "won"),
             StrategyOutcome.organization_id,
             organization_id,
         )
         all_won = list(self.session.exec(stmt).all())
 
-        # Apply filters
+        # Apply filters. Sector filters on company_industry — the field
+        # StrategyOutcome.industry ("alias for company_industry") is declared
+        # on the model but record_outcome() never actually writes it, so
+        # filtering on it silently matched zero rows for every sector.
         filtered_won = all_won
         if sector:
-            filtered_won = [o for o in all_won if (o.industry or "").lower() == sector.lower()]
+            filtered_won = [
+                o for o in all_won if (o.company_industry or "").lower() == sector.lower()
+            ]
         if signal_type:
-            filtered_won = [o for o in filtered_won if (o.signal_type or "").lower() == signal_type.lower()]
+            filtered_won = [
+                o for o in filtered_won if (o.signal_type or "").lower() == signal_type.lower()
+            ]
 
         # Get total outcomes for the same filters
         all_stmt = _scope(select(StrategyOutcome), StrategyOutcome.organization_id, organization_id)
         all_outcomes = list(self.session.exec(all_stmt).all())
         filtered_all = all_outcomes
         if sector:
-            filtered_all = [o for o in all_outcomes if (o.industry or "").lower() == sector.lower()]
+            filtered_all = [
+                o for o in all_outcomes if (o.company_industry or "").lower() == sector.lower()
+            ]
         if signal_type:
-            filtered_all = [o for o in filtered_all if (o.signal_type or "").lower() == signal_type.lower()]
+            filtered_all = [
+                o for o in filtered_all if (o.signal_type or "").lower() == signal_type.lower()
+            ]
 
         # Compute stats
         sample_size = len(filtered_all)
         win_rate = len(filtered_won) / max(sample_size, 1)
 
         deal_values = [o.deal_value for o in filtered_won if o.deal_value and o.deal_value > 0]
-        avg_deal_value = sum(deal_values) / max(len(deal_values), 1) if deal_values else _BASE_DEAL_VALUE_DEFAULT
+        used_default_deal_value = len(deal_values) == 0
+        avg_deal_value = (
+            sum(deal_values) / max(len(deal_values), 1) if deal_values else _BASE_DEAL_VALUE_DEFAULT
+        )
 
         cycle_days = [o.cycle_days for o in filtered_won if o.cycle_days and o.cycle_days > 0]
+        used_default_cycle_days = len(cycle_days) == 0
         median_cycle = sorted(cycle_days)[len(cycle_days) // 2] if cycle_days else 45
 
         # If insufficient data, fall back to global rates
         if sample_size < _MIN_SAMPLE_FOR_CONFIDENCE:
             global_size = len(all_outcomes)
-            global_won = len([o for o in all_outcomes if o.outcome == "WON"])
+            global_won = len([o for o in all_outcomes if o.outcome == "won"])
             fallback_rate = global_won / max(global_size, 1) if global_size > 0 else 0.25
             win_rate = fallback_rate
             logger.debug(
                 "Scenario: insufficient sector data (n=%d), using global win_rate=%.2f",
-                sample_size, win_rate,
+                sample_size,
+                win_rate,
             )
 
         return {
@@ -258,6 +291,13 @@ class ScenarioSimulator:
             "sample_size": sample_size,
             "sector": sector,
             "signal_type": signal_type,
+            # Honesty flags: True when there was no real StrategyOutcome.deal_value/
+            # cycle_days to average, so the number above is an assumed industry
+            # default, not a measurement from this org's own closed deals. The
+            # frontend must show this distinction, never present a default as if
+            # it were real historical data.
+            "used_default_deal_value": used_default_deal_value,
+            "used_default_cycle_days": used_default_cycle_days,
         }
 
     def _compute_key_drivers(
@@ -270,17 +310,32 @@ class ScenarioSimulator:
     ) -> list[str]:
         drivers = []
         if channel_mod >= 1.30:
-            drivers.append(f"Channel '{request.channel}' is your strongest lever (+{(channel_mod-1)*100:.0f}% lift)")
+            drivers.append(
+                f"El canal '{request.channel}' es tu palanca más fuerte (+{(channel_mod - 1) * 100:.0f}%)"
+            )
         if disc_mod >= 1.15:
-            drivers.append(f"DISC style '{request.psychographic_style}' responds exceptionally well to adapted messaging (+{(disc_mod-1)*100:.0f}%)")
+            drivers.append(
+                f"El estilo DISC '{request.psychographic_style}' responde excepcionalmente bien a mensajes "
+                f"adaptados (+{(disc_mod - 1) * 100:.0f}%)"
+            )
         if signal_mod >= 1.20:
-            drivers.append(f"Signal type '{request.signal_type}' indicates active buying intent (+{(signal_mod-1)*100:.0f}%)")
+            drivers.append(
+                f"El tipo de señal '{request.signal_type}' indica intención de compra activa "
+                f"(+{(signal_mod - 1) * 100:.0f}%)"
+            )
         if heat_mod >= 1.30:
-            drivers.append("Dark funnel heat: these leads are already researching actively — contact now (+35%)")
+            drivers.append(
+                "Calor de pipeline oculto alto: estos leads ya están investigando activamente — contacta ahora (+35%)"
+            )
         if request.additional_prospecting_reps:
-            drivers.append(f"{request.additional_prospecting_reps} additional rep(s) = ~{request.additional_prospecting_reps*35:.0f}% more signal volume")
+            drivers.append(
+                f"{request.additional_prospecting_reps} rep(s) adicional(es) = ~"
+                f"{request.additional_prospecting_reps * 35:.0f}% más volumen de señales"
+            )
         if not drivers:
-            drivers.append("Baseline conditions: performance driven primarily by historical win rates")
+            drivers.append(
+                "Condiciones base: el desempeño depende principalmente de la tasa de cierre histórica"
+            )
         return drivers
 
     def _compute_risks(
@@ -291,14 +346,23 @@ class ScenarioSimulator:
     ) -> list[str]:
         risks = []
         if sample_size < _MIN_SAMPLE_FOR_CONFIDENCE:
-            risks.append(f"Low data confidence: only {sample_size} historical outcome(s) for this segment — projections have wide uncertainty")
+            risks.append(
+                f"Confianza de datos baja: solo {sample_size} resultado(s) histórico(s) para este segmento — "
+                "las proyecciones tienen un margen de error amplio"
+            )
         if base_win_rate < 0.15:
-            risks.append("Current win rate in this segment is below 15% — address offer-market fit before scaling prospecting")
+            risks.append(
+                "La tasa de cierre actual en este segmento está bajo 15% — ajusta el fit oferta-mercado antes de escalar prospección"
+            )
         channel_mod = CHANNEL_MODIFIERS.get(request.channel or "email", 1.0)
         if channel_mod < 0.90:
-            risks.append(f"Channel '{request.channel}' has a historical underperformance modifier — consider switching channels")
+            risks.append(
+                f"El canal '{request.channel}' tiene un modificador histórico de bajo desempeño — considera cambiar de canal"
+            )
         if (request.target_monthly_signals or 0) > 30:
-            risks.append("High signal volume may dilute quality — ensure qualification criteria are tight")
+            risks.append(
+                "Un volumen alto de señales puede diluir la calidad — asegura criterios de calificación estrictos"
+            )
         return risks
 
     def _compute_recommended_actions(
@@ -312,23 +376,36 @@ class ScenarioSimulator:
         actions = []
 
         if effective_win_rate > base_win_rate * 1.20:
-            actions.append(f"Prioritise '{request.channel}' channel for '{request.sector}' leads — modifiers are strong")
+            actions.append(
+                f"Prioriza el canal '{request.channel}' para leads de '{request.sector}' — los modificadores son fuertes"
+            )
         if disc_mod >= 1.15 and request.psychographic_style:
-            actions.append(f"Activate DISC-adapted messaging for '{request.psychographic_style}' style leads in this segment")
+            actions.append(
+                f"Activa mensajes adaptados a DISC para leads con estilo '{request.psychographic_style}' en este segmento"
+            )
         if channel_mod < 1.0 and request.channel != "warm_intro":
-            actions.append("Switch to 'warm_intro' channel — historical data shows it outperforms in most segments")
+            actions.append(
+                "Cambia al canal 'warm_intro' — los datos históricos muestran que rinde más en la mayoría de los segmentos"
+            )
         if effective_win_rate >= 0.35:
-            actions.append("Win rate is strong — increase signal volume to maximise revenue impact")
+            actions.append(
+                "La tasa de cierre es sólida — aumenta el volumen de señales para maximizar el impacto en ingresos"
+            )
         elif effective_win_rate < 0.20:
-            actions.append("Win rate is low — run A/B test on messaging before scaling volume")
+            actions.append(
+                "La tasa de cierre es baja — corre una prueba A/B de mensajes antes de escalar volumen"
+            )
 
         if not actions:
-            actions.append("Maintain current approach — no strong modifiers detected")
+            actions.append("Mantén el enfoque actual — no se detectaron modificadores fuertes")
 
         return actions
 
     def _audit_simulation(
-        self, request: ScenarioRequest, result: ScenarioResult, organization_id: uuid.UUID | None = None
+        self,
+        request: ScenarioRequest,
+        result: ScenarioResult,
+        organization_id: uuid.UUID | None = None,
     ) -> None:
         """Log the simulation to AuditTrailService."""
         try:

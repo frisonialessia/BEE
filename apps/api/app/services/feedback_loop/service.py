@@ -132,6 +132,15 @@ class FeedbackLoopService:
             notes=body.notes,
             loss_reason=body.loss_reason,
             competitor=body.competitor,
+            # Real deal-value/cycle-time data for ScenarioSimulator/RevenueSimulator
+            # to build projections from — previously these two columns existed on
+            # the model but nothing ever wrote them, so every dollar projection
+            # silently fell back to an assumed industry default. deal_value only
+            # ever set on WON (matches the column's own docstring); cycle_days is
+            # measured from the originating Signal's detected_at, not
+            # opportunity.created_at (that's what days_to_close above already is).
+            deal_value=opportunity.amount if won else None,
+            cycle_days=self._extract_cycle_days(opportunity, now),
             strategy_snapshot=strat,
         )
         self._outcomes.add(outcome_row)
@@ -529,3 +538,24 @@ class FeedbackLoopService:
             lead = self.session.get(Lead, opp.lead_id)
             return lead.seniority if lead else None
         return None
+
+    def _extract_cycle_days(self, opp: Opportunity, closed_at: datetime) -> int | None:
+        """Days from the originating Signal's detected_at to close.
+
+        Distinct from ``days_to_close`` (opportunity.created_at → close) —
+        ``cycle_days`` is meant to capture the full sales cycle from the
+        market trigger itself, which is what ScenarioSimulator's median
+        cycle time is documented as measuring. ``None`` when there's no
+        signal to anchor to, never a guessed number.
+        """
+        from app.models.signal import Signal
+
+        if not opp.signal_id:
+            return None
+        sig = self.session.get(Signal, opp.signal_id)
+        if sig is None or sig.detected_at is None:
+            return None
+        detected = sig.detected_at
+        if detected.tzinfo is None:
+            detected = detected.replace(tzinfo=UTC)
+        return max(0, (closed_at - detected).days)

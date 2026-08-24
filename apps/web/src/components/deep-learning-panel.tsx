@@ -1,19 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import type {
-  AnomalyAlert,
-  CorrectionOut,
-  ScenarioResult,
-  StyleProfileOut,
-} from "@/lib/types";
+import type { AnomalyAlert, CorrectionOut, StyleProfileOut } from "@/lib/types";
 import {
   acknowledgeAnomaly,
   checkAnomalies,
   getAnomalyAlerts,
   getStyleProfile,
   recordCorrection,
-  runScenario,
 } from "@/lib/api";
 
 // ── Correction Learning Panel ─────────────────────────────────────────────────
@@ -143,152 +137,6 @@ function CorrectionLearningPanel() {
           ) : (
             <p className="text-xs text-muted-foreground">More corrections needed to build authoritative rules.</p>
           )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Scenario Simulator Panel ──────────────────────────────────────────────────
-
-function fmt(n: number) {
-  if (n >= 1_000_000) return `€${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `€${(n / 1_000).toFixed(0)}K`;
-  return `€${n.toFixed(0)}`;
-}
-
-function ScenarioSimulatorPanel() {
-  const [result, setResult] = useState<ScenarioResult | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [sector, setSector] = useState("fintech");
-  const [channel, setChannel] = useState("email");
-  const [disc, setDisc] = useState("");
-  const [signals, setSignals] = useState(10);
-  const [heat, setHeat] = useState(0);
-  const [reps, setReps] = useState(0);
-
-  async function handleRun() {
-    setLoading(true);
-    try {
-      const r = await runScenario({
-        sector: sector || undefined,
-        channel: channel || undefined,
-        psychographic_style: disc || undefined,
-        target_monthly_signals: signals,
-        additional_prospecting_reps: reps,
-        dark_funnel_heat: heat || undefined,
-      });
-      setResult(r.data);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const scenarios = result ? [
-    { variant: result.conservative, varColor: "var(--color-chart-2)", label: "Conservative" },
-    { variant: result.realistic, varColor: "var(--color-chart-4)", label: "Realistic" },
-    { variant: result.optimistic, varColor: "var(--success)", label: "Optimistic" },
-  ] : [];
-
-  return (
-    <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">
-        Run a What-If simulation to project revenue from any combination of sector, channel, and DISC style.
-        Uses real win-rate history from your FeedbackLoop.
-      </p>
-
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Sector</label>
-          <input value={sector} onChange={(e) => setSector(e.target.value)}
-            placeholder="fintech, saas…" className="w-full text-xs border border-border rounded-sm px-2 py-1.5" />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Channel</label>
-          <select value={channel} onChange={(e) => setChannel(e.target.value)}
-            className="w-full text-xs border border-border rounded-sm px-2 py-1.5 bg-[var(--color-card)]">
-            {["email", "linkedin", "warm_intro", "twitter"].map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">DISC Style</label>
-          <select value={disc} onChange={(e) => setDisc(e.target.value)}
-            className="w-full text-xs border border-border rounded-sm px-2 py-1.5 bg-[var(--color-card)]">
-            <option value="">Any</option>
-            {["D", "I", "S", "C"].map((d) => <option key={d} value={d}>{d}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Monthly Signals: {signals}</label>
-          <input type="range" min={1} max={100} value={signals} onChange={(e) => setSignals(+e.target.value)}
-            className="w-full" />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Calor de pipeline oculto: {heat}</label>
-          <input type="range" min={0} max={100} value={heat} onChange={(e) => setHeat(+e.target.value)}
-            className="w-full" />
-        </div>
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Extra Reps: {reps}</label>
-          <input type="range" min={0} max={10} value={reps} onChange={(e) => setReps(+e.target.value)}
-            className="w-full" />
-        </div>
-      </div>
-
-      <button onClick={handleRun} disabled={loading} className="w-full bee-btn bee-btn--primary">
-        {loading ? "Simulating…" : "Run Scenario"}
-      </button>
-
-      {result && (
-        <div className="space-y-3">
-          {result.low_data_confidence && (
-            <div
-              className="text-xs rounded-lg border p-2"
-              style={{ borderColor: "var(--warning)", background: "color-mix(in srgb, var(--warning) 15%, var(--color-background))", color: "var(--color-text)" }}
-            >
-              ⚠ Low data confidence — only {result.historical_sample_size} historical data point(s). Projections have wide uncertainty.
-            </div>
-          )}
-
-          <div className="grid grid-cols-3 gap-2">
-            {scenarios.map(({ variant, varColor, label }) => (
-              <div
-                key={label}
-                className="rounded-lg border p-3"
-                style={{ borderColor: varColor, background: `color-mix(in srgb, ${varColor} 10%, var(--color-background))` }}
-              >
-                <p className="text-xs font-medium text-muted-foreground mb-1">{label}</p>
-                <p className="text-lg font-bold" style={{ color: varColor }}>{fmt(variant.annual_revenue)}</p>
-                <p className="text-xs text-muted-foreground">{fmt(variant.monthly_revenue)}/mo</p>
-                <p className="text-xs text-muted-foreground">{(variant.win_rate * 100).toFixed(1)}% close rate</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="rounded-lg border border-border bg-[var(--color-card)] p-3 space-y-2 text-xs">
-            <p className="font-medium text-foreground">
-              Effective win rate: <span style={{ color: "var(--color-chart-4)" }}>{(result.effective_win_rate * 100).toFixed(1)}%</span>
-              {" "}(base {(result.base_win_rate * 100).toFixed(1)}%)
-            </p>
-            {result.key_drivers.length > 0 && (
-              <div>
-                <p className="font-medium text-muted-foreground mb-1">Key drivers:</p>
-                <ul className="space-y-0.5 text-muted-foreground">
-                  {result.key_drivers.map((d, i) => <li key={i}>✓ {d}</li>)}
-                </ul>
-              </div>
-            )}
-            {result.recommended_actions.length > 0 && (
-              <div>
-                <p className="font-medium text-muted-foreground mb-1">Recommended:</p>
-                <ul className="space-y-0.5 text-muted-foreground">
-                  {result.recommended_actions.map((a, i) => <li key={i}>→ {a}</li>)}
-                </ul>
-              </div>
-            )}
-          </div>
         </div>
       )}
     </div>
@@ -427,7 +275,6 @@ function AnomalyAlertsPanel() {
 
 const TABS = [
   { id: "correction", label: "Style Learning" },
-  { id: "simulator", label: "What-If Simulator" },
   { id: "anomaly", label: "Anomaly Monitor" },
 ] as const;
 
@@ -454,7 +301,6 @@ export function DeepLearningPanel() {
         ))}
       </div>
       {tab === "correction" && <CorrectionLearningPanel />}
-      {tab === "simulator" && <ScenarioSimulatorPanel />}
       {tab === "anomaly" && <AnomalyAlertsPanel />}
     </div>
   );

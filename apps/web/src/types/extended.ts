@@ -596,6 +596,7 @@ export interface ScenarioResult {
   effective_win_rate: number;
   channel_modifier: number;
   disc_modifier: number;
+  signal_modifier: number;
   dark_funnel_modifier: number;
   target_monthly_signals: number;
   adjusted_monthly_signals: number;
@@ -609,6 +610,14 @@ export interface ScenarioResult {
   recommended_actions: string[];
   historical_sample_size: number;
   low_data_confidence: boolean;
+  // Honesty flags surfaced from ScenarioSimulator._get_historical_stats —
+  // True means avg_deal_value/median_cycle_days is an assumed industry
+  // default, not a measurement from this org's own closed deals.
+  supporting_data: {
+    used_default_deal_value?: boolean;
+    used_default_cycle_days?: boolean;
+    [key: string]: unknown;
+  };
 }
 
 // ─── Anomaly Detector ─────────────────────────────────────────────────────────
