@@ -40,7 +40,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
   }
 
   return (
-    <div className="bee-bento bee-bento-pad space-y-2.5">
+    <div className="bee-bento bee-bento-pad space-y-2.5 transition-colors hover:border-[var(--color-chart-4)]">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-xs font-semibold">
@@ -83,25 +83,30 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
             <CheckCircle2 className="size-3.5" />
             Secuencia iniciada — primer paso pendiente de tu aprobación en Control
           </span>
-        ) : matchingSequence ? (
-          <button
-            type="button"
-            onClick={handleTrigger}
-            disabled={startExecution.isPending}
-            className="bee-btn bee-btn--primary text-xs"
-          >
-            <Rocket className="size-3.5" />
-            {startExecution.isPending ? "Iniciando…" : `Disparar "${matchingSequence.name}"`}
-          </button>
         ) : (
-          <button
-            type="button"
-            onClick={() => openOpportunity(battlecard.opportunity_id)}
-            className="bee-btn-ghost text-xs"
-          >
-            Ver battlecard
-            <ArrowRight className="size-3.5" />
-          </button>
+          <>
+            {matchingSequence && (
+              <button
+                type="button"
+                onClick={handleTrigger}
+                disabled={startExecution.isPending}
+                className="bee-btn bee-btn--primary text-xs"
+              >
+                <Rocket className="size-3.5" />
+                {startExecution.isPending ? "Iniciando…" : `Disparar "${matchingSequence.name}"`}
+              </button>
+            )}
+            {/* Siempre visible — disparar una secuencia no debe ser la única
+                forma de ver el detalle completo de la cuenta. */}
+            <button
+              type="button"
+              onClick={() => openOpportunity(battlecard.opportunity_id)}
+              className="bee-btn-ghost text-xs"
+            >
+              Ver battlecard
+              <ArrowRight className="size-3.5" />
+            </button>
+          </>
         )}
       </div>
     </div>

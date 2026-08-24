@@ -19,7 +19,7 @@ export function TodayImpactCard({ impact }: { impact: TodayImpact }) {
 
   if (hotSignalsToday.length === 0) {
     return (
-      <section className="bee-bento bee-bento--primary bee-bento-pad-lg mb-4 flex items-center gap-3">
+      <section className="bee-glass rounded-[var(--radius-lg)] bee-bento-pad-lg mb-4 flex items-center gap-3">
         <Sparkles className="size-5 shrink-0 text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
           Ninguna señal de alta intención detectada en las últimas 24h — nada urgente que proyectar hoy.
@@ -29,7 +29,7 @@ export function TodayImpactCard({ impact }: { impact: TodayImpact }) {
   }
 
   return (
-    <section className="bee-bento bee-bento--primary bee-bento-pad-lg mb-4">
+    <section className="bee-glass bee-glass--hover rounded-[var(--radius-lg)] bee-bento-pad-lg mb-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-chart-5)]/20">

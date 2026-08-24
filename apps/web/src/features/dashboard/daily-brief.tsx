@@ -4,6 +4,7 @@ import { AlertTriangle, Flame, Info, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCompanies, useCompanyDuplicates } from "@/hooks/queries/use-companies";
 import { useLeadDuplicates, useLeads } from "@/hooks/queries/use-leads";
 import { useIcpCriteria } from "@/hooks/queries/use-icp";
@@ -32,17 +33,35 @@ const TONE_COLOR: Record<BriefTone, string> = {
  *  necesita tu atención hoy", arriba del todo en Resumen. Si no hay nada
  *  real que decir, lo dice — nunca inventa urgencia para llenar el espacio. */
 export function DailyBrief() {
-  const { data: companiesResult } = useCompanies(300);
-  const { data: oppsResult } = useOpportunities(undefined, 300);
-  const { data: leadsResult } = useLeads(300);
-  const { data: icpResult } = useIcpCriteria();
-  const { data: quotasResult } = useQuotas();
-  const { data: users } = useUsers();
-  const { data: companyDupResult } = useCompanyDuplicates();
-  const { data: leadDupResult } = useLeadDuplicates();
-  const { data: anomaliesResult } = useOpenAnomalies();
-  const { data: overdueTasksResult } = useOverdueTasks();
-  const { data: patternsResult } = useSuccessPatterns();
+  const { data: companiesResult, isLoading: companiesLoading } = useCompanies(300);
+  const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 300);
+  const { data: leadsResult, isLoading: leadsLoading } = useLeads(300);
+  const { data: icpResult, isLoading: icpLoading } = useIcpCriteria();
+  const { data: quotasResult, isLoading: quotasLoading } = useQuotas();
+  const { data: users, isLoading: usersLoading } = useUsers();
+  const { data: companyDupResult, isLoading: companyDupLoading } = useCompanyDuplicates();
+  const { data: leadDupResult, isLoading: leadDupLoading } = useLeadDuplicates();
+  const { data: anomaliesResult, isLoading: anomaliesLoading } = useOpenAnomalies();
+  const { data: overdueTasksResult, isLoading: overdueTasksLoading } = useOverdueTasks();
+  const { data: patternsResult, isLoading: patternsLoading } = useSuccessPatterns();
+
+  // Este componente arma su propio set de queries (no comparte el gate de
+  // loading de la página padre) — sin este chequeo, un usuario con conexión
+  // lenta ve "Nada urgente por ahora" un instante antes de que los datos
+  // reales lleguen, que es exactamente la clase de falsa calma que la
+  // regla de honestidad de datos prohíbe en cualquier otra parte de BEE.
+  const loading =
+    companiesLoading ||
+    oppsLoading ||
+    leadsLoading ||
+    icpLoading ||
+    quotasLoading ||
+    usersLoading ||
+    companyDupLoading ||
+    leadDupLoading ||
+    anomaliesLoading ||
+    overdueTasksLoading ||
+    patternsLoading;
 
   const items = computeDailyBrief({
     today: new Date(),
@@ -65,7 +84,13 @@ export function DailyBrief() {
         <Sparkles className="size-3.5 text-[var(--color-chart-4)]" />
         <p className="bee-eyebrow">Brief del día</p>
       </div>
-      {items.length === 0 ? (
+      {loading ? (
+        <div className="flex gap-2.5 overflow-x-auto pb-1">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-[70px] w-64 shrink-0 rounded-[var(--radius-lg)]" />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
         <div className="bee-glass rounded-[var(--radius-lg)] px-4 py-3">
           <p className="text-xs text-muted-foreground">
             Nada urgente por ahora — pipeline, cuotas y datos se ven en orden.
