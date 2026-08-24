@@ -74,9 +74,7 @@ class FeedbackLoopService:
 
     # ── Outcome recording ─────────────────────────────────────────────────────
 
-    def record_outcome(
-        self, opportunity_id: str | object, body: OutcomeIn
-    ) -> OutcomeOut:
+    def record_outcome(self, opportunity_id: str | object, body: OutcomeIn) -> OutcomeOut:
         """Persist a WON/LOST outcome.
 
         Automatically tags variant outcomes if the strategy has a variant_id.
@@ -100,9 +98,7 @@ class FeedbackLoopService:
                 already_recorded=True,
             )
 
-        new_status = (
-            OpportunityStatus.WON if body.outcome == "won" else OpportunityStatus.LOST
-        )
+        new_status = OpportunityStatus.WON if body.outcome == "won" else OpportunityStatus.LOST
         opportunity.status = new_status
 
         now = datetime.now(UTC)
@@ -134,6 +130,8 @@ class FeedbackLoopService:
             generator=strat.get("generator", "unknown"),
             generator_version=strat.get("generator_version", "0"),
             notes=body.notes,
+            loss_reason=body.loss_reason,
+            competitor=body.competitor,
             strategy_snapshot=strat,
         )
         self._outcomes.add(outcome_row)
@@ -148,25 +146,45 @@ class FeedbackLoopService:
                 self._variants.record_outcome(vid, outcome_row.id, variant_arm, won)
                 # Check if we can auto-conclude the variant
                 variant = self._variants.get(vid)
-                if variant and variant.status == VariantStatus.ACTIVE and variant.is_ready_to_conclude:
+                if (
+                    variant
+                    and variant.status == VariantStatus.ACTIVE
+                    and variant.is_ready_to_conclude
+                ):
                     self._variants.conclude(vid)
                     winner = variant.winner_arm
                     logger.info(
                         "Variant %s auto-concluded: winner=arm_%s (a=%.0f%% b=%.0f%%)",
-                        vid, winner, variant.arm_a_win_rate * 100, variant.arm_b_win_rate * 100,
+                        vid,
+                        winner,
+                        variant.arm_a_win_rate * 100,
+                        variant.arm_b_win_rate * 100,
                     )
             except (ValueError, Exception) as exc:
                 logger.warning("Failed to record variant outcome: %s", exc)
 
         self.session.commit()
-        logger.info("Outcome: opp=%s result=%s days=%d variant=%s", opp_id, body.outcome, days, variant_id_str)
+        logger.info(
+            "Outcome: opp=%s result=%s days=%d variant=%s",
+            opp_id,
+            body.outcome,
+            days,
+            variant_id_str,
+        )
 
-        # ── VectorKnowledgeBase: seed Sales DNA on WON outcomes ───────────────
-        # Every successful close is encoded and stored in the vector store so
-        # future StrategyGeneratorService calls can retrieve similar wins as
-        # few-shot examples ("what worked for deals like this one").
+        # ── VectorKnowledgeBase: seed Sales DNA on WON, cautionary on LOST ─────
+        # Every successful close is encoded so future StrategyGeneratorService
+        # calls can retrieve similar wins as few-shot examples ("what worked
+        # for deals like this one"). Every loss is *also* encoded — but as a
+        # separate, explicitly-tagged cautionary pattern
+        # (StrategyGeneratorService._query_cautionary_patterns), never mixed
+        # into the "similar wins" retrieval path. A loss is a warning, not a
+        # recipe — see EnrichmentContext.cautionary_patterns for the guardrail
+        # every generator consuming it must follow.
         if won:
             self._seed_vector_store(outcome_row)
+        else:
+            self._seed_loss_pattern(outcome_row)
 
         return OutcomeOut(
             opportunity_id=opp_id,
@@ -186,7 +204,9 @@ class FeedbackLoopService:
         organization_id: _uuid_module.UUID | None = None,
     ) -> list[SuccessHint]:
         """Return ranked success hints for strategy generation."""
-        rows = self._outcomes.get_win_rates(signal_type, industry=industry, organization_id=organization_id)
+        rows = self._outcomes.get_win_rates(
+            signal_type, industry=industry, organization_id=organization_id
+        )
         hints: list[SuccessHint] = []
         for row in rows[:max_hints]:
             hints.append(
@@ -201,7 +221,9 @@ class FeedbackLoopService:
                 )
             )
         if hints:
-            logger.debug("Found %d hints for signal_type=%s industry=%s", len(hints), signal_type, industry)
+            logger.debug(
+                "Found %d hints for signal_type=%s industry=%s", len(hints), signal_type, industry
+            )
         return hints
 
     # ── Learning patterns (the visible "learn" step) ─────────────────────────
@@ -246,7 +268,9 @@ class FeedbackLoopService:
         if patterns:
             logger.debug(
                 "Found %d learning patterns for signal_type=%s industry=%s",
-                len(patterns), signal_type, industry,
+                len(patterns),
+                signal_type,
+                industry,
             )
         return patterns
 
@@ -273,11 +297,19 @@ class FeedbackLoopService:
         self._variants.add(variant)
         self.session.commit()
         self.session.refresh(variant)
-        logger.info("Created TacticVariant %s (%s) for signal_type=%s", variant.id, body.name, body.signal_type)
+        logger.info(
+            "Created TacticVariant %s (%s) for signal_type=%s",
+            variant.id,
+            body.name,
+            body.signal_type,
+        )
         return self._to_variant_out(variant)
 
     def get_active_variant(
-        self, signal_type: str, industry: str | None = None, organization_id: _uuid_module.UUID | None = None
+        self,
+        signal_type: str,
+        industry: str | None = None,
+        organization_id: _uuid_module.UUID | None = None,
     ) -> ActiveVariantRef | None:
         """Return a randomly-assigned arm for an active variant, or None.
 
@@ -340,7 +372,12 @@ class FeedbackLoopService:
 
         The document content is a natural-language summary of the winning
         strategy — rich enough for semantic similarity search but structured
-        enough to be useful as a few-shot example for LLM generators.
+        enough to be useful as a few-shot example for LLM generators. Tagged
+        ``metadata["outcome"] = "won"`` so
+        ``StrategyGeneratorService._query_similar_wins`` can positively
+        confirm a retrieved document is safe to treat as a template —
+        defense in depth alongside ``_seed_loss_pattern`` tagging its own
+        documents ``"lost"``.
 
         Non-blocking: failures are logged but never propagate to the caller.
         """
@@ -374,14 +411,92 @@ class FeedbackLoopService:
                     "days_to_close": outcome.days_to_close,
                     "score": outcome.score_at_close,
                     "generator": outcome.generator,
+                    "outcome": "won",
                 },
             )
             logger.info(
                 "VectorKnowledgeBase: seeded WON outcome %s (signal=%s industry=%s)",
-                outcome.id, outcome.signal_type, outcome.company_industry,
+                outcome.id,
+                outcome.signal_type,
+                outcome.company_industry,
             )
         except Exception:  # noqa: BLE001
-            logger.warning("VectorKnowledgeBase seeding failed for outcome %s", outcome.id, exc_info=True)
+            logger.warning(
+                "VectorKnowledgeBase seeding failed for outcome %s", outcome.id, exc_info=True
+            )
+
+    def _seed_loss_pattern(self, outcome: StrategyOutcome) -> None:
+        """Encode a LOST strategy into the vector store as a cautionary pattern.
+
+        Mirrors :meth:`_seed_vector_store` structurally, but this is
+        deliberately a *separate* method rather than a branch inside it —
+        the two must never share a retrieval path. This document is tagged
+        ``metadata["outcome"] = "lost"`` plus the real ``loss_reason`` and
+        ``competitor`` the rep captured (``"not specified"``/``"no named
+        competitor"`` when they weren't — never fabricated, honesty
+        guardrail applies here too).
+
+        Only ``StrategyGeneratorService._query_cautionary_patterns`` reads
+        these documents back, never ``_query_similar_wins`` — a loss is a
+        warning to weigh against a recommendation, not a template to copy.
+        Every consumer of ``EnrichmentContext.cautionary_patterns`` (rule-
+        based generators, the LLM prompt, ``ObservabilityService``) is
+        required to treat a match as a reason to reconsider or flag for
+        human review, never as a reason to imitate the losing play.
+
+        Non-blocking: failures are logged but never propagate to the caller.
+        """
+        try:
+            from app.services.vector_store import get_vector_store
+
+            strat = outcome.strategy_snapshot or {}
+            reason = outcome.loss_reason or "not specified"
+            lost_to = outcome.competitor or "no named competitor"
+
+            content = (
+                f"SIGNAL: {outcome.signal_type or 'unknown'}. "
+                f"INDUSTRY: {outcome.company_industry or 'general'}. "
+                f"LEAD: {outcome.lead_seniority or 'unknown seniority'}. "
+                f"PLAYBOOK: {strat.get('playbook', outcome.playbook)}. "
+                f"CHANNEL: {strat.get('channel', outcome.channel)}. "
+                f"PAIN: {strat.get('pain_point', '')[:150]}. "
+                f"CLOSING: {strat.get('closing_argument', '')[:150]}. "
+                f"RESULT: LOST in {outcome.days_to_close} days to {lost_to}. "
+                f"REASON: {reason}. "
+                f"SCORE: {outcome.score_at_close:.1f}."
+            )
+
+            store = get_vector_store()
+            store.upsert(
+                doc_id=f"outcome:{outcome.id}",
+                content=content,
+                metadata={
+                    "signal_type": outcome.signal_type,
+                    "industry": outcome.company_industry,
+                    "playbook": outcome.playbook,
+                    "channel": outcome.channel,
+                    "days_to_close": outcome.days_to_close,
+                    "score": outcome.score_at_close,
+                    "generator": outcome.generator,
+                    "outcome": "lost",
+                    "loss_reason": outcome.loss_reason,
+                    "competitor": outcome.competitor,
+                },
+            )
+            logger.info(
+                "VectorKnowledgeBase: seeded LOST outcome %s as cautionary pattern "
+                "(signal=%s industry=%s reason=%s)",
+                outcome.id,
+                outcome.signal_type,
+                outcome.company_industry,
+                reason,
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning(
+                "VectorKnowledgeBase cautionary seeding failed for outcome %s",
+                outcome.id,
+                exc_info=True,
+            )
 
     # ── Private helpers ────────────────────────────────────────────────────────
 
@@ -390,14 +505,18 @@ class FeedbackLoopService:
 
     def _extract_signal_type(self, opp: Opportunity) -> str:
         from app.models.signal import Signal
+
         if opp.signal_id:
             sig = self.session.get(Signal, opp.signal_id)
             if sig:
-                return str(sig.signal_type.value if hasattr(sig.signal_type, "value") else sig.signal_type)
+                return str(
+                    sig.signal_type.value if hasattr(sig.signal_type, "value") else sig.signal_type
+                )
         return "other"
 
     def _extract_industry(self, opp: Opportunity) -> str | None:
         from app.models.company import Company
+
         if opp.company_id:
             co = self.session.get(Company, opp.company_id)
             return co.industry if co else None
@@ -405,6 +524,7 @@ class FeedbackLoopService:
 
     def _extract_seniority(self, opp: Opportunity) -> str | None:
         from app.models.lead import Lead
+
         if opp.lead_id:
             lead = self.session.get(Lead, opp.lead_id)
             return lead.seniority if lead else None

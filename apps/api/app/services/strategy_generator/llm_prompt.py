@@ -15,6 +15,11 @@ Prompt design principles
    anonymised case studies — the model sees "deals like this closed with
    challenger + linkedin in 22 days" and can pattern-match.
 
+3b. **Cautionary patterns are warnings, never examples**: ``cautionary_patterns``
+    (real deals that were LOST in a similar context) are presented in their own
+    clearly-labeled section instructing the model NOT to replicate them — the
+    opposite framing from Sales DNA. See rule 11 in the system prompt.
+
 4. **Strict JSON output**: the system prompt demands a specific JSON schema
    matching ``StrategySchema``. Response is parsed with Pydantic — if it
    fails, the rule-based generator runs as fallback.
@@ -103,6 +108,10 @@ Rules:
 8. If dark funnel score > 60, set timing_window.urgency to immediate or this_week.
 9. Apply DISC tone instructions if provided — the closing_argument voice must match the lead's style.
 10. Base playbook/channel on similar_wins data if available — proven patterns beat intuition.
+11. If CAUTIONARY PATTERNS are present, they are REAL DEALS THAT WERE LOST — not examples to follow.
+    Do NOT choose the same (playbook, channel) combination shown in a cautionary pattern unless no
+    better alternative exists in this context. A cautionary pattern is a reason to pick differently,
+    never a template to copy.
 
 Return ONLY valid JSON. No code blocks, no explanation, no markdown."""
 
@@ -121,21 +130,21 @@ def build_user_prompt(ctx: EnrichmentContext) -> str:
 Type: {ctx.signal_type.value}
 Title: {ctx.signal_title}
 Score: {ctx.signal_score:.2f}/1.0
-Description: {ctx.signal_description or 'None provided'}""")
+Description: {ctx.signal_description or "None provided"}""")
 
     # ── 2. Company ────────────────────────────────────────────────────────────
     sections.append(f"""=== COMPANY ===
-Name: {ctx.company_name or 'Unknown'}
-Domain: {ctx.company_domain or 'Unknown'}
-Industry: {ctx.company_industry or 'Unknown'}
-Country: {ctx.company_country or 'Unknown'}""")
+Name: {ctx.company_name or "Unknown"}
+Domain: {ctx.company_domain or "Unknown"}
+Industry: {ctx.company_industry or "Unknown"}
+Country: {ctx.company_country or "Unknown"}""")
 
     # ── 3. Lead ───────────────────────────────────────────────────────────────
     sections.append(f"""=== LEAD ===
-Name: {ctx.lead_name or 'Unknown'}
-Title: {ctx.lead_title or 'Unknown'}
-Seniority: {ctx.lead_seniority or 'Unknown'}
-Email: {ctx.lead_email or 'Unavailable'}""")
+Name: {ctx.lead_name or "Unknown"}
+Title: {ctx.lead_title or "Unknown"}
+Seniority: {ctx.lead_seniority or "Unknown"}
+Email: {ctx.lead_email or "Unavailable"}""")
 
     # ── 4. Sales DNA — similar winning strategies ─────────────────────────────
     if ctx.similar_wins:
@@ -147,11 +156,29 @@ Email: {ctx.lead_email or 'Unavailable'}""")
                 f"industry={w.get('industry')} closed_in={w.get('days_to_close')}d"
             )
         sections.append(
-            "=== SALES DNA (similar past WON deals — proven patterns) ===\n"
-            + "\n".join(wins_text)
+            "=== SALES DNA (similar past WON deals — proven patterns) ===\n" + "\n".join(wins_text)
         )
     else:
         sections.append("=== SALES DNA ===\nNo similar historical wins yet. Use judgment.")
+
+    # ── 4b. Cautionary patterns — similar past LOST deals (warnings, NOT examples) ──
+    if ctx.cautionary_patterns:
+        cautions_text = []
+        for i, c in enumerate(ctx.cautionary_patterns[:3], 1):
+            cautions_text.append(
+                f"  Loss {i} (similarity={c.get('similarity_score', 0):.2f}): "
+                f"channel={c.get('channel')} playbook={c.get('playbook')} "
+                f"lost_to={c.get('competitor') or 'unspecified'} "
+                f"reason={c.get('loss_reason') or 'unspecified'}"
+            )
+        sections.append(
+            "=== CAUTIONARY PATTERNS (similar past LOST deals — DO NOT REPLICATE) ===\n"
+            "These are real losses, not few-shot examples. Do not recommend the same "
+            "channel+playbook combination shown below unless nothing better fits this context:\n"
+            + "\n".join(cautions_text)
+        )
+    else:
+        sections.append("=== CAUTIONARY PATTERNS ===\nNo similar historical losses on record.")
 
     # ── 5. Adaptive memory hints ──────────────────────────────────────────────
     if ctx.success_hints:
@@ -183,7 +210,7 @@ Confidence: {top.confidence:.0%}"""
         sections.append(
             f"""=== DARK FUNNEL (research intent) ===
 Score: {ctx.dark_funnel_score:.0f}/100 (>60 = hot lead, act now)
-Stage: {ctx.dark_funnel_stage or 'unknown'}"""
+Stage: {ctx.dark_funnel_stage or "unknown"}"""
         )
     else:
         sections.append("=== DARK FUNNEL ===\nNo intent data available.")
@@ -194,39 +221,42 @@ Stage: {ctx.dark_funnel_stage or 'unknown'}"""
         sections.append(
             f"""=== NETWORK INTELLIGENCE ===
 WARM INTRO AVAILABLE — strength={best_path.strength_score:.1f}/10
-Connector: {best_path.connector_name or 'Mutual connection'}
-Path length: {getattr(best_path, 'path_length', 1)} degree(s) of separation
+Connector: {best_path.connector_name or "Mutual connection"}
+Path length: {getattr(best_path, "path_length", 1)} degree(s) of separation
 Recommendation: USE THIS. Warm intros close 4x faster than cold outreach."""
         )
     else:
-        sections.append("=== NETWORK INTELLIGENCE ===\nNo warm intro path found. Use cold outreach.")
+        sections.append(
+            "=== NETWORK INTELLIGENCE ===\nNo warm intro path found. Use cold outreach."
+        )
 
     # ── 9. Psychographic profile ──────────────────────────────────────────────
     if ctx.psychographic_style:
         disc_instruction = _DISC_TONE.get(ctx.psychographic_style, "")
         sections.append(
             f"""=== PSYCHOGRAPHIC PROFILE ===
-DISC Style: {ctx.psychographic_style} ({ctx.psychographic_tone or 'unknown tone'})
+DISC Style: {ctx.psychographic_style} ({ctx.psychographic_tone or "unknown tone"})
 Tone instruction: {disc_instruction}"""
         )
     else:
-        sections.append("=== PSYCHOGRAPHIC PROFILE ===\nNo DISC profile available. Use a balanced tone.")
+        sections.append(
+            "=== PSYCHOGRAPHIC PROFILE ===\nNo DISC profile available. Use a balanced tone."
+        )
 
     # ── 10. External profile enrichment (LinkedIn / G2 / Google) ─────────────
     if ctx.external_profile:
         ep = ctx.external_profile
         sections.append(
             f"""=== EXTERNAL PROFILE (LinkedIn enrichment) ===
-Name: {ep.get('lead_name') or ctx.lead_name or 'Unknown'}
-Title: {ep.get('lead_title') or ctx.lead_title or 'Unknown'}
-Headline: {ep.get('headline') or 'N/A'}
-Location: {ep.get('location') or 'N/A'}
-LinkedIn: {ep.get('linkedin_url') or 'N/A'}"""
+Name: {ep.get("lead_name") or ctx.lead_name or "Unknown"}
+Title: {ep.get("lead_title") or ctx.lead_title or "Unknown"}
+Headline: {ep.get("headline") or "N/A"}
+Location: {ep.get("location") or "N/A"}
+LinkedIn: {ep.get("linkedin_url") or "N/A"}"""
         )
     if ctx.external_intent_keywords:
         sections.append(
-            "=== EXTERNAL INTENT SIGNALS ===\n"
-            + ", ".join(ctx.external_intent_keywords[:15])
+            "=== EXTERNAL INTENT SIGNALS ===\n" + ", ".join(ctx.external_intent_keywords[:15])
         )
 
     # ── 11. A/B variant instruction ───────────────────────────────────────────
@@ -235,8 +265,8 @@ LinkedIn: {ep.get('linkedin_url') or 'N/A'}"""
         sections.append(
             f"""=== A/B EXPERIMENT ===
 IMPORTANT: Active experiment — you MUST use these overrides:
-channel: {cfg.get('channel', 'not set')}
-playbook: {cfg.get('playbook', 'not set')}
+channel: {cfg.get("channel", "not set")}
+playbook: {cfg.get("playbook", "not set")}
 (Do not deviate from these — they are required for clean experiment data.)"""
         )
 
@@ -244,6 +274,8 @@ playbook: {cfg.get('playbook', 'not set')}
     sections.append("""=== YOUR TASK ===
 Generate a complete battlecard strategy for this opportunity.
 Synthesise all context above. Prioritise: A/B variant > warm intro > Sales DNA > adaptive hints > your judgment.
+Before finalising, check your chosen (playbook, channel) against CAUTIONARY PATTERNS above — if it
+matches a documented loss, reconsider unless you have a specific reason this context is different.
 
 Return ONLY this JSON object (no markdown, no explanation):
 {
@@ -275,6 +307,7 @@ def parse_llm_response(raw: str) -> dict:
     # Strip markdown code fences
     if "```" in text:
         import re
+
         match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
         if match:
             text = match.group(1)

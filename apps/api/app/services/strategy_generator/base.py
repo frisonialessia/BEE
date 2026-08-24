@@ -117,7 +117,7 @@ class EnrichmentContext:
     # Used by generators to adjust recommended channel, message tone, and
     # the ContentStyleMiddleware adapts all generated text accordingly.
     psychographic_style: str | None = None  # "D" | "I" | "S" | "C" | None
-    psychographic_tone: str | None = None   # "direct" | "enthusiastic" | "warm" | "analytical"
+    psychographic_tone: str | None = None  # "direct" | "enthusiastic" | "warm" | "analytical"
 
     # ── Network intelligence: warm intro paths ────────────────────────────────
     # Introduction paths from CEO's network to the target company.
@@ -141,6 +141,24 @@ class EnrichmentContext:
     # Empty list = no similar wins yet; generators use their default logic.
     similar_wins: list[dict] = field(default_factory=list)
 
+    # ── VectorKnowledgeBase: similar LOST strategies (cautionary patterns) ────
+    # Semantically similar past LOST deals, retrieved from a *separate* query
+    # path (StrategyGeneratorService._query_cautionary_patterns) than
+    # similar_wins — the two are never mixed. Each item is a dict with keys:
+    # content, similarity_score, playbook, channel, industry, loss_reason,
+    # competitor.
+    #
+    # GUARDRAIL (non-negotiable, see the handoff's data-honesty principle):
+    # a cautionary pattern is a real documented loss. It must NEVER be
+    # treated as a recipe or few-shot example to imitate — only as a signal
+    # to avoid repeating the same (playbook, channel) combination for a
+    # similar context, or to explicitly flag the resulting strategy for
+    # human review when a generator recommends it anyway. Every consumer
+    # (rule_based.py's priority chain, the LLM system prompt, and
+    # ObservabilityService's manual_review_required backstop) enforces this.
+    # Empty list = no similar losses yet, or none close enough to be useful.
+    cautionary_patterns: list[dict] = field(default_factory=list)
+
     # ── External enrichment: LinkedIn / G2 / Google (ExternalAPIOrchestrator) ─
     # Populated from signal.raw_payload["external_enrichment"] after the async
     # ingestion worker fetches lead profiles and intent signals.
@@ -153,6 +171,28 @@ class EnrichmentContext:
         """Return the highest win-rate actionable hint, or None."""
         actionable = [h for h in self.success_hints if h.is_actionable]
         return actionable[0] if actionable else None
+
+    def is_cautioned(
+        self, channel: str | None, playbook: str | None, min_score: float = 0.40
+    ) -> bool:
+        """True when ``(channel, playbook)`` matches a strong cautionary pattern.
+
+        The single shared check every consumer of ``cautionary_patterns``
+        uses — ``rule_based.py``'s selection chain and
+        ``ObservabilityService``'s manual-review backstop both call this
+        instead of re-implementing the match/threshold logic. ``min_score``
+        mirrors the 0.40 bar ``rule_based.py`` already uses for treating a
+        similar-win match as reliable, so a cautionary match is held to the
+        same evidentiary standard as a positive recommendation would be.
+        """
+        if not channel or not playbook:
+            return False
+        return any(
+            p.get("similarity_score", 0.0) >= min_score
+            and p.get("channel") == channel
+            and p.get("playbook") == playbook
+            for p in self.cautionary_patterns
+        )
 
     @property
     def has_warm_intro(self) -> bool:

@@ -74,6 +74,7 @@ class StrategyGeneratorService:
             self._trend = trend_analyst
         else:
             from app.services.trend_analyst import TrendAnalyst
+
             self._trend = TrendAnalyst(session)
 
     def enrich(self, signal: Signal, opportunity: Opportunity) -> bool:
@@ -89,7 +90,9 @@ class StrategyGeneratorService:
             return False
 
         if not strategy.is_battlecard_complete():
-            logger.warning("Strategy for opportunity %s incomplete; stays DETECTED.", opportunity.id)
+            logger.warning(
+                "Strategy for opportunity %s incomplete; stays DETECTED.", opportunity.id
+            )
             return False
 
         # Apply observability scoring (sets confidence_score + manual_review_required).
@@ -98,6 +101,7 @@ class StrategyGeneratorService:
             generator_name=strategy.generator,
             success_hints=ctx.success_hints,
             market_insights=ctx.market_insights,
+            cautionary_patterns=ctx.cautionary_patterns,
         )
 
         opportunity.strategy = strategy.to_db_dict()
@@ -123,13 +127,16 @@ class StrategyGeneratorService:
         try:
             from app.schemas.workflow import BeeEvent
             from app.services.workflow_orchestrator.service import WorkflowOrchestrator
+
             event = BeeEvent(
                 event_type="opportunity.ready_to_action",
                 entity_id=opportunity.id,
                 entity_type="opportunity",
                 payload={
                     "opportunity_id": str(opportunity.id),
-                    "organization_id": str(opportunity.organization_id) if opportunity.organization_id else None,
+                    "organization_id": str(opportunity.organization_id)
+                    if opportunity.organization_id
+                    else None,
                     "company_name": ctx.company_name,
                     "score": opportunity.score,
                     "signal_type": ctx.signal_type.value,
@@ -178,6 +185,12 @@ class StrategyGeneratorService:
         # ── 4. VectorKnowledgeBase: retrieve similar winning strategies ────────
         similar_wins = self._query_similar_wins(signal_type.value, industry, signal.title)
 
+        # ── 4b. VectorKnowledgeBase: retrieve similar LOST deals (cautionary) ──
+        # Separate query, separate result — never merged with similar_wins.
+        cautionary_patterns = self._query_cautionary_patterns(
+            signal_type.value, industry, signal.title
+        )
+
         # ── 5. External enrichment (LinkedIn / G2 / Google) ───────────────────
         ext = raw.get("external_enrichment") or {}
         linkedin = ext.get("linkedin") or {}
@@ -223,6 +236,7 @@ class StrategyGeneratorService:
             market_insights=market_insights,
             active_variant=variant_ref,
             similar_wins=similar_wins,
+            cautionary_patterns=cautionary_patterns,
             external_profile=linkedin,
             external_intent_keywords=list(dict.fromkeys(intent_keywords)),
             external_providers_called=ext.get("providers_called") or [],
@@ -252,7 +266,9 @@ class StrategyGeneratorService:
             profile = PsychographicAnalyzer(self.session).get_or_classify(lead)
             return profile.dominant_style, profile.preferred_tone
         except Exception:  # noqa: BLE001
-            logger.warning("PsychographicAnalyzer query failed; proceeding without DISC style", exc_info=True)
+            logger.warning(
+                "PsychographicAnalyzer query failed; proceeding without DISC style", exc_info=True
+            )
             return None, None
 
     def _query_dark_funnel(self, company_domain: str | None) -> tuple[float | None, str | None]:
@@ -271,7 +287,9 @@ class StrategyGeneratorService:
                 return None, None
             return score.research_intensity_score, score.buying_stage
         except Exception:  # noqa: BLE001
-            logger.warning("DarkFunnelService query failed; proceeding without intent score", exc_info=True)
+            logger.warning(
+                "DarkFunnelService query failed; proceeding without intent score", exc_info=True
+            )
             return None, None
 
     def _query_intro_paths(
@@ -298,8 +316,19 @@ class StrategyGeneratorService:
             )
             return result.paths_found
         except Exception:  # noqa: BLE001
-            logger.warning("NetworkNavigator query failed; proceeding without intro paths", exc_info=True)
+            logger.warning(
+                "NetworkNavigator query failed; proceeding without intro paths", exc_info=True
+            )
             return []
+
+    # Fetch this many candidates before filtering by outcome tag and capping
+    # to top_k — the store now mixes WON and LOST documents (see
+    # FeedbackLoopService._seed_vector_store / _seed_loss_pattern), so a
+    # plain top_k fetch could return fewer than top_k wins if losses happen
+    # to rank higher for a given query. A generous multiplier keeps both
+    # _query_similar_wins and _query_cautionary_patterns honoring their
+    # top_k contract even as the store grows.
+    _VECTOR_QUERY_OVERFETCH = 5
 
     def _query_similar_wins(
         self,
@@ -316,6 +345,12 @@ class StrategyGeneratorService:
         Returns a list of dicts (content, score, playbook, channel, industry)
         that generators inject as few-shot examples for channel/playbook bias.
 
+        Excludes any document explicitly tagged ``outcome="lost"`` — a
+        cautionary pattern must never surface here (see
+        ``_query_cautionary_patterns`` for those). A document with no
+        ``outcome`` tag at all (pre-existing/manually-seeded data) is treated
+        as a win, same as before this tagging existed.
+
         Non-blocking: returns [] when the store is empty or unavailable.
         """
         try:
@@ -326,32 +361,109 @@ class StrategyGeneratorService:
                 return []
 
             query = (
-                f"SIGNAL: {signal_type}. "
-                f"INDUSTRY: {industry or 'general'}. "
-                f"{signal_title[:100]}"
+                f"SIGNAL: {signal_type}. INDUSTRY: {industry or 'general'}. {signal_title[:100]}"
             )
-            results = store.query(query, top_k=top_k)
+            results = store.query(query, top_k=top_k * self._VECTOR_QUERY_OVERFETCH)
             wins = []
             for doc in results:
+                if doc.metadata.get("outcome") == "lost":
+                    continue
                 if doc.score < 0.05:  # noqa: PLR2004
                     continue
-                wins.append({
-                    "content": doc.content[:300],
-                    "similarity_score": round(doc.score, 3),
-                    "playbook": doc.metadata.get("playbook"),
-                    "channel": doc.metadata.get("channel"),
-                    "industry": doc.metadata.get("industry"),
-                    "signal_type": doc.metadata.get("signal_type"),
-                    "days_to_close": doc.metadata.get("days_to_close"),
-                })
+                wins.append(
+                    {
+                        "content": doc.content[:300],
+                        "similarity_score": round(doc.score, 3),
+                        "playbook": doc.metadata.get("playbook"),
+                        "channel": doc.metadata.get("channel"),
+                        "industry": doc.metadata.get("industry"),
+                        "signal_type": doc.metadata.get("signal_type"),
+                        "days_to_close": doc.metadata.get("days_to_close"),
+                    }
+                )
+                if len(wins) >= top_k:
+                    break
             if wins:
                 logger.info(
                     "VectorKnowledgeBase: retrieved %d similar win(s) for signal_type=%s industry=%s",
-                    len(wins), signal_type, industry,
+                    len(wins),
+                    signal_type,
+                    industry,
                 )
             return wins
         except Exception:  # noqa: BLE001
-            logger.warning("VectorKnowledgeBase query failed — proceeding without similar wins", exc_info=True)
+            logger.warning(
+                "VectorKnowledgeBase query failed — proceeding without similar wins", exc_info=True
+            )
+            return []
+
+    def _query_cautionary_patterns(
+        self,
+        signal_type: str,
+        industry: str | None,
+        signal_title: str,
+        top_k: int = 3,
+    ) -> list[dict]:
+        """Retrieve semantically similar past LOST deals as cautionary patterns.
+
+        Same query shape as ``_query_similar_wins``, but strictly the
+        opposite filter: only documents explicitly tagged
+        ``outcome="lost"`` (via ``FeedbackLoopService._seed_loss_pattern``)
+        are returned. The two methods never share a result.
+
+        GUARDRAIL: a returned item is a real documented loss — see
+        ``EnrichmentContext.cautionary_patterns`` for what every consumer of
+        this list is required (and forbidden) to do with it.
+
+        Non-blocking: returns [] when the store is empty, unavailable, or
+        has no tagged losses close enough to this context to be useful — an
+        organization with no losses yet simply gets no cautionary signal,
+        never a fabricated one.
+        """
+        try:
+            from app.services.vector_store import get_vector_store
+
+            store = get_vector_store()
+            if store.count() == 0:
+                return []
+
+            query = (
+                f"SIGNAL: {signal_type}. INDUSTRY: {industry or 'general'}. {signal_title[:100]}"
+            )
+            results = store.query(query, top_k=top_k * self._VECTOR_QUERY_OVERFETCH)
+            cautions = []
+            for doc in results:
+                if doc.metadata.get("outcome") != "lost":
+                    continue
+                if doc.score < 0.05:  # noqa: PLR2004
+                    continue
+                cautions.append(
+                    {
+                        "content": doc.content[:300],
+                        "similarity_score": round(doc.score, 3),
+                        "playbook": doc.metadata.get("playbook"),
+                        "channel": doc.metadata.get("channel"),
+                        "industry": doc.metadata.get("industry"),
+                        "signal_type": doc.metadata.get("signal_type"),
+                        "loss_reason": doc.metadata.get("loss_reason"),
+                        "competitor": doc.metadata.get("competitor"),
+                    }
+                )
+                if len(cautions) >= top_k:
+                    break
+            if cautions:
+                logger.info(
+                    "VectorKnowledgeBase: retrieved %d cautionary pattern(s) for signal_type=%s industry=%s",
+                    len(cautions),
+                    signal_type,
+                    industry,
+                )
+            return cautions
+        except Exception:  # noqa: BLE001
+            logger.warning(
+                "VectorKnowledgeBase cautionary query failed — proceeding without warnings",
+                exc_info=True,
+            )
             return []
 
     def _run_generators(self, ctx: EnrichmentContext) -> StrategySchema | None:

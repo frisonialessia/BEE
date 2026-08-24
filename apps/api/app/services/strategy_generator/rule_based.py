@@ -70,6 +70,16 @@ def _apply_hints_and_variant(
     2. Adaptive memory hints (statistical evidence from closed deals)
     3. VectorKnowledgeBase similar wins (semantic Sales DNA retrieval)
     4. Generator defaults (fallback)
+
+    Guardrail: a candidate from tier 2 or 3 that matches a strong cautionary
+    pattern (``ctx.is_cautioned`` — a real documented loss for this exact
+    channel+playbook combination) is skipped in favor of the next tier,
+    instead of recommending a play BEE already knows tends to lose. Tier 1
+    is never second-guessed this way — overriding an active A/B experiment
+    would corrupt its data, so a variant's config is always honored as-is.
+    If every tier is cautioned, the defaults are still returned (there is
+    nothing else to fall back to) — ObservabilityService's
+    manual_review_required check is the backstop for that case.
     """
     # 1. A/B variant overrides take highest priority to ensure clean experiment data.
     if ctx.active_variant:
@@ -80,12 +90,12 @@ def _apply_hints_and_variant(
 
     # 2. Adaptive memory hints (confidence ≥ medium).
     hint = ctx.best_hint
-    if hint is not None:
+    if hint is not None and not ctx.is_cautioned(hint.channel, hint.playbook):
         return hint.channel, hint.playbook
 
     # 3. VectorKnowledgeBase: similar past wins give semantic backing.
     similar = _best_similar_win_channel_playbook(ctx)
-    if similar is not None:
+    if similar is not None and not ctx.is_cautioned(*similar):
         return similar
 
     return default_channel, default_playbook
@@ -102,7 +112,9 @@ def _variant_tag(ctx: EnrichmentContext) -> dict:
 
 
 # Keep old name as alias for backward compat with tests that call it directly.
-def _apply_hints(ctx: EnrichmentContext, default_channel: str, default_playbook: str) -> tuple[str, str]:
+def _apply_hints(
+    ctx: EnrichmentContext, default_channel: str, default_playbook: str
+) -> tuple[str, str]:
     return _apply_hints_and_variant(ctx, default_channel, default_playbook)
 
 
@@ -141,9 +153,7 @@ class FundingStrategyGenerator(StrategyGenerator):
 
         hint_note = ""
         if ctx.best_hint and ctx.best_hint.is_actionable:
-            hint_note = (
-                f" [Adaptive: {ctx.best_hint.to_prompt_text()}]"
-            )
+            hint_note = f" [Adaptive: {ctx.best_hint.to_prompt_text()}]"
 
         return StrategySchema(
             pain_point=(

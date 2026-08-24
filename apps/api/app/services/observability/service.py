@@ -65,10 +65,22 @@ class ObservabilityService:
         generator_name: str = "rule_based",
         success_hints: list[SuccessHint] | None = None,
         market_insights: list[MarketInsightRef] | None = None,
+        cautionary_patterns: list[dict] | None = None,
     ) -> StrategySchema:
         """Compute confidence_score and set manual_review_required on the strategy.
 
         Returns the mutated strategy (field values updated in-place).
+
+        ``cautionary_patterns`` is the code-level backstop for BEE's "never
+        treat a loss as a recipe" guardrail: if the strategy's final
+        ``(channel, playbook)`` matches a real documented loss closely
+        enough, ``manual_review_required`` is forced to ``True`` regardless
+        of the computed confidence score. This catches the case every
+        upstream guardrail (the rule-based priority chain in
+        ``rule_based.py``, the LLM system prompt) is designed to prevent but
+        cannot fully guarantee for a generator that ignores its context —
+        the CEO always sees a warning badge before acting on a battlecard
+        that repeats a known loss.
         """
         score = self._compute_score(
             strategy=strategy,
@@ -78,8 +90,28 @@ class ObservabilityService:
         )
 
         strategy.confidence_score = round(min(1.0, max(0.0, score)), 3)
-        strategy.manual_review_required = strategy.confidence_score < CONFIDENCE_THRESHOLD
+        cautioned = self._matches_cautionary_pattern(strategy, cautionary_patterns or [])
+        strategy.manual_review_required = (
+            strategy.confidence_score < CONFIDENCE_THRESHOLD or cautioned
+        )
         return strategy
+
+    @staticmethod
+    def _matches_cautionary_pattern(
+        strategy: StrategySchema, cautionary_patterns: list[dict]
+    ) -> bool:
+        """True when the strategy repeats a real documented loss closely enough to matter.
+
+        Same 0.40 similarity bar ``rule_based.py`` uses to trust a positive
+        similar-win match — a cautionary match is held to the same
+        evidentiary standard before it forces a human into the loop.
+        """
+        return any(
+            p.get("similarity_score", 0.0) >= 0.40  # noqa: PLR2004
+            and p.get("channel") == strategy.channel
+            and p.get("playbook") == strategy.playbook
+            for p in cautionary_patterns
+        )
 
     def _compute_score(
         self,

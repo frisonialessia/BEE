@@ -63,7 +63,11 @@ class StrategyOutcome(TimestampMixin, table=True):
 
     # ── Entity context ──────────────────────────────────────────────────────
     company_industry: str | None = Field(default=None, index=True)
-    industry: str | None = Field(default=None, index=True, description="Alias for company_industry — used by analytics queries")
+    industry: str | None = Field(
+        default=None,
+        index=True,
+        description="Alias for company_industry — used by analytics queries",
+    )
     company_domain: str | None = Field(default=None)
     lead_seniority: str | None = Field(default=None, index=True)
     lead_title: str | None = Field(default=None)
@@ -81,10 +85,17 @@ class StrategyOutcome(TimestampMixin, table=True):
     # ── Free-form notes (human or AI-generated post-mortem) ─────────────────
     notes: str | None = Field(default=None)
 
+    # ── Loss detail (mirrors Opportunity.loss_reason/competitor at close time)
+    # Denormalized onto this row — not just onto Opportunity — so
+    # FeedbackLoopService can seed a "why this lost" cautionary pattern into
+    # the vector store without a join back to Opportunity, same rationale as
+    # every other denormalized field on this table. Only ever set when
+    # outcome == "lost"; None on a WON row.
+    loss_reason: str | None = Field(default=None, max_length=64, index=True)
+    competitor: str | None = Field(default=None, max_length=200)
+
     # ── Full strategy snapshot (for LLM fine-tuning dataset) ────────────────
-    strategy_snapshot: dict[str, Any] = Field(
-        default_factory=dict, sa_column=Column(JSON)
-    )
+    strategy_snapshot: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
 
     @property
     def is_won(self) -> bool:
