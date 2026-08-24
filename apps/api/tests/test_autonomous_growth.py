@@ -392,6 +392,70 @@ class TestOmnichannelGateway:
         assert pending.status == "pending_approval"
 
 
+class TestOrchestratorGatewayDispatch:
+    """AgentOrchestrator.approve() auto-dispatches gateway-native actions.
+
+    Regression coverage for a wiring gap: OmnichannelGateway.dispatch_approved
+    and ChannelDispatcher were fully implemented and unit-tested (above) but
+    never invoked from any live approval path — approving one of these
+    actions used to leave it stuck in APPROVED forever, waiting on an
+    external tool (n8n/Zapier) that only ever polls for the bundle-based
+    actions AgentOrchestrator.create_from_bundle creates, not these.
+    """
+
+    def test_approve_dispatches_channel_action_to_completed(
+        self, gateway: OmnichannelGateway, session: Session
+    ) -> None:
+        from app.schemas.orchestrator import ApprovalIn
+        from app.services.orchestrator.service import AgentOrchestrator
+
+        pending = gateway.prepare_action(
+            channel="email",
+            recipient_id="prospect@example.com",
+            body="Following up on our conversation...",
+            title="Outreach to prospect@example.com",
+        )
+        session.commit()
+        assert pending.status == "pending_approval"
+
+        orchestrator = AgentOrchestrator(session, gateway)
+        approved = orchestrator.approve(pending.id, ApprovalIn(approved_by="ceo@bee.io"))
+
+        # No manual start-execution/complete call — the gateway dispatch
+        # inside approve() already carried it all the way to COMPLETED
+        # (mock mode, since no real credentials are configured in tests).
+        assert approved.status == "completed"
+        assert approved.executing_tool == "omnichannel_gateway"
+
+    def test_approve_bundle_action_stays_on_external_tool_path(
+        self, gateway: OmnichannelGateway, session: Session
+    ) -> None:
+        """A create_from_bundle action has no `channel` key — approving it
+        must NOT auto-dispatch; it stays APPROVED for n8n/Zapier to pick up,
+        exactly as documented in AgentOrchestrator's module docstring."""
+        from app.models.base import ActionStatus, ActionType
+        from app.models.pending_action import PendingAction
+        from app.schemas.orchestrator import ApprovalIn
+        from app.services.orchestrator.service import AgentOrchestrator
+
+        pending = PendingAction(
+            action_type=ActionType.SEND_EMAIL,
+            status=ActionStatus.PENDING_APPROVAL,
+            title="Send email: battlecard follow-up",
+            payload={"email_draft": {"subject": "Follow-up", "body": "..."}},
+            generator="executive_agent",
+        )
+        session.add(pending)
+        session.commit()
+        session.refresh(pending)
+
+        orchestrator = AgentOrchestrator(session, gateway)
+        approved = orchestrator.approve(pending.id, ApprovalIn(approved_by="ceo@bee.io"))
+
+        assert approved.status == "approved"
+        assert approved.executing_tool is None
+
+
 # ══════════════════════════════════════════════════════════════════
 # SmartEngagementEngine
 # ══════════════════════════════════════════════════════════════════

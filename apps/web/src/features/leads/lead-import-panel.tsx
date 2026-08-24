@@ -78,6 +78,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
   const [rows, setRows] = useState<LeadImportRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const importMutation = useImportLeads();
 
@@ -95,12 +96,15 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
   const importable = rows.filter(isImportable);
   const result = importMutation.data;
 
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
+  async function ingestFile(file: File) {
     setParseError(null);
     importMutation.reset();
+    if (!/\.(csv|xlsx?)$/i.test(file.name)) {
+      setParseError("Formato no admitido — sube un archivo .csv o .xlsx.");
+      setRows([]);
+      setFileName(null);
+      return;
+    }
     try {
       const parsed = await parseFile(file);
       setRows(parsed.map(mapRow));
@@ -110,6 +114,34 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
       setRows([]);
       setFileName(null);
     }
+  }
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    await ingestFile(file);
+  }
+
+  function handleDragOver(e: React.DragEvent<HTMLElement>) {
+    e.preventDefault();
+    if (!isDragging) setIsDragging(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent<HTMLElement>) {
+    // relatedTarget is null when the pointer leaves the window entirely, and
+    // otherwise fires on every child hand-off within the drop zone — only
+    // clear the state once the pointer has actually left the zone itself.
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+    setIsDragging(false);
+  }
+
+  async function handleDrop(e: React.DragEvent<HTMLElement>) {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    await ingestFile(file);
   }
 
   function handleReset() {
@@ -151,21 +183,29 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
             </button>
           </section>
 
-          <section className="bee-bento bee-bento-pad space-y-2">
+          <section
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={(e) => void handleDrop(e)}
+            className={`bee-bento bee-bento-pad space-y-2 border-dashed transition-colors ${
+              isDragging ? "border-[var(--color-chart-4)] bg-[var(--color-chart-4)]/5" : ""
+            }`}
+          >
             <p className="text-xs font-semibold">2. Sube tu archivo (.csv o .xlsx)</p>
+            <p className="bee-caption">Arrastra el archivo aquí o elígelo manualmente.</p>
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
               className="bee-btn-ghost text-xs"
             >
               <Upload className="size-3.5" />
-              Elegir archivo
+              {isDragging ? "Suelta para cargar" : "Elegir archivo"}
             </button>
             <input
               ref={inputRef}
               type="file"
               accept=".csv,text/csv,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-              onChange={handleFile}
+              onChange={(e) => void handleFile(e)}
               className="hidden"
             />
             {fileName && (

@@ -34,13 +34,14 @@ from app.schemas.orchestrator import (
     PendingActionOut,
     RejectionIn,
 )
+from app.services.omnichannel.gateway import OmnichannelGateway
 from app.services.orchestrator import AgentOrchestrator, PendingActionNotFoundError
 
 router = APIRouter(prefix="/orchestrator", tags=["AgentOrchestrator"])
 
 
 def _get_orchestrator(session: Session = Depends(get_session)) -> AgentOrchestrator:
-    return AgentOrchestrator(session)
+    return AgentOrchestrator(session, OmnichannelGateway(session))
 
 
 @router.get(

@@ -40,6 +40,7 @@ from app.schemas.strategy import StrategySchema, TimingWindow
 from app.schemas.variants import ActiveVariantRef
 from app.services.data_validator.service import DataValidator
 from app.services.observability.service import CONFIDENCE_THRESHOLD, ObservabilityService
+from app.services.omnichannel.gateway import OmnichannelGateway
 from app.services.orchestrator.service import AgentOrchestrator
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -92,7 +93,7 @@ def _make_strategy(**kwargs) -> StrategySchema:
 class TestAgentOrchestrator:
     def test_create_from_bundle_creates_pending_action(self, session: Session):
         bundle = _make_bundle()
-        orch = AgentOrchestrator(session)
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
         actions = orch.create_from_bundle(bundle)
         session.commit()
 
@@ -106,7 +107,7 @@ class TestAgentOrchestrator:
 
     def test_approve_transitions_to_approved(self, session: Session):
         bundle = _make_bundle()
-        orch = AgentOrchestrator(session)
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
         [action] = orch.create_from_bundle(bundle)
         session.commit()
 
@@ -119,7 +120,7 @@ class TestAgentOrchestrator:
 
     def test_cannot_approve_rejected_action(self, session: Session):
         bundle = _make_bundle()
-        orch = AgentOrchestrator(session)
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
         [action] = orch.create_from_bundle(bundle)
         session.commit()
 
@@ -132,7 +133,7 @@ class TestAgentOrchestrator:
     def test_full_happy_path_state_machine(self, session: Session):
         """PENDING_APPROVAL → APPROVED → EXECUTING → COMPLETED."""
         bundle = _make_bundle()
-        orch = AgentOrchestrator(session)
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
         [action] = orch.create_from_bundle(bundle)
         session.commit()
         assert action.status == ActionStatus.PENDING_APPROVAL
@@ -153,7 +154,7 @@ class TestAgentOrchestrator:
 
     def test_failed_action_with_retry_requeues(self, session: Session):
         bundle = _make_bundle()
-        orch = AgentOrchestrator(session)
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
         [action] = orch.create_from_bundle(bundle)
         session.commit()
 
@@ -170,7 +171,7 @@ class TestAgentOrchestrator:
 
     def test_cannot_start_execution_without_approval(self, session: Session):
         bundle = _make_bundle()
-        orch = AgentOrchestrator(session)
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
         [action] = orch.create_from_bundle(bundle)
         session.commit()
 
@@ -178,7 +179,7 @@ class TestAgentOrchestrator:
             orch.start_execution(action.id, ExecutionStartIn(tool="n8n"))
 
     def test_get_status_returns_counts(self, session: Session):
-        orch = AgentOrchestrator(session)
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
         status_out = orch.get_status()
         assert hasattr(status_out, "total_pending")
         assert hasattr(status_out, "total_completed")
@@ -240,7 +241,7 @@ class TestOrchestratorEndpoints:
 
     def test_approve_via_api(self, client: TestClient, session: Session):
         bundle = _make_bundle()
-        orch = AgentOrchestrator(session)
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
         [action] = orch.create_from_bundle(bundle)
         session.commit()
 
@@ -253,7 +254,7 @@ class TestOrchestratorEndpoints:
 
     def test_reject_via_api(self, client: TestClient, session: Session):
         bundle = _make_bundle()
-        orch = AgentOrchestrator(session)
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
         [action] = orch.create_from_bundle(bundle)
         session.commit()
 
@@ -267,7 +268,7 @@ class TestOrchestratorEndpoints:
     def test_full_lifecycle_via_api(self, client: TestClient, session: Session):
         """Full state machine via HTTP API calls."""
         bundle = _make_bundle()
-        orch = AgentOrchestrator(session)
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
         [action] = orch.create_from_bundle(bundle)
         session.commit()
 

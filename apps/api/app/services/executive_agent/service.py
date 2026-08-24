@@ -165,8 +165,9 @@ class ExecutiveAgent:
         action. No action can be executed until explicitly approved.
         """
         try:
+            from app.services.omnichannel.gateway import OmnichannelGateway
             from app.services.orchestrator import AgentOrchestrator
-            orchestrator = AgentOrchestrator(self.session)
+            orchestrator = AgentOrchestrator(self.session, OmnichannelGateway(self.session))
             actions = orchestrator.create_from_bundle(bundle)
             logger.info(
                 "Created %d orchestrator action(s) for opportunity %s",

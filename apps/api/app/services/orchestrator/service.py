@@ -44,6 +44,7 @@ from app.schemas.orchestrator import (
     OrchestratorStatusOut,
     RejectionIn,
 )
+from app.services.omnichannel.gateway import OmnichannelGateway
 
 logger = get_logger(__name__)
 
@@ -67,9 +68,19 @@ class AgentOrchestrator:
     book a meeting) passes through this orchestrator before being executed.
     """
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, gateway: OmnichannelGateway) -> None:
         self.session = session
         self._repo = PendingActionRepository(session)
+        # Required, not a None-default: every AgentOrchestrator is constructed
+        # at the endpoint layer (see _get_orchestrator), so there's no call
+        # site where a gateway isn't actually available. A previous version
+        # of the approval flow left OmnichannelGateway.dispatch_approved()
+        # and ChannelDispatcher fully implemented and unit-tested but never
+        # invoked from any live request path — approving a channel-backed
+        # action (one created via gateway.prepare_action, e.g. an auto-drafted
+        # SmartEngagementEngine reply) just left it stuck in APPROVED forever,
+        # waiting on an external tool that was never going to poll for it.
+        self._gateway = gateway
 
     # ── Creation ─────────────────────────────────────────────────────────────
 
@@ -115,7 +126,19 @@ class AgentOrchestrator:
     # ── State transitions (security-gated) ──────────────────────────────────
 
     def approve(self, action_id: uuid.UUID, body: ApprovalIn) -> PendingAction:
-        """Approve a pending action. Raises ValueError on invalid state."""
+        """Approve a pending action. Raises ValueError on invalid state.
+
+        Actions created via ``OmnichannelGateway.prepare_action`` carry a
+        ``channel`` key in their payload — BEE already has a registered
+        provider for those (mock or real, see ``get_channel_status``), so
+        there's no reason to leave them sitting in APPROVED waiting for an
+        external tool: dispatch them immediately through the gateway.
+        Actions created via ``create_from_bundle`` (battlecard email drafts
+        with meeting structure / next steps attached) have no ``channel``
+        key by design — those stay on the external-tool path (n8n/Zapier
+        poll ``/approved-actions`` and call ``start-execution``/``complete``
+        themselves), unchanged.
+        """
         action = self._get_or_raise(action_id)
         self._assert_status(action, ActionStatus.PENDING_APPROVAL, "approve")
         action.mark_approved(body.approved_by)
@@ -123,7 +146,47 @@ class AgentOrchestrator:
         self.session.commit()
         self.session.refresh(action)
         logger.info("Action %s approved by %s", action_id, body.approved_by)
+
+        if action.payload.get("channel"):
+            self._dispatch_via_gateway(action)
+
         return action
+
+    def _dispatch_via_gateway(self, action: PendingAction) -> None:
+        """Send a gateway-native action through its registered channel
+        provider right after approval, and record the outcome.
+
+        Never raises — a provider failure (rate limit, no credentials, mock
+        mode) is recorded on the action via ``mark_failed`` rather than
+        surfaced as a 500 to the approver; the action stays inspectable
+        (and, if retryable, requeued) instead of vanishing mid-request.
+        """
+        action.mark_executing("omnichannel_gateway")
+        self.session.add(action)
+        self.session.commit()
+        self.session.refresh(action)
+
+        try:
+            result = self._gateway.dispatch_approved(action)
+        except Exception as exc:  # noqa: BLE001 - provider failures must not break approval
+            logger.exception("Dispatch failed for action %s", action.id)
+            action.mark_failed(str(exc))
+            self.session.add(action)
+            self.session.commit()
+            return
+
+        if result.success:
+            action.mark_completed()
+            logger.info(
+                "Action %s dispatched via %s (mock=%s message_id=%s)",
+                action.id, result.channel, result.mock, result.message_id,
+            )
+        else:
+            action.mark_failed(result.error)
+            logger.warning("Action %s dispatch failed: %s", action.id, result.error)
+        self.session.add(action)
+        self.session.commit()
+        self.session.refresh(action)
 
     def reject(self, action_id: uuid.UUID, body: RejectionIn) -> PendingAction:
         """Reject a pending action. Raises ValueError on invalid state."""
