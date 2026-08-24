@@ -21,7 +21,7 @@ export function CompetitorBreakdown({ stats }: { stats: CompetitorStat[] }) {
           <div key={s.competitor}>
             <div className="flex items-center justify-between gap-2">
               <p className="truncate text-xs font-medium">{s.competitor}</p>
-              <p className="shrink-0 text-[11px] text-muted-foreground">
+              <p className="shrink-0 bee-micro">
                 {s.wins} ganadas · {s.losses} perdidas
               </p>
             </div>

@@ -40,7 +40,7 @@ function HandlerIcon({ name }: { name: string }) {
     ready_to_action_notify: "NTF",
   };
   return (
-    <span className="rounded-sm border border-border bg-background px-1 py-0.5 text-[9px] font-medium text-muted-foreground">
+    <span className="rounded-sm border border-border bg-background px-1 py-0.5 text-[11px] font-medium text-muted-foreground">
       {map[name] ?? name.slice(0, 3).toUpperCase()}
     </span>
   );
@@ -58,12 +58,12 @@ function TaskRow({ task }: { task: WorkflowTask }) {
           {task.event_type}
         </span>
         {task.mock && (
-          <span className="rounded-sm border border-border px-1 text-[9px] text-muted-foreground">
+          <span className="rounded-sm border border-border px-1 bee-micro">
             simulado
           </span>
         )}
       </div>
-      <span className="bee-eyebrow text-[10px] normal-case tracking-normal">
+      <span className="bee-eyebrow text-[11px] normal-case tracking-normal">
         {STATUS_LABEL[task.status] ?? task.status}
       </span>
     </div>
@@ -134,9 +134,9 @@ export function WorkflowStatusPanel() {
           <Layers className="mt-0.5 size-3.5 shrink-0 stroke-[1.25]" />
           <span>
             Todas las tareas se ejecutan en modo simulado. Configura{" "}
-            <code className="text-[10px] text-foreground">WORKFLOW_CRM_URL</code>,{" "}
-            <code className="text-[10px] text-foreground">WORKFLOW_DELIVERY_URL</code> o{" "}
-            <code className="text-[10px] text-foreground">WORKFLOW_BILLING_URL</code>{" "}
+            <code className="text-[11px] text-foreground">WORKFLOW_CRM_URL</code>,{" "}
+            <code className="text-[11px] text-foreground">WORKFLOW_DELIVERY_URL</code> o{" "}
+            <code className="text-[11px] text-foreground">WORKFLOW_BILLING_URL</code>{" "}
             para integraciones en vivo.
           </span>
         </div>
@@ -152,7 +152,7 @@ export function WorkflowStatusPanel() {
       ) : (
         <div className="py-4 text-center">
           <p className="text-xs text-muted-foreground">Aún no se han despachado tareas.</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">
+          <p className="mt-1 bee-micro">
             Cierra una oportunidad como GANADA para activar el bus de eventos.
           </p>
         </div>

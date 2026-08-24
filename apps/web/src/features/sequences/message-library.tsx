@@ -176,7 +176,7 @@ export function MessageLibrary() {
                     setShowNew(false);
                     setEditing(t);
                   }}
-                  className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-[var(--color-primary)]/40 hover:text-foreground"
+                  className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 bee-micro transition-colors hover:bg-[var(--color-primary)]/40 hover:text-foreground"
                 >
                   <Pencil className="size-3" />
                   Editar
@@ -185,7 +185,7 @@ export function MessageLibrary() {
                   type="button"
                   onClick={() => deleteTemplate.mutate(t.id)}
                   disabled={deleteTemplate.isPending}
-                  className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-chart-2)]"
+                  className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 bee-micro transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-chart-2)]"
                 >
                   <Trash2 className="size-3" />
                   Eliminar

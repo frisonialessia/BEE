@@ -174,7 +174,7 @@ export function QuotasSection({
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <p className="text-sm font-medium">{owner ?? "—"}</p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="bee-micro">
                       {q.period_start} → {q.period_end}
                     </p>
                   </div>

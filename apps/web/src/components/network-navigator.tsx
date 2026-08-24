@@ -184,9 +184,9 @@ export function NetworkNavigatorPanel() {
             { label: "Companies Covered", value: stats.companies_covered },
             { label: "Avg Strength", value: `${stats.avg_relationship_strength}/10` },
           ].map(({ label, value }) => (
-            <div key={label} className="rounded-lg border border-border bg-[var(--color-card)] p-3 text-center">
-              <p className="text-xl font-bold text-foreground">{value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+            <div key={label} className="bee-bento p-3 text-center">
+              <p className="bee-stat__val">{value}</p>
+              <p className="bee-stat__lbl">{label}</p>
             </div>
           ))}
         </div>

@@ -176,7 +176,7 @@ export function CommandPalette() {
             placeholder="Ir a una sección, buscar una empresa, oportunidad o contacto…"
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
-          <kbd className="shrink-0 rounded-[var(--radius-sm)] border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
+          <kbd className="shrink-0 rounded-[var(--radius-sm)] border border-border px-1.5 py-0.5 bee-micro">
             Esc
           </kbd>
         </div>
@@ -187,7 +187,7 @@ export function CommandPalette() {
           ) : (
             [...groups.entries()].map(([groupLabel, items]) => (
               <div key={groupLabel} className="mb-1.5 last:mb-0">
-                <p className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                <p className="px-4 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
                   {groupLabel}
                 </p>
                 {items.map(({ entry, index }) => {
@@ -207,7 +207,7 @@ export function CommandPalette() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-medium">{entry.label}</p>
                         {entry.sublabel && (
-                          <p className="truncate text-[10px] text-muted-foreground">{entry.sublabel}</p>
+                          <p className="truncate bee-micro">{entry.sublabel}</p>
                         )}
                       </div>
                     </button>

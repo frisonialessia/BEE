@@ -162,18 +162,18 @@ export function EngagementInboxPanel() {
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="bee-inset p-2">
-          <p className="text-lg font-bold">{events.length}</p>
-          <p className="bee-caption">Total</p>
+          <p className="bee-stat__val">{events.length}</p>
+          <p className="bee-stat__lbl">Total</p>
         </div>
         <div className="bee-bento bee-bento--warm p-2">
-          <p className="text-lg font-bold">{actionable.length}</p>
-          <p className="bee-caption">Need approval</p>
+          <p className="bee-stat__val">{actionable.length}</p>
+          <p className="bee-stat__lbl">Need approval</p>
         </div>
         <div className="bee-bento bee-bento--primary p-2">
-          <p className="text-lg font-bold">
+          <p className="bee-stat__val">
             {events.filter((e) => e.intent === "sales_interest").length}
           </p>
-          <p className="bee-caption">Sales leads</p>
+          <p className="bee-stat__lbl">Sales leads</p>
         </div>
       </div>
 

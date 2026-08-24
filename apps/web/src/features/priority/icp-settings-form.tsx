@@ -65,7 +65,7 @@ export function IcpSettingsForm({
             className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
           {suggestions.industries.length > 0 && (
-            <p className="mt-1 text-[10px] text-muted-foreground">
+            <p className="mt-1 bee-micro">
               Ya usas: {suggestions.industries.join(", ")}
             </p>
           )}
@@ -79,7 +79,7 @@ export function IcpSettingsForm({
             className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
           {suggestions.sizes.length > 0 && (
-            <p className="mt-1 text-[10px] text-muted-foreground">Ya usas: {suggestions.sizes.join(", ")}</p>
+            <p className="mt-1 bee-micro">Ya usas: {suggestions.sizes.join(", ")}</p>
           )}
         </div>
         <div>
@@ -91,7 +91,7 @@ export function IcpSettingsForm({
             className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
           {suggestions.countries.length > 0 && (
-            <p className="mt-1 text-[10px] text-muted-foreground">
+            <p className="mt-1 bee-micro">
               Ya usas: {suggestions.countries.join(", ")}
             </p>
           )}

@@ -58,7 +58,7 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
     <section className="bee-surface p-5">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Calificación (MEDDIC)</h3>
-        <span className="font-mono text-[11px] text-muted-foreground">
+        <span className="font-mono bee-micro">
           {confirmedCount}/{MEDDIC_CRITERIA.length}
         </span>
       </div>

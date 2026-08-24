@@ -169,7 +169,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
               className="hidden"
             />
             {fileName && (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="bee-micro">
                 {fileName} · {rows.length} fila{rows.length === 1 ? "" : "s"} leída
                 {rows.length === 1 ? "" : "s"}
                 {importable.length < rows.length &&
@@ -224,7 +224,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
           {result && (
             <section className="bee-bento bee-bento-pad space-y-1.5">
               <p className="text-xs font-semibold">Resultado</p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="bee-micro">
                 {result.leads_created} lead{result.leads_created === 1 ? "" : "s"} nuevo
                 {result.leads_created === 1 ? "" : "s"} · {result.leads_matched} ya existía
                 {result.leads_matched === 1 ? "" : "n"} (fusionado{result.leads_matched === 1 ? "" : "s"} por

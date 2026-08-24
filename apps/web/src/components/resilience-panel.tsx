@@ -166,9 +166,9 @@ function DLQPanel() {
             { label: "Failed", value: summary.permanently_failed_count, color: "var(--color-chart-2)" },
             { label: "Due Now", value: summary.due_for_retry_count, color: "var(--color-chart-4)" },
           ].map(({ label, value, color }) => (
-            <div key={label} className="rounded-lg border border-border bg-[var(--color-card)] p-2 text-center">
-              <p className="text-lg font-bold" style={{ color }}>{value}</p>
-              <p className="text-xs text-muted-foreground">{label}</p>
+            <div key={label} className="bee-bento p-2 text-center">
+              <p className="bee-stat__val" style={{ color }}>{value}</p>
+              <p className="bee-stat__lbl">{label}</p>
             </div>
           ))}
         </div>
@@ -321,20 +321,20 @@ function AuditPanel() {
     <div className="space-y-4">
       {summary && (
         <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-lg border border-border bg-[var(--color-card)] p-2 text-center">
-            <p className="text-lg font-bold">{summary.total_entries}</p>
-            <p className="text-xs text-muted-foreground">Total Decisions</p>
+          <div className="bee-bento p-2 text-center">
+            <p className="bee-stat__val">{summary.total_entries}</p>
+            <p className="bee-stat__lbl">Total Decisions</p>
           </div>
           <div
             className="rounded-lg border p-2 text-center"
             style={{ borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 12%, var(--color-background))" }}
           >
-            <p className="text-lg font-bold" style={{ color: "var(--color-chart-2)" }}>{summary.manual_review_count}</p>
-            <p className="text-xs text-muted-foreground">Need Review</p>
+            <p className="bee-stat__val" style={{ color: "var(--color-chart-2)" }}>{summary.manual_review_count}</p>
+            <p className="bee-stat__lbl">Need Review</p>
           </div>
-          <div className="rounded-lg border border-border bg-[var(--color-card)] p-2 text-center">
-            <p className="text-lg font-bold" style={{ color: "var(--success)" }}>{(summary.avg_confidence_score * 100).toFixed(0)}%</p>
-            <p className="text-xs text-muted-foreground">Avg Confidence</p>
+          <div className="bee-bento p-2 text-center">
+            <p className="bee-stat__val" style={{ color: "var(--success)" }}>{(summary.avg_confidence_score * 100).toFixed(0)}%</p>
+            <p className="bee-stat__lbl">Avg Confidence</p>
           </div>
         </div>
       )}

@@ -67,7 +67,7 @@ function CsvImportButton({ companyId }: { companyId: string }) {
       </button>
       <input ref={inputRef} type="file" accept=".csv,text/csv" onChange={handleFile} className="hidden" />
       {result && (
-        <p className="text-[11px] text-muted-foreground">
+        <p className="bee-micro">
           {result.created} contactos importados
           {result.skipped > 0 && ` · ${result.skipped} sin nombre (omitidos)`}
           {result.errors > 0 && ` · ${result.errors} con error`}

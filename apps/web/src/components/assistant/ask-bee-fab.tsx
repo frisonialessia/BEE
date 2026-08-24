@@ -87,7 +87,7 @@ export function AskBeeFab() {
             </form>
             <Link
               href="/dashboard/assistant"
-              className="mt-1.5 block text-center text-[10px] text-muted-foreground hover:text-[var(--color-cta)]"
+              className="mt-1.5 block text-center bee-micro hover:text-[var(--color-cta)]"
             >
               Abrir conversación completa →
             </Link>

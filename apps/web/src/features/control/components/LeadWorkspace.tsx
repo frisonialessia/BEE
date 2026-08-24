@@ -35,7 +35,7 @@ export function LeadWorkspace() {
           <h2 className="mt-0.5 text-base font-semibold tracking-tight">Espacio de leads</h2>
         </div>
         {result?.live === false && (
-          <span className="text-[10px] text-muted-foreground">Demo / offline</span>
+          <span className="bee-micro">Demo / offline</span>
         )}
       </div>
 

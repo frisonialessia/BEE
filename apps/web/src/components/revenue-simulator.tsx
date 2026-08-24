@@ -51,7 +51,7 @@ function ScenarioBar({
         <span className="w-24 text-muted-foreground">{scenario.label}</span>
         <span className="font-semibold">{scenario.projected_won_deals} operaciones</span>
         {scenario.uplift_vs_baseline > 0 && (
-          <span className="text-[10px] text-muted-foreground">
+          <span className="bee-micro">
             +{scenario.uplift_vs_baseline} vs línea base
           </span>
         )}
@@ -189,7 +189,7 @@ export function RevenueSimulatorWidget() {
             </div>
             <p className="text-xs leading-relaxed">{result.recommendation}</p>
             {result.top_playbook && (
-              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-2 bee-micro">
                 <TrendingUp className="size-3" style={{ color: CHART_PALETTE[4] }} />
                 Táctica principal: <span className="text-foreground">{result.top_playbook}</span>
                 {result.top_channel && (
@@ -228,7 +228,7 @@ export function RevenueSimulatorWidget() {
           <button
             type="button"
             onClick={() => setShowDetails(!showDetails)}
-            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-1 bee-micro hover:text-foreground"
           >
             {showDetails ? (
               <ChevronUp className="size-3" />
@@ -238,7 +238,7 @@ export function RevenueSimulatorWidget() {
             {showDetails ? "Ocultar" : "Mostrar"} metodología
           </button>
           {showDetails && (
-            <p className="text-[10px] leading-relaxed text-muted-foreground">
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
               {result.disclaimer}
             </p>
           )}

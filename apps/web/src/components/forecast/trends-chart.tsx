@@ -14,7 +14,7 @@ export function TrendsChart({ points }: { points: MonthlyTrendPoint[] }) {
         const pct = (p.created / maxCreated) * 100;
         return (
           <div key={p.key} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
-            <p className="h-4 text-[10px] font-medium text-muted-foreground">
+            <p className="h-4 text-[11px] font-medium text-muted-foreground">
               {p.winRate !== null ? `${Math.round(p.winRate * 100)}%` : "—"}
             </p>
             <div
@@ -26,7 +26,7 @@ export function TrendsChart({ points }: { points: MonthlyTrendPoint[] }) {
                 style={{ height: `${Math.max(pct, p.created > 0 ? 4 : 0)}%` }}
               />
             </div>
-            <p className="text-[10px] font-medium text-muted-foreground">{p.label}</p>
+            <p className="text-[11px] font-medium text-muted-foreground">{p.label}</p>
           </div>
         );
       })}

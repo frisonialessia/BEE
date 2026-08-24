@@ -48,12 +48,12 @@ function VariantCard({ variant }: { variant: ScenarioVariant }) {
       className="rounded-[var(--radius-md)] border p-3"
       style={{ borderColor: color, background: `color-mix(in srgb, ${color} 10%, var(--color-background))` }}
     >
-      <p className="text-[11px] font-medium text-muted-foreground">{VARIANT_LABEL[variant.label] ?? variant.label}</p>
-      <p className="mt-1 text-lg font-bold" style={{ color }}>
+      <p className="bee-eyebrow" style={{ color }}>{VARIANT_LABEL[variant.label] ?? variant.label}</p>
+      <p className="bee-kpi-sm mt-1" style={{ color }}>
         {currency.format(variant.annual_revenue)}
       </p>
-      <p className="text-[11px] text-muted-foreground">{currency.format(variant.monthly_revenue)}/mes</p>
-      <p className="text-[11px] text-muted-foreground">{(variant.win_rate * 100).toFixed(1)}% de cierre</p>
+      <p className="bee-caption">{currency.format(variant.monthly_revenue)}/mes</p>
+      <p className="bee-caption">{(variant.win_rate * 100).toFixed(1)}% de cierre</p>
     </div>
   );
 }
@@ -150,7 +150,7 @@ export function ScenarioSimulatorPanel() {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-[11px] text-muted-foreground">
+            <label className="block bee-micro">
               Señales mensuales objetivo: {monthlySignals}
             </label>
             <input
@@ -161,7 +161,7 @@ export function ScenarioSimulatorPanel() {
               onChange={(e) => setMonthlySignals(Number(e.target.value))}
               className="w-full accent-[var(--color-chart-4)]"
             />
-            <label className="block text-[11px] text-muted-foreground">
+            <label className="block bee-micro">
               Calor de pipeline oculto: {heat}
             </label>
             <input
@@ -172,7 +172,7 @@ export function ScenarioSimulatorPanel() {
               onChange={(e) => setHeat(Number(e.target.value))}
               className="w-full accent-[var(--color-chart-4)]"
             />
-            <label className="block text-[11px] text-muted-foreground">Reps adicionales: {reps}</label>
+            <label className="block bee-micro">Reps adicionales: {reps}</label>
             <input
               type="range"
               min={0}
@@ -211,7 +211,7 @@ export function ScenarioSimulatorPanel() {
               </div>
             )}
             {usedDefaultDealValue && (
-              <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-primary)]/25 p-2.5 text-[11px] text-muted-foreground">
+              <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-primary)]/25 p-2.5 bee-micro">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                 El valor de deal ({currency.format(result.avg_deal_value)}) es un estimado de industria — todavía
                 no hay suficientes deals cerrados con monto real en este segmento. Agrega el monto al calificar
@@ -257,7 +257,7 @@ export function ScenarioSimulatorPanel() {
                   <ul className="space-y-0.5 text-muted-foreground">
                     {result.risk_factors.map((r, i) => (
                       <li key={i}>
-                        <Badge variant="warning" className="mr-1 text-[9px]">
+                        <Badge variant="warning" className="mr-1 text-[11px]">
                           !
                         </Badge>
                         {r}

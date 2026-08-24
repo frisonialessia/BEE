@@ -109,7 +109,7 @@ export function DailyBrief() {
                 <Icon className="mt-0.5 size-4 shrink-0" style={{ color: TONE_COLOR[item.tone] }} />
                 <div className="min-w-0">
                   <p className="truncate text-xs font-semibold">{item.title}</p>
-                  <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">{item.description}</p>
+                  <p className="mt-0.5 line-clamp-2 bee-micro">{item.description}</p>
                 </div>
               </Link>
             );

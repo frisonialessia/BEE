@@ -94,9 +94,9 @@ export function GlobalSearch({ className }: { className?: string }) {
                       <Icon className="size-4 shrink-0 text-[var(--color-chart-4)]" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-medium">{r.title}</p>
-                        <p className="truncate text-[10px] text-muted-foreground">{r.subtitle}</p>
+                        <p className="truncate bee-micro">{r.subtitle}</p>
                       </div>
-                      <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground">
+                      <span className="shrink-0 text-[11px] uppercase tracking-wide text-muted-foreground">
                         {KIND_LABEL[r.kind]}
                       </span>
                     </Link>

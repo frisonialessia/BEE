@@ -321,7 +321,7 @@ export function LeadsDirectory() {
           <div className="bee-surface overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-xs">
               <thead>
-                <tr className="border-b border-border text-[10px] uppercase tracking-wide text-muted-foreground">
+                <tr className="border-b border-border text-[11px] uppercase tracking-wide text-muted-foreground">
                   <th className="w-8 px-4 py-2.5">
                     <input
                       type="checkbox"
@@ -364,7 +364,7 @@ export function LeadsDirectory() {
                         </td>
                         <td className="px-4 py-2.5">
                           <p className="font-medium text-foreground">{lead.full_name}</p>
-                          {lead.email && <p className="text-[11px] text-muted-foreground">{lead.email}</p>}
+                          {lead.email && <p className="bee-micro">{lead.email}</p>}
                         </td>
                         <td className="px-4 py-2.5 text-muted-foreground">
                           {company ? (
@@ -401,7 +401,7 @@ export function LeadsDirectory() {
                                 : "Desactualizado"}
                             </span>
                           ) : (
-                            <span className="text-[11px] text-muted-foreground">
+                            <span className="bee-micro">
                               {lead.last_validated_at ? `Validado ${timeAgo(lead.last_validated_at)}` : "Sin validar"}
                             </span>
                           )}
@@ -411,7 +411,7 @@ export function LeadsDirectory() {
                             type="button"
                             onClick={() => validateLead.mutate(lead.id)}
                             disabled={validateLead.isPending}
-                            className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-[var(--color-primary)]/40 hover:text-foreground"
+                            className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 bee-micro transition-colors hover:bg-[var(--color-primary)]/40 hover:text-foreground"
                             title="Re-validar datos"
                           >
                             <RefreshCw className="size-3" />

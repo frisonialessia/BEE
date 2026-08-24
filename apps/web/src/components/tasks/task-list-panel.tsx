@@ -37,7 +37,7 @@ function TaskRow({
           {task.title}
         </p>
         {task.due_at && (
-          <p className={cn("text-[10px]", overdue ? "text-destructive" : "text-muted-foreground")}>
+          <p className={cn("text-[11px]", overdue ? "text-destructive" : "text-muted-foreground")}>
             {new Date(task.due_at).toLocaleDateString()} {overdue && "· vencida"}
           </p>
         )}
@@ -110,7 +110,7 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
           ))}
           {completed.length > 0 && (
             <details className="mt-1">
-              <summary className="cursor-pointer text-[11px] text-muted-foreground">
+              <summary className="cursor-pointer bee-micro">
                 {completed.length} completada{completed.length === 1 ? "" : "s"}
               </summary>
               <div className="mt-1 space-y-0.5">

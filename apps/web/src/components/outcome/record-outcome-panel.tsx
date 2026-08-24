@@ -41,7 +41,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
             {won ? "Ganada" : lost ? "Perdida" : "Descartada"}
           </h3>
           {opportunity.closed_at && (
-            <span className="ml-auto text-[11px] text-muted-foreground">
+            <span className="ml-auto bee-micro">
               {new Date(opportunity.closed_at).toLocaleDateString()}
             </span>
           )}

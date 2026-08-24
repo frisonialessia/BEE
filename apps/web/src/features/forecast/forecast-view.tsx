@@ -153,11 +153,11 @@ export function ForecastView() {
                         key={s.bucketStart}
                         className="rounded-[var(--radius-md)] bg-[var(--color-primary)]/25 p-3 text-center"
                       >
-                        <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                        <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
                           Score {s.bucketStart}-{s.bucketStart + 19}
                         </p>
                         <p className="mt-1 text-lg font-semibold">{Math.round(s.winRate * 100)}%</p>
-                        <p className="text-[10px] text-muted-foreground">{s.sampleSize} deals cerrados</p>
+                        <p className="bee-micro">{s.sampleSize} deals cerrados</p>
                       </div>
                     ))}
                   </div>
@@ -187,13 +187,13 @@ export function ForecastView() {
                               <p className="truncate text-xs font-medium">
                                 {opportunity.title.replace(/^Opportunity:\s*/, "")}
                               </p>
-                              <p className="truncate text-[11px] text-muted-foreground">
+                              <p className="truncate bee-micro">
                                 {company?.name ?? "Sin empresa"} ·{" "}
                                 {Math.round(qualificationScore(opportunity.qualification) * 100)}%
                                 calificada
                               </p>
                             </div>
-                            <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-1)]/20 px-2 py-0.5 text-[10px] font-medium text-[var(--color-chart-1)]">
+                            <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-1)]/20 px-2 py-0.5 text-[11px] font-medium text-[var(--color-chart-1)]">
                               {RISK_LABEL[reason]}
                             </span>
                           </button>

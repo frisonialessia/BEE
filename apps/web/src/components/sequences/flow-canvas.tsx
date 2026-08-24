@@ -88,7 +88,7 @@ export function FlowCanvas({
                       <p className="truncate text-xs font-semibold">{step.name}</p>
                     </div>
                     <p className="bee-caption mt-0.5">{def?.description ?? step.action}</p>
-                    {step.notes && <p className="mt-1 text-[11px] text-muted-foreground">{step.notes}</p>}
+                    {step.notes && <p className="mt-1 bee-micro">{step.notes}</p>}
                   </div>
                   {onRemoveStep && (
                     <button
@@ -103,7 +103,7 @@ export function FlowCanvas({
                 </div>
 
                 {!isLast && primaryTransition && (
-                  <p className="mt-1.5 pl-1 text-[11px] text-muted-foreground">
+                  <p className="mt-1.5 pl-1 bee-micro">
                     → avanza {describeCondition(primaryTransition.condition)}
                   </p>
                 )}

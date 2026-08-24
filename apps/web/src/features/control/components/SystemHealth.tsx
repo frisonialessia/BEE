@@ -35,18 +35,23 @@ function KpiCard({
   value,
   mono,
   warn,
+  text,
 }: {
   label: string;
   value: string;
   mono?: boolean;
   warn?: boolean;
+  /** This tile holds a status word ("Inactivo", "Con errores"), not a
+   *  number — the KPI-sized numeric scale wraps mid-word on tiles this
+   *  narrow. Falls back to a smaller, non-tabular size that fits. */
+  text?: boolean;
 }) {
   return (
     <div className="bee-kpi-card">
       <p className="bee-kpi-card__label">{label}</p>
       <p
         className={cn(
-          "bee-kpi-card__value",
+          text ? "text-base font-bold tracking-tight" : "bee-kpi-card__value",
           mono && "font-mono",
           warn && "text-destructive",
         )}
@@ -101,7 +106,7 @@ function WorkerKpis({ worker }: { worker: WorkerHealth }) {
 
   return (
     <div className="bee-kpi-strip !mt-0">
-      <KpiCard label="Ingesta" value={worker.running ? stateLabel : "Apagado"} />
+      <KpiCard label="Ingesta" value={worker.running ? stateLabel : "Apagado"} text />
       <KpiCard label="Cola" value={String(worker.queue_depth)} mono />
       <KpiCard label="Procesados" value={String(worker.processed_count)} mono />
       <KpiCard

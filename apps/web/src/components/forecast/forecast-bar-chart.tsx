@@ -32,11 +32,11 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
                 style={{ height: `${Math.max(weightedPct, b.weighted > 0 ? 2 : 0)}%` }}
               />
             </div>
-            <p className="text-[10px] font-medium text-muted-foreground">{b.label}</p>
+            <p className="text-[11px] font-medium text-muted-foreground">{b.label}</p>
           </div>
         );
       })}
-      <div className="ml-2 flex shrink-0 flex-col justify-end gap-1.5 pb-4 text-[10px] text-muted-foreground">
+      <div className="ml-2 flex shrink-0 flex-col justify-end gap-1.5 pb-4 bee-micro">
         <span className="flex items-center gap-1.5">
           <span className="size-2 rounded-[2px] bg-[var(--color-chart-2)]" /> Ponderado
         </span>

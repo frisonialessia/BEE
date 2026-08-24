@@ -115,7 +115,7 @@ export function StepComposer({ onAdd }: { onAdd: (step: NewStepInput) => void })
               placeholder="ej. not_replied_3d"
               className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
             />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="bee-micro">
               Formato <code>not_&lt;evento&gt;_&lt;N&gt;d</code>. Este deploy no tiene un scheduler propio —
               se evalúa la próxima vez que llegue un evento a esta ejecución, no automáticamente cada día.
             </p>

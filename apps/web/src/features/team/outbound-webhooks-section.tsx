@@ -78,7 +78,7 @@ function NewWebhookForm({ eventTypes, onDone }: { eventTypes: string[]; onDone: 
 
 function StatusBadge({ status }: { status: "success" | "failed" | null }) {
   if (status === null) {
-    return <span className="text-[11px] text-muted-foreground">Sin intentos todavía</span>;
+    return <span className="bee-micro">Sin intentos todavía</span>;
   }
   return status === "success" ? (
     <span className="inline-flex items-center gap-1 text-[11px] text-[var(--success)]">
@@ -134,7 +134,7 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
           <code className="mt-2 block break-all rounded-[var(--radius-md)] bg-[var(--color-card)] px-3 py-2 text-xs">
             {justCreated.secret}
           </code>
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 bee-micro">
             BEE firma cada envío con este secreto (header <code>X-BEE-Signature</code>) para que tu sistema
             pueda verificar que el evento realmente vino de BEE.
           </p>
@@ -177,19 +177,19 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
                     {w.event_types.map((t) => (
                       <span
                         key={t}
-                        className="rounded-[var(--radius-sm)] bg-[var(--color-card)] px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                        className="rounded-[var(--radius-sm)] bg-[var(--color-card)] px-1.5 py-0.5 bee-micro"
                       >
                         {EVENT_TYPE_LABELS[t] ?? t}
                       </span>
                     ))}
                   </div>
-                  <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                  <p className="mt-1 font-mono bee-micro">
                     secreto {w.secret_preview}… · <StatusBadge status={w.last_status} />
                   </p>
                 </div>
                 {canManage && (
                   <div className="flex shrink-0 items-center gap-2">
-                    <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <label className="flex items-center gap-1.5 bee-micro">
                       <input
                         type="checkbox"
                         checked={w.is_active}

@@ -86,7 +86,7 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
                     className="min-w-0 flex-1 truncate text-left text-xs"
                   >
                     {v.name}
-                    {v.is_shared && <span className="ml-1.5 text-[10px] text-muted-foreground">· equipo</span>}
+                    {v.is_shared && <span className="ml-1.5 bee-micro">· equipo</span>}
                   </button>
                   <button
                     type="button"
@@ -112,7 +112,7 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
                   autoFocus
                   className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
                 />
-                <label className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <label className="flex items-center gap-1.5 bee-micro">
                   <input
                     type="checkbox"
                     checked={shared}

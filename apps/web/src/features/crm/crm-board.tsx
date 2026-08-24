@@ -67,11 +67,11 @@ function CrmCard({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Badge variant={scoreVariant(opportunity.score)} className="font-mono text-[10px]">
+        <Badge variant={scoreVariant(opportunity.score)} className="font-mono text-[11px]">
           {Math.round(opportunity.score)}
         </Badge>
         {isHot && (
-          <span className="inline-flex items-center gap-1 text-[10px] text-[var(--color-chart-5)]">
+          <span className="inline-flex items-center gap-1 text-[11px] text-[var(--color-chart-5)]">
             <Flame className="size-3" />
             Caliente
           </span>
@@ -87,7 +87,7 @@ function CrmCard({
         </p>
       )}
       {typeof channel === "string" && channel && (
-        <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">vía {channel}</p>
+        <p className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">vía {channel}</p>
       )}
     </div>
   );
@@ -118,7 +118,7 @@ function CrmColumn({
     <div className="flex w-[min(100%,280px)] shrink-0 flex-col">
       <div className="mb-3 flex items-baseline justify-between px-1">
         <h3 className="bee-eyebrow">{label}</h3>
-        <span className="font-mono text-[10px] text-muted-foreground">{cards.length}</span>
+        <span className="font-mono bee-micro">{cards.length}</span>
       </div>
       <div
         onDragOver={(e) => {
@@ -139,8 +139,8 @@ function CrmColumn({
         {cards.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-2 py-8 text-center">
             <Inbox className="size-4 text-muted-foreground" />
-            <p className="text-[11px] text-muted-foreground">Sin oportunidades aquí</p>
-            <p className="text-[10px] text-muted-foreground">Arrastra una tarjeta para moverla</p>
+            <p className="bee-micro">Sin oportunidades aquí</p>
+            <p className="bee-micro">Arrastra una tarjeta para moverla</p>
           </div>
         ) : (
           cards.map((opp) => (
@@ -251,12 +251,12 @@ export function CrmBoard() {
         <div className="flex w-[min(100%,280px)] shrink-0 flex-col">
           <div className="mb-3 flex items-baseline justify-between px-1">
             <h3 className="bee-eyebrow">Cerradas</h3>
-            <span className="font-mono text-[10px] text-muted-foreground">{closed.length}</span>
+            <span className="font-mono bee-micro">{closed.length}</span>
           </div>
           <div className="flex min-h-[220px] flex-1 flex-col gap-2.5 rounded-[var(--radius-lg)] bg-[var(--color-block-muted)] p-2.5">
             {closed.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-2 py-8 text-center">
-                <p className="text-[11px] text-muted-foreground">Nada cerrado todavía</p>
+                <p className="bee-micro">Nada cerrado todavía</p>
               </div>
             ) : (
               closed.map((opp) => (
@@ -274,7 +274,7 @@ export function CrmBoard() {
                   </p>
                   <Badge
                     variant={opp.status === "won" ? "success" : "secondary"}
-                    className="mt-2 text-[10px]"
+                    className="mt-2 text-[11px]"
                   >
                     {opp.status === "won" ? "Ganada" : opp.status === "lost" ? "Perdida" : "Descartada"}
                   </Badge>

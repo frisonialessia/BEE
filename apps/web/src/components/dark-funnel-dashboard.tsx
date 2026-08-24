@@ -192,9 +192,9 @@ export function DarkFunnelDashboard() {
             { label: "Etapa de decisión", value: summary.decision_stage_count, accent: "var(--color-chart-3)" },
             { label: "Señales de hoy", value: summary.total_signals_today, accent: "var(--color-chart-4)" },
           ].map(({ label, value, accent }) => (
-            <div key={label} className="rounded-lg border border-border bg-[var(--color-card)] p-3 text-center">
-              <p className="text-2xl font-bold" style={{ color: accent }}>{value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+            <div key={label} className="bee-bento p-3 text-center">
+              <p className="bee-stat__val" style={{ color: accent }}>{value}</p>
+              <p className="bee-stat__lbl">{label}</p>
             </div>
           ))}
         </div>

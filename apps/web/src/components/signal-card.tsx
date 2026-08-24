@@ -33,7 +33,7 @@ export function SignalCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline">{signalTypeLabels[signal.signal_type]}</Badge>
-            <span className="text-[10px] text-muted-foreground">
+            <span className="bee-micro">
               {timeAgo(signal.detected_at)} · {signal.source}
             </span>
           </div>
@@ -50,7 +50,7 @@ export function SignalCard({
               {tags.slice(0, 4).map((tag) => (
                 <span
                   key={tag}
-                  className="border border-border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                  className="border border-border bg-background px-1.5 py-0.5 bee-micro"
                   style={{ borderRadius: "var(--radius-sm)" }}
                 >
                   {tag}
@@ -63,7 +63,7 @@ export function SignalCard({
         <div className="flex shrink-0 flex-col items-end gap-1">
           <Badge variant={scoreVariant(signal.score)}>{Math.round(signal.score)}</Badge>
           {primary && (
-            <span className="text-[10px] text-muted-foreground">{primary}</span>
+            <span className="bee-micro">{primary}</span>
           )}
         </div>
       </div>

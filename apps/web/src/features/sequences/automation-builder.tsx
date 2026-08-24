@@ -53,7 +53,7 @@ function ChannelStatusBadges() {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {statuses.map((s) => (
-        <Badge key={s.channel} variant={s.mock ? "outline" : "success"} className="text-[10px]">
+        <Badge key={s.channel} variant={s.mock ? "outline" : "success"} className="text-[11px]">
           {s.channel}: {s.mock ? "modo simulado" : "conectado"}
         </Badge>
       ))}
@@ -225,7 +225,7 @@ function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onN
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="truncate text-xs font-semibold">{seq.name}</p>
-                <Badge variant={seq.status === "active" ? "success" : "outline"} className="text-[10px]">
+                <Badge variant={seq.status === "active" ? "success" : "outline"} className="text-[11px]">
                   {seq.status}
                 </Badge>
               </div>

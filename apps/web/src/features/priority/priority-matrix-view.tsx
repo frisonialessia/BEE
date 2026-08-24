@@ -144,11 +144,11 @@ export function PriorityMatrixView() {
                   <div key={q} className="flex flex-col">
                     <div className="mb-2 px-1">
                       <h3 className="bee-eyebrow">{QUADRANT_LABELS[q]}</h3>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">{QUADRANT_HINTS[q]}</p>
+                      <p className="mt-0.5 bee-micro">{QUADRANT_HINTS[q]}</p>
                     </div>
                     <div className="flex min-h-[100px] flex-col gap-2 rounded-[var(--radius-lg)] bg-[var(--color-primary)]/20 p-2.5">
                       {byQuadrant[q].length === 0 ? (
-                        <p className="px-2 py-6 text-center text-[11px] text-muted-foreground">Vacío</p>
+                        <p className="px-2 py-6 text-center bee-micro">Vacío</p>
                       ) : (
                         byQuadrant[q].map((p) => (
                           <Link
@@ -157,7 +157,7 @@ export function PriorityMatrixView() {
                             className="bee-kanban-card block"
                           >
                             <p className="truncate text-sm font-medium">{p.company.name}</p>
-                            <p className="mt-1 text-[10px] text-muted-foreground">
+                            <p className="mt-1 bee-micro">
                               Fit {p.fit} · Intención {Math.round(p.intent)}
                             </p>
                           </Link>

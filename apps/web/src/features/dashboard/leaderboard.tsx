@@ -67,7 +67,7 @@ export function Leaderboard({
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium leading-tight">{row.user.full_name}</p>
-                <p className="text-[11px] text-muted-foreground">{row.user.role}</p>
+                <p className="bee-micro">{row.user.role}</p>
               </div>
               <span className="shrink-0 text-sm font-bold tabular-nums">{row.won}</span>
             </li>

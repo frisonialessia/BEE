@@ -31,7 +31,7 @@ function AlertRow({ alert }: { alert: AnomalyAlert }) {
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <p className="truncate text-sm font-medium tracking-tight">{alert.title}</p>
-          <span className="shrink-0 text-[11px] text-muted-foreground">
+          <span className="shrink-0 bee-micro">
             {SEVERITY_LABEL[alert.severity]}
           </span>
         </div>

@@ -62,7 +62,7 @@ export function NotificationBell() {
       >
         <Bell className="size-4 stroke-[1.5]" />
         {unreadCount > 0 && (
-          <span className="absolute right-1 top-1 flex size-4 items-center justify-center rounded-full bg-[var(--color-chart-2)] text-[9px] font-bold text-white">
+          <span className="absolute right-1 top-1 flex size-4 items-center justify-center rounded-full bg-[var(--color-chart-2)] text-[11px] font-bold text-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -95,10 +95,10 @@ export function NotificationBell() {
                       <Icon className="mt-0.5 size-4 shrink-0" style={{ color: KIND_COLOR[n.kind] }} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-medium">{n.title}</p>
-                        <p className="mt-0.5 line-clamp-2 text-[11px] text-muted-foreground">
+                        <p className="mt-0.5 line-clamp-2 bee-micro">
                           {n.description}
                         </p>
-                        <p className="mt-1 text-[10px] text-muted-foreground">{timeAgo(n.timestamp)}</p>
+                        <p className="mt-1 bee-micro">{timeAgo(n.timestamp)}</p>
                       </div>
                     </Link>
                   </li>

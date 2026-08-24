@@ -22,7 +22,7 @@ export function MeddicCorrelationChart({ stats }: { stats: MeddicBucketStat[] })
         const pct = (total / maxTotal) * 100;
         return (
           <div key={s.bucketLabel} className="flex flex-1 flex-col items-center gap-1.5">
-            <p className="h-4 text-[10px] font-medium text-muted-foreground">
+            <p className="h-4 text-[11px] font-medium text-muted-foreground">
               {s.winRate !== null ? `${Math.round(s.winRate * 100)}%` : "—"}
             </p>
             <div
@@ -34,7 +34,7 @@ export function MeddicCorrelationChart({ stats }: { stats: MeddicBucketStat[] })
                 style={{ height: `${Math.max(pct, total > 0 ? 4 : 0)}%` }}
               />
             </div>
-            <p className="text-[10px] font-medium text-muted-foreground">{s.bucketLabel}</p>
+            <p className="text-[11px] font-medium text-muted-foreground">{s.bucketLabel}</p>
           </div>
         );
       })}

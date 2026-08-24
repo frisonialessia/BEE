@@ -50,7 +50,7 @@ function HiveTooltip({
 
   return (
     <div
-      className="bee-hex-tooltip pointer-events-none absolute z-20 w-56 rounded-2xl bg-[var(--color-card)] p-4 shadow-[var(--bee-shadow)]"
+      className="bee-hex-tooltip pointer-events-none absolute z-20 w-56 rounded-lg p-4"
       style={{
         left: Math.min(Math.max(x + 12, 8), containerWidth - 240),
         top: Math.max(y - 8, 8),
@@ -63,8 +63,8 @@ function HiveTooltip({
       <p className="mt-1.5 text-sm font-light leading-snug">
         {lead.company_name ?? lead.company_domain}
       </p>
-      <p className="text-[11px] text-muted-foreground">{lead.company_domain}</p>
-      <div className="mt-2 flex flex-wrap gap-1.5 text-[10px]">
+      <p className="bee-micro">{lead.company_domain}</p>
+      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
         <span className="rounded-lg bg-muted px-2 py-0.5">
           {STAGE_LABELS[lead.buying_stage] ?? lead.buying_stage}
         </span>
@@ -75,12 +75,12 @@ function HiveTooltip({
         )}
       </div>
       {lead.top_intent_keywords.length > 0 && (
-        <p className="mt-2 line-clamp-2 text-[10px] text-muted-foreground">
+        <p className="mt-2 line-clamp-2 bee-micro">
           {lead.top_intent_keywords.slice(0, 3).join(" · ")}
         </p>
       )}
       {extra > 0 && (
-        <p className="mt-1.5 text-[10px] text-muted-foreground">+{extra} más en esta celda</p>
+        <p className="mt-1.5 bee-micro">+{extra} más en esta celda</p>
       )}
     </div>
   );
@@ -283,7 +283,7 @@ export function SignalHexMap({
             Ver más
             <ArrowUpRight className="size-3" />
           </Link>
-          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-2 bee-micro">
             <span>Frío</span>
             <div
               className="h-2 w-24 rounded-full"

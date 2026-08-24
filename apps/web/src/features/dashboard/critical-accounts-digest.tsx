@@ -51,7 +51,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
           </p>
         </div>
         {battlecard.hot_lead && (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-chart-5)]/20 px-2 py-0.5 text-[10px] font-medium text-[var(--color-chart-5)]">
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-chart-5)]/20 px-2 py-0.5 text-[11px] font-medium text-[var(--color-chart-5)]">
             <Zap className="size-2.5" />
             caliente
           </span>
@@ -59,7 +59,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
       </div>
 
       <div>
-        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           Por qué importa
         </p>
         <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
@@ -68,11 +68,11 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
       </div>
 
       <div>
-        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           Ángulo recomendado
         </p>
         <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed">{battlecard.strategy.closing_argument}</p>
-        <p className="mt-1 text-[10px] text-muted-foreground">
+        <p className="mt-1 bee-micro">
           {battlecard.strategy.playbook} vía {battlecard.strategy.channel}
         </p>
       </div>

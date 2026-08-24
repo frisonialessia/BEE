@@ -74,7 +74,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
           </div>
         </div>
         <span
-          className={`shrink-0 rounded-sm border border-border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${STATUS_STYLES[action.status] ?? "bg-background"}`}
+          className={`shrink-0 rounded-sm border border-border px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide ${STATUS_STYLES[action.status] ?? "bg-background"}`}
         >
           {statusLabel}
         </span>
@@ -116,7 +116,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
       )}
 
       {action.approved_by && (
-        <p className="text-[10px] text-muted-foreground">
+        <p className="bee-micro">
           Aprobado por {action.approved_by}
           {action.approved_at &&
             ` · ${new Date(action.approved_at).toLocaleDateString()}`}
@@ -190,7 +190,7 @@ export function PendingActionsPanel() {
             style={{ color: CHART_PALETTE[4] }}
           />
           <p className="text-xs text-muted-foreground">No hay acciones pendientes.</p>
-          <p className="mt-1 text-[10px] text-muted-foreground">
+          <p className="mt-1 bee-micro">
             Los artefactos de ejecución aparecerán aquí cuando BEE los genere.
           </p>
         </div>
@@ -207,7 +207,7 @@ export function PendingActionsPanel() {
         </div>
       )}
 
-      <p className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+      <p className="flex items-center gap-1.5 bee-micro">
         <span
           className="inline-block size-1.5"
           style={{ background: CHART_PALETTE[0] }}

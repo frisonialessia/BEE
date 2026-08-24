@@ -48,7 +48,7 @@ export function AccountMenu() {
           <div className="border-b border-border px-4 py-3">
             <p className="truncate text-sm font-semibold">{user.full_name}</p>
             <p className="truncate text-xs text-muted-foreground">{user.email}</p>
-            <p className="mt-1 text-[10px] uppercase tracking-wide text-muted-foreground">{user.role}</p>
+            <p className="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">{user.role}</p>
           </div>
           <Link
             href="/dashboard/team"
