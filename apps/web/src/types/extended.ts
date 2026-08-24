@@ -112,6 +112,8 @@ export interface ResourcePrediction {
 export interface OutcomeWithPrediction {
   opportunity_id: string;
   outcome: "won" | "lost";
+  loss_reason: string | null;
+  competitor: string | null;
   closed_at: string;
   message: string;
   resource_prediction: ResourcePrediction | null;

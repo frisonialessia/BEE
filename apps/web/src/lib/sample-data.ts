@@ -111,6 +111,9 @@ export const sampleOpportunities: Opportunity[] = [
     },
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    loss_reason: null,
+    competitor: null,
+    closed_at: null,
   },
   {
     id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
@@ -143,6 +146,9 @@ export const sampleOpportunities: Opportunity[] = [
     },
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
     updated_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+    loss_reason: null,
+    competitor: null,
+    closed_at: null,
   },
 ];
 

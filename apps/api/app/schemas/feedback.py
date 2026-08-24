@@ -28,18 +28,52 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+
+# Fixed, small set of loss categories — a picklist, not free text, so Win/Loss
+# Analysis can group and count reliably. "other" plus the free-text `notes`
+# field below cover anything this list doesn't anticipate; the set can grow
+# later (it's a plain string column, not a DB enum) without a migration.
+LossReason = Literal[
+    "price",
+    "budget",
+    "timing",
+    "competitor",
+    "no_decision",
+    "lost_champion",
+    "product_fit",
+    "no_response",
+    "other",
+]
 
 
 class OutcomeIn(BaseModel):
     """Request body for recording a sales outcome on an opportunity."""
 
     outcome: Literal["won", "lost"]
+    loss_reason: LossReason | None = Field(
+        default=None,
+        description="Structured loss category — only meaningful when outcome='lost'.",
+    )
+    competitor: str | None = Field(
+        default=None,
+        max_length=200,
+        description=(
+            "Competitor name — who ultimately won the deal (outcome='lost') or "
+            "was beaten (outcome='won'). Optional either way."
+        ),
+    )
     notes: str | None = Field(
         default=None,
         description="Optional post-mortem or deal notes.",
         max_length=2000,
     )
+
+    @model_validator(mode="after")
+    def _loss_reason_requires_lost(self) -> "OutcomeIn":
+        if self.loss_reason is not None and self.outcome != "lost":
+            raise ValueError("loss_reason only applies when outcome='lost'")
+        return self
 
 
 class SuccessPatternOut(BaseModel):
@@ -64,6 +98,8 @@ class OutcomeOut(BaseModel):
 
     opportunity_id: uuid.UUID
     outcome: str
+    loss_reason: str | None = None
+    competitor: str | None = None
     closed_at: datetime
     message: str = "Outcome recorded"
 

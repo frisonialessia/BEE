@@ -20,9 +20,10 @@ function monthKey(date: Date): string {
 /** Conversión por etapa en el tiempo: cuántas oportunidades se crearon,
  *  ganaron o perdieron cada mes, y la tasa de cierre resultante — en vez de
  *  solo la foto de "ahora mismo" que ya muestran el Resumen y Pronóstico.
- *  `updated_at` se usa como aproximación de la fecha de cierre (BEE no
- *  guarda un `closed_at` separado todavía) — razonable porque una vez que
- *  una oportunidad llega a won/lost no vuelve a cambiar. */
+ *  Usa `closed_at` (fecha real en que se registró el desenlace); para deals
+ *  cerrados antes de que ese campo existiera, cae de vuelta a `updated_at`
+ *  como aproximación — la migración ya rellenó `closed_at` para todo lo
+ *  histórico, así que esto solo importa para filas muy viejas sin backfill. */
 export function computeMonthlyTrends(
   opportunities: Opportunity[],
   today: Date,
@@ -41,7 +42,7 @@ export function computeMonthlyTrends(
     if (createdPoint) createdPoint.created += 1;
 
     if (o.status === "won" || o.status === "lost") {
-      const closedKey = monthKey(new Date(o.updated_at));
+      const closedKey = monthKey(new Date(o.closed_at ?? o.updated_at));
       const closedPoint = points.get(closedKey);
       if (closedPoint) {
         if (o.status === "won") closedPoint.won += 1;

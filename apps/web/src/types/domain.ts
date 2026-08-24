@@ -121,6 +121,10 @@ export interface Opportunity {
   qualification: Record<string, boolean>;
   created_at: string;
   updated_at: string;
+  // Win/Loss Analysis — null until PATCH /{id}/outcome is called.
+  loss_reason: LossReason | null;
+  competitor: string | null;
+  closed_at: string | null;
 }
 
 // ── SignalIngestResult ────────────────────────────────────────────────────────
@@ -231,14 +235,30 @@ export interface ArtifactBundle {
   context_snapshot: Record<string, unknown>;
 }
 
+// Fixed loss picklist — mirrors app.schemas.feedback.LossReason on the backend.
+export type LossReason =
+  | "price"
+  | "budget"
+  | "timing"
+  | "competitor"
+  | "no_decision"
+  | "lost_champion"
+  | "product_fit"
+  | "no_response"
+  | "other";
+
 export interface OutcomeIn {
   outcome: "won" | "lost";
+  loss_reason?: LossReason;
+  competitor?: string;
   notes?: string;
 }
 
 export interface OutcomeOut {
   opportunity_id: string;
   outcome: string;
+  loss_reason: string | null;
+  competitor: string | null;
   closed_at: string;
   message: string;
 }

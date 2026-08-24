@@ -10,7 +10,7 @@ timing, next best action) without further schema migrations.
 """
 
 import uuid
-from datetime import date
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import JSON, Column
@@ -79,6 +79,17 @@ class Opportunity(TimestampMixin, table=True):
     # evolve — e.g. swapping in BANT — without another migration. Missing
     # keys read as "not yet confirmed", never as "disqualified".
     qualification: dict[str, bool] = Field(default_factory=dict, sa_column=Column(JSON))
+
+    # ----- Outcome detail (Win/Loss Analysis) -----------------------------------
+    # Set once, by FeedbackLoopService.record_outcome, the moment status
+    # transitions to WON/LOST — never edited afterward (outcome recording is
+    # idempotent, see FeedbackLoopService). Kept on the opportunity itself
+    # (not only on StrategyOutcome) so the frontend can build Win/Loss
+    # breakdowns straight from the same bulk opportunity list it already
+    # fetches for Pronóstico/Tendencias, with no extra endpoint.
+    loss_reason: str | None = Field(default=None, max_length=64, index=True)
+    competitor: str | None = Field(default=None, max_length=200)
+    closed_at: datetime | None = Field(default=None)
 
     # ----- Relationships -------------------------------------------------------
     signal: "Signal" = Relationship(back_populates="opportunities")

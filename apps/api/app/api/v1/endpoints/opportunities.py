@@ -114,6 +114,10 @@ def list_opportunities(
             "qualification": item.qualification or {},
             "created_at": item.created_at.isoformat(),
             "updated_at": item.updated_at.isoformat(),
+            # Win/Loss Analysis — null until the outcome is recorded.
+            "loss_reason": item.loss_reason,
+            "competitor": item.competitor,
+            "closed_at": item.closed_at.isoformat() if item.closed_at else None,
         }
         for item in items
     ]
@@ -383,6 +387,8 @@ def record_outcome(
     return OutcomeWithPrediction(
         opportunity_id=str(outcome_out.opportunity_id),
         outcome=outcome_out.outcome,
+        loss_reason=outcome_out.loss_reason,
+        competitor=outcome_out.competitor,
         closed_at=outcome_out.closed_at.isoformat(),
         message=outcome_out.message,
         resource_prediction=prediction,

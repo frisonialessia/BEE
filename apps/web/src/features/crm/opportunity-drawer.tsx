@@ -8,6 +8,7 @@ import { DiscRadar } from "@/components/disc-radar";
 import { ExecutionArtifacts } from "@/components/execution-artifacts";
 import { QualificationPanel } from "@/components/forecast/qualification-panel";
 import { OpportunityCard } from "@/components/opportunity-card";
+import { RecordOutcomePanel } from "@/components/outcome/record-outcome-panel";
 import { OpportunityTimeline } from "@/components/timeline/opportunity-timeline";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -92,6 +93,8 @@ export function OpportunityDrawer() {
           )}
 
           {opportunity && <OpportunityCard opportunity={opportunity} />}
+
+          {opportunity && <RecordOutcomePanel key={opportunity.id} opportunity={opportunity} />}
 
           {opportunity && <QualificationPanel key={opportunity.id} opportunity={opportunity} />}
 

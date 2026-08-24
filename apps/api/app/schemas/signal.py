@@ -117,6 +117,11 @@ class OpportunityOut(BaseModel):
     # (TimestampMixin) but never returned to clients.
     created_at: datetime
     updated_at: datetime
+    # Win/Loss Analysis — set once by FeedbackLoopService.record_outcome when
+    # status first transitions to WON/LOST. See app.models.opportunity.
+    loss_reason: str | None = None
+    competitor: str | None = None
+    closed_at: datetime | None = None
 
 
 class OpportunityUpdateIn(BaseModel):

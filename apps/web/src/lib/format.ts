@@ -1,5 +1,5 @@
 import type { OpportunityStatus, SignalType, TimingUrgency } from "@/lib/types";
-import type { LeadStatus } from "@/types/domain";
+import type { LeadStatus, LossReason } from "@/types/domain";
 
 export const signalTypeLabels: Record<SignalType, string> = {
   funding_round: "Funding round",
@@ -43,6 +43,20 @@ export const leadStatusLabels: Record<LeadStatus, string> = {
   engaged: "En conversación",
   converted: "Convertido",
   disqualified: "Descartado",
+};
+
+/** Etiquetas en español para el picklist fijo de razones de pérdida
+ *  (app.schemas.feedback.LossReason en el backend). */
+export const lossReasonLabels: Record<LossReason, string> = {
+  price: "Precio",
+  budget: "Sin presupuesto",
+  timing: "Momento no oportuno",
+  competitor: "Eligieron a un competidor",
+  no_decision: "No hubo decisión (statu quo)",
+  lost_champion: "Se perdió al champion interno",
+  product_fit: "No encajó el producto",
+  no_response: "Dejó de responder",
+  other: "Otra razón",
 };
 
 /** Etiquetas en español para las banderas que arma DataValidator en el backend. */

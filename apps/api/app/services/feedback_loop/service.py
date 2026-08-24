@@ -93,6 +93,8 @@ class FeedbackLoopService:
             return OutcomeOut(
                 opportunity_id=opp_id,
                 outcome=existing.outcome,
+                loss_reason=opportunity.loss_reason,
+                competitor=opportunity.competitor,
                 closed_at=existing.closed_at,
                 message="Outcome already recorded (idempotent)",
             )
@@ -101,9 +103,12 @@ class FeedbackLoopService:
             OpportunityStatus.WON if body.outcome == "won" else OpportunityStatus.LOST
         )
         opportunity.status = new_status
-        self.session.add(opportunity)
 
         now = datetime.now(UTC)
+        opportunity.loss_reason = body.loss_reason
+        opportunity.competitor = body.competitor
+        opportunity.closed_at = now
+        self.session.add(opportunity)
         created = opportunity.created_at
         if created.tzinfo is None:
             created = created.replace(tzinfo=UTC)
@@ -165,6 +170,8 @@ class FeedbackLoopService:
         return OutcomeOut(
             opportunity_id=opp_id,
             outcome=body.outcome,
+            loss_reason=body.loss_reason,
+            competitor=body.competitor,
             closed_at=now,
         )
 

@@ -46,6 +46,8 @@ class OutcomeWithPrediction(BaseModel):
 
     opportunity_id: str
     outcome: str
+    loss_reason: str | None = None
+    competitor: str | None = None
     closed_at: str
     message: str = "Outcome recorded"
     resource_prediction: ResourcePrediction | None = None
