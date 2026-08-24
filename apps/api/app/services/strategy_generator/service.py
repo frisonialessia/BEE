@@ -118,6 +118,7 @@ class StrategyGeneratorService:
                 entity_type="opportunity",
                 payload={
                     "opportunity_id": str(opportunity.id),
+                    "organization_id": str(opportunity.organization_id) if opportunity.organization_id else None,
                     "company_name": ctx.company_name,
                     "score": opportunity.score,
                     "signal_type": ctx.signal_type.value,

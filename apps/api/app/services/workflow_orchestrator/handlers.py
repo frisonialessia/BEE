@@ -20,6 +20,12 @@ Built-in handlers
 * ``ServiceDeliveryHandler`` — fires on ``opportunity.won`` (creates delivery ticket)
 * ``BillingHandler`` — fires on ``opportunity.won`` (triggers invoice)
 * ``ReadyToActionNotifyHandler`` — fires on ``opportunity.ready_to_action`` (Slack notify)
+* ``OutboundWebhookHandler`` — fires on any event type in
+  ``AVAILABLE_EVENT_TYPES``, fanning out to every org-configured
+  ``OutboundWebhook`` that subscribed to it. Unlike the handlers above (one
+  hardcoded, env-var-only URL each), this is the user-facing, multi-tenant
+  equivalent: any org registers its own destination(s) from the dashboard —
+  see app.api.v1.endpoints.outbound_webhooks.
 """
 
 from __future__ import annotations
@@ -27,9 +33,10 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import uuid
 from datetime import UTC, datetime
 
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.core.logging import get_logger
 from app.models.workflow_task import WorkflowTask, WorkflowTaskStatus
@@ -224,6 +231,87 @@ class BillingHandler(WorkflowHandler):
             session, event, self.name, self.version, status, payload,
             result=result,
             error_message=result.get("error") if not ok else None,
+        )
+
+
+@register_workflow_handler
+class OutboundWebhookHandler(WorkflowHandler):
+    """Fans an event out to every org-configured OutboundWebhook that wants it.
+
+    Unlike every other handler in this module (one hardcoded, env-var-only
+    URL), this is genuinely multi-tenant: it looks up ``OutboundWebhook``
+    rows for the event's organization and POSTs to each active one whose
+    ``event_types`` includes this event — no partner API credentials
+    required on either side, since these all just need a plain HTTPS
+    endpoint (Zapier, Make, a Slack incoming webhook, or the org's own
+    system).
+
+    Requires ``organization_id`` in the event payload (not on ``BeeEvent``
+    itself — every publish call site already resolves it from the entity it
+    fires on, e.g. the opportunity being closed) — without it there's no
+    tenant to scope the lookup to, so this runs in mock mode.
+    """
+
+    name = "outbound_webhook"
+    version = "1.0.0"
+    # Kept in sync by hand with app.schemas.outbound_webhook.AVAILABLE_EVENT_TYPES
+    # (importing it here would be fine too, but this list IS the contract the
+    # registry decorator reads at import time, so it stays a literal here).
+    event_types = ["opportunity.won", "opportunity.lost", "opportunity.ready_to_action"]
+
+    def handle(self, event: BeeEvent, session: Session) -> WorkflowTask:
+        from app.models.outbound_webhook import OutboundWebhook
+
+        payload = {
+            "event_type": event.event_type,
+            "opportunity_id": str(event.entity_id) if event.entity_id else None,
+            "timestamp": datetime.now(UTC).isoformat(),
+            **event.payload,
+        }
+
+        org_id_raw = event.payload.get("organization_id")
+        org_id = uuid.UUID(org_id_raw) if org_id_raw else None
+        if org_id is None:
+            return _create_task(
+                session, event, self.name, self.version,
+                WorkflowTaskStatus.MOCK_DISPATCHED, payload,
+                result={"mock": True, "note": "No organization_id on this event — nothing to look up."},
+                mock=True,
+            )
+
+        webhooks = session.exec(
+            select(OutboundWebhook).where(
+                OutboundWebhook.organization_id == org_id,
+                OutboundWebhook.is_active == True,  # noqa: E712
+            )
+        ).all()
+        matching = [w for w in webhooks if event.event_type in (w.event_types or [])]
+
+        if not matching:
+            return _create_task(
+                session, event, self.name, self.version,
+                WorkflowTaskStatus.MOCK_DISPATCHED, payload,
+                result={"mock": True, "note": "No active outbound webhook subscribed to this event type."},
+                mock=True,
+            )
+
+        deliveries = []
+        any_ok = False
+        for webhook in matching:
+            ok, result = _post_webhook(webhook.url, payload, webhook.secret)
+            any_ok = any_ok or ok
+            webhook.last_triggered_at = datetime.now(UTC)
+            webhook.last_status = "success" if ok else "failed"
+            webhook.failure_count = 0 if ok else webhook.failure_count + 1
+            session.add(webhook)
+            deliveries.append({"webhook_id": str(webhook.id), "ok": ok, **result})
+        session.flush()
+
+        status = WorkflowTaskStatus.COMPLETED if any_ok else WorkflowTaskStatus.FAILED
+        return _create_task(
+            session, event, self.name, self.version, status, payload,
+            result={"deliveries": deliveries},
+            error_message=None if any_ok else "All subscribed webhooks failed to deliver.",
         )
 
 

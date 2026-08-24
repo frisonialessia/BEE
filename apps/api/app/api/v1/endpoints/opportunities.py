@@ -343,41 +343,47 @@ def record_outcome(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
     # ── Step 3: Publish event to WorkflowOrchestrator ─────────────────────────
+    # Fires for both won and lost — CRMUpdateHandler and OutboundWebhookHandler
+    # both already subscribe to "opportunity.lost" (see
+    # app.services.workflow_orchestrator.handlers), but until now nothing ever
+    # published it, so a lost deal silently reached no integration at all.
     workflow_tasks_dispatched = 0
-    if body.outcome == "won":
-        try:
-            # Resolve company name for the event payload
-            repo2 = OpportunityRepository(session)
-            opp2 = repo2.get(opportunity_id)
-            company_name = None
-            if opp2 and opp2.company_id:
-                from app.models.company import Company
-                co = session.get(Company, opp2.company_id)
-                company_name = co.name if co else None
+    try:
+        # Resolve company name for the event payload
+        repo2 = OpportunityRepository(session)
+        opp2 = repo2.get(opportunity_id)
+        company_name = None
+        if opp2 and opp2.company_id:
+            from app.models.company import Company
+            co = session.get(Company, opp2.company_id)
+            company_name = co.name if co else None
 
-            event = BeeEvent(
-                event_type="opportunity.won",
-                entity_id=opportunity_id,
-                entity_type="opportunity",
-                payload={
-                    "opportunity_id": str(opportunity_id),
-                    "company_name": company_name,
-                    "score": opp2.score if opp2 else 0,
-                    "notes": body.notes,
-                },
-            )
-            orchestrator = WorkflowOrchestrator(session)
-            tasks = orchestrator.publish(event)
-            session.commit()
-            workflow_tasks_dispatched = len(tasks)
-        except Exception:  # noqa: BLE001
-            import logging
-            # A failed commit leaves the session invalidated — anything reusing
-            # it afterwards (the AnomalyDetector check right below) would raise
-            # too and silently no-op. Roll back so the rest of the request can
-            # still use this session normally.
-            session.rollback()
-            logging.getLogger(__name__).exception("WorkflowOrchestrator dispatch failed for opp %s", opportunity_id)
+        event = BeeEvent(
+            event_type=f"opportunity.{body.outcome}",
+            entity_id=opportunity_id,
+            entity_type="opportunity",
+            payload={
+                "opportunity_id": str(opportunity_id),
+                "organization_id": str(opp2.organization_id) if opp2 and opp2.organization_id else None,
+                "company_name": company_name,
+                "score": opp2.score if opp2 else 0,
+                "loss_reason": body.loss_reason,
+                "competitor": body.competitor,
+                "notes": body.notes,
+            },
+        )
+        orchestrator = WorkflowOrchestrator(session)
+        tasks = orchestrator.publish(event)
+        session.commit()
+        workflow_tasks_dispatched = len(tasks)
+    except Exception:  # noqa: BLE001
+        import logging
+        # A failed commit leaves the session invalidated — anything reusing
+        # it afterwards (the AnomalyDetector check right below) would raise
+        # too and silently no-op. Roll back so the rest of the request can
+        # still use this session normally.
+        session.rollback()
+        logging.getLogger(__name__).exception("WorkflowOrchestrator dispatch failed for opp %s", opportunity_id)
 
     # ── Step 4: Trigger AnomalyDetector after every outcome ───────────────────
     # Run automatically (non-blocking) so the CEO is alerted if this outcome

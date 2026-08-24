@@ -72,6 +72,11 @@ export const queryKeys = {
     list: (opportunityId?: string) => [...queryKeys.tasks.all, "list", opportunityId ?? "all"] as const,
     overdue: () => [...queryKeys.tasks.all, "overdue"] as const,
   },
+  outboundWebhooks: {
+    all: ["outbound-webhooks"] as const,
+    list: () => [...queryKeys.outboundWebhooks.all, "list"] as const,
+    eventTypes: () => [...queryKeys.outboundWebhooks.all, "event-types"] as const,
+  },
   control: {
     all: ["control"] as const,
     systemHealth: () => [...queryKeys.control.all, "system-health"] as const,
