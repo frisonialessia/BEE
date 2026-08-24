@@ -30,6 +30,7 @@ from app.models.market_insight import MarketInsight
 from app.models.message_template import MessageTemplate
 from app.models.network import NetworkConnection
 from app.models.opportunity import Opportunity
+from app.models.opportunity_task import OpportunityTask
 from app.models.organization import Organization
 from app.models.organization_api_key import OrganizationApiKey
 from app.models.pending_action import PendingAction
@@ -52,6 +53,7 @@ __all__ = [
     "Quota",
     "Signal",
     "Opportunity",
+    "OpportunityTask",
     "StrategyOutcome",
     "TacticVariant",
     "VariantOutcome",

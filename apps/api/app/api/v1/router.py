@@ -25,6 +25,7 @@ from app.api.v1.endpoints import (
     leads,
     network,
     opportunities,
+    opportunity_tasks,
     organizations,
     orchestrator,
     psychographic,
@@ -48,6 +49,7 @@ api_router.include_router(signals.router)
 api_router.include_router(leads.router)
 api_router.include_router(companies.router)
 api_router.include_router(opportunities.router)
+api_router.include_router(opportunity_tasks.router)
 api_router.include_router(orchestrator.router)
 api_router.include_router(insights.router)
 api_router.include_router(analytics.router)

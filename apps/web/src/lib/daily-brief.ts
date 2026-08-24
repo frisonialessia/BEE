@@ -7,7 +7,7 @@ import type { Quota } from "@/lib/api/quotas";
 import type { CompanyDuplicateGroup } from "@/lib/api/companies";
 import type { LeadDuplicateGroup } from "@/lib/api/leads";
 import type { UserOut } from "@/types/auth";
-import type { Company, Lead, Opportunity } from "@/types/domain";
+import type { Company, Lead, Opportunity, OpportunityTask } from "@/types/domain";
 
 export type BriefTone = "hot" | "risk" | "info";
 
@@ -37,6 +37,7 @@ export function computeDailyBrief(input: {
   companyDuplicates: CompanyDuplicateGroup[];
   leadDuplicates: LeadDuplicateGroup[];
   anomalies: AnomalyAlert[];
+  overdueTasks: OpportunityTask[];
 }): BriefItem[] {
   const items: BriefItem[] = [];
 
@@ -54,6 +55,20 @@ export function computeDailyBrief(input: {
         .map((l) => l.full_name)
         .join(", "),
       href: "/dashboard/leads",
+    });
+  }
+
+  // ── Tareas vencidas ──────────────────────────────────────────────────────
+  if (input.overdueTasks.length > 0) {
+    items.push({
+      id: "overdue-tasks",
+      tone: "risk",
+      title: `${input.overdueTasks.length} tarea${input.overdueTasks.length === 1 ? "" : "s"} vencida${input.overdueTasks.length === 1 ? "" : "s"}`,
+      description: input.overdueTasks
+        .slice(0, 3)
+        .map((t) => t.title)
+        .join(", "),
+      href: "/dashboard/opportunities",
     });
   }
 

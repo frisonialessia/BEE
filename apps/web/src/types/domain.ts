@@ -263,6 +263,32 @@ export interface OutcomeOut {
   message: string;
 }
 
+// ── OpportunityTask ─────────────────────────────────────────────────────────
+
+export interface OpportunityTask {
+  id: string;
+  opportunity_id: string;
+  assigned_to_user_id: string | null;
+  title: string;
+  due_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+export interface OpportunityTaskCreateIn {
+  opportunity_id: string;
+  title: string;
+  due_at?: string | null;
+  assigned_to_user_id?: string | null;
+}
+
+export interface OpportunityTaskUpdateIn {
+  title?: string;
+  due_at?: string | null;
+  assigned_to_user_id?: string | null;
+  completed?: boolean;
+}
+
 // ── LeadOut ───────────────────────────────────────────────────────────────────
 
 // ── CompanyOut ────────────────────────────────────────────────────────────────

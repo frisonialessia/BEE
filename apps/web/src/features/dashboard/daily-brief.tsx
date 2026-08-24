@@ -10,6 +10,7 @@ import { useIcpCriteria } from "@/hooks/queries/use-icp";
 import { useOpenAnomalies } from "@/hooks/queries/use-anomalies";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useQuotas } from "@/hooks/queries/use-quotas";
+import { useOverdueTasks } from "@/hooks/queries/use-tasks";
 import { useUsers } from "@/hooks/queries/use-users";
 import { computeDailyBrief, type BriefTone } from "@/lib/daily-brief";
 
@@ -39,6 +40,7 @@ export function DailyBrief() {
   const { data: companyDupResult } = useCompanyDuplicates();
   const { data: leadDupResult } = useLeadDuplicates();
   const { data: anomaliesResult } = useOpenAnomalies();
+  const { data: overdueTasksResult } = useOverdueTasks();
 
   const items = computeDailyBrief({
     today: new Date(),
@@ -51,6 +53,7 @@ export function DailyBrief() {
     companyDuplicates: companyDupResult?.data ?? [],
     leadDuplicates: leadDupResult?.data ?? [],
     anomalies: anomaliesResult?.data ?? [],
+    overdueTasks: overdueTasksResult?.data ?? [],
   });
 
   return (

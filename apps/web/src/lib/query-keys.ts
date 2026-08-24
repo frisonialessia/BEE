@@ -67,6 +67,11 @@ export const queryKeys = {
     all: ["anomalies"] as const,
     open: () => [...queryKeys.anomalies.all, "open"] as const,
   },
+  tasks: {
+    all: ["tasks"] as const,
+    list: (opportunityId?: string) => [...queryKeys.tasks.all, "list", opportunityId ?? "all"] as const,
+    overdue: () => [...queryKeys.tasks.all, "overdue"] as const,
+  },
   control: {
     all: ["control"] as const,
     systemHealth: () => [...queryKeys.control.all, "system-health"] as const,

@@ -10,6 +10,7 @@ import { QualificationPanel } from "@/components/forecast/qualification-panel";
 import { OpportunityCard } from "@/components/opportunity-card";
 import { RecordOutcomePanel } from "@/components/outcome/record-outcome-panel";
 import { OpportunityTimeline } from "@/components/timeline/opportunity-timeline";
+import { TaskListPanel } from "@/components/tasks/task-list-panel";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
@@ -97,6 +98,8 @@ export function OpportunityDrawer() {
           {opportunity && <RecordOutcomePanel key={opportunity.id} opportunity={opportunity} />}
 
           {opportunity && <QualificationPanel key={opportunity.id} opportunity={opportunity} />}
+
+          {opportunity && <TaskListPanel key={opportunity.id} opportunityId={opportunity.id} />}
 
           {loadingBattlecard ? (
             <Skeleton className="h-64" />
