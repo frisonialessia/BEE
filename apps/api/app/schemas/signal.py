@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -136,6 +136,19 @@ class OpportunityUpdateIn(BaseModel):
     amount: float | None = None
     expected_close_date: date | None = None
     qualification: dict[str, bool] | None = None
+
+
+class OpportunityStageIn(BaseModel):
+    """Move an opportunity between pipeline stages — the CRM Kanban drag.
+
+    Deliberately restricted to the four non-terminal stages. WON/LOST/
+    DISMISSED carry business logic (loss reason, competitor, the feedback
+    loop, vector-store seeding — see ``FeedbackLoopService.record_outcome``)
+    that a plain drag-and-drop must never bypass; closing a deal stays a
+    dedicated action, not a Kanban column.
+    """
+
+    status: Literal["detected", "ready_to_action", "prioritized", "in_progress"]
 
 
 class SignalIngestResult(BaseModel):

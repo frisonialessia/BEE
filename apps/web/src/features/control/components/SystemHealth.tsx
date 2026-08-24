@@ -163,8 +163,10 @@ export function SystemHealth() {
     <section className="bee-surface flex h-full flex-col p-5" aria-label="System health">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="bee-eyebrow">Inteligencia</h2>
-          <p className="bee-kpi-sm mt-1">{live ? "Conectado" : "Sin conexión"}</p>
+          <p className="bee-eyebrow">Inteligencia</p>
+          <h2 className="mt-0.5 text-base font-semibold tracking-tight">
+            {live ? "Conectado" : "Sin conexión"}
+          </h2>
         </div>
         <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">

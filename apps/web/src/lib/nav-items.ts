@@ -3,6 +3,7 @@ import {
   Crosshair,
   Fingerprint,
   Flame,
+  KanbanSquare,
   LayoutDashboard,
   Lightbulb,
   Radio,
@@ -37,8 +38,9 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [{ href: "/dashboard", icon: LayoutDashboard, label: "Resumen", exact: true }],
   },
   {
-    label: "CRM",
+    label: "Cuentas",
     items: [
+      { href: "/dashboard/crm", icon: KanbanSquare, label: "CRM" },
       { href: "/dashboard/companies", icon: Building2, label: "Empresas" },
       { href: "/dashboard/leads", icon: Users, label: "Leads" },
       { href: "/dashboard/opportunities", icon: Target, label: "Oportunidades" },

@@ -14,7 +14,7 @@ const COLUMN_LABELS: Record<LeadColumnId, string> = {
   closed: "Cerradas",
 };
 
-// Mismo mapeo de color que las columnas del Kanban (PipelineBoard), para que
+// Mismo mapeo de color que las columnas del Kanban de Control (LeadWorkspace), para que
 // una etapa se vea igual en las dos vistas.
 const COLUMN_COLOR: Record<LeadColumnId, string> = {
   detected: "var(--color-chart-3)",

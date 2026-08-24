@@ -106,3 +106,22 @@ export async function updateOpportunity(
     body: JSON.stringify(body),
   });
 }
+
+export type CrmStage = "detected" | "ready_to_action" | "prioritized" | "in_progress";
+
+/** Mueve una oportunidad entre etapas del pipeline — el drag del Kanban del
+ *  CRM. Solo las 4 etapas abiertas; ganar/perder sigue siendo una acción
+ *  dedicada (`recordOutcome`), nunca una columna a la que se suelta una
+ *  tarjeta. El backend rechaza el move con un 422 (mensaje real, nunca
+ *  silencioso) si el battlecard no está completo para "Lista para actuar",
+ *  o si la oportunidad ya está cerrada. */
+export async function moveOpportunityStage(
+  opportunityId: string,
+  stage: CrmStage,
+): Promise<Opportunity> {
+  return apiFetch<Opportunity>(`/api/v1/opportunities/${opportunityId}/stage`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: stage }),
+  });
+}

@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
-import { PipelineBoard } from "@/features/opportunities/pipeline-board";
 import { PipelineFlow } from "@/features/opportunities/pipeline-flow";
 import { usePagination } from "@/hooks/use-pagination";
 import { useCompanies } from "@/hooks/queries/use-companies";
@@ -56,12 +55,13 @@ export function OpportunitiesDashboard() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Pipeline comercial</p>
+        <p className="bee-eyebrow">Battlecards y análisis</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="bee-display">Oportunidades</h1>
             <p className="bee-caption mt-1">
-              Oportunidades enriquecidas con pain point, argumento de cierre y ventana de timing
+              Battlecards enriquecidos con pain point, argumento de cierre y ventana de timing — el
+              pipeline arrastrable vive en CRM
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -93,9 +93,6 @@ export function OpportunitiesDashboard() {
           <TabsList className="border border-border bg-background">
             <TabsTrigger value="battlecards" className="rounded-sm">
               Battlecards ({battlecards.length})
-            </TabsTrigger>
-            <TabsTrigger value="pipeline" className="rounded-sm">
-              Pipeline ({opportunities.length})
             </TabsTrigger>
             <TabsTrigger value="flujo" className="rounded-sm">
               Flujo
@@ -140,16 +137,6 @@ export function OpportunitiesDashboard() {
                   itemLabel="battlecards"
                 />
               </>
-            )}
-          </TabsContent>
-
-          <TabsContent value="pipeline" className="mt-6">
-            {opportunities.length === 0 ? (
-              <div className="bee-bento bee-bento-pad py-12 text-center">
-                <p className="text-sm text-muted-foreground">Aún no hay oportunidades en el pipeline.</p>
-              </div>
-            ) : (
-              <PipelineBoard opportunities={opportunities} onOpen={openOpportunity} />
             )}
           </TabsContent>
 
