@@ -62,7 +62,11 @@
   --bee-text-kpi: clamp(1.75rem, 2.5vw, 2.25rem);
   --bee-text-kpi-sm: clamp(1.25rem, 2vw, 1.75rem);
   --bee-text-title: 0.6875rem;
-  --bee-text-caption: 0.8125rem;
+  /* Antes 0.8125rem (13px) — imperceptiblemente distinto de text-xs (12px),
+     el tamaño más usado en todo el sitio para texto secundario. Un tamaño
+     menos en el sistema; .bee-caption y .bee-metric-bar__label ahora
+     coinciden exactamente con text-xs en vez de flotar 1px aparte. */
+  --bee-text-caption: 0.75rem;
 
   --bee-gap-sm: 0.75rem;
   --bee-gap-md: 1rem;
@@ -275,7 +279,7 @@
   padding: 0 0.625rem;
   border-radius: var(--radius-md);
   color: var(--color-text-muted);
-  font-size: 0.8125rem;
+  font-size: var(--bee-text-caption);
   font-weight: 500;
   transition: background 120ms ease, color 120ms ease;
 }

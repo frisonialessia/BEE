@@ -16,8 +16,8 @@ function CorrectionLearningPanel() {
   const [profile, setProfile] = useState<StyleProfileOut | null>(null);
   const [result, setResult] = useState<CorrectionOut | null>(null);
   const [loading, setLoading] = useState(false);
-  const [original, setOriginal] = useState("Hope you're well! We are industry-leading in sales intelligence and wanted to reach out.");
-  const [edited, setEdited] = useState("Your CAC is 40% above your sector average. Here's how we close that gap in 60 days.");
+  const [original, setOriginal] = useState("¡Espero que estés bien! Somos líderes de la industria en inteligencia de ventas y queríamos contactarte.");
+  const [edited, setEdited] = useState("Tu CAC está 40% por encima del promedio de tu sector. Así cerramos esa brecha en 60 días.");
   const [artifactType, setArtifactType] = useState("email_draft");
 
   async function handleLoadProfile() {
@@ -40,13 +40,13 @@ function CorrectionLearningPanel() {
   return (
     <div className="space-y-4">
       <p className="text-xs text-muted-foreground">
-        Submit a corrected artifact and BEE will extract your writing style preferences automatically.
-        The AI will apply these rules to every future generation — no configuration needed.
+        Envía un artefacto corregido y BEE extraerá tus preferencias de estilo de escritura automáticamente.
+        La IA aplicará estas reglas en cada generación futura — sin necesidad de configuración.
       </p>
 
       <div className="grid gap-3">
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Artifact Type</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Tipo de artefacto</label>
           <select
             value={artifactType}
             onChange={(e) => setArtifactType(e.target.value)}
@@ -59,7 +59,7 @@ function CorrectionLearningPanel() {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Original (BEE&apos;s output)</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Original (salida de BEE)</label>
           <textarea
             value={original}
             onChange={(e) => setOriginal(e.target.value)}
@@ -70,7 +70,7 @@ function CorrectionLearningPanel() {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Edited (your version)</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">Editado (tu versión)</label>
           <textarea
             value={edited}
             onChange={(e) => setEdited(e.target.value)}
@@ -81,7 +81,7 @@ function CorrectionLearningPanel() {
         </div>
 
         <button onClick={handleSubmit} disabled={loading} className="bee-btn bee-btn--primary">
-          {loading ? "Learning..." : "Submit Correction"}
+          {loading ? "Aprendiendo..." : "Enviar corrección"}
         </button>
       </div>
 
@@ -91,17 +91,17 @@ function CorrectionLearningPanel() {
           style={{ borderColor: "var(--color-chart-6)", background: "color-mix(in srgb, var(--color-chart-6) 10%, var(--color-background))" }}
         >
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold" style={{ color: "var(--color-chart-6)" }}>Learning Result</span>
+            <span className="text-xs font-semibold" style={{ color: "var(--color-chart-6)" }}>Resultado del aprendizaje</span>
             <span
               className="text-xs px-2 py-0.5 rounded-sm"
               style={{ background: "color-mix(in srgb, var(--color-chart-6) 20%, var(--color-background))", color: "var(--color-chart-6)" }}
             >
-              v{result.profile_version} — {result.total_corrections} correction{result.total_corrections !== 1 ? "s" : ""}
+              v{result.profile_version} — {result.total_corrections} corrección{result.total_corrections !== 1 ? "es" : ""}
             </span>
           </div>
           {result.extracted_rules.length > 0 && (
             <div>
-              <p className="text-xs font-medium mb-1" style={{ color: "var(--color-chart-6)" }}>Rules learned from this edit:</p>
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--color-chart-6)" }}>Reglas aprendidas de esta edición:</p>
               <ul className="space-y-0.5">
                 {result.extracted_rules.map((r) => (
                   <li key={r} className="text-xs text-foreground flex items-center gap-1">
@@ -113,21 +113,21 @@ function CorrectionLearningPanel() {
             </div>
           )}
           <p className="text-xs text-muted-foreground">
-            Change ratio: {(result.change_ratio * 100).toFixed(0)}% · {result.authoritative_rules_count} authoritative rule{result.authoritative_rules_count !== 1 ? "s" : ""}
+            Ratio de cambio: {(result.change_ratio * 100).toFixed(0)}% · {result.authoritative_rules_count} regla{result.authoritative_rules_count !== 1 ? "s" : ""} autoritativa{result.authoritative_rules_count !== 1 ? "s" : ""}
           </p>
         </div>
       )}
 
       <button onClick={handleLoadProfile} className="text-xs text-muted-foreground hover:text-muted-foreground underline underline-offset-2">
-        View full style profile
+        Ver perfil de estilo completo
       </button>
 
       {profile && profile.total_corrections > 0 && (
         <div className="rounded-lg border border-border bg-[var(--color-primary)] p-3 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-foreground">Current Style Profile</span>
+            <span className="text-xs font-semibold text-foreground">Perfil de estilo actual</span>
             <span className="text-xs text-muted-foreground">
-              {profile.authoritative_rules_count} authoritative · {profile.total_corrections} corrections
+              {profile.authoritative_rules_count} autoritativas · {profile.total_corrections} correcciones
             </span>
           </div>
           {profile.style_summary ? (
@@ -135,7 +135,7 @@ function CorrectionLearningPanel() {
               {profile.style_summary}
             </pre>
           ) : (
-            <p className="text-xs text-muted-foreground">More corrections needed to build authoritative rules.</p>
+            <p className="text-xs text-muted-foreground">Se necesitan más correcciones para construir reglas autoritativas.</p>
           )}
         </div>
       )}
@@ -155,6 +155,13 @@ const SEVERITY_VAR: Record<string, string | null> = {
   low: null,
 };
 
+const SEVERITY_LABEL: Record<string, string> = {
+  critical: "crítica",
+  high: "alta",
+  medium: "media",
+  low: "baja",
+};
+
 function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAcknowledge: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false);
   const varColor = SEVERITY_VAR[alert.severity] ?? null;
@@ -171,12 +178,12 @@ function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAck
         <div className="flex-1">
           <p className="text-xs font-semibold leading-tight">{alert.title}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Rolling: {(alert.rolling_rate * 100).toFixed(1)}% vs baseline {(alert.baseline_rate * 100).toFixed(1)}%
+            Actual: {(alert.rolling_rate * 100).toFixed(1)}% vs. base {(alert.baseline_rate * 100).toFixed(1)}%
             {" "}({alert.deviation_pct.toFixed(1)}%)
           </p>
         </div>
         <span className="text-xs font-bold uppercase px-2 py-0.5 rounded-sm border" style={chipStyle}>
-          {alert.severity}
+          {SEVERITY_LABEL[alert.severity] ?? alert.severity}
         </span>
       </div>
 
@@ -185,12 +192,12 @@ function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAck
           onClick={() => onAcknowledge(alert.id)}
           className="text-xs px-3 py-1 rounded-sm border border-current hover:opacity-75 transition-opacity"
         >
-          Acknowledge
+          Confirmar
         </button>
       )}
 
       <button onClick={() => setExpanded(v => !v)} className="text-xs underline underline-offset-2 opacity-60">
-        {expanded ? "Hide" : "Details & actions"}
+        {expanded ? "Ocultar" : "Detalles y acciones"}
       </button>
 
       {expanded && (
@@ -234,19 +241,19 @@ function AnomalyAlertsPanel() {
   }
 
   async function handleAcknowledge(id: string) {
-    await acknowledgeAnomaly(id, "Reviewed via dashboard");
+    await acknowledgeAnomaly(id, "Revisado desde el panel");
     await load();
   }
 
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        Monitors rolling conversion rates against historical baselines across channels and sectors.
-        Anomalous drops trigger strategy alerts requiring CEO review before any change is made.
+        Monitorea la tasa de conversión reciente contra el histórico por canal y sector.
+        Las caídas anómalas disparan alertas de estrategia que requieren revisión del CEO antes de cualquier cambio.
       </p>
 
       <button onClick={handleCheck} disabled={checking} className="bee-btn bee-btn--primary">
-        {checking ? "Scanning…" : "Run Anomaly Scan"}
+        {checking ? "Escaneando…" : "Ejecutar escaneo de anomalías"}
       </button>
 
       {summary && (
@@ -259,8 +266,8 @@ function AnomalyAlertsPanel() {
         <div className="space-y-2">{[...Array(2)].map((_, i) => <div key={i} className="h-14 rounded-lg bg-[var(--color-primary)] animate-pulse" />)}</div>
       ) : alerts.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed border-border p-6 text-center">
-          <p className="text-sm text-muted-foreground">No open anomaly alerts.</p>
-          <p className="text-xs text-muted-foreground mt-1">Run a scan to check current conversion rate health.</p>
+          <p className="text-sm text-muted-foreground">No hay alertas de anomalías abiertas.</p>
+          <p className="text-xs text-muted-foreground mt-1">Ejecuta un escaneo para revisar la salud actual de conversión.</p>
         </div>
       ) : (
         <div className="space-y-2">

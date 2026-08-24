@@ -157,13 +157,13 @@ export function CommandPalette() {
       <button
         type="button"
         className="bee-drawer-overlay"
-        aria-label="Cerrar Command Palette"
+        aria-label="Cerrar paleta de comandos"
         onClick={() => setOpen(false)}
       />
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Command Palette"
+        aria-label="Paleta de comandos"
         className="bee-glass fixed left-1/2 top-24 z-[60] w-[min(560px,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-[var(--radius-lg)]"
       >
         <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">

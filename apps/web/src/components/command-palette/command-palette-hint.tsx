@@ -13,8 +13,8 @@ export function CommandPaletteHint() {
       type="button"
       onClick={() => setOpen(true)}
       className="hidden shrink-0 items-center gap-1 rounded-[var(--radius-sm)] border border-border px-1.5 py-1 bee-micro transition-colors hover:bg-[var(--color-primary)] hover:text-foreground sm:flex"
-      aria-label="Abrir Command Palette"
-      title="Command Palette"
+      aria-label="Abrir paleta de comandos"
+      title="Paleta de comandos"
     >
       <kbd className="font-sans">⌘</kbd>
       <kbd className="font-sans">K</kbd>

@@ -28,11 +28,11 @@ const CHANNEL_ICONS: Record<string, string> = {
 };
 
 const FRAGMENT_CATEGORIES = [
-  { value: "example_post", label: "Example Post" },
-  { value: "key_insight", label: "Key Insight" },
-  { value: "signature_phrase", label: "Signature Phrase" },
-  { value: "authority_content", label: "Authority Content" },
-  { value: "response_template", label: "Response Template" },
+  { value: "example_post", label: "Post de ejemplo" },
+  { value: "key_insight", label: "Insight clave" },
+  { value: "signature_phrase", label: "Frase distintiva" },
+  { value: "authority_content", label: "Contenido de autoridad" },
+  { value: "response_template", label: "Plantilla de respuesta" },
 ];
 
 export function BrandVoicePanel() {
@@ -46,9 +46,9 @@ export function BrandVoicePanel() {
   const [fragmentTags, setFragmentTags] = useState("");
   const [saving, setSaving] = useState(false);
   const [createName, setCreateName] = useState("");
-  const [createTone, setCreateTone] = useState("analytical, direct");
-  const [createTopics, setCreateTopics] = useState("B2B SaaS, AI in sales");
-  const [createCTA, setCreateCTA] = useState("Let's talk.");
+  const [createTone, setCreateTone] = useState("analítico, directo");
+  const [createTopics, setCreateTopics] = useState("B2B SaaS, IA en ventas");
+  const [createCTA, setCreateCTA] = useState("Hablemos.");
 
   useEffect(() => {
     async function load() {
@@ -109,19 +109,19 @@ export function BrandVoicePanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="bee-panel__title">Voice Brain</h3>
+          <h3 className="bee-panel__title">Cerebro de voz</h3>
           <p className="bee-panel__subtitle">
-            CEO personal brand profile — grounds all AI-generated content
+            Perfil de marca personal del CEO — fundamenta todo el contenido generado por IA
           </p>
         </div>
         {!profile && (
           <button onClick={() => setShowCreate(true)} className="bee-btn bee-btn--primary">
-            Setup Voice
+            Configurar voz
           </button>
         )}
         {profile && (
           <button onClick={() => setShowAddFragment(true)} className="bee-btn-ghost">
-            + Add Fragment
+            + Agregar fragmento
           </button>
         )}
       </div>
@@ -129,29 +129,29 @@ export function BrandVoicePanel() {
       {/* Create profile form */}
       {showCreate && (
         <div className="bee-inset space-y-3 p-4">
-          <p className="bee-eyebrow">Configure Voice Profile</p>
+          <p className="bee-eyebrow">Configurar perfil de voz</p>
           <input
             value={createName}
             onChange={(e) => setCreateName(e.target.value)}
-            placeholder="Your full name"
+            placeholder="Tu nombre completo"
             className="bee-input"
           />
           <input
             value={createTone}
             onChange={(e) => setCreateTone(e.target.value)}
-            placeholder="Tone descriptors (comma-separated)"
+            placeholder="Descriptores de tono (separados por coma)"
             className="bee-input"
           />
           <input
             value={createTopics}
             onChange={(e) => setCreateTopics(e.target.value)}
-            placeholder="Authority topics (comma-separated)"
+            placeholder="Temas de autoridad (separados por coma)"
             className="bee-input"
           />
           <input
             value={createCTA}
             onChange={(e) => setCreateCTA(e.target.value)}
-            placeholder="Preferred CTA (e.g. Let's talk.)"
+            placeholder="CTA preferido (ej. Hablemos.)"
             className="bee-input"
           />
           <div className="flex gap-2">
@@ -160,10 +160,10 @@ export function BrandVoicePanel() {
               disabled={saving || !createName}
               className="bee-btn bee-btn--primary"
             >
-              {saving ? "Saving..." : "Create Profile"}
+              {saving ? "Guardando..." : "Crear perfil"}
             </button>
             <button onClick={() => setShowCreate(false)} className="bee-btn">
-              Cancel
+              Cancelar
             </button>
           </div>
         </div>
@@ -196,7 +196,7 @@ export function BrandVoicePanel() {
           {/* Authority topics */}
           {profile.authority_topics.length > 0 && (
             <div>
-              <p className="bee-caption mb-1.5">Authority topics</p>
+              <p className="bee-caption mb-1.5">Temas de autoridad</p>
               <div className="flex flex-wrap gap-1.5">
                 {profile.authority_topics.map((t) => (
                   <Badge key={t} variant="warning">
@@ -217,7 +217,7 @@ export function BrandVoicePanel() {
       {/* Add fragment form */}
       {showAddFragment && profile && (
         <div className="bee-inset space-y-3 p-4">
-          <p className="bee-eyebrow">Add Brand Fragment</p>
+          <p className="bee-eyebrow">Agregar fragmento de marca</p>
           <select
             value={fragmentCategory}
             onChange={(e) => setFragmentCategory(e.target.value)}
@@ -230,14 +230,14 @@ export function BrandVoicePanel() {
           <textarea
             value={fragmentContent}
             onChange={(e) => setFragmentContent(e.target.value)}
-            placeholder="Paste an example post, key insight, or signature phrase..."
+            placeholder="Pega un post de ejemplo, insight clave o frase distintiva..."
             rows={4}
             className="bee-input resize-none"
           />
           <input
             value={fragmentTags}
             onChange={(e) => setFragmentTags(e.target.value)}
-            placeholder="Tags (comma-separated): funding, SaaS, leadership"
+            placeholder="Tags (separados por coma): financiación, SaaS, liderazgo"
             className="bee-input"
           />
           <div className="flex gap-2">
@@ -246,10 +246,10 @@ export function BrandVoicePanel() {
               disabled={saving || !fragmentContent}
               className="bee-btn bee-btn--primary"
             >
-              {saving ? "Adding..." : "Add Fragment"}
+              {saving ? "Agregando..." : "Agregar fragmento"}
             </button>
             <button onClick={() => setShowAddFragment(false)} className="bee-btn">
-              Cancel
+              Cancelar
             </button>
           </div>
         </div>
@@ -258,7 +258,7 @@ export function BrandVoicePanel() {
       {/* Channel status */}
       {channels.length > 0 && (
         <div>
-          <p className="bee-caption mb-2">Channel connections</p>
+          <p className="bee-caption mb-2">Conexiones de canal</p>
           <div className="grid grid-cols-3 gap-2">
             {channels.map((ch) => (
               <div
@@ -268,17 +268,17 @@ export function BrandVoicePanel() {
                 <p className="text-sm font-bold">{CHANNEL_ICONS[ch.channel] ?? ch.channel}</p>
                 <p className="bee-caption mt-0.5 capitalize">{ch.channel}</p>
                 <p className="bee-caption mt-1">
-                  {ch.mock ? "not connected" : "active"}
+                  {ch.mock ? "sin conectar" : "activo"}
                 </p>
                 {ch.tokens_remaining != null && (
-                  <p className="bee-caption mt-0.5">{ch.tokens_remaining} tokens left</p>
+                  <p className="bee-caption mt-0.5">{ch.tokens_remaining} tokens restantes</p>
                 )}
               </div>
             ))}
           </div>
           {channels.every((c) => c.mock) && (
             <p className="bee-caption mt-2">
-              All channels in mock mode. Add credentials in .env to go live.
+              Todos los canales están en modo simulado. Agrega credenciales en .env para activarlos.
             </p>
           )}
         </div>
@@ -286,7 +286,7 @@ export function BrandVoicePanel() {
 
       {!profile && !showCreate && (
         <p className="bee-caption">
-          No voice profile configured. Set one up to enable brand-grounded AI content generation.
+          No hay un perfil de voz configurado. Configura uno para habilitar la generación de contenido con IA fundamentada en tu marca.
         </p>
       )}
     </div>

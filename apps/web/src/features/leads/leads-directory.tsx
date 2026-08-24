@@ -172,7 +172,7 @@ export function LeadsDirectory() {
                 { key: "telefono", header: "Teléfono" },
                 { key: "linkedin", header: "LinkedIn" },
                 { key: "estado", header: "Estado" },
-                { key: "intent_score", header: "Intent score" },
+                { key: "intent_score", header: "Puntaje de intención" },
                 { key: "frescura_datos", header: "Frescura de datos (%)" },
                 { key: "creado", header: "Creado" },
               ]}
@@ -203,7 +203,7 @@ export function LeadsDirectory() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard label="Total de leads" value={leads.length} />
             <MetricCard
-              label="Intent score promedio"
+              label="Puntaje de intención promedio"
               value={avgScore}
               tone={avgScore >= 60 ? "default" : "muted"}
             />
@@ -335,7 +335,7 @@ export function LeadsDirectory() {
                   <th className="px-4 py-2.5 font-medium">Empresa</th>
                   <th className="px-4 py-2.5 font-medium">Cargo</th>
                   <th className="px-4 py-2.5 font-medium">Estado</th>
-                  <th className="px-4 py-2.5 font-medium">Intent score</th>
+                  <th className="px-4 py-2.5 font-medium">Puntaje de intención</th>
                   <th className="px-4 py-2.5 font-medium">Datos</th>
                   <th className="px-4 py-2.5 font-medium" />
                 </tr>
@@ -427,7 +427,7 @@ export function LeadsDirectory() {
           </div>
           {filtered.some((l) => l.company_id) && (
             <p className="bee-caption">
-              Tip: los leads todavía no tienen ficha propia — abre la empresa desde{" "}
+              Consejo: los leads todavía no tienen ficha propia — abre la empresa desde{" "}
               <Link href="/dashboard/companies" className="text-[var(--color-chart-4)] hover:underline">
                 Empresas
               </Link>{" "}
