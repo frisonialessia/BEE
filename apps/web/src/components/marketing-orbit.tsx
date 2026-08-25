@@ -3,42 +3,43 @@ import { Radio, Share2, Sparkles, TrendingUp } from "lucide-react";
 /**
  * MarketingOrbit — galería de tarjetas en arco (estilo coverflow) para el
  * hero público. Puramente CSS (rotate/translate por tarjeta, hover para
- * enderezar y elevar) — sin JS, sin librería de carrusel, así que no hay
- * estado que romper ni autoplay que pelee con el usuario. Cada tarjeta
- * representa un módulo real del producto (mismos 4 de la sección de
- * módulos más abajo), no un mockup separado inventado para la ocasión.
+ * enderezar y elevar) — sin JS, sin librería de carrusel.
+ *
+ * Cada tarjeta es una propuesta de valor del módulo — no una cifra de la
+ * app en vivo. Antes decían "247 señales esta semana" / "+18% vs.
+ * escenario base": números que parecían salidos de una cuenta real y que
+ * ningún visitante nuevo puede verificar. Un visitante que entra por
+ * primera vez no tiene 247 señales de nada — mostrarle eso rompe la
+ * confianza apenas la pisa. Esto describe lo que el módulo HACE, no lo
+ * que una cuenta activa acumuló.
  */
 
 const CARDS = [
   {
     icon: Radio,
+    headline: "Detecta cada señal de mercado apenas ocurre",
     label: "Motor de señales",
-    stat: "247",
-    statLabel: "señales esta semana",
     accent: "var(--color-chart-4)",
     tilt: "-rotate-[10deg] translate-y-3 sm:translate-y-5",
   },
   {
     icon: Sparkles,
+    headline: "Tu resumen ejecutivo, listo cada mañana",
     label: "Brief del día",
-    stat: "6",
-    statLabel: "cuentas prioritarias hoy",
     accent: "var(--color-chart-2)",
     tilt: "-rotate-[3deg] -translate-y-2",
   },
   {
     icon: TrendingUp,
+    headline: "Proyecta escenarios sobre intención de compra real",
     label: "Simulador de ingresos",
-    stat: "+18%",
-    statLabel: "vs. escenario base",
     accent: "var(--color-chart-5)",
     tilt: "rotate-[3deg] -translate-y-2",
   },
   {
     icon: Share2,
+    headline: "Secuencias que avanzan solas, con tu aprobación",
     label: "Automatización",
-    stat: "12",
-    statLabel: "secuencias activas",
     accent: "var(--color-chart-6)",
     tilt: "rotate-[10deg] translate-y-3 sm:translate-y-5",
   },
@@ -68,20 +69,19 @@ export function MarketingOrbit() {
         {CARDS.map((card) => (
           <div
             key={card.label}
-            className={`group w-32 shrink-0 origin-bottom transition-transform duration-300 ease-out hover:z-10 hover:-translate-y-2 hover:rotate-0 hover:scale-110 sm:w-40 ${card.tilt}`}
+            className={`group w-36 shrink-0 origin-bottom transition-transform duration-300 ease-out hover:z-10 hover:-translate-y-2 hover:rotate-0 hover:scale-110 sm:w-44 ${card.tilt}`}
           >
-            <div className="bee-glass rounded-[var(--radius-lg)] p-3.5 shadow-[0_20px_40px_-24px_rgba(34,34,34,0.35)] transition-shadow duration-300 group-hover:shadow-[0_28px_48px_-20px_rgba(34,34,34,0.4)] sm:p-4">
+            <div className="bee-glass flex h-full flex-col rounded-[var(--radius-lg)] p-3.5 shadow-[0_20px_40px_-24px_rgba(34,34,34,0.35)] transition-shadow duration-300 group-hover:shadow-[0_28px_48px_-20px_rgba(34,34,34,0.4)] sm:p-4">
               <div
                 className="flex size-8 items-center justify-center rounded-[var(--radius-md)] sm:size-9"
                 style={{ background: `color-mix(in srgb, ${card.accent} 18%, white)`, color: card.accent }}
               >
                 <card.icon className="size-4 stroke-[1.75]" />
               </div>
-              <p className="mt-3 text-lg font-bold tabular-nums tracking-tight sm:text-xl" style={{ color: card.accent }}>
-                {card.stat}
+              <p className="mt-3 text-xs font-semibold leading-snug tracking-tight text-foreground sm:text-sm">
+                {card.headline}
               </p>
-              <p className="bee-micro mt-0.5 leading-tight">{card.statLabel}</p>
-              <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <p className="mt-2.5 text-[11px] font-semibold uppercase tracking-wide" style={{ color: card.accent }}>
                 {card.label}
               </p>
             </div>

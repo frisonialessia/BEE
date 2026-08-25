@@ -1,9 +1,17 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/logo";
-import { Button } from "@/components/ui/button";
 
-/** Cabecera pública — Iniciar sesión + Funcionalidades. */
+/**
+ * Cabecera pública — Iniciar sesión + Funcionalidades.
+ *
+ * Botones sin el wrapper <Button> de shadcn a propósito: sus variantes
+ * cva (size="sm"/"lg") traían su propio alto/padding/radio, distinto del
+ * sistema .bee-btn/.bee-btn-ghost que usa el resto de la app (Control,
+ * Leads, etc.) — de ahí que radios y tamaños de botón no coincidieran
+ * entre la landing y el dashboard. Enlaces planos + clases bee-btn*
+ * directas, igual que en cualquier otra página del producto.
+ */
 export function MarketingHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[color-mix(in_srgb,var(--color-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--color-background)_75%,transparent)] backdrop-blur-md">
@@ -14,17 +22,30 @@ export function MarketingHeader() {
         {/* Funcionalidades/Iniciar sesión ocultos bajo sm: en un viewport de
          * teléfono no entran junto al logo y al CTA principal sin que este
          * último se salga de la pantalla — el CTA es lo único imprescindible
-         * ahí; los otros dos siguen alcanzables desde el footer. */}
+         * ahí; los otros dos siguen alcanzables desde el footer.
+         *
+         * El hidden/sm: va en un <span> envolvente, no directo en el link:
+         * .bee-btn-ghost fija su propio display:inline-flex como CSS sin
+         * capa (fuera de @layer), y una regla sin capa siempre gana sobre
+         * cualquier utilidad de Tailwind — que sí vive dentro de @layer
+         * utilities — sin importar el breakpoint. Puesto directo en el
+         * link, hidden/sm:inline-flex quedaban anulados y el link nunca
+         * se ocultaba en mobile. En el <span> no hay pelea: nada ahí
+         * fuerza su propio display. */}
         <nav className="flex shrink-0 items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-            <a href="#modulos">Funcionalidades</a>
-          </Button>
-          <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-            <Link href="/login">Iniciar sesión</Link>
-          </Button>
-          <Button asChild size="sm" className="bee-btn--primary">
-            <Link href="/register">Comenzar ahora</Link>
-          </Button>
+          <span className="hidden sm:inline-flex">
+            <a href="#modulos" className="bee-btn-ghost">
+              Funcionalidades
+            </a>
+          </span>
+          <span className="hidden sm:inline-flex">
+            <Link href="/login" className="bee-btn-ghost">
+              Iniciar sesión
+            </Link>
+          </span>
+          <Link href="/register" className="bee-btn bee-btn--primary">
+            Comenzar ahora
+          </Link>
         </nav>
       </div>
     </header>

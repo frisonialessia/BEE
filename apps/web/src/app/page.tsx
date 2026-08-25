@@ -15,7 +15,6 @@ import { MarketingDemoPanel } from "@/components/marketing-demo-panel";
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
 import { MarketingOrbit } from "@/components/marketing-orbit";
-import { Button } from "@/components/ui/button";
 
 /**
  * Landing pública — la primera pantalla que ve cualquier visitante antes de
@@ -123,16 +122,12 @@ export default function Home() {
               sin fricción, sin datos inventados, sin perder el control de cada decisión.
             </p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-              <Button asChild size="lg" className="bee-btn--primary rounded-full shadow-[0_12px_24px_-10px_var(--color-chart-4)] transition-transform hover:-translate-y-0.5">
-                <Link href="/register">
-                  Comenzar ahora <ArrowRight className="size-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="rounded-full transition-transform hover:-translate-y-0.5">
-                <a href="#producto">
-                  <PlayCircle className="size-4" /> Ver demo en vivo
-                </a>
-              </Button>
+              <Link href="/register" className="bee-btn bee-btn--primary">
+                Comenzar ahora <ArrowRight className="size-4" />
+              </Link>
+              <a href="#producto" className="bee-btn-ghost">
+                <PlayCircle className="size-4" /> Ver demo en vivo
+              </a>
             </div>
           </div>
 
@@ -148,7 +143,7 @@ export default function Home() {
         </section>
 
         {/* ── Vista previa del producto ───────────────────────────────────── */}
-        <section id="producto" className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-20">
+        <section id="producto" className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
             <p className="bee-eyebrow">Demo en vivo</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
@@ -221,11 +216,9 @@ export default function Home() {
             <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
               Tu próximo cliente ya está mandando señales. La pregunta es si las estás viendo.
             </h2>
-            <Button asChild size="lg" className="bee-btn--primary rounded-full shadow-[0_12px_24px_-10px_var(--color-chart-4)] transition-transform hover:-translate-y-0.5">
-              <Link href="/register">
-                Comenzar ahora <ArrowRight className="size-4" />
-              </Link>
-            </Button>
+            <Link href="/register" className="bee-btn bee-btn--primary">
+              Comenzar ahora <ArrowRight className="size-4" />
+            </Link>
           </div>
         </section>
       </main>
