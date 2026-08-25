@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 /** Cabecera pública — Iniciar sesión + Funcionalidades. */
 export function MarketingHeader() {
   return (
-    <header className="border-b border-border bg-background">
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 px-6">
+    <header className="sticky top-0 z-40 border-b border-[color-mix(in_srgb,var(--color-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--color-background)_75%,transparent)] backdrop-blur-md">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-6">
         <Link href="/" aria-label="Inicio BEE" className="shrink-0">
           <Logo />
         </Link>
