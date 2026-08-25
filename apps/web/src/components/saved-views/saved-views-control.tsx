@@ -71,7 +71,7 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
           {views.length === 0 ? (
             <p className="px-2 py-2 text-xs text-muted-foreground">Todavía no hay vistas guardadas.</p>
           ) : (
-            <div className="max-h-56 space-y-0.5 overflow-y-auto">
+            <div className="max-h-56 space-y-0.5 overflow-y-auto overscroll-contain">
               {views.map((v) => (
                 <div
                   key={v.id}

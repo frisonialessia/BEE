@@ -91,14 +91,15 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
           <button
             type="button"
             onClick={() => setMode("won")}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-border bg-[var(--success)]/10 px-3 py-2 text-xs font-medium text-[var(--success)] transition-colors hover:bg-[var(--success)]/20"
+            className="bee-btn-ghost flex-1 justify-center"
+            style={{ borderColor: "var(--success)", color: "var(--success)" }}
           >
             <CheckCircle2 className="size-3.5" /> Marcar ganada
           </button>
           <button
             type="button"
             onClick={() => setMode("lost")}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-[var(--radius-md)] border border-border bg-background px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-[var(--color-primary)]/25"
+            className="bee-btn-ghost flex-1 justify-center"
           >
             <XCircle className="size-3.5" /> Marcar perdida
           </button>
@@ -159,15 +160,11 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
               type="button"
               onClick={() => submit(mode)}
               disabled={recordOutcome.isPending || (mode === "lost" && !lossReason)}
-              className="flex-1 rounded-[var(--radius-md)] bg-[var(--color-chart-4)] px-3 py-1.5 text-xs font-medium text-background transition-opacity disabled:opacity-50"
+              className="bee-btn bee-btn--primary flex-1"
             >
               {recordOutcome.isPending ? "Guardando…" : "Confirmar"}
             </button>
-            <button
-              type="button"
-              onClick={reset}
-              className="rounded-[var(--radius-md)] border border-border px-3 py-1.5 text-xs text-muted-foreground"
-            >
+            <button type="button" onClick={reset} className="bee-btn-ghost">
               Cancelar
             </button>
           </div>

@@ -236,6 +236,19 @@ class Settings(BaseSettings):
             problems.append("WEBHOOK_SIGNING_SECRET is still the default placeholder value")
         if self.JWT_SECRET_KEY == "change-me-in-production":
             problems.append("JWT_SECRET_KEY is still the default placeholder value")
+        # sqlalchemy_database_uri never raises or returns None when the DB
+        # isn't configured — it silently assembles a connection string from
+        # the POSTGRES_* defaults (localhost/bee/bee), which only fails once
+        # the first real request hits Postgres, as a confusing "connection
+        # refused" deep inside a request instead of a clear config error at
+        # boot. Neither DATABASE_URL set nor POSTGRES_HOST/PASSWORD changed
+        # from their local-dev defaults means nobody configured a real DB.
+        if not self.DATABASE_URL and self.POSTGRES_HOST == "localhost" and self.POSTGRES_PASSWORD == "bee":
+            problems.append(
+                "DATABASE_URL is unset and POSTGRES_* still hold their local-dev "
+                "defaults (host=localhost, password=bee) — set DATABASE_URL or "
+                "the real POSTGRES_* values"
+            )
 
         if problems:
             logging.getLogger(__name__).critical(

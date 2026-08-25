@@ -147,9 +147,12 @@ def import_leads(
     created — see ``LeadImportResult``'s own docstring on why that distinction
     is never blurred. Newly created leads get the same first-encounter
     ``DataValidator`` pass a manually-created lead already gets (see
-    ``_validate_new_lead`` below); matched leads are left untouched — an
-    import shouldn't silently overwrite quality flags on a contact that
-    already exists.
+    ``_validate_new_lead`` below); a matched lead never gets re-validated
+    and never has an existing field overwritten — the one exception is
+    backfilling ``phone`` when the matched lead doesn't have one yet and the
+    row supplies one, which fills a gap rather than overwriting data. An
+    import shouldn't silently overwrite quality flags — or any other
+    already-populated field — on a contact that already exists.
 
     Committed per row, same as ``POST /leads/bulk`` — one bad row (e.g. a
     company name so long it violates a column limit) never rolls back the

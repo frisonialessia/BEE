@@ -209,11 +209,7 @@ export function NetworkNavigatorPanel() {
             placeholder="Nombre de la empresa (opcional)"
             className="flex-1 min-w-40 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
-          <button
-            type="submit"
-            disabled={pathLoading}
-            className="px-4 py-2 rounded-sm bg-[var(--color-cta)] text-white text-sm hover:opacity-90 disabled:opacity-50 transition-colors"
-          >
+          <button type="submit" disabled={pathLoading} className="bee-btn bee-btn--primary">
             {pathLoading ? "Buscando…" : "Buscar rutas"}
           </button>
         </form>

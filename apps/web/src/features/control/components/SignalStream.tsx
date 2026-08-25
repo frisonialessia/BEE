@@ -84,7 +84,11 @@ export function SignalStream() {
   const readyCount = result?.data.ready_count ?? 0;
 
   return (
-    <aside className="bee-surface flex min-h-[200px] flex-col p-5" aria-label="Flujo de señales">
+    // overflow-hidden here (matching SignalHexMap's own root, its column
+    // sibling) is the outer guarantee: whatever the ScrollArea does inside,
+    // nothing — a scrolled row, its connector line, a highlighted item's
+    // -mx-2 bleed — can ever render past this card's own rounded border.
+    <aside className="bee-surface flex min-h-[200px] flex-col overflow-hidden p-5" aria-label="Flujo de señales">
       <div className="mb-3 flex shrink-0 items-start justify-between gap-2">
         <div>
           <h2 className="bee-eyebrow">Flujo de señales</h2>

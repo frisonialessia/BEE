@@ -133,7 +133,7 @@ function WorkerKpis({ worker }: { worker: WorkerHealth }) {
 
 function HealthSkeleton() {
   return (
-    <section className="bee-surface h-full p-8">
+    <section className="bee-surface p-8">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-[5.5rem] rounded-2xl" />
@@ -161,7 +161,7 @@ export function SystemHealth() {
 
   if (isError || !snapshot) {
     return (
-      <section className="bee-surface flex h-full items-center p-8">
+      <section className="bee-surface flex items-center p-8">
         <div className="flex items-center gap-2 text-destructive">
           <WifiOff className="size-4" />
           <p className="text-sm">No se pudo conectar con la API de BEE — revisa NEXT_PUBLIC_API_URL</p>
@@ -177,7 +177,15 @@ export function SystemHealth() {
   });
 
   return (
-    <section className="bee-surface flex h-full flex-col p-5" aria-label="Salud del sistema">
+    // No h-full: this card used to be the only occupant of its column, so
+    // stretching to fill the column's full height was harmless. Now that
+    // AnomaliesPanel sits below it as a flex sibling, h-full made this card
+    // claim the entire column height for itself — its own content (KPI grid
+    // + a max-h-24-capped APIs list) doesn't need nearly that much, so the
+    // leftover became a large dead-space gap, pushing AnomaliesPanel almost
+    // out of view. Sizing to natural content height lets both cards sit
+    // proportionately, same as every other pair of stacked cards in Control.
+    <section className="bee-surface flex flex-col p-5" aria-label="Salud del sistema">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="bee-eyebrow">Inteligencia</p>

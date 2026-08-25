@@ -89,7 +89,7 @@ export function AssistantPage() {
         </div>
       ) : (
         <>
-          <div className="flex-1 space-y-4 overflow-y-auto py-2">
+          <div className="flex-1 space-y-4 overflow-y-auto overscroll-contain py-2">
             {messages.map((m) => (
               <ChatMessage key={m.id} message={m} />
             ))}

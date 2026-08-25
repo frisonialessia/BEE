@@ -170,7 +170,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
           </button>
         </div>
 
-        <div className="space-y-5 overflow-y-auto px-6 py-5">
+        <div className="space-y-5 overflow-y-auto overscroll-contain px-6 py-5">
           <section className="bee-bento bee-bento-pad space-y-2">
             <p className="text-xs font-semibold">1. Descarga la plantilla</p>
             <p className="bee-caption">

@@ -73,7 +73,8 @@ function DLQEventRow({ event, onRetry, onResolve }: {
         {event.status !== "resolved" && event.status !== "permanently_failed" && (
           <button
             onClick={() => onRetry(event.id)}
-            className="text-xs px-2 py-1 rounded-sm bg-[var(--color-chart-4)] text-[var(--color-background)] hover:opacity-90 transition-opacity"
+            className="bee-btn-ghost bee-btn-ghost--fill"
+            style={{ "--bee-fill": "var(--color-chart-4)", "--bee-fill-text": "var(--color-background)" } as React.CSSProperties}
           >
             Reintentar ahora
           </button>
@@ -81,7 +82,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
         {event.status !== "resolved" && (
           <button
             onClick={() => onResolve(event.id)}
-            className="text-xs px-2 py-1 rounded-sm border transition-colors"
+            className="bee-btn-ghost"
             style={{ borderColor: "var(--success)", color: "var(--success)" }}
           >
             Resolver
@@ -387,7 +388,14 @@ export function ResiliencePanel() {
           </button>
         ))}
       </div>
-      {activeTab === "dlq" ? <DLQPanel /> : <AuditPanel />}
+      {/* min-h: same layout-shift fix as DeepLearningPanel's tab wrapper —
+       * DLQPanel (5-col stat grid + its own filter row + list) is taller
+       * than AuditPanel (3-col stat grid + a single checkbox row + list);
+       * without a floor, switching to the shorter tab shrinks this card and
+       * drags its grid sibling PendingActionsPanel's row height down with it. */}
+      <div className="min-h-[420px]">
+        {activeTab === "dlq" ? <DLQPanel /> : <AuditPanel />}
+      </div>
     </div>
   );
 }

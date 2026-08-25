@@ -40,7 +40,7 @@ export function DashboardRail() {
           <Logo />
         </Link>
 
-        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain">
           {GROUPS.map((group, gi) => (
             <div key={group.label ?? `group-${gi}`} className={gi > 0 ? "mt-3" : undefined}>
               {group.label && (

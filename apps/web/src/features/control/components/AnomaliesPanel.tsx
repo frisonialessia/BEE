@@ -54,11 +54,16 @@ export function AnomaliesPanel() {
   const alerts = result?.data ?? [];
 
   if (isLoading) {
-    return <Skeleton className="mt-4 h-24 rounded-2xl" />;
+    return <Skeleton className="h-24 rounded-2xl" />;
   }
 
   return (
-    <section className="bee-surface mt-4 p-5" aria-label="Anomalías de conversión">
+    // No mt-4 here — this section is a flex child of .bee-crm-control__metrics,
+    // which already spaces its children with gap: 0.75rem (same as its
+    // sibling SystemHealth's root, which carries no margin of its own). The
+    // mt-4 that used to live here stacked on top of that gap and doubled the
+    // whitespace above this card versus every other card in the column.
+    <section className="bee-surface p-5" aria-label="Anomalías de conversión">
       <div className="mb-1 flex items-center gap-2">
         <AlertTriangle className="size-3.5 text-[var(--color-text-muted)]" />
         <p className="bee-eyebrow">Anomalías</p>

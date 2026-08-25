@@ -541,6 +541,21 @@
 
 .bee-btn-ghost--dashed:hover { color: var(--color-text); border-color: var(--color-text-muted); }
 
+/* Colored-fill inline action (Reintentar ahora, Marcar ganada/perdida) — same
+ * fixed height/padding/type as .bee-btn-ghost, but the color is per-instance
+ * (retry=blue, resolve=success, won=success, lost=neutral) so it's driven by
+ * a custom property set inline rather than a fixed background/border. Reads
+ * --bee-fill instead of the plain .bee-btn-ghost background so the dynamic
+ * color doesn't fight .bee-btn-ghost:hover's own fixed hover background —
+ * these dim on hover instead of swapping to a wrong-looking flat tint. */
+.bee-btn-ghost--fill {
+  background: var(--bee-fill, transparent);
+  border-color: var(--bee-fill, var(--color-divider));
+  color: var(--bee-fill-text, var(--color-text));
+}
+
+.bee-btn-ghost--fill:hover { filter: brightness(0.93); background: var(--bee-fill, transparent); }
+
 /* Filter / tab pill row — segmented in-place filters and lightweight tab
  * switchers (Pipeline oculto's stage filter, Resiliencia's estado filter +
  * Cola/Auditoría switcher, Aprendizaje's Aprendizaje/Anomalías switcher).
