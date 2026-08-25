@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     API_SECRET_KEY: str | None = None
     # Comma-separated list of paths exempt from API key auth (exact prefix match).
     # /api/v1/health and /api/v1/ready are always exempt.
-    API_KEY_EXEMPT_PATHS: str = "/api/v1/health,/api/v1/ready,/api/v1/webhooks/receive"
+    API_KEY_EXEMPT_PATHS: str = "/api/v1/health,/api/v1/ready,/api/v1/webhooks/receive,/api/v1/contact"
 
     # ----- Multi-tenant user auth (Organization / Team / User) ------------------
     # Distinct from API_SECRET_KEY above: API_SECRET_KEY gates service-to-service
@@ -207,7 +207,7 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.BACKEND_CORS_ORIGINS.split(",") if origin.strip()]
 
     @model_validator(mode="after")
-    def _warn_on_production_hardening_gaps(self) -> "Settings":
+    def _warn_on_production_hardening_gaps(self) -> Settings:
         """Loudly flag dev-only settings left in place in production.
 
         ``WEBHOOK_SIGNATURE_REQUIRED`` now defaults to ``True`` and

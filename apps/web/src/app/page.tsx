@@ -31,7 +31,7 @@ const MODULES = [
     title: "Motor de señales en tiempo real",
     description:
       "Detecta rondas de financiamiento, contrataciones clave y cambios de stack tecnológico apenas ocurren — sin que nadie tenga que ir a buscarlos.",
-    href: "/dashboard/signals",
+    href: "/funcionalidades#senales",
     tone: "bee-bento--primary",
     span: "bee-span-8",
   },
@@ -40,7 +40,7 @@ const MODULES = [
     title: "Brief del día",
     description:
       "Un resumen ejecutivo cada mañana con lo que de verdad importa en tu pipeline — cero fricción cognitiva antes de la primera llamada.",
-    href: "/dashboard",
+    href: "/funcionalidades#brief",
     tone: "bee-bento--warm",
     span: "bee-span-4",
   },
@@ -49,7 +49,7 @@ const MODULES = [
     title: "Simulador de ingresos",
     description:
       "Proyecta escenarios de pipeline basados en intención de compra real — no en promedios genéricos del sector.",
-    href: "/dashboard/forecast",
+    href: "/funcionalidades#simulador",
     tone: "",
     span: "bee-span-4",
   },
@@ -58,7 +58,7 @@ const MODULES = [
     title: "Automatización multicanal",
     description:
       "Diseña secuencias de alcance por email, LinkedIn y más que avanzan solas según cómo responde cada lead — siempre con tu aprobación antes de enviar nada.",
-    href: "/dashboard/sequences",
+    href: "/funcionalidades#automatizacion",
     tone: "bee-bento--muted",
     span: "bee-span-8",
   },
@@ -122,7 +122,7 @@ export default function Home() {
               sin fricción, sin datos inventados, sin perder el control de cada decisión.
             </p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/register" className="bee-btn bee-btn--primary">
+              <Link href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary">
                 Comenzar ahora <ArrowRight className="size-4" />
               </Link>
               <a href="#producto" className="bee-btn-ghost">
@@ -216,7 +216,7 @@ export default function Home() {
             <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
               Tu próximo cliente ya está mandando señales. La pregunta es si las estás viendo.
             </h2>
-            <Link href="/register" className="bee-btn bee-btn--primary">
+            <Link href="/contacto?source=closing_cta" className="bee-btn bee-btn--primary">
               Comenzar ahora <ArrowRight className="size-4" />
             </Link>
           </div>

@@ -41,11 +41,20 @@ const SIGNAL_FEED = [
   { icon: Sparkles, label: "Estrategia lista", title: "Solace Data nombró un nuevo CRO", time: "hace 1d" },
 ] as const;
 
+// Mismas 5 etapas que el Espacio de leads real (Control → LeadWorkspace,
+// STAGE_LABEL_ES) — no una versión recortada solo para que quepa acá.
 const ACTION_ZONE = [
   { label: "Detectadas", value: 4 },
+  { label: "Enriqueciendo", value: 2 },
   { label: "Listas", value: 7 },
   { label: "En progreso", value: 3 },
+  { label: "Cerradas", value: 5 },
 ] as const;
+
+const NEXT_ACTION = {
+  company: "Northwind Robotics",
+  reason: "Levantó una Serie C de USD 40M — el momento de mayor propensión a comprar.",
+} as const;
 
 const KPI_TILES = [
   { label: "Ingesta", value: "Activo" },
@@ -62,7 +71,7 @@ const PROVIDERS = [
 function SignalsView() {
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-      <div className="bee-bento bee-bento-pad space-y-2">
+      <div className="bee-bento bee-bento-pad flex flex-col space-y-2">
         <p className="bee-eyebrow">Zona de acción</p>
         {ACTION_ZONE.map((row) => (
           <div key={row.label} className="flex items-center justify-between rounded-sm bg-[var(--color-primary)]/50 px-2.5 py-2">
@@ -70,6 +79,15 @@ function SignalsView() {
             <span className="text-xs font-semibold tabular-nums">{row.value}</span>
           </div>
         ))}
+        <p className="flex items-center gap-1.5 text-[11px] text-[var(--color-chart-5)]">
+          <Flame className="size-3" />
+          3 leads calientes
+        </p>
+        <div className="mt-auto space-y-1.5 rounded-sm border border-dashed border-[var(--color-divider)] p-2.5">
+          <p className="bee-kpi-tile__label">Próxima acción sugerida</p>
+          <p className="text-xs font-medium leading-snug">{NEXT_ACTION.company}</p>
+          <p className="bee-micro leading-snug">{NEXT_ACTION.reason}</p>
+        </div>
       </div>
 
       <div className="bee-bento bee-bento-pad space-y-3">
@@ -138,10 +156,12 @@ function SignalsView() {
 const LEAD_STATUS_TABS = ["Todos", "Nuevo", "Calificado", "Convertido"] as const;
 
 const LEADS = [
-  { name: "Elena Cross", title: "VP Sales", company: "Northwind Robotics", score: 92, stage: "Listo para comprar" },
-  { name: "Marcus Diaz", title: "Head of RevOps", company: "Vantage Health", score: 78, stage: "Decisión" },
-  { name: "Priya Shah", title: "CRO", company: "Solace Data", score: 65, stage: "Consideración" },
-  { name: "Tom Reyes", title: "Director of Ops", company: "Fielder Logistics", score: 41, stage: "Conocimiento" },
+  { name: "Elena Cross", title: "VP Sales", company: "Northwind Robotics", score: 92, stage: "Listo para comprar", status: "Convertido" },
+  { name: "Marcus Diaz", title: "Head of RevOps", company: "Vantage Health", score: 78, stage: "Decisión", status: "Calificado" },
+  { name: "Priya Shah", title: "CRO", company: "Solace Data", score: 65, stage: "Consideración", status: "Calificado" },
+  { name: "Tom Reyes", title: "Director of Ops", company: "Fielder Logistics", score: 41, stage: "Conocimiento", status: "Nuevo" },
+  { name: "Aisha Bello", title: "VP RevOps", company: "Bright Path Analytics", score: 58, stage: "Consideración", status: "Nuevo" },
+  { name: "Diego Farro", title: "Head of Growth", company: "Anchor Freight", score: 88, stage: "Listo para comprar", status: "Convertido" },
 ] as const;
 
 function scoreVariant(score: number): "success" | "warning" | "secondary" {
@@ -150,23 +170,56 @@ function scoreVariant(score: number): "success" | "warning" | "secondary" {
   return "secondary";
 }
 
+// Filtro + búsqueda REALES sobre el array de arriba, no solo una pestaña que
+// cambia de color: esto es lo que hace que la pestaña sea "una herramienta
+// para probar" y no una captura de pantalla interactiva a medias.
 function LeadsView() {
   const [statusTab, setStatusTab] = useState<(typeof LEAD_STATUS_TABS)[number]>("Todos");
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return LEADS.filter((lead) => {
+      const matchesStatus = statusTab === "Todos" || lead.status === statusTab;
+      const matchesQuery =
+        q.length === 0 ||
+        lead.name.toLowerCase().includes(q) ||
+        lead.company.toLowerCase().includes(q);
+      return matchesStatus && matchesQuery;
+    });
+  }, [statusTab, query]);
 
   return (
     <div className="bee-bento bee-bento-pad space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="bee-eyebrow">Leads priorizados por score</p>
-        <div className="bee-filter-tabs">
-          {LEAD_STATUS_TABS.map((s) => (
-            <button
-              key={s}
-              onClick={() => setStatusTab(s)}
-              className={`bee-filter-tab ${statusTab === s ? "bee-filter-tab--active" : ""}`}
-            >
-              {s}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="bee-filter-tabs">
+            {LEAD_STATUS_TABS.map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusTab(s)}
+                className={`bee-filter-tab ${statusTab === s ? "bee-filter-tab--active" : ""}`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          {/* w-32 en un <div> envolvente, no en el <input>: .bee-input fija
+           * su propio width:100% como CSS sin capa (fuera de @layer), y una
+           * regla sin capa siempre gana sobre una utilidad de Tailwind —
+           * que sí vive dentro de @layer utilities. Puesto directo en el
+           * input, w-32 quedaba anulado y el input se estiraba a todo el
+           * ancho disponible, empujando el resto a su propia fila. */}
+          <div className="w-32">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar…"
+              className="bee-input"
+            />
+          </div>
         </div>
       </div>
       <div className="overflow-x-auto">
@@ -180,7 +233,7 @@ function LeadsView() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {LEADS.map((lead) => (
+            {filtered.map((lead) => (
               <tr key={lead.name}>
                 <td className="py-2">
                   <p className="font-medium">{lead.name}</p>
@@ -198,10 +251,19 @@ function LeadsView() {
                 </td>
               </tr>
             ))}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={4} className="py-6 text-center text-muted-foreground">
+                  Ningún lead coincide con ese filtro.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
-      <p className="bee-micro border-t border-[var(--color-divider)] pt-2">4 de 128 leads · ordenado por score</p>
+      <p className="bee-micro border-t border-[var(--color-divider)] pt-2">
+        {filtered.length} de 128 leads · ordenado por score
+      </p>
     </div>
   );
 }
@@ -423,7 +485,10 @@ export function MarketingDemoPanel() {
       {/* min-h evita que el panel salte de alto al cambiar de pestaña —
        * mismo principio que DeepLearningPanel/ResiliencePanel en el
        * dashboard real. Calibrado al contenido real de Simulador (~510px
-       * medido), la pestaña más alta de las tres — no un valor a ojo. */}
+       * medido con Playwright, clonando el nodo con min-height:0 para
+       * leer su alto natural), la pestaña más alta de las tres — no un
+       * valor a ojo, y recalibrado cada vez que el contenido de alguna
+       * pestaña cambia. */}
       <div className="min-h-[510px] p-4 sm:p-5">
         <ActiveView />
       </div>

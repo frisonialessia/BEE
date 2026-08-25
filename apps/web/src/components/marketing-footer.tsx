@@ -4,7 +4,7 @@ import { Logo } from "@/components/logo";
 import { getApiBaseUrl } from "@/lib/api/client";
 
 const PRODUCT_LINKS = [
-  { label: "Funcionalidades", href: "#modulos" },
+  { label: "Funcionalidades", href: "/funcionalidades" },
   { label: "Vista previa", href: "#producto" },
   { label: "Documentación de la API", href: `${getApiBaseUrl()}/docs`, external: true },
 ] as const;
@@ -12,6 +12,7 @@ const PRODUCT_LINKS = [
 const ACCOUNT_LINKS = [
   { label: "Iniciar sesión", href: "/login" },
   { label: "Crear cuenta", href: "/register" },
+  { label: "Contacto", href: "/contacto?source=footer" },
 ] as const;
 
 /** Pie ejecutivo — marca, navegación real (sin enlaces inventados) y copyright. */

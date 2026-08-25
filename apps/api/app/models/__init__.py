@@ -21,6 +21,7 @@ from app.models.base import (
 )
 from app.models.brand_profile import BrandFragment, VoiceProfile
 from app.models.company import Company
+from app.models.contact_submission import ContactSubmission
 from app.models.correction import ArtifactCorrection, UserStyleProfile
 from app.models.dark_funnel import DarkFunnelSignal, HotLeadScore
 from app.models.dead_letter import FailedEvent
@@ -48,6 +49,7 @@ from app.models.workflow_task import WorkflowTask
 
 __all__ = [
     "Company",
+    "ContactSubmission",
     "Lead",
     "MarketInsight",
     "MessageTemplate",

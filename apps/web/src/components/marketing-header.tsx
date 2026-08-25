@@ -34,16 +34,16 @@ export function MarketingHeader() {
          * fuerza su propio display. */}
         <nav className="flex shrink-0 items-center gap-2">
           <span className="hidden sm:inline-flex">
-            <a href="#modulos" className="bee-btn-ghost">
+            <Link href="/funcionalidades" className="bee-btn-ghost">
               Funcionalidades
-            </a>
+            </Link>
           </span>
           <span className="hidden sm:inline-flex">
             <Link href="/login" className="bee-btn-ghost">
               Iniciar sesión
             </Link>
           </span>
-          <Link href="/register" className="bee-btn bee-btn--primary">
+          <Link href="/contacto?source=header" className="bee-btn bee-btn--primary">
             Comenzar ahora
           </Link>
         </nav>
