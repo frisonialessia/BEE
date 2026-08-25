@@ -11,10 +11,15 @@ import {
   UserCheck,
 } from "lucide-react";
 
+import { MarketingBeforeAfter } from "@/components/marketing-before-after";
 import { MarketingDemoPanel } from "@/components/marketing-demo-panel";
+import { MarketingFAQ } from "@/components/marketing-faq";
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
+import { MarketingHowItWorks } from "@/components/marketing-how-it-works";
+import { MarketingIntegrations } from "@/components/marketing-integrations";
 import { MarketingOrbit } from "@/components/marketing-orbit";
+import { MarketingSignalTicker } from "@/components/marketing-signal-ticker";
 
 /**
  * Landing pública — la primera pantalla que ve cualquier visitante antes de
@@ -142,6 +147,8 @@ export default function Home() {
           </div>
         </section>
 
+        <MarketingSignalTicker />
+
         {/* ── Vista previa del producto ───────────────────────────────────── */}
         <section id="producto" className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
@@ -154,6 +161,10 @@ export default function Home() {
             <MarketingDemoPanel />
           </div>
         </section>
+
+        <MarketingHowItWorks />
+
+        <MarketingBeforeAfter />
 
         {/* ── Módulos de valor ─────────────────────────────────────────────── */}
         <section id="modulos" className="border-t border-border bg-[var(--color-primary)]/15">
@@ -187,6 +198,8 @@ export default function Home() {
           </div>
         </section>
 
+        <MarketingIntegrations />
+
         {/* ── Autoridad / garantías del sistema ───────────────────────────── */}
         <section id="features" className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
@@ -209,6 +222,8 @@ export default function Home() {
             ))}
           </div>
         </section>
+
+        <MarketingFAQ />
 
         {/* ── CTA de cierre ────────────────────────────────────────────────── */}
         <section className="border-t border-border">

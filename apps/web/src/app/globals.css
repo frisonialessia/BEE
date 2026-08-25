@@ -933,6 +933,29 @@
   white-space: nowrap;
 }
 
+/* ── Ticker de señales — cinta horizontal en loop, puro CSS ─────────────── */
+
+.bee-ticker-track {
+  display: flex;
+  width: max-content;
+  animation: bee-ticker-scroll 32s linear infinite;
+}
+
+.bee-ticker-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes bee-ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bee-ticker-track {
+    animation: none;
+  }
+}
+
 @layer base {
   * { border-color: var(--border); }
   body {

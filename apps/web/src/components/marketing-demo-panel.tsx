@@ -83,7 +83,7 @@ const KPI_TILES = [
 const PROVIDERS = [
   { name: "LinkedIn", status: "Modo simulado", quota: "100/100" },
   { name: "G2", status: "Modo simulado", quota: "60/60" },
-  { name: "Clearbit", status: "Modo simulado", quota: "40/40" },
+  { name: "Google Search", status: "Modo simulado", quota: "40/40" },
 ] as const;
 
 function SignalsView() {
