@@ -6,7 +6,7 @@ import { MarketingHeader } from "@/components/marketing-header";
 
 export const metadata: Metadata = {
   title: "Contacto — BEE",
-  description: "Hablá con el equipo de BEE. Te respondemos en menos de 24 horas hábiles.",
+  description: "Habla con el equipo de BEE. Te respondemos en menos de 24 horas hábiles.",
 };
 
 /**
@@ -39,7 +39,7 @@ export default async function ContactoPage({
                 Hablemos de tu pipeline.
               </h1>
               <p className="bee-caption mt-4 max-w-sm text-base">
-                Contanos un poco de tu equipo comercial y te respondemos en menos de 24 horas
+                Cuéntanos un poco de tu equipo comercial y te respondemos en menos de 24 horas
                 hábiles — sin bots de ventas, sin formularios que se pierden en el aire.
               </p>
 
@@ -48,14 +48,14 @@ export default async function ContactoPage({
                   <p className="text-sm font-semibold">¿Qué pasa después de enviar esto?</p>
                   <p className="bee-caption mt-1.5">
                     Un mensaje real llega directo a nuestro equipo — queda registrado, nunca se
-                    descarta en silencio. Te contactamos por el email que dejes acá.
+                    descarta en silencio. Te contactamos por el email que dejes aquí.
                   </p>
                 </div>
                 <div className="bee-bento bee-bento-pad">
-                  <p className="text-sm font-semibold">¿Ya tenés cuenta?</p>
+                  <p className="text-sm font-semibold">¿Ya tienes cuenta?</p>
                   <p className="bee-caption mt-1.5">
-                    Este formulario es para organizaciones nuevas. Si ya usás BEE, iniciá sesión
-                    directamente en vez de escribirnos acá.
+                    Este formulario es para organizaciones nuevas. Si ya usas BEE, inicia sesión
+                    directamente en vez de escribirnos aquí.
                   </p>
                 </div>
               </div>

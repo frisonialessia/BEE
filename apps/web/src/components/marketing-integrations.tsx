@@ -22,7 +22,7 @@ export function MarketingIntegrations() {
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
       <div className="mx-auto max-w-2xl text-center">
-        <p className="bee-eyebrow">Conectado con lo que ya usás</p>
+        <p className="bee-eyebrow">Conectado con lo que ya usas</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
           Las señales vienen de fuentes reales.
         </h2>

@@ -32,8 +32,8 @@ const STEPS = [
   },
   {
     icon: CheckCircle2,
-    title: "4. Vos aprobás",
-    description: "Nada sale sin luz verde explícita. Aprobás, ajustás o descartás — la decisión final es siempre humana.",
+    title: "4. Tú apruebas",
+    description: "Nada sale sin luz verde explícita. Apruebas, ajustas o descartas — la decisión final es siempre humana.",
   },
 ] as const;
 

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const SECTIONS = [
   {
     title: "1. Aceptación de estos términos",
-    body: "Al crear una cuenta o usar BEE aceptás estos términos. Si no estás de acuerdo, no debés usar el servicio.",
+    body: "Al crear una cuenta o usar BEE aceptas estos términos. Si no estás de acuerdo, no debes usar el servicio.",
   },
   {
     title: "2. Qué es BEE",
@@ -20,15 +20,15 @@ const SECTIONS = [
   },
   {
     title: "3. Tu cuenta",
-    body: "Sos responsable de mantener la confidencialidad de tus credenciales y de la actividad que ocurre bajo tu cuenta. Cada organización tiene sus datos aislados de las demás — ver la página de Seguridad para el detalle técnico.",
+    body: "Eres responsable de mantener la confidencialidad de tus credenciales y de la actividad que ocurre bajo tu cuenta. Cada organización tiene sus datos aislados de las demás — ver la página de Seguridad para el detalle técnico.",
   },
   {
     title: "4. Aprobación humana en cualquier envío",
-    body: "BEE puede sugerir o preparar mensajes, secuencias y acciones de alcance, pero ninguna acción externa (un email, un mensaje, una secuencia) se ejecuta sin que un usuario de tu cuenta la apruebe explícitamente. Sos responsable del contenido final que aprobás y enviás a través de la plataforma.",
+    body: "BEE puede sugerir o preparar mensajes, secuencias y acciones de alcance, pero ninguna acción externa (un email, un mensaje, una secuencia) se ejecuta sin que un usuario de tu cuenta la apruebe explícitamente. Eres responsable del contenido final que apruebas y envías a través de la plataforma.",
   },
   {
     title: "5. Tus datos",
-    body: "Los datos que cargás o que BEE recolecta para tu cuenta te pertenecen a vos. No los usamos para entrenar modelos de terceros ni los compartimos con otras organizaciones que usan la plataforma.",
+    body: "Los datos que cargas o que BEE recolecta para tu cuenta te pertenecen a ti. No los usamos para entrenar modelos de terceros ni los compartimos con otras organizaciones que usan la plataforma.",
   },
   {
     title: "6. Limitación de responsabilidad",
@@ -40,7 +40,7 @@ const SECTIONS = [
   },
   {
     title: "8. Contacto",
-    body: "Para cualquier consulta sobre estos términos, escribinos desde la página de Contacto.",
+    body: "Para cualquier consulta sobre estos términos, escríbenos desde la página de Contacto.",
   },
 ] as const;
 
@@ -60,7 +60,7 @@ export default function TerminosPage() {
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--color-chart-2)]" />
             <p className="bee-caption">
               Borrador de referencia, no un documento legal definitivo — antes de operar
-              comercialmente con estos términos, hacelos revisar por un asesor legal y completá
+              comercialmente con estos términos, hazlos revisar por un asesor legal y completa
               los datos societarios y de jurisdicción que correspondan.
             </p>
           </div>

@@ -17,7 +17,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "¿BEE envía mensajes por mi cuenta sin que yo lo sepa?",
-    a: "No. Ninguna acción externa — un email, un mensaje de LinkedIn, una secuencia — se ejecuta sin aprobación humana explícita. El sistema prepara la jugada; vos decidís si sale.",
+    a: "No. Ninguna acción externa — un email, un mensaje de LinkedIn, una secuencia — se ejecuta sin aprobación humana explícita. El sistema prepara la jugada; tú decides si sale.",
   },
   {
     q: "¿Mis datos se mezclan con los de otras cuentas?",

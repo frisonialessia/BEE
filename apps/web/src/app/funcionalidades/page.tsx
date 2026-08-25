@@ -48,18 +48,18 @@ const MODULES = [
     eyebrow: "Brief del día",
     title: "Un resumen ejecutivo antes de tu primera llamada.",
     description:
-      "Cada mañana, BEE arma un brief con lo que de verdad cambió en tu pipeline desde ayer — leads nuevos, cuentas que se calentaron, tareas vencidas — para que no tengas que reconstruir el contexto vos mismo.",
+      "Cada mañana, BEE arma un brief con lo que de verdad cambió en tu pipeline desde ayer — leads nuevos, cuentas que se calentaron, tareas vencidas — para que no tengas que reconstruir el contexto tú mismo.",
     points: [
       "Cero fricción cognitiva: lo importante arriba, lo rutinario abajo.",
       "Generado desde datos reales de tu cuenta, nunca una plantilla genérica.",
-      "Disponible apenas iniciás sesión, sin configuración adicional.",
+      "Disponible apenas inicias sesión, sin configuración adicional.",
     ],
   },
   {
     id: "simulador",
     icon: TrendingUp,
     eyebrow: "Simulador de ingresos",
-    title: "Proyectá el impacto de prospectar más, antes de hacerlo.",
+    title: "Proyecta el impacto de prospectar más, antes de hacerlo.",
     description:
       "El simulador de ingresos corre escenarios de pipeline basados en intención de compra real de tu base de leads — no en promedios genéricos del sector — para que decidas cuánto subir la prospección con datos, no con intuición.",
     points: [
@@ -74,7 +74,7 @@ const MODULES = [
     eyebrow: "Automatización multicanal",
     title: "Secuencias que avanzan solas — nunca sin tu aprobación.",
     description:
-      "Diseñá secuencias de alcance por email, LinkedIn y más que se adaptan según cómo responde cada lead. BEE prepara el siguiente paso; vos das la luz verde antes de que salga cualquier mensaje.",
+      "Diseña secuencias de alcance por email, LinkedIn y más que se adaptan según cómo responde cada lead. BEE prepara el siguiente paso; tú das la luz verde antes de que salga cualquier mensaje.",
     points: [
       "Plantillas reutilizables por playbook, canal y tipo de señal.",
       "Pausa automática ante señales de riesgo (rebote, baja de interés).",
@@ -95,7 +95,7 @@ export default function FuncionalidadesPage() {
             Cuatro motores, un solo flujo de trabajo.
           </h1>
           <p className="bee-caption mx-auto mt-4 max-w-xl text-base">
-            Cada capacidad de acá corre hoy en producción — nada de lo que sigue es una
+            Cada capacidad de aquí corre hoy en producción — nada de lo que sigue es una
             promesa de roadmap.
           </p>
         </section>

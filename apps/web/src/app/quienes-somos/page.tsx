@@ -20,7 +20,7 @@ const PRINCIPLES = [
     icon: UserCheck,
     title: "La decisión final es siempre tuya",
     description:
-      "BEE prepara la jugada — el mensaje, el canal, el momento — pero ninguna acción externa sale sin que vos la apruebes explícitamente.",
+      "BEE prepara la jugada — el mensaje, el canal, el momento — pero ninguna acción externa sale sin que tú la apruebes explícitamente.",
   },
   {
     icon: Target,

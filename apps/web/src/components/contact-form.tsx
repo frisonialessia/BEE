@@ -51,7 +51,7 @@ export function ContactForm({ source }: ContactFormProps) {
       setError(
         err instanceof ApiError
           ? err.message
-          : "No pudimos enviar tu mensaje. Probá de nuevo en un momento.",
+          : "No pudimos enviar tu mensaje. Prueba de nuevo en un momento.",
       );
     }
   }
@@ -131,7 +131,7 @@ export function ContactForm({ source }: ContactFormProps) {
 
       <div className="space-y-1.5">
         <label htmlFor="message" className="bee-caption block">
-          Contanos qué necesitás
+          Cuéntanos qué necesitas
         </label>
         <textarea
           id="message"
@@ -140,7 +140,7 @@ export function ContactForm({ source }: ContactFormProps) {
           rows={5}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Tamaño de tu equipo comercial, qué CRM usás hoy, qué te gustaría automatizar…"
+          placeholder="Tamaño de tu equipo comercial, qué CRM usas hoy, qué te gustaría automatizar…"
           className="w-full resize-y rounded-[var(--radius-sm)] border border-[var(--color-divider)] bg-background px-2 py-2 font-[var(--bee-font)] text-xs text-[var(--color-text)] focus:border-[var(--color-chart-4)] focus:outline-none"
         />
       </div>

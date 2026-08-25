@@ -93,7 +93,7 @@ export default function LoginPage() {
         <p className="bee-caption mt-6 text-center">
           ¿Todavía no tienes una organización?{" "}
           <Link href="/register" className="font-medium text-foreground underline underline-offset-4">
-            Creá una
+            Crea una
           </Link>
         </p>
       </div>

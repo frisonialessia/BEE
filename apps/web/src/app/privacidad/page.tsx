@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 const SECTIONS = [
   {
     title: "1. Qué datos recolectamos",
-    body: "Del formulario de Contacto: nombre, email, empresa y teléfono (opcionales estos dos últimos) y el mensaje que escribís. También guardamos la IP de origen, únicamente para prevenir abuso del formulario (límite de envíos por hora). Si creás una cuenta: nombre, email y el nombre de tu organización. Mientras tenés sesión iniciada, guardamos un token de sesión en el almacenamiento local de tu navegador — no una cookie de terceros.",
+    body: "Del formulario de Contacto: nombre, email, empresa y teléfono (opcionales estos dos últimos) y el mensaje que escribes. También guardamos la IP de origen, únicamente para prevenir abuso del formulario (límite de envíos por hora). Si creas una cuenta: nombre, email y el nombre de tu organización. Mientras tienes sesión iniciada, guardamos un token de sesión en el almacenamiento local de tu navegador — no una cookie de terceros.",
   },
   {
     title: "2. Qué NO hacemos",
@@ -21,11 +21,11 @@ const SECTIONS = [
   },
   {
     title: "3. Para qué usamos lo que recolectamos",
-    body: "Para responder tu consulta cuando escribís desde Contacto, para operar tu cuenta si te registrás, y para prevenir spam y abuso en formularios públicos (por eso guardamos la IP en los envíos de contacto).",
+    body: "Para responder tu consulta cuando escribes desde Contacto, para operar tu cuenta si te registras, y para prevenir spam y abuso en formularios públicos (por eso guardamos la IP en los envíos de contacto).",
   },
   {
     title: "4. Cuánto tiempo lo guardamos",
-    body: "Los envíos del formulario de Contacto se conservan mientras sean relevantes para responderte o para nuestros registros comerciales. Podés pedirnos que eliminemos tus datos en cualquier momento — ver el punto 6.",
+    body: "Los envíos del formulario de Contacto se conservan mientras sean relevantes para responderte o para nuestros registros comerciales. Puedes pedirnos que eliminemos tus datos en cualquier momento — ver el punto 6.",
   },
   {
     title: "5. Seguridad",
@@ -33,7 +33,7 @@ const SECTIONS = [
   },
   {
     title: "6. Tus derechos",
-    body: "Podés pedirnos acceder, corregir o eliminar los datos que tenemos sobre vos escribiéndonos desde Contacto. Vamos a responder tu pedido en un plazo razonable.",
+    body: "Puedes pedirnos acceder, corregir o eliminar los datos que tenemos sobre ti escribiéndonos desde Contacto. Vamos a responder tu pedido en un plazo razonable.",
   },
   {
     title: "7. Cambios a esta política",
@@ -57,7 +57,7 @@ export default function PrivacidadPage() {
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--color-chart-2)]" />
             <p className="bee-caption">
               Borrador de referencia que describe honestamente qué hace hoy el sistema — antes de
-              operar comercialmente, hacelo revisar por un asesor legal para tu jurisdicción
+              operar comercialmente, hazlo revisar por un asesor legal para tu jurisdicción
               (GDPR, CCPA u otra normativa aplicable a tus usuarios).
             </p>
           </div>

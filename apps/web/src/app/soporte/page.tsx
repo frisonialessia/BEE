@@ -9,7 +9,7 @@ import { MarketingHeader } from "@/components/marketing-header";
 
 export const metadata: Metadata = {
   title: "Soporte — BEE",
-  description: "¿Ya usás BEE y tenés un problema? Estás en el lugar correcto.",
+  description: "¿Ya usas BEE y tienes un problema? Estás en el lugar correcto.",
 };
 
 /**
@@ -32,14 +32,14 @@ export default function SoportePage() {
           </div>
           <p className="bee-eyebrow mt-4">Soporte</p>
           <h1 className="mx-auto mt-2 max-w-xl text-balance text-3xl font-bold tracking-tight sm:text-4xl">
-            ¿Ya usás BEE y algo no funciona como esperabas?
+            ¿Ya usas BEE y algo no funciona como esperabas?
           </h1>
           <p className="bee-caption mx-auto mt-4 max-w-md text-base">
-            Si todavía estás evaluando la plataforma, mejor escribinos desde{" "}
+            Si todavía estás evaluando la plataforma, mejor escríbenos desde{" "}
             <Link href="/contacto" className="font-medium text-foreground underline underline-offset-4">
               Contacto
             </Link>
-            . Si ya tenés cuenta, contanos qué pasó acá abajo.
+            . Si ya tienes cuenta, cuéntanos qué pasó aquí abajo.
           </p>
         </section>
 
@@ -69,14 +69,14 @@ export default function SoportePage() {
                 <div>
                   <p className="text-sm font-semibold">Documentación de la API</p>
                   <p className="bee-caption mt-1">
-                    Si integraste BEE por API, la referencia completa de endpoints está acá.
+                    Si integraste BEE por API, la referencia completa de endpoints está aquí.
                   </p>
                 </div>
               </a>
             </div>
 
             <div id="formulario" className="bee-bento bee-bento-pad-lg scroll-mt-20">
-              <p className="text-sm font-semibold">Contanos qué pasó</p>
+              <p className="text-sm font-semibold">Cuéntanos qué pasó</p>
               <p className="bee-caption mt-1 mb-5">
                 Cuanto más detalle (qué esperabas ver, qué viste en cambio), más rápido podemos
                 ayudarte.

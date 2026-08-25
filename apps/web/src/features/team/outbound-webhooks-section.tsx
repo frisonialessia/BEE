@@ -163,7 +163,7 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
       ) : webhooks.length === 0 ? (
         <p className="bee-caption">
           {canManage
-            ? "Todavía no hay webhooks configurados — creá el primero arriba."
+            ? "Todavía no hay webhooks configurados — crea el primero arriba."
             : "Todavía no hay webhooks configurados."}
         </p>
       ) : (

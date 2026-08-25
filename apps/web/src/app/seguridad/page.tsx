@@ -90,7 +90,7 @@ export default function SeguridadPage() {
             </h2>
             <p className="bee-caption mx-auto mt-3 max-w-md">
               Si tu proceso de compra necesita un cuestionario de seguridad o una llamada con
-              alguien técnico, contanos desde{" "}
+              alguien técnico, cuéntanos desde{" "}
               <a href="/contacto?source=seguridad" className="font-medium text-foreground underline underline-offset-4">
                 Contacto
               </a>

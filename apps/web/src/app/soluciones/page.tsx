@@ -7,7 +7,7 @@ import { MarketingHeader } from "@/components/marketing-header";
 
 export const metadata: Metadata = {
   title: "Soluciones — BEE",
-  description: "Cómo BEE encaja según el tipo de equipo comercial que sos.",
+  description: "Cómo BEE encaja según el tipo de equipo comercial que eres.",
 };
 
 /**
@@ -82,7 +82,7 @@ export default function SolucionesPage() {
         <section className="border-t border-border">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 py-16 text-center sm:py-20">
             <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
-              ¿No te ves reflejado en ninguno de estos? Contanos tu caso.
+              ¿No te ves reflejado en ninguno de estos? Cuéntanos tu caso.
             </h2>
             <Link href="/contacto?source=soluciones" className="bee-btn bee-btn--primary">
               Comenzar ahora <ArrowRight className="size-4" />

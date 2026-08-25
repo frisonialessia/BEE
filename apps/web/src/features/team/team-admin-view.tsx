@@ -330,7 +330,7 @@ export function TeamAdminView() {
             </div>
 
             {ordered.length === 0 ? (
-              <p className="bee-caption">Todavía no hay equipos — creá el primero abajo.</p>
+              <p className="bee-caption">Todavía no hay equipos — crea el primero abajo.</p>
             ) : (
               <ul className="space-y-1.5">
                 {ordered.map((team) => (

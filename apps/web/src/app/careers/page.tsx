@@ -7,7 +7,7 @@ import { MarketingHeader } from "@/components/marketing-header";
 
 export const metadata: Metadata = {
   title: "Careers — BEE",
-  description: "No hay posiciones abiertas en este momento — escribinos si te interesa BEE.",
+  description: "No hay posiciones abiertas en este momento — escríbenos si te interesa BEE.",
 };
 
 /**
@@ -33,8 +33,8 @@ export default function CareersPage() {
           </h1>
           <p className="bee-caption mx-auto mt-4 max-w-md text-base">
             Preferimos decir esto claramente en vez de publicar vacantes que no existen. Si te
-            interesa lo que estamos construyendo y querés que te tengamos en cuenta para más
-            adelante, escribinos — leemos cada mensaje.
+            interesa lo que estamos construyendo y quieres que te tengamos en cuenta para más
+            adelante, escríbenos — leemos cada mensaje.
           </p>
           <div className="mt-8">
             <Link href="/contacto?source=careers" className="bee-btn bee-btn--primary">

@@ -52,7 +52,7 @@ export function MarketingBeforeAfter() {
         <div className="mx-auto max-w-2xl text-center">
           <p className="bee-eyebrow">La misma lista, dos resultados</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Los mismos leads. La diferencia es qué hacés primero.
+            Los mismos leads. La diferencia es qué haces primero.
           </h2>
         </div>
 
@@ -116,7 +116,7 @@ export function MarketingBeforeAfter() {
         <p className="bee-micro mt-4 flex items-center justify-center gap-1.5 text-center">
           {!withBee ? (
             <>
-              Hacé clic en <span className="font-medium text-foreground">&quot;Con BEE&quot;</span> para ver la
+              Haz clic en <span className="font-medium text-foreground">&quot;Con BEE&quot;</span> para ver la
               misma lista priorizada <ArrowRight className="size-3" />
             </>
           ) : (

@@ -45,10 +45,10 @@ export default function RegisterPage() {
         </div>
 
         <div className="bee-bento bee-bento-pad-lg">
-          <p className="bee-eyebrow">Empezá gratis</p>
-          <h1 className="mt-1 text-lg font-semibold">Creá tu organización</h1>
+          <p className="bee-eyebrow">Empieza gratis</p>
+          <h1 className="mt-1 text-lg font-semibold">Crea tu organización</h1>
           <p className="bee-caption mt-1">
-            Vas a quedar como Owner — desde ahí invitás al resto del equipo.
+            Vas a quedar como Owner — desde ahí invitas al resto del equipo.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -133,7 +133,7 @@ export default function RegisterPage() {
         <p className="bee-caption mt-6 text-center">
           ¿Ya tienes cuenta?{" "}
           <Link href="/login" className="font-medium text-foreground underline underline-offset-4">
-            Iniciá sesión
+            Inicia sesión
           </Link>
         </p>
       </div>

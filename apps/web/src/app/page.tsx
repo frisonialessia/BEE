@@ -123,7 +123,7 @@ export default function Home() {
               Inteligencia comercial autónoma que decide en tiempo real.
             </h1>
             <p className="bee-caption mx-auto mt-6 max-w-xl text-base sm:text-lg">
-              BEE vigila el mercado, prioriza tu pipeline y prepara la próxima jugada mientras vos cerrás —
+              BEE vigila el mercado, prioriza tu pipeline y prepara la próxima jugada mientras tú cierras —
               sin fricción, sin datos inventados, sin perder el control de cada decisión.
             </p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
@@ -154,7 +154,7 @@ export default function Home() {
           <div className="mx-auto max-w-2xl text-center">
             <p className="bee-eyebrow">Demo en vivo</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-              De la señal a la oportunidad — explorá el panel vos mismo.
+              De la señal a la oportunidad — explora el panel tú mismo.
             </h2>
           </div>
           <div className="mt-10">
@@ -208,7 +208,7 @@ export default function Home() {
               Diseñado para equipos comerciales de alto rendimiento.
             </h2>
             <p className="bee-caption mt-3">
-              No promesas — garantías de arquitectura que sostienen cada decisión que BEE toma por vos.
+              No promesas — garantías de arquitectura que sostienen cada decisión que BEE toma por ti.
             </p>
           </div>
 

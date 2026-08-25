@@ -85,7 +85,7 @@ def submit_contact(
         logger.warning("Contact form rate limit hit ip=%s", client_ip)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Demasiados envíos desde esta conexión. Probá de nuevo en un rato.",
+            detail="Demasiados envíos desde esta conexión. Prueba de nuevo en un rato.",
         )
 
     submission = ContactSubmission(

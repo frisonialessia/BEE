@@ -161,7 +161,7 @@ export function QuotasSection({
         <p className="bee-caption">Cargando…</p>
       ) : quotas.length === 0 ? (
         <p className="bee-caption">
-          {canManage ? "Todavía no hay cuotas — creá la primera arriba." : "Todavía no hay cuotas asignadas."}
+          {canManage ? "Todavía no hay cuotas — crea la primera arriba." : "Todavía no hay cuotas asignadas."}
         </p>
       ) : (
         <div className="space-y-2.5">
