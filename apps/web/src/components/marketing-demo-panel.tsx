@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
+import { MarketingHoneycomb } from "@/components/marketing-honeycomb";
 
 /**
  * MarketingDemoPanel — vista previa con pestañas del producto para la
@@ -58,13 +59,6 @@ const PROVIDERS = [
   { name: "G2", status: "Modo simulado", quota: "60/60" },
 ] as const;
 
-// Grilla de "temperatura de cierre" — mismo concepto que la Colmena de
-// intención real (SignalHexMap), simplificado a bloques CSS estáticos en
-// vez de un canvas hexbin: sin datos reales que dibujar en una landing sin
-// sesión, esto comunica la misma idea (mapa de calor por intensidad) sin
-// fingir ser el componente conectado.
-const HEAT_ROW = [0.9, 0.6, 0.3, 0.7, 0.4, 0.85, 0.5, 0.2] as const;
-
 function SignalsView() {
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
@@ -80,31 +74,28 @@ function SignalsView() {
 
       <div className="bee-bento bee-bento-pad space-y-3">
         <div>
-          <p className="bee-eyebrow">Colmena de intención</p>
-          <div className="mt-2 flex items-center gap-1">
-            {HEAT_ROW.map((t, i) => (
-              <span
-                key={i}
-                className="h-6 flex-1 rounded-sm"
-                style={{ background: `color-mix(in srgb, var(--color-chart-2) ${Math.round(t * 100)}%, var(--color-chart-4) ${Math.round((1 - t) * 100)}%)`, opacity: 0.35 + t * 0.65 }}
-              />
-            ))}
+          <div className="flex items-center justify-between">
+            <p className="bee-eyebrow">Colmena de intención</p>
+            <div className="flex items-center gap-1.5 bee-micro">
+              <span>Frío</span>
+              <span className="h-1.5 w-10 rounded-full" style={{ background: "linear-gradient(90deg, var(--color-chart-4), var(--color-chart-6), var(--color-chart-1))" }} />
+              <span>Caliente</span>
+            </div>
           </div>
-          <div className="mt-1 flex items-center justify-between bee-micro">
-            <span>Frío</span>
-            <span>Caliente</span>
+          <div className="mt-2 flex h-40 items-center justify-center">
+            <MarketingHoneycomb />
           </div>
         </div>
         <div className="space-y-2.5 border-t border-[var(--color-divider)] pt-3">
           <p className="bee-eyebrow">Flujo de señales</p>
-          {SIGNAL_FEED.map((event) => (
+          {SIGNAL_FEED.slice(0, 2).map((event) => (
             <div key={event.title} className="flex gap-2">
               <div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--color-chart-4)]">
                 <event.icon className="size-3" strokeWidth={1.75} />
               </div>
               <div className="min-w-0">
                 <p className="bee-micro">{event.label}</p>
-                <p className="line-clamp-2 text-xs leading-snug">{event.title}</p>
+                <p className="line-clamp-1 text-xs leading-snug">{event.title}</p>
                 <p className="bee-micro mt-0.5">{event.time}</p>
               </div>
             </div>
@@ -223,19 +214,78 @@ const SCENARIOS = [
   { label: "Optimista", base: 26, bar: "bee-bar--1" },
 ] as const;
 
+const MONTHS = ["Ago", "Sep", "Oct", "Nov", "Dic", "Ene"] as const;
+
+/** Curva mensual de operaciones proyectadas para el escenario realista, a
+ *  partir del multiplicador — una rampa suave (no lineal) hasta el valor
+ *  final, para que la tendencia se vea como una proyección real y no una
+ *  recta artificial. */
+function buildTrend(finalValue: number): number[] {
+  return MONTHS.map((_, i) => {
+    const t = (i + 1) / MONTHS.length;
+    const eased = t * t * (3 - 2 * t); // smoothstep — arranque y cierre suaves
+    return Math.round(finalValue * 0.35 + finalValue * 0.65 * eased);
+  });
+}
+
+function TrendChart({ values }: { values: number[] }) {
+  const w = 100;
+  const h = 100;
+  const max = Math.max(...values, 1);
+  const stepX = w / (values.length - 1);
+  const points = values.map((v, i) => [i * stepX, h - (v / max) * (h - 12) - 4]);
+  const linePath = points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
+  const areaPath = `${linePath} L${w},${h} L0,${h} Z`;
+
+  return (
+    <div className="relative">
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-24 w-full overflow-visible">
+        <defs>
+          <linearGradient id="marketing-trend-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-chart-4)" stopOpacity={0.35} />
+            <stop offset="100%" stopColor="var(--color-chart-4)" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <path d={areaPath} fill="url(#marketing-trend-fill)" className="transition-all duration-500" />
+        <path d={linePath} fill="none" stroke="var(--color-chart-4)" strokeWidth={2} vectorEffect="non-scaling-stroke" className="transition-all duration-500" />
+        {points.map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r={2.2} fill="var(--color-chart-4)" vectorEffect="non-scaling-stroke" />
+        ))}
+      </svg>
+      <div className="mt-1 flex justify-between bee-micro">
+        {MONTHS.map((m) => (
+          <span key={m}>{m}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ForecastView() {
   const [factor, setFactor] = useState(2);
+  const [running, setRunning] = useState(false);
+  // Poblado desde el arranque (factor=2 por defecto) para que la pestaña
+  // no se vea vacía hasta el primer clic — pero mover el slider por sí
+  // solo NO recalcula nada: solo "Ejecutar simulación" lo hace, con una
+  // breve carga, igual que el widget real (que sí llama a la API en
+  // handleRun en vez de recalcular en cada pixel del drag).
+  const [ranFactor, setRanFactor] = useState(2);
 
-  // Recalcula al mover el slider — la única pieza genuinamente interactiva
-  // del panel de demo. La fórmula es una aproximación ilustrativa (no una
-  // simulación real conectada al backend), pero mover el control SÍ mueve
-  // las barras — no es un mockup congelado.
   const scenarios = useMemo(
-    () => SCENARIOS.map((s) => ({ ...s, deals: Math.round(s.base * (factor / 2)) })),
-    [factor],
+    () => SCENARIOS.map((s) => ({ ...s, deals: Math.round(s.base * (ranFactor / 2)) })),
+    [ranFactor],
   );
   const maxDeals = Math.max(...scenarios.map((s) => s.deals), 1);
   const realistic = scenarios.find((s) => s.label === "Realista");
+  const trend = useMemo(() => buildTrend(realistic?.deals ?? 0), [realistic]);
+
+  function handleRun() {
+    setRunning(true);
+    setTimeout(() => {
+      setRanFactor(factor);
+      setRunning(false);
+    }, 650);
+  }
 
   return (
     <div className="bee-bento bee-bento--warm bee-bento-pad space-y-4">
@@ -275,48 +325,61 @@ function ForecastView() {
         </div>
       </div>
 
-      <div className="bee-bento bee-bento--primary bee-bento-pad space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="bee-kpi-tile__label">Proyección realista</span>
-          <span className="bee-kpi text-xl">
-            {realistic?.deals ?? 0}
-            <span className="ml-1 text-xs font-normal text-muted-foreground">operaciones</span>
-          </span>
-        </div>
-        <p className="text-xs leading-relaxed">
-          Subir la prospección {factor}× en este segmento sostiene el ritmo actual de cierre sin saturar al equipo.
-        </p>
-      </div>
+      <button type="button" onClick={handleRun} disabled={running} className="bee-btn bee-btn--primary w-full">
+        {running ? "Simulando…" : `Ejecutar simulación ${factor}×`}
+      </button>
 
-      <div className="space-y-2">
-        {scenarios.map((s) => {
-          const pct = Math.round((s.deals / maxDeals) * 100);
-          return (
-            <div key={s.label} className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="w-24 text-muted-foreground">{s.label}</span>
-                <span className="font-semibold tabular-nums">{s.deals} operaciones</span>
-              </div>
-              <div className="bee-bar-track">
-                <div className={`bee-bar ${s.bar} transition-[width] duration-300`} style={{ width: `${pct}%` }} />
-              </div>
+      {/* Proyección + tendencia a la izquierda, escenarios + stats a la
+       * derecha — en 2 columnas en vez de todo apilado, para que esta
+       * pestaña converja a una altura parecida a Señales/Leads en vez de
+       * quedar mucho más alta y hacer saltar el panel al cambiar de tab. */}
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <div className="bee-bento bee-bento--primary bee-bento-pad space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="bee-kpi-tile__label">Proyección realista</span>
+            <span className="bee-kpi text-xl">
+              {realistic?.deals ?? 0}
+              <span className="ml-1 text-xs font-normal text-muted-foreground">operaciones</span>
+            </span>
+          </div>
+          <p className="text-xs leading-relaxed">
+            Subir la prospección {ranFactor}× en este segmento sostiene el ritmo actual de cierre sin saturar al equipo.
+          </p>
+          <TrendChart values={trend} />
+        </div>
+
+        <div className="space-y-3">
+          <div className="space-y-2">
+            {scenarios.map((s) => {
+              const pct = Math.round((s.deals / maxDeals) * 100);
+              return (
+                <div key={s.label} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="w-24 text-muted-foreground">{s.label}</span>
+                    <span className="font-semibold tabular-nums">{s.deals} operaciones</span>
+                  </div>
+                  <div className="bee-bar-track">
+                    <div className={`bee-bar ${s.bar} transition-[width] duration-300`} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="bee-stat-grid">
+            <div className="bee-stat">
+              <div className="bee-stat__val">68%</div>
+              <div className="bee-stat__lbl">Tasa de éxito</div>
             </div>
-          );
-        })}
-      </div>
-
-      <div className="bee-stat-grid">
-        <div className="bee-stat">
-          <div className="bee-stat__val">68%</div>
-          <div className="bee-stat__lbl">Tasa de éxito</div>
-        </div>
-        <div className="bee-stat">
-          <div className="bee-stat__val">54</div>
-          <div className="bee-stat__lbl">Pipeline</div>
-        </div>
-        <div className="bee-stat">
-          <div className="bee-stat__val">312</div>
-          <div className="bee-stat__lbl">Puntos de datos</div>
+            <div className="bee-stat">
+              <div className="bee-stat__val">54</div>
+              <div className="bee-stat__lbl">Pipeline</div>
+            </div>
+            <div className="bee-stat">
+              <div className="bee-stat__val">312</div>
+              <div className="bee-stat__lbl">Puntos de datos</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -359,9 +422,9 @@ export function MarketingDemoPanel() {
 
       {/* min-h evita que el panel salte de alto al cambiar de pestaña —
        * mismo principio que DeepLearningPanel/ResiliencePanel en el
-       * dashboard real. Calibrado al alto de la pestaña Señales, la más
-       * alta de las tres. */}
-      <div className="min-h-[420px] p-4 sm:p-5">
+       * dashboard real. Calibrado al contenido real de Simulador (~510px
+       * medido), la pestaña más alta de las tres — no un valor a ojo. */}
+      <div className="min-h-[510px] p-4 sm:p-5">
         <ActiveView />
       </div>
 
