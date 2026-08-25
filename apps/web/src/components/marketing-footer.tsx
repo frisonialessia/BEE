@@ -5,14 +5,27 @@ import { getApiBaseUrl } from "@/lib/api/client";
 
 const PRODUCT_LINKS = [
   { label: "Funcionalidades", href: "/funcionalidades" },
+  { label: "Soluciones", href: "/soluciones" },
   { label: "Vista previa", href: "#producto" },
   { label: "Documentación de la API", href: `${getApiBaseUrl()}/docs`, external: true },
+] as const;
+
+const COMPANY_LINKS = [
+  { label: "Quiénes somos", href: "/quienes-somos" },
+  { label: "Careers", href: "/careers" },
+  { label: "Seguridad", href: "/seguridad" },
 ] as const;
 
 const ACCOUNT_LINKS = [
   { label: "Iniciar sesión", href: "/login" },
   { label: "Crear cuenta", href: "/register" },
   { label: "Contacto", href: "/contacto?source=footer" },
+  { label: "Soporte", href: "/soporte" },
+] as const;
+
+const LEGAL_LINKS = [
+  { label: "Términos de Servicio", href: "/terminos" },
+  { label: "Privacidad", href: "/privacidad" },
 ] as const;
 
 /** Pie ejecutivo — marca, navegación real (sin enlaces inventados) y copyright. */
@@ -22,8 +35,8 @@ export function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-background">
       <div className="mx-auto w-full max-w-6xl px-6 py-12">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-[1.4fr_1fr_1fr]">
-          <div>
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="col-span-2 sm:col-span-3 lg:col-span-1">
             <Logo />
             <p className="bee-caption mt-3 max-w-xs">
               Inteligencia comercial autónoma para equipos de revenue que no tienen tiempo de buscar la señal —
@@ -55,10 +68,36 @@ export function MarketingFooter() {
             </ul>
           </nav>
 
+          <nav aria-label="Empresa">
+            <p className="bee-eyebrow">Empresa</p>
+            <ul className="mt-3 space-y-2">
+              {COMPANY_LINKS.map((link) => (
+                <li key={link.label}>
+                  <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
           <nav aria-label="Cuenta">
             <p className="bee-eyebrow">Cuenta</p>
             <ul className="mt-3 space-y-2">
               {ACCOUNT_LINKS.map((link) => (
+                <li key={link.label}>
+                  <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <nav aria-label="Legal">
+            <p className="bee-eyebrow">Legal</p>
+            <ul className="mt-3 space-y-2">
+              {LEGAL_LINKS.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground">
                     {link.label}
