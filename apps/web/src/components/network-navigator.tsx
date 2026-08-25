@@ -254,7 +254,7 @@ export function NetworkNavigatorPanel() {
         <h3 className="text-sm font-semibold text-foreground">Conexiones de red ({connections.length})</h3>
         <button
           onClick={() => setShowAdd((v) => !v)}
-          className="text-xs px-3 py-1.5 rounded-sm border border-dashed border-border text-muted-foreground hover:border-[var(--color-text-muted)] hover:text-foreground transition-colors"
+          className="bee-btn-ghost bee-btn-ghost--dashed"
         >
           + Agregar conexión
         </button>
@@ -272,7 +272,7 @@ export function NetworkNavigatorPanel() {
             <label className="text-xs text-muted-foreground shrink-0">Fuerza de la relación: <span className="font-bold text-foreground">{addStrength}/10</span></label>
             <input type="range" min={1} max={10} value={addStrength} onChange={(e) => setAddStrength(Number(e.target.value))} className="flex-1" />
           </div>
-          <button type="submit" disabled={addLoading} className="text-xs px-4 py-2 rounded-sm bg-[var(--color-cta)] text-white hover:opacity-90 disabled:opacity-50 transition-colors">
+          <button type="submit" disabled={addLoading} className="bee-btn bee-btn--primary">
             {addLoading ? "Agregando…" : "Agregar conexión"}
           </button>
         </form>

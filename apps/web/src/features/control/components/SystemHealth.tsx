@@ -213,7 +213,11 @@ export function SystemHealth() {
             <Radio className="size-3.5 text-[var(--color-text-muted)]" />
             <p className="bee-eyebrow">APIs externas</p>
           </div>
-          <div className="max-h-24 overflow-y-auto">
+          {/* overscroll-contain: this column (.bee-crm-control__metrics) is
+           * itself scrollable — without it, scrolling this list to its edge
+           * hands the leftover wheel delta to the column and the whole card
+           * jumps. */}
+          <div className="max-h-24 overflow-y-auto overscroll-contain">
             {snapshot.providers.map((p) => (
               <ProviderRow key={p.name} provider={p} />
             ))}

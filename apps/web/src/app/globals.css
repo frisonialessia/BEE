@@ -528,6 +528,19 @@
 
 .bee-btn-ghost:hover { background: var(--color-primary); }
 
+/* "Add slot" affordance (Simular señal, Agregar conexión) — same fixed
+ * height/padding/type as .bee-btn-ghost, dashed border only to read as an
+ * empty slot to fill rather than a regular secondary action. These used to
+ * be styled ad hoc per call site (px-3 py-1.5, rounded-sm vs rounded-md,
+ * text-muted-foreground) and drifted out of the height/padding system the
+ * rest of the button rows already follow. */
+.bee-btn-ghost--dashed {
+  border-style: dashed;
+  color: var(--color-text-muted);
+}
+
+.bee-btn-ghost--dashed:hover { color: var(--color-text); border-color: var(--color-text-muted); }
+
 /* Filter / tab pill row — segmented in-place filters and lightweight tab
  * switchers (Pipeline oculto's stage filter, Resiliencia's estado filter +
  * Cola/Auditoría switcher, Aprendizaje's Aprendizaje/Anomalías switcher).

@@ -303,8 +303,15 @@ export function DeepLearningPanel() {
           </button>
         ))}
       </div>
-      {tab === "correction" && <CorrectionLearningPanel />}
-      {tab === "anomaly" && <AnomalyAlertsPanel />}
+      {/* min-h reserves the height of the taller tab (Aprendizaje de estilo,
+       * with its two textareas) so switching to the shorter one (Monitor de
+       * anomalías) doesn't shrink this card — which, as a grid sibling of
+       * BrandVoicePanel on the Voz de marca page, would otherwise drag that
+       * whole row's height down with it and read as a layout jump. */}
+      <div className="min-h-[420px]">
+        {tab === "correction" && <CorrectionLearningPanel />}
+        {tab === "anomaly" && <AnomalyAlertsPanel />}
+      </div>
     </div>
   );
 }

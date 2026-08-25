@@ -18,7 +18,14 @@ function ScrollArea({
     >
       <ScrollAreaPrimitive.Viewport
         data-slot="scroll-area-viewport"
-        className="size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1"
+        // overscroll-contain: without it, scrolling this viewport past its
+        // own top/bottom hands the remaining wheel delta to the nearest
+        // scrollable ancestor — a real ancestor in every place this
+        // component is used today (e.g. Control's `.bee-crm-control__viz`
+        // column), so the whole column visibly jumps the moment a nested
+        // list is scrolled to its edge. This keeps the scroll contained to
+        // the list it belongs to.
+        className="size-full overscroll-contain rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-1"
       >
         {children}
       </ScrollAreaPrimitive.Viewport>

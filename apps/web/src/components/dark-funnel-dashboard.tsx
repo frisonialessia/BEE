@@ -215,7 +215,7 @@ export function DarkFunnelDashboard() {
         </div>
         <button
           onClick={() => setShowSimulate((v) => !v)}
-          className="ml-auto text-xs px-3 py-1.5 rounded-md border border-dashed border-border text-muted-foreground hover:border-[var(--color-text-muted)] hover:text-foreground transition-colors"
+          className="bee-btn-ghost bee-btn-ghost--dashed ml-auto"
         >
           + Simular señal
         </button>
@@ -249,11 +249,7 @@ export function DarkFunnelDashboard() {
               className="col-span-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
             />
           </div>
-          <button
-            type="submit"
-            disabled={simLoading}
-            className="text-xs px-4 py-2 rounded-md bg-[var(--color-cta)] text-white hover:opacity-90 disabled:opacity-50 transition-colors"
-          >
+          <button type="submit" disabled={simLoading} className="bee-btn bee-btn--primary">
             {simLoading ? "Enviando…" : "Enviar señal"}
           </button>
         </form>
