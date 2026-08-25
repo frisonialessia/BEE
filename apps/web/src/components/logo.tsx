@@ -18,7 +18,7 @@ export function Logo({
       {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, no una foto que se beneficie de next/image */}
       <img src="/icon.svg" alt="" className="h-8 w-8 shrink-0" aria-hidden="true" />
       {withText && (
-        <span className="text-lg font-semibold tracking-tight">
+        <span className="whitespace-nowrap text-lg font-semibold tracking-tight">
           BEE
           <span className="text-muted-foreground font-normal"> Intelligence</span>
         </span>
