@@ -11,7 +11,7 @@ import uuid
 from collections.abc import Generator
 from datetime import UTC, datetime
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel import Session, select
 
@@ -92,11 +92,9 @@ def get_current_user_optional(
     return _load_user_from_token(credentials.credentials, session)
 
 
-def get_organization_from_api_key(
-    x_bee_org_key: str | None = Header(default=None, alias="X-BEE-Org-Key"),
-    session: Session = Depends(get_session),
-) -> uuid.UUID | None:
-    """Resolve the tenant for a webhook/integration call from an org API key.
+def _resolve_org_api_key(plaintext: str | None, session: Session) -> uuid.UUID | None:
+    """Shared lookup behind :func:`get_organization_from_api_key` and
+    :func:`get_organization_from_webhook_key`.
 
     Returns ``None`` when no key is presented at all — ingestion stays
     backward-compatible with the single-shared-secret model (the created
@@ -105,12 +103,12 @@ def get_organization_from_api_key(
     silently falling back to untagged, so a typo'd or revoked key fails
     loudly instead of quietly leaking data into the global pool.
     """
-    if x_bee_org_key is None:
+    if plaintext is None:
         return None
 
     key = session.exec(
         select(OrganizationApiKey).where(
-            OrganizationApiKey.key_hash == hash_api_key(x_bee_org_key),
+            OrganizationApiKey.key_hash == hash_api_key(plaintext),
             OrganizationApiKey.is_active,
         )
     ).first()
@@ -121,6 +119,36 @@ def get_organization_from_api_key(
     session.add(key)
     session.flush()
     return key.organization_id
+
+
+def get_organization_from_api_key(
+    x_bee_org_key: str | None = Header(default=None, alias="X-BEE-Org-Key"),
+    session: Session = Depends(get_session),
+) -> uuid.UUID | None:
+    """Resolve the tenant for a webhook/integration call from an org API key
+    presented as a header — see :func:`_resolve_org_api_key`."""
+    return _resolve_org_api_key(x_bee_org_key, session)
+
+
+def get_organization_from_webhook_key(
+    x_bee_org_key: str | None = Header(default=None, alias="X-BEE-Org-Key"),
+    org_key: str | None = Query(default=None),
+    session: Session = Depends(get_session),
+) -> uuid.UUID | None:
+    """Resolve the tenant for ``POST /webhooks/receive`` from an org API key.
+
+    Unlike :func:`get_organization_from_api_key` (header-only — fine for
+    integrations BEE's own frontend or scripts control), external providers
+    (LinkedIn Sales Nav, G2, Google Alerts) are typically configured with
+    only a destination *URL*, no custom headers — so this also accepts the
+    key as an ``?org_key=`` query parameter on the callback URL BEE gives
+    that provider. Header takes precedence when both are somehow present.
+    Same backward-compatible ``None``-when-absent contract as
+    :func:`get_organization_from_api_key`: a webhook configured before
+    per-org keys existed (or one that intentionally shares signals across
+    the whole install) keeps working, untagged, exactly as before.
+    """
+    return _resolve_org_api_key(x_bee_org_key or org_key, session)
 
 
 def get_organization_id(

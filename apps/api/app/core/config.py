@@ -74,6 +74,16 @@ class Settings(BaseSettings):
     # Secure by default: unsigned webhooks are rejected unless a deployment
     # explicitly opts out (local dev's .env.example/docker-compose already do).
     WEBHOOK_SIGNATURE_REQUIRED: bool = True
+    # Replay-attack window for /webhooks/receive: a request whose exact
+    # (provider, signature) pair was already accepted within this many
+    # seconds is rejected as a captured-and-replayed request, independent of
+    # whether the payload it carries is otherwise valid. 0 disables the
+    # check entirely (useful for tests that intentionally POST the same
+    # signed payload twice). Per-process only — same in-process limitation
+    # as IngestionWorker itself (see README §7 gotcha #2); a multi-instance
+    # deployment needs a shared store (Redis) for this to hold across
+    # instances, same future work already called out for the queue.
+    WEBHOOK_REPLAY_WINDOW_SECONDS: int = 300
 
     # API Key authentication for REST endpoints.
     # When set, all non-health endpoints require the header:

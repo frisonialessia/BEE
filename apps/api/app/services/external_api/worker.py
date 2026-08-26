@@ -54,6 +54,11 @@ class IngestionTask:
     payload: dict[str, Any] = field(default_factory=dict)
     signal_id: str | None = None
     opportunity_id: str | None = None
+    # Tenant resolved from the webhook call (X-BEE-Org-Key header or
+    # ?org_key= query param — see app.api.deps.get_organization_from_webhook_key).
+    # None means untagged, same backward-compatible contract as every other
+    # optional organization_id in the codebase.
+    organization_id: str | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -148,16 +153,17 @@ class IngestionWorker:
         payload = task.payload
         provider = task.provider
         event_type = payload.get("event_type") or payload.get("event") or "unknown"
+        organization_id = uuid.UUID(task.organization_id) if task.organization_id else None
 
         with session_scope() as session:
             # 1. Dark funnel intent signals (G2, website visits, LinkedIn research)
             if _is_dark_funnel_event(event_type, provider):
-                self._ingest_dark_funnel(session, payload, provider)
+                self._ingest_dark_funnel(session, payload, provider, organization_id)
 
             # 2. Market signal ingestion (funding, hiring, etc.)
             signal_outcome = None
             if _is_market_signal_event(event_type, payload):
-                signal_outcome = self._ingest_market_signal(session, payload)
+                signal_outcome = self._ingest_market_signal(session, payload, organization_id)
 
             # 3. External API enrichment (LinkedIn profile, G2, Google)
             from app.services.external_api.orchestrator import ExternalAPIOrchestrator
@@ -234,7 +240,9 @@ class IngestionWorker:
             self._reenrich_opportunity(session, signal, opp)
             session.commit()
 
-    def _ingest_dark_funnel(self, session, payload: dict, provider: str) -> None:
+    def _ingest_dark_funnel(
+        self, session, payload: dict, provider: str, organization_id: uuid.UUID | None = None
+    ) -> None:
         from app.schemas.dark_funnel import DarkFunnelSignalIn
         from app.services.dark_funnel.service import DarkFunnelService
 
@@ -254,9 +262,9 @@ class IngestionWorker:
             raw_payload=payload,
             external_id=payload.get("external_id"),
         )
-        DarkFunnelService(session).ingest_signal(signal_in)
+        DarkFunnelService(session).ingest_signal(signal_in, organization_id)
 
-    def _ingest_market_signal(self, session, payload: dict):
+    def _ingest_market_signal(self, session, payload: dict, organization_id: uuid.UUID | None = None):
         from app.schemas.signal import CompanyRef, LeadRef, SignalWebhookIn
         from app.services.signal_engine import SignalEngine
 
@@ -271,7 +279,7 @@ class IngestionWorker:
             lead=LeadRef(**lead) if lead else None,
             data=payload.get("data") or {},
         )
-        return SignalEngine(session).ingest(webhook, commit=False)
+        return SignalEngine(session).ingest(webhook, commit=False, organization_id=organization_id)
 
     def _apply_enrichment_and_reenrich(
         self,
@@ -344,6 +352,7 @@ def _task_to_dict(task: IngestionTask) -> dict[str, Any]:
         "payload": task.payload,
         "signal_id": task.signal_id,
         "opportunity_id": task.opportunity_id,
+        "organization_id": task.organization_id,
     }
 
 
@@ -355,6 +364,7 @@ def _task_from_dict(data: dict[str, Any]) -> IngestionTask:
         payload=data.get("payload") or {},
         signal_id=data.get("signal_id"),
         opportunity_id=data.get("opportunity_id"),
+        organization_id=data.get("organization_id"),
     )
 
 

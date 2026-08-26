@@ -52,6 +52,10 @@ Referencia completa: `apps/api/.env.example`
 
 Autenticación por **HMAC por provider**, no por `X-API-Key`. No eliminar esta exención: los sistemas externos no pueden enviar `X-API-Key`.
 
+Protegido además contra replay: la misma firma no se acepta dos veces dentro de `WEBHOOK_REPLAY_WINDOW_SECONDS` (default 300s, `0` desactiva el chequeo — ver `app.core.replay_guard`).
+
+Para que las señales/dark-funnel entrantes por este endpoint queden etiquetadas con `organization_id` (en vez de "sin tenant", visible a toda la instalación), configurar la URL que se le da a cada proveedor con `?org_key=<clave de la organización>` — o, si el proveedor sí permite headers custom, `X-BEE-Org-Key`. Sin ninguno de los dos, el comportamiento es el mismo de siempre (sin tenant).
+
 ### 2. `IngestionWorker` es in-process (`asyncio.Queue`)
 
 Arranca automáticamente al boot cuando `EXTERNAL_INGESTION_ENABLED=true`. En despliegues **multi-instancia**, considerar una cola respaldada por Redis (futuro) para que las tareas de enriquecimiento no se pierdan al reiniciar.
