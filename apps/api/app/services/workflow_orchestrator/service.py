@@ -43,6 +43,7 @@ from sqlmodel import Session, select
 
 # Triggers handler registration as a side effect.
 import app.services.workflow_orchestrator.handlers  # noqa: F401
+from app.core.database import session_scope
 from app.core.logging import get_logger
 from app.models.workflow_task import WorkflowTask, WorkflowTaskStatus
 from app.schemas.workflow import BeeEvent, WorkflowStatusOut
@@ -50,6 +51,52 @@ from app.services.permissions import scope_by_organization_id
 from app.services.workflow_orchestrator.registry import get_all_handlers, get_handlers_for_event
 
 logger = get_logger(__name__)
+
+_DLQ_NAME_SEPARATOR = "::handler::"
+
+
+def _dlq_event_name(event_type: str, handler_name: str) -> str:
+    """Composite DLQ key disambiguating which handler failed.
+
+    Multiple handlers can subscribe to the same event_type (e.g. CRM,
+    billing, and service-delivery all fire on ``opportunity.won``) — keying
+    the DLQ purely by ``event_type`` would collide their retry handlers.
+    """
+    return f"{event_type}{_DLQ_NAME_SEPARATOR}{handler_name}"
+
+
+def _replay_workflow_handler(original_event: dict) -> bool:
+    """Generic DLQ retry handler: replays ANY workflow handler by name.
+
+    Registered dynamically (see ``WorkflowOrchestrator._enqueue_to_dlq``) for
+    every ``(event_type, handler_name)`` combination that actually fails, so
+    a single function covers every built-in and future handler without
+    needing one hand-written retry function per integration.
+
+    Returns True on success. Raises on failure (a handler that still returns
+    a FAILED task, or a handler_name no longer registered) so the DLQ's
+    exponential-backoff/permanently-failed bookkeeping applies exactly like
+    any other retried event.
+    """
+    handler_name = original_event.get("handler_name")
+    event_type = original_event.get("event_type")
+    handler = next((h for h in get_all_handlers() if h.name == handler_name), None)
+    if handler is None:
+        raise ValueError(f"Workflow handler '{handler_name}' is no longer registered.")
+
+    event = BeeEvent(
+        event_type=event_type,
+        entity_id=original_event.get("entity_id"),
+        entity_type=original_event.get("entity_type"),
+        payload=original_event.get("payload") or {},
+        published_at=original_event.get("published_at"),
+    )
+
+    with session_scope() as session:
+        task = handler.handle(event, session)
+        if task.status == WorkflowTaskStatus.FAILED:
+            raise RuntimeError(task.error_message or f"Handler '{handler_name}' failed again on retry.")
+    return True
 
 
 class WorkflowOrchestrator:
@@ -84,6 +131,19 @@ class WorkflowOrchestrator:
                     task.status,
                     task.mock,
                 )
+                if task.status == WorkflowTaskStatus.FAILED:
+                    # Handlers built on _post_webhook() (CRM, billing,
+                    # delivery, notify, outbound webhooks to customers)
+                    # catch their own HTTP failures and return a FAILED task
+                    # rather than raising — without this, that failure never
+                    # reached the except block below, so it was never
+                    # retried or escalated: a transient 500/timeout from a
+                    # customer's Zapier endpoint permanently dropped that
+                    # delivery with only a WorkflowTask row (nobody polls)
+                    # as evidence.
+                    self._enqueue_to_dlq(
+                        event, handler.name, task.error_message or "Handler returned a FAILED task.", task.id
+                    )
             except Exception as exc:  # noqa: BLE001
                 logger.exception(
                     "Handler '%s' raised during event '%s' — creating FAILED task + DLQ entry.",
@@ -123,11 +183,18 @@ class WorkflowOrchestrator:
         """Capture a failed handler dispatch into the Dead Letter Queue."""
         try:
             from app.models.dead_letter import DLQEventType
-            from app.services.dead_letter import DeadLetterQueueService
+            from app.services.dead_letter import DeadLetterQueueService, register_retry_handler
+
+            dlq_event_name = _dlq_event_name(event.event_type, handler_name)
+            # Idempotent — just a dict assignment — safe to call on every
+            # enqueue rather than only at import time, which is what lets
+            # one generic function cover every (event_type, handler_name)
+            # combination without enumerating them in advance.
+            register_retry_handler(dlq_event_name)(_replay_workflow_handler)
 
             dlq = DeadLetterQueueService(self.session)
             dlq.enqueue(
-                event_name=event.event_type,
+                event_name=dlq_event_name,
                 event_type=DLQEventType.WORKFLOW_HANDLER,
                 original_event={
                     "event_type": event.event_type,
