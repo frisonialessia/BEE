@@ -150,7 +150,7 @@ def test_funding_generator_produces_complete_battlecard(session):
     assert strategy.closing_argument
     assert strategy.timing_window.urgency == "immediate"
     assert strategy.timing_window.reason
-    assert strategy.generator == "rule_based"
+    assert strategy.generator == "funding_strategy"
     assert strategy.is_battlecard_complete() is True
 
 
@@ -164,7 +164,7 @@ def test_hiring_generator_produces_complete_battlecard(session):
     strategy = StrategySchema.model_validate(outcome.opportunity.strategy)
     assert "leadership" in strategy.pain_point.lower() or "exec" in strategy.pain_point.lower() or strategy.pain_point
     assert strategy.timing_window.urgency in ("this_week", "this_month")
-    assert strategy.generator == "rule_based"
+    assert strategy.generator == "hiring_strategy"
 
 
 def test_tech_generator_produces_complete_battlecard(session):
@@ -242,3 +242,82 @@ def test_strategy_schema_completeness_check():
 def test_all_builtin_generators_registered():
     names = {g.name for g in get_strategy_generators()}
     assert {"funding_strategy", "hiring_strategy", "tech_adoption_strategy", "generic_strategy"} <= names
+
+
+# ── generator identity must flow through to confidence scoring ─────────────────
+#
+# Regression test: every rule-based generator used to hardcode
+# generator="rule_based" in its StrategySchema literally, instead of
+# generator=self.name — so StrategyGeneratorService.enrich() always called
+# ObservabilityService.score_and_flag(generator_name="rule_based"), and the
+# per-generator entries in GENERATOR_BASE_SCORES ("funding_strategy": 0.85,
+# "generic_strategy": 0.55, ...) were unreachable dead code: EVERY rule-based
+# strategy — including GenericStrategyGenerator's safety-net battlecard —
+# got the same 0.85 "rule_based" base reliability. In practice this meant
+# manual_review_required essentially never engaged for a generic/fallback
+# battlecard, the opposite of what the confidence system exists to catch.
+
+def test_specific_generator_produces_higher_confidence_than_generic(session):
+    """A funding signal (a real, specific classification) must score higher
+    confidence than an uncovered signal_type that falls through to
+    GenericStrategyGenerator — proving generator identity actually reaches
+    the confidence system now, not just that both happen to pass."""
+    from app.services.strategy_generator import StrategyGeneratorService
+
+    engine = SignalEngine(session)
+    funding_outcome = engine.ingest(_funding_payload("test:confidence-funding"))
+    assert funding_outcome.opportunity is not None
+    funding_strategy = StrategySchema.model_validate(funding_outcome.opportunity.strategy)
+    assert funding_strategy.generator == "funding_strategy"
+
+    from datetime import UTC, datetime
+
+    from app.models.company import Company
+    from app.models.lead import Lead
+    from app.models.opportunity import Opportunity
+    from app.models.signal import Signal, SignalSource
+
+    company = Company(name="Launchy", domain="launchy.example")
+    session.add(company)
+    session.flush()
+    lead = Lead(company_id=company.id, full_name="Sam Lead", email="sam@launchy.example")
+    session.add(lead)
+    session.flush()
+    # PRODUCT_LAUNCH has no dedicated generator (see rule_based.py's
+    # supports() methods) — GenericStrategyGenerator is the only one that
+    # will match, exactly the scenario its own docstring exists for.
+    signal = Signal(
+        company_id=company.id,
+        lead_id=lead.id,
+        signal_type=SignalType.PRODUCT_LAUNCH,
+        source=SignalSource.WEBHOOK,
+        title="Launchy shipped a new product line",
+        score=60.0,
+        confidence=0.5,
+        detected_at=datetime.now(UTC),
+    )
+    session.add(signal)
+    session.flush()
+    opportunity = Opportunity(
+        signal_id=signal.id,
+        lead_id=lead.id,
+        company_id=company.id,
+        title="Launchy — product launch",
+        status=OpportunityStatus.DETECTED,
+        score=signal.score,
+    )
+    session.add(opportunity)
+    session.flush()
+
+    svc = StrategyGeneratorService(session)
+    enriched = svc.enrich(signal, opportunity)
+    assert enriched is True
+
+    generic_strategy = StrategySchema.model_validate(opportunity.strategy)
+    assert generic_strategy.generator == "generic_strategy"
+
+    # The actual regression assertion: before the fix both strategies got
+    # the same "rule_based": 0.85 base and this would fail (both ~equal,
+    # generic frequently NOT flagged for review).
+    assert generic_strategy.confidence_score < funding_strategy.confidence_score
+    assert generic_strategy.manual_review_required is True

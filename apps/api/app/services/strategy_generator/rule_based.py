@@ -184,7 +184,7 @@ class FundingStrategyGenerator(StrategyGenerator):
                 f"Signal score {score:.0f}/100 — {company} raised {round_label}{amount_str}. "
                 f"Lead: {lead}.{hint_note}"
             ),
-            generator="rule_based",
+            generator=self.name,
             generator_version="1.0.0",
             generated_at=datetime.now(UTC),
         )
@@ -269,7 +269,7 @@ class HiringStrategyGenerator(StrategyGenerator):
             next_best_action=action,
             channel=channel,
             rationale=f"Signal score {ctx.signal_score:.0f}/100 — {company} / {lead}.",
-            generator="rule_based",
+            generator=self.name,
             generator_version="1.0.0",
             generated_at=datetime.now(UTC),
         )
@@ -321,7 +321,7 @@ class TechAdoptionStrategyGenerator(StrategyGenerator):
             next_best_action="research",
             channel="email",
             rationale=f"Signal score {ctx.signal_score:.0f}/100 — {company} adopted {tool}.",
-            generator="rule_based",
+            generator=self.name,
             generator_version="1.0.0",
             generated_at=datetime.now(UTC),
         )
@@ -367,7 +367,7 @@ class GenericStrategyGenerator(StrategyGenerator):
             next_best_action="monitor",
             channel="email",
             rationale=f"Unclassified signal for {company}. Score {ctx.signal_score:.0f}/100.",
-            generator="rule_based",
+            generator=self.name,
             generator_version="1.0.0",
             generated_at=datetime.now(UTC),
         )
