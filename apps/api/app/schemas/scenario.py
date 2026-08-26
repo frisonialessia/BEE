@@ -61,4 +61,10 @@ class ScenarioResult(BaseModel):
 
     historical_sample_size: int
     low_data_confidence: bool
+    has_any_historical_data: bool = Field(
+        description="False when this organization has zero closed StrategyOutcome records of any "
+        "kind — win_rate/avg_deal_value/the three projections are entirely industry-benchmark "
+        "estimates rather than anything measured from this tenant's own pipeline. Distinct from "
+        "low_data_confidence, which can still be True with real (just sparse) data.",
+    )
     supporting_data: dict[str, Any]

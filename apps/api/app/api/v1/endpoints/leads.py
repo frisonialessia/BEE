@@ -31,6 +31,7 @@ from app.schemas.lead import (
     LeadCreateIn,
     LeadImportIn,
     LeadImportResult,
+    LeadImportRow,
     LeadImportRowOutcome,
     LeadOut,
     LeadValidationOut,
@@ -98,7 +99,10 @@ def bulk_create_leads(
 ) -> LeadBulkResult:
     """CSV parsing happens in the browser — this just persists the rows it
     already validated. Each row is inserted independently so one bad row
-    (e.g. a company_id that doesn't exist) doesn't fail the whole import.
+    (e.g. a company_id that doesn't exist, or a field failing LeadCreateIn's
+    own constraints) doesn't fail the whole import — see LeadBulkCreateIn's
+    docstring for why row validation happens here rather than at the
+    request-body layer.
     """
     created_count = 0
     errors: list[LeadBulkError] = []
@@ -106,8 +110,9 @@ def bulk_create_leads(
     # Committed per row (not batched into one transaction) so a bad row
     # (e.g. a company_id that doesn't exist) can be rolled back on its own
     # without losing the rows already inserted earlier in the same import.
-    for index, row in enumerate(data.leads):
+    for index, raw_row in enumerate(data.leads):
         try:
+            row = LeadCreateIn.model_validate(raw_row)
             lead = Lead(
                 organization_id=current_user.organization_id,
                 company_id=row.company_id,
@@ -120,6 +125,7 @@ def bulk_create_leads(
             )
             session.add(lead)
             session.commit()
+            _validate_new_lead(session, lead.id)
             created_count += 1
         except Exception as exc:  # noqa: BLE001 - one bad row must not abort the batch
             session.rollback()
@@ -156,7 +162,9 @@ def import_leads(
 
     Committed per row, same as ``POST /leads/bulk`` — one bad row (e.g. a
     company name so long it violates a column limit) never rolls back the
-    rows already imported earlier in the same file.
+    rows already imported earlier in the same file. Row-shape validation
+    itself also happens per-row here rather than at the request-body layer —
+    see ``LeadImportIn``'s docstring for why.
     """
     companies = CompanyRepository(session)
     leads = LeadRepository(session)
@@ -165,7 +173,13 @@ def import_leads(
     outcomes: list[LeadImportRowOutcome] = []
     leads_created = leads_matched = companies_created = companies_matched = skipped = 0
 
-    for index, row in enumerate(data.rows):
+    for index, raw_row in enumerate(data.rows):
+        try:
+            row = LeadImportRow.model_validate(raw_row)
+        except Exception as exc:  # noqa: BLE001 - one bad row must not abort the import
+            outcomes.append(LeadImportRowOutcome(row=index, status="error", message=str(exc)))
+            continue
+
         full_name = (row.full_name or "").strip() or None
         email = (row.email or "").strip().lower() or None
         if not full_name and not email:

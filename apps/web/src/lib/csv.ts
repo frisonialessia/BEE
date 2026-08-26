@@ -39,12 +39,33 @@ function parseLine(line: string): string[] {
   return fields;
 }
 
+/** Encuentra encabezados duplicados (tras trim + minúscula) — dos columnas
+ *  que colapsan al mismo nombre harían que la última pisara silenciosamente
+ *  el valor de la primera en cada fila, sin ningún aviso. Compartida con
+ *  `xlsx-import.ts` para que ambos formatos de import validen igual. */
+export function findDuplicateHeaders(headers: string[]): string[] {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const header of headers) {
+    if (!header) continue;
+    if (seen.has(header)) duplicates.add(header);
+    seen.add(header);
+  }
+  return [...duplicates];
+}
+
 /** Parsea un CSV con encabezado en la primera fila → un objeto por fila. */
 export function parseCsv(text: string): Record<string, string>[] {
   const lines = text.split(/\r\n|\n/).filter((line) => line.trim().length > 0);
   if (lines.length === 0) return [];
 
   const headers = parseLine(lines[0]).map((h) => h.trim().toLowerCase());
+  const duplicates = findDuplicateHeaders(headers);
+  if (duplicates.length > 0) {
+    throw new Error(
+      `El archivo tiene columnas repetidas (${duplicates.join(", ")}) — cada fila perdería datos silenciosamente. Renombra o elimina la columna duplicada y vuelve a intentar.`,
+    );
+  }
   return lines.slice(1).map((line) => {
     const values = parseLine(line);
     const row: Record<string, string> = {};

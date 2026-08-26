@@ -1,3 +1,5 @@
+import { findDuplicateHeaders } from "@/lib/csv";
+
 /** Parseo de .xlsx/.xls en el navegador — carga `xlsx` (SheetJS) de forma
  *  dinámica (`import()`) para que el paquete no infle el bundle principal;
  *  solo se descarga cuando alguien realmente abre el panel de importación.
@@ -20,6 +22,12 @@ export async function parseXlsxFile(file: File): Promise<Record<string, string>[
   if (raw.length === 0) return [];
 
   const headers = raw[0].map((h) => String(h ?? "").trim().toLowerCase());
+  const duplicates = findDuplicateHeaders(headers);
+  if (duplicates.length > 0) {
+    throw new Error(
+      `El archivo tiene columnas repetidas (${duplicates.join(", ")}) — cada fila perdería datos silenciosamente. Renombra o elimina la columna duplicada y vuelve a intentar.`,
+    );
+  }
   return raw.slice(1).map((line) => {
     const row: Record<string, string> = {};
     headers.forEach((header, i) => {

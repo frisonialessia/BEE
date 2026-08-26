@@ -610,6 +610,12 @@ export interface ScenarioResult {
   recommended_actions: string[];
   historical_sample_size: number;
   low_data_confidence: boolean;
+  // False when this organization has zero closed StrategyOutcome records of
+  // any kind — every number below (win rates, avg deal value, and all three
+  // projections) is an industry-benchmark estimate, not anything measured
+  // from this tenant's own pipeline. Distinct from low_data_confidence,
+  // which can still be true with real (just sparse) data.
+  has_any_historical_data: boolean;
   // Honesty flags surfaced from ScenarioSimulator._get_historical_stats —
   // True means avg_deal_value/median_cycle_days is an assumed industry
   // default, not a measurement from this org's own closed deals.

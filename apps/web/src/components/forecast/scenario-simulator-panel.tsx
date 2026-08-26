@@ -203,12 +203,21 @@ export function ScenarioSimulatorPanel() {
           </div>
         ) : (
           <>
-            {result.low_data_confidence && (
-              <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[color-mix(in_srgb,var(--warning)_15%,var(--color-background))] p-2.5 text-[11px]">
+            {!result.has_any_historical_data ? (
+              <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-chart-2)] bg-[color-mix(in_srgb,var(--color-chart-2)_15%,var(--color-background))] p-2.5 text-[11px]">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-                Confianza de datos baja — solo {result.historical_sample_size} resultado(s) histórico(s) para
-                este segmento. Las proyecciones tienen un margen de error amplio.
+                Sin historial de resultados en tu organización todavía — estas proyecciones son estimados
+                genéricos de industria, no tu desempeño real. Registra tus primeros resultados (Ganado/Perdido)
+                para desbloquear proyecciones basadas en tus propios datos.
               </div>
+            ) : (
+              result.low_data_confidence && (
+                <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[color-mix(in_srgb,var(--warning)_15%,var(--color-background))] p-2.5 text-[11px]">
+                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                  Confianza de datos baja — solo {result.historical_sample_size} resultado(s) histórico(s) para
+                  este segmento. Las proyecciones tienen un margen de error amplio.
+                </div>
+              )
             )}
             {usedDefaultDealValue && (
               <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-primary)]/25 p-2.5 bee-micro">
