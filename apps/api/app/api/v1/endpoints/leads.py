@@ -362,7 +362,7 @@ def merge_leads(
 def bulk_update_leads(
     body: LeadBulkUpdateIn,
     session: Session = Depends(get_session),
-    current_user: User | None = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
 ) -> LeadBulkUpdateResult:
     """The bulk-action toolbar in the leads directory — select a page of
     rows, reassign them or move them along the pipeline in one call instead

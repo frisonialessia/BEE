@@ -87,7 +87,7 @@ class ExecutiveAgent:
 
         bundle = self._generate(opp)
         self._persist(opp, bundle)
-        self._create_orchestrator_actions(bundle)
+        self._create_orchestrator_actions(bundle, opp.organization_id)
         self._emit_webhook(bundle)
         self._audit_bundle(opp, bundle)
         return bundle
@@ -158,17 +158,22 @@ class ExecutiveAgent:
         self.session.commit()
         logger.debug("Persisted artifacts for opportunity %s", opp.id)
 
-    def _create_orchestrator_actions(self, bundle: ArtifactBundle) -> None:
+    def _create_orchestrator_actions(
+        self, bundle: ArtifactBundle, organization_id: uuid.UUID | None
+    ) -> None:
         """Register all executable artifacts with the AgentOrchestrator.
 
         Creates PendingAction records (PENDING_APPROVAL) for every external
         action. No action can be executed until explicitly approved.
+        ``organization_id`` is the owning opportunity's tenant — stamped onto
+        every created action so it stays scoped to that organization instead
+        of falling into the "untagged = visible to every tenant" convention.
         """
         try:
             from app.services.omnichannel.gateway import OmnichannelGateway
             from app.services.orchestrator import AgentOrchestrator
             orchestrator = AgentOrchestrator(self.session, OmnichannelGateway(self.session))
-            actions = orchestrator.create_from_bundle(bundle)
+            actions = orchestrator.create_from_bundle(bundle, organization_id=organization_id)
             logger.info(
                 "Created %d orchestrator action(s) for opportunity %s",
                 len(actions), bundle.opportunity_id,

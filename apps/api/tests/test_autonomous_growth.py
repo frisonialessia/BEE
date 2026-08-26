@@ -16,7 +16,11 @@ import uuid
 import pytest
 from sqlmodel import Session
 
+from app.core.security import create_access_token, hash_password
+from app.models.base import UserRole
+from app.models.organization import Organization
 from app.models.sequence import ExecutionStatus
+from app.models.user import User
 from app.schemas.brand import BrandFragmentCreate, VoiceProfileCreate
 from app.schemas.engagement import IncomingEventIn
 from app.schemas.sequence import ExecutionCreate, SequenceCreate, StepDefinition, StepTransition
@@ -845,6 +849,29 @@ class TestEngagementEndpoints:
 # Sequence API endpoints
 # ══════════════════════════════════════════════════════════════════
 
+def _auth_headers(session: Session) -> dict:
+    """A valid bearer token for a fresh, persisted OWNER — the sequence
+    endpoints require a resolvable tenant identity."""
+    org = Organization(name="Test Org", slug=f"test-org-{uuid.uuid4().hex[:8]}")
+    session.add(org)
+    session.commit()
+    session.refresh(org)
+
+    user = User(
+        organization_id=org.id,
+        email=f"owner-{uuid.uuid4().hex[:8]}@bee.ai",
+        hashed_password=hash_password("password123"),
+        full_name="Owner",
+        role=UserRole.OWNER,
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    token = create_access_token(user.id, organization_id=org.id, role=user.role.value)
+    return {"Authorization": f"Bearer {token}"}
+
+
 class TestSequenceEndpoints:
     def _sample_payload(self, name: str = "api_test") -> dict:
         return {
@@ -871,44 +898,55 @@ class TestSequenceEndpoints:
             "max_days": 14,
         }
 
-    def test_create_sequence(self, client) -> None:
-        resp = client.post("/api/v1/sequences", json=self._sample_payload("endpoint_create"))
+    def test_sequences_require_auth(self, client) -> None:
+        resp = client.post("/api/v1/sequences", json=self._sample_payload("no_auth"))
+        assert resp.status_code == 401
+
+    def test_create_sequence(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        resp = client.post("/api/v1/sequences", json=self._sample_payload("endpoint_create"), headers=headers)
         assert resp.status_code == 201
         data = resp.json()
         assert data["name"] == "endpoint_create"
         assert len(data["steps"]) == 2
 
-    def test_list_sequences(self, client) -> None:
-        client.post("/api/v1/sequences", json=self._sample_payload("endpoint_list_1"))
-        client.post("/api/v1/sequences", json=self._sample_payload("endpoint_list_2"))
-        resp = client.get("/api/v1/sequences")
+    def test_list_sequences(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        client.post("/api/v1/sequences", json=self._sample_payload("endpoint_list_1"), headers=headers)
+        client.post("/api/v1/sequences", json=self._sample_payload("endpoint_list_2"), headers=headers)
+        resp = client.get("/api/v1/sequences", headers=headers)
         assert resp.status_code == 200
         assert len(resp.json()) >= 2
 
-    def test_start_execution(self, client) -> None:
-        create = client.post("/api/v1/sequences", json=self._sample_payload("endpoint_exec"))
+    def test_start_execution(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        create = client.post("/api/v1/sequences", json=self._sample_payload("endpoint_exec"), headers=headers)
         seq_id = create.json()["id"]
 
-        resp = client.post("/api/v1/sequences/executions", json={"sequence_id": seq_id})
+        resp = client.post("/api/v1/sequences/executions", json={"sequence_id": seq_id}, headers=headers)
         assert resp.status_code == 201
         data = resp.json()
         assert data["current_step_id"] == "s1"
         assert data["status"] == "running"
 
-    def test_advance_execution(self, client) -> None:
-        seq_id = client.post("/api/v1/sequences", json=self._sample_payload("endpoint_adv")).json()["id"]
-        exec_id = client.post("/api/v1/sequences/executions", json={"sequence_id": seq_id}).json()["id"]
+    def test_advance_execution(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        seq_id = client.post("/api/v1/sequences", json=self._sample_payload("endpoint_adv"), headers=headers).json()["id"]
+        exec_id = client.post("/api/v1/sequences/executions", json={"sequence_id": seq_id}, headers=headers).json()["id"]
 
-        resp = client.post(f"/api/v1/sequences/executions/{exec_id}/advance", json={"event": "email_opened"})
+        resp = client.post(
+            f"/api/v1/sequences/executions/{exec_id}/advance", json={"event": "email_opened"}, headers=headers
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["transition_triggered"] == "email_opened"
         assert data["current_step"] == "s2"
 
-    def test_get_execution(self, client) -> None:
-        seq_id = client.post("/api/v1/sequences", json=self._sample_payload("endpoint_get")).json()["id"]
-        exec_id = client.post("/api/v1/sequences/executions", json={"sequence_id": seq_id}).json()["id"]
+    def test_get_execution(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        seq_id = client.post("/api/v1/sequences", json=self._sample_payload("endpoint_get"), headers=headers).json()["id"]
+        exec_id = client.post("/api/v1/sequences/executions", json={"sequence_id": seq_id}, headers=headers).json()["id"]
 
-        resp = client.get(f"/api/v1/sequences/executions/{exec_id}")
+        resp = client.get(f"/api/v1/sequences/executions/{exec_id}", headers=headers)
         assert resp.status_code == 200
         assert resp.json()["id"] == exec_id

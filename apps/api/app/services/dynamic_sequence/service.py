@@ -58,6 +58,7 @@ from sqlmodel import Session, select
 from app.core.logging import get_logger
 from app.models.sequence import DynamicSequence, ExecutionStatus, SequenceExecution
 from app.schemas.sequence import AdvanceResult, ExecutionCreate, SequenceCreate
+from app.services.permissions import scope_by_organization_id
 
 logger = get_logger(__name__)
 
@@ -122,9 +123,12 @@ class DynamicSequenceEngine:
 
     # ── Sequence management ───────────────────────────────────────────────────
 
-    def create_sequence(self, data: SequenceCreate) -> DynamicSequence:
-        """Define a new sequence DAG."""
+    def create_sequence(
+        self, data: SequenceCreate, organization_id: uuid.UUID | None = None
+    ) -> DynamicSequence:
+        """Define a new sequence DAG, tagged to the caller's organization."""
         seq = DynamicSequence(
+            organization_id=organization_id,
             name=data.name,
             description=data.description,
             signal_type=data.signal_type,
@@ -139,26 +143,44 @@ class DynamicSequenceEngine:
         logger.info("DynamicSequence created: id=%s name=%s steps=%d", seq.id, seq.name, len(seq.steps))
         return seq
 
-    def get_sequence(self, sequence_id: uuid.UUID) -> DynamicSequence | None:
-        return self.session.get(DynamicSequence, sequence_id)
+    def get_sequence(
+        self, sequence_id: uuid.UUID, organization_id: uuid.UUID | None = None
+    ) -> DynamicSequence | None:
+        seq = self.session.get(DynamicSequence, sequence_id)
+        if seq is None:
+            return None
+        if (
+            organization_id is not None
+            and seq.organization_id is not None
+            and seq.organization_id != organization_id
+        ):
+            return None
+        return seq
 
-    def list_sequences(self, limit: int = 50) -> list[DynamicSequence]:
-        stmt = select(DynamicSequence).order_by(DynamicSequence.created_at.desc()).limit(limit)
+    def list_sequences(
+        self, limit: int = 50, organization_id: uuid.UUID | None = None
+    ) -> list[DynamicSequence]:
+        stmt = select(DynamicSequence)
+        stmt = scope_by_organization_id(stmt, DynamicSequence.organization_id, organization_id)
+        stmt = stmt.order_by(DynamicSequence.created_at.desc()).limit(limit)
         return list(self.session.exec(stmt).all())
 
     # ── Execution management ──────────────────────────────────────────────────
 
-    def start_execution(self, data: ExecutionCreate) -> SequenceExecution:
+    def start_execution(
+        self, data: ExecutionCreate, organization_id: uuid.UUID | None = None
+    ) -> SequenceExecution:
         """Instantiate a sequence execution for a specific lead/opportunity.
 
         Creates the execution and immediately tries to execute the entry step
         (creating the first PendingAction for CEO approval).
         """
-        seq = self.session.get(DynamicSequence, data.sequence_id)
+        seq = self.get_sequence(data.sequence_id, organization_id=organization_id)
         if not seq:
             raise ValueError(f"Sequence {data.sequence_id} not found")
 
         execution = SequenceExecution(
+            organization_id=organization_id,
             sequence_id=data.sequence_id,
             opportunity_id=data.opportunity_id,
             lead_id=data.lead_id,
@@ -184,6 +206,7 @@ class DynamicSequenceEngine:
         execution_id: uuid.UUID,
         event: str,
         metadata: dict[str, Any] | None = None,
+        organization_id: uuid.UUID | None = None,
     ) -> AdvanceResult:
         """Record an event and advance the sequence to the next step.
 
@@ -195,11 +218,13 @@ class DynamicSequenceEngine:
             execution_id: The running sequence execution to advance.
             event:        The engagement event (e.g., "email_opened").
             metadata:     Optional data about the event.
+            organization_id: Tenant boundary — a mismatched execution is
+                treated as not found, same as a missing one.
 
         Returns:
             An :class:`AdvanceResult` describing what happened.
         """
-        execution = self.session.get(SequenceExecution, execution_id)
+        execution = self.get_execution(execution_id, organization_id=organization_id)
         if not execution:
             raise ValueError(f"Execution {execution_id} not found")
 
@@ -281,16 +306,30 @@ class DynamicSequenceEngine:
             message=self._describe_result(matched_condition, next_step_id, execution.status),
         )
 
-    def get_execution(self, execution_id: uuid.UUID) -> SequenceExecution | None:
-        return self.session.get(SequenceExecution, execution_id)
+    def get_execution(
+        self, execution_id: uuid.UUID, organization_id: uuid.UUID | None = None
+    ) -> SequenceExecution | None:
+        execution = self.session.get(SequenceExecution, execution_id)
+        if execution is None:
+            return None
+        if (
+            organization_id is not None
+            and execution.organization_id is not None
+            and execution.organization_id != organization_id
+        ):
+            return None
+        return execution
 
     def list_executions(
         self,
         sequence_id: uuid.UUID | None = None,
         status: str | None = None,
         limit: int = 50,
+        organization_id: uuid.UUID | None = None,
     ) -> list[SequenceExecution]:
-        stmt = select(SequenceExecution).order_by(SequenceExecution.created_at.desc()).limit(limit)
+        stmt = select(SequenceExecution)
+        stmt = scope_by_organization_id(stmt, SequenceExecution.organization_id, organization_id)
+        stmt = stmt.order_by(SequenceExecution.created_at.desc()).limit(limit)
         if sequence_id:
             stmt = stmt.where(SequenceExecution.sequence_id == sequence_id)
         if status:
@@ -318,6 +357,7 @@ class DynamicSequenceEngine:
             from app.models.pending_action import PendingAction
 
             pending = PendingAction(
+                organization_id=execution.organization_id,
                 opportunity_id=execution.opportunity_id,
                 action_type=ActionType.SEND_EMAIL if channel == "email" else ActionType.LINKEDIN_MESSAGE,
                 status=ActionStatus.PENDING_APPROVAL,

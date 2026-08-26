@@ -38,12 +38,43 @@ from app.schemas.orchestrator import (
 )
 from app.schemas.strategy import StrategySchema, TimingWindow
 from app.schemas.variants import ActiveVariantRef
+from app.core.security import create_access_token, hash_password
+from app.models.base import UserRole
+from app.models.organization import Organization
+from app.models.user import User
 from app.services.data_validator.service import DataValidator
 from app.services.observability.service import CONFIDENCE_THRESHOLD, ObservabilityService
 from app.services.omnichannel.gateway import OmnichannelGateway
 from app.services.orchestrator.service import AgentOrchestrator
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
+
+
+def _make_owner(session: Session) -> tuple[Organization, User]:
+    """A persisted Organization + OWNER User — the orchestrator endpoints
+    require a resolvable tenant identity, same as every other mutating
+    endpoint in the API, so tests need a real user to authenticate as."""
+    org = Organization(name="Test Org", slug=f"test-org-{uuid.uuid4().hex[:8]}")
+    session.add(org)
+    session.commit()
+    session.refresh(org)
+
+    user = User(
+        organization_id=org.id,
+        email=f"owner-{uuid.uuid4().hex[:8]}@bee.ai",
+        hashed_password=hash_password("password123"),
+        full_name="Owner",
+        role=UserRole.OWNER,
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return org, user
+
+
+def _auth_headers(org: Organization, user: User) -> dict:
+    token = create_access_token(user.id, organization_id=org.id, role=user.role.value)
+    return {"Authorization": f"Bearer {token}"}
 
 
 def _make_bundle(opportunity_id: uuid.UUID | None = None) -> ArtifactBundle:
@@ -218,70 +249,111 @@ class PendingAction_stub:
 
 
 class TestOrchestratorEndpoints:
-    def test_get_pending_actions(self, client: TestClient):
+    def test_pending_actions_require_auth(self, client: TestClient):
         resp = client.get("/api/v1/orchestrator/pending-actions")
+        assert resp.status_code == 401
+
+    def test_get_pending_actions(self, client: TestClient, session: Session):
+        org, user = _make_owner(session)
+        resp = client.get("/api/v1/orchestrator/pending-actions", headers=_auth_headers(org, user))
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
 
-    def test_get_approved_actions(self, client: TestClient):
-        resp = client.get("/api/v1/orchestrator/approved-actions")
+    def test_get_approved_actions(self, client: TestClient, session: Session):
+        org, user = _make_owner(session)
+        resp = client.get("/api/v1/orchestrator/approved-actions", headers=_auth_headers(org, user))
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
 
-    def test_get_status(self, client: TestClient):
-        resp = client.get("/api/v1/orchestrator/status")
+    def test_get_status(self, client: TestClient, session: Session):
+        org, user = _make_owner(session)
+        resp = client.get("/api/v1/orchestrator/status", headers=_auth_headers(org, user))
         assert resp.status_code == 200
         data = resp.json()
         assert "total_pending" in data
         assert "total_completed" in data
 
-    def test_get_nonexistent_action_returns_404(self, client: TestClient):
-        resp = client.get(f"/api/v1/orchestrator/{uuid.uuid4()}")
+    def test_get_nonexistent_action_returns_404(self, client: TestClient, session: Session):
+        org, user = _make_owner(session)
+        resp = client.get(f"/api/v1/orchestrator/{uuid.uuid4()}", headers=_auth_headers(org, user))
         assert resp.status_code == 404
 
     def test_approve_via_api(self, client: TestClient, session: Session):
+        org, user = _make_owner(session)
         bundle = _make_bundle()
         orch = AgentOrchestrator(session, OmnichannelGateway(session))
-        [action] = orch.create_from_bundle(bundle)
+        [action] = orch.create_from_bundle(bundle, organization_id=org.id)
         session.commit()
 
         resp = client.post(
             f"/api/v1/orchestrator/{action.id}/approve",
             json={"approved_by": "api_test_user@bee.ai"},
+            headers=_auth_headers(org, user),
         )
         assert resp.status_code == 200
         assert resp.json()["status"] == "approved"
 
     def test_reject_via_api(self, client: TestClient, session: Session):
+        org, user = _make_owner(session)
         bundle = _make_bundle()
         orch = AgentOrchestrator(session, OmnichannelGateway(session))
-        [action] = orch.create_from_bundle(bundle)
+        [action] = orch.create_from_bundle(bundle, organization_id=org.id)
         session.commit()
 
         resp = client.post(
             f"/api/v1/orchestrator/{action.id}/reject",
             json={"reason": "Not the right time"},
+            headers=_auth_headers(org, user),
         )
         assert resp.status_code == 200
         assert resp.json()["status"] == "rejected"
 
     def test_full_lifecycle_via_api(self, client: TestClient, session: Session):
         """Full state machine via HTTP API calls."""
+        org, user = _make_owner(session)
         bundle = _make_bundle()
         orch = AgentOrchestrator(session, OmnichannelGateway(session))
-        [action] = orch.create_from_bundle(bundle)
+        [action] = orch.create_from_bundle(bundle, organization_id=org.id)
         session.commit()
 
         action_id = str(action.id)
+        headers = _auth_headers(org, user)
 
-        r = client.post(f"/api/v1/orchestrator/{action_id}/approve", json={"approved_by": "ceo@bee.ai"})
+        r = client.post(f"/api/v1/orchestrator/{action_id}/approve", json={"approved_by": "ceo@bee.ai"}, headers=headers)
         assert r.json()["status"] == "approved"
 
-        r = client.post(f"/api/v1/orchestrator/{action_id}/start-execution", json={"tool": "n8n"})
+        r = client.post(f"/api/v1/orchestrator/{action_id}/start-execution", json={"tool": "n8n"}, headers=headers)
         assert r.json()["status"] == "executing"
 
-        r = client.post(f"/api/v1/orchestrator/{action_id}/complete", json={})
+        r = client.post(f"/api/v1/orchestrator/{action_id}/complete", json={}, headers=headers)
         assert r.json()["status"] == "completed"
+
+    def test_cannot_approve_other_orgs_action(self, client: TestClient, session: Session):
+        org_a, _ = _make_owner(session)
+        org_b, user_b = _make_owner(session)
+        bundle = _make_bundle()
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
+        [action] = orch.create_from_bundle(bundle, organization_id=org_a.id)
+        session.commit()
+
+        resp = client.post(
+            f"/api/v1/orchestrator/{action.id}/approve",
+            json={"approved_by": "intruder@bee.ai"},
+            headers=_auth_headers(org_b, user_b),
+        )
+        assert resp.status_code == 404
+
+    def test_pending_actions_scoped_to_caller_org(self, client: TestClient, session: Session):
+        org_a, user_a = _make_owner(session)
+        org_b, _ = _make_owner(session)
+        orch = AgentOrchestrator(session, OmnichannelGateway(session))
+        orch.create_from_bundle(_make_bundle(), organization_id=org_a.id)
+        orch.create_from_bundle(_make_bundle(), organization_id=org_b.id)
+        session.commit()
+
+        resp = client.get("/api/v1/orchestrator/pending-actions", headers=_auth_headers(org_a, user_a))
+        assert resp.status_code == 200
+        assert len(resp.json()) == 1
 
 
 # ── ObservabilityService tests ─────────────────────────────────────────────────

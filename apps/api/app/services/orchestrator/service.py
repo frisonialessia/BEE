@@ -84,12 +84,18 @@ class AgentOrchestrator:
 
     # ── Creation ─────────────────────────────────────────────────────────────
 
-    def create_from_bundle(self, bundle: ArtifactBundle) -> list[PendingAction]:
+    def create_from_bundle(
+        self, bundle: ArtifactBundle, organization_id: uuid.UUID | None = None
+    ) -> list[PendingAction]:
         """Create a PendingAction for each executable artifact in the bundle.
 
         Currently creates one EMAIL action. The meeting structure and next steps
         are embedded in the payload but don't create separate actions (they
         accompany the email action as context for the approver).
+
+        ``organization_id`` is the owning opportunity's tenant — stamped on
+        the created action so it stays scoped to that organization rather
+        than falling into the "untagged" (visible to every tenant) bucket.
 
         Extensible: add new ActionType cases here as BEE grows.
         """
@@ -97,6 +103,7 @@ class AgentOrchestrator:
 
         email = bundle.email_draft
         action = PendingAction(
+            organization_id=organization_id,
             opportunity_id=bundle.opportunity_id,
             artifact_bundle_id=str(bundle.opportunity_id),
             action_type=ActionType.SEND_EMAIL,
@@ -125,7 +132,9 @@ class AgentOrchestrator:
 
     # ── State transitions (security-gated) ──────────────────────────────────
 
-    def approve(self, action_id: uuid.UUID, body: ApprovalIn) -> PendingAction:
+    def approve(
+        self, action_id: uuid.UUID, body: ApprovalIn, organization_id: uuid.UUID | None = None
+    ) -> PendingAction:
         """Approve a pending action. Raises ValueError on invalid state.
 
         Actions created via ``OmnichannelGateway.prepare_action`` carry a
@@ -139,7 +148,7 @@ class AgentOrchestrator:
         poll ``/approved-actions`` and call ``start-execution``/``complete``
         themselves), unchanged.
         """
-        action = self._get_or_raise(action_id)
+        action = self._get_or_raise(action_id, organization_id)
         self._assert_status(action, ActionStatus.PENDING_APPROVAL, "approve")
         action.mark_approved(body.approved_by)
         self.session.add(action)
@@ -188,9 +197,11 @@ class AgentOrchestrator:
         self.session.commit()
         self.session.refresh(action)
 
-    def reject(self, action_id: uuid.UUID, body: RejectionIn) -> PendingAction:
+    def reject(
+        self, action_id: uuid.UUID, body: RejectionIn, organization_id: uuid.UUID | None = None
+    ) -> PendingAction:
         """Reject a pending action. Raises ValueError on invalid state."""
-        action = self._get_or_raise(action_id)
+        action = self._get_or_raise(action_id, organization_id)
         self._assert_status(action, ActionStatus.PENDING_APPROVAL, "reject")
         action.mark_rejected(body.reason)
         self.session.add(action)
@@ -199,9 +210,11 @@ class AgentOrchestrator:
         logger.info("Action %s rejected (reason=%s)", action_id, body.reason)
         return action
 
-    def start_execution(self, action_id: uuid.UUID, body: ExecutionStartIn) -> PendingAction:
+    def start_execution(
+        self, action_id: uuid.UUID, body: ExecutionStartIn, organization_id: uuid.UUID | None = None
+    ) -> PendingAction:
         """Mark an action as executing. MUST be called only after approval."""
-        action = self._get_or_raise(action_id)
+        action = self._get_or_raise(action_id, organization_id)
         self._assert_status(action, ActionStatus.APPROVED, "start execution")
         action.mark_executing(body.tool)
         self.session.add(action)
@@ -210,9 +223,11 @@ class AgentOrchestrator:
         logger.info("Action %s executing via %s", action_id, body.tool)
         return action
 
-    def complete(self, action_id: uuid.UUID, body: ExecutionCompleteIn) -> PendingAction:  # noqa: ARG002
+    def complete(
+        self, action_id: uuid.UUID, body: ExecutionCompleteIn, organization_id: uuid.UUID | None = None
+    ) -> PendingAction:  # noqa: ARG002
         """Mark an action as completed successfully."""
-        action = self._get_or_raise(action_id)
+        action = self._get_or_raise(action_id, organization_id)
         self._assert_status(action, ActionStatus.EXECUTING, "complete")
         action.mark_completed()
         self.session.add(action)
@@ -221,9 +236,11 @@ class AgentOrchestrator:
         logger.info("Action %s completed", action_id)
         return action
 
-    def fail(self, action_id: uuid.UUID, body: ExecutionFailedIn) -> PendingAction:
+    def fail(
+        self, action_id: uuid.UUID, body: ExecutionFailedIn, organization_id: uuid.UUID | None = None
+    ) -> PendingAction:
         """Mark an action as failed, optionally requeuing it for retry."""
-        action = self._get_or_raise(action_id)
+        action = self._get_or_raise(action_id, organization_id)
         self._assert_status(action, ActionStatus.EXECUTING, "fail")
         action.mark_failed(body.reason)
 
@@ -240,18 +257,24 @@ class AgentOrchestrator:
 
     # ── Query interface ──────────────────────────────────────────────────────
 
-    def get_pending(self, limit: int = 50, offset: int = 0) -> list[PendingAction]:
-        return self._repo.list_pending(limit=limit, offset=offset)
+    def get_pending(
+        self, limit: int = 50, offset: int = 0, organization_id: uuid.UUID | None = None
+    ) -> list[PendingAction]:
+        return self._repo.list_pending(limit=limit, offset=offset, organization_id=organization_id)
 
-    def get_approved(self, limit: int = 50) -> list[PendingAction]:
+    def get_approved(
+        self, limit: int = 50, organization_id: uuid.UUID | None = None
+    ) -> list[PendingAction]:
         """Return approved actions ready for external tools to execute."""
-        return self._repo.list_approved(limit=limit)
+        return self._repo.list_approved(limit=limit, organization_id=organization_id)
 
-    def get_by_opportunity(self, opportunity_id: uuid.UUID) -> list[PendingAction]:
-        return self._repo.list_by_opportunity(opportunity_id)
+    def get_by_opportunity(
+        self, opportunity_id: uuid.UUID, organization_id: uuid.UUID | None = None
+    ) -> list[PendingAction]:
+        return self._repo.list_by_opportunity(opportunity_id, organization_id=organization_id)
 
-    def get_status(self) -> OrchestratorStatusOut:
-        counts = self._repo.count_by_status()
+    def get_status(self, organization_id: uuid.UUID | None = None) -> OrchestratorStatusOut:
+        counts = self._repo.count_by_status(organization_id=organization_id)
         return OrchestratorStatusOut(
             total_pending=counts.get(ActionStatus.PENDING_APPROVAL.value, 0),
             total_approved=counts.get(ActionStatus.APPROVED.value, 0),
@@ -263,9 +286,24 @@ class AgentOrchestrator:
 
     # ── Internal helpers ─────────────────────────────────────────────────────
 
-    def _get_or_raise(self, action_id: uuid.UUID) -> PendingAction:
+    def _get_or_raise(
+        self, action_id: uuid.UUID, organization_id: uuid.UUID | None = None
+    ) -> PendingAction:
         action = self._repo.get(action_id)
         if action is None:
+            raise PendingActionNotFoundError(f"PendingAction {action_id} not found")
+        # Tenant boundary: an action tagged to a *different* organization than
+        # the caller's is treated as not found (404, not 403) — same
+        # ID-enumeration-avoidance convention as every other single-record
+        # fetch in the codebase (see opportunities.py's _hidden_from). An
+        # untagged action (organization_id is None — pre-multi-tenancy data,
+        # or a caller with no resolvable org) stays visible, same "untagged =
+        # shared" convention as scope_by_organization_id.
+        if (
+            organization_id is not None
+            and action.organization_id is not None
+            and action.organization_id != organization_id
+        ):
             raise PendingActionNotFoundError(f"PendingAction {action_id} not found")
         return action
 

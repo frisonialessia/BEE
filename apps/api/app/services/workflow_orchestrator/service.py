@@ -46,6 +46,7 @@ import app.services.workflow_orchestrator.handlers  # noqa: F401
 from app.core.logging import get_logger
 from app.models.workflow_task import WorkflowTask, WorkflowTaskStatus
 from app.schemas.workflow import BeeEvent, WorkflowStatusOut
+from app.services.permissions import scope_by_organization_id
 from app.services.workflow_orchestrator.registry import get_all_handlers, get_handlers_for_event
 
 logger = get_logger(__name__)
@@ -145,24 +146,25 @@ class WorkflowOrchestrator:
 
     # ── Query interface ──────────────────────────────────────────────────────
 
-    def get_tasks_for_entity(self, entity_id: uuid.UUID) -> list[WorkflowTask]:
-        stmt = (
-            select(WorkflowTask)
-            .where(WorkflowTask.entity_id == entity_id)
-            .order_by(WorkflowTask.created_at.desc())
-        )
+    def get_tasks_for_entity(
+        self, entity_id: uuid.UUID, organization_id: uuid.UUID | None = None
+    ) -> list[WorkflowTask]:
+        stmt = select(WorkflowTask).where(WorkflowTask.entity_id == entity_id)
+        stmt = scope_by_organization_id(stmt, WorkflowTask.organization_id, organization_id)
+        stmt = stmt.order_by(WorkflowTask.created_at.desc())
         return list(self.session.exec(stmt).all())
 
-    def get_recent_tasks(self, limit: int = 50) -> list[WorkflowTask]:
-        stmt = (
-            select(WorkflowTask)
-            .order_by(WorkflowTask.created_at.desc())
-            .limit(limit)
-        )
+    def get_recent_tasks(
+        self, limit: int = 50, organization_id: uuid.UUID | None = None
+    ) -> list[WorkflowTask]:
+        stmt = select(WorkflowTask)
+        stmt = scope_by_organization_id(stmt, WorkflowTask.organization_id, organization_id)
+        stmt = stmt.order_by(WorkflowTask.created_at.desc()).limit(limit)
         return list(self.session.exec(stmt).all())
 
-    def get_status(self) -> WorkflowStatusOut:
-        tasks = self.session.exec(select(WorkflowTask)).all()
+    def get_status(self, organization_id: uuid.UUID | None = None) -> WorkflowStatusOut:
+        stmt = scope_by_organization_id(select(WorkflowTask), WorkflowTask.organization_id, organization_id)
+        tasks = self.session.exec(stmt).all()
         counts: dict[str, int] = {}
         for task in tasks:
             counts[task.status] = counts.get(task.status, 0) + 1

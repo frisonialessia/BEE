@@ -1,4 +1,14 @@
-"""Analytics endpoints — RevenueSimulator, WorkflowOrchestrator status."""
+"""Analytics endpoints — RevenueSimulator, WorkflowOrchestrator status.
+
+Tenant boundary
+----------------
+Every route resolves the caller's organization via
+``app.api.deps.get_organization_id`` (JWT session or ``X-BEE-Org-Key``) and
+scopes results to it. Same "untagged = shared" convention as the rest of the
+read-only endpoints (an unidentifiable caller still gets a response, but one
+scoped to nothing — untagged/legacy data only — rather than every tenant's
+aggregate business metrics blended together).
+"""
 
 from __future__ import annotations
 
@@ -7,6 +17,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
+from app.api.deps import get_organization_id
 from app.core.database import get_session
 from app.schemas.simulator import RevenueSimulation
 from app.schemas.workflow import WorkflowStatusOut, WorkflowTaskOut
@@ -38,6 +49,7 @@ def run_revenue_simulation(
         description="Prospecting volume multiplier (e.g. 2.0 = double outreach)",
     ),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> RevenueSimulation:
     """Project the revenue impact of increasing prospecting in a specific segment.
 
@@ -56,6 +68,7 @@ def run_revenue_simulation(
         signal_type=signal_type,
         industry=industry,
         increase_factor=increase_factor,
+        organization_id=organization_id,
     )
 
 
@@ -68,6 +81,7 @@ def list_workflow_tasks(
     limit: int = Query(default=50, le=200),
     entity_id: uuid.UUID | None = Query(default=None, description="Filter by entity (opportunity) ID"),
     session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
 ) -> list[WorkflowTaskOut]:
     """Return recent workflow tasks for audit and monitoring.
 
@@ -76,9 +90,9 @@ def list_workflow_tasks(
     """
     orch = WorkflowOrchestrator(session)
     if entity_id:
-        tasks = orch.get_tasks_for_entity(entity_id)
+        tasks = orch.get_tasks_for_entity(entity_id, organization_id=organization_id)
     else:
-        tasks = orch.get_recent_tasks(limit=limit)
+        tasks = orch.get_recent_tasks(limit=limit, organization_id=organization_id)
     return [WorkflowTaskOut.model_validate(t) for t in tasks]
 
 
@@ -87,8 +101,11 @@ def list_workflow_tasks(
     response_model=WorkflowStatusOut,
     summary="Workflow bus health summary",
 )
-def workflow_status(session: Session = Depends(get_session)) -> WorkflowStatusOut:
-    return WorkflowOrchestrator(session).get_status()
+def workflow_status(
+    session: Session = Depends(get_session),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
+) -> WorkflowStatusOut:
+    return WorkflowOrchestrator(session).get_status(organization_id=organization_id)
 
 
 @router.get(

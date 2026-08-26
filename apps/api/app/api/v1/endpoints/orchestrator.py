@@ -15,6 +15,16 @@ POST /{id}/start-execution         — mark as executing (called by the external
 POST /{id}/complete                — mark as completed
 POST /{id}/fail                    — mark as failed (optionally requeue)
 GET  /opportunity/{opp_id}/actions — all actions for a specific opportunity
+
+Tenant boundary
+----------------
+Every route requires a resolvable caller identity (a logged-in dashboard user
+via JWT, or a per-org integration via ``X-BEE-Org-Key`` — see
+``app.api.deps.get_organization_id``) and scopes every query/mutation to that
+organization. This queue holds real executable actions (drafted emails,
+LinkedIn messages) for real opportunities — unlike the read-only market
+intelligence endpoints that stay reachable without credentials for legacy
+integrations, there is no legitimate "unscoped" caller here.
 """
 
 from __future__ import annotations
@@ -24,6 +34,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
+from app.api.deps import get_organization_id
 from app.core.database import get_session
 from app.schemas.orchestrator import (
     ApprovalIn,
@@ -44,6 +55,25 @@ def _get_orchestrator(session: Session = Depends(get_session)) -> AgentOrchestra
     return AgentOrchestrator(session, OmnichannelGateway(session))
 
 
+def _require_organization_id(
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
+) -> uuid.UUID:
+    """Require a resolvable tenant identity for this request.
+
+    ``get_organization_id`` returns ``None`` for a caller with neither a JWT
+    session nor an org API key — acceptable for read-only market-intelligence
+    endpoints elsewhere, but not here: this queue holds real executable
+    actions, so an unidentifiable caller is rejected outright rather than
+    falling back to "unscoped" access.
+    """
+    if organization_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required (Bearer token or X-BEE-Org-Key).",
+        )
+    return organization_id
+
+
 @router.get(
     "/pending-actions",
     response_model=list[PendingActionOut],
@@ -53,6 +83,7 @@ def list_pending_actions(
     limit: int = Query(default=50, le=200),
     offset: int = 0,
     orchestrator: AgentOrchestrator = Depends(_get_orchestrator),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
 ) -> list[PendingActionOut]:
     """Return all actions waiting for explicit human approval.
 
@@ -63,7 +94,7 @@ def list_pending_actions(
     be explicitly approved via ``POST /{id}/approve`` before any external system
     can act on it.
     """
-    actions = orchestrator.get_pending(limit=limit, offset=offset)
+    actions = orchestrator.get_pending(limit=limit, offset=offset, organization_id=organization_id)
     return [PendingActionOut.model_validate(a) for a in actions]
 
 
@@ -75,6 +106,7 @@ def list_pending_actions(
 def list_approved_actions(
     limit: int = Query(default=50, le=200),
     orchestrator: AgentOrchestrator = Depends(_get_orchestrator),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
 ) -> list[PendingActionOut]:
     """Return all approved actions ready to be executed by external tools.
 
@@ -82,7 +114,7 @@ def list_approved_actions(
     ``POST /{id}/start-execution`` when they begin, and
     ``POST /{id}/complete`` or ``POST /{id}/fail`` when done.
     """
-    actions = orchestrator.get_approved(limit=limit)
+    actions = orchestrator.get_approved(limit=limit, organization_id=organization_id)
     return [PendingActionOut.model_validate(a) for a in actions]
 
 
@@ -93,8 +125,9 @@ def list_approved_actions(
 )
 def get_status(
     orchestrator: AgentOrchestrator = Depends(_get_orchestrator),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
 ) -> OrchestratorStatusOut:
-    return orchestrator.get_status()
+    return orchestrator.get_status(organization_id=organization_id)
 
 
 @router.get(
@@ -105,8 +138,9 @@ def get_status(
 def list_opportunity_actions(
     opportunity_id: uuid.UUID,
     orchestrator: AgentOrchestrator = Depends(_get_orchestrator),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
 ) -> list[PendingActionOut]:
-    actions = orchestrator.get_by_opportunity(opportunity_id)
+    actions = orchestrator.get_by_opportunity(opportunity_id, organization_id=organization_id)
     return [PendingActionOut.model_validate(a) for a in actions]
 
 
@@ -118,12 +152,15 @@ def list_opportunity_actions(
 def get_action(
     action_id: uuid.UUID,
     orchestrator: AgentOrchestrator = Depends(_get_orchestrator),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
 ) -> PendingActionOut:
     from app.repositories.pending_action import PendingActionRepository
 
     repo = PendingActionRepository(orchestrator.session)
     action = repo.get(action_id)
-    if action is None:
+    if action is None or (
+        action.organization_id is not None and action.organization_id != organization_id
+    ):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Action not found")
     return PendingActionOut.model_validate(action)
 
@@ -137,6 +174,7 @@ def approve_action(
     action_id: uuid.UUID,
     body: ApprovalIn,
     orchestrator: AgentOrchestrator = Depends(_get_orchestrator),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
 ) -> PendingActionOut:
     """Explicitly approve a pending action.
 
@@ -145,7 +183,7 @@ def approve_action(
     audit trail purposes.
     """
     try:
-        action = orchestrator.approve(action_id, body)
+        action = orchestrator.approve(action_id, body, organization_id=organization_id)
         return PendingActionOut.model_validate(action)
     except PendingActionNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
@@ -162,9 +200,10 @@ def reject_action(
     action_id: uuid.UUID,
     body: RejectionIn,
     orchestrator: AgentOrchestrator = Depends(_get_orchestrator),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
 ) -> PendingActionOut:
     try:
-        action = orchestrator.reject(action_id, body)
+        action = orchestrator.reject(action_id, body, organization_id=organization_id)
         return PendingActionOut.model_validate(action)
     except PendingActionNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
@@ -181,9 +220,10 @@ def start_execution(
     action_id: uuid.UUID,
     body: ExecutionStartIn,
     orchestrator: AgentOrchestrator = Depends(_get_orchestrator),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
 ) -> PendingActionOut:
     try:
-        action = orchestrator.start_execution(action_id, body)
+        action = orchestrator.start_execution(action_id, body, organization_id=organization_id)
         return PendingActionOut.model_validate(action)
     except PendingActionNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
@@ -200,9 +240,10 @@ def complete_action(
     action_id: uuid.UUID,
     body: ExecutionCompleteIn,
     orchestrator: AgentOrchestrator = Depends(_get_orchestrator),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
 ) -> PendingActionOut:
     try:
-        action = orchestrator.complete(action_id, body)
+        action = orchestrator.complete(action_id, body, organization_id=organization_id)
         return PendingActionOut.model_validate(action)
     except PendingActionNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
@@ -219,6 +260,7 @@ def fail_action(
     action_id: uuid.UUID,
     body: ExecutionFailedIn,
     orchestrator: AgentOrchestrator = Depends(_get_orchestrator),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
 ) -> PendingActionOut:
     """Report an action as failed.
 
@@ -227,7 +269,7 @@ def fail_action(
     state permanently.
     """
     try:
-        action = orchestrator.fail(action_id, body)
+        action = orchestrator.fail(action_id, body, organization_id=organization_id)
         return PendingActionOut.model_validate(action)
     except PendingActionNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
