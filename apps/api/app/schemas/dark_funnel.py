@@ -22,6 +22,11 @@ class DarkFunnelSignalIn(BaseModel):
     contact_role: str | None = None
     lead_id: uuid.UUID | None = None
     raw_payload: dict[str, Any] = Field(default_factory=dict)
+    external_id: str | None = Field(
+        default=None,
+        description="Upstream event id, when the source provides one — lets ingest_signal "
+        "dedupe a retried/replayed webhook delivery instead of double-counting it.",
+    )
 
 
 class DarkFunnelSignalOut(BaseModel):

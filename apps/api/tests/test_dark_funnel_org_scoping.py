@@ -98,3 +98,37 @@ class TestDarkFunnelOrgScoping:
             "/api/v1/dark-funnel/signals/shared2.com", headers=_auth_headers(owner_a["access_token"])
         ).json()
         assert len(signals_a) == 1
+
+    def test_duplicate_external_id_is_deduplicated(self, client: TestClient):
+        """A retried/replayed webhook delivery carrying the same external_id
+        must not double-count into research_intensity_score — see
+        DarkFunnelService.ingest_signal's idempotency contract."""
+        owner = _register(client, org_name="Org I", email="dfi@x.io")
+        headers = _auth_headers(owner["access_token"])
+
+        payload = {
+            "company_domain": "dedup-lead.com",
+            "signal_type": "pricing_view",
+            "external_id": "provider:evt_dedup_1",
+        }
+        first = client.post("/api/v1/dark-funnel/signals", json=payload, headers=headers)
+        assert first.status_code == 201, first.text
+        second = client.post("/api/v1/dark-funnel/signals", json=payload, headers=headers)
+        assert second.status_code == 201, second.text
+        assert first.json()["id"] == second.json()["id"]
+
+        score = client.get(
+            "/api/v1/dark-funnel/hot-leads/dedup-lead.com", headers=headers
+        ).json()
+        assert score["signal_count"] == 1
+
+    def test_signals_without_external_id_are_never_deduplicated(self, client: TestClient):
+        owner = _register(client, org_name="Org J", email="dfj@x.io")
+        headers = _auth_headers(owner["access_token"])
+        _simulate(client, headers, "no-dedup-lead.com")
+        _simulate(client, headers, "no-dedup-lead.com")
+
+        score = client.get(
+            "/api/v1/dark-funnel/hot-leads/no-dedup-lead.com", headers=headers
+        ).json()
+        assert score["signal_count"] == 2
