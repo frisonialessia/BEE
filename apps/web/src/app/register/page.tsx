@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,6 +29,7 @@ export default function RegisterPage() {
         full_name: fullName,
         email,
         password,
+        invite_code: inviteCode || undefined,
       });
       router.push("/dashboard");
     } catch (err) {
@@ -111,6 +113,19 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="bee-input"
                 placeholder="Mínimo 8 caracteres"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label htmlFor="inviteCode" className="bee-caption block">
+                Código de invitación <span className="text-muted-foreground">(si te dieron uno)</span>
+              </label>
+              <input
+                id="inviteCode"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                className="bee-input"
+                placeholder="Opcional"
               />
             </div>
 

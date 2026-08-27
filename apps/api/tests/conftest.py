@@ -130,6 +130,13 @@ def client_fixture(engine) -> Generator[TestClient, None, None]:
 
     app = create_app()
     app.dependency_overrides[get_session] = _get_session_override
+    # SignupGuard is a process-wide singleton (see app.core.signup_guard) —
+    # without resetting it, a test file that calls POST /auth/register more
+    # than SIGNUP_RATE_LIMIT_PER_HOUR times (the default is 5) starts
+    # getting 429s from unrelated earlier tests' registrations.
+    from app.core.signup_guard import reset_signup_guard
+
+    reset_signup_guard()
     # WEBHOOK_SIGNATURE_REQUIRED now defaults to True (secure-by-default in
     # production) — tests exercising /signals/webhook and /webhooks/receive
     # without computing a real signature are effectively running as "local

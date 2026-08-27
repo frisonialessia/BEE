@@ -106,6 +106,18 @@ class Settings(BaseSettings):
     # brute-force resistance vs. login latency; raise only with load testing.
     PASSWORD_HASH_ROUNDS: int = 12
 
+    # ----- Signup abuse protection (see app.core.signup_guard) ------------------
+    # POST /auth/register is open self-serve with no email verification — set
+    # this during a controlled beta so registration also requires a shared
+    # code (distributed out-of-band to invited testers), checked with a
+    # timing-safe comparison. None (the default) keeps registration fully
+    # open, same as before this existed.
+    SIGNUP_INVITE_CODE: str | None = None
+    # Per-IP registration attempts allowed per rolling hour, independent of
+    # the invite code above (a leaked/brute-forced code still hits this). 0
+    # disables the check entirely.
+    SIGNUP_RATE_LIMIT_PER_HOUR: int = 5
+
     # ----- CORS ----------------------------------------------------------------
     # Comma-separated list of origins allowed to call the API (the Next.js app).
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"

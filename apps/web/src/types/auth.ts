@@ -28,6 +28,9 @@ export interface OrganizationRegisterIn {
   full_name: string;
   email: string;
   password: string;
+  // Only required when the backend deployment has SIGNUP_INVITE_CODE set
+  // (a controlled-beta gate) — omit/leave blank otherwise.
+  invite_code?: string;
 }
 
 export interface UserLoginIn {

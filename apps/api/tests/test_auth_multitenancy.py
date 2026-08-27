@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -371,6 +372,97 @@ class TestAuthEndpoints:
         resp = client.get("/api/v1/auth/me", headers=_auth_headers(body["access_token"]))
         assert resp.status_code == 200
         assert resp.json()["email"] == "me@acme.io"
+
+
+class TestSignupInviteCode:
+    """SIGNUP_INVITE_CODE unset (the default) keeps registration fully open —
+    covered by every other test in TestAuthEndpoints, which never sets it."""
+
+    def test_missing_code_rejected_when_configured(self, client: TestClient):
+        from app.core.config import settings as app_settings
+
+        with patch.object(app_settings, "SIGNUP_INVITE_CODE", "beta-2026"):
+            resp = client.post(
+                "/api/v1/auth/register",
+                json={
+                    "organization_name": "No Code Inc",
+                    "full_name": "Someone",
+                    "email": "nocode@acme.io",
+                    "password": "password123",
+                },
+            )
+        assert resp.status_code == 403
+
+    def test_wrong_code_rejected_when_configured(self, client: TestClient):
+        from app.core.config import settings as app_settings
+
+        with patch.object(app_settings, "SIGNUP_INVITE_CODE", "beta-2026"):
+            resp = client.post(
+                "/api/v1/auth/register",
+                json={
+                    "organization_name": "Wrong Code Inc",
+                    "full_name": "Someone",
+                    "email": "wrongcode@acme.io",
+                    "password": "password123",
+                    "invite_code": "not-it",
+                },
+            )
+        assert resp.status_code == 403
+
+    def test_correct_code_accepted(self, client: TestClient):
+        from app.core.config import settings as app_settings
+
+        with patch.object(app_settings, "SIGNUP_INVITE_CODE", "beta-2026"):
+            resp = client.post(
+                "/api/v1/auth/register",
+                json={
+                    "organization_name": "Right Code Inc",
+                    "full_name": "Someone",
+                    "email": "rightcode@acme.io",
+                    "password": "password123",
+                    "invite_code": "beta-2026",
+                },
+            )
+        assert resp.status_code == 201, resp.text
+
+
+class TestSignupRateLimit:
+    def _register_payload(self, n: int) -> dict:
+        return {
+            "organization_name": f"RateLimit Org {n}",
+            "full_name": "Someone",
+            "email": f"ratelimit{n}@acme.io",
+            "password": "password123",
+        }
+
+    def test_exceeding_limit_returns_429(self, client: TestClient):
+        from app.core.config import settings as app_settings
+        from app.core.signup_guard import reset_signup_guard
+
+        reset_signup_guard()
+        try:
+            with patch.object(app_settings, "SIGNUP_RATE_LIMIT_PER_HOUR", 2):
+                first = client.post("/api/v1/auth/register", json=self._register_payload(1))
+                second = client.post("/api/v1/auth/register", json=self._register_payload(2))
+                third = client.post("/api/v1/auth/register", json=self._register_payload(3))
+            assert first.status_code == 201, first.text
+            assert second.status_code == 201, second.text
+            assert third.status_code == 429
+        finally:
+            reset_signup_guard()
+
+    def test_zero_disables_rate_limit(self, client: TestClient):
+        from app.core.config import settings as app_settings
+        from app.core.signup_guard import reset_signup_guard
+
+        reset_signup_guard()
+        try:
+            with patch.object(app_settings, "SIGNUP_RATE_LIMIT_PER_HOUR", 0):
+                for n in range(4, 7):
+                    resp = client.post("/api/v1/auth/register", json=self._register_payload(n))
+                    assert resp.status_code == 201, resp.text
+        finally:
+            reset_signup_guard()
 
 
 class TestTeamEndpoints:

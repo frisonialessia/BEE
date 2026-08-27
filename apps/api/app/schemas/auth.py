@@ -17,6 +17,11 @@ class OrganizationRegister(BaseModel):
     full_name: str = Field(min_length=1, max_length=200)
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
+    # Required only when the deployment sets SIGNUP_INVITE_CODE (see
+    # app.core.config) — a controlled-beta gate, not part of the permanent
+    # product contract. Optional at the schema layer so a deployment that
+    # never sets the setting keeps accepting requests that omit this field.
+    invite_code: str | None = None
 
 
 class UserLogin(BaseModel):
