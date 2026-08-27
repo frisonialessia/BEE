@@ -114,6 +114,18 @@ def hash_password(plain_password: str) -> str:
     return hashed.decode("utf-8")
 
 
+def generate_temporary_password() -> str:
+    """Generate a random, high-entropy temporary password.
+
+    Used by the support password-reset tool (see
+    ``app.api.v1.endpoints.internal_support``) instead of letting the
+    secret-holder invent one — a machine-generated value can't be weak or
+    reused, and it's shown to the caller exactly once, the same
+    show-once-never-stored contract as :func:`generate_api_key`.
+    """
+    return secrets.token_urlsafe(18)
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Check a plaintext password against a stored bcrypt hash.
 
