@@ -15,7 +15,10 @@ from typing import Any
 
 from sqlmodel import Session
 
-from app.models.base import OpportunityStatus
+from app.core.security import create_access_token, hash_password
+from app.models.base import OpportunityStatus, UserRole
+from app.models.organization import Organization
+from app.models.user import User
 from app.models.opportunity import Opportunity
 from app.models.workflow_task import WorkflowTask, WorkflowTaskStatus
 from app.schemas.predictor import ResourcePrediction
@@ -472,6 +475,29 @@ class TestAnalyticsEndpoints:
 # BOS: Outcome endpoint resource gate integration
 # ══════════════════════════════════════════════════════════════════
 
+def _auth_headers(session: Session) -> dict:
+    """A valid bearer token for a fresh, persisted OWNER — record_outcome
+    requires a resolvable caller identity."""
+    org = Organization(name="Test Org", slug=f"test-org-{uuid.uuid4().hex[:8]}")
+    session.add(org)
+    session.commit()
+    session.refresh(org)
+
+    user = User(
+        organization_id=org.id,
+        email=f"owner-{uuid.uuid4().hex[:8]}@bee.ai",
+        hashed_password=hash_password("password123"),
+        full_name="Owner",
+        role=UserRole.OWNER,
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    token = create_access_token(user.id, organization_id=org.id, role=user.role.value)
+    return {"Authorization": f"Bearer {token}"}
+
+
 class TestOutcomeWithBOS:
     def test_outcome_response_includes_prediction_field(self, client: Any, session: Session) -> None:
         """The WON outcome response must include resource_prediction field."""
@@ -482,6 +508,7 @@ class TestOutcomeWithBOS:
         resp = client.patch(
             f"/api/v1/opportunities/{opp.id}/outcome",
             json={"outcome": "won", "notes": "Closed deal"},
+            headers=_auth_headers(session),
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -499,6 +526,7 @@ class TestOutcomeWithBOS:
         resp = client.patch(
             f"/api/v1/opportunities/{opp.id}/outcome",
             json={"outcome": "lost", "notes": "Lost to competitor"},
+            headers=_auth_headers(session),
         )
         assert resp.status_code == 200
         # LOST outcome: CRM handler fires, but service_delivery and billing do not

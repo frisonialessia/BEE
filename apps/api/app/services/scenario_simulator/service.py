@@ -115,6 +115,7 @@ class ScenarioSimulator:
         avg_deal_value = historical["avg_deal_value"]
         median_cycle_days = historical["median_cycle_days"]
         sample_size = historical["sample_size"]
+        has_any_historical_data = historical["has_any_historical_data"]
 
         # ── Compute effective win rate with modifiers ─────────────────────────
         channel_mod = CHANNEL_MODIFIERS.get(request.channel or "email", 1.0)
@@ -152,7 +153,7 @@ class ScenarioSimulator:
         drivers = self._compute_key_drivers(channel_mod, disc_mod, signal_mod, heat_mod, request)
 
         # ── Risk factors ──────────────────────────────────────────────────────
-        risks = self._compute_risks(base_win_rate, sample_size, request)
+        risks = self._compute_risks(base_win_rate, sample_size, request, has_any_historical_data)
 
         # ── Recommended actions ───────────────────────────────────────────────
         actions = self._compute_recommended_actions(
@@ -183,6 +184,7 @@ class ScenarioSimulator:
             recommended_actions=actions,
             historical_sample_size=sample_size,
             low_data_confidence=sample_size < _MIN_SAMPLE_FOR_CONFIDENCE,
+            has_any_historical_data=has_any_historical_data,
             supporting_data=historical,
         )
 
@@ -248,6 +250,15 @@ class ScenarioSimulator:
         # Get total outcomes for the same filters
         all_stmt = _scope(select(StrategyOutcome), StrategyOutcome.organization_id, organization_id)
         all_outcomes = list(self.session.exec(all_stmt).all())
+        # Whether this org has closed ANY deal at all, in any sector/signal —
+        # distinct from "this specific segment is sparse" (sample_size < 5,
+        # which can still fall back to a real global blended rate below).
+        # Zero here means the win_rate/avg_deal_value this simulation returns
+        # came entirely from the hardcoded industry-benchmark constants
+        # (_BASE_DEAL_VALUE_DEFAULT, the 0.25 fallback rate below), not from
+        # this organization's own history — surfaced so callers can label
+        # the projections as estimates rather than data-driven numbers.
+        has_any_historical_data = len(all_outcomes) > 0
         filtered_all = all_outcomes
         if sector:
             filtered_all = [
@@ -298,6 +309,7 @@ class ScenarioSimulator:
             # it were real historical data.
             "used_default_deal_value": used_default_deal_value,
             "used_default_cycle_days": used_default_cycle_days,
+            "has_any_historical_data": has_any_historical_data,
         }
 
     def _compute_key_drivers(
@@ -343,9 +355,22 @@ class ScenarioSimulator:
         base_win_rate: float,
         sample_size: int,
         request: ScenarioRequest,
+        has_any_historical_data: bool = True,
     ) -> list[str]:
         risks = []
-        if sample_size < _MIN_SAMPLE_FOR_CONFIDENCE:
+        if not has_any_historical_data:
+            # Distinct from (and takes priority over) the generic
+            # low-sample-size warning below: this org has closed zero deals
+            # of any kind, so win_rate/avg_deal_value came entirely from
+            # hardcoded industry-benchmark constants, not from anything BEE
+            # measured for this tenant — the projections are estimates, not
+            # a forecast, and must read that way to the CEO.
+            risks.append(
+                "Sin historial de resultados en tu organización todavía — estas proyecciones usan "
+                "benchmarks genéricos de industria (no tu propio desempeño de cierre). "
+                "Registra tus primeros resultados (Ganado/Perdido) para desbloquear proyecciones reales."
+            )
+        elif sample_size < _MIN_SAMPLE_FOR_CONFIDENCE:
             risks.append(
                 f"Confianza de datos baja: solo {sample_size} resultado(s) histórico(s) para este segmento — "
                 "las proyecciones tienen un margen de error amplio"

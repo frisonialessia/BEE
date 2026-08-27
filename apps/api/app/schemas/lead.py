@@ -26,9 +26,18 @@ class LeadCreateIn(BaseModel):
 class LeadBulkCreateIn(BaseModel):
     """Bulk import — the CSV path. Parsing happens client-side; this just
     takes the already-parsed rows so the backend stays format-agnostic.
+
+    Rows are intentionally untyped (``dict``, not ``LeadCreateIn``) at this
+    layer: FastAPI validates the request body — including every item in a
+    typed list — before the endpoint body ever runs, so one row failing
+    ``LeadCreateIn``'s field constraints (e.g. an empty ``full_name``) would
+    422 the *entire* request, discarding every valid row alongside it. The
+    endpoint instead validates each row against ``LeadCreateIn`` itself,
+    inside its existing per-row try/except, so a bad row is reported and
+    skipped like any other row-level failure instead of aborting the batch.
     """
 
-    leads: list[LeadCreateIn] = Field(min_length=1, max_length=1000)
+    leads: list[dict[str, Any]] = Field(min_length=1, max_length=1000)
 
 
 class LeadBulkError(BaseModel):
@@ -70,9 +79,16 @@ class LeadImportRow(BaseModel):
 
 
 class LeadImportIn(BaseModel):
-    """Bulk import from an external prospect list — the template-driven path."""
+    """Bulk import from an external prospect list — the template-driven path.
 
-    rows: list[LeadImportRow] = Field(min_length=1, max_length=1000)
+    Rows are untyped (``dict``, not ``LeadImportRow``) for the same reason
+    as ``LeadBulkCreateIn.leads`` — a request-body-level ``list[LeadImportRow]``
+    would let one row exceeding a ``max_length`` constraint 422 the whole
+    file instead of just that row. The endpoint validates each row against
+    ``LeadImportRow`` inside its own per-row try/except.
+    """
+
+    rows: list[dict[str, Any]] = Field(min_length=1, max_length=1000)
 
 
 class LeadImportRowOutcome(BaseModel):

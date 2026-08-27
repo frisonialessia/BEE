@@ -107,6 +107,14 @@ class DarkFunnelSignal(TimestampMixin, table=True):
     company_name: str | None = Field(default=None)
     lead_id: uuid.UUID | None = Field(default=None, index=True)
 
+    # ── Idempotency ───────────────────────────────────────────────────────────
+    # Upstream event id (provider-supplied), when the source can give us one —
+    # a retried/replayed webhook delivery carries the same external_id, so
+    # DarkFunnelService.ingest_signal can dedupe instead of double-counting the
+    # signal into research_intensity_score. Nullable: many dark-funnel sources
+    # (pixel tracking, manual entry) have no natural event id to dedupe on.
+    external_id: str | None = Field(default=None, index=True)
+
     # ── Signal details ────────────────────────────────────────────────────────
     signal_type: str = Field(index=True, nullable=False)
     source_platform: str | None = Field(

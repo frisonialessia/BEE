@@ -84,7 +84,30 @@ class DarkFunnelService:
 
         Returns:
             A :class:`DarkFunnelSignalOut` representing the persisted signal.
+
+        Idempotency: when ``data.external_id`` is set, a prior signal with the
+        same id (scoped to this organization) is returned as-is instead of
+        being re-ingested — a retried/replayed webhook delivery (network
+        blip on the provider's side, or a captured-request replay) must not
+        double-count into ``research_intensity_score`` and re-flip
+        ``is_hot``/re-trigger hot-lead alerts. Sources with no natural event
+        id (pixel tracking, manual entry) leave ``external_id`` unset and are
+        never deduped — same tradeoff as ``SignalEngine.ingest``.
         """
+        if data.external_id:
+            existing_stmt = _scope(
+                select(DarkFunnelSignal).where(DarkFunnelSignal.external_id == data.external_id),
+                DarkFunnelSignal.organization_id,
+                organization_id,
+            )
+            existing = self.session.exec(existing_stmt).first()
+            if existing is not None:
+                logger.info(
+                    "DarkFunnelSignal deduplicated: external_id=%s domain=%s",
+                    data.external_id, existing.company_domain,
+                )
+                return DarkFunnelSignalOut.model_validate(existing)
+
         weight = SIGNAL_WEIGHTS.get(data.signal_type, 5.0)
 
         signal = DarkFunnelSignal(
@@ -100,6 +123,7 @@ class DarkFunnelService:
             contact_role=data.contact_role,
             weight=weight,
             raw_payload=data.raw_payload,
+            external_id=data.external_id,
             processed=False,
         )
         self.session.add(signal)

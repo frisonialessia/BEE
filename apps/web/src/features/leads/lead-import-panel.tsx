@@ -109,8 +109,12 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
       const parsed = await parseFile(file);
       setRows(parsed.map(mapRow));
       setFileName(file.name);
-    } catch {
-      setParseError("No se pudo leer el archivo — confirma que sea un .csv o .xlsx válido.");
+    } catch (err) {
+      setParseError(
+        err instanceof Error
+          ? err.message
+          : "No se pudo leer el archivo — confirma que sea un .csv o .xlsx válido.",
+      );
       setRows([]);
       setFileName(null);
     }

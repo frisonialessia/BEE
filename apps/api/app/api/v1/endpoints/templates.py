@@ -86,7 +86,7 @@ def update_template(
     template_id: uuid.UUID,
     data: MessageTemplateUpdateIn,
     session: Session = Depends(get_session),
-    current_user: User | None = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
 ) -> MessageTemplateOut:
     template = session.get(MessageTemplate, template_id)
     if template is None or _hidden_from(current_user, template):
@@ -109,7 +109,7 @@ def update_template(
 def delete_template(
     template_id: uuid.UUID,
     session: Session = Depends(get_session),
-    current_user: User | None = Depends(get_current_user_optional),
+    current_user: User = Depends(get_current_user),
 ) -> None:
     template = session.get(MessageTemplate, template_id)
     if template is None or _hidden_from(current_user, template):

@@ -342,6 +342,44 @@ class TestScenarioSimulator:
             )
         )
         assert result.low_data_confidence is True
+        # Zero StrategyOutcome rows anywhere for this org — the win_rate/
+        # avg_deal_value/projections above are entirely industry-benchmark
+        # defaults (_BASE_DEAL_VALUE_DEFAULT, the 0.25 fallback rate), not
+        # anything measured from this tenant's own pipeline. This must be
+        # surfaced distinctly from the generic low-sample-size case so the
+        # frontend can label the numbers as estimates, not a forecast.
+        assert result.has_any_historical_data is False
+        assert any("Sin historial" in risk for risk in result.risk_factors)
+
+    def test_has_any_historical_data_true_with_real_outcomes(self, session: Session) -> None:
+        """A sparse-but-real sector still gets has_any_historical_data=True
+        as long as this org has closed at least one deal anywhere — only a
+        fully empty org falls back to pure industry-benchmark constants."""
+        import uuid
+
+        from app.models.strategy_outcome import StrategyOutcome
+
+        session.add(
+            StrategyOutcome(
+                opportunity_id=uuid.uuid4(),
+                signal_type="hiring_surge",
+                company_industry="logistics",
+                outcome="won",
+                deal_value=50_000.0,
+                cycle_days=30,
+                playbook="p",
+                channel="email",
+                generator="g",
+                generator_version="1.0.0",
+            )
+        )
+        session.commit()
+
+        simulator = ScenarioSimulator(session)
+        result = simulator.run(
+            ScenarioRequest(sector="a_totally_different_sector", target_monthly_signals=5)
+        )
+        assert result.has_any_historical_data is True
 
     def test_additional_reps_increases_signal_volume(self, session: Session) -> None:
         simulator = ScenarioSimulator(session)

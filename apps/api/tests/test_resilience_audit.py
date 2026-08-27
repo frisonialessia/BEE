@@ -542,12 +542,139 @@ class TestWorkflowOrchestratorDLQ:
 
         assert len(tasks) == 1
 
-        # Check DLQ entry was created
+        # Check DLQ entry was created — event_name is a composite
+        # "<event_type>::handler::<handler_name>" key (disambiguates
+        # multiple handlers subscribed to the same event_type), see
+        # WorkflowOrchestrator._dlq_event_name.
         failed_events = list(session.exec(
-            select(FailedEvent).where(FailedEvent.event_name == "test.dlq.trigger")
+            select(FailedEvent).where(
+                FailedEvent.event_name == "test.dlq.trigger::handler::failing_test_handler_unique"
+            )
         ).all())
         assert len(failed_events) >= 1
         assert failed_events[0].status == DLQStatus.PENDING
+
+    def test_handler_returning_failed_task_also_reaches_dlq(self, session: Session) -> None:
+        """Most built-in handlers (CRM, billing, outbound webhooks — anything
+        built on _post_webhook) catch their own HTTP failure and return a
+        FAILED WorkflowTask rather than raising. Before this fix, only a
+        *raising* handler reached the DLQ — this is the far more common
+        failure mode (a real HTTP timeout/500) and it silently never got
+        retried or escalated."""
+        from app.schemas.workflow import BeeEvent
+        from app.services.workflow_orchestrator.base import WorkflowHandler
+        from app.services.workflow_orchestrator.registry import (
+            register_workflow_handler as register_handler,
+        )
+        from app.services.workflow_orchestrator.service import WorkflowOrchestrator
+
+        @register_handler
+        class ReturnsFailedTaskHandler(WorkflowHandler):
+            name = "returns_failed_task_unique"
+            version = "1.0"
+            event_types = ["test.dlq.returns_failed"]
+            enabled = True
+
+            def handle(self, event, session):  # noqa: ARG002
+                from app.models.workflow_task import WorkflowTask, WorkflowTaskStatus
+
+                task = WorkflowTask(
+                    event_type=event.event_type,
+                    handler_name=self.name,
+                    handler_version=self.version,
+                    status=WorkflowTaskStatus.FAILED,
+                    payload=event.payload,
+                    error_message="Connection reset by peer",
+                )
+                session.add(task)
+                session.flush()
+                session.refresh(task)
+                return task
+
+        orchestrator = WorkflowOrchestrator(session)
+        event = BeeEvent(event_type="test.dlq.returns_failed", payload={"test": True})
+        orchestrator.publish(event)
+        session.commit()
+
+        failed_events = list(session.exec(
+            select(FailedEvent).where(
+                FailedEvent.event_name == "test.dlq.returns_failed::handler::returns_failed_task_unique"
+            )
+        ).all())
+        assert len(failed_events) >= 1
+        assert failed_events[0].last_error == "Connection reset by peer"
+
+    def test_generic_replay_handler_re_invokes_the_named_handler(self, session: Session) -> None:
+        """The dynamically-registered retry handler must look up the
+        original handler by name and re-run it — not just no-op."""
+        from unittest.mock import MagicMock, patch
+
+        from app.schemas.workflow import BeeEvent
+        from app.services.workflow_orchestrator.base import WorkflowHandler
+        from app.services.workflow_orchestrator.registry import (
+            clear_registry,
+            register_workflow_handler as register_handler,
+        )
+        from app.services.workflow_orchestrator.service import (
+            WorkflowOrchestrator,
+            _replay_workflow_handler,
+        )
+
+        call_count = {"n": 0}
+
+        @register_handler
+        class FlakyHandler(WorkflowHandler):
+            name = "flaky_handler_unique"
+            version = "1.0"
+            event_types = ["test.dlq.flaky"]
+            enabled = True
+
+            def handle(self, event, session):
+                from app.models.workflow_task import WorkflowTask, WorkflowTaskStatus
+
+                call_count["n"] += 1
+                # Fails the first time (via publish()), succeeds on replay.
+                status = WorkflowTaskStatus.FAILED if call_count["n"] == 1 else WorkflowTaskStatus.COMPLETED
+                task = WorkflowTask(
+                    event_type=event.event_type,
+                    handler_name=self.name,
+                    handler_version=self.version,
+                    status=status,
+                    payload=event.payload,
+                    error_message=None if status == WorkflowTaskStatus.COMPLETED else "first attempt fails",
+                )
+                session.add(task)
+                session.flush()
+                session.refresh(task)
+                return task
+
+        try:
+            orchestrator = WorkflowOrchestrator(session)
+            event = BeeEvent(event_type="test.dlq.flaky", payload={"test": True})
+            orchestrator.publish(event)
+            session.commit()
+            assert call_count["n"] == 1
+
+            original_event = {
+                "event_type": "test.dlq.flaky",
+                "entity_id": None,
+                "entity_type": None,
+                "handler_name": "flaky_handler_unique",
+                "payload": {"test": True},
+                "published_at": None,
+            }
+            # _replay_workflow_handler opens its own session via
+            # session_scope() (the real Postgres-backed engine, for use by
+            # the background retry worker) — redirect it to this test's
+            # in-memory session so the replayed handler sees the same DB.
+            with patch("app.services.workflow_orchestrator.service.session_scope") as mock_scope:
+                mock_scope.return_value.__enter__ = MagicMock(return_value=session)
+                mock_scope.return_value.__exit__ = MagicMock(return_value=False)
+                result = _replay_workflow_handler(original_event)
+            assert result is True
+            assert call_count["n"] == 2
+        finally:
+            clear_registry()
 
 
 # ══════════════════════════════════════════════════════════════════

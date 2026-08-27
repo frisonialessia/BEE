@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.core.security import compute_signature, verify_provider_webhook_signature
+from app.core.security import settings as security_settings
 from app.main import app
 from app.services.external_api.orchestrator import ExternalAPIOrchestrator
 from app.services.external_api.rate_limiter import GlobalRateLimiter
@@ -140,7 +141,15 @@ class TestWebhookReceive:
     }
 
     def test_webhook_accepted_without_signature_when_not_required(self, client):
-        with patch("app.core.config.get_settings") as mock_cfg:
+        # verify_provider_webhook_signature (app.core.security) reads the
+        # module-level `settings` singleton directly rather than calling
+        # get_settings() — patching get_settings() alone (as this test used
+        # to) never reaches it, so the real (secure-by-default) value of
+        # WEBHOOK_SIGNATURE_REQUIRED applied and this always 401'd regardless
+        # of what's asserted below. Patch the singleton attribute itself.
+        with patch.object(security_settings, "WEBHOOK_SIGNATURE_REQUIRED", False), patch(
+            "app.core.config.get_settings"
+        ) as mock_cfg:
             settings = MagicMock()
             settings.EXTERNAL_INGESTION_ENABLED = True
             settings.WEBHOOK_SIGNATURE_REQUIRED = False
@@ -183,7 +192,11 @@ class TestWebhookReceive:
 
     def test_webhook_exempt_from_api_key_auth(self, client):
         """External webhook endpoint must work without X-API-Key header."""
-        with patch("app.core.config.get_settings") as mock_cfg:
+        # See test_webhook_accepted_without_signature_when_not_required — same
+        # reason this needs the singleton patched directly, not get_settings().
+        with patch.object(security_settings, "WEBHOOK_SIGNATURE_REQUIRED", False), patch(
+            "app.core.config.get_settings"
+        ) as mock_cfg:
             settings = MagicMock()
             settings.EXTERNAL_INGESTION_ENABLED = True
             settings.WEBHOOK_SIGNATURE_REQUIRED = False
@@ -284,3 +297,82 @@ class TestIngestionWorker:
 
         mock_orch.enrich_lead_from_signal.assert_called_once()
         mock_df.assert_called_once()
+
+    def test_run_loop_sends_failed_task_to_dlq(self):
+        """A task that raises inside _process_sync must not just be logged
+        and dropped — it needs to reach the DLQ so it's retryable and, after
+        exhausting retries, escalates to the CEO (same resilience contract
+        as WorkflowOrchestrator)."""
+        import asyncio
+
+        worker = IngestionWorker(queue_size=10)
+        task = IngestionTask(
+            task_type=IngestionTaskType.EXTERNAL_WEBHOOK,
+            provider="linkedin",
+            payload={"event_type": "page_view"},
+        )
+
+        with (
+            patch.object(worker, "_process_sync", side_effect=RuntimeError("boom")),
+            patch.object(worker, "_send_to_dlq") as mock_dlq,
+        ):
+
+            async def run():
+                await worker.start()
+                await worker.enqueue(task)
+                await worker._queue.join()
+                await worker.stop()
+
+            asyncio.run(run())
+
+        assert worker.error_count == 1
+        mock_dlq.assert_called_once()
+        called_task, called_error = mock_dlq.call_args[0]
+        assert called_task.task_id == task.task_id
+        assert "boom" in called_error
+
+    def test_send_to_dlq_enqueues_failed_event(self):
+        worker = IngestionWorker()
+        task = IngestionTask(
+            task_type=IngestionTaskType.EXTERNAL_WEBHOOK,
+            provider="linkedin",
+            payload={"event_type": "page_view", "company": {"domain": "x.io"}},
+        )
+
+        with (
+            patch("app.services.external_api.worker.session_scope") as mock_scope,
+            patch("app.services.dead_letter.DeadLetterQueueService") as mock_dlq_cls,
+        ):
+            mock_session = MagicMock()
+            mock_scope.return_value.__enter__ = MagicMock(return_value=mock_session)
+            mock_scope.return_value.__exit__ = MagicMock(return_value=False)
+            mock_dlq = MagicMock()
+            mock_dlq_cls.return_value = mock_dlq
+
+            worker._send_to_dlq(task, "connection reset")
+
+        mock_dlq_cls.assert_called_once_with(mock_session)
+        mock_dlq.enqueue.assert_called_once()
+        _, kwargs = mock_dlq.enqueue.call_args
+        assert kwargs["error"] == "connection reset"
+        assert kwargs["original_event"]["task_id"] == task.task_id
+        assert kwargs["original_event"]["payload"] == task.payload
+
+    def test_retry_handler_replays_task(self):
+        """The registered DLQ retry handler must reconstruct and re-process
+        the original task from its serialized form."""
+        from app.services.external_api.worker import _retry_ingestion_task, _task_to_dict
+
+        task = IngestionTask(
+            task_type=IngestionTaskType.EXTERNAL_WEBHOOK,
+            provider="linkedin",
+            payload={"event_type": "page_view"},
+        )
+        with patch("app.services.external_api.worker.IngestionWorker._process_sync") as mock_process:
+            result = _retry_ingestion_task(_task_to_dict(task))
+
+        assert result is True
+        mock_process.assert_called_once()
+        replayed_task = mock_process.call_args[0][0]
+        assert replayed_task.task_id == task.task_id
+        assert replayed_task.provider == "linkedin"

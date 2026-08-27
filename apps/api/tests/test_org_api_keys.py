@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import uuid
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
@@ -261,3 +262,221 @@ class TestOrgScopedWebhookIngestion:
         ).all()
         assert len(companies) == 2
         assert {c.organization_id for c in companies} == {org_a.id, org_b.id}
+
+
+# ---------------------------------------------------------------------------
+# 4. get_organization_from_webhook_key — POST /webhooks/receive's tenant
+#    resolution (header OR ?org_key= query param, since external providers
+#    like LinkedIn/G2 typically only let you configure a destination URL,
+#    not custom headers).
+# ---------------------------------------------------------------------------
+
+
+class TestGetOrganizationFromWebhookKey:
+    def test_absent_returns_none(self, session: Session):
+        from app.api.deps import get_organization_from_webhook_key
+
+        assert get_organization_from_webhook_key(None, None, session) is None
+
+    def test_resolves_from_header(self, session: Session):
+        from app.api.deps import get_organization_from_webhook_key
+
+        org = _make_org(session, "Header Org")
+        plaintext = _make_active_key(session, org)
+
+        resolved = get_organization_from_webhook_key(plaintext, None, session)
+        assert resolved == org.id
+
+    def test_resolves_from_query_param(self, session: Session):
+        """The path external providers can actually use — a webhook URL
+        callback with ?org_key=... baked in, no custom header required."""
+        from app.api.deps import get_organization_from_webhook_key
+
+        org = _make_org(session, "Query Org")
+        plaintext = _make_active_key(session, org)
+
+        resolved = get_organization_from_webhook_key(None, plaintext, session)
+        assert resolved == org.id
+
+    def test_header_takes_precedence_over_query_param(self, session: Session):
+        from app.api.deps import get_organization_from_webhook_key
+
+        org_a = _make_org(session, "Precedence A")
+        org_b = _make_org(session, "Precedence B")
+        key_a = _make_active_key(session, org_a)
+        key_b = _make_active_key(session, org_b)
+
+        resolved = get_organization_from_webhook_key(key_a, key_b, session)
+        assert resolved == org_a.id
+
+    def test_invalid_key_401s(self, session: Session):
+        from fastapi import HTTPException
+
+        from app.api.deps import get_organization_from_webhook_key
+
+        with pytest.raises(HTTPException) as exc_info:
+            get_organization_from_webhook_key("bee_org_not-a-real-key", None, session)
+        assert exc_info.value.status_code == 401
+
+
+# ---------------------------------------------------------------------------
+# 5. POST /webhooks/receive — org_key threading + replay protection
+# ---------------------------------------------------------------------------
+
+
+class TestWebhookReceiveOrgScoping:
+    """Uses the DB-wired `client` fixture (unlike test_external_ingestion.py's
+    module-local one) since resolving an org key requires a real session.
+
+    The worker's asyncio queue processes off-thread — rather than depend on
+    its timing, these assert the resolved organization_id made it onto the
+    IngestionTask the endpoint actually enqueues (mocking the worker itself,
+    same technique test_external_ingestion.py's TestWebhookReceive uses).
+    """
+
+    def _payload(self, external_id: str) -> dict:
+        return {
+            "provider": "linkedin",
+            "event_type": "funding.round.announced",
+            "title": "Acme raised a Series B",
+            "external_id": external_id,
+            "company": {"name": "Acme", "domain": "acme-webhook-org.com"},
+        }
+
+    def test_org_key_query_param_lands_on_the_enqueued_task(self, client: TestClient, session: Session):
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        org = _make_org(session, "Webhook Query Org")
+        plaintext = _make_active_key(session, org)
+
+        with patch("app.api.v1.endpoints.webhooks.get_ingestion_worker") as mock_worker_fn:
+            worker = MagicMock()
+            worker.enqueue = AsyncMock(return_value="task-org-query")
+            mock_worker_fn.return_value = worker
+
+            resp = client.post(
+                f"/api/v1/webhooks/receive?org_key={plaintext}",
+                json=self._payload("provider:evt_org_query_1"),
+            )
+
+        assert resp.status_code == 202, resp.text
+        enqueued_task = worker.enqueue.call_args[0][0]
+        assert enqueued_task.organization_id == str(org.id)
+
+    def test_org_key_header_lands_on_the_enqueued_task(self, client: TestClient, session: Session):
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        org = _make_org(session, "Webhook Header Org")
+        plaintext = _make_active_key(session, org)
+
+        with patch("app.api.v1.endpoints.webhooks.get_ingestion_worker") as mock_worker_fn:
+            worker = MagicMock()
+            worker.enqueue = AsyncMock(return_value="task-org-header")
+            mock_worker_fn.return_value = worker
+
+            resp = client.post(
+                "/api/v1/webhooks/receive",
+                json=self._payload("provider:evt_org_header_1"),
+                headers={"X-BEE-Org-Key": plaintext},
+            )
+
+        assert resp.status_code == 202, resp.text
+        enqueued_task = worker.enqueue.call_args[0][0]
+        assert enqueued_task.organization_id == str(org.id)
+
+    def test_no_org_key_leaves_task_untagged(self, client: TestClient, session: Session):  # noqa: ARG002
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        with patch("app.api.v1.endpoints.webhooks.get_ingestion_worker") as mock_worker_fn:
+            worker = MagicMock()
+            worker.enqueue = AsyncMock(return_value="task-org-none")
+            mock_worker_fn.return_value = worker
+
+            resp = client.post(
+                "/api/v1/webhooks/receive",
+                json=self._payload("provider:evt_org_untagged_1"),
+            )
+
+        assert resp.status_code == 202, resp.text
+        enqueued_task = worker.enqueue.call_args[0][0]
+        assert enqueued_task.organization_id is None
+
+    def test_invalid_org_key_401s_before_enqueueing(self, client: TestClient, session: Session):  # noqa: ARG002
+        resp = client.post(
+            "/api/v1/webhooks/receive?org_key=bee_org_not-a-real-key",
+            json=self._payload("provider:evt_org_invalid_1"),
+        )
+        assert resp.status_code == 401
+
+
+class TestWebhookReplayProtection:
+    def test_replayed_signature_is_rejected(self, client: TestClient):
+        import json as json_module
+
+        from app.core.config import settings as app_settings
+        from app.core.replay_guard import reset_replay_guard
+        from app.core.security import compute_signature
+
+        reset_replay_guard()
+        original_window = app_settings.WEBHOOK_REPLAY_WINDOW_SECONDS
+        original_required = app_settings.WEBHOOK_SIGNATURE_REQUIRED
+        app_settings.WEBHOOK_REPLAY_WINDOW_SECONDS = 300
+        app_settings.WEBHOOK_SIGNATURE_REQUIRED = True
+        try:
+            body = json_module.dumps(
+                {
+                    "provider": "linkedin",
+                    "event_type": "funding.round.announced",
+                    "title": "Replay test",
+                    "external_id": "provider:evt_replay_1",
+                }
+            ).encode()
+            signature = compute_signature(body)
+            headers = {"X-BEE-Signature": signature, "content-type": "application/json"}
+
+            first = client.post("/api/v1/webhooks/receive", content=body, headers=headers)
+            assert first.status_code == 202, first.text
+
+            second = client.post("/api/v1/webhooks/receive", content=body, headers=headers)
+            assert second.status_code == 409, second.text
+        finally:
+            app_settings.WEBHOOK_REPLAY_WINDOW_SECONDS = original_window
+            app_settings.WEBHOOK_SIGNATURE_REQUIRED = original_required
+            reset_replay_guard()
+
+    def test_disabled_window_allows_repeated_delivery(self, client: TestClient):
+        """WEBHOOK_REPLAY_WINDOW_SECONDS=0 disables the guard entirely —
+        needed by tests (and operators) that intentionally resend the same
+        signed payload to exercise idempotency at the application level."""
+        import json as json_module
+
+        from app.core.config import settings as app_settings
+        from app.core.replay_guard import reset_replay_guard
+        from app.core.security import compute_signature
+
+        reset_replay_guard()
+        original_window = app_settings.WEBHOOK_REPLAY_WINDOW_SECONDS
+        original_required = app_settings.WEBHOOK_SIGNATURE_REQUIRED
+        app_settings.WEBHOOK_REPLAY_WINDOW_SECONDS = 0
+        app_settings.WEBHOOK_SIGNATURE_REQUIRED = True
+        try:
+            body = json_module.dumps(
+                {
+                    "provider": "linkedin",
+                    "event_type": "funding.round.announced",
+                    "title": "Replay disabled test",
+                    "external_id": "provider:evt_replay_disabled_1",
+                }
+            ).encode()
+            signature = compute_signature(body)
+            headers = {"X-BEE-Signature": signature, "content-type": "application/json"}
+
+            first = client.post("/api/v1/webhooks/receive", content=body, headers=headers)
+            assert first.status_code == 202, first.text
+
+            second = client.post("/api/v1/webhooks/receive", content=body, headers=headers)
+            assert second.status_code == 202, second.text
+        finally:
+            app_settings.WEBHOOK_REPLAY_WINDOW_SECONDS = original_window
+            app_settings.WEBHOOK_SIGNATURE_REQUIRED = original_required
+            reset_replay_guard()

@@ -32,8 +32,11 @@ from typing import Any
 
 from app.core.database import session_scope
 from app.core.logging import get_logger
+from app.services.dead_letter import register_retry_handler
 
 logger = get_logger(__name__)
+
+_DLQ_EVENT_NAME = "ingestion.task_processing_failed"
 
 
 class IngestionTaskType(str, Enum):
@@ -51,6 +54,11 @@ class IngestionTask:
     payload: dict[str, Any] = field(default_factory=dict)
     signal_id: str | None = None
     opportunity_id: str | None = None
+    # Tenant resolved from the webhook call (X-BEE-Org-Key header or
+    # ?org_key= query param — see app.api.deps.get_organization_from_webhook_key).
+    # None means untagged, same backward-compatible contract as every other
+    # optional organization_id in the codebase.
+    organization_id: str | None = None
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -101,11 +109,37 @@ class IngestionWorker:
             try:
                 await asyncio.to_thread(self._process_sync, task)
                 self.processed_count += 1
-            except Exception:  # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
                 self.error_count += 1
                 logger.exception("IngestionWorker: task %s failed", task.task_id)
+                # Without this, a transient failure here (a DB deadlock mid-
+                # commit, a provider timeout inside enrichment) vanished with
+                # only this log line as evidence — the webhook's effects
+                # (dark funnel signal, market signal, enrichment) were lost
+                # for good. Enqueuing to the DLQ makes it retryable with
+                # backoff and, after exhausting retries, escalates to the CEO
+                # — same resilience contract the WorkflowOrchestrator gets.
+                await asyncio.to_thread(self._send_to_dlq, task, str(exc))
             finally:
                 self._queue.task_done()
+
+    def _send_to_dlq(self, task: IngestionTask, error: str) -> None:
+        try:
+            from app.services.dead_letter import DeadLetterQueueService
+            from app.models.dead_letter import DLQEventType
+
+            with session_scope() as session:
+                DeadLetterQueueService(session).enqueue(
+                    event_name=_DLQ_EVENT_NAME,
+                    original_event=_task_to_dict(task),
+                    error=error,
+                    event_type=DLQEventType.WEBHOOK,
+                )
+        except Exception:  # noqa: BLE001
+            # Same reasoning as WorkflowOrchestrator._enqueue_to_dlq: if the
+            # DLQ write itself fails, log it — there's no further fallback,
+            # but this must never raise out of the worker loop.
+            logger.exception("IngestionWorker: failed to enqueue task %s to DLQ", task.task_id)
 
     def _process_sync(self, task: IngestionTask) -> None:
         """Synchronous processing — runs in thread pool to avoid blocking event loop."""
@@ -119,16 +153,17 @@ class IngestionWorker:
         payload = task.payload
         provider = task.provider
         event_type = payload.get("event_type") or payload.get("event") or "unknown"
+        organization_id = uuid.UUID(task.organization_id) if task.organization_id else None
 
         with session_scope() as session:
             # 1. Dark funnel intent signals (G2, website visits, LinkedIn research)
             if _is_dark_funnel_event(event_type, provider):
-                self._ingest_dark_funnel(session, payload, provider)
+                self._ingest_dark_funnel(session, payload, provider, organization_id)
 
             # 2. Market signal ingestion (funding, hiring, etc.)
             signal_outcome = None
             if _is_market_signal_event(event_type, payload):
-                signal_outcome = self._ingest_market_signal(session, payload)
+                signal_outcome = self._ingest_market_signal(session, payload, organization_id)
 
             # 3. External API enrichment (LinkedIn profile, G2, Google)
             from app.services.external_api.orchestrator import ExternalAPIOrchestrator
@@ -205,7 +240,9 @@ class IngestionWorker:
             self._reenrich_opportunity(session, signal, opp)
             session.commit()
 
-    def _ingest_dark_funnel(self, session, payload: dict, provider: str) -> None:
+    def _ingest_dark_funnel(
+        self, session, payload: dict, provider: str, organization_id: uuid.UUID | None = None
+    ) -> None:
         from app.schemas.dark_funnel import DarkFunnelSignalIn
         from app.services.dark_funnel.service import DarkFunnelService
 
@@ -223,10 +260,11 @@ class IngestionWorker:
             content_url=data.get("content_url") or data.get("url"),
             intent_keywords=data.get("intent_keywords") or data.get("keywords") or [],
             raw_payload=payload,
+            external_id=payload.get("external_id"),
         )
-        DarkFunnelService(session).ingest_signal(signal_in)
+        DarkFunnelService(session).ingest_signal(signal_in, organization_id)
 
-    def _ingest_market_signal(self, session, payload: dict):
+    def _ingest_market_signal(self, session, payload: dict, organization_id: uuid.UUID | None = None):
         from app.schemas.signal import CompanyRef, LeadRef, SignalWebhookIn
         from app.services.signal_engine import SignalEngine
 
@@ -241,7 +279,7 @@ class IngestionWorker:
             lead=LeadRef(**lead) if lead else None,
             data=payload.get("data") or {},
         )
-        return SignalEngine(session).ingest(webhook, commit=False)
+        return SignalEngine(session).ingest(webhook, commit=False, organization_id=organization_id)
 
     def _apply_enrichment_and_reenrich(
         self,
@@ -303,6 +341,49 @@ class IngestionWorker:
             "external_providers_called": ctx.external_providers_called,
             "strategy_channel": (opportunity.strategy or {}).get("channel"),
         }
+
+
+def _task_to_dict(task: IngestionTask) -> dict[str, Any]:
+    """Serialize an :class:`IngestionTask` for DLQ storage/replay."""
+    return {
+        "task_id": task.task_id,
+        "task_type": task.task_type.value,
+        "provider": task.provider,
+        "payload": task.payload,
+        "signal_id": task.signal_id,
+        "opportunity_id": task.opportunity_id,
+        "organization_id": task.organization_id,
+    }
+
+
+def _task_from_dict(data: dict[str, Any]) -> IngestionTask:
+    return IngestionTask(
+        task_id=data.get("task_id") or str(uuid.uuid4()),
+        task_type=IngestionTaskType(data.get("task_type", IngestionTaskType.EXTERNAL_WEBHOOK.value)),
+        provider=data.get("provider", "unknown"),
+        payload=data.get("payload") or {},
+        signal_id=data.get("signal_id"),
+        opportunity_id=data.get("opportunity_id"),
+        organization_id=data.get("organization_id"),
+    )
+
+
+def _retry_ingestion_task(original_event: dict[str, Any]) -> bool:
+    """DLQ retry handler for ``_DLQ_EVENT_NAME`` — replays the ingestion task
+    synchronously against a fresh session. Returns True on success; raises
+    (caught by DeadLetterQueueService.retry) on failure so the DLQ's
+    exponential-backoff/permanently-failed bookkeeping applies same as any
+    other retried event.
+    """
+    task = _task_from_dict(original_event)
+    # A throwaway worker instance: _process_sync only dispatches by
+    # task_type and doesn't touch any queue/running state, so this is safe
+    # to call directly outside the normal enqueue/_run_loop path.
+    IngestionWorker()._process_sync(task)  # noqa: SLF001
+    return True
+
+
+register_retry_handler(_DLQ_EVENT_NAME)(_retry_ingestion_task)
 
 
 def _is_dark_funnel_event(event_type: str, provider: str) -> bool:

@@ -26,6 +26,7 @@ win rate."
 from __future__ import annotations
 
 import math
+import uuid
 
 from sqlmodel import Session, func, select
 
@@ -36,6 +37,7 @@ from app.models.opportunity import Opportunity
 from app.models.signal import Signal
 from app.repositories.strategy_outcome import StrategyOutcomeRepository
 from app.schemas.simulator import RevenueSimulation, SimulatorScenario
+from app.services.permissions import scope_by_organization_id
 
 logger = get_logger(__name__)
 
@@ -70,6 +72,7 @@ class RevenueSimulator:
         signal_type: str,
         industry: str | None = None,
         increase_factor: float = 2.0,
+        organization_id: uuid.UUID | None = None,
     ) -> RevenueSimulation:
         """Generate a multi-scenario revenue projection.
 
@@ -77,12 +80,18 @@ class RevenueSimulator:
             signal_type:     The signal category to analyze (e.g., "funding_round").
             industry:        Optional industry filter (e.g., "SaaS").
             increase_factor: Prospecting volume multiplier (e.g., 2.0 = double).
+            organization_id: Tenant boundary — scopes both the historical
+                win-rate data and the open-pipeline count to this org (plus
+                untagged/legacy records), instead of blending every tenant's
+                numbers into one projection.
 
         Returns:
             A :class:`RevenueSimulation` with baseline and three scenarios.
         """
         # ── 1. Get historical win-rate data ───────────────────────────────────
-        win_rate_rows = self._outcomes.get_win_rates(signal_type, industry=industry, min_samples=1)
+        win_rate_rows = self._outcomes.get_win_rates(
+            signal_type, industry=industry, min_samples=1, organization_id=organization_id
+        )
 
         if win_rate_rows:
             # Use the best-performing combination's win rate
@@ -100,7 +109,7 @@ class RevenueSimulator:
         confidence = _data_confidence(sample_size)
 
         # ── 2. Count current open pipeline ────────────────────────────────────
-        current_pipeline = self._count_open_opportunities(signal_type, industry)
+        current_pipeline = self._count_open_opportunities(signal_type, industry, organization_id)
 
         # ── 3. Compute baseline ───────────────────────────────────────────────
         baseline_expected = math.floor(current_pipeline * win_rate)
@@ -153,7 +162,9 @@ class RevenueSimulator:
             recommendation=recommendation,
         )
 
-    def _count_open_opportunities(self, signal_type: str, industry: str | None) -> int:
+    def _count_open_opportunities(
+        self, signal_type: str, industry: str | None, organization_id: uuid.UUID | None = None
+    ) -> int:
         """Count READY_TO_ACTION opportunities matching the segment.
 
         Joins to ``Signal.signal_type`` (always) and, when requested, to
@@ -174,6 +185,7 @@ class RevenueSimulator:
             .where(Opportunity.status == OpportunityStatus.READY_TO_ACTION)
             .where(Signal.signal_type == sig_type)
         )
+        stmt = scope_by_organization_id(stmt, Opportunity.organization_id, organization_id)
         if industry:
             stmt = stmt.join(Company, Company.id == Opportunity.company_id).where(
                 Company.industry == industry

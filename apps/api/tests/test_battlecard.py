@@ -59,7 +59,7 @@ def test_battlecard_returns_complete_structure(client):
     assert strategy["closing_argument"], "closing_argument must be non-empty"
     assert strategy["timing_window"]["urgency"] == "immediate"
     assert strategy["timing_window"]["reason"]
-    assert strategy["generator"] == "rule_based"
+    assert strategy["generator"] == "funding_strategy"
 
 
 def test_battlecard_404_for_missing_opportunity(client):
