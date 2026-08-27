@@ -19,7 +19,9 @@ import sqlmodel
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "016_dark_funnel_signal_external_id"
+revision: str = "016_dark_funnel_external_id"
+# NOTE: shortened from "016_dark_funnel_signal_external_id" (34 chars) —
+# see 005's note on why (VARCHAR(32) version_num column).
 down_revision: str | None = "015_contact_submissions"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

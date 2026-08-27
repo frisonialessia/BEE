@@ -25,7 +25,12 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "005_opportunity_forecasting_fields"
+revision: str = "005_opp_forecasting_fields"
+# NOTE: shortened from "005_opportunity_forecasting_fields" (34 chars) — the
+# default Alembic-bootstrapped `alembic_version.version_num` column is
+# VARCHAR(32), so the original id couldn't ever be stamped. Filename kept
+# as-is for readability; only the id string that actually gets persisted
+# needed to shrink. See 014/016 for the other two ids with the same issue.
 down_revision: str | None = "004_organization_api_keys"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None

@@ -17,7 +17,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "006_message_templates"
-down_revision: str | None = "005_opportunity_forecasting_fields"
+down_revision: str | None = "005_opp_forecasting_fields"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

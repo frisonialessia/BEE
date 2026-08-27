@@ -18,7 +18,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "015_contact_submissions"
-down_revision: str | None = "014_backfill_strategy_outcome_deal_value"
+down_revision: str | None = "014_backfill_deal_value"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
