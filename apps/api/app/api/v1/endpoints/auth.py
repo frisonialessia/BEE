@@ -2,17 +2,35 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import hmac
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlmodel import Session
 
 from app.api.deps import get_current_user
+from app.core.config import get_settings
 from app.core.database import get_session
 from app.core.security import create_access_token
+from app.core.signup_guard import get_signup_guard
 from app.models.user import User
 from app.schemas.auth import OrganizationRegister, TokenResponse, UserLogin, UserOut
 from app.services.auth import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+
+
+def _client_key(request: Request) -> str:
+    """Best-effort caller identity for the signup rate limiter.
+
+    ``request.client.host`` is the proxy's address behind most PaaS
+    deployments (Vercel included) unless the real client IP is forwarded —
+    fall back to a fixed key rather than raising, so a missing header
+    degrades to "one shared bucket" instead of breaking registration.
+    """
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
 
 
 @router.post(
@@ -21,13 +39,31 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
     status_code=status.HTTP_201_CREATED,
     summary="Register a new organization and its OWNER user",
 )
-def register(data: OrganizationRegister, session: Session = Depends(get_session)) -> TokenResponse:
+def register(
+    data: OrganizationRegister, request: Request, session: Session = Depends(get_session)
+) -> TokenResponse:
     """Bootstrap a brand-new organization.
 
     This is the *only* way an Organization comes into existence — there is no
     "join an existing org" self-serve flow. Every subsequent teammate is added
     by an OWNER/ADMIN via ``POST /api/v1/users``.
+
+    Two abuse-protection layers guard this fully-open endpoint (see
+    ``app.core.signup_guard``'s module docstring for the full rationale):
+    an optional shared invite code, and a per-IP rate limit independent of it.
     """
+    settings = get_settings()
+
+    if settings.SIGNUP_INVITE_CODE:
+        if not data.invite_code or not hmac.compare_digest(data.invite_code, settings.SIGNUP_INVITE_CODE):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing invite code.")
+
+    if not get_signup_guard().try_consume(_client_key(request)):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many signup attempts from this address. Try again later.",
+        )
+
     service = AuthService(session)
     try:
         org, user = service.register_organization(data)

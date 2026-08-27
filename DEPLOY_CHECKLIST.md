@@ -12,11 +12,13 @@ Estado del backend tras External Ingestion: **Ready**.
 | Variable | Acción |
 |----------|--------|
 | `API_SECRET_KEY` | Generar con `python -c "import secrets; print(secrets.token_hex(32))"` — protege todos los endpoints REST |
+| `JWT_SECRET_KEY` | Generar igual que `API_SECRET_KEY` — el default `change-me-in-production` hace que la app **se niegue a arrancar** en `ENVIRONMENT=production` |
 | `WEBHOOK_SIGNATURE_REQUIRED` | `true` en producción |
 | `WEBHOOK_SIGNING_SECRET` | Secreto aleatorio fuerte — el default `change-me-in-production` **no** es seguro |
 | `LINKEDIN_WEBHOOK_SECRET` | Secreto HMAC por provider para `/api/v1/webhooks/receive` |
 | `G2_WEBHOOK_SECRET` / `GOOGLE_WEBHOOK_SECRET` | Configurar cuando esos providers estén activos |
 | `ENVIRONMENT` | `production` (habilita cabeceras HSTS) |
+| `SIGNUP_INVITE_CODE` | Recomendado durante el beta cerrado — sin esto, `/auth/register` queda 100% abierto a cualquiera con la URL. Ver §7. |
 
 ### Base de datos
 
@@ -178,6 +180,17 @@ URLs de prueba:
 | `apps/web/next.config.ts` | Redirect `/control` → `/dashboard/control` |
 | `apps/web/src/app/dashboard/control/page.tsx` | Ruta App Router |
 | `apps/web/.env.example` | Template de variables |
+
+---
+
+## 7. Beta cerrado — código de invitación y rate limit de signup
+
+`POST /auth/register` es self-serve abierto por diseño: cualquiera con la URL crea una organización nueva, sin verificación de email ni aprobación de un admin. Para un beta cerrado con testers curados, hay dos capas de protección (ver `app.core.signup_guard`):
+
+1. **`SIGNUP_INVITE_CODE`** — si se configura, `/auth/register` exige ese código (comparación timing-safe). Sin configurar, registro 100% abierto — mismo comportamiento de siempre. El campo en el formulario de `/register` es opcional en el frontend porque no sabe si el backend lo pide; si lo pide y no coincide, el backend devuelve 403.
+2. **`SIGNUP_RATE_LIMIT_PER_HOUR`** (default `5`) — límite por IP, independiente del código anterior (protege incluso si el código se filtra o alguien lo prueba a fuerza bruta). `0` lo desactiva.
+
+Ambos son en memoria del proceso, igual que `WEBHOOK_REPLAY_WINDOW_SECONDS` — no persisten entre reinicios ni se comparten entre instancias (ver gotcha #2 arriba).
 
 ---
 
