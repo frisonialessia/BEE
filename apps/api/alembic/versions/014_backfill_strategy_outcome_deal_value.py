@@ -28,7 +28,9 @@ from collections.abc import Sequence
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "014_backfill_strategy_outcome_deal_value"
+revision: str = "014_backfill_deal_value"
+# NOTE: shortened from "014_backfill_strategy_outcome_deal_value" (40 chars)
+# — see 005's note on why (VARCHAR(32) version_num column).
 down_revision: str | None = "013_strategy_outcome_loss_detail"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
