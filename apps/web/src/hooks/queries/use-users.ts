@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createUser, fetchUsers, updateUser } from "@/lib/api/users";
+import { createUser, deleteUser, fetchUsers, updateUser } from "@/lib/api/users";
 import { queryKeys } from "@/lib/query-keys";
 import type { UserCreateIn, UserUpdateIn } from "@/types/auth";
 
@@ -28,6 +28,16 @@ export function useUpdateUser() {
   return useMutation({
     mutationFn: ({ userId, body }: { userId: string; body: UserUpdateIn }) =>
       updateUser(userId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => deleteUser(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.all });
     },

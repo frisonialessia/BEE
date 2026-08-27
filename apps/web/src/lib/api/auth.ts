@@ -25,3 +25,14 @@ export async function login(body: UserLoginIn): Promise<TokenResponse> {
 export async function fetchMe(): Promise<UserOut> {
   return apiFetch<UserOut>("/api/v1/auth/me", { cache: "no-store" });
 }
+
+export async function changePassword(body: {
+  current_password: string;
+  new_password: string;
+}): Promise<void> {
+  return apiFetch<void>("/api/v1/auth/me/password", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}

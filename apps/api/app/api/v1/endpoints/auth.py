@@ -10,10 +10,10 @@ from sqlmodel import Session
 from app.api.deps import get_current_user
 from app.core.config import get_settings
 from app.core.database import get_session
-from app.core.security import create_access_token
+from app.core.security import create_access_token, hash_password, verify_password
 from app.core.signup_guard import get_signup_guard
 from app.models.user import User
-from app.schemas.auth import OrganizationRegister, TokenResponse, UserLogin, UserOut
+from app.schemas.auth import OrganizationRegister, PasswordChangeIn, TokenResponse, UserLogin, UserOut
 from app.services.auth import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -92,3 +92,28 @@ def login(data: UserLogin, session: Session = Depends(get_session)) -> TokenResp
 @router.get("/me", response_model=UserOut, summary="Return the logged-in user")
 def me(current_user: User = Depends(get_current_user)) -> UserOut:
     return UserOut.model_validate(current_user)
+
+
+@router.patch(
+    "/me/password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Change the logged-in user's own password",
+)
+def change_my_password(
+    data: PasswordChangeIn,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> None:
+    """Self-service password change — every role can do this for themselves,
+    no admin action required. Requires the current password (see
+    ``PasswordChangeIn``'s docstring for why); existing session tokens stay
+    valid (JWTs aren't revocable short of expiry — see ``app.core.security``),
+    so a caller worried about a leaked token should treat re-logging in
+    everywhere as a separate, manual step.
+    """
+    if not verify_password(data.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Current password is incorrect.")
+
+    current_user.hashed_password = hash_password(data.new_password)
+    session.add(current_user)
+    session.commit()
