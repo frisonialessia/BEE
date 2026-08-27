@@ -194,4 +194,14 @@ Ambos son en memoria del proceso, igual que `WEBHOOK_REPLAY_WINDOW_SECONDS` — 
 
 ---
 
+## 8. Herramienta interna de soporte — reset de contraseña de emergencia
+
+No existe todavía un flujo de "olvidé mi contraseña" self-serve. `POST /api/v1/internal/support/reset-password` es una única acción de emergencia para el equipo de BEE (no para clientes): dado un email, genera una contraseña temporal nueva y la devuelve una sola vez — quien la pide se la pasa por fuera de la app a la persona afectada.
+
+- **`SUPPORT_ADMIN_SECRET`** — sin configurar (default), el endpoint devuelve 404, no existe. Configurarlo solo si de verdad hace falta esta herramienta, y dárselo a muy pocas personas. Generar con `python -c "import secrets; print(secrets.token_hex(32))"` — **nunca reutilizar** `API_SECRET_KEY` ni `JWT_SECRET_KEY` para esto.
+- Uso: `POST /api/v1/internal/support/reset-password` con header `X-BEE-Support-Secret: <secreto>` y body `{"email": "..."}`.
+- Deliberadamente **no** es un rol de administrador dentro de la app que vea datos de cualquier organización — eso reabriría el mismo riesgo de aislamiento cross-tenant que el resto de este proyecto existe para cerrar. Para cualquier otra intervención de emergencia (arreglar una fila, etc.), usar el dashboard de Supabase directamente.
+
+---
+
 *Última actualización: fase External Ingestion — backend Ready.*

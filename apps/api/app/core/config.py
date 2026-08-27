@@ -118,6 +118,17 @@ class Settings(BaseSettings):
     # disables the check entirely.
     SIGNUP_RATE_LIMIT_PER_HOUR: int = 5
 
+    # ----- Internal support tooling (see app.api.v1.endpoints.internal_support) --
+    # A single narrow emergency action — reset any user's password by email —
+    # gated by its own secret, entirely separate from API_SECRET_KEY (service
+    # auth) and JWT_SECRET_KEY (customer sessions). None (the default)
+    # disables the endpoint outright: it 404s rather than existing as a live,
+    # always-on surface in deployments that never opt into it. This is
+    # deliberately NOT a general cross-organization admin role — see the
+    # module docstring for why that's a materially bigger, unaudited risk
+    # this project isn't taking on right now.
+    SUPPORT_ADMIN_SECRET: str | None = None
+
     # ----- CORS ----------------------------------------------------------------
     # Comma-separated list of origins allowed to call the API (the Next.js app).
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
