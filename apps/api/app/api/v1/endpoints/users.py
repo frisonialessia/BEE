@@ -110,3 +110,46 @@ def update_user(
     session.commit()
     session.refresh(target)
     return target
+
+
+@router.delete(
+    "/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove a teammate from the caller's organization (OWNER/ADMIN only)",
+)
+def delete_user(
+    user_id: uuid.UUID,
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> None:
+    """Deactivates the teammate rather than deleting the row.
+
+    A hard delete isn't safe here: ``User`` is referenced by
+    ``assigned_to_user_id``/``created_by_user_id`` FKs across leads,
+    opportunities, templates, and more (none set ``ondelete=CASCADE``), plus
+    the audit trail and every past approval/outcome this person is on record
+    for — deleting the row would either fail outright on the FK constraints
+    or silently erase that history. Deactivation gives the same practical
+    result the caller wants (this person can no longer log in or act — see
+    ``app.api.deps._load_user_from_token``'s ``is_active`` re-check on every
+    request) while keeping everything they're on record for intact. Same
+    ``is_active=False`` a PATCH already sets — this is just the dedicated,
+    discoverable "remove" action for it.
+    """
+    target = session.get(User, user_id)
+    if target is None or target.organization_id != current_user.organization_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    if target.role == UserRole.OWNER:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="The organization OWNER cannot be removed.")
+
+    if target.id == current_user.id:
+        # An ADMIN removing themselves is still a real scenario (an OWNER
+        # can't be removed at all, per the check above) — block it anyway so
+        # nobody locks themselves out mid-session; another OWNER/ADMIN can
+        # remove them instead.
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You cannot remove your own account.")
+
+    target.is_active = False
+    session.add(target)
+    session.commit()

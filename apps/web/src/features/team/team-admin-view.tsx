@@ -6,8 +6,9 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/providers/auth-provider";
+import { useChangePassword } from "@/hooks/queries/use-auth";
 import { useCreateTeam, useTeams } from "@/hooks/queries/use-teams";
-import { useCreateUser, useUpdateUser, useUsers } from "@/hooks/queries/use-users";
+import { useCreateUser, useDeleteUser, useUpdateUser, useUsers } from "@/hooks/queries/use-users";
 import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
 import { QuotasSection } from "@/features/team/quotas-section";
 import { ROLE_LABELS, type TeamOut, type UserOut, type UserRole } from "@/types/auth";
@@ -206,10 +207,16 @@ function UserRow({
   isSelf: boolean;
 }) {
   const updateUser = useUpdateUser();
+  const deleteUser = useDeleteUser();
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const teamName = teams.find((t) => t.id === user.team_id)?.name ?? "—";
   // The org OWNER's role can't be changed (backend enforces this too — see
   // app/api/v1/endpoints/users.py) so editing it here would just 403.
   const canEditRole = canManage && user.role !== "owner";
+  // Mirrors the backend's own guardrails (app/api/v1/endpoints/users.py
+  // delete_user): the OWNER can't be removed by anyone, and nobody can
+  // remove themselves — both would just 403 if attempted.
+  const canRemove = canManage && user.role !== "owner" && !isSelf;
 
   async function handleRoleChange(role: UserRole) {
     try {
@@ -226,6 +233,21 @@ function UserRow({
       toast.success("Equipo actualizado");
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : "No se pudo actualizar el equipo.");
+    }
+  }
+
+  async function handleRemove() {
+    if (!confirmingDelete) {
+      setConfirmingDelete(true);
+      return;
+    }
+    try {
+      await deleteUser.mutateAsync(user.id);
+      toast.success(`${user.full_name} ya no tiene acceso`);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "No se pudo eliminar el miembro.");
+    } finally {
+      setConfirmingDelete(false);
     }
   }
 
@@ -277,12 +299,121 @@ function UserRow({
           teamName
         )}
       </td>
-      <td className="py-2.5">
+      <td className="py-2.5 pr-3">
         <Badge variant={user.is_active ? "success" : "warning"}>
           {user.is_active ? "Activo" : "Inactivo"}
         </Badge>
       </td>
+      {canManage && (
+        <td className="py-2.5 text-right">
+          {canRemove && (
+            <button
+              type="button"
+              onClick={handleRemove}
+              onBlur={() => setConfirmingDelete(false)}
+              disabled={deleteUser.isPending}
+              className={confirmingDelete ? "bee-btn-ghost bee-btn-ghost--fill" : "bee-btn-ghost"}
+              style={
+                confirmingDelete
+                  ? ({
+                      "--bee-fill": "var(--color-chart-2)",
+                      "--bee-fill-text": "#ffffff",
+                    } as React.CSSProperties)
+                  : undefined
+              }
+            >
+              {confirmingDelete ? "¿Confirmar?" : "Eliminar"}
+            </button>
+          )}
+        </td>
+      )}
     </tr>
+  );
+}
+
+/** Self-service password change — every role gets this, not just OWNER/ADMIN
+ * (the backend endpoint requires no role at all, only being logged in — see
+ * PATCH /auth/me/password). */
+function ChangePasswordSection() {
+  const changePassword = useChangePassword();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [open, setOpen] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    try {
+      await changePassword.mutateAsync({
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+      toast.success("Contraseña actualizada");
+      setCurrentPassword("");
+      setNewPassword("");
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "No se pudo cambiar la contraseña.");
+    }
+  }
+
+  return (
+    <section className="bee-bento bee-bento-pad-lg space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="bee-eyebrow">Mi cuenta</p>
+          <h2 className="mt-1 text-base font-semibold">Contraseña</h2>
+        </div>
+        {!open && (
+          <button type="button" onClick={() => setOpen(true)} className="bee-btn-ghost">
+            Cambiar contraseña
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <form onSubmit={handleSubmit} className="grid gap-2 sm:grid-cols-3">
+          <input
+            type="password"
+            required
+            autoComplete="current-password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            className="bee-input"
+            placeholder="Contraseña actual"
+          />
+          <input
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            className="bee-input"
+            placeholder="Contraseña nueva (mín. 8 caracteres)"
+          />
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={changePassword.isPending}
+              className="bee-btn bee-btn--primary flex-1"
+            >
+              {changePassword.isPending ? "Guardando…" : "Guardar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setCurrentPassword("");
+                setNewPassword("");
+              }}
+              className="bee-btn-ghost"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
+    </section>
   );
 }
 
@@ -323,6 +454,8 @@ export function TeamAdminView() {
         </div>
       ) : (
         <div className="space-y-6">
+          <ChangePasswordSection />
+
           <section className="bee-bento bee-bento-pad-lg space-y-4">
             <div>
               <p className="bee-eyebrow">Equipos</p>
@@ -366,7 +499,8 @@ export function TeamAdminView() {
                     <th className="pb-2 pr-3 font-medium">Persona</th>
                     <th className="pb-2 pr-3 font-medium">Rol</th>
                     <th className="pb-2 pr-3 font-medium">Equipo</th>
-                    <th className="pb-2 font-medium">Estado</th>
+                    <th className="pb-2 pr-3 font-medium">Estado</th>
+                    {canManage && <th className="pb-2 font-medium" />}
                   </tr>
                 </thead>
                 <tbody>

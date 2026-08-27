@@ -29,6 +29,18 @@ class UserLogin(BaseModel):
     password: str
 
 
+class PasswordChangeIn(BaseModel):
+    """Self-service password change for the logged-in user.
+
+    Distinct from a future admin-reset or forgot-password flow (neither
+    exists yet) — this always requires the caller's *current* password, so
+    a stolen session token alone can't be used to lock the real owner out.
+    """
+
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
 class OrganizationOut(BaseModel):
     id: uuid.UUID
     name: str

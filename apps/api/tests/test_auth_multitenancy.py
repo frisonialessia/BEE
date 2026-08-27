@@ -538,6 +538,122 @@ class TestUserEndpoints:
         emails = {u["email"] for u in resp.json()}
         assert emails == {"mgra@acme.io", "repa@acme.io"}
 
+    def test_owner_can_remove_teammate(self, client: TestClient):
+        owner = _register(client, org_name="Acme Corp", email="remove1@acme.io")
+        headers = _auth_headers(owner["access_token"])
+        created = client.post(
+            "/api/v1/users",
+            json={"email": "toremove@acme.io", "password": "password123", "full_name": "Bye"},
+            headers=headers,
+        ).json()
+
+        resp = client.delete(f"/api/v1/users/{created['id']}", headers=headers)
+        assert resp.status_code == 204
+
+        listed = {u["email"]: u for u in client.get("/api/v1/users", headers=headers).json()}
+        assert listed["toremove@acme.io"]["is_active"] is False
+
+    def test_removed_teammate_cannot_authenticate(self, client: TestClient):
+        owner = _register(client, org_name="Acme Corp", email="remove2@acme.io")
+        headers = _auth_headers(owner["access_token"])
+        created = client.post(
+            "/api/v1/users",
+            json={"email": "gone@acme.io", "password": "password123", "full_name": "Gone"},
+            headers=headers,
+        ).json()
+        login = client.post(
+            "/api/v1/auth/login", json={"email": "gone@acme.io", "password": "password123"}
+        )
+        removed_token = login.json()["access_token"]
+
+        client.delete(f"/api/v1/users/{created['id']}", headers=headers)
+
+        # is_active is re-checked on every request (app.api.deps), not just
+        # at token issuance — the existing session token stops working
+        # immediately rather than at its 7-day expiry.
+        resp = client.get("/api/v1/auth/me", headers=_auth_headers(removed_token))
+        assert resp.status_code == 401
+        # And they can no longer log back in either.
+        relogin = client.post(
+            "/api/v1/auth/login", json={"email": "gone@acme.io", "password": "password123"}
+        )
+        assert relogin.status_code == 401
+
+    def test_cannot_remove_owner(self, client: TestClient):
+        owner = _register(client, org_name="Acme Corp", email="remove3@acme.io")
+        headers = _auth_headers(owner["access_token"])
+        resp = client.delete(f"/api/v1/users/{owner['user']['id']}", headers=headers)
+        assert resp.status_code == 403
+
+    def test_cannot_remove_self(self, client: TestClient, session: Session):
+        owner = _register(client, org_name="Acme Corp", email="remove4@acme.io")
+        org = session.get(Organization, uuid.UUID(owner["user"]["organization_id"]))
+        admin = _make_user(session, org, UserRole.ADMIN, email="admin-self@acme.io")
+        session.commit()
+        token = create_access_token(admin.id, organization_id=org.id, role=admin.role.value)
+
+        resp = client.delete(f"/api/v1/users/{admin.id}", headers=_auth_headers(token))
+        assert resp.status_code == 403
+
+    def test_member_cannot_remove_teammate(self, client: TestClient, session: Session):
+        owner = _register(client, org_name="Acme Corp", email="remove5@acme.io")
+        org = session.get(Organization, uuid.UUID(owner["user"]["organization_id"]))
+        member = _make_user(session, org, UserRole.MEMBER, email="member-remove@acme.io")
+        other = _make_user(session, org, UserRole.MEMBER, email="other-remove@acme.io")
+        session.commit()
+        token = create_access_token(member.id, organization_id=org.id, role=member.role.value)
+
+        resp = client.delete(f"/api/v1/users/{other.id}", headers=_auth_headers(token))
+        assert resp.status_code == 403
+
+    def test_cannot_remove_teammate_from_other_org(self, client: TestClient, session: Session):
+        owner_a = _register(client, org_name="Org A", email="removeA@acme.io")
+        other_org = _make_org(session)
+        outsider = _make_user(session, other_org, UserRole.MEMBER, email="outsider@bcorp.io")
+        session.commit()
+
+        resp = client.delete(
+            f"/api/v1/users/{outsider.id}", headers=_auth_headers(owner_a["access_token"])
+        )
+        assert resp.status_code == 404
+
+
+class TestChangePassword:
+    def test_wrong_current_password_rejected(self, client: TestClient):
+        owner = _register(client, org_name="Acme Corp", email="pwd1@acme.io")
+        resp = client.patch(
+            "/api/v1/auth/me/password",
+            json={"current_password": "wrongpass", "new_password": "newpassword123"},
+            headers=_auth_headers(owner["access_token"]),
+        )
+        assert resp.status_code == 401
+
+    def test_correct_password_change_and_relogin(self, client: TestClient):
+        owner = _register(client, org_name="Acme Corp", email="pwd2@acme.io", password="original123")
+        resp = client.patch(
+            "/api/v1/auth/me/password",
+            json={"current_password": "original123", "new_password": "brandnew123"},
+            headers=_auth_headers(owner["access_token"]),
+        )
+        assert resp.status_code == 204
+
+        old_login = client.post(
+            "/api/v1/auth/login", json={"email": "pwd2@acme.io", "password": "original123"}
+        )
+        assert old_login.status_code == 401
+
+        new_login = client.post(
+            "/api/v1/auth/login", json={"email": "pwd2@acme.io", "password": "brandnew123"}
+        )
+        assert new_login.status_code == 200
+
+    def test_requires_authentication(self, client: TestClient):
+        resp = client.patch(
+            "/api/v1/auth/me/password",
+            json={"current_password": "x", "new_password": "newpassword123"},
+        )
+        assert resp.status_code == 401
+
 
 class TestOpportunitiesVisibilityScoping:
     def test_unauthenticated_request_sees_all_ready_opportunities(self, client: TestClient, session: Session):

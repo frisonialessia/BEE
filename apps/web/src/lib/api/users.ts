@@ -20,3 +20,7 @@ export async function updateUser(userId: string, body: UserUpdateIn): Promise<Us
     body: JSON.stringify(body),
   });
 }
+
+export async function deleteUser(userId: string): Promise<void> {
+  return apiFetch<void>(`/api/v1/users/${userId}`, { method: "DELETE" });
+}
