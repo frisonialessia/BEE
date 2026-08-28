@@ -145,6 +145,15 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         if not self._enabled:
             return await call_next(request)
 
+        # CORS pre-flight requests never carry custom headers (X-API-Key
+        # included) — that's how browsers do CORS. Rejecting OPTIONS here
+        # would 401 every pre-flight and the browser would never send the
+        # real request, regardless of how CORSMiddleware is ordered relative
+        # to this one. CORSMiddleware still decides whether the pre-flight's
+        # origin is actually allowed.
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         path = request.url.path
 
         # Check exact match first, then prefix match.

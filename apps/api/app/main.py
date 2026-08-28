@@ -79,11 +79,24 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # Middleware stack is applied in reverse registration order.
-    # Outermost (last added) runs first on request, first on response.
+    # Starlette's add_middleware() *inserts* each call at the front of the
+    # stack, so the LAST call registered here ends up outermost — the first
+    # thing that sees the request, the last thing that touches the response.
+    # Register in the *reverse* of execution order:
 
-    # 1. CORS — must be outermost so pre-flight OPTIONS requests are handled
-    #    before any auth check (browsers send OPTIONS without credentials).
+    # 3. Security headers — innermost, applied to every response including errors.
+    app.add_middleware(SecurityHeadersMiddleware, environment=settings.ENVIRONMENT)
+
+    # 2. API key authentication — enabled only when API_SECRET_KEY is set.
+    app.add_middleware(APIKeyMiddleware)
+
+    # 1. CORS — registered LAST so it's outermost and handles pre-flight
+    #    OPTIONS requests before APIKeyMiddleware ever sees them. Browsers
+    #    never attach custom headers (X-API-Key included) to a pre-flight
+    #    request, so if APIKeyMiddleware ran first it would 401 every
+    #    pre-flight and the browser would never send the real request —
+    #    exactly what broke cross-origin calls from apps/web once
+    #    API_SECRET_KEY was set in production.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -91,13 +104,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*", "X-API-Key"],
     )
-
-    # 2. API key authentication — runs after CORS, before business logic.
-    #    Enabled only when API_SECRET_KEY is configured.
-    app.add_middleware(APIKeyMiddleware)
-
-    # 3. Security headers — innermost, applied to every response including errors.
-    app.add_middleware(SecurityHeadersMiddleware, environment=settings.ENVIRONMENT)
 
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
