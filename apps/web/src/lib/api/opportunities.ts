@@ -1,6 +1,9 @@
 import { apiFetch } from "@/lib/api/client";
+import { predictCycle } from "@/lib/cycle-prediction";
 import {
+  demoFetchAllBattlecards,
   demoFetchOpportunities,
+  demoFetchSignals,
   demoFindArtifacts,
   demoFindBattlecard,
   demoMoveOpportunityStage,
@@ -16,7 +19,7 @@ import type {
   OpportunityStatus,
   OutcomeIn,
 } from "@/types/domain";
-import type { OutcomeWithPrediction } from "@/types/extended";
+import type { CyclePrediction, OutcomeWithPrediction } from "@/types/extended";
 import { sampleArtifacts, sampleBattlecards } from "@/lib/sample-data";
 
 export async function fetchOpportunities(
@@ -99,6 +102,30 @@ export async function fetchArtifacts(
     if (sample) return { data: sample, live: false };
     throw new Error(`No artifacts for opportunity ${opportunityId}`);
   }
+}
+
+/** Predicted time-to-close for one open opportunity — see
+ *  CyclePredictorService's module docstring for the algorithm. `available:
+ *  false` inside the response is a normal outcome (too little history, or
+ *  the opportunity is already closed), never an error; `live: false` here
+ *  is separate and only means "computed locally from demo data", same
+ *  meaning as everywhere else in this file. */
+export async function fetchCyclePrediction(
+  opportunityId: string,
+): Promise<FetchResult<CyclePrediction>> {
+  if (isDemoMode()) {
+    const opportunities = demoFetchOpportunities();
+    const target = opportunities.find((o) => o.id === opportunityId);
+    if (!target) throw new Error(`No demo opportunity ${opportunityId}`);
+    const signals = demoFetchSignals(1000);
+    const battlecards = demoFetchAllBattlecards();
+    return { data: predictCycle(target, opportunities, signals, battlecards), live: false };
+  }
+  const data = await apiFetch<CyclePrediction>(
+    `/api/v1/opportunities/${opportunityId}/cycle-prediction`,
+    { next: { revalidate: 15 } },
+  );
+  return { data, live: true };
 }
 
 export async function recordOutcome(

@@ -1,12 +1,13 @@
 import type { ArtifactBundle, Battlecard, Opportunity, Signal } from "@/lib/types";
 import type { HotLeadScore } from "@/types/extended";
+import { historicalBattlecards, historicalOpportunities, historicalSignals } from "@/lib/demo/seed-history";
 
 /**
  * Illustrative data used when the backend API is not reachable (e.g. static
  * previews / first run before `docker compose up`). It keeps the dashboard fully
  * renderable and demonstrates the shape of real Signal Engine + Battlecard output.
  */
-export const sampleSignals: Signal[] = [
+const baseSampleSignals: Signal[] = [
   {
     id: "11111111-1111-1111-1111-111111111111",
     signal_type: "funding_round",
@@ -77,7 +78,12 @@ export const sampleSignals: Signal[] = [
   },
 ];
 
-export const sampleOpportunities: Opportunity[] = [
+/** Los 4 ejemplos originales + el historial ampliado en lib/demo/seed-history
+ * (ver ese archivo para por qué existe: dar profundidad real a Ganado/
+ * Perdido, Pronóstico y la predicción de ciclo de venta en /probar). */
+export const sampleSignals: Signal[] = [...baseSampleSignals, ...historicalSignals];
+
+const baseSampleOpportunities: Opportunity[] = [
   {
     id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
     title: "Oportunidad: Northwind Labs cerró una Serie B de $32M",
@@ -152,8 +158,10 @@ export const sampleOpportunities: Opportunity[] = [
   },
 ];
 
+export const sampleOpportunities: Opportunity[] = [...baseSampleOpportunities, ...historicalOpportunities];
+
 // Sample battlecards (one per opportunity) demonstrating the full CEO brief format.
-export const sampleBattlecards: Battlecard[] = [
+const baseSampleBattlecards: Battlecard[] = [
   {
     opportunity_id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
     title: "Northwind Labs cerró una Serie B de $32M",
@@ -267,6 +275,8 @@ export const sampleBattlecards: Battlecard[] = [
     updated_at: new Date().toISOString(),
   },
 ];
+
+export const sampleBattlecards: Battlecard[] = [...baseSampleBattlecards, ...historicalBattlecards];
 
 export const sampleArtifacts: ArtifactBundle[] = [
   {

@@ -198,6 +198,14 @@ function allBattlecards(): Battlecard[] {
   return [...sampleBattlecards, ...loadJSON<Battlecard[]>(BATTLECARDS_KEY, [])];
 }
 
+/** Every battlecard this visitor's demo knows about — the 2+historical seeded
+ * ones plus any added via "Simula tu empresa". Used by the cycle-prediction
+ * JS port (lib/cycle-prediction.ts) to look up a closed deal's industry,
+ * mirroring how the real backend joins Opportunity → Company. */
+export function demoFetchAllBattlecards(): Battlecard[] {
+  return allBattlecards();
+}
+
 export function demoFetchCompanies(): Company[] {
   const seen = new Map<string, Company>();
   for (const card of allBattlecards()) {

@@ -22,6 +22,7 @@ from app.core.database import get_session
 from app.models.base import OpportunityStatus
 from app.models.user import User
 from app.repositories.opportunity import OpportunityRepository
+from app.schemas.cycle_prediction import CyclePredictionOut
 from app.schemas.executive import ArtifactBundle
 from app.schemas.feedback import OutcomeIn
 from app.schemas.predictor import OutcomeWithPrediction
@@ -33,6 +34,7 @@ from app.schemas.strategy import (
     BattlecardSignal,
     StrategySchema,
 )
+from app.services.cycle_predictor import CyclePredictorService
 from app.services.executive_agent.service import ExecutiveAgent
 from app.services.feedback_loop.service import FeedbackLoopService
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
@@ -356,6 +358,36 @@ def get_battlecard(
         created_at=opportunity.created_at,
         updated_at=opportunity.updated_at,
     )
+
+
+@router.get(
+    "/{opportunity_id}/cycle-prediction",
+    response_model=CyclePredictionOut,
+    summary="Predict when an open opportunity is likely to close, from this org's own closed-deal history",
+)
+def get_cycle_prediction(
+    opportunity_id: uuid.UUID,
+    session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
+) -> CyclePredictionOut:
+    """See CyclePredictorService's module docstring for the full method —
+    in short: the median close time of this org's own comparable closed
+    deals (same signal type / industry), never a fabricated formula.
+    ``available=False`` with a ``reason`` is a normal response, not an
+    error, for a closed opportunity or one with no comparable history yet.
+    """
+    repo = OpportunityRepository(session)
+    result = repo.get_with_relations(opportunity_id)
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
+
+    opportunity, signal, company, _lead = result
+    if _hidden_from(session, current_user, opportunity):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Opportunity not found.")
+
+    organization_id = current_user.organization_id if current_user else opportunity.organization_id
+    prediction = CyclePredictorService(session).predict(opportunity, signal, company, organization_id)
+    return CyclePredictionOut(**prediction.__dict__)
 
 
 @router.patch(
