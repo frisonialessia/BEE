@@ -1,7 +1,5 @@
-import { TrendingUp } from "lucide-react";
-
-import { ProbarComingSoon } from "@/features/probar/probar-coming-soon";
+import { ForecastView } from "@/features/forecast/forecast-view";
 
 export default function ProbarForecastPage() {
-  return <ProbarComingSoon label="Pronóstico" icon={TrendingUp} />;
+  return <ForecastView />;
 }

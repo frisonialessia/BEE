@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
+import { isDemoMode } from "@/lib/demo/mode";
 import type { FetchResult } from "@/types/api";
 
 export interface IcpCriteria {
@@ -38,6 +39,7 @@ export async function fetchOrganizationProfile(): Promise<FetchResult<Organizati
 export async function updateOrganizationProfile(
   body: OrganizationProfileIn,
 ): Promise<OrganizationProfile> {
+  if (isDemoMode()) throw new Error("El sandbox no tiene una cuenta real que editar.");
   return apiFetch<OrganizationProfile>("/api/v1/organizations/profile", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -55,6 +57,7 @@ export async function fetchIcpCriteria(): Promise<FetchResult<IcpCriteria>> {
 }
 
 export async function updateIcpCriteria(body: IcpCriteria): Promise<IcpCriteria> {
+  if (isDemoMode()) throw new Error("Priorización es de solo lectura en el sandbox.");
   return apiFetch<IcpCriteria>("/api/v1/organizations/icp", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },

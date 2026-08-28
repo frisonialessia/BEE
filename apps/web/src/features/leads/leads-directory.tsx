@@ -14,6 +14,7 @@ import { LeadImportPanel } from "@/features/leads/lead-import-panel";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBulkUpdateLeads, useLeads, useValidateLead } from "@/hooks/queries/use-leads";
 import { useUsers } from "@/hooks/queries/use-users";
+import { isDemoMode } from "@/lib/demo/mode";
 import { leadStatusLabels, scoreVariant, timeAgo, validationFlagLabels } from "@/lib/format";
 import type { Lead, LeadStatus } from "@/types/domain";
 
@@ -428,7 +429,10 @@ export function LeadsDirectory() {
           {filtered.some((l) => l.company_id) && (
             <p className="bee-caption">
               Consejo: los leads todavía no tienen ficha propia — abre la empresa desde{" "}
-              <Link href="/dashboard/companies" className="text-[var(--color-chart-4)] hover:underline">
+              <Link
+                href={isDemoMode() ? "/probar/companies" : "/dashboard/companies"}
+                className="text-[var(--color-chart-4)] hover:underline"
+              >
                 Empresas
               </Link>{" "}
               para ver el contacto completo.

@@ -14,8 +14,27 @@ export const PROBAR_NAV_GROUPS: NavGroup[] = NAV_GROUPS.map((group) => ({
   })),
 }));
 
-/** The only sections actually simulated in the sandbox today — see
- * lib/demo/store.ts. Everything else in the nav routes to a page that says
- * so honestly instead of faking data (this product's honesty policy: never
- * dress up "not built yet" as if it were live). */
-export const PROBAR_LIVE_SECTIONS = new Set(["/probar", "/probar/signals", "/probar/crm"]);
+/** The sections actually simulated in the sandbox today, read-only except
+ * the pipeline itself (drag a card, mark won/lost) — see lib/demo/store.ts
+ * and the isDemoMode() guards across lib/api/*.ts. Control, Resiliencia,
+ * Red, and Voz de marca are deliberately NOT here and never will be by
+ * faking their data: those show real backend/infrastructure state (worker
+ * health, audit logs, relationship graphs), and inventing that would be
+ * lying about the system itself, not illustrating a product feature — the
+ * same honesty policy the rest of BEE holds to. Secuencias isn't here
+ * either, not on principle — its flow-builder just needs more plumbing
+ * than a first pass covered. Everything else in the nav routes to a page
+ * that says so honestly instead of faking a working demo. */
+export const PROBAR_LIVE_SECTIONS = new Set([
+  "/probar",
+  "/probar/signals",
+  "/probar/crm",
+  "/probar/companies",
+  "/probar/leads",
+  "/probar/opportunities",
+  "/probar/strategies",
+  "/probar/priority",
+  "/probar/dark-funnel",
+  "/probar/forecast",
+  "/probar/win-loss",
+]);

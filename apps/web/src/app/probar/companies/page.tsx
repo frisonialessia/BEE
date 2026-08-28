@@ -1,7 +1,5 @@
-import { Building2 } from "lucide-react";
-
-import { ProbarComingSoon } from "@/features/probar/probar-coming-soon";
+import { CompaniesList } from "@/features/companies/companies-list";
 
 export default function ProbarCompaniesPage() {
-  return <ProbarComingSoon label="Empresas" icon={Building2} />;
+  return <CompaniesList />;
 }
