@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { CheckCircle2, Mail, Plug, Users, XCircle } from "lucide-react";
+import { CheckCircle2, Cloud, Mail, Plug, Users, XCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -18,7 +18,7 @@ const CALLBACK_ERROR_MESSAGES: Record<string, string> = {
   exchange_failed: "El proveedor rechazó la conexión. Intenta de nuevo en unos minutos.",
 };
 
-const CONNECTED_LABELS: Record<string, string> = { gmail: "Gmail", linkedin: "LinkedIn" };
+const CONNECTED_LABELS: Record<string, string> = { gmail: "Gmail", linkedin: "LinkedIn", salesforce: "Salesforce" };
 
 /** Reads the one-time ?connected=<provider> / ?integration_error=... query
  * params left by an OAuth callback redirect (see
@@ -167,6 +167,7 @@ export function IntegrationsView() {
   const statuses = result?.data ?? [];
   const gmail = statuses.find((s) => s.provider === "gmail");
   const linkedin = statuses.find((s) => s.provider === "linkedin");
+  const salesforce = statuses.find((s) => s.provider === "salesforce");
   const serverChannels = statuses.filter((s) => s.scope === "server");
 
   return (
@@ -178,12 +179,14 @@ export function IntegrationsView() {
           <p className="bee-caption mt-1">
             Conecta tus propias cuentas para que BEE actúe en tu nombre — el envío de secuencias
             por Gmail o LinkedIn sale desde tu cuenta real, no desde una compartida del servidor.
+            Salesforce, por ahora, solo autentica la cuenta.
           </p>
         </div>
       </header>
 
       {isLoading ? (
         <div className="space-y-4">
+          <Skeleton className="h-24" />
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
           <Skeleton className="h-40" />
@@ -210,6 +213,17 @@ export function IntegrationsView() {
               canManage={canManage}
               connectedCopy={(account) => `Los mensajes y solicitudes de conexión salen desde ${account}, no desde un token compartido.`}
               disconnectedCopy="Conecta tu cuenta de LinkedIn para que las secuencias envíen mensajes y solicitudes de conexión desde tu propio perfil."
+            />
+          )}
+          {salesforce && (
+            <OAuthProviderRow
+              provider="salesforce"
+              label="Salesforce"
+              icon={Cloud}
+              status={salesforce}
+              canManage={canManage}
+              connectedCopy={(account) => `Conectado a ${account}. Por ahora solo autentica la cuenta — sincronizar registros es un siguiente paso.`}
+              disconnectedCopy="Conecta tu org de Salesforce. Hoy esto solo autentica la cuenta; enviar o traer registros llega en una siguiente entrega."
             />
           )}
           {!canManage && (

@@ -99,7 +99,8 @@ class Settings(BaseSettings):
     # app.core.security.decode_oauth_state_token).
     API_KEY_EXEMPT_PATHS: str = (
         "/api/v1/health,/api/v1/ready,/api/v1/webhooks/receive,/api/v1/contact,"
-        "/api/v1/integrations/gmail/callback,/api/v1/integrations/linkedin/callback"
+        "/api/v1/integrations/gmail/callback,/api/v1/integrations/linkedin/callback,"
+        "/api/v1/integrations/salesforce/callback"
     )
 
     # ----- Multi-tenant user auth (Organization / Team / User) ------------------
@@ -187,6 +188,24 @@ class Settings(BaseSettings):
     # Must exactly match a Redirect URL registered on that app — e.g.
     # https://api.yourdomain.com/api/v1/integrations/linkedin/callback
     LINKEDIN_OAUTH_REDIRECT_URI: str | None = None
+
+    # ----- Salesforce OAuth (Salesforce integration) ----------------------------
+    # Powers "Connect Salesforce" at /dashboard/integrations — a per-org
+    # connection to a real Salesforce org, from a Connected App created in
+    # Salesforce Setup (App Manager → New Connected App, enable OAuth
+    # Settings). Unlike Gmail/LinkedIn, connecting is all this ships today —
+    # see app.services.integrations.salesforce_oauth's module docstring for
+    # why actually syncing records is deliberately NOT built yet: it needs
+    # this org's real object/picklist schema, not just credentials.
+    SALESFORCE_OAUTH_CLIENT_ID: str | None = None
+    SALESFORCE_OAUTH_CLIENT_SECRET: str | None = None
+    # Must exactly match a Callback URL on that Connected App, e.g.:
+    #   https://api.yourdomain.com/api/v1/integrations/salesforce/callback
+    SALESFORCE_OAUTH_REDIRECT_URI: str | None = None
+    # https://login.salesforce.com for a production/Developer org,
+    # https://test.salesforce.com for a sandbox. Salesforce has no single
+    # fixed OAuth host the way Google/LinkedIn do.
+    SALESFORCE_LOGIN_URL: str = "https://login.salesforce.com"
 
     # ----- ExecutiveAgent webhook (n8n / Zapier / Make) -------------------------
     # When set, BEE fires a POST to this URL every time execution artifacts are
@@ -329,6 +348,8 @@ class Settings(BaseSettings):
             or self.GOOGLE_OAUTH_CLIENT_SECRET
             or self.LINKEDIN_OAUTH_CLIENT_ID
             or self.LINKEDIN_OAUTH_CLIENT_SECRET
+            or self.SALESFORCE_OAUTH_CLIENT_ID
+            or self.SALESFORCE_OAUTH_CLIENT_SECRET
         ) and not self.TOKEN_ENCRYPTION_KEY:
             problems.append(
                 "A *_OAUTH_CLIENT_ID/SECRET pair is set but TOKEN_ENCRYPTION_KEY is not — "

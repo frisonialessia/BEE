@@ -17,9 +17,10 @@ from app.core.config import settings as app_settings
 from app.core.security import InvalidTokenError, create_oauth_state_token, decode_oauth_state_token
 from app.core.token_crypto import decrypt_token, encrypt_token
 from app.models.integration_connection import IntegrationConnection
-from app.services.integrations import gmail_oauth, linkedin_oauth
+from app.services.integrations import gmail_oauth, linkedin_oauth, salesforce_oauth
 from app.services.integrations.gmail_oauth import GmailOAuthError, GmailTokens
 from app.services.integrations.linkedin_oauth import LinkedInOAuthError, LinkedInTokens
+from app.services.integrations.salesforce_oauth import SalesforceOAuthError, SalesforceTokens
 from app.services.integrations.service import IntegrationsService
 
 
@@ -93,6 +94,26 @@ def _linkedin_oauth_configured():
     ) = originals
 
 
+@pytest.fixture(autouse=True)
+def _salesforce_oauth_configured():
+    """Fake-but-well-formed Salesforce Connected App config, same rationale
+    as _google_oauth_configured above."""
+    originals = (
+        app_settings.SALESFORCE_OAUTH_CLIENT_ID,
+        app_settings.SALESFORCE_OAUTH_CLIENT_SECRET,
+        app_settings.SALESFORCE_OAUTH_REDIRECT_URI,
+    )
+    app_settings.SALESFORCE_OAUTH_CLIENT_ID = "test-sf-client-id"
+    app_settings.SALESFORCE_OAUTH_CLIENT_SECRET = "test-sf-client-secret"
+    app_settings.SALESFORCE_OAUTH_REDIRECT_URI = "http://localhost:8000/api/v1/integrations/salesforce/callback"
+    yield
+    (
+        app_settings.SALESFORCE_OAUTH_CLIENT_ID,
+        app_settings.SALESFORCE_OAUTH_CLIENT_SECRET,
+        app_settings.SALESFORCE_OAUTH_REDIRECT_URI,
+    ) = originals
+
+
 class TestTokenCrypto:
     def test_round_trip(self):
         ciphertext = encrypt_token("ya29.super-secret-access-token")
@@ -145,6 +166,8 @@ class TestListIntegrations:
         assert rows["gmail"]["scope"] == "organization"
         assert rows["linkedin"]["connected"] is False
         assert rows["linkedin"]["scope"] == "organization"
+        assert rows["salesforce"]["connected"] is False
+        assert rows["salesforce"]["scope"] == "organization"
         # Server-wide channels are surfaced too, but read-only. LinkedIn's
         # server credential isn't shown separately — it would be a second,
         # confusingly-named row next to the one that actually has a button.
@@ -635,3 +658,203 @@ class TestGetValidLinkedInAccessToken:
 
     def test_no_connection_returns_none(self, session: Session):
         assert IntegrationsService(session).get_valid_linkedin_access_token(uuid.uuid4()) is None
+
+
+class TestSalesforceAuthorize:
+    def test_requires_owner_or_admin(self, client: TestClient):
+        auth = _register(client, org_name="SF Locked Co", email="owner@sflocked.co")
+        owner_headers = _auth_headers(auth["access_token"])
+        client.post(
+            "/api/v1/users",
+            headers=owner_headers,
+            json={"email": "member@sflocked.co", "full_name": "A Member", "password": "password123", "role": "member"},
+        )
+        login = client.post("/api/v1/auth/login", json={"email": "member@sflocked.co", "password": "password123"})
+        member_headers = _auth_headers(login.json()["access_token"])
+
+        resp = client.get("/api/v1/integrations/salesforce/authorize", headers=member_headers)
+        assert resp.status_code == 403
+
+    def test_503_when_salesforce_oauth_not_configured(self, client: TestClient):
+        app_settings.SALESFORCE_OAUTH_CLIENT_ID = None
+        auth = _register(client, org_name="No SF Co", email="owner@nosf.co")
+        resp = client.get("/api/v1/integrations/salesforce/authorize", headers=_auth_headers(auth["access_token"]))
+        assert resp.status_code == 503
+
+    def test_owner_gets_a_state_carrying_authorize_url(self, client: TestClient):
+        auth = _register(client, org_name="SF Connect Co", email="owner@sfconnect.co")
+        resp = client.get("/api/v1/integrations/salesforce/authorize", headers=_auth_headers(auth["access_token"]))
+        assert resp.status_code == 200
+        url = resp.json()["authorize_url"]
+        assert url.startswith("https://login.salesforce.com/services/oauth2/authorize?")
+        assert "state=" in url
+
+    def test_respects_a_sandbox_login_url(self, client: TestClient):
+        app_settings.SALESFORCE_LOGIN_URL = "https://test.salesforce.com"
+        auth = _register(client, org_name="SF Sandbox Co", email="owner@sfsandbox.co")
+        resp = client.get("/api/v1/integrations/salesforce/authorize", headers=_auth_headers(auth["access_token"]))
+        app_settings.SALESFORCE_LOGIN_URL = "https://login.salesforce.com"
+        assert resp.json()["authorize_url"].startswith("https://test.salesforce.com/services/oauth2/authorize?")
+
+
+class TestSalesforceCallback:
+    def _state_for(self, client: TestClient, *, org_name: str, email: str) -> tuple[dict, str]:
+        auth = _register(client, org_name=org_name, email=email)
+        headers = _auth_headers(auth["access_token"])
+        authorize = client.get("/api/v1/integrations/salesforce/authorize", headers=headers)
+        state = authorize.json()["authorize_url"].split("state=")[1].split("&")[0]
+        return headers, state
+
+    def test_user_denied_consent(self, client: TestClient):
+        resp = client.get(
+            "/api/v1/integrations/salesforce/callback", params={"error": "access_denied"}, follow_redirects=False
+        )
+        assert resp.status_code in (302, 307)
+        assert "integration_error=denied" in resp.headers["location"]
+
+    def test_invalid_state_rejected(self, client: TestClient):
+        resp = client.get(
+            "/api/v1/integrations/salesforce/callback",
+            params={"code": "abc123", "state": "garbage"},
+            follow_redirects=False,
+        )
+        assert "integration_error=invalid_state" in resp.headers["location"]
+
+    def test_successful_connect_creates_the_row_with_instance_url(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ):
+        headers, state = self._state_for(client, org_name="Real SF Connect Co", email="owner@realsfconnect.co")
+
+        monkeypatch.setattr(
+            salesforce_oauth,
+            "exchange_code_for_tokens",
+            lambda _code: SalesforceTokens(
+                access_token="fake-sf-access", refresh_token="fake-sf-refresh",
+                instance_url="https://realsfconnect.my.salesforce.com",
+                scope=salesforce_oauth.SCOPES, expires_at=datetime.now(UTC) + timedelta(hours=2),
+            ),
+        )
+
+        resp = client.get(
+            "/api/v1/integrations/salesforce/callback",
+            params={"code": "abc123", "state": state},
+            follow_redirects=False,
+        )
+        assert "connected=salesforce" in resp.headers["location"]
+
+        status_resp = client.get("/api/v1/integrations", headers=headers)
+        sf_row = next(r for r in status_resp.json() if r["provider"] == "salesforce")
+        assert sf_row["connected"] is True
+        assert sf_row["account_email"] == "realsfconnect.my.salesforce.com"
+
+    def test_exchange_failure_redirects_with_error(self, client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        _, state = self._state_for(client, org_name="SF Fails Co", email="owner@sffails.co")
+
+        def _boom(_code: str):
+            raise SalesforceOAuthError("Salesforce said no")
+
+        monkeypatch.setattr(salesforce_oauth, "exchange_code_for_tokens", _boom)
+
+        resp = client.get(
+            "/api/v1/integrations/salesforce/callback",
+            params={"code": "abc123", "state": state},
+            follow_redirects=False,
+        )
+        assert "integration_error=exchange_failed" in resp.headers["location"]
+
+
+class TestSalesforceDisconnect:
+    def test_owner_can_disconnect(self, client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        auth = _register(client, org_name="Real SF Disc Co", email="owner@realsfdisc.co")
+        headers = _auth_headers(auth["access_token"])
+
+        authorize = client.get("/api/v1/integrations/salesforce/authorize", headers=headers)
+        state = authorize.json()["authorize_url"].split("state=")[1].split("&")[0]
+        monkeypatch.setattr(
+            salesforce_oauth,
+            "exchange_code_for_tokens",
+            lambda _code: SalesforceTokens(
+                access_token="fake-sf-access", refresh_token="fake-sf-refresh",
+                instance_url="https://realsfdisc.my.salesforce.com",
+                scope=salesforce_oauth.SCOPES, expires_at=datetime.now(UTC) + timedelta(hours=2),
+            ),
+        )
+        client.get(
+            "/api/v1/integrations/salesforce/callback", params={"code": "abc123", "state": state}, follow_redirects=False
+        )
+
+        resp = client.post("/api/v1/integrations/salesforce/disconnect", headers=headers)
+        assert resp.status_code == 200
+        assert resp.json() == {"disconnected": True}
+
+        status_resp = client.get("/api/v1/integrations", headers=headers)
+        sf_row = next(r for r in status_resp.json() if r["provider"] == "salesforce")
+        assert sf_row["connected"] is False
+
+
+class TestGetValidSalesforceAccessToken:
+    def test_returns_instance_url_not_an_email(self, session: Session):
+        org_id = uuid.uuid4()
+        session.add(
+            IntegrationConnection(
+                organization_id=org_id,
+                provider="salesforce",
+                external_account_email="myorg.my.salesforce.com",
+                instance_url="https://myorg.my.salesforce.com",
+                access_token_encrypted=encrypt_token("still-fresh"),
+                refresh_token_encrypted=encrypt_token("refresh-me"),
+                token_expires_at=datetime.now(UTC) + timedelta(hours=1),
+            )
+        )
+        session.commit()
+
+        result = IntegrationsService(session).get_valid_salesforce_access_token(org_id)
+        assert result == ("still-fresh", "https://myorg.my.salesforce.com")
+
+    def test_refresh_keeps_the_previous_refresh_token_when_response_omits_one(
+        self, session: Session, monkeypatch: pytest.MonkeyPatch
+    ):
+        """Salesforce's refresh response doesn't echo refresh_token back —
+        confirms salesforce_oauth.refresh_access_token itself preserves the
+        one it was called with (see that function's own comment), so a
+        second refresh later still has one to use."""
+        org_id = uuid.uuid4()
+        session.add(
+            IntegrationConnection(
+                organization_id=org_id,
+                provider="salesforce",
+                external_account_email="myorg.my.salesforce.com",
+                instance_url="https://myorg.my.salesforce.com",
+                access_token_encrypted=encrypt_token("stale"),
+                refresh_token_encrypted=encrypt_token("long-lived-refresh"),
+                token_expires_at=datetime.now(UTC) - timedelta(minutes=5),
+            )
+        )
+        session.commit()
+
+        import httpx
+
+        class _FakeResponse:
+            def raise_for_status(self) -> None:
+                return None
+
+            def json(self) -> dict:
+                # Deliberately omits "refresh_token", matching Salesforce's
+                # real behavior.
+                return {
+                    "access_token": "brand-new-sf",
+                    "instance_url": "https://myorg.my.salesforce.com",
+                    "scope": salesforce_oauth.SCOPES,
+                }
+
+        monkeypatch.setattr(httpx, "post", lambda *_args, **_kwargs: _FakeResponse())
+
+        access_token, instance_url = IntegrationsService(session).get_valid_salesforce_access_token(org_id)
+        assert access_token == "brand-new-sf"
+        assert instance_url == "https://myorg.my.salesforce.com"
+
+        stored = IntegrationsService(session).get_connection(org_id, "salesforce")
+        assert decrypt_token(stored.refresh_token_encrypted) == "long-lived-refresh"
+
+    def test_no_connection_returns_none(self, session: Session):
+        assert IntegrationsService(session).get_valid_salesforce_access_token(uuid.uuid4()) is None

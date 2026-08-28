@@ -53,6 +53,12 @@ class IntegrationConnection(TimestampMixin, table=True):
     # Space-separated, as returned by the provider — informational only.
     scopes: str | None = Field(default=None)
 
+    # Salesforce-only: every API call must go to *this* org's pod
+    # (e.g. https://mycompany.my.salesforce.com), returned alongside the
+    # token at OAuth time — there's no fixed api.salesforce.com the way
+    # there's a fixed gmail.googleapis.com. Null for every other provider.
+    instance_url: str | None = Field(default=None)
+
     # Set when a token refresh fails (revoked access, expired refresh token)
     # instead of silently dropping the row — the UI shows "reconectar" with
     # this message rather than the connection just vanishing unexplained.
