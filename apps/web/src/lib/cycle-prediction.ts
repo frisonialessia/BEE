@@ -3,25 +3,29 @@
  * /probar (the sandbox has no backend to call). Keep this in lockstep with
  * that Python implementation — same tiers, same _MIN_COHORT, same median,
  * same honesty guardrails (available=false + reason rather than a number
- * backed by too little data). See that module's docstring for the full
- * rationale.
+ * backed by too little data), plus the same signal-recalibration split
+ * (see below). See that module's docstring for the full rationale.
  *
  * The one structural difference from the backend: the demo's Opportunity
  * has no Company row to join against, so "industry" here comes from the
  * matching Battlecard's `company.industry` instead of a company_id lookup —
  * the same information, just reached through the shape the demo actually
- * has.
+ * has. `company_id` itself (needed for signal recalibration, below) IS
+ * populated on the demo's Opportunity/Signal records — see
+ * lib/demo/seed-history.ts.
  */
 import type { Battlecard, Opportunity, Signal } from "@/types/domain";
-import type { CyclePrediction } from "@/types/extended";
+import type { CyclePrediction, CycleSignalRecalibration } from "@/types/extended";
 
 const MIN_COHORT = 3;
+const MIN_SIGNAL_COHORT = 3;
 const CLOSED_STATUSES = new Set(["won", "lost"]);
 
 interface ClosedDeal {
   cycleDays: number;
   signalType: string | null;
   industry: string | null;
+  opportunity: Opportunity;
 }
 
 function industryFor(opportunity: Opportunity, battlecards: Battlecard[]): string | null {
@@ -46,6 +50,7 @@ function closedDeals(
       cycleDays,
       signalType: signalTypeFor(o, signals),
       industry: industryFor(o, battlecards),
+      opportunity: o,
     });
   }
   return deals;
@@ -86,6 +91,83 @@ function bestCohort(
   return tiers.find((t) => t.cohort.length >= MIN_COHORT) ?? null;
 }
 
+/** See CyclePredictorService._signal_recalibration's docstring (backend) —
+ * this mirrors it exactly: split the same cohort into deals whose company
+ * got a NEW signal (not the one that originated the opportunity) between
+ * open and close, vs. deals that didn't, and compare medians. Only called
+ * for the cohort already selected for the base prediction. */
+function signalRecalibration(
+  cohort: ClosedDeal[],
+  target: Opportunity,
+  signals: Signal[],
+): CycleSignalRecalibration {
+  const byCompany = new Map<string, Signal[]>();
+  for (const s of signals) {
+    if (!s.company_id) continue;
+    const list = byCompany.get(s.company_id) ?? [];
+    list.push(s);
+    byCompany.set(s.company_id, list);
+  }
+
+  const withGroup: number[] = [];
+  const withoutGroup: number[] = [];
+  for (const deal of cohort) {
+    const o = deal.opportunity;
+    if (!o.company_id || !o.closed_at) continue; // can't check without a company + close date
+    const createdAt = new Date(o.created_at).getTime();
+    const closedAt = new Date(o.closed_at).getTime();
+    const hasNewSignal = (byCompany.get(o.company_id) ?? []).some((s) => {
+      if (s.id === o.signal_id) return false; // the originating signal isn't a "new" one
+      const detectedAt = new Date(s.detected_at).getTime();
+      return detectedAt > createdAt && detectedAt <= closedAt;
+    });
+    (hasNewSignal ? withGroup : withoutGroup).push(deal.cycleDays);
+  }
+
+  let targetHasNewSignal = false;
+  let targetNewSignalTypes: string[] = [];
+  if (target.company_id) {
+    const createdAt = new Date(target.created_at).getTime();
+    const now = Date.now();
+    const newSignals = (byCompany.get(target.company_id) ?? []).filter((s) => {
+      if (s.id === target.signal_id) return false;
+      const detectedAt = new Date(s.detected_at).getTime();
+      return detectedAt > createdAt && detectedAt <= now;
+    });
+    targetHasNewSignal = newSignals.length > 0;
+    targetNewSignalTypes = [...new Set(newSignals.map((s) => s.signal_type))].sort();
+  }
+
+  if (withGroup.length < MIN_SIGNAL_COHORT || withoutGroup.length < MIN_SIGNAL_COHORT) {
+    return {
+      available: false,
+      reason:
+        "Todavía no hay suficientes deals cerrados con y sin una señal nueva de mercado durante el ciclo para comparar.",
+      with_signal_median_days: null,
+      with_signal_count: withGroup.length,
+      without_signal_median_days: null,
+      without_signal_count: withoutGroup.length,
+      delta_days: null,
+      target_has_new_signal: targetHasNewSignal,
+      target_new_signal_types: targetNewSignalTypes,
+    };
+  }
+
+  const withMedian = median(withGroup);
+  const withoutMedian = median(withoutGroup);
+  return {
+    available: true,
+    reason: null,
+    with_signal_median_days: Math.round(withMedian * 10) / 10,
+    with_signal_count: withGroup.length,
+    without_signal_median_days: Math.round(withoutMedian * 10) / 10,
+    without_signal_count: withoutGroup.length,
+    delta_days: Math.round((withMedian - withoutMedian) * 10) / 10,
+    target_has_new_signal: targetHasNewSignal,
+    target_new_signal_types: targetNewSignalTypes,
+  };
+}
+
 const NOT_AVAILABLE = (reason: string): CyclePrediction => ({
   available: false,
   predicted_cycle_days: null,
@@ -97,6 +179,7 @@ const NOT_AVAILABLE = (reason: string): CyclePrediction => ({
   cohort_basis: null,
   confidence: null,
   reason,
+  signal_recalibration: null,
 });
 
 /** Predicts time-to-close for `target` using this sandbox's own comparable
@@ -147,5 +230,6 @@ export function predictCycle(
     cohort_basis: best.basis,
     confidence,
     reason: null,
+    signal_recalibration: signalRecalibration(best.cohort, target, signals),
   };
 }

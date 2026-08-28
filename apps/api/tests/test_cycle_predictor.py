@@ -39,6 +39,29 @@ def _signal(session: Session, *, org_id: uuid.UUID, signal_type: SignalType = Si
     return s
 
 
+def _signal_at(
+    session: Session, *, org_id: uuid.UUID, company_id: uuid.UUID, detected_at: datetime,
+    signal_type: SignalType = SignalType.HIRING,
+) -> Signal:
+    """A signal on a specific company at a specific moment — used to plant a
+    "new signal detected while the deal was open" event for the signal
+    recalibration tests, independent of the signal that originated the
+    opportunity itself."""
+    s = Signal(
+        organization_id=org_id,
+        company_id=company_id,
+        signal_type=signal_type,
+        source=SignalSource.WEBHOOK,
+        title="Intermediate signal",
+        score=70,
+        confidence=0.7,
+        detected_at=detected_at,
+    )
+    session.add(s)
+    session.flush()
+    return s
+
+
 def _closed_opportunity(
     session: Session,
     *,
@@ -279,6 +302,165 @@ class TestNegativeCycleGuard:
         assert result.available is False
 
 
+class TestSignalRecalibration:
+    def test_with_and_without_signal_cohorts_are_compared(self, session: Session):
+        org_id = uuid.uuid4()
+
+        # 3 closed deals that each got a NEW signal on their company while
+        # the deal was open — cycle lengths 10/20/30 → median 20.
+        for cycle_days in (10, 20, 30):
+            company = _company(session, org_id=org_id)
+            deal = _closed_opportunity(
+                session, org_id=org_id, company=company, signal=None,
+                status=OpportunityStatus.WON, created_days_ago=100, cycle_days=cycle_days,
+            )
+            _signal_at(
+                session, org_id=org_id, company_id=company.id,
+                detected_at=deal.created_at + timedelta(days=cycle_days / 2),
+            )
+
+        # 3 closed deals with no signal at all on their company —
+        # cycle lengths 40/50/60 → median 50.
+        for cycle_days in (40, 50, 60):
+            company = _company(session, org_id=org_id)
+            _closed_opportunity(
+                session, org_id=org_id, company=company, signal=None,
+                status=OpportunityStatus.LOST, created_days_ago=100, cycle_days=cycle_days,
+            )
+
+        target = _open_opportunity(session, org_id=org_id, company=None, signal=None, created_days_ago=5)
+        session.commit()
+
+        result = CyclePredictorService(session).predict(target, None, None, org_id)
+        assert result.available is True  # base prediction: 6-deal cohort
+        recal = result.signal_recalibration
+        assert recal is not None
+        assert recal.available is True
+        assert recal.with_signal_count == 3
+        assert recal.without_signal_count == 3
+        assert recal.with_signal_median_days == 20.0
+        assert recal.without_signal_median_days == 50.0
+        assert recal.delta_days == -30.0  # deals with a new signal closed faster here
+        assert recal.target_has_new_signal is False  # target has no company at all
+
+    def test_not_enough_deals_on_one_side_is_unavailable(self, session: Session):
+        org_id = uuid.uuid4()
+
+        # Only 2 with a signal — below _MIN_SIGNAL_COHORT.
+        for cycle_days in (10, 20):
+            company = _company(session, org_id=org_id)
+            deal = _closed_opportunity(
+                session, org_id=org_id, company=company, signal=None,
+                status=OpportunityStatus.WON, created_days_ago=100, cycle_days=cycle_days,
+            )
+            _signal_at(session, org_id=org_id, company_id=company.id, detected_at=deal.created_at + timedelta(days=1))
+
+        for cycle_days in (30, 40, 50, 60):
+            company = _company(session, org_id=org_id)
+            _closed_opportunity(
+                session, org_id=org_id, company=company, signal=None,
+                status=OpportunityStatus.LOST, created_days_ago=100, cycle_days=cycle_days,
+            )
+
+        target = _open_opportunity(session, org_id=org_id, company=None, signal=None, created_days_ago=5)
+        session.commit()
+
+        result = CyclePredictorService(session).predict(target, None, None, org_id)
+        assert result.available is True  # base prediction still fine: 6-deal cohort
+        recal = result.signal_recalibration
+        assert recal is not None
+        assert recal.available is False
+        assert recal.reason
+
+    def test_the_signal_that_originated_a_deal_is_not_counted_as_a_new_one(self, session: Session):
+        """A deal's own originating signal necessarily falls inside its
+        (created_at, closed_at] window — it must never be mistaken for a
+        NEW signal detected during the deal, or every deal with a known
+        origin signal would wrongly count as "with signal"."""
+        org_id = uuid.uuid4()
+
+        for cycle_days in (10, 20, 30):
+            company = _company(session, org_id=org_id)
+            deal = _closed_opportunity(
+                session, org_id=org_id, company=company, signal=None,
+                status=OpportunityStatus.WON, created_days_ago=100, cycle_days=cycle_days,
+            )
+            _signal_at(session, org_id=org_id, company_id=company.id, detected_at=deal.created_at + timedelta(days=1))
+
+        # 2 plain deals with nothing, plus 1 whose ONLY company signal is
+        # the one that originated it — all 3 should land in "without".
+        for cycle_days in (40, 50):
+            company = _company(session, org_id=org_id)
+            _closed_opportunity(
+                session, org_id=org_id, company=company, signal=None,
+                status=OpportunityStatus.LOST, created_days_ago=100, cycle_days=cycle_days,
+            )
+        tricky_company = _company(session, org_id=org_id)
+        origin_signal = _signal_at(
+            session, org_id=org_id, company_id=tricky_company.id,
+            detected_at=datetime.now(UTC) - timedelta(days=95),  # inside its own (created_at, closed_at]
+        )
+        _closed_opportunity(
+            session, org_id=org_id, company=tricky_company, signal=origin_signal,
+            status=OpportunityStatus.LOST, created_days_ago=100, cycle_days=60,
+        )
+
+        target = _open_opportunity(session, org_id=org_id, company=None, signal=None, created_days_ago=5)
+        session.commit()
+
+        result = CyclePredictorService(session).predict(target, None, None, org_id)
+        recal = result.signal_recalibration
+        assert recal is not None
+        # If the origin signal were wrongly counted, without_signal_count
+        # would drop to 2 (below _MIN_SIGNAL_COHORT) and this would be
+        # unavailable instead.
+        assert recal.available is True
+        assert recal.without_signal_count == 3
+        assert recal.without_signal_median_days == 50.0
+
+    def test_target_has_new_signal_reflects_current_state_live(self, session: Session):
+        """The whole point of this feature: it changes as new market
+        signals arrive on the same company, without touching the deal
+        itself."""
+        org_id = uuid.uuid4()
+        for cycle_days in (10, 20, 30):
+            company = _company(session, org_id=org_id)
+            deal = _closed_opportunity(
+                session, org_id=org_id, company=company, signal=None,
+                status=OpportunityStatus.WON, created_days_ago=100, cycle_days=cycle_days,
+            )
+            _signal_at(session, org_id=org_id, company_id=company.id, detected_at=deal.created_at + timedelta(days=1))
+        for cycle_days in (40, 50, 60):
+            company = _company(session, org_id=org_id)
+            _closed_opportunity(
+                session, org_id=org_id, company=company, signal=None,
+                status=OpportunityStatus.LOST, created_days_ago=100, cycle_days=cycle_days,
+            )
+
+        target_company = _company(session, org_id=org_id)
+        origin_signal = _signal(session, org_id=org_id, signal_type=SignalType.FUNDING_ROUND)
+        target = _open_opportunity(
+            session, org_id=org_id, company=target_company, signal=origin_signal, created_days_ago=5,
+        )
+        session.commit()
+
+        before = CyclePredictorService(session).predict(target, origin_signal, target_company, org_id)
+        assert before.signal_recalibration is not None
+        # The origin signal itself must not count as "new".
+        assert before.signal_recalibration.target_has_new_signal is False
+
+        _signal_at(
+            session, org_id=org_id, company_id=target_company.id,
+            detected_at=datetime.now(UTC) - timedelta(days=1), signal_type=SignalType.LEADERSHIP_CHANGE,
+        )
+        session.commit()
+
+        after = CyclePredictorService(session).predict(target, origin_signal, target_company, org_id)
+        assert after.signal_recalibration is not None
+        assert after.signal_recalibration.target_has_new_signal is True
+        assert after.signal_recalibration.target_new_signal_types == ["leadership_change"]
+
+
 def _register(client: TestClient, *, org_name: str, email: str, password: str = "password123") -> dict:
     resp = client.post(
         "/api/v1/auth/register",
@@ -327,3 +509,34 @@ class TestCyclePredictionEndpoint:
             headers=_auth_headers(auth["access_token"]),
         )
         assert resp.status_code == 404
+
+    def test_signal_recalibration_is_nested_in_the_response(self, client: TestClient, session: Session):
+        auth = _register(client, org_name="Recal Cycle Co", email="owner@recalcycle.co")
+        org_id = uuid.UUID(auth["user"]["organization_id"])
+
+        for cycle_days in (10, 20, 30):
+            company = _company(session, org_id=org_id)
+            deal = _closed_opportunity(
+                session, org_id=org_id, company=company, signal=None,
+                status=OpportunityStatus.WON, created_days_ago=100, cycle_days=cycle_days,
+            )
+            _signal_at(session, org_id=org_id, company_id=company.id, detected_at=deal.created_at + timedelta(days=1))
+        for cycle_days in (40, 50, 60):
+            company = _company(session, org_id=org_id)
+            _closed_opportunity(
+                session, org_id=org_id, company=company, signal=None,
+                status=OpportunityStatus.LOST, created_days_ago=100, cycle_days=cycle_days,
+            )
+        target = _open_opportunity(session, org_id=org_id, company=None, signal=None, created_days_ago=5)
+        session.commit()
+
+        resp = client.get(
+            f"/api/v1/opportunities/{target.id}/cycle-prediction",
+            headers=_auth_headers(auth["access_token"]),
+        )
+        assert resp.status_code == 200, resp.text
+        recal = resp.json()["signal_recalibration"]
+        assert recal["available"] is True
+        assert recal["with_signal_count"] == 3
+        assert recal["without_signal_count"] == 3
+        assert recal["delta_days"] == -30.0

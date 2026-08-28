@@ -125,6 +125,25 @@ export interface OutcomeWithPrediction {
 
 export type CyclePredictionConfidence = "low" | "medium" | "high";
 
+/** Whether a NEW market signal on the same company, detected while a deal
+ *  was open, historically correlates with a faster or slower close —
+ *  independent of, and additive to, the base cycle prediction (never
+ *  blended into `predicted_cycle_days`). See CyclePredictorService's
+ *  module docstring (backend) / lib/cycle-prediction.ts (its JS port) for
+ *  the full rationale — including why this is very often `available:
+ *  false` on a small or young account, honestly, rather than a guess. */
+export interface CycleSignalRecalibration {
+  available: boolean;
+  reason: string | null;
+  with_signal_median_days: number | null;
+  with_signal_count: number;
+  without_signal_median_days: number | null;
+  without_signal_count: number;
+  delta_days: number | null;
+  target_has_new_signal: boolean;
+  target_new_signal_types: string[];
+}
+
 /** Predicted time-to-close for one open opportunity, from GET
  *  /opportunities/{id}/cycle-prediction (or its JS port in lib/cycle-prediction.ts
  *  for /probar). `available=false` is a normal, expected response — not an
@@ -142,6 +161,7 @@ export interface CyclePrediction {
   cohort_basis: string | null;
   confidence: CyclePredictionConfidence | null;
   reason: string | null;
+  signal_recalibration: CycleSignalRecalibration | null;
 }
 
 // ── WorkflowOrchestrator (event bus) ──────────────────────────────────────────
