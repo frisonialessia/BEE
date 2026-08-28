@@ -38,7 +38,7 @@ export default function CareersPage() {
           </p>
           <div className="mt-8">
             <Link href="/contacto?source=careers" className="bee-btn bee-btn--primary">
-              Escribinos <ArrowRight className="size-4" />
+              Escríbenos <ArrowRight className="size-4" />
             </Link>
           </div>
         </section>

@@ -29,7 +29,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "¿Cómo empiezo?",
-    a: "Escribinos desde el formulario de Contacto — te respondemos en menos de 24 horas hábiles para coordinar el primer paso.",
+    a: "Escríbenos desde el formulario de Contacto — te respondemos en menos de 24 horas hábiles para coordinar el primer paso.",
   },
 ] as const;
 
