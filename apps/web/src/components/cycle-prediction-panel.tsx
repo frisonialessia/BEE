@@ -1,10 +1,13 @@
 "use client";
 
-import { Clock } from "lucide-react";
+import { Clock, Radar } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCyclePrediction } from "@/hooks/queries/use-artifacts";
+import { signalTypeLabels } from "@/lib/format";
+import type { SignalType } from "@/types/domain";
+import type { CycleSignalRecalibration } from "@/types/extended";
 
 const CONFIDENCE_LABEL: Record<string, string> = {
   low: "Confianza baja",
@@ -90,8 +93,48 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
             Basado en {prediction.cohort_size} {prediction.cohort_size === 1 ? "deal cerrado" : "deals cerrados"}
             {prediction.cohort_basis ? ` — ${prediction.cohort_basis}` : ""}.
           </p>
+
+          {prediction.signal_recalibration?.available && (
+            <SignalRecalibrationNote recal={prediction.signal_recalibration} />
+          )}
         </div>
       )}
     </section>
+  );
+}
+
+/** Recalibración en vivo: ¿el mercado hizo algo nuevo sobre esta cuenta
+ *  desde que el deal se abrió, y eso históricamente adelantó o atrasó el
+ *  cierre en deals comparables? Insight adicional, independiente del
+ *  número principal — nunca se mezcla con `predicted_cycle_days`, solo se
+ *  muestra junto a él. Ver el docstring de CyclePredictorService. */
+function SignalRecalibrationNote({ recal }: { recal: CycleSignalRecalibration }) {
+  if (!recal.available) return null;
+  const faster = (recal.delta_days ?? 0) < 0;
+
+  return (
+    <div className="rounded-md border border-border bg-muted/40 p-3 text-xs">
+      <p className="flex items-center gap-1.5 font-medium text-foreground">
+        <Radar className="size-3.5 stroke-[1.5]" />
+        Recalibración por señales de mercado
+      </p>
+      <p className="mt-1.5 text-muted-foreground">
+        Deals con una señal nueva de mercado durante el ciclo cerraron en {faster ? "menos" : "más"} tiempo:{" "}
+        <span className="font-medium text-foreground">{recal.with_signal_median_days} días</span> de mediana
+        (n={recal.with_signal_count}) vs.{" "}
+        <span className="font-medium text-foreground">{recal.without_signal_median_days} días</span> sin ella
+        (n={recal.without_signal_count}).
+      </p>
+      {recal.target_has_new_signal && (
+        <p className="mt-1.5">
+          <Badge variant="outline">
+            Esta cuenta ya tuvo una señal nueva
+            {recal.target_new_signal_types.length > 0
+              ? `: ${recal.target_new_signal_types.map((t) => signalTypeLabels[t as SignalType] ?? t).join(", ")}`
+              : ""}
+          </Badge>
+        </p>
+      )}
+    </div>
   );
 }

@@ -13,6 +13,7 @@ New endpoints in this release:
 from __future__ import annotations
 
 import uuid
+from dataclasses import asdict
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
@@ -387,7 +388,10 @@ def get_cycle_prediction(
 
     organization_id = current_user.organization_id if current_user else opportunity.organization_id
     prediction = CyclePredictorService(session).predict(opportunity, signal, company, organization_id)
-    return CyclePredictionOut(**prediction.__dict__)
+    # asdict() recurses into the nested SignalRecalibration dataclass too —
+    # Pydantic then validates that nested dict straight into
+    # SignalRecalibrationOut, no manual field-by-field mapping needed.
+    return CyclePredictionOut(**asdict(prediction))
 
 
 @router.patch(

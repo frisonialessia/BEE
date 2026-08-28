@@ -7,6 +7,23 @@ from datetime import date
 from pydantic import BaseModel
 
 
+class SignalRecalibrationOut(BaseModel):
+    """Whether a NEW market signal on the same company, detected while a
+    deal was open, historically correlates with a faster or slower close —
+    see CyclePredictorService's module docstring. Independent of the base
+    prediction: never blended into ``predicted_cycle_days``."""
+
+    available: bool
+    reason: str | None = None
+    with_signal_median_days: float | None = None
+    with_signal_count: int = 0
+    without_signal_median_days: float | None = None
+    without_signal_count: int = 0
+    delta_days: float | None = None
+    target_has_new_signal: bool = False
+    target_new_signal_types: list[str] = []
+
+
 class CyclePredictionOut(BaseModel):
     """Predicted time-to-close for one open opportunity.
 
@@ -27,3 +44,4 @@ class CyclePredictionOut(BaseModel):
     cohort_basis: str | None = None
     confidence: str | None = None
     reason: str | None = None
+    signal_recalibration: SignalRecalibrationOut | None = None
