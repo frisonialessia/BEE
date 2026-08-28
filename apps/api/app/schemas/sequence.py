@@ -42,6 +42,7 @@ class SequenceCreate(BaseModel):
     description: str | None = None
     signal_type: str | None = None
     industry: str | None = None
+    seniority: str | None = None
     entry_step_id: str = "s1"
     steps: list[StepDefinition] = Field(min_length=1)
     max_days: int = Field(default=30, ge=1, le=180)
@@ -53,6 +54,7 @@ class SequenceOut(BaseModel):
     description: str | None
     signal_type: str | None
     industry: str | None
+    seniority: str | None
     entry_step_id: str
     steps: list[dict[str, Any]]
     max_days: int
@@ -94,6 +96,29 @@ class ExecutionOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class BulkExecutionCreate(BaseModel):
+    """Enroll several leads into the same sequence in one call — the
+    "Enviar a secuencia" bulk action from the Leads directory."""
+
+    sequence_id: uuid.UUID
+    lead_ids: list[uuid.UUID] = Field(min_length=1, max_length=200)
+
+
+class BulkExecutionFailure(BaseModel):
+    lead_id: uuid.UUID
+    error: str
+
+
+class BulkExecutionResult(BaseModel):
+    """Partial success is expected and not an error — some leads enroll,
+    others fail (bad id, sequence not found), and the caller needs both
+    lists to tell the rep exactly what happened rather than an all-or-
+    nothing verdict."""
+
+    created: list[ExecutionOut]
+    failed: list[BulkExecutionFailure]
 
 
 class AdvanceResult(BaseModel):

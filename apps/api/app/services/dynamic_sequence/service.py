@@ -57,7 +57,14 @@ from sqlmodel import Session, select
 
 from app.core.logging import get_logger
 from app.models.sequence import DynamicSequence, ExecutionStatus, SequenceExecution
-from app.schemas.sequence import AdvanceResult, ExecutionCreate, SequenceCreate
+from app.schemas.sequence import (
+    AdvanceResult,
+    BulkExecutionFailure,
+    BulkExecutionResult,
+    ExecutionCreate,
+    ExecutionOut,
+    SequenceCreate,
+)
 from app.services.permissions import scope_by_organization_id
 
 logger = get_logger(__name__)
@@ -133,6 +140,7 @@ class DynamicSequenceEngine:
             description=data.description,
             signal_type=data.signal_type,
             industry=data.industry,
+            seniority=data.seniority,
             entry_step_id=data.entry_step_id,
             steps=[s.model_dump() for s in data.steps],
             max_days=data.max_days,
@@ -200,6 +208,43 @@ class DynamicSequenceEngine:
             execution.id, data.sequence_id, execution.current_step_id, data.opportunity_id,
         )
         return execution
+
+    def bulk_start_execution(
+        self,
+        sequence_id: uuid.UUID,
+        lead_ids: list[uuid.UUID],
+        organization_id: uuid.UUID | None = None,
+    ) -> BulkExecutionResult:
+        """Enroll several leads into one sequence — the "Enviar a secuencia"
+        bulk action from the Leads directory.
+
+        Each lead is started independently (one failure — a duplicate, a
+        transient error — never aborts the rest of the batch), matching the
+        partial-success contract BulkExecutionResult documents. The sequence
+        itself is looked up once, up front: if it doesn't exist there is no
+        point trying (and failing) N times.
+        """
+        seq = self.get_sequence(sequence_id, organization_id=organization_id)
+        if not seq:
+            raise ValueError(f"Sequence {sequence_id} not found")
+
+        created: list[ExecutionOut] = []
+        failed: list[BulkExecutionFailure] = []
+        for lead_id in lead_ids:
+            try:
+                execution = self.start_execution(
+                    ExecutionCreate(sequence_id=sequence_id, lead_id=lead_id),
+                    organization_id=organization_id,
+                )
+                created.append(ExecutionOut.model_validate(execution))
+            except ValueError as exc:
+                failed.append(BulkExecutionFailure(lead_id=lead_id, error=str(exc)))
+
+        logger.info(
+            "Bulk sequence enrollment: seq=%s requested=%d created=%d failed=%d",
+            sequence_id, len(lead_ids), len(created), len(failed),
+        )
+        return BulkExecutionResult(created=created, failed=failed)
 
     def advance(
         self,

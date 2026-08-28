@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  bulkEnrollLeadsInSequence,
   createSequence,
   fetchSequence,
   fetchSequences,
@@ -41,6 +42,13 @@ export function useStartSequenceExecution() {
   return useMutation({
     mutationFn: (body: { sequence_id: string; lead_id?: string; opportunity_id?: string }) =>
       startSequenceExecution(body),
+  });
+}
+
+export function useBulkEnrollLeadsInSequence() {
+  return useMutation({
+    mutationFn: ({ sequenceId, leadIds }: { sequenceId: string; leadIds: string[] }) =>
+      bulkEnrollLeadsInSequence(sequenceId, leadIds),
   });
 }
 

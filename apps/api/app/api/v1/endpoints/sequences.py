@@ -20,6 +20,8 @@ from app.api.deps import get_organization_id
 from app.core.database import get_session
 from app.schemas.sequence import (
     AdvanceResult,
+    BulkExecutionCreate,
+    BulkExecutionResult,
     ExecutionAdvance,
     ExecutionCreate,
     ExecutionOut,
@@ -91,6 +93,27 @@ def list_sequences(
 
 
 @router.get(
+    "/executions",
+    response_model=list[ExecutionOut],
+    summary="List sequence executions",
+)
+def list_executions(
+    sequence_id: uuid.UUID | None = Query(default=None),
+    status_filter: str | None = Query(default=None, alias="status"),
+    limit: int = Query(default=50, le=200),
+    engine: DynamicSequenceEngine = Depends(_get_engine),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
+) -> list[ExecutionOut]:
+    execs = engine.list_executions(
+        sequence_id=sequence_id,
+        status=status_filter,
+        limit=limit,
+        organization_id=organization_id,
+    )
+    return [ExecutionOut.model_validate(e) for e in execs]
+
+
+@router.get(
     "/{sequence_id}",
     response_model=SequenceOut,
     summary="Get a sequence definition",
@@ -131,6 +154,31 @@ def start_execution(
     session.commit()
     session.refresh(execution)
     return ExecutionOut.model_validate(execution)
+
+
+@router.post(
+    "/executions/bulk",
+    response_model=BulkExecutionResult,
+    status_code=status.HTTP_201_CREATED,
+    summary="Enroll several leads into one sequence",
+)
+def bulk_start_execution(
+    data: BulkExecutionCreate,
+    engine: DynamicSequenceEngine = Depends(_get_engine),
+    session: Session = Depends(get_session),
+    organization_id: uuid.UUID = Depends(_require_organization_id),
+) -> BulkExecutionResult:
+    """The "Enviar a secuencia" bulk action from the Leads directory —
+    same PendingAction-per-entry-step contract as start_execution, just run
+    once per selected lead. A lead failing (already enrolled, bad state)
+    never aborts the rest of the batch — see BulkExecutionResult.
+    """
+    try:
+        result = engine.bulk_start_execution(data.sequence_id, data.lead_ids, organization_id=organization_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    session.commit()
+    return result
 
 
 @router.get(
@@ -181,24 +229,3 @@ def advance_execution(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     session.commit()
     return result
-
-
-@router.get(
-    "/executions",
-    response_model=list[ExecutionOut],
-    summary="List sequence executions",
-)
-def list_executions(
-    sequence_id: uuid.UUID | None = Query(default=None),
-    status_filter: str | None = Query(default=None, alias="status"),
-    limit: int = Query(default=50, le=200),
-    engine: DynamicSequenceEngine = Depends(_get_engine),
-    organization_id: uuid.UUID = Depends(_require_organization_id),
-) -> list[ExecutionOut]:
-    execs = engine.list_executions(
-        sequence_id=sequence_id,
-        status=status_filter,
-        limit=limit,
-        organization_id=organization_id,
-    )
-    return [ExecutionOut.model_validate(e) for e in execs]

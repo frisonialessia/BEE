@@ -83,6 +83,12 @@ class DynamicSequence(TimestampMixin, table=True):
     # Target segment
     signal_type: str | None = Field(default=None, index=True)
     industry: str | None = Field(default=None)
+    # Same free-form seniority values as Lead.seniority ("c_level", "vp",
+    # "director", "manager", "ic") — see lib/relationship-map.ts on the
+    # frontend for the canonical set. Purely descriptive, like industry
+    # above: enrollment is always an explicit lead_id/opportunity_id via
+    # ExecutionCreate, this never auto-matches leads into a sequence.
+    seniority: str | None = Field(default=None)
 
     # ── Step graph (JSON) ─────────────────────────────────────────────────────
     # Schema: list of StepDefinition dicts.
