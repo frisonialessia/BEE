@@ -1,6 +1,8 @@
 import { apiFetch } from "@/lib/api/client";
 import {
   demoFetchOpportunities,
+  demoFindArtifacts,
+  demoFindBattlecard,
   demoMoveOpportunityStage,
   demoRecordOutcome,
   demoUpdateOpportunity,
@@ -41,7 +43,9 @@ export async function fetchBattlecard(
   opportunityId: string,
 ): Promise<FetchResult<Battlecard>> {
   if (isDemoMode()) {
-    const sample = sampleBattlecards.find((b) => b.opportunity_id === opportunityId);
+    const sample =
+      sampleBattlecards.find((b) => b.opportunity_id === opportunityId) ??
+      demoFindBattlecard(opportunityId);
     if (sample) return { data: sample, live: false };
     throw new Error(`No demo battlecard for opportunity ${opportunityId}`);
   }
@@ -80,7 +84,9 @@ export async function fetchArtifacts(
   force = false,
 ): Promise<FetchResult<ArtifactBundle>> {
   if (isDemoMode()) {
-    const sample = sampleArtifacts.find((a) => a.opportunity_id === opportunityId);
+    const sample =
+      sampleArtifacts.find((a) => a.opportunity_id === opportunityId) ??
+      demoFindArtifacts(opportunityId);
     if (sample) return { data: sample, live: false };
     throw new Error(`No demo artifacts for opportunity ${opportunityId}`);
   }

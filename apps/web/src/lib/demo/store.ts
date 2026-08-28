@@ -4,36 +4,55 @@
  * (`localStorage`) and is seeded from `lib/sample-data`'s existing,
  * realistic example dataset. Nothing here ever calls the real API.
  */
+import type { EmployeeRange } from "@/lib/api/organizations";
 import type { CrmStage, OpportunityUpdateIn } from "@/lib/api/opportunities";
-import { sampleOpportunities } from "@/lib/sample-data";
-import type { Opportunity, OpportunityStatus, OutcomeIn } from "@/types/domain";
+import { buildDemoCompanySet } from "@/lib/demo/templates";
+import { sampleOpportunities, sampleSignals } from "@/lib/sample-data";
+import type {
+  ArtifactBundle,
+  Battlecard,
+  Opportunity,
+  OpportunityStatus,
+  OutcomeIn,
+  Signal,
+} from "@/types/domain";
 import type { OutcomeWithPrediction } from "@/types/extended";
 
-const STORAGE_KEY = "bee_demo_opportunities_v1";
+const OPPORTUNITIES_KEY = "bee_demo_opportunities_v1";
+const SIGNALS_KEY = "bee_demo_signals_v1";
+// Battlecards/artifacts for companies added via "+ Agregá tu empresa" —
+// the 2 seeded example opportunities keep using the static samples in
+// lib/sample-data (checked first, see lib/api/opportunities.ts), this only
+// holds ones generated locally.
+const BATTLECARDS_KEY = "bee_demo_battlecards_v1";
+const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
 
-function load(): Opportunity[] {
-  if (typeof window === "undefined") return structuredClone(sampleOpportunities);
+function loadJSON<T>(key: string, seed: T): T {
+  if (typeof window === "undefined") return structuredClone(seed);
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Opportunity[];
+    const raw = window.localStorage.getItem(key);
+    if (raw) return JSON.parse(raw) as T;
   } catch {
     // Corrupted JSON or storage unavailable (private browsing, quota) —
     // reseed rather than crash the demo.
   }
-  const seeded = structuredClone(sampleOpportunities);
-  save(seeded);
+  const seeded = structuredClone(seed);
+  saveJSON(key, seeded);
   return seeded;
 }
 
-function save(list: Opportunity[]): void {
+function saveJSON<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
     // Storage full or unavailable — the demo just won't persist across
     // reloads for this visitor. Not worth surfacing as an error.
   }
 }
+
+const load = () => loadJSON<Opportunity[]>(OPPORTUNITIES_KEY, sampleOpportunities);
+const save = (list: Opportunity[]) => saveJSON(OPPORTUNITIES_KEY, list);
 
 export function demoFetchOpportunities(status?: OpportunityStatus): Opportunity[] {
   const list = load();
@@ -106,7 +125,53 @@ export function demoRecordOutcome(id: string, body: OutcomeIn): OutcomeWithPredi
   };
 }
 
+// ── Signals ──────────────────────────────────────────────────────────────
+
+export function demoFetchSignals(limit = 50): Signal[] {
+  const list = loadJSON<Signal[]>(SIGNALS_KEY, sampleSignals);
+  return list.slice(0, limit);
+}
+
+// ── Battlecards / artifacts for locally-generated companies ────────────────
+
+export function demoFindBattlecard(opportunityId: string): Battlecard | undefined {
+  return loadJSON<Battlecard[]>(BATTLECARDS_KEY, []).find((b) => b.opportunity_id === opportunityId);
+}
+
+export function demoFindArtifacts(opportunityId: string): ArtifactBundle | undefined {
+  return loadJSON<ArtifactBundle[]>(ARTIFACTS_KEY, []).find((a) => a.opportunity_id === opportunityId);
+}
+
+/** "+ Agregá tu empresa" — the only way new data enters the demo. Builds a
+ * full Signal → Opportunity → Battlecard → Artifacts set (see
+ * lib/demo/templates.ts for why it's an honest self-referential signal, not
+ * a fabricated event) and appends it to every relevant local list. */
+export function demoAddCompany(companyName: string, employeeRange: EmployeeRange): Opportunity {
+  const set = buildDemoCompanySet(companyName, employeeRange);
+
+  const opportunities = load();
+  opportunities.unshift(set.opportunity);
+  save(opportunities);
+
+  const signals = loadJSON<Signal[]>(SIGNALS_KEY, sampleSignals);
+  signals.unshift(set.signal);
+  saveJSON(SIGNALS_KEY, signals);
+
+  const battlecards = loadJSON<Battlecard[]>(BATTLECARDS_KEY, []);
+  battlecards.push(set.battlecard);
+  saveJSON(BATTLECARDS_KEY, battlecards);
+
+  const artifacts = loadJSON<ArtifactBundle[]>(ARTIFACTS_KEY, []);
+  artifacts.push(set.artifacts);
+  saveJSON(ARTIFACTS_KEY, artifacts);
+
+  return set.opportunity;
+}
+
 /** Wipes this visitor's local edits and restores the original seed data. */
 export function resetDemoData(): void {
   save(structuredClone(sampleOpportunities));
+  saveJSON(SIGNALS_KEY, structuredClone(sampleSignals));
+  saveJSON(BATTLECARDS_KEY, []);
+  saveJSON(ARTIFACTS_KEY, []);
 }
