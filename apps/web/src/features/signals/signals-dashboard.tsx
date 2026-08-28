@@ -59,6 +59,12 @@ export function SignalsDashboard() {
         </div>
       ) : (
         <>
+          {/* Columna apilada en mobile a propósito, no el patrón de caja
+           * con scroll horizontal que usa el Pipeline (crm-board.tsx) o
+           * las tarjetas cortas de /probar — cada SignalCard trae título +
+           * descripción + tags, texto largo que se lee peor recortado en
+           * una tarjeta angosta de scroll horizontal que apilado a lo
+           * ancho de la pantalla. */}
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {pagination.pageItems.map((signal, i) => (
               <SignalCard key={signal.id} signal={signal} toneIndex={i} />
