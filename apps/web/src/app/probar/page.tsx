@@ -35,8 +35,18 @@ export default function ProbarOverviewPage() {
         </div>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Link href="/probar/signals" className="bee-bento bee-bento-pad bee-glass--hover block">
+      {/* Tarjetas cortas (un título + un número, nada de texto largo) →
+       * caja con su propio scroll horizontal, mismo patrón que las
+       * columnas del Pipeline (ver crm-board.tsx): el contenedor se
+       * desplaza, la página nunca. SignalsDashboard hace lo contrario a
+       * propósito — sus tarjetas sí tienen texto largo (título +
+       * descripción + tags), así que ahí la columna apilada es la
+       * correcta, no un descuido. */}
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        <Link
+          href="/probar/signals"
+          className="bee-bento bee-bento-pad bee-glass--hover block w-[min(85%,280px)] shrink-0"
+        >
           <div className="flex items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
               <Radio className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
@@ -48,7 +58,10 @@ export default function ProbarOverviewPage() {
           </div>
         </Link>
 
-        <Link href="/probar/crm" className="bee-bento bee-bento-pad bee-glass--hover block">
+        <Link
+          href="/probar/crm"
+          className="bee-bento bee-bento-pad bee-glass--hover block w-[min(85%,280px)] shrink-0"
+        >
           <div className="flex items-center gap-3">
             <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
               <KanbanSquare className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
