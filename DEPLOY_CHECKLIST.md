@@ -1,164 +1,188 @@
 # BEE — Deployment Checklist
 
-> **Biblia de despliegue** — completa esta lista antes de habilitar tráfico real
-> (webhooks públicos, frontend en producción, enriquecimiento externo).
+> **Deployment bible** — complete this checklist before enabling real traffic
+> (public webhooks, production frontend, external enrichment).
 
-Estado del backend tras External Ingestion: **Ready**.
+Backend status after External Ingestion: **Ready**.
 
 ---
 
-## 1. Variables de entorno obligatorias (seguridad)
+## 1. Required environment variables (security)
 
-| Variable | Acción |
+| Variable | Action |
 |----------|--------|
-| `API_SECRET_KEY` | Generar con `python -c "import secrets; print(secrets.token_hex(32))"` — protege todos los endpoints REST |
-| `JWT_SECRET_KEY` | Generar igual que `API_SECRET_KEY` — el default `change-me-in-production` hace que la app **se niegue a arrancar** en `ENVIRONMENT=production` |
-| `WEBHOOK_SIGNATURE_REQUIRED` | `true` en producción |
-| `WEBHOOK_SIGNING_SECRET` | Secreto aleatorio fuerte — el default `change-me-in-production` **no** es seguro |
-| `LINKEDIN_WEBHOOK_SECRET` | Secreto HMAC por provider para `/api/v1/webhooks/receive` |
-| `G2_WEBHOOK_SECRET` / `GOOGLE_WEBHOOK_SECRET` | Configurar cuando esos providers estén activos |
-| `ENVIRONMENT` | `production` (habilita cabeceras HSTS) |
-| `SIGNUP_INVITE_CODE` | Recomendado durante el beta cerrado — sin esto, `/auth/register` queda 100% abierto a cualquiera con la URL. Ver §7. |
+| `API_SECRET_KEY` | Generate with `python -c "import secrets; print(secrets.token_hex(32))"` — protects all REST endpoints |
+| `JWT_SECRET_KEY` | Generate the same way as `API_SECRET_KEY` — the default `change-me-in-production` makes the app **refuse to start** when `ENVIRONMENT=production` |
+| `WEBHOOK_SIGNATURE_REQUIRED` | `true` in production |
+| `WEBHOOK_SIGNING_SECRET` | Strong random secret — the default `change-me-in-production` is **not** safe |
+| `LINKEDIN_WEBHOOK_SECRET` | Per-provider HMAC secret for `/api/v1/webhooks/receive` |
+| `G2_WEBHOOK_SECRET` / `GOOGLE_WEBHOOK_SECRET` | Configure when those providers are active |
+| `ENVIRONMENT` | `production` (enables HSTS headers) |
+| `SIGNUP_INVITE_CODE` | Optional — only set this during a closed beta. Unset (default) means `/auth/register` is fully open self-serve. See §7. |
 
-### Base de datos
+### Database
 
 ```bash
-# Migraciones (las ~24 tablas de dominio + la tabla pgvector Sales DNA):
-cd apps/api && alembic upgrade head   # o: make api-migrate
+# Migrations (all domain tables + the pgvector Sales DNA table):
+cd apps/api && alembic upgrade head   # or: make api-migrate
 
-# Extensión pgvector (one-time, solo si el Postgres de destino no la trae
-# preinstalada — docker-compose.yml y la migración 001 ya la habilitan):
+# pgvector extension (one-time — only if the target Postgres doesn't already
+# have it preinstalled; docker-compose.yml and migration 001 already handle this):
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
-> Usar `init_db()` solo en local. En producción, **siempre Alembic**.
+> Use `init_db()` for local dev only. In production, **always Alembic**.
 
 ---
 
-## 2. Variables recomendadas (ventaja competitiva)
+## 2. Recommended variables (competitive edge)
 
-| Variable | Propósito |
-|----------|-----------|
-| `VECTOR_STORE_BACKEND=pgvector` | Memoria Sales DNA persistente |
-| `AI_PROVIDER=openai` + `AI_API_KEY` | Generación de estrategia/artefactos con LLM |
-| `LINKEDIN_ACCESS_TOKEN` | Enriquecimiento real de perfiles LinkedIn (sin token → mock) |
-| `EXTERNAL_INGESTION_ENABLED=true` | Arranca `IngestionWorker` al boot de la app |
+| Variable | Purpose |
+|----------|---------|
+| `VECTOR_STORE_BACKEND=pgvector` | Persistent Sales DNA memory |
+| `AI_PROVIDER=openai` + `AI_API_KEY` | LLM-powered strategy/artifact generation |
+| `LINKEDIN_ACCESS_TOKEN` | Real LinkedIn profile enrichment (mock fallback without it) |
+| `EXTERNAL_INGESTION_ENABLED=true` | Starts `IngestionWorker` on app boot |
 
-Referencia completa: `apps/api/.env.example`
+Full reference: `apps/api/.env.example`
 
 ---
 
-## 3. Gotchas — pasos manuales (leer antes de abrir tráfico)
+## 3. Gotchas — manual steps (read before opening traffic)
 
-### 1. `/api/v1/webhooks/receive` está exento de API key
+### 1. `/api/v1/webhooks/receive` is exempt from API key auth
 
-Autenticación por **HMAC por provider**, no por `X-API-Key`. No eliminar esta exención: los sistemas externos no pueden enviar `X-API-Key`.
+Authenticated by **per-provider HMAC** instead of `X-API-Key`. Do not remove
+this exemption — external systems cannot send `X-API-Key`.
 
-Protegido además contra replay: la misma firma no se acepta dos veces dentro de `WEBHOOK_REPLAY_WINDOW_SECONDS` (default 300s, `0` desactiva el chequeo — ver `app.core.replay_guard`).
+Also protected against replay: the same signature is not accepted twice
+within `WEBHOOK_REPLAY_WINDOW_SECONDS` (default 300s; `0` disables the
+check — see `app.core.replay_guard`).
 
-Para que las señales/dark-funnel entrantes por este endpoint queden etiquetadas con `organization_id` (en vez de "sin tenant", visible a toda la instalación), configurar la URL que se le da a cada proveedor con `?org_key=<clave de la organización>` — o, si el proveedor sí permite headers custom, `X-BEE-Org-Key`. Sin ninguno de los dos, el comportamiento es el mismo de siempre (sin tenant).
+For inbound signals/dark-funnel data on this endpoint to be tagged with an
+`organization_id` (instead of "untagged", visible instance-wide), configure
+the URL given to each provider with `?org_key=<organization's key>` — or, if
+the provider supports custom headers, `X-BEE-Org-Key`. Without either, the
+behavior is the same as always (untagged).
 
-### 2. `IngestionWorker` es in-process (`asyncio.Queue`)
+### 2. `IngestionWorker` is in-process (`asyncio.Queue`)
 
-Arranca automáticamente al boot cuando `EXTERNAL_INGESTION_ENABLED=true`. En despliegues **multi-instancia**, considerar una cola respaldada por Redis (futuro) para que las tareas de enriquecimiento no se pierdan al reiniciar.
+Starts automatically on boot when `EXTERNAL_INGESTION_ENABLED=true`. For
+**multi-instance** deployments, consider a Redis-backed queue (future work)
+so enrichment tasks aren't lost on restart.
 
-### 3. pgvector en Postgres gestionado (fuera de docker-compose)
+### 3. pgvector on managed Postgres (outside docker-compose)
 
-`docker-compose.yml` ya usa la imagen `pgvector/pgvector:pg16` (con la extensión preinstalada), así que `make up` / `docker compose up --build` funciona sin pasos extra. Si el despliegue de producción usa un Postgres **gestionado** (RDS, Cloud SQL, Supabase, etc.) en vez de esta imagen, confirmar que soporta pgvector y ejecutar `CREATE EXTENSION IF NOT EXISTS vector;` (la migración `001_pgvector_sales_dna` también lo intenta, pero solo funciona si la extensión está disponible en el servidor) **antes** de fijar `VECTOR_STORE_BACKEND=pgvector`.
+`docker-compose.yml` already uses the `pgvector/pgvector:pg16` image (with
+the extension preinstalled), so `make up` / `docker compose up --build`
+works with no extra steps. If production uses a **managed** Postgres (RDS,
+Cloud SQL, Supabase, etc.) instead of that image, confirm it supports
+pgvector and run `CREATE EXTENSION IF NOT EXISTS vector;` (migration
+`001_pgvector_sales_dna` also attempts this, but it only works if the
+extension is available on the server) **before** setting
+`VECTOR_STORE_BACKEND=pgvector`.
 
-### 4. LinkedIn API requiere aprobación OAuth de la app
+### 4. LinkedIn API requires OAuth app approval
 
-Sin `LINKEDIN_ACCESS_TOKEN`, BEE usa perfiles mock deterministas (seguro en staging, **no** válido para enriquecimiento real en producción).
+Without `LINKEDIN_ACCESS_TOKEN`, BEE uses deterministic mock profiles (safe
+for staging, **not** valid for real production enrichment).
 
-### 5. El frontend debe enviar `X-API-Key`
+### 5. The frontend must send `X-API-Key`
 
-En todas las llamadas API cuando `API_SECRET_KEY` esté configurado. Configurar `NEXT_PUBLIC_BEE_API_KEY` en la app Next.js (ver `apps/web/.env.example`).
+On every API call, when `API_SECRET_KEY` is set. Configure
+`NEXT_PUBLIC_BEE_API_KEY` in the Next.js app (see `apps/web/.env.example`).
+Note: `/auth/register` and `/auth/login` are the exception — they're
+always reachable without `X-API-Key` since they're the public self-serve
+entry points (see `app/core/middleware.py`).
 
-### 6. Dry run post-deploy
+### 6. Post-deploy dry run
 
-Verificar el pipeline completo tras cada despliegue:
+Verify the full pipeline after every deploy:
 
 ```bash
 python scripts/simulate_signal.py --mode http --base-url https://your-api.example.com
 ```
 
-Modo local (sin servidor):
+Local mode (no server required):
 
 ```bash
 python scripts/simulate_signal.py
-python scripts/simulate_signal.py --failure   # valida logs seguros ante caída de LinkedIn
+python scripts/simulate_signal.py --failure   # validates safe logging when LinkedIn is down
 ```
 
 ---
 
 ## 4. Health checks
 
-| Endpoint | Propósito |
+| Endpoint | Purpose |
 |----------|---------|
-| `GET /api/v1/health` | Liveness (sin auth) |
-| `GET /api/v1/ready` | Conectividad DB |
-| `GET /api/v1/status` | Chequeo profundo (DB, vector store, DLQ, security) |
-| `GET /api/v1/webhooks/status` | Profundidad de cola del worker + config de providers |
+| `GET /api/v1/health` | Liveness (no auth) |
+| `GET /api/v1/ready` | DB connectivity |
+| `GET /api/v1/status` | Deep subsystem check (DB, vector store, DLQ, security) |
+| `GET /api/v1/webhooks/status` | Ingestion worker queue depth + provider config |
 
 ---
 
-## 5. Orden de despliegue sugerido
+## 5. Suggested deployment order
 
-1. Provisionar Postgres con pgvector
-2. Configurar secrets (API key, webhook HMAC, tokens externos)
+1. Provision Postgres with pgvector
+2. Configure secrets (API key, webhook HMAC, external tokens)
 3. `alembic upgrade head`
-4. Desplegar API con `ENVIRONMENT=production`
-5. Verificar `/api/v1/ready` y `/api/v1/status`
-6. Ejecutar dry run (`scripts/simulate_signal.py --mode http`)
-7. Abrir webhooks a internet pública (ver recomendaciones de seguridad en README §7)
-8. Desplegar frontend con `NEXT_PUBLIC_API_URL` + `NEXT_PUBLIC_BEE_API_KEY`
+4. Deploy the API with `ENVIRONMENT=production`
+5. Verify `/api/v1/ready` and `/api/v1/status`
+6. Run the dry run (`scripts/simulate_signal.py --mode http`)
+7. Open webhooks to the public internet (see security recommendations in README §4)
+8. Deploy the frontend with `NEXT_PUBLIC_API_URL` + `NEXT_PUBLIC_BEE_API_KEY`
 
 ---
 
 ## 6. Frontend — Vercel (monorepo)
 
-El frontend Next.js vive en **`apps/web/`**. El repo **no** tiene `app/` en la raíz — si Vercel apunta al root del monorepo, el build falla con `Couldn't find any app directory` y las rutas devuelven **404**.
+The Next.js frontend lives in **`apps/web/`**. The repo does **not** have an
+`app/` directory at the root — if Vercel points at the monorepo root, the
+build fails with `Couldn't find any app directory` and routes 404.
 
-### Configuración obligatoria en Vercel
+### Required Vercel configuration
 
-> **Error común:** si Root Directory = `apps/web` y Output Directory = `apps/web/.next`,
-> Vercel busca `apps/web/apps/web/.next` → 404 / build failed.
-> Output Directory debe ser **`.next`** (o vacío) cuando Root Directory = `apps/web`.
+> **Common mistake:** if Root Directory = `apps/web` and Output Directory =
+> `apps/web/.next`, Vercel looks for `apps/web/apps/web/.next` → 404 / build
+> failed. Output Directory must be **`.next`** (or empty) when Root Directory
+> = `apps/web`.
 
-**Opción A — Root Directory = `apps/web` (recomendada para Next.js):**
+**Option A — Root Directory = `apps/web` (recommended for Next.js):**
 
-| Setting | Valor |
+| Setting | Value |
 |---------|-------|
 | **Root Directory** | `apps/web` |
 | **Install Command** | `cd .. && pnpm install --frozen-lockfile --filter web` |
 | **Build Command** | `pnpm build` |
-| **Output Directory** | `.next` *(o dejar vacío — nunca `apps/web/.next`)* |
+| **Output Directory** | `.next` *(or leave empty — never `apps/web/.next`)* |
 
-Config en repo: `apps/web/vercel.json`
+Repo config: `apps/web/vercel.json`
 
-**Opción B — Root Directory = repo root:**
+**Option B — Root Directory = repo root:**
 
-| Setting | Valor |
+| Setting | Value |
 |---------|-------|
-| **Root Directory** | *(vacío / `.`)* |
+| **Root Directory** | *(empty / `.`)* |
 | **Install Command** | `pnpm install --frozen-lockfile` |
 | **Build Command** | `pnpm --dir apps/web build` |
 | **Output Directory** | `apps/web/.next` |
 
-Config en repo: `vercel.json` (raíz)
+Repo config: `vercel.json` (root)
 
-El lockfile canónico está en la **raíz** del repo (`pnpm-lock.yaml`).
+The canonical lockfile lives at the repo **root** (`pnpm-lock.yaml`).
 
-### Variables de entorno (Production + Preview)
+### Environment variables (Production + Preview)
 
-| Variable | Valor |
+| Variable | Value |
 |----------|-------|
-| `NEXT_PUBLIC_API_URL` | URL pública del API FastAPI (ej. `https://api.tu-dominio.com`) |
-| `NEXT_PUBLIC_BEE_API_KEY` | Mismo valor que `API_SECRET_KEY` del backend |
+| `NEXT_PUBLIC_API_URL` | Public URL of the FastAPI backend (e.g. `https://api.yourdomain.com`) |
+| `NEXT_PUBLIC_BEE_API_KEY` | Same value as the backend's `API_SECRET_KEY` |
 
-### Verificación post-deploy
+### Post-deploy verification
 
-Tras el deploy, confirma que el build log incluye:
+After deploying, confirm the build log includes:
 
 ```
 ○ /dashboard/control
@@ -166,42 +190,66 @@ Tras el deploy, confirma que el build log incluye:
 ○ /dashboard/signals
 ```
 
-URLs de prueba:
+Test URLs:
 
 - `/` — landing
 - `/dashboard` — overview
-- `/dashboard/control` — panel operador (redirect desde `/control`)
+- `/dashboard/control` — operator panel (redirects from `/control`)
 
-### Archivos de referencia en el repo
+### Reference files in the repo
 
-| Archivo | Propósito |
-|---------|-----------|
-| `apps/web/vercel.json` | Install/build commands para Vercel |
+| File | Purpose |
+|------|---------|
+| `apps/web/vercel.json` | Install/build commands for Vercel |
 | `apps/web/next.config.ts` | Redirect `/control` → `/dashboard/control` |
-| `apps/web/src/app/dashboard/control/page.tsx` | Ruta App Router |
-| `apps/web/.env.example` | Template de variables |
+| `apps/web/src/app/dashboard/control/page.tsx` | App Router route |
+| `apps/web/.env.example` | Variable template |
 
 ---
 
-## 7. Beta cerrado — código de invitación y rate limit de signup
+## 7. Open registration — invite code and signup rate limit
 
-`POST /auth/register` es self-serve abierto por diseño: cualquiera con la URL crea una organización nueva, sin verificación de email ni aprobación de un admin. Para un beta cerrado con testers curados, hay dos capas de protección (ver `app.core.signup_guard`):
+`POST /auth/register` is open self-serve by design: anyone with the URL
+creates a new organization, with no email verification and no admin
+approval — that's the intended product model (see `AuthService.register_organization`).
+If you want a curated closed beta instead, two protection layers are
+available (see `app.core.signup_guard`):
 
-1. **`SIGNUP_INVITE_CODE`** — si se configura, `/auth/register` exige ese código (comparación timing-safe). Sin configurar, registro 100% abierto — mismo comportamiento de siempre. El campo en el formulario de `/register` es opcional en el frontend porque no sabe si el backend lo pide; si lo pide y no coincide, el backend devuelve 403.
-2. **`SIGNUP_RATE_LIMIT_PER_HOUR`** (default `5`) — límite por IP, independiente del código anterior (protege incluso si el código se filtra o alguien lo prueba a fuerza bruta). `0` lo desactiva.
+1. **`SIGNUP_INVITE_CODE`** — when set, `/auth/register` requires that code
+   (timing-safe comparison). Left unset, registration is fully open — the
+   default, intended behavior. The `/register` form's invite-code field is
+   optional in the frontend since it doesn't know whether the backend
+   requires one; if the backend does and it doesn't match, it returns 403.
+2. **`SIGNUP_RATE_LIMIT_PER_HOUR`** (default `5`) — a per-IP limit,
+   independent of the invite code above (protects even if the code leaks or
+   someone brute-forces it). `0` disables it.
 
-Ambos son en memoria del proceso, igual que `WEBHOOK_REPLAY_WINDOW_SECONDS` — no persisten entre reinicios ni se comparten entre instancias (ver gotcha #2 arriba).
+Both are in-process memory, same as `WEBHOOK_REPLAY_WINDOW_SECONDS` — they
+don't persist across restarts or share state across instances (see gotcha
+#2 above).
 
 ---
 
-## 8. Herramienta interna de soporte — reset de contraseña de emergencia
+## 8. Internal support tool — emergency password reset
 
-No existe todavía un flujo de "olvidé mi contraseña" self-serve. `POST /api/v1/internal/support/reset-password` es una única acción de emergencia para el equipo de BEE (no para clientes): dado un email, genera una contraseña temporal nueva y la devuelve una sola vez — quien la pide se la pasa por fuera de la app a la persona afectada.
+There is no self-serve "forgot password" flow yet. `POST
+/api/v1/internal/support/reset-password` is a single emergency action for
+the BEE team (not customer-facing): given an email, it generates a new
+temporary password and returns it exactly once — whoever calls it relays it
+out-of-band to the affected person.
 
-- **`SUPPORT_ADMIN_SECRET`** — sin configurar (default), el endpoint devuelve 404, no existe. Configurarlo solo si de verdad hace falta esta herramienta, y dárselo a muy pocas personas. Generar con `python -c "import secrets; print(secrets.token_hex(32))"` — **nunca reutilizar** `API_SECRET_KEY` ni `JWT_SECRET_KEY` para esto.
-- Uso: `POST /api/v1/internal/support/reset-password` con header `X-BEE-Support-Secret: <secreto>` y body `{"email": "..."}`.
-- Deliberadamente **no** es un rol de administrador dentro de la app que vea datos de cualquier organización — eso reabriría el mismo riesgo de aislamiento cross-tenant que el resto de este proyecto existe para cerrar. Para cualquier otra intervención de emergencia (arreglar una fila, etc.), usar el dashboard de Supabase directamente.
+- **`SUPPORT_ADMIN_SECRET`** — unset by default, in which case the endpoint
+  404s and doesn't exist. Only configure it if this tool is genuinely
+  needed, and give it to very few people. Generate with
+  `python -c "import secrets; print(secrets.token_hex(32))"` — **never**
+  reuse `API_SECRET_KEY` or `JWT_SECRET_KEY` for this.
+- Usage: `POST /api/v1/internal/support/reset-password` with header
+  `X-BEE-Support-Secret: <secret>` and body `{"email": "..."}`.
+- Deliberately **not** an in-app admin role that can see any organization's
+  data — that would reopen the same cross-tenant isolation risk the rest of
+  this project exists to close. For any other emergency intervention (fixing
+  a row, etc.), use the database provider's own dashboard directly.
 
 ---
 
-*Última actualización: fase External Ingestion — backend Ready.*
+*Last updated: External Ingestion phase — backend Ready.*

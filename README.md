@@ -26,7 +26,7 @@ bee/
 │   │   │   ├── schemas/         Pydantic DTOs (external API contract)
 │   │   │   ├── repositories/    Repository pattern (data access)
 │   │   │   ├── services/
-│   │   │   │   └── signal_engine/   ← Motor de Señales
+│   │   │   │   └── signal_engine/   ← Signal Engine
 │   │   │   │       ├── engine.py         orchestration
 │   │   │   │       └── analyzers/        ← THE EXTENSION POINT (plugins)
 │   │   │   └── api/v1/          thin HTTP routers
@@ -136,7 +136,7 @@ Design choices that make it future-proof:
 
 ---
 
-## 3. The Signal Engine (Motor de Señales)
+## 3. The Signal Engine
 
 `POST /api/v1/signals/webhook`
 

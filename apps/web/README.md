@@ -1,4 +1,4 @@
-# BEE Frontend — Señales y Estrategia Dashboard
+# BEE Frontend — Signals & Strategy Dashboard
 
 Next.js App Router frontend for the BEE Sales Force Intelligence platform.
 
