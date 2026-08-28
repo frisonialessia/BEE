@@ -1,10 +1,11 @@
-"""Schemas for GET /integrations and the Gmail connect/disconnect flow."""
+"""Schemas for GET /integrations, the connect/disconnect flow, and the
+Salesforce import endpoint."""
 
 from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class IntegrationStatusOut(BaseModel):
@@ -28,3 +29,20 @@ class IntegrationStatusOut(BaseModel):
 
 class AuthorizeUrlOut(BaseModel):
     authorize_url: str
+
+
+class ImportCountsOut(BaseModel):
+    created: int = 0
+    updated: int = 0
+    skipped: int = 0
+
+
+class SalesforceImportSummaryOut(BaseModel):
+    """Result of POST /integrations/salesforce/import — always returned,
+    even on partial failure (see ``errors``), so the rep sees exactly what
+    happened instead of a bare success/fail."""
+
+    companies: ImportCountsOut = Field(default_factory=ImportCountsOut)
+    leads: ImportCountsOut = Field(default_factory=ImportCountsOut)
+    opportunities: ImportCountsOut = Field(default_factory=ImportCountsOut)
+    errors: list[str] = Field(default_factory=list)

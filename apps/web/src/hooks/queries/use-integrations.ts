@@ -6,6 +6,7 @@ import {
   disconnectOAuthProvider,
   fetchIntegrations,
   getOAuthAuthorizeUrl,
+  importFromSalesforce,
   type OAuthProvider,
 } from "@/lib/api/integrations";
 import { queryKeys } from "@/lib/query-keys";
@@ -37,5 +38,11 @@ export function useDisconnectOAuthProvider(provider: OAuthProvider) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.integrations.all });
     },
+  });
+}
+
+export function useImportFromSalesforce() {
+  return useMutation({
+    mutationFn: importFromSalesforce,
   });
 }
