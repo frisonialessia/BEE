@@ -47,7 +47,23 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-_ALWAYS_EXEMPT = frozenset({"/", "/api/v1/health", "/api/v1/ready"})
+_ALWAYS_EXEMPT = frozenset(
+    {
+        "/",
+        "/api/v1/health",
+        "/api/v1/ready",
+        # Self-serve entry points: BEE is open signup (anyone can create an
+        # organization), so these can't sit behind a key nobody outside the
+        # frontend bundle knows about — X-API-Key is meant for
+        # service-to-service callers (n8n/Zapier/the dashboard's own calls),
+        # not for gating the first request a brand-new visitor ever makes.
+        # Abuse protection for these two lives elsewhere: signup_guard's
+        # per-IP rate limit (+ optional SIGNUP_INVITE_CODE) on /register,
+        # and the password check itself on /login.
+        "/api/v1/auth/register",
+        "/api/v1/auth/login",
+    }
+)
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -101,6 +117,8 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
     * ``/`` — root service metadata
     * ``/api/v1/health`` — health check
     * ``/api/v1/ready`` — readiness probe
+    * ``/api/v1/auth/register`` / ``/api/v1/auth/login`` — self-serve entry
+      points; see the ``_ALWAYS_EXEMPT`` docstring note above for why
     * Paths in ``settings.API_KEY_EXEMPT_PATHS`` (comma-separated)
 
     The signal webhook (``POST /api/v1/signals/ingest``) has its own HMAC
