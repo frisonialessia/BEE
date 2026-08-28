@@ -36,7 +36,7 @@ function AddCompanyForm() {
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="bee-btn bee-btn--primary">
-        <Sparkles className="size-4" /> Agrega tu empresa
+        <Sparkles className="size-4" /> Simula tu empresa
       </button>
     );
   }
@@ -92,9 +92,14 @@ function AddCompanyForm() {
  * become a working pipeline. Strategy/battlecard detail lives one click
  * away, in the opportunity drawer, same as the real product — see
  * `probar/layout.tsx` for why this can reuse those components unmodified.
- * "+ Agrega tu empresa" is the one way new data enters — see
- * `lib/demo/templates.ts` for why it's an honest self-referential signal,
- * not an invented event about the visitor's real company. */
+ * "Simula tu empresa" is the one way new data enters — named deliberately
+ * differently from the real Dashboard's onboarding "Cuéntanos de tu
+ * empresa" step (an account-profile field) and from the real Dashboard's
+ * "+ Agregar empresa" (adding a tracked prospect) — three different
+ * actions that all touch the words "tu empresa", so each needed its own
+ * distinct phrasing. See `lib/demo/templates.ts` for why this one is an
+ * honest self-referential signal, not an invented event about the
+ * visitor's real company. */
 export default function ProbarPage() {
   return (
     <div>

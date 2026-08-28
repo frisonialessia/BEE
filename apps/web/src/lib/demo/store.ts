@@ -20,7 +20,7 @@ import type { OutcomeWithPrediction } from "@/types/extended";
 
 const OPPORTUNITIES_KEY = "bee_demo_opportunities_v1";
 const SIGNALS_KEY = "bee_demo_signals_v1";
-// Battlecards/artifacts for companies added via "+ Agrega tu empresa" —
+// Battlecards/artifacts for companies added via "Simula tu empresa" —
 // the 2 seeded example opportunities keep using the static samples in
 // lib/sample-data (checked first, see lib/api/opportunities.ts), this only
 // holds ones generated locally.
@@ -142,7 +142,7 @@ export function demoFindArtifacts(opportunityId: string): ArtifactBundle | undef
   return loadJSON<ArtifactBundle[]>(ARTIFACTS_KEY, []).find((a) => a.opportunity_id === opportunityId);
 }
 
-/** "+ Agrega tu empresa" — the only way new data enters the demo. Builds a
+/** "Simula tu empresa" — the only way new data enters the demo. Builds a
  * full Signal → Opportunity → Battlecard → Artifacts set (see
  * lib/demo/templates.ts for why it's an honest self-referential signal, not
  * a fabricated event) and appends it to every relevant local list. */
