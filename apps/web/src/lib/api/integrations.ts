@@ -43,3 +43,26 @@ export async function disconnectOAuthProvider(provider: OAuthProvider): Promise<
     method: "POST",
   });
 }
+
+export interface ImportCounts {
+  created: number;
+  updated: number;
+  skipped: number;
+}
+
+export interface SalesforceImportSummary {
+  companies: ImportCounts;
+  leads: ImportCounts;
+  opportunities: ImportCounts;
+  errors: string[];
+}
+
+/** Trae Accounts/Contacts/Leads/Opportunities de Salesforce a BEE — solo
+ * lectura, nunca escribe en Salesforce. Seguro de correr varias veces
+ * (actualiza lo que ya importó en vez de duplicar). */
+export async function importFromSalesforce(): Promise<SalesforceImportSummary> {
+  if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
+  return apiFetch<SalesforceImportSummary>("/api/v1/integrations/salesforce/import", {
+    method: "POST",
+  });
+}

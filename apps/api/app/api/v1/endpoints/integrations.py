@@ -6,9 +6,11 @@ is explicit about which is which (see IntegrationStatusOut.scope):
 * **organization-scoped** (real OAuth, one row per org): Gmail, LinkedIn,
   Salesforce. Each org connects (or not) its own account via a genuine
   Connect/Disconnect button — see gmail_oauth.py/linkedin_oauth.py/
-  salesforce_oauth.py and IntegrationsService. Salesforce's row is
-  connect-only for now — see salesforce_oauth's module docstring for why
-  actually syncing records isn't built yet.
+  salesforce_oauth.py and IntegrationsService. Salesforce additionally
+  gets POST /salesforce/import — a one-way, explicit, re-runnable pull of
+  standard Accounts/Contacts/Leads/Opportunities into BEE's own Company/
+  Lead/Opportunity tables. See salesforce_import.py's module docstring for
+  why it's one-way (BEE never writes back) and standard-fields-only.
 * **server-scoped** (a single shared credential the whole deployment uses):
   Email/SMTP fallback, X — status reused as-is from
   OmnichannelGateway.get_channel_status(), read-only here. LinkedIn's
@@ -42,10 +44,15 @@ from app.core.logging import get_logger
 from app.core.security import InvalidTokenError, create_oauth_state_token, decode_oauth_state_token
 from app.models.base import UserRole
 from app.models.user import User
-from app.schemas.integrations import AuthorizeUrlOut, IntegrationStatusOut
+from app.schemas.integrations import (
+    AuthorizeUrlOut,
+    IntegrationStatusOut,
+    SalesforceImportSummaryOut,
+)
 from app.services.integrations import gmail_oauth, linkedin_oauth, salesforce_oauth
 from app.services.integrations.gmail_oauth import GmailOAuthError
 from app.services.integrations.linkedin_oauth import LinkedInOAuthError
+from app.services.integrations.salesforce_import import SalesforceImportService
 from app.services.integrations.salesforce_oauth import SalesforceOAuthError
 from app.services.integrations.service import IntegrationsService
 from app.services.omnichannel.gateway import OmnichannelGateway
@@ -110,7 +117,7 @@ def list_integrations(
             connected_at=salesforce.created_at if salesforce else None,
             last_error=salesforce.last_error if salesforce else None,
             detail=(
-                "Solo conecta la cuenta todavía — sincronizar registros es un siguiente paso."
+                "Importa Accounts/Contacts/Leads/Opportunities cuando quieras — solo lectura, nunca escribe en Salesforce."
                 if salesforce
                 else (None if salesforce_oauth.is_configured() else "No configurado en el servidor todavía.")
             ),
@@ -353,3 +360,29 @@ def salesforce_disconnect(
     disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "salesforce")
     session.commit()
     return {"disconnected": disconnected}
+
+
+@router.post(
+    "/salesforce/import",
+    response_model=SalesforceImportSummaryOut,
+    summary="Pull Accounts/Contacts/Leads/Opportunities from Salesforce into BEE",
+)
+def salesforce_import(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> SalesforceImportSummaryOut:
+    """One-way pull, safe to re-run — see salesforce_import.py's module
+    docstring. Requires an active Salesforce connection; 400s with a clear
+    message otherwise rather than a confusing empty result."""
+    connection = IntegrationsService(session).get_valid_salesforce_access_token(current_user.organization_id)
+    if not connection:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Conecta Salesforce primero desde Integraciones.",
+        )
+    access_token, instance_url = connection
+
+    importer = SalesforceImportService(session, access_token=access_token, instance_url=instance_url)
+    summary = importer.import_all(current_user.organization_id)
+    session.commit()
+    return SalesforceImportSummaryOut.model_validate(summary, from_attributes=True)

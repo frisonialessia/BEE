@@ -1,15 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
-import { CheckCircle2, Cloud, Mail, Plug, Users, XCircle } from "lucide-react";
+import type { ReactNode } from "react";
+import { CheckCircle2, Cloud, Download, Mail, Plug, Users, XCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/providers/auth-provider";
-import { useConnectOAuthProvider, useDisconnectOAuthProvider, useIntegrations } from "@/hooks/queries/use-integrations";
-import type { IntegrationStatus, OAuthProvider } from "@/lib/api/integrations";
+import {
+  useConnectOAuthProvider,
+  useDisconnectOAuthProvider,
+  useImportFromSalesforce,
+  useIntegrations,
+} from "@/hooks/queries/use-integrations";
+import type { IntegrationStatus, OAuthProvider, SalesforceImportSummary } from "@/lib/api/integrations";
 
 const CALLBACK_ERROR_MESSAGES: Record<string, string> = {
   denied: "Cancelaste la conexión — no se conectó nada.",
@@ -52,6 +58,7 @@ function OAuthProviderRow({
   disconnectedCopy,
   status,
   canManage,
+  children,
 }: {
   provider: OAuthProvider;
   label: string;
@@ -60,6 +67,9 @@ function OAuthProviderRow({
   disconnectedCopy: string;
   status: IntegrationStatus;
   canManage: boolean;
+  /** Extra content shown only while connected — e.g. the "Importar CRM"
+   * action Salesforce gets that Gmail/LinkedIn don't. */
+  children?: ReactNode;
 }) {
   const connect = useConnectOAuthProvider(provider);
   const disconnect = useDisconnectOAuthProvider(provider);
@@ -83,51 +93,98 @@ function OAuthProviderRow({
   }
 
   return (
-    <div className="bee-surface flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-          <Icon className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
-        </div>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-semibold">{label}</p>
-            <Badge variant={status.connected ? "success" : "outline"}>
-              {status.connected ? "Conectado" : "No conectado"}
-            </Badge>
+    <div className="bee-surface p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
+            <Icon className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
           </div>
-          <p className="bee-caption mt-1">
-            {status.connected ? connectedCopy(status.account_email ?? "esta cuenta") : disconnectedCopy}
-          </p>
-          {status.last_error && (
-            <p className="mt-1 text-[11px] text-[var(--color-chart-2)]">{status.last_error} — reconecta la cuenta.</p>
-          )}
-          {status.detail && !status.connected && <p className="bee-caption mt-1">{status.detail}</p>}
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-semibold">{label}</p>
+              <Badge variant={status.connected ? "success" : "outline"}>
+                {status.connected ? "Conectado" : "No conectado"}
+              </Badge>
+            </div>
+            <p className="bee-caption mt-1">
+              {status.connected ? connectedCopy(status.account_email ?? "esta cuenta") : disconnectedCopy}
+            </p>
+            {status.last_error && (
+              <p className="mt-1 text-[11px] text-[var(--color-chart-2)]">{status.last_error} — reconecta la cuenta.</p>
+            )}
+            {status.detail && !status.connected && <p className="bee-caption mt-1">{status.detail}</p>}
+          </div>
         </div>
-      </div>
 
-      {canManage && (
-        <div className="shrink-0">
-          {status.connected ? (
-            <button
-              type="button"
-              onClick={handleDisconnect}
-              disabled={disconnect.isPending}
-              className="bee-btn-ghost text-xs"
-            >
-              {disconnect.isPending ? "Desconectando…" : "Desconectar"}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleConnect}
-              disabled={connect.isPending}
-              className="bee-btn bee-btn--primary text-xs"
-            >
-              {connect.isPending ? "Redirigiendo…" : `Conectar ${label}`}
-            </button>
-          )}
-        </div>
-      )}
+        {canManage && (
+          <div className="shrink-0">
+            {status.connected ? (
+              <button
+                type="button"
+                onClick={handleDisconnect}
+                disabled={disconnect.isPending}
+                className="bee-btn-ghost text-xs"
+              >
+                {disconnect.isPending ? "Desconectando…" : "Desconectar"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleConnect}
+                disabled={connect.isPending}
+                className="bee-btn bee-btn--primary text-xs"
+              >
+                {connect.isPending ? "Redirigiendo…" : `Conectar ${label}`}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+      {status.connected && children}
+    </div>
+  );
+}
+
+function summarizeImport(summary: SalesforceImportSummary): string {
+  const total =
+    summary.companies.created + summary.companies.updated +
+    summary.leads.created + summary.leads.updated +
+    summary.opportunities.created + summary.opportunities.updated;
+  if (total === 0) return "No había nada nuevo que importar.";
+  return (
+    `${summary.companies.created + summary.companies.updated} empresa${summary.companies.created + summary.companies.updated === 1 ? "" : "s"}, ` +
+    `${summary.leads.created + summary.leads.updated} lead${summary.leads.created + summary.leads.updated === 1 ? "" : "s"}, ` +
+    `${summary.opportunities.created + summary.opportunities.updated} oportunidad${summary.opportunities.created + summary.opportunities.updated === 1 ? "" : "es"} desde Salesforce.`
+  );
+}
+
+function SalesforceImportButton() {
+  const importFromSalesforce = useImportFromSalesforce();
+
+  async function handleImport() {
+    try {
+      const summary = await importFromSalesforce.mutateAsync();
+      if (summary.errors.length > 0) {
+        toast.warning(`${summarizeImport(summary)} Con errores: ${summary.errors.join(" · ")}`);
+      } else {
+        toast.success(summarizeImport(summary));
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo importar de Salesforce.");
+    }
+  }
+
+  return (
+    <div className="mt-3 flex items-center gap-2 border-t border-[var(--color-divider)] pt-3">
+      <button
+        type="button"
+        onClick={handleImport}
+        disabled={importFromSalesforce.isPending}
+        className="bee-btn-ghost inline-flex items-center gap-1.5 text-xs"
+      >
+        <Download className="size-3.5" />
+        {importFromSalesforce.isPending ? "Importando…" : "Importar Accounts, Contacts, Leads y Opportunities"}
+      </button>
     </div>
   );
 }
@@ -179,7 +236,7 @@ export function IntegrationsView() {
           <p className="bee-caption mt-1">
             Conecta tus propias cuentas para que BEE actúe en tu nombre — el envío de secuencias
             por Gmail o LinkedIn sale desde tu cuenta real, no desde una compartida del servidor.
-            Salesforce, por ahora, solo autentica la cuenta.
+            Salesforce trae tu CRM a BEE, de solo lectura.
           </p>
         </div>
       </header>
@@ -222,9 +279,11 @@ export function IntegrationsView() {
               icon={Cloud}
               status={salesforce}
               canManage={canManage}
-              connectedCopy={(account) => `Conectado a ${account}. Por ahora solo autentica la cuenta — sincronizar registros es un siguiente paso.`}
-              disconnectedCopy="Conecta tu org de Salesforce. Hoy esto solo autentica la cuenta; enviar o traer registros llega en una siguiente entrega."
-            />
+              connectedCopy={(account) => `Conectado a ${account}. Trae Accounts, Contacts, Leads y Opportunities cuando quieras — nunca escribe de vuelta en Salesforce.`}
+              disconnectedCopy="Conecta tu org de Salesforce para traer tu CRM a BEE — empresas, contactos y oportunidades, de solo lectura."
+            >
+              {canManage && <SalesforceImportButton />}
+            </OAuthProviderRow>
           )}
           {!canManage && (
             <p className="bee-caption">
