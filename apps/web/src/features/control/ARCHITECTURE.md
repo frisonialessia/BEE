@@ -1,6 +1,6 @@
 # BEE Control Dashboard — Architecture
 
-Minimalist editorial UI for the Señales y Estrategia control plane.
+Minimalist editorial UI for the Signals & Strategy control plane.
 
 ## Folder structure
 
@@ -10,7 +10,7 @@ src/features/control/
 │   ├── SystemHealth.tsx    ✅ Worker + provider status (live polling)
 │   ├── SignalStream.tsx    ✅ Live pipeline feed + proactive toasts
 │   ├── LeadWorkspace.tsx   ✅ Kanban · 12s poll
-│   └── SignalHexMap.tsx    ✅ Colmena · d3-hexbin + Canvas
+│   └── SignalHexMap.tsx    ✅ Hive heatmap · d3-hexbin + Canvas
 ├── hooks/                  (future: useSignalStream, useLeadBoard)
 └── index.ts
 

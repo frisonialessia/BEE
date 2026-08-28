@@ -1,9 +1,9 @@
 # BEE API — Sales Force Intelligence backend
 
 FastAPI + SQLModel + PostgreSQL. A modular, SOLID backend whose centerpiece is
-the **Signal Engine (Motor de Señales)**: it ingests market signals via webhook,
-classifies and scores them through pluggable analyzers, and turns them into
-actionable sales opportunities.
+the **Signal Engine**: it ingests market signals via webhook, classifies and
+scores them through pluggable analyzers, and turns them into actionable
+sales opportunities.
 
 ## Architecture (clean, layered)
 
@@ -15,14 +15,14 @@ app/
 │   ├── security.py      HMAC webhook signature verification
 │   └── logging.py       Structured logging setup
 ├── models/          SQLModel entities (the DB schema)
-│   ├── company.py       Empresa
+│   ├── company.py       Company
 │   ├── lead.py          Lead
-│   ├── signal.py        Señal (trigger)
-│   └── opportunity.py   Oportunidad (lead + signal + strategy)
+│   ├── signal.py        Signal (trigger)
+│   └── opportunity.py   Opportunity (lead + signal + strategy)
 ├── schemas/         Pydantic DTOs — the external API contract
 ├── repositories/    Repository pattern — encapsulated data access
 ├── services/
-│   └── signal_engine/   The Motor de Señales
+│   └── signal_engine/   The Signal Engine
 │       ├── engine.py            Orchestration
 │       └── analyzers/           ← THE EXTENSION POINT
 │           ├── base.py              SignalAnalyzer ABC + AnalysisResult
