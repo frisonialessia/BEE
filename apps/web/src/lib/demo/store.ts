@@ -7,10 +7,12 @@
 import type { EmployeeRange } from "@/lib/api/organizations";
 import type { CrmStage, OpportunityUpdateIn } from "@/lib/api/opportunities";
 import { buildDemoCompanySet } from "@/lib/demo/templates";
-import { sampleOpportunities, sampleSignals } from "@/lib/sample-data";
+import { sampleBattlecards, sampleOpportunities, sampleSignals } from "@/lib/sample-data";
 import type {
   ArtifactBundle,
   Battlecard,
+  Company,
+  Lead,
   Opportunity,
   OpportunityStatus,
   OutcomeIn,
@@ -174,4 +176,76 @@ export function resetDemoData(): void {
   saveJSON(SIGNALS_KEY, structuredClone(sampleSignals));
   saveJSON(BATTLECARDS_KEY, []);
   saveJSON(ARTIFACTS_KEY, []);
+}
+
+// ── Companies / Leads (derived, not their own store) ────────────────────────
+//
+// There's no separate "companies" or "leads" local list — a Company/Lead in
+// this demo is just whatever a Battlecard's `company`/`lead` sub-object
+// says, deduped by name, across the 2 seeded battlecards plus any added via
+// "Simula tu empresa". This keeps them always in sync with the pipeline
+// (add a company there, it shows up here too) without a second source of
+// truth to drift out of. Read-only: there's no demoCreateCompany/
+// demoCreateLead — Empresas/Leads only display what the pipeline already
+// produced, matching "solo mover o visualizar, no modificar" for the
+// sections that aren't the pipeline itself.
+
+function slugify(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-+|-+$)/g, "") || "demo";
+}
+
+function allBattlecards(): Battlecard[] {
+  return [...sampleBattlecards, ...loadJSON<Battlecard[]>(BATTLECARDS_KEY, [])];
+}
+
+export function demoFetchCompanies(): Company[] {
+  const seen = new Map<string, Company>();
+  for (const card of allBattlecards()) {
+    const name = card.company.name;
+    if (!name || seen.has(name)) continue;
+    seen.set(name, {
+      id: `demo-company-${slugify(name)}`,
+      name,
+      domain: card.company.domain,
+      industry: card.company.industry,
+      size: null,
+      country: card.company.country,
+      website: card.company.domain ? `https://${card.company.domain}` : null,
+      description: null,
+      attributes: {},
+      created_at: card.created_at,
+    });
+  }
+  return [...seen.values()];
+}
+
+export function demoFetchLeads(): Lead[] {
+  const companyIdByName = new Map(demoFetchCompanies().map((c) => [c.name, c.id]));
+  const seen = new Map<string, Lead>();
+  for (const card of allBattlecards()) {
+    const name = card.lead.full_name;
+    if (!name || seen.has(name)) continue;
+    const companyName = card.company.name;
+    seen.set(name, {
+      id: `demo-lead-${slugify(name)}`,
+      company_id: companyName ? (companyIdByName.get(companyName) ?? null) : null,
+      organization_id: null,
+      assigned_to_user_id: null,
+      full_name: name,
+      email: card.lead.email,
+      title: card.lead.title,
+      seniority: card.lead.seniority,
+      linkedin_url: card.lead.linkedin_url,
+      phone: null,
+      status: "new",
+      score: card.score,
+      attributes: {},
+      created_at: card.created_at,
+      data_freshness_score: 1,
+      validation_flags: [],
+      last_validated_at: card.created_at,
+      stale_risk: false,
+    });
+  }
+  return [...seen.values()];
 }

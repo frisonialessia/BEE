@@ -11,6 +11,7 @@ import { CompanyDuplicatesPanel } from "@/components/dedup/company-duplicates-pa
 import { useCompanies, useCreateCompany } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
+import { isDemoMode } from "@/lib/demo/mode";
 
 function NewCompanyForm({ onDone }: { onDone: () => void }) {
   const createCompany = useCreateCompany();
@@ -92,6 +93,7 @@ export function CompaniesList() {
   const { data: leadsResult } = useLeads(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);
   const [showNew, setShowNew] = useState(false);
+  const demo = isDemoMode();
 
   const companies = companiesResult?.data ?? [];
   const live = companiesResult?.live ?? false;
@@ -145,9 +147,11 @@ export function CompaniesList() {
                 { key: "oportunidades", header: "Oportunidades" },
               ]}
             />
-            <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary">
-              + Nueva empresa
-            </button>
+            {!demo && (
+              <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary">
+                + Nueva empresa
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -169,46 +173,66 @@ export function CompaniesList() {
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {companies.map((company) => (
-            <Link
-              key={company.id}
-              href={`/dashboard/companies/${company.id}`}
-              className="bee-bento bee-bento-pad transition-colors hover:border-[var(--color-chart-4)]"
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]">
-                  <Building2 className="size-4 text-[var(--color-chart-4)]" />
-                </span>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold">{company.name}</p>
-                  {company.domain && (
-                    <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-                      <Globe className="size-3 shrink-0" />
-                      {company.domain}
-                    </p>
+          {companies.map((company) => {
+            const cardContent = (
+              <>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]">
+                    <Building2 className="size-4 text-[var(--color-chart-4)]" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold">{company.name}</p>
+                    {company.domain && (
+                      <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                        <Globe className="size-3 shrink-0" />
+                        {company.domain}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+                  {company.industry && (
+                    <span className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/60 px-2 py-0.5 text-muted-foreground">
+                      {company.industry}
+                    </span>
+                  )}
+                  {company.country && (
+                    <span className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/60 px-2 py-0.5 text-muted-foreground">
+                      {company.country}
+                    </span>
                   )}
                 </div>
-              </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
-                {company.industry && (
-                  <span className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/60 px-2 py-0.5 text-muted-foreground">
-                    {company.industry}
-                  </span>
-                )}
-                {company.country && (
-                  <span className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/60 px-2 py-0.5 text-muted-foreground">
-                    {company.country}
-                  </span>
-                )}
-              </div>
+                <div className="mt-3 flex items-center gap-4 border-t border-border pt-2.5 text-xs text-muted-foreground">
+                  <span>{leadCountByCompany.get(company.id) ?? 0} contactos</span>
+                  <span>{oppCountByCompany.get(company.id) ?? 0} oportunidades</span>
+                </div>
+              </>
+            );
 
-              <div className="mt-3 flex items-center gap-4 border-t border-border pt-2.5 text-xs text-muted-foreground">
-                <span>{leadCountByCompany.get(company.id) ?? 0} contactos</span>
-                <span>{oppCountByCompany.get(company.id) ?? 0} oportunidades</span>
-              </div>
-            </Link>
-          ))}
+            // En el sandbox no existe /probar/companies/[id] (solo lectura,
+            // sin ficha de detalle) — mostrar la tarjeta sin link en vez de
+            // uno que caería en /dashboard/companies/[id] y te mandaría a
+            // /login sin sesión.
+            if (demo) {
+              return (
+                <div key={company.id} className="bee-bento bee-bento-pad">
+                  {cardContent}
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={company.id}
+                href={`/dashboard/companies/${company.id}`}
+                className="bee-bento bee-bento-pad transition-colors hover:border-[var(--color-chart-4)]"
+              >
+                {cardContent}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

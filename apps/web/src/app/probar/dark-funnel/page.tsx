@@ -1,7 +1,5 @@
-import { Flame } from "lucide-react";
-
-import { ProbarComingSoon } from "@/features/probar/probar-coming-soon";
+import { DarkFunnelView } from "@/features/dark-funnel/dark-funnel-view";
 
 export default function ProbarDarkFunnelPage() {
-  return <ProbarComingSoon label="Pipeline oculto" icon={Flame} />;
+  return <DarkFunnelView />;
 }

@@ -1,8 +1,19 @@
 import { apiFetch } from "@/lib/api/client";
+import { isDemoMode } from "@/lib/demo/mode";
+import { demoFetchLeads } from "@/lib/demo/store";
 import type { FetchResult } from "@/types/api";
 import type { Lead, LeadStatus } from "@/types/domain";
 
+/** Leads (like Companies) is read-only in the sandbox — see
+ * lib/demo/store.ts's "Companies / Leads" section for why there's no
+ * demoCreateLead. Every mutation below throws the same clear message in
+ * demo mode instead of silently hitting the real API (which would 401 and
+ * surface a confusing generic error). */
+const READ_ONLY_MESSAGE =
+  "Leads es de solo lectura en el sandbox — usa \"Simula tu empresa\" desde el Resumen para agregar uno.";
+
 export async function fetchLeads(limit = 50): Promise<FetchResult<Lead[]>> {
+  if (isDemoMode()) return { data: demoFetchLeads().slice(0, limit), live: false };
   try {
     const data = await apiFetch<Lead[]>(`/api/v1/leads?limit=${limit}`, {
       next: { revalidate: 15 },
@@ -24,6 +35,7 @@ export interface LeadCreateIn {
 }
 
 export async function createLead(body: LeadCreateIn): Promise<Lead> {
+  if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
   return apiFetch<Lead>("/api/v1/leads", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -37,6 +49,7 @@ export interface LeadBulkResult {
 }
 
 export async function bulkCreateLeads(leads: LeadCreateIn[]): Promise<LeadBulkResult> {
+  if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
   return apiFetch<LeadBulkResult>("/api/v1/leads/bulk", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -80,6 +93,7 @@ export interface LeadImportResult {
  *  el archivo no puede tener), esto resuelve la empresa por nombre/dominio
  *  igual que la ingesta de señales. */
 export async function importLeads(rows: LeadImportRow[]): Promise<LeadImportResult> {
+  if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
   return apiFetch<LeadImportResult>("/api/v1/leads/import", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -104,6 +118,7 @@ export async function fetchLeadDuplicates(): Promise<FetchResult<LeadDuplicateGr
 }
 
 export async function mergeLeads(keepId: string, mergeId: string): Promise<Lead> {
+  if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
   return apiFetch<Lead>("/api/v1/leads/merge", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -120,6 +135,7 @@ export interface LeadValidationOut {
 }
 
 export async function validateLead(leadId: string): Promise<LeadValidationOut> {
+  if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
   return apiFetch<LeadValidationOut>(`/api/v1/leads/${leadId}/validate`, {
     method: "POST",
   });
@@ -137,6 +153,7 @@ export interface LeadBulkUpdateResult {
 }
 
 export async function bulkUpdateLeads(body: LeadBulkUpdateIn): Promise<LeadBulkUpdateResult> {
+  if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
   return apiFetch<LeadBulkUpdateResult>("/api/v1/leads/bulk-update", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },

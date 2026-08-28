@@ -1,7 +1,5 @@
-import { Target } from "lucide-react";
-
-import { ProbarComingSoon } from "@/features/probar/probar-coming-soon";
+import { OpportunitiesDashboard } from "@/features/opportunities/opportunities-dashboard";
 
 export default function ProbarOpportunitiesPage() {
-  return <ProbarComingSoon label="Oportunidades" icon={Target} />;
+  return <OpportunitiesDashboard />;
 }

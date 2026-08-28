@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
+import { isDemoMode } from "@/lib/demo/mode";
 import type { FetchResult } from "@/types/api";
 
 export interface SavedView {
@@ -31,6 +32,7 @@ export async function fetchSavedViews(page: string): Promise<FetchResult<SavedVi
 }
 
 export async function createSavedView(body: SavedViewCreateIn): Promise<SavedView> {
+  if (isDemoMode()) throw new Error("Las vistas guardadas no persisten en el sandbox.");
   return apiFetch<SavedView>("/api/v1/saved-views", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -39,5 +41,6 @@ export async function createSavedView(body: SavedViewCreateIn): Promise<SavedVie
 }
 
 export async function deleteSavedView(id: string): Promise<void> {
+  if (isDemoMode()) throw new Error("Las vistas guardadas no persisten en el sandbox.");
   await apiFetch<void>(`/api/v1/saved-views/${id}`, { method: "DELETE" });
 }

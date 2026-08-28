@@ -1,7 +1,5 @@
-import { Scale } from "lucide-react";
-
-import { ProbarComingSoon } from "@/features/probar/probar-coming-soon";
+import { WinLossView } from "@/features/win-loss/win-loss-view";
 
 export default function ProbarWinLossPage() {
-  return <ProbarComingSoon label="Ganado/Perdido" icon={Scale} />;
+  return <WinLossView />;
 }

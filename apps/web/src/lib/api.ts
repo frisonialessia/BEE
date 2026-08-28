@@ -36,9 +36,10 @@ import type {
 import { buildApiHeaders, getApiBaseUrl } from "@/lib/api/client";
 import { fetchBattlecards, fetchOpportunities } from "@/lib/api/opportunities";
 import { fetchSignals } from "@/lib/api/signals";
+import { isDemoMode } from "@/lib/demo/mode";
 import type { FetchResult } from "@/types/api";
 import type { Opportunity, OpportunityStatus } from "@/types/domain";
-import { sampleArtifacts, sampleBattlecards, sampleSignals } from "@/lib/sample-data";
+import { sampleArtifacts, sampleHotLeads } from "@/lib/sample-data";
 
 /**
  * Thin client for the BEE API.
@@ -452,6 +453,26 @@ export async function getDarkFunnelHotLeads(params?: {
 }
 
 export async function getDarkFunnelSummary(): Promise<FetchResult<DarkFunnelSummary | null>> {
+  if (isDemoMode()) {
+    // Computed from the same sampleHotLeads getDarkFunnelHotLeads already
+    // falls back to — an honest aggregate of the data actually on screen,
+    // not a separately invented number.
+    const hot = sampleHotLeads.filter((l) => l.is_hot);
+    const summary: DarkFunnelSummary = {
+      total_signals_today: sampleHotLeads.reduce((sum, l) => sum + l.signal_count, 0),
+      total_hot_leads: hot.length,
+      ready_to_buy_count: sampleHotLeads.filter((l) => l.buying_stage === "ready_to_buy").length,
+      decision_stage_count: sampleHotLeads.filter((l) => l.buying_stage === "decision").length,
+      consideration_stage_count: sampleHotLeads.filter((l) => l.buying_stage === "consideration")
+        .length,
+      new_signals_today: hot.length,
+      top_intent_signals: [...new Set(sampleHotLeads.flatMap((l) => l.top_intent_keywords))].slice(
+        0,
+        5,
+      ),
+    };
+    return { data: summary, live: false };
+  }
   try {
     const res = await beeFetch(`${API_URL}/api/v1/dark-funnel/summary`, { cache: "no-store" });
     if (!res.ok) throw new Error(`API responded ${res.status}`);
@@ -468,6 +489,7 @@ export async function ingestDarkFunnelSignal(payload: {
   intent_keywords?: string[];
   source_platform?: string;
 }): Promise<FetchResult<DarkFunnelSignal>> {
+  if (isDemoMode()) throw new Error("Pipeline oculto es de solo lectura en el sandbox.");
   const res = await beeFetch(`${API_URL}/api/v1/dark-funnel/signals`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -626,6 +648,9 @@ export async function runScenario(params: {
   additional_prospecting_reps?: number;
   dark_funnel_heat?: number;
 }): Promise<FetchResult<import("@/lib/types").ScenarioResult>> {
+  if (isDemoMode()) {
+    throw new Error("El simulador de escenarios corre sobre datos reales — no está en el sandbox.");
+  }
   const res = await beeFetch(`${API_URL}/api/v1/analytics/scenarios`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
