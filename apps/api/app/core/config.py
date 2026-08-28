@@ -92,7 +92,14 @@ class Settings(BaseSettings):
     API_SECRET_KEY: str | None = None
     # Comma-separated list of paths exempt from API key auth (exact prefix match).
     # /api/v1/health and /api/v1/ready are always exempt.
-    API_KEY_EXEMPT_PATHS: str = "/api/v1/health,/api/v1/ready,/api/v1/webhooks/receive,/api/v1/contact"
+    # /api/v1/integrations/gmail/callback is exempt too: it's hit by a plain
+    # browser redirect from Google, which carries neither X-API-Key nor our
+    # Authorization bearer — it authenticates via its own signed ``state``
+    # param instead (see app.core.security.decode_oauth_state_token).
+    API_KEY_EXEMPT_PATHS: str = (
+        "/api/v1/health,/api/v1/ready,/api/v1/webhooks/receive,/api/v1/contact,"
+        "/api/v1/integrations/gmail/callback"
+    )
 
     # ----- Multi-tenant user auth (Organization / Team / User) ------------------
     # Distinct from API_SECRET_KEY above: API_SECRET_KEY gates service-to-service
@@ -132,6 +139,37 @@ class Settings(BaseSettings):
     # ----- CORS ----------------------------------------------------------------
     # Comma-separated list of origins allowed to call the API (the Next.js app).
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
+
+    # Base URL of the deployed frontend (no trailing slash) — used only to
+    # build the redirect target after an OAuth callback (e.g. Google) hands
+    # control back to us server-side, since that's a browser navigation, not
+    # something the frontend's own fetch client controls. Distinct from
+    # BACKEND_CORS_ORIGINS above (which can list several allowed origins);
+    # this is the one canonical origin a human gets redirected back to.
+    FRONTEND_URL: str = "http://localhost:3000"
+
+    # ----- Third-party OAuth token storage (see app.core.token_crypto) ---------
+    # Symmetric key used to encrypt OAuth access/refresh tokens (Gmail, and
+    # any future integration) before they're persisted. Unset by default —
+    # connecting an integration fails with a clear error until it's set,
+    # same "opt-in, no silent insecure fallback" posture as every secret in
+    # this file. Generate with:
+    #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    TOKEN_ENCRYPTION_KEY: str | None = None
+
+    # ----- Google OAuth (Gmail integration) -------------------------------------
+    # Powers the real "Connect Gmail" flow at /dashboard/integrations — lets a
+    # rep send sequence steps from their own Gmail account instead of BEE's
+    # shared SMTP relay (see app.services.integrations.gmail_oauth). All three
+    # come from a Google Cloud OAuth 2.0 Client ID (Web application type) that
+    # only the BEE team can create — never invented or defaulted here. Unset
+    # (the default) means the "Conectar Gmail" button in the dashboard shows
+    # honestly as unavailable rather than pretending to work.
+    GOOGLE_OAUTH_CLIENT_ID: str | None = None
+    GOOGLE_OAUTH_CLIENT_SECRET: str | None = None
+    # Must exactly match a Redirect URI registered on that OAuth Client —
+    # e.g. https://api.yourdomain.com/api/v1/integrations/gmail/callback
+    GOOGLE_OAUTH_REDIRECT_URI: str | None = None
 
     # ----- ExecutiveAgent webhook (n8n / Zapier / Make) -------------------------
     # When set, BEE fires a POST to this URL every time execution artifacts are
@@ -269,6 +307,11 @@ class Settings(BaseSettings):
             problems.append("WEBHOOK_SIGNING_SECRET is still the default placeholder value")
         if self.JWT_SECRET_KEY == "change-me-in-production":
             problems.append("JWT_SECRET_KEY is still the default placeholder value")
+        if (self.GOOGLE_OAUTH_CLIENT_ID or self.GOOGLE_OAUTH_CLIENT_SECRET) and not self.TOKEN_ENCRYPTION_KEY:
+            problems.append(
+                "GOOGLE_OAUTH_CLIENT_ID/SECRET are set but TOKEN_ENCRYPTION_KEY is not — "
+                "connected Gmail tokens would fail to store"
+            )
         # sqlalchemy_database_uri never raises or returns None when the DB
         # isn't configured — it silently assembles a connection string from
         # the POSTGRES_* defaults (localhost/bee/bee), which only fails once

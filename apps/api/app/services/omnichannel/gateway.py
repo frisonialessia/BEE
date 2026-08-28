@@ -215,12 +215,28 @@ class OmnichannelGateway:
                 details={"tokens_remaining": bucket.tokens_remaining},
             )
 
+        metadata = dict(payload_data)
+        organization_id = getattr(pending_action, "organization_id", None)
+        if channel == "email" and organization_id is not None:
+            # Prefer the organization's own connected Gmail account over the
+            # shared SMTP relay — see EmailProvider.send(), which checks for
+            # these two keys first. No connection → keys stay absent and the
+            # provider falls through to its existing SMTP/mock behavior,
+            # unchanged from before this integration existed.
+            from app.services.integrations.service import IntegrationsService
+
+            gmail = IntegrationsService(self.session).get_valid_gmail_access_token(organization_id)
+            if gmail:
+                access_token, from_address = gmail
+                metadata["gmail_access_token"] = access_token
+                metadata["gmail_from_address"] = from_address
+
         payload = ChannelPayload(
             channel=channel,
             recipient_id=payload_data.get("recipient_id", ""),
             subject=payload_data.get("subject"),
             body=payload_data.get("body", ""),
-            metadata=payload_data,
+            metadata=metadata,
         )
         result = provider.send(payload)
         logger.info(

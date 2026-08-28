@@ -1,11 +1,17 @@
-"""EmailProvider — SMTP / SendGrid email channel.
+"""EmailProvider — Gmail (per-organization) / SMTP (server-wide) / mock.
 
-Mock mode (default): returns a success result with mock=True and logs the
-email payload. No real email is sent.
+Three tiers, tried in order by ``send()``:
 
-Live mode: configure ``EMAIL_SMTP_HOST``, ``EMAIL_SMTP_USER``,
-``EMAIL_SMTP_PASSWORD``, and ``EMAIL_FROM_ADDRESS`` in ``.env``.
-When all four are set, the provider uses Python's ``smtplib`` to send.
+1. **Connected Gmail** — when the gateway found a connected Gmail account
+   for this action's organization, ``payload.metadata`` carries
+   ``gmail_access_token``/``gmail_from_address`` (see
+   OmnichannelGateway.dispatch_approved) and the email goes out via the
+   Gmail API, from that rep's real inbox.
+2. **Server SMTP** — configure ``EMAIL_SMTP_HOST``, ``EMAIL_SMTP_USER``,
+   ``EMAIL_SMTP_PASSWORD``, and ``EMAIL_FROM_ADDRESS`` in ``.env``. Used
+   when no organization has connected Gmail (or this org hasn't).
+3. **Mock** (default): returns a success result with mock=True and logs the
+   email payload. No real email is sent.
 """
 
 from __future__ import annotations
@@ -47,6 +53,30 @@ class EmailProvider(IChannelProvider):
         }
 
     def send(self, payload: ChannelPayload) -> ChannelResult:
+        gmail_token = payload.metadata.get("gmail_access_token")
+        gmail_from = payload.metadata.get("gmail_from_address")
+        if gmail_token and gmail_from:
+            from app.services.integrations import gmail_oauth
+            from app.services.integrations.gmail_oauth import GmailOAuthError
+
+            try:
+                message_id = gmail_oauth.send_email(
+                    access_token=gmail_token,
+                    from_address=gmail_from,
+                    to=payload.recipient_id,
+                    subject=payload.subject or "(no subject)",
+                    body=payload.body,
+                )
+                return ChannelResult(
+                    channel=self.channel,
+                    success=True,
+                    message_id=message_id,
+                    details={"to": payload.recipient_id, "via": "gmail", "from": gmail_from},
+                )
+            except GmailOAuthError as exc:
+                logger.warning("EmailProvider: Gmail send failed, not falling back to SMTP: %s", exc)
+                return ChannelResult(channel=self.channel, success=False, error=str(exc))
+
         if not self.is_configured():
             logger.info(
                 "EmailProvider [MOCK]: to=%s subject=%s",

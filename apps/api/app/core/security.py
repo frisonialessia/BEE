@@ -224,3 +224,67 @@ def decode_access_token(token: str) -> dict[str, Any]:
     if payload.get("type") != _JWT_SUBJECT_TYPE:
         raise InvalidTokenError("Token is not a user session token.")
     return payload
+
+
+# ---------------------------------------------------------------------------
+# OAuth connect-flow state — third-party integration handshakes
+# (see app.services.integrations / app.api.v1.endpoints.integrations)
+# ---------------------------------------------------------------------------
+#
+# A provider's OAuth callback (e.g. Google redirecting back to
+# /integrations/gmail/callback) is a plain top-level browser navigation —
+# it carries neither our Authorization bearer token nor X-API-Key, so it
+# can't be authenticated the normal way. Instead, the *authorize* step (which
+# IS an authenticated dashboard call) mints one of these short-lived,
+# signed tokens carrying the organization id and a fixed "purpose" claim,
+# passed through Google untouched as the OAuth ``state`` parameter. The
+# callback verifies it instead of trusting anything the redirect itself
+# claims — same signing key and library as session JWTs (settings.JWT_SECRET_KEY
+# via PyJWT), but a distinct "type" so an oauth_state token can never be
+# replayed as a real session token or vice versa.
+
+_OAUTH_STATE_TYPE = "oauth_state"
+
+
+def create_oauth_state_token(
+    organization_id: uuid.UUID,
+    *,
+    purpose: str,
+    expires_minutes: int = 10,
+) -> str:
+    """Mint a short-lived, signed token to pass as an OAuth ``state`` param.
+
+    ``purpose`` (e.g. "gmail_connect") is checked on decode so a state token
+    minted for one provider's flow can't be replayed against another's.
+    """
+    now = datetime.now(UTC)
+    payload: dict[str, Any] = {
+        "type": _OAUTH_STATE_TYPE,
+        "purpose": purpose,
+        "org": str(organization_id),
+        "nonce": secrets.token_urlsafe(8),
+        "iat": now,
+        "exp": now + timedelta(minutes=expires_minutes),
+    }
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def decode_oauth_state_token(token: str, *, expected_purpose: str) -> uuid.UUID:
+    """Verify an OAuth ``state`` token and return the organization id it names.
+
+    Raises :class:`InvalidTokenError` for any failure — expired, forged,
+    wrong purpose, or a session token presented in its place — so the
+    callback endpoint has one failure mode to handle (reject the connect
+    attempt) rather than needing to reason about PyJWT's exception hierarchy.
+    """
+    try:
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+    except jwt.PyJWTError as exc:
+        raise InvalidTokenError(str(exc)) from exc
+
+    if payload.get("type") != _OAUTH_STATE_TYPE or payload.get("purpose") != expected_purpose:
+        raise InvalidTokenError("Token is not a valid state token for this OAuth flow.")
+    try:
+        return uuid.UUID(payload["org"])
+    except (KeyError, ValueError) as exc:
+        raise InvalidTokenError("State token is missing a valid organization id.") from exc

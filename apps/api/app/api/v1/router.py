@@ -24,6 +24,7 @@ from app.api.v1.endpoints import (
     feedback,
     health,
     insights,
+    integrations,
     internal_support,
     leads,
     network,
@@ -69,6 +70,7 @@ api_router.include_router(templates.router)
 api_router.include_router(quotas.router)
 api_router.include_router(saved_views.router)
 api_router.include_router(organizations.router)
+api_router.include_router(integrations.router)
 api_router.include_router(psychographic.router)
 api_router.include_router(dark_funnel.router)
 api_router.include_router(network.router)
