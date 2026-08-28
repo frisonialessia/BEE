@@ -4,6 +4,9 @@ import { Activity, Bot, Flame, ShieldCheck, TrendingUp } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
+import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-heatmap";
+import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
+import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-heatmap";
 import { TodayImpactCard } from "@/components/dashboard/today-impact-card";
 import { MetricCard } from "@/components/metric-card";
 import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
@@ -16,6 +19,7 @@ import { CriticalAccountsDigest } from "@/features/dashboard/critical-accounts-d
 import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { Leaderboard } from "@/features/dashboard/leaderboard";
 import { usePagination } from "@/hooks/use-pagination";
+import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
@@ -34,6 +38,7 @@ export function DashboardOverview() {
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
   const { data: allOppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 200);
   const { data: usersResult, isLoading: usersLoading } = useUsers();
+  const { data: companiesResult } = useCompanies(200);
   const { openOpportunity } = useOpportunityDrawer();
 
   const signals = signalsResult?.data ?? [];
@@ -135,6 +140,39 @@ export function DashboardOverview() {
       <DailyBrief />
 
       <SignalHexMap className="mb-3" height={320} />
+
+      <section className="mb-3 space-y-3">
+        <div>
+          <p className="bee-eyebrow">Todo el pipeline</p>
+          <h2 className="mt-1 text-base font-semibold">Embudo de cierre</h2>
+          <p className="bee-caption">Cuántas oportunidades hay hoy en cada etapa, camino a ganar</p>
+        </div>
+        <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
+      </section>
+
+      <div className="mb-3 grid gap-3 lg:grid-cols-2">
+        <section className="bee-surface p-5 space-y-3">
+          <div>
+            <p className="bee-eyebrow">Industria × Tipo de señal</p>
+            <h2 className="mt-1 text-base font-semibold">Dónde eres más fuerte</h2>
+            <p className="bee-caption">Tasa de cierre cruzando industria de la cuenta y tipo de señal</p>
+          </div>
+          <IndustrySignalHeatmap
+            opportunities={allOppsResult?.data ?? []}
+            signals={signals}
+            companies={companiesResult?.data ?? []}
+          />
+        </section>
+
+        <section className="bee-surface p-5 space-y-3">
+          <div>
+            <p className="bee-eyebrow">Día × hora</p>
+            <h2 className="mt-1 text-base font-semibold">Cuándo llega el mercado</h2>
+            <p className="bee-caption">Actividad de señales detectadas, por día y horario</p>
+          </div>
+          <SignalActivityHeatmap signals={signals} />
+        </section>
+      </div>
 
       <div className="bee-bento-grid">
         {battlecards.length > 0 && (
