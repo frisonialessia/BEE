@@ -26,6 +26,7 @@ export interface SequenceCreateIn {
   description?: string;
   signal_type?: string;
   industry?: string;
+  seniority?: string;
   entry_step_id: string;
   steps: StepDefinition[];
   max_days: number;
@@ -37,6 +38,7 @@ export interface DynamicSequenceOut {
   description: string | null;
   signal_type: string | null;
   industry: string | null;
+  seniority: string | null;
   entry_step_id: string;
   steps: StepDefinition[];
   max_days: number;
@@ -78,5 +80,26 @@ export async function startSequenceExecution(body: {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+  });
+}
+
+export interface BulkExecutionResult {
+  created: { id: string; lead_id: string | null }[];
+  failed: { lead_id: string; error: string }[];
+}
+
+/** "Enviar a secuencia" desde Leads — mata una selección múltiple en una
+ * sola llamada en vez de N. Éxito parcial es normal, no un error: algunos
+ * leads se inscriben y otros fallan (ya inscritos, etc.), por eso el
+ * resultado siempre trae ambas listas en vez de una sola respuesta
+ * todo-o-nada — ver BulkExecutionResult en app.schemas.sequence. */
+export async function bulkEnrollLeadsInSequence(
+  sequenceId: string,
+  leadIds: string[],
+): Promise<BulkExecutionResult> {
+  return apiFetch<BulkExecutionResult>("/api/v1/sequences/executions/bulk", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sequence_id: sequenceId, lead_ids: leadIds }),
   });
 }

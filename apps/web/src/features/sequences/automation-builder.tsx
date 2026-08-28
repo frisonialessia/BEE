@@ -14,8 +14,11 @@ import {
   useSequences,
 } from "@/hooks/queries/use-sequences";
 import { signalTypeLabels } from "@/lib/format";
+import { TIER_LABELS, type SeniorityTier } from "@/lib/relationship-map";
 import type { SignalType } from "@/lib/types";
 import type { StepDefinition } from "@/lib/api/sequences";
+
+const SENIORITY_OPTIONS: SeniorityTier[] = ["c_level", "vp", "director", "manager", "ic"];
 
 interface LocalStep {
   id: string;
@@ -66,6 +69,7 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
   const [description, setDescription] = useState("");
   const [signalType, setSignalType] = useState<SignalType | "">("");
   const [industry, setIndustry] = useState("");
+  const [seniority, setSeniority] = useState("");
   const [steps, setSteps] = useState<LocalStep[]>([]);
   const createSequence = useCreateSequence();
 
@@ -86,6 +90,7 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
       description: description.trim() || undefined,
       signal_type: signalType || undefined,
       industry: industry.trim() || undefined,
+      seniority: seniority || undefined,
       entry_step_id: "s1",
       steps: assembled,
       max_days: 30,
@@ -129,7 +134,23 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
               placeholder="Industria (opcional)"
               className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
             />
+            <select
+              value={seniority}
+              onChange={(e) => setSeniority(e.target.value)}
+              className="col-span-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
+            >
+              <option value="">Cualquier cargo</option>
+              {SENIORITY_OPTIONS.map((tier) => (
+                <option key={tier} value={tier}>
+                  {TIER_LABELS[tier]}
+                </option>
+              ))}
+            </select>
           </div>
+          <p className="bee-caption">
+            Industria y cargo son descriptivos — para quién se pensó este flujo. La inscripción
+            siempre es manual desde Leads, nunca automática por coincidencia.
+          </p>
           <ChannelStatusBadges />
         </div>
 
@@ -232,6 +253,8 @@ function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onN
               <p className="bee-caption mt-1">
                 {seq.steps.length} paso{seq.steps.length === 1 ? "" : "s"}
                 {seq.signal_type ? ` · ${signalTypeLabels[seq.signal_type as SignalType] ?? seq.signal_type}` : ""}
+                {seq.industry ? ` · ${seq.industry}` : ""}
+                {seq.seniority ? ` · ${TIER_LABELS[seq.seniority as SeniorityTier] ?? seq.seniority}` : ""}
               </p>
             </button>
           ))}

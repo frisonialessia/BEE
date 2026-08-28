@@ -1,8 +1,9 @@
 "use client";
 
-import { Flame, RefreshCw, Search, Upload } from "lucide-react";
+import { Flame, RefreshCw, Search, Upload, Workflow } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { LeadDuplicatesPanel } from "@/components/dedup/lead-duplicates-panel";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
@@ -13,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LeadImportPanel } from "@/features/leads/lead-import-panel";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBulkUpdateLeads, useLeads, useValidateLead } from "@/hooks/queries/use-leads";
+import { useBulkEnrollLeadsInSequence, useSequences } from "@/hooks/queries/use-sequences";
 import { useUsers } from "@/hooks/queries/use-users";
 import { isDemoMode } from "@/lib/demo/mode";
 import { leadStatusLabels, scoreVariant, timeAgo, validationFlagLabels } from "@/lib/format";
@@ -49,6 +51,9 @@ export function LeadsDirectory() {
   const { data: users } = useUsers();
   const validateLead = useValidateLead();
   const bulkUpdate = useBulkUpdateLeads();
+  const demo = isDemoMode();
+  const { data: sequencesResult } = useSequences();
+  const bulkEnroll = useBulkEnrollLeadsInSequence();
 
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
@@ -57,6 +62,7 @@ export function LeadsDirectory() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<LeadStatus | "">("");
   const [bulkAssignee, setBulkAssignee] = useState("");
+  const [bulkSequence, setBulkSequence] = useState("");
   const [importOpen, setImportOpen] = useState(false);
 
   const currentViewConfig: LeadsViewConfig = { query, statusFilter, staleOnly, sortKey };
@@ -123,6 +129,24 @@ export function LeadsDirectory() {
     await bulkUpdate.mutateAsync({ ids: [...selected], assigned_to_user_id: bulkAssignee });
     setSelected(new Set());
     setBulkAssignee("");
+  }
+
+  async function applyBulkSequence() {
+    if (!bulkSequence || selected.size === 0) return;
+    try {
+      const result = await bulkEnroll.mutateAsync({ sequenceId: bulkSequence, leadIds: [...selected] });
+      if (result.failed.length === 0) {
+        toast.success(`${result.created.length} lead${result.created.length === 1 ? "" : "s"} enviado${result.created.length === 1 ? "" : "s"} a la secuencia.`);
+      } else {
+        toast.warning(
+          `${result.created.length} inscrito${result.created.length === 1 ? "" : "s"}, ${result.failed.length} falló${result.failed.length === 1 ? "" : "aron"}.`,
+        );
+      }
+      setSelected(new Set());
+      setBulkSequence("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo enviar a la secuencia.");
+    }
   }
 
   const hotCount = leads.filter((l) => l.score >= 75).length;
@@ -309,6 +333,31 @@ export function LeadsDirectory() {
                   Aplicar
                 </button>
               </div>
+              {!demo && (
+                <div className="flex items-center gap-1.5">
+                  <select
+                    value={bulkSequence}
+                    onChange={(e) => setBulkSequence(e.target.value)}
+                    className="rounded-full border border-border bg-[var(--color-card)] px-2.5 py-1 text-xs outline-none"
+                  >
+                    <option value="">Enviar a secuencia…</option>
+                    {(sequencesResult?.data ?? []).map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={applyBulkSequence}
+                    disabled={!bulkSequence || bulkEnroll.isPending}
+                    className="bee-btn bee-btn--primary inline-flex items-center gap-1 text-xs"
+                  >
+                    <Workflow className="size-3.5" />
+                    {bulkEnroll.isPending ? "Enviando…" : "Aplicar"}
+                  </button>
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => setSelected(new Set())}
