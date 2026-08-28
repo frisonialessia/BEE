@@ -190,3 +190,18 @@ class OpportunityStatus(str, Enum):
     WON = "won"
     LOST = "lost"
     DISMISSED = "dismissed"
+
+
+class EmployeeRange(str, Enum):
+    """Company-size bracket for an Organization's own profile — not a
+    prospect's, this org's. Standard SaaS onboarding buckets, fixed rather
+    than free text so it stays usable for segmentation/reporting later
+    (a free-text field would fragment into a hundred spellings of "50-ish").
+    """
+
+    RANGE_1_10 = "1-10"
+    RANGE_11_50 = "11-50"
+    RANGE_51_200 = "51-200"
+    RANGE_201_500 = "201-500"
+    RANGE_501_1000 = "501-1000"
+    RANGE_1000_PLUS = "1000+"
