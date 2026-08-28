@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship
 
-from app.models.base import TimestampMixin, new_uuid
+from app.models.base import EmployeeRange, TimestampMixin, new_uuid
 
 if TYPE_CHECKING:  # pragma: no cover - typing only, avoids circular imports
     from app.models.team import Team
@@ -44,6 +44,15 @@ class Organization(TimestampMixin, table=True):
     # "no opinion" (neutral/unknown fit), never as "matches nothing" — see
     # app.services.icp / lib/icp.ts on the frontend for how this is read.
     icp_criteria: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+
+    # This organization's own company profile — collected as a progressive
+    # onboarding step in-app (see app.api.v1.endpoints.organizations), not at
+    # registration, to keep signup itself to the 4 fields it already has.
+    # All nullable: "not set yet" is a valid, expected state, same as
+    # icp_criteria's empty lists — never treat a null here as "0 employees".
+    industry: str | None = Field(default=None)
+    employee_range: EmployeeRange | None = Field(default=None)
+    website: str | None = Field(default=None)
 
     # ----- Relationships -------------------------------------------------------
     teams: list["Team"] = Relationship(back_populates="organization")

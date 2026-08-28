@@ -59,6 +59,10 @@ export const queryKeys = {
     all: ["quotas"] as const,
     list: () => [...queryKeys.quotas.all, "list"] as const,
   },
+  organizationProfile: {
+    all: ["organization-profile"] as const,
+    detail: () => [...queryKeys.organizationProfile.all, "detail"] as const,
+  },
   icp: {
     all: ["icp"] as const,
     criteria: () => [...queryKeys.icp.all, "criteria"] as const,
