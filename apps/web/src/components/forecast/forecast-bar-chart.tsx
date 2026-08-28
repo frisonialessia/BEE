@@ -1,3 +1,4 @@
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { ForecastMonthBucket } from "@/lib/forecast";
 
 const currency = new Intl.NumberFormat("es-MX", {
@@ -8,7 +9,8 @@ const currency = new Intl.NumberFormat("es-MX", {
 
 /** Barras de pronóstico ponderado por mes — sin librería de gráficas, como
  *  el resto de la BI de BEE. Cada barra muestra el total del pipeline en un
- *  tono tenue y, encima, la porción ponderada por probabilidad de cierre. */
+ *  tono tenue y, encima, la porción ponderada por probabilidad de cierre.
+ *  El tooltip es real (Radix), no el title nativo del navegador. */
 export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }) {
   const maxValue = Math.max(1, ...buckets.map((b) => b.total));
 
@@ -19,19 +21,24 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
         const weightedPct = (b.weighted / maxValue) * 100;
         return (
           <div key={b.key} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
-            <div
-              className="relative flex w-full flex-1 items-end justify-center rounded-t-[var(--radius-sm)] bg-[var(--color-primary)]/40"
-              title={`${b.label}: ${currency.format(b.weighted)} ponderado de ${currency.format(b.total)} en pipeline (${b.count} oportunidad${b.count === 1 ? "" : "es"})`}
-            >
-              <div
-                className="w-full rounded-t-[var(--radius-sm)] bg-[var(--color-chart-4)] transition-[height]"
-                style={{ height: `${Math.max(totalPct, 2)}%` }}
-              />
-              <div
-                className="absolute bottom-0 w-full rounded-t-[var(--radius-sm)] bg-[var(--color-chart-2)]"
-                style={{ height: `${Math.max(weightedPct, b.weighted > 0 ? 2 : 0)}%` }}
-              />
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="relative flex w-full flex-1 items-end justify-center rounded-t-[var(--radius-sm)] bg-[var(--color-primary)]/40">
+                  <div
+                    className="w-full rounded-t-[var(--radius-sm)] bg-[var(--color-chart-4)] transition-[height]"
+                    style={{ height: `${Math.max(totalPct, 2)}%` }}
+                  />
+                  <div
+                    className="absolute bottom-0 w-full rounded-t-[var(--radius-sm)] bg-[var(--color-chart-2)] transition-[height]"
+                    style={{ height: `${Math.max(weightedPct, b.weighted > 0 ? 2 : 0)}%` }}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {b.label}: {currency.format(b.weighted)} ponderado de {currency.format(b.total)} en pipeline (
+                {b.count} oportunidad{b.count === 1 ? "" : "es"})
+              </TooltipContent>
+            </Tooltip>
             <p className="text-[11px] font-medium text-muted-foreground">{b.label}</p>
           </div>
         );

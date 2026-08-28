@@ -1,3 +1,7 @@
+import { Tooltip as TooltipPrimitive } from "radix-ui";
+
+import { TooltipContent } from "@/components/ui/tooltip";
+
 /**
  * Sparkline — trend indicator inline dentro de una tarjeta KPI.
  *
@@ -5,17 +9,25 @@
  * lleva leyenda. Línea de 2px con extremos redondeados, color heredado del
  * texto que lo rodea vía `currentColor` para que combine con el tono de la
  * tarjeta (bee-bento--primary/--warm/--muted) sin necesitar una prop de color.
+ * Cada punto tiene un tooltip real al pasar el mouse — el círculo visible es
+ * chico a propósito (no compite con el número grande de la tarjeta), así que
+ * el área donde responde el hover es más grande que el círculo pintado.
  */
 export function Sparkline({
   values,
   width = 88,
   height = 28,
   className,
+  formatValue = (v) => String(Math.round(v * 10) / 10),
 }: {
   values: number[];
   width?: number;
   height?: number;
   className?: string;
+  /** Cómo mostrar el valor de cada punto en su tooltip. Por defecto,
+   * redondeado a 1 decimal (suficiente para un promedio; un conteo entero
+   * ya sale limpio). */
+  formatValue?: (value: number) => string;
 }) {
   if (values.length < 2) return null;
 
@@ -35,16 +47,28 @@ export function Sparkline({
   const [lastX, lastY] = points[points.length - 1];
 
   return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      width={width}
-      height={height}
-      className={className}
-      role="img"
-      aria-label={`Tendencia: ${values.join(", ")}`}
-    >
-      <path d={path} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" opacity={0.85} />
-      <circle cx={lastX} cy={lastY} r={2.5} fill="currentColor" />
-    </svg>
+    <TooltipPrimitive.Provider delayDuration={100}>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        width={width}
+        height={height}
+        className={className}
+        role="img"
+        aria-label={`Tendencia: ${values.join(", ")}`}
+      >
+        <path d={path} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" opacity={0.85} />
+        {points.map(([x, y], i) => (
+          <TooltipPrimitive.Root key={i}>
+            <TooltipPrimitive.Trigger asChild>
+              {/* Círculo invisible más grande que el visible: el objetivo
+               * del hover no debe depender de acertarle a 2.5px exactos. */}
+              <circle cx={x} cy={y} r={7} fill="transparent" className="cursor-default" />
+            </TooltipPrimitive.Trigger>
+            <TooltipContent>{formatValue(values[i])}</TooltipContent>
+          </TooltipPrimitive.Root>
+        ))}
+        <circle cx={lastX} cy={lastY} r={2.5} fill="currentColor" />
+      </svg>
+    </TooltipPrimitive.Provider>
   );
 }

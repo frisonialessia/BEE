@@ -1,3 +1,4 @@
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { CompetitorStat } from "@/lib/win-loss";
 
 /** Por competidor: cuántas veces le ganamos y cuántas nos ganó — la lista de
@@ -25,10 +26,24 @@ export function CompetitorBreakdown({ stats }: { stats: CompetitorStat[] }) {
                 {s.wins} ganadas · {s.losses} perdidas
               </p>
             </div>
-            <div className="mt-1 flex h-1.5 overflow-hidden rounded-full bg-[var(--color-primary)]/20">
-              <div className="h-full bg-[var(--success)]" style={{ width: `${winPct}%` }} />
-              <div className="h-full bg-[var(--color-chart-2)]/70" style={{ width: `${100 - winPct}%` }} />
-            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="mt-1 flex h-1.5 overflow-hidden rounded-full bg-[var(--color-primary)]/20">
+                  <div
+                    className="h-full bg-[var(--success)] transition-[width] duration-300"
+                    style={{ width: `${winPct}%` }}
+                  />
+                  <div
+                    className="h-full bg-[var(--color-chart-2)]/70 transition-[width] duration-300"
+                    style={{ width: `${100 - winPct}%` }}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {s.competitor}: {Math.round(winPct)}% de tasa de cierre en {total} deal{total === 1 ? "" : "s"}{" "}
+                enfrentados
+              </TooltipContent>
+            </Tooltip>
           </div>
         );
       })}

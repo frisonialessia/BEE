@@ -1,11 +1,13 @@
 "use client";
 
 import { SignalCard } from "@/components/signal-card";
+import { SignalVolumeChart } from "@/components/signals/signal-volume-chart";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSignals } from "@/hooks/queries/use-signals";
+import { computeDailySignalVolume } from "@/lib/signal-trends";
 
 /** Panel de señales — triggers de mercado del Signal Engine. */
 export function SignalsDashboard() {
@@ -15,6 +17,7 @@ export function SignalsDashboard() {
   const live = result?.live ?? false;
   const hotCount = signals.filter((s) => s.score >= 75).length;
   const pagination = usePagination(signals);
+  const dailyVolume = computeDailySignalVolume(signals, new Date(), 14);
 
   return (
     <div>
@@ -59,6 +62,11 @@ export function SignalsDashboard() {
         </div>
       ) : (
         <>
+          <section className="bee-surface mb-4 p-4">
+            <p className="bee-eyebrow mb-3">Volumen · últimos 14 días</p>
+            <SignalVolumeChart points={dailyVolume} />
+          </section>
+
           {/* Columna apilada en mobile a propósito, no el patrón de caja
            * con scroll horizontal que usa el Pipeline (crm-board.tsx) o
            * las tarjetas cortas de /probar — cada SignalCard trae título +
