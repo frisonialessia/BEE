@@ -16,7 +16,7 @@ export interface IntegrationStatus {
   last_error: string | null;
 }
 
-export type OAuthProvider = "gmail" | "linkedin";
+export type OAuthProvider = "gmail" | "linkedin" | "salesforce";
 
 const READ_ONLY_MESSAGE = "Integraciones no está disponible en el sandbox — conecta una cuenta real desde el Dashboard.";
 

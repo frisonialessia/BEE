@@ -3,10 +3,12 @@
 Two different kinds of "connected" live on the same page, and the response
 is explicit about which is which (see IntegrationStatusOut.scope):
 
-* **organization-scoped** (real OAuth, one row per org): Gmail and LinkedIn.
-  Each org connects (or not) its own account via a genuine Connect/
-  Disconnect button — see gmail_oauth.py/linkedin_oauth.py and
-  IntegrationsService.
+* **organization-scoped** (real OAuth, one row per org): Gmail, LinkedIn,
+  Salesforce. Each org connects (or not) its own account via a genuine
+  Connect/Disconnect button — see gmail_oauth.py/linkedin_oauth.py/
+  salesforce_oauth.py and IntegrationsService. Salesforce's row is
+  connect-only for now — see salesforce_oauth's module docstring for why
+  actually syncing records isn't built yet.
 * **server-scoped** (a single shared credential the whole deployment uses):
   Email/SMTP fallback, X — status reused as-is from
   OmnichannelGateway.get_channel_status(), read-only here. LinkedIn's
@@ -16,7 +18,7 @@ is explicit about which is which (see IntegrationStatusOut.scope):
   different meanings would confuse the one button that actually does
   something (Connect).
 
-Each OAuth handshake spans three endpoints, same shape for both providers:
+Each OAuth handshake spans three endpoints, same shape for every provider:
   1. GET /{provider}/authorize  — authenticated call from the dashboard;
      returns a consent URL carrying a signed, short-lived state token.
   2. GET /{provider}/callback   — the provider redirects the BROWSER here
@@ -41,9 +43,10 @@ from app.core.security import InvalidTokenError, create_oauth_state_token, decod
 from app.models.base import UserRole
 from app.models.user import User
 from app.schemas.integrations import AuthorizeUrlOut, IntegrationStatusOut
-from app.services.integrations import gmail_oauth, linkedin_oauth
+from app.services.integrations import gmail_oauth, linkedin_oauth, salesforce_oauth
 from app.services.integrations.gmail_oauth import GmailOAuthError
 from app.services.integrations.linkedin_oauth import LinkedInOAuthError
+from app.services.integrations.salesforce_oauth import SalesforceOAuthError
 from app.services.integrations.service import IntegrationsService
 from app.services.omnichannel.gateway import OmnichannelGateway
 
@@ -53,6 +56,7 @@ router = APIRouter(prefix="/integrations", tags=["Integrations"])
 
 _GMAIL_STATE_PURPOSE = "gmail_connect"
 _LINKEDIN_STATE_PURPOSE = "linkedin_connect"
+_SALESFORCE_STATE_PURPOSE = "salesforce_connect"
 
 # Server-scoped channels are shown as-is except "linkedin", which now has
 # its own organization-scoped row above (see module docstring).
@@ -92,6 +96,24 @@ def list_integrations(
             connected_at=linkedin.created_at if linkedin else None,
             last_error=linkedin.last_error if linkedin else None,
             detail=None if linkedin_oauth.is_configured() else "No configurado en el servidor todavía.",
+        )
+    )
+
+    salesforce = integrations.get_connection(current_user.organization_id, "salesforce")
+    result.append(
+        IntegrationStatusOut(
+            provider="salesforce",
+            label="Salesforce",
+            connected=salesforce is not None,
+            scope="organization",
+            account_email=salesforce.external_account_email if salesforce else None,
+            connected_at=salesforce.created_at if salesforce else None,
+            last_error=salesforce.last_error if salesforce else None,
+            detail=(
+                "Solo conecta la cuenta todavía — sincronizar registros es un siguiente paso."
+                if salesforce
+                else (None if salesforce_oauth.is_configured() else "No configurado en el servidor todavía.")
+            ),
         )
     )
 
@@ -257,5 +279,77 @@ def linkedin_disconnect(
     session: Session = Depends(get_session),
 ) -> dict[str, bool]:
     disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "linkedin")
+    session.commit()
+    return {"disconnected": disconnected}
+
+
+# ── Salesforce ───────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/salesforce/authorize",
+    response_model=AuthorizeUrlOut,
+    summary="Get the Salesforce consent URL to connect this organization's Salesforce org",
+)
+def salesforce_authorize(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+) -> AuthorizeUrlOut:
+    if not salesforce_oauth.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Salesforce todavía no está configurado en el servidor (falta la Connected App).",
+        )
+    state = create_oauth_state_token(current_user.organization_id, purpose=_SALESFORCE_STATE_PURPOSE)
+    return AuthorizeUrlOut(authorize_url=salesforce_oauth.build_authorize_url(state))
+
+
+@router.get(
+    "/salesforce/callback",
+    summary="Salesforce redirects here after the user grants (or denies) consent",
+    include_in_schema=False,
+)
+def salesforce_callback(
+    session: Session = Depends(get_session),
+    code: str | None = Query(default=None),
+    state: str | None = Query(default=None),
+    error: str | None = Query(default=None),
+) -> RedirectResponse:
+    redirect_base = f"{settings.FRONTEND_URL}/dashboard/integrations"
+
+    if error:
+        logger.info("Salesforce OAuth denied by user: %s", error)
+        return RedirectResponse(f"{redirect_base}?integration_error=denied")
+
+    if not code or not state:
+        return RedirectResponse(f"{redirect_base}?integration_error=invalid_request")
+
+    try:
+        organization_id = decode_oauth_state_token(state, expected_purpose=_SALESFORCE_STATE_PURPOSE)
+    except InvalidTokenError:
+        logger.warning("Salesforce OAuth callback with invalid/expired state token")
+        return RedirectResponse(f"{redirect_base}?integration_error=invalid_state")
+
+    try:
+        tokens = salesforce_oauth.exchange_code_for_tokens(code)
+    except SalesforceOAuthError as exc:
+        logger.warning("Salesforce OAuth exchange failed: %s", exc)
+        return RedirectResponse(f"{redirect_base}?integration_error=exchange_failed")
+
+    IntegrationsService(session).save_salesforce_connection(
+        organization_id=organization_id,
+        connected_by_user_id=None,  # the callback carries no session — see module docstring
+        tokens=tokens,
+    )
+    session.commit()
+
+    return RedirectResponse(f"{redirect_base}?connected=salesforce")
+
+
+@router.post("/salesforce/disconnect", summary="Disconnect this organization's Salesforce org")
+def salesforce_disconnect(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> dict[str, bool]:
+    disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "salesforce")
     session.commit()
     return {"disconnected": disconnected}
