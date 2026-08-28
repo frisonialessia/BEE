@@ -130,9 +130,9 @@ export default function Home() {
               <Link href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary">
                 Comenzar ahora <ArrowRight className="size-4" />
               </Link>
-              <a href="#producto" className="bee-btn-ghost">
-                <PlayCircle className="size-4" /> Ver demo en vivo
-              </a>
+              <Link href="/probar" className="bee-btn-ghost">
+                <PlayCircle className="size-4" /> Probar sin registrarte
+              </Link>
             </div>
           </div>
 

@@ -1,4 +1,11 @@
 import { apiFetch } from "@/lib/api/client";
+import {
+  demoFetchOpportunities,
+  demoMoveOpportunityStage,
+  demoRecordOutcome,
+  demoUpdateOpportunity,
+} from "@/lib/demo/store";
+import { isDemoMode } from "@/lib/demo/mode";
 import type { FetchResult } from "@/types/api";
 import type {
   ArtifactBundle,
@@ -14,6 +21,9 @@ export async function fetchOpportunities(
   status?: OpportunityStatus,
   limit = 50,
 ): Promise<FetchResult<Opportunity[]>> {
+  if (isDemoMode()) {
+    return { data: demoFetchOpportunities(status).slice(0, limit), live: false };
+  }
   try {
     const params = new URLSearchParams({ limit: String(limit) });
     if (status) params.set("status", status);
@@ -30,6 +40,11 @@ export async function fetchOpportunities(
 export async function fetchBattlecard(
   opportunityId: string,
 ): Promise<FetchResult<Battlecard>> {
+  if (isDemoMode()) {
+    const sample = sampleBattlecards.find((b) => b.opportunity_id === opportunityId);
+    if (sample) return { data: sample, live: false };
+    throw new Error(`No demo battlecard for opportunity ${opportunityId}`);
+  }
   try {
     const data = await apiFetch<Battlecard>(
       `/api/v1/opportunities/${opportunityId}/battlecard`,
@@ -64,6 +79,11 @@ export async function fetchArtifacts(
   opportunityId: string,
   force = false,
 ): Promise<FetchResult<ArtifactBundle>> {
+  if (isDemoMode()) {
+    const sample = sampleArtifacts.find((a) => a.opportunity_id === opportunityId);
+    if (sample) return { data: sample, live: false };
+    throw new Error(`No demo artifacts for opportunity ${opportunityId}`);
+  }
   try {
     const path = `/api/v1/opportunities/${opportunityId}/artifacts${force ? "?force=true" : ""}`;
     const data = await apiFetch<ArtifactBundle>(path, { cache: "no-store" });
@@ -79,6 +99,7 @@ export async function recordOutcome(
   opportunityId: string,
   body: OutcomeIn,
 ): Promise<OutcomeWithPrediction> {
+  if (isDemoMode()) return demoRecordOutcome(opportunityId, body);
   return apiFetch<OutcomeWithPrediction>(
     `/api/v1/opportunities/${opportunityId}/outcome`,
     {
@@ -100,6 +121,7 @@ export async function updateOpportunity(
   opportunityId: string,
   body: OpportunityUpdateIn,
 ): Promise<Opportunity> {
+  if (isDemoMode()) return demoUpdateOpportunity(opportunityId, body);
   return apiFetch<Opportunity>(`/api/v1/opportunities/${opportunityId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -119,6 +141,7 @@ export async function moveOpportunityStage(
   opportunityId: string,
   stage: CrmStage,
 ): Promise<Opportunity> {
+  if (isDemoMode()) return demoMoveOpportunityStage(opportunityId, stage);
   return apiFetch<Opportunity>(`/api/v1/opportunities/${opportunityId}/stage`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
