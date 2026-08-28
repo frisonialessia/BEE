@@ -64,7 +64,7 @@ export function buildDemoCompanySet(companyName: string, employeeRange: Employee
 
   const strategy = {
     pain_point: pain,
-    closing_argument: `${name}, ya estás mirando cómo priorizar señales de mercado — el paso que sigue es dejar que un motor lo haga por vos, todo el tiempo, no solo hoy.`,
+    closing_argument: `${name}, ya estás mirando cómo priorizar señales de mercado — el paso que sigue es dejar que un motor lo haga por ti, todo el tiempo, no solo hoy.`,
     timing_window: { urgency: "this_week" as const, reason: "Ventana de evaluación activa", expires_at: null },
     playbook: "self_serve_evaluation",
     next_best_action: "reach_out",

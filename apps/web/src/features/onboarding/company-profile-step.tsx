@@ -30,10 +30,10 @@ export function CompanyProfileStep({ onDone }: { onDone: () => void }) {
   return (
     <form onSubmit={handleSubmit}>
       <DialogHeader>
-        <DialogTitle className="bee-display text-xl">Contanos de tu empresa</DialogTitle>
+        <DialogTitle className="bee-display text-xl">Cuéntanos de tu empresa</DialogTitle>
         <DialogDescription>
           Un dato rápido antes de arrancar — nos ayuda a mostrarte lo relevante para el tamaño de
-          tu equipo. Podés cambiarlo después en Configuración.
+          tu equipo. Puedes cambiarlo después en Configuración.
         </DialogDescription>
       </DialogHeader>
 
@@ -50,7 +50,7 @@ export function CompanyProfileStep({ onDone }: { onDone: () => void }) {
             className="bee-input"
           >
             <option value="" disabled>
-              Elegí un rango
+              Elige un rango
             </option>
             {EMPLOYEE_RANGES.map((range) => (
               <option key={range} value={range}>

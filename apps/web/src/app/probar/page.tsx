@@ -36,7 +36,7 @@ function AddCompanyForm() {
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="bee-btn bee-btn--primary">
-        <Sparkles className="size-4" /> Agregá tu empresa
+        <Sparkles className="size-4" /> Agrega tu empresa
       </button>
     );
   }
@@ -69,7 +69,7 @@ function AddCompanyForm() {
           className="bee-input"
         >
           <option value="" disabled>
-            Elegí un rango
+            Elige un rango
           </option>
           {EMPLOYEE_RANGES.map((range) => (
             <option key={range} value={range}>
@@ -92,7 +92,7 @@ function AddCompanyForm() {
  * become a working pipeline. Strategy/battlecard detail lives one click
  * away, in the opportunity drawer, same as the real product — see
  * `probar/layout.tsx` for why this can reuse those components unmodified.
- * "+ Agregá tu empresa" is the one way new data enters — see
+ * "+ Agrega tu empresa" is the one way new data enters — see
  * `lib/demo/templates.ts` for why it's an honest self-referential signal,
  * not an invented event about the visitor's real company. */
 export default function ProbarPage() {
@@ -103,7 +103,7 @@ export default function ProbarPage() {
         <h1 className="bee-display">Así ve BEE tu mercado</h1>
         <p className="bee-caption mt-1">
           Señales detectadas → pipeline priorizado → estrategia lista para ejecutar.
-          Arrastra una tarjeta o abrila para ver el battlecard generado.
+          Arrastra una tarjeta o ábrela para ver el battlecard generado.
         </p>
         <div className="mt-4">
           <AddCompanyForm />

@@ -18,10 +18,10 @@ import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-con
 export default function ProbarLayout({ children }: { children: React.ReactNode }) {
   return (
     <OpportunityDrawerProvider>
-      <div className="min-h-full bg-background">
+      <div className="min-h-full overflow-x-hidden bg-background">
         <div className="sticky top-0 z-40 border-b border-border bg-[var(--color-chart-4)] text-white">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
-            <p className="text-xs sm:text-sm">
+            <p className="min-w-0 text-xs sm:text-sm">
               <strong className="font-semibold">Estás probando BEE con datos de ejemplo</strong>
               <span className="hidden sm:inline"> — guardados solo en este navegador, nunca en nuestra base de datos.</span>
             </p>
@@ -30,7 +30,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
                 Crear cuenta gratis
               </Link>
               <Link href="/contacto" className="bee-btn-ghost !border-white !text-white px-3 py-1.5 text-xs">
-                Contactanos
+                Contáctanos
               </Link>
             </div>
           </div>
