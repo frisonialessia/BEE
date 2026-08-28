@@ -1,5 +1,6 @@
 import { Trophy } from "lucide-react";
 
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { UserOut } from "@/types/auth";
 import type { Opportunity } from "@/types/domain";
 
@@ -54,24 +55,39 @@ export function Leaderboard({
         </p>
       ) : (
         <ul className="space-y-2">
-          {ranked.map((row, i) => (
-            <li key={row.user.id} className="flex items-center gap-3 rounded-[var(--radius-md)] bg-[var(--color-primary)]/30 p-2.5">
-              <span
-                className="flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                style={{ background: RANK_COLOR[i] ?? "var(--color-text-muted)" }}
-              >
-                {i + 1}
-              </span>
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-chart-4)]/20 text-xs font-semibold text-[var(--color-chart-4)]">
-                {initials(row.user.full_name)}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium leading-tight">{row.user.full_name}</p>
-                <p className="bee-micro">{row.user.role}</p>
-              </div>
-              <span className="shrink-0 text-sm font-bold tabular-nums">{row.won}</span>
-            </li>
-          ))}
+          {ranked.map((row, i) => {
+            const pct = Math.round((row.won / ranked[0].won) * 100);
+            return (
+              <li key={row.user.id} className="flex items-center gap-3 rounded-[var(--radius-md)] bg-[var(--color-primary)]/30 p-2.5">
+                <span
+                  className="flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                  style={{ background: RANK_COLOR[i] ?? "var(--color-text-muted)" }}
+                >
+                  {i + 1}
+                </span>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-chart-4)]/20 text-xs font-semibold text-[var(--color-chart-4)]">
+                  {initials(row.user.full_name)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium leading-tight">{row.user.full_name}</p>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-[var(--color-card)]">
+                        <div
+                          className="h-full rounded-full transition-[width] duration-300"
+                          style={{ width: `${pct}%`, background: RANK_COLOR[i] ?? "var(--color-chart-4)" }}
+                        />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {row.won} ganada{row.won === 1 ? "" : "s"} · {pct}% del líder ({ranked[0].user.full_name})
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <span className="shrink-0 text-sm font-bold tabular-nums">{row.won}</span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

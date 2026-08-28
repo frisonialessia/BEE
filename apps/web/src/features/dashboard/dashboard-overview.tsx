@@ -20,7 +20,7 @@ import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunit
 import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
 import { computeTodayImpact } from "@/lib/today-impact";
-import { bucketByDay } from "@/lib/trend";
+import { bucketAverageByDay, bucketByDay } from "@/lib/trend";
 
 /**
  * Resumen — the analytics tool: KPI strip, enriched battlecards, and the
@@ -56,10 +56,28 @@ export function DashboardOverview() {
   const readyCount = battlecards.filter((b) => b.ready_to_action).length;
   const hotLeads = battlecards.filter((b) => b.hot_lead).length;
 
-  // Tendencia de 7 días — calculada a partir de las señales ya obtenidas
-  // (detected_at real), no inventada.
+  // Tendencia de 7 días — calculada a partir de las señales/battlecards ya
+  // obtenidas (detected_at/created_at real), no inventada. readyCount y
+  // hotLeads usan created_at del battlecard como proxy honesto de "cuándo
+  // pasó esto" — BEE no guarda por separado el momento exacto en que un
+  // battlecard cruzó a ready/hot, así que created_at es lo más cercano sin
+  // fabricar un dato que no existe.
   const signalsTrend = bucketByDay(signals.map((s) => s.detected_at), 7);
   const hotSignalsTrend = bucketByDay(hotSignalsList.map((s) => s.detected_at), 7);
+  const readyTrend = bucketByDay(
+    battlecards.filter((b) => b.ready_to_action).map((b) => b.created_at),
+    7,
+  );
+  const hotLeadsTrend = bucketByDay(
+    battlecards.filter((b) => b.hot_lead).map((b) => b.created_at),
+    7,
+  );
+  // Promedio, no conteo — un día sin señales se omite en vez de mostrar un
+  // score de 0 que se leería como "se desplomó".
+  const avgScoreTrend = bucketAverageByDay(
+    signals.map((s) => ({ date: s.detected_at, value: s.score })),
+    7,
+  ).filter((v): v is number => v !== null);
   const todayImpact = computeTodayImpact(signals, allOppsResult?.data ?? [], new Date());
 
   if (loading) {
@@ -94,9 +112,21 @@ export function DashboardOverview() {
         <div className="bee-kpi-strip">
           <MetricCard label="Señales" value={signals.length} icon={Activity} trend={signalsTrend} />
           <MetricCard label="Alta intención" value={hotSignals} hint="score ≥ 75" icon={TrendingUp} trend={hotSignalsTrend} />
-          <MetricCard label="Listas para acción" value={readyCount} hint="battlecard completo" icon={ShieldCheck} />
-          <MetricCard label="Leads calientes" value={hotLeads} hint="intención de compra" icon={Flame} />
-          <MetricCard label="Score medio" value={avgScore} icon={Activity} />
+          <MetricCard
+            label="Listas para acción"
+            value={readyCount}
+            hint="battlecard completo"
+            icon={ShieldCheck}
+            trend={readyTrend}
+          />
+          <MetricCard
+            label="Leads calientes"
+            value={hotLeads}
+            hint="intención de compra"
+            icon={Flame}
+            trend={hotLeadsTrend}
+          />
+          <MetricCard label="Score medio" value={avgScore} icon={Activity} trend={avgScoreTrend} />
         </div>
       </header>
 

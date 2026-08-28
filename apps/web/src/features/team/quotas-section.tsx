@@ -3,6 +3,7 @@
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCreateQuota, useDeleteQuota, useQuotas } from "@/hooks/queries/use-quotas";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { computeQuotaActual } from "@/lib/quotas";
@@ -180,7 +181,7 @@ export function QuotasSection({
                   </div>
                   <div className="flex items-center gap-2">
                     <p className="text-xs font-mono text-muted-foreground">
-                      {currency.format(actual)} / {currency.format(q.target_amount)}
+                      {currency.format(actual)} / {currency.format(q.target_amount)} · {pct}%
                     </p>
                     {canManage && (
                       <button
@@ -195,12 +196,19 @@ export function QuotasSection({
                     )}
                   </div>
                 </div>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-card)]">
-                  <div
-                    className="h-full rounded-full bg-[var(--color-chart-4)] transition-[width]"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-card)]">
+                      <div
+                        className="h-full rounded-full bg-[var(--color-chart-4)] transition-[width]"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {currency.format(actual)} de {currency.format(q.target_amount)} ({pct}%)
+                  </TooltipContent>
+                </Tooltip>
               </div>
             );
           })}
