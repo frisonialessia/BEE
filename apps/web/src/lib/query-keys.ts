@@ -96,6 +96,10 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.sequences.all, "detail", id] as const,
     channelStatus: () => [...queryKeys.sequences.all, "channel-status"] as const,
   },
+  integrations: {
+    all: ["integrations"] as const,
+    list: () => [...queryKeys.integrations.all, "list"] as const,
+  },
   control: {
     all: ["control"] as const,
     systemHealth: () => [...queryKeys.control.all, "system-health"] as const,

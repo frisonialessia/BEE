@@ -26,6 +26,7 @@ from app.models.correction import ArtifactCorrection, UserStyleProfile
 from app.models.dark_funnel import DarkFunnelSignal, HotLeadScore
 from app.models.dead_letter import FailedEvent
 from app.models.engagement_event import IncomingEngagementEvent
+from app.models.integration_connection import IntegrationConnection
 from app.models.lead import Lead
 from app.models.market_insight import MarketInsight
 from app.models.message_template import MessageTemplate
@@ -66,6 +67,7 @@ __all__ = [
     "VoiceProfile",
     "BrandFragment",
     "IncomingEngagementEvent",
+    "IntegrationConnection",
     "DynamicSequence",
     "SequenceExecution",
     "LeadPsychographic",
