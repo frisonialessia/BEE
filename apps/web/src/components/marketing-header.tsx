@@ -3,7 +3,11 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 
 /**
- * Cabecera pública — Iniciar sesión + Funcionalidades.
+ * Cabecera pública — Iniciar sesión + Funcionalidades + Probar sin
+ * registrarte (/probar). El CTA relleno manda al sandbox, no a /contacto —
+ * es el mismo camino de cero fricción que el botón ghost del hero, y este
+ * es el único que queda visible siempre (sticky) mientras el visitante
+ * scrollea el resto de la landing.
  *
  * Botones sin el wrapper <Button> de shadcn a propósito: sus variantes
  * cva (size="sm"/"lg") traían su propio alto/padding/radio, distinto del
@@ -43,8 +47,8 @@ export function MarketingHeader() {
               Iniciar sesión
             </Link>
           </span>
-          <Link href="/contacto?source=header" className="bee-btn bee-btn--primary">
-            Comenzar ahora
+          <Link href="/probar" className="bee-btn bee-btn--primary">
+            Probar sin registrarte
           </Link>
         </nav>
       </div>
