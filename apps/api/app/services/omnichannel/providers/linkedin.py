@@ -1,7 +1,14 @@
 """LinkedInProvider — LinkedIn messaging and connection request channel.
 
-Mock mode (default): simulates a successful send with ``mock=True``.
-Live mode: configure ``LINKEDIN_ACCESS_TOKEN`` in ``.env``.
+Three tiers, tried in order by ``send()`` — same shape as EmailProvider:
+
+1. **Connected LinkedIn** — when the gateway found a connected LinkedIn
+   account for this action's organization, ``payload.metadata`` carries
+   ``linkedin_access_token`` (see OmnichannelGateway.dispatch_approved) and
+   the action goes out as that member.
+2. **Server credential**: configure ``LINKEDIN_ACCESS_TOKEN`` in ``.env``.
+   Used when no organization has connected LinkedIn.
+3. **Mock** (default): simulates a successful send with ``mock=True``.
 
 LinkedIn API constraints
 ------------------------
@@ -48,7 +55,14 @@ class LinkedInProvider(IChannelProvider):
         }
 
     def send(self, payload: ChannelPayload) -> ChannelResult:
-        if not self.is_configured():
+        token = payload.metadata.get("linkedin_access_token")
+        via = "connected_account"
+        if not token:
+            from app.core.config import get_settings
+            token = getattr(get_settings(), "LINKEDIN_ACCESS_TOKEN", None)
+            via = "server"
+
+        if not token:
             logger.info(
                 "LinkedInProvider [MOCK]: to=%s action=%s",
                 payload.recipient_id,
@@ -62,15 +76,13 @@ class LinkedInProvider(IChannelProvider):
                 details={
                     "to": payload.recipient_id,
                     "action": payload.metadata.get("action_type", "message"),
-                    "note": "Set LINKEDIN_ACCESS_TOKEN to activate live LinkedIn integration",
+                    "note": "Conecta LinkedIn desde Integraciones, o configura LINKEDIN_ACCESS_TOKEN, para activarlo de verdad.",
                 },
             )
 
         try:
             import httpx
 
-            from app.core.config import get_settings
-            token = getattr(get_settings(), "LINKEDIN_ACCESS_TOKEN", "")
             headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
             action = payload.metadata.get("action_type", "message")
@@ -85,7 +97,12 @@ class LinkedInProvider(IChannelProvider):
                 resp = httpx.post("https://api.linkedin.com/v2/messages", headers=headers, json=body, timeout=10)
 
             resp.raise_for_status()
-            return ChannelResult(channel=self.channel, success=True, message_id=str(resp.headers.get("x-li-format")), details={"status_code": resp.status_code})
+            return ChannelResult(
+                channel=self.channel,
+                success=True,
+                message_id=str(resp.headers.get("x-li-format")),
+                details={"status_code": resp.status_code, "via": via},
+            )
 
         except Exception as exc:  # noqa: BLE001
             logger.exception("LinkedInProvider.send failed")

@@ -230,6 +230,16 @@ class OmnichannelGateway:
                 access_token, from_address = gmail
                 metadata["gmail_access_token"] = access_token
                 metadata["gmail_from_address"] = from_address
+        elif channel == "linkedin" and organization_id is not None:
+            # Same preference as Gmail above: the organization's own
+            # connected LinkedIn account over the shared server credential —
+            # see LinkedInProvider.send(), which checks for this key first.
+            from app.services.integrations.service import IntegrationsService
+
+            linkedin = IntegrationsService(self.session).get_valid_linkedin_access_token(organization_id)
+            if linkedin:
+                access_token, _account_label = linkedin
+                metadata["linkedin_access_token"] = access_token
 
         payload = ChannelPayload(
             channel=channel,
