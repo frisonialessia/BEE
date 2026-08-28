@@ -12,6 +12,8 @@ import { MobileNavProvider } from "@/components/dashboard/mobile-nav-context";
 import { FloatingCursors } from "@/components/presence/floating-cursors";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
+import { OnboardingIntro } from "@/features/onboarding/onboarding-intro";
+import { OnboardingProvider } from "@/features/onboarding/onboarding-context";
 import { useAuth } from "@/providers/auth-provider";
 
 /** Shell CRM — rail 52px + workspace + drawer lateral. */
@@ -40,22 +42,25 @@ export default function DashboardLayout({
   }
 
   return (
-    <OpportunityDrawerProvider>
-      <MobileNavProvider>
-        <CommandPaletteProvider>
-          <div className="bee-app">
-            <DashboardRail />
-            <div className="bee-main">
-              <DashboardHeader />
-              <div className="bee-scroll">{children}</div>
+    <OnboardingProvider>
+      <OpportunityDrawerProvider>
+        <MobileNavProvider>
+          <CommandPaletteProvider>
+            <div className="bee-app">
+              <DashboardRail />
+              <div className="bee-main">
+                <DashboardHeader />
+                <div className="bee-scroll">{children}</div>
+              </div>
+              <OpportunityDrawer />
+              <OnboardingIntro />
+              <AskBeeFab />
+              <FloatingCursors />
+              <CommandPalette />
             </div>
-            <OpportunityDrawer />
-            <AskBeeFab />
-            <FloatingCursors />
-            <CommandPalette />
-          </div>
-        </CommandPaletteProvider>
-      </MobileNavProvider>
-    </OpportunityDrawerProvider>
+          </CommandPaletteProvider>
+        </MobileNavProvider>
+      </OpportunityDrawerProvider>
+    </OnboardingProvider>
   );
 }
