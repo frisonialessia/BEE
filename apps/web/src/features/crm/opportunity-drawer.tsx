@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { X } from "lucide-react";
 
 import { BattlecardView } from "@/components/battlecard";
+import { CyclePredictionPanel } from "@/components/cycle-prediction-panel";
 import { DiscRadar } from "@/components/disc-radar";
 import { ExecutionArtifacts } from "@/components/execution-artifacts";
 import { QualificationPanel } from "@/components/forecast/qualification-panel";
@@ -98,6 +99,8 @@ export function OpportunityDrawer() {
           {opportunity && <RecordOutcomePanel key={opportunity.id} opportunity={opportunity} />}
 
           {opportunity && <QualificationPanel key={opportunity.id} opportunity={opportunity} />}
+
+          {opportunity && <CyclePredictionPanel key={opportunity.id} opportunityId={opportunity.id} />}
 
           {opportunity && <TaskListPanel key={opportunity.id} opportunityId={opportunity.id} />}
 

@@ -15,6 +15,8 @@ export const queryKeys = {
       [...queryKeys.opportunities.all, "battlecard", id] as const,
     artifacts: (id: string) =>
       [...queryKeys.opportunities.all, "artifacts", id] as const,
+    cyclePrediction: (id: string) =>
+      [...queryKeys.opportunities.all, "cycle-prediction", id] as const,
   },
   battlecards: {
     all: ["battlecards"] as const,

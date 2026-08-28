@@ -121,6 +121,29 @@ export interface OutcomeWithPrediction {
   workflow_tasks_dispatched: number;
 }
 
+// ── CyclePredictorService ─────────────────────────────────────────────────────
+
+export type CyclePredictionConfidence = "low" | "medium" | "high";
+
+/** Predicted time-to-close for one open opportunity, from GET
+ *  /opportunities/{id}/cycle-prediction (or its JS port in lib/cycle-prediction.ts
+ *  for /probar). `available=false` is a normal, expected response — not an
+ *  error — for a closed opportunity or one with no comparable historical
+ *  cohort yet; `reason` explains why, and every other field stays null
+ *  rather than a fabricated number. */
+export interface CyclePrediction {
+  available: boolean;
+  predicted_cycle_days: number | null;
+  predicted_close_date: string | null;
+  days_elapsed: number | null;
+  days_remaining: number | null;
+  is_overdue: boolean;
+  cohort_size: number;
+  cohort_basis: string | null;
+  confidence: CyclePredictionConfidence | null;
+  reason: string | null;
+}
+
 // ── WorkflowOrchestrator (event bus) ──────────────────────────────────────────
 
 export type WorkflowTaskStatus =
