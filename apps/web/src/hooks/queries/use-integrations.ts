@@ -2,7 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { disconnectGmail, fetchIntegrations, getGmailAuthorizeUrl } from "@/lib/api/integrations";
+import {
+  disconnectOAuthProvider,
+  fetchIntegrations,
+  getOAuthAuthorizeUrl,
+  type OAuthProvider,
+} from "@/lib/api/integrations";
 import { queryKeys } from "@/lib/query-keys";
 
 export function useIntegrations() {
@@ -12,22 +17,23 @@ export function useIntegrations() {
   });
 }
 
-/** Navigates the whole tab to Google's consent screen — this is a real
- * OAuth redirect, not a fetch, so there's nothing to invalidate until the
- * browser comes back to /dashboard/integrations?connected=gmail. */
-export function useConnectGmail() {
+/** Navega la pestaña completa a la pantalla de consentimiento del
+ * proveedor — es una redirección OAuth real, no un fetch, así que no hay
+ * nada que invalidar hasta que el navegador regrese a
+ * /dashboard/integrations?connected=<provider>. */
+export function useConnectOAuthProvider(provider: OAuthProvider) {
   return useMutation({
-    mutationFn: getGmailAuthorizeUrl,
+    mutationFn: () => getOAuthAuthorizeUrl(provider),
     onSuccess: (authorizeUrl) => {
       window.location.href = authorizeUrl;
     },
   });
 }
 
-export function useDisconnectGmail() {
+export function useDisconnectOAuthProvider(provider: OAuthProvider) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: disconnectGmail,
+    mutationFn: () => disconnectOAuthProvider(provider),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.integrations.all });
     },

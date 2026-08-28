@@ -17,8 +17,9 @@ from app.core.config import settings as app_settings
 from app.core.security import InvalidTokenError, create_oauth_state_token, decode_oauth_state_token
 from app.core.token_crypto import decrypt_token, encrypt_token
 from app.models.integration_connection import IntegrationConnection
-from app.services.integrations import gmail_oauth
+from app.services.integrations import gmail_oauth, linkedin_oauth
 from app.services.integrations.gmail_oauth import GmailOAuthError, GmailTokens
+from app.services.integrations.linkedin_oauth import LinkedInOAuthError, LinkedInTokens
 from app.services.integrations.service import IntegrationsService
 
 
@@ -72,6 +73,26 @@ def _google_oauth_configured():
     ) = originals
 
 
+@pytest.fixture(autouse=True)
+def _linkedin_oauth_configured():
+    """Fake-but-well-formed LinkedIn OAuth app config, same rationale as
+    _google_oauth_configured above."""
+    originals = (
+        app_settings.LINKEDIN_OAUTH_CLIENT_ID,
+        app_settings.LINKEDIN_OAUTH_CLIENT_SECRET,
+        app_settings.LINKEDIN_OAUTH_REDIRECT_URI,
+    )
+    app_settings.LINKEDIN_OAUTH_CLIENT_ID = "test-li-client-id"
+    app_settings.LINKEDIN_OAUTH_CLIENT_SECRET = "test-li-client-secret"
+    app_settings.LINKEDIN_OAUTH_REDIRECT_URI = "http://localhost:8000/api/v1/integrations/linkedin/callback"
+    yield
+    (
+        app_settings.LINKEDIN_OAUTH_CLIENT_ID,
+        app_settings.LINKEDIN_OAUTH_CLIENT_SECRET,
+        app_settings.LINKEDIN_OAUTH_REDIRECT_URI,
+    ) = originals
+
+
 class TestTokenCrypto:
     def test_round_trip(self):
         ciphertext = encrypt_token("ya29.super-secret-access-token")
@@ -122,9 +143,13 @@ class TestListIntegrations:
 
         assert rows["gmail"]["connected"] is False
         assert rows["gmail"]["scope"] == "organization"
-        # Server-wide channels are surfaced too, but read-only.
+        assert rows["linkedin"]["connected"] is False
+        assert rows["linkedin"]["scope"] == "organization"
+        # Server-wide channels are surfaced too, but read-only. LinkedIn's
+        # server credential isn't shown separately — it would be a second,
+        # confusingly-named row next to the one that actually has a button.
         assert rows["email"]["scope"] == "server"
-        assert rows["linkedin"]["scope"] == "server"
+        assert "twitter" in rows
 
 
 class TestGmailAuthorize:
@@ -357,3 +382,256 @@ class TestGetValidGmailAccessToken:
 
     def test_no_connection_returns_none(self, session: Session):
         assert IntegrationsService(session).get_valid_gmail_access_token(uuid.uuid4()) is None
+
+
+class TestLinkedInAuthorize:
+    def test_requires_owner_or_admin(self, client: TestClient):
+        auth = _register(client, org_name="LI Locked Co", email="owner@lilocked.co")
+        owner_headers = _auth_headers(auth["access_token"])
+        client.post(
+            "/api/v1/users",
+            headers=owner_headers,
+            json={"email": "member@lilocked.co", "full_name": "A Member", "password": "password123", "role": "member"},
+        )
+        login = client.post("/api/v1/auth/login", json={"email": "member@lilocked.co", "password": "password123"})
+        member_headers = _auth_headers(login.json()["access_token"])
+
+        resp = client.get("/api/v1/integrations/linkedin/authorize", headers=member_headers)
+        assert resp.status_code == 403
+
+    def test_503_when_linkedin_oauth_not_configured(self, client: TestClient):
+        app_settings.LINKEDIN_OAUTH_CLIENT_ID = None
+        auth = _register(client, org_name="No LI Co", email="owner@noli.co")
+        resp = client.get("/api/v1/integrations/linkedin/authorize", headers=_auth_headers(auth["access_token"]))
+        assert resp.status_code == 503
+
+    def test_owner_gets_a_state_carrying_authorize_url(self, client: TestClient):
+        auth = _register(client, org_name="LI Connect Co", email="owner@liconnect.co")
+        resp = client.get("/api/v1/integrations/linkedin/authorize", headers=_auth_headers(auth["access_token"]))
+        assert resp.status_code == 200
+        url = resp.json()["authorize_url"]
+        assert url.startswith("https://www.linkedin.com/oauth/v2/authorization?")
+        assert "state=" in url
+        assert "scope=" in url
+
+
+class TestLinkedInCallback:
+    def _state_for(self, client: TestClient, *, org_name: str, email: str) -> tuple[dict, str]:
+        auth = _register(client, org_name=org_name, email=email)
+        headers = _auth_headers(auth["access_token"])
+        authorize = client.get("/api/v1/integrations/linkedin/authorize", headers=headers)
+        state = authorize.json()["authorize_url"].split("state=")[1].split("&")[0]
+        return headers, state
+
+    def test_user_denied_consent(self, client: TestClient):
+        resp = client.get(
+            "/api/v1/integrations/linkedin/callback", params={"error": "user_cancelled_login"}, follow_redirects=False
+        )
+        assert resp.status_code in (302, 307)
+        assert "integration_error=denied" in resp.headers["location"]
+
+    def test_invalid_state_rejected(self, client: TestClient):
+        resp = client.get(
+            "/api/v1/integrations/linkedin/callback",
+            params={"code": "abc123", "state": "garbage"},
+            follow_redirects=False,
+        )
+        assert "integration_error=invalid_state" in resp.headers["location"]
+
+    def test_a_gmail_state_token_cannot_be_replayed_against_linkedin(self, client: TestClient):
+        """The purpose claim keeps one provider's state token from being
+        replayed against the other's callback — not just any signed token."""
+        auth = _register(client, org_name="Swap Provider Co", email="owner@swapprovider.co")
+        headers = _auth_headers(auth["access_token"])
+        gmail_authorize = client.get("/api/v1/integrations/gmail/authorize", headers=headers)
+        gmail_state = gmail_authorize.json()["authorize_url"].split("state=")[1].split("&")[0]
+
+        resp = client.get(
+            "/api/v1/integrations/linkedin/callback",
+            params={"code": "abc123", "state": gmail_state},
+            follow_redirects=False,
+        )
+        assert "integration_error=invalid_state" in resp.headers["location"]
+
+    def test_successful_connect_creates_the_row_and_shows_up_in_status(
+        self, client: TestClient, monkeypatch: pytest.MonkeyPatch
+    ):
+        headers, state = self._state_for(client, org_name="Real LI Connect Co", email="owner@realliconnect.co")
+
+        monkeypatch.setattr(
+            linkedin_oauth,
+            "exchange_code_for_tokens",
+            lambda _code: LinkedInTokens(
+                access_token="fake-li-access", refresh_token=None,
+                expires_at=datetime.now(UTC) + timedelta(days=60), scope=linkedin_oauth.SCOPES,
+            ),
+        )
+        monkeypatch.setattr(linkedin_oauth, "fetch_account_info", lambda _token: "owner@realliconnect.co")
+
+        resp = client.get(
+            "/api/v1/integrations/linkedin/callback",
+            params={"code": "abc123", "state": state},
+            follow_redirects=False,
+        )
+        assert "connected=linkedin" in resp.headers["location"]
+
+        status_resp = client.get("/api/v1/integrations", headers=headers)
+        li_row = next(r for r in status_resp.json() if r["provider"] == "linkedin")
+        assert li_row["connected"] is True
+        assert li_row["account_email"] == "owner@realliconnect.co"
+
+    def test_exchange_failure_redirects_with_error(self, client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        _, state = self._state_for(client, org_name="LI Fails Co", email="owner@lifails.co")
+
+        def _boom(_code: str):
+            raise LinkedInOAuthError("LinkedIn said no")
+
+        monkeypatch.setattr(linkedin_oauth, "exchange_code_for_tokens", _boom)
+
+        resp = client.get(
+            "/api/v1/integrations/linkedin/callback",
+            params={"code": "abc123", "state": state},
+            follow_redirects=False,
+        )
+        assert "integration_error=exchange_failed" in resp.headers["location"]
+
+
+class TestLinkedInDisconnect:
+    def _connect(self, client: TestClient, headers: dict, monkeypatch: pytest.MonkeyPatch, *, email: str) -> None:
+        authorize = client.get("/api/v1/integrations/linkedin/authorize", headers=headers)
+        state = authorize.json()["authorize_url"].split("state=")[1].split("&")[0]
+        monkeypatch.setattr(
+            linkedin_oauth,
+            "exchange_code_for_tokens",
+            lambda _code: LinkedInTokens(
+                access_token="fake-li-access", refresh_token=None,
+                expires_at=datetime.now(UTC) + timedelta(days=60), scope=linkedin_oauth.SCOPES,
+            ),
+        )
+        monkeypatch.setattr(linkedin_oauth, "fetch_account_info", lambda _token: email)
+        client.get(
+            "/api/v1/integrations/linkedin/callback", params={"code": "abc123", "state": state}, follow_redirects=False
+        )
+
+    def test_requires_owner_or_admin(self, client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        auth = _register(client, org_name="LI Disc Co", email="owner@lidisc.co")
+        headers = _auth_headers(auth["access_token"])
+        self._connect(client, headers, monkeypatch, email="owner@lidisc.co")
+
+        client.post(
+            "/api/v1/users",
+            headers=headers,
+            json={"email": "member@lidisc.co", "full_name": "A Member", "password": "password123", "role": "member"},
+        )
+        login = client.post("/api/v1/auth/login", json={"email": "member@lidisc.co", "password": "password123"})
+        member_headers = _auth_headers(login.json()["access_token"])
+
+        resp = client.post("/api/v1/integrations/linkedin/disconnect", headers=member_headers)
+        assert resp.status_code == 403
+
+    def test_owner_can_disconnect_without_a_revoke_call(self, client: TestClient, monkeypatch: pytest.MonkeyPatch):
+        """Unlike Gmail, disconnect must succeed with zero network calls —
+        LinkedIn has no revoke endpoint to call (see linkedin_oauth's module
+        docstring); this test would fail loudly if disconnect() ever grew
+        an unconditional revoke attempt for a provider that doesn't support it."""
+        auth = _register(client, org_name="Real LI Disc Co", email="owner@reallidisc.co")
+        headers = _auth_headers(auth["access_token"])
+        self._connect(client, headers, monkeypatch, email="owner@reallidisc.co")
+
+        resp = client.post("/api/v1/integrations/linkedin/disconnect", headers=headers)
+        assert resp.status_code == 200
+        assert resp.json() == {"disconnected": True}
+
+        status_resp = client.get("/api/v1/integrations", headers=headers)
+        li_row = next(r for r in status_resp.json() if r["provider"] == "linkedin")
+        assert li_row["connected"] is False
+
+    def test_disconnecting_nothing_is_a_no_op(self, client: TestClient):
+        auth = _register(client, org_name="LI Never Connected Co", email="owner@linever.co")
+        resp = client.post(
+            "/api/v1/integrations/linkedin/disconnect", headers=_auth_headers(auth["access_token"])
+        )
+        assert resp.status_code == 200
+        assert resp.json() == {"disconnected": False}
+
+
+class TestGetValidLinkedInAccessToken:
+    def test_fresh_token_is_returned_without_refreshing(self, session: Session, monkeypatch: pytest.MonkeyPatch):
+        org_id = uuid.uuid4()
+        session.add(
+            IntegrationConnection(
+                organization_id=org_id,
+                provider="linkedin",
+                external_account_email="rep@co.com",
+                access_token_encrypted=encrypt_token("still-fresh"),
+                refresh_token_encrypted=encrypt_token("refresh-me"),
+                token_expires_at=datetime.now(UTC) + timedelta(days=30),
+            )
+        )
+        session.commit()
+
+        def _should_not_be_called(_refresh_token: str):
+            raise AssertionError("refresh_access_token must not be called for a fresh token")
+
+        monkeypatch.setattr(linkedin_oauth, "refresh_access_token", _should_not_be_called)
+
+        result = IntegrationsService(session).get_valid_linkedin_access_token(org_id)
+        assert result == ("still-fresh", "rep@co.com")
+
+    def test_no_refresh_token_sets_last_error_and_returns_none(self, session: Session):
+        """The common LinkedIn case: no refresh_token was ever issued (app
+        not approved for it). Once the access token expires, the row must
+        surface "reconecta" rather than silently keep returning a stale
+        (and now-rejected) token."""
+        org_id = uuid.uuid4()
+        session.add(
+            IntegrationConnection(
+                organization_id=org_id,
+                provider="linkedin",
+                external_account_email="rep@co.com",
+                access_token_encrypted=encrypt_token("expired"),
+                refresh_token_encrypted=None,
+                token_expires_at=datetime.now(UTC) - timedelta(minutes=5),
+            )
+        )
+        session.commit()
+
+        result = IntegrationsService(session).get_valid_linkedin_access_token(org_id)
+        assert result is None
+
+        stored = IntegrationsService(session).get_connection(org_id, "linkedin")
+        assert stored.last_error is not None
+
+    def test_expired_token_is_refreshed_and_persisted(self, session: Session, monkeypatch: pytest.MonkeyPatch):
+        org_id = uuid.uuid4()
+        session.add(
+            IntegrationConnection(
+                organization_id=org_id,
+                provider="linkedin",
+                external_account_email="rep@co.com",
+                access_token_encrypted=encrypt_token("stale"),
+                refresh_token_encrypted=encrypt_token("refresh-me"),
+                token_expires_at=datetime.now(UTC) - timedelta(minutes=5),
+            )
+        )
+        session.commit()
+
+        monkeypatch.setattr(
+            linkedin_oauth,
+            "refresh_access_token",
+            lambda _refresh_token: LinkedInTokens(
+                access_token="brand-new-li", refresh_token=None,
+                expires_at=datetime.now(UTC) + timedelta(days=60), scope=linkedin_oauth.SCOPES,
+            ),
+        )
+
+        access_token, account_label = IntegrationsService(session).get_valid_linkedin_access_token(org_id)
+        assert access_token == "brand-new-li"
+        assert account_label == "rep@co.com"
+
+        stored = IntegrationsService(session).get_connection(org_id, "linkedin")
+        assert decrypt_token(stored.access_token_encrypted) == "brand-new-li"
+        assert stored.last_error is None
+
+    def test_no_connection_returns_none(self, session: Session):
+        assert IntegrationsService(session).get_valid_linkedin_access_token(uuid.uuid4()) is None

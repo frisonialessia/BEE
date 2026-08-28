@@ -16,6 +16,8 @@ export interface IntegrationStatus {
   last_error: string | null;
 }
 
+export type OAuthProvider = "gmail" | "linkedin";
+
 const READ_ONLY_MESSAGE = "Integraciones no está disponible en el sandbox — conecta una cuenta real desde el Dashboard.";
 
 export async function fetchIntegrations(): Promise<FetchResult<IntegrationStatus[]>> {
@@ -27,17 +29,17 @@ export async function fetchIntegrations(): Promise<FetchResult<IntegrationStatus
   }
 }
 
-export async function getGmailAuthorizeUrl(): Promise<string> {
+export async function getOAuthAuthorizeUrl(provider: OAuthProvider): Promise<string> {
   if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
   const { authorize_url } = await apiFetch<{ authorize_url: string }>(
-    "/api/v1/integrations/gmail/authorize",
+    `/api/v1/integrations/${provider}/authorize`,
   );
   return authorize_url;
 }
 
-export async function disconnectGmail(): Promise<{ disconnected: boolean }> {
+export async function disconnectOAuthProvider(provider: OAuthProvider): Promise<{ disconnected: boolean }> {
   if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
-  return apiFetch<{ disconnected: boolean }>("/api/v1/integrations/gmail/disconnect", {
+  return apiFetch<{ disconnected: boolean }>(`/api/v1/integrations/${provider}/disconnect`, {
     method: "POST",
   });
 }

@@ -3,22 +3,28 @@
 Two different kinds of "connected" live on the same page, and the response
 is explicit about which is which (see IntegrationStatusOut.scope):
 
-* **organization-scoped** (real OAuth, one row per org): Gmail today. Each
-  org connects (or not) its own account via a genuine Connect/Disconnect
-  button — see GmailOAuthService and IntegrationsService.
+* **organization-scoped** (real OAuth, one row per org): Gmail and LinkedIn.
+  Each org connects (or not) its own account via a genuine Connect/
+  Disconnect button — see gmail_oauth.py/linkedin_oauth.py and
+  IntegrationsService.
 * **server-scoped** (a single shared credential the whole deployment uses):
-  LinkedIn, Email/SMTP fallback, X — status reused as-is from
-  OmnichannelGateway.get_channel_status(), read-only here. Nothing new is
-  invented for them; this page just gives that existing status a visible
-  home instead of only showing inside the sequence builder.
+  Email/SMTP fallback, X — status reused as-is from
+  OmnichannelGateway.get_channel_status(), read-only here. LinkedIn's
+  server-wide LINKEDIN_ACCESS_TOKEN still exists as the OmnichannelGateway's
+  fallback when no org has connected LinkedIn (see gateway.dispatch_approved),
+  but isn't listed separately here — showing two "LinkedIn" rows with
+  different meanings would confuse the one button that actually does
+  something (Connect).
 
-The Gmail OAuth handshake spans three endpoints:
-  1. GET /gmail/authorize  — authenticated call from the dashboard; returns
-     a Google consent URL carrying a signed, short-lived state token.
-  2. GET /gmail/callback   — Google redirects the BROWSER here directly, so
-     this endpoint carries none of our normal auth (no JWT, no X-API-Key —
-     see API_KEY_EXEMPT_PATHS). It trusts only the signed state token.
-  3. POST /gmail/disconnect — authenticated; revokes + deletes the row.
+Each OAuth handshake spans three endpoints, same shape for both providers:
+  1. GET /{provider}/authorize  — authenticated call from the dashboard;
+     returns a consent URL carrying a signed, short-lived state token.
+  2. GET /{provider}/callback   — the provider redirects the BROWSER here
+     directly, so this endpoint carries none of our normal auth (no JWT, no
+     X-API-Key — see API_KEY_EXEMPT_PATHS). It trusts only the signed state
+     token.
+  3. POST /{provider}/disconnect — authenticated; revokes (where the
+     provider supports it) + deletes the row.
 """
 
 from __future__ import annotations
@@ -35,8 +41,9 @@ from app.core.security import InvalidTokenError, create_oauth_state_token, decod
 from app.models.base import UserRole
 from app.models.user import User
 from app.schemas.integrations import AuthorizeUrlOut, IntegrationStatusOut
-from app.services.integrations import gmail_oauth
+from app.services.integrations import gmail_oauth, linkedin_oauth
 from app.services.integrations.gmail_oauth import GmailOAuthError
+from app.services.integrations.linkedin_oauth import LinkedInOAuthError
 from app.services.integrations.service import IntegrationsService
 from app.services.omnichannel.gateway import OmnichannelGateway
 
@@ -45,8 +52,11 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/integrations", tags=["Integrations"])
 
 _GMAIL_STATE_PURPOSE = "gmail_connect"
+_LINKEDIN_STATE_PURPOSE = "linkedin_connect"
 
-_SERVER_CHANNEL_LABELS = {"email": "Email (SMTP)", "linkedin": "LinkedIn", "twitter": "X / Twitter"}
+# Server-scoped channels are shown as-is except "linkedin", which now has
+# its own organization-scoped row above (see module docstring).
+_SERVER_CHANNEL_LABELS = {"email": "Email (SMTP)", "twitter": "X / Twitter"}
 
 
 @router.get("", response_model=list[IntegrationStatusOut], summary="Status of every integration")
@@ -55,8 +65,9 @@ def list_integrations(
     session: Session = Depends(get_session),
 ) -> list[IntegrationStatusOut]:
     result: list[IntegrationStatusOut] = []
+    integrations = IntegrationsService(session)
 
-    gmail = IntegrationsService(session).get_connection(current_user.organization_id, "gmail")
+    gmail = integrations.get_connection(current_user.organization_id, "gmail")
     result.append(
         IntegrationStatusOut(
             provider="gmail",
@@ -70,8 +81,24 @@ def list_integrations(
         )
     )
 
+    linkedin = integrations.get_connection(current_user.organization_id, "linkedin")
+    result.append(
+        IntegrationStatusOut(
+            provider="linkedin",
+            label="LinkedIn",
+            connected=linkedin is not None,
+            scope="organization",
+            account_email=linkedin.external_account_email if linkedin else None,
+            connected_at=linkedin.created_at if linkedin else None,
+            last_error=linkedin.last_error if linkedin else None,
+            detail=None if linkedin_oauth.is_configured() else "No configurado en el servidor todavía.",
+        )
+    )
+
     for status_dict in OmnichannelGateway(session).get_channel_status():
         channel = status_dict.get("channel", "unknown")
+        if channel == "linkedin":
+            continue
         result.append(
             IntegrationStatusOut(
                 provider=channel,
@@ -84,6 +111,9 @@ def list_integrations(
         )
 
     return result
+
+
+# ── Gmail ────────────────────────────────────────────────────────────────
 
 
 @router.get(
@@ -153,5 +183,79 @@ def gmail_disconnect(
     session: Session = Depends(get_session),
 ) -> dict[str, bool]:
     disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "gmail")
+    session.commit()
+    return {"disconnected": disconnected}
+
+
+# ── LinkedIn ─────────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/linkedin/authorize",
+    response_model=AuthorizeUrlOut,
+    summary="Get the LinkedIn consent URL to connect this organization's LinkedIn",
+)
+def linkedin_authorize(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+) -> AuthorizeUrlOut:
+    if not linkedin_oauth.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="LinkedIn todavía no está configurado en el servidor (falta la app de LinkedIn Developers).",
+        )
+    state = create_oauth_state_token(current_user.organization_id, purpose=_LINKEDIN_STATE_PURPOSE)
+    return AuthorizeUrlOut(authorize_url=linkedin_oauth.build_authorize_url(state))
+
+
+@router.get(
+    "/linkedin/callback",
+    summary="LinkedIn redirects here after the user grants (or denies) consent",
+    include_in_schema=False,
+)
+def linkedin_callback(
+    session: Session = Depends(get_session),
+    code: str | None = Query(default=None),
+    state: str | None = Query(default=None),
+    error: str | None = Query(default=None),
+) -> RedirectResponse:
+    redirect_base = f"{settings.FRONTEND_URL}/dashboard/integrations"
+
+    if error:
+        logger.info("LinkedIn OAuth denied by user: %s", error)
+        return RedirectResponse(f"{redirect_base}?integration_error=denied")
+
+    if not code or not state:
+        return RedirectResponse(f"{redirect_base}?integration_error=invalid_request")
+
+    try:
+        organization_id = decode_oauth_state_token(state, expected_purpose=_LINKEDIN_STATE_PURPOSE)
+    except InvalidTokenError:
+        logger.warning("LinkedIn OAuth callback with invalid/expired state token")
+        return RedirectResponse(f"{redirect_base}?integration_error=invalid_state")
+
+    try:
+        tokens = linkedin_oauth.exchange_code_for_tokens(code)
+        account_label = linkedin_oauth.fetch_account_info(tokens.access_token)
+    except LinkedInOAuthError as exc:
+        logger.warning("LinkedIn OAuth exchange failed: %s", exc)
+        return RedirectResponse(f"{redirect_base}?integration_error=exchange_failed")
+
+    IntegrationsService(session).save_linkedin_connection(
+        organization_id=organization_id,
+        connected_by_user_id=None,  # the callback carries no session — see module docstring
+        tokens=tokens,
+        account_label=account_label,
+    )
+    session.commit()
+
+    return RedirectResponse(f"{redirect_base}?connected=linkedin")
+
+
+@router.post("/linkedin/disconnect", summary="Disconnect this organization's LinkedIn account")
+def linkedin_disconnect(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> dict[str, bool]:
+    disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "linkedin")
     session.commit()
     return {"disconnected": disconnected}
