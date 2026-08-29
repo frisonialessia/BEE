@@ -75,75 +75,77 @@ export function IndustrySignalHeatmap({
   const height = HEADER_H + industries.length * ROW_STEP + HEX_H / 2 + PAD;
 
   return (
-    <div className="overflow-x-auto">
-      <svg width={width} height={height} role="img" aria-label="Tasa de cierre por industria y tipo de señal">
-        {signalTypes.map((t, ci) => {
-          const x = LABEL_W + PAD + ci * HEX_W + HEX_W / 2;
-          return (
-            <text
-              key={t}
-              x={x}
-              y={HEADER_H - 10}
-              textAnchor="start"
-              fontSize={10}
-              fill="var(--color-muted-foreground)"
-              transform={`rotate(-32 ${x} ${HEADER_H - 10})`}
-            >
-              {signalTypeLabels[t]}
-            </text>
-          );
-        })}
-
-        {industries.map((industry, ri) => {
-          const y = HEADER_H + ri * ROW_STEP + R;
-          return (
-            <text
-              key={industry}
-              x={LABEL_W - 10}
-              y={y + 4}
-              textAnchor="end"
-              fontSize={11}
-              fill="var(--color-foreground)"
-            >
-              {industry}
-            </text>
-          );
-        })}
-
-        {industries.map((industry, ri) =>
-          signalTypes.map((signalType, ci) => {
-            const cell = byKey.get(`${industry}::${signalType}`);
-            const x =
-              LABEL_W + PAD + ci * HEX_W + HEX_W / 2 + (ri % 2 === 1 ? HEX_W / 2 : 0);
-            const y = HEADER_H + ri * ROW_STEP + R;
-
-            if (!cell) {
-              return (
-                <polygon
-                  key={`${industry}::${signalType}`}
-                  points={hexPoints(x, y, R - 1)}
-                  fill="var(--color-muted)"
-                  fillOpacity={0.25}
-                  stroke="var(--color-border)"
-                  strokeWidth={0.5}
-                />
-              );
-            }
-
+    <TooltipPrimitive.Provider delayDuration={100}>
+      <div className="overflow-x-auto">
+        <svg width={width} height={height} role="img" aria-label="Tasa de cierre por industria y tipo de señal">
+          {signalTypes.map((t, ci) => {
+            const x = LABEL_W + PAD + ci * HEX_W + HEX_W / 2;
             return (
-              <HexCell key={`${industry}::${signalType}`} x={x} y={y} cell={cell} fill={color(cell.winRate * 100)} />
+              <text
+                key={t}
+                x={x}
+                y={HEADER_H - 10}
+                textAnchor="start"
+                fontSize={10}
+                fill="var(--color-muted-foreground)"
+                transform={`rotate(-32 ${x} ${HEADER_H - 10})`}
+              >
+                {signalTypeLabels[t]}
+              </text>
             );
-          }),
-        )}
-      </svg>
+          })}
 
-      <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
-        <span>Tasa de cierre:</span>
-        <span className="h-2.5 w-24 rounded-full" style={{ background: `linear-gradient(to right, ${color(0)}, ${color(50)}, ${color(100)})` }} />
-        <span>0%</span>
-        <span className="ml-auto">100%</span>
+          {industries.map((industry, ri) => {
+            const y = HEADER_H + ri * ROW_STEP + R;
+            return (
+              <text
+                key={industry}
+                x={LABEL_W - 10}
+                y={y + 4}
+                textAnchor="end"
+                fontSize={11}
+                fill="var(--color-foreground)"
+              >
+                {industry}
+              </text>
+            );
+          })}
+
+          {industries.map((industry, ri) =>
+            signalTypes.map((signalType, ci) => {
+              const cell = byKey.get(`${industry}::${signalType}`);
+              const x =
+                LABEL_W + PAD + ci * HEX_W + HEX_W / 2 + (ri % 2 === 1 ? HEX_W / 2 : 0);
+              const y = HEADER_H + ri * ROW_STEP + R;
+
+              if (!cell) {
+                return (
+                  <polygon
+                    key={`${industry}::${signalType}`}
+                    points={hexPoints(x, y, R - 1)}
+                    fill="var(--color-muted)"
+                    fillOpacity={0.25}
+                    stroke="var(--color-border)"
+                    strokeWidth={0.5}
+                  />
+                );
+              }
+
+              return (
+                <HexCell key={`${industry}::${signalType}`} x={x} y={y} cell={cell} fill={color(cell.winRate * 100)} />
+              );
+            }),
+          )}
+        </svg>
+
+        <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+          <span>Tasa de cierre:</span>
+          <span className="h-2.5 w-24 rounded-full" style={{ background: `linear-gradient(to right, ${color(0)}, ${color(50)}, ${color(100)})` }} />
+          <span>0%</span>
+          <span className="ml-auto">100%</span>
+        </div>
       </div>
-    </div>
+    </TooltipPrimitive.Provider>
   );
 }
 

@@ -27,23 +27,25 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
   const height = HEADER_H + 7 * STEP;
 
   return (
-    <div className="overflow-x-auto">
-      <svg width={width} height={height} role="img" aria-label="Actividad de señales por día y hora">
-        {HOUR_MARKS.map((h) => (
-          <text key={h} x={LABEL_W + h * STEP + CELL / 2} y={HEADER_H - 5} textAnchor="middle" fontSize={9} fill="var(--color-muted-foreground)">
-            {h}h
-          </text>
-        ))}
-        {DAY_LABELS.map((label, day) => (
-          <text key={label} x={LABEL_W - 6} y={HEADER_H + day * STEP + CELL / 2 + 4} textAnchor="end" fontSize={10} fill="var(--color-muted-foreground)">
-            {label}
-          </text>
-        ))}
-        {cells.map((cell) => (
-          <ActivitySquare key={`${cell.day}:${cell.hour}`} cell={cell} maxCount={maxCount} x={LABEL_W + cell.hour * STEP} y={HEADER_H + cell.day * STEP} />
-        ))}
-      </svg>
-    </div>
+    <TooltipPrimitive.Provider delayDuration={100}>
+      <div className="overflow-x-auto">
+        <svg width={width} height={height} role="img" aria-label="Actividad de señales por día y hora">
+          {HOUR_MARKS.map((h) => (
+            <text key={h} x={LABEL_W + h * STEP + CELL / 2} y={HEADER_H - 5} textAnchor="middle" fontSize={9} fill="var(--color-muted-foreground)">
+              {h}h
+            </text>
+          ))}
+          {DAY_LABELS.map((label, day) => (
+            <text key={label} x={LABEL_W - 6} y={HEADER_H + day * STEP + CELL / 2 + 4} textAnchor="end" fontSize={10} fill="var(--color-muted-foreground)">
+              {label}
+            </text>
+          ))}
+          {cells.map((cell) => (
+            <ActivitySquare key={`${cell.day}:${cell.hour}`} cell={cell} maxCount={maxCount} x={LABEL_W + cell.hour * STEP} y={HEADER_H + cell.day * STEP} />
+          ))}
+        </svg>
+      </div>
+    </TooltipPrimitive.Provider>
   );
 }
 

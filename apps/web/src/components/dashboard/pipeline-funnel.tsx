@@ -19,9 +19,9 @@ export function PipelineFunnel({ opportunities }: { opportunities: Opportunity[]
           <p className="bee-eyebrow">{stage.label}</p>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-semibold tabular-nums">{stage.count}</span>
-            {stage.conversionFromFirst !== null && (
+            {stage.shareOfPipeline !== null && (
               <span className="text-xs text-muted-foreground">
-                {Math.round(stage.conversionFromFirst * 100)}% de detectadas
+                {Math.round(stage.shareOfPipeline * 100)}% del pipeline
               </span>
             )}
           </div>

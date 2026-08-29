@@ -17,8 +17,12 @@ export interface FunnelStage {
   key: "detected" | "ready_to_action" | "in_progress" | "won";
   label: string;
   count: number;
-  /** % del conteo de la primera etapa (Detectada). null en la primera etapa. */
-  conversionFromFirst: number | null;
+  /** % del total de oportunidades en estas 4 etapas (nunca de "Detectada" —
+   * ese bucket es chico y transitorio por naturaleza, así que un % contra
+   * él se lee como un error aunque sea matemáticamente correcto). Siempre
+   * entre 0-100%, y las 4 etapas suman 100%. null si no hay ninguna
+   * oportunidad en estas 4 etapas todavía. */
+  shareOfPipeline: number | null;
   /** Timestamps ISO para la sparkline de 7 días — created_at en la primera
    * etapa, updated_at como proxy honesto en las demás (BEE no guarda por
    * separado "cuándo entró a este status"; ver el mismo patrón ya usado en
@@ -34,16 +38,18 @@ const STAGES: { key: FunnelStage["key"]; label: string }[] = [
 ];
 
 export function computeFunnelStages(opportunities: Opportunity[]): FunnelStage[] {
-  const firstCount = opportunities.filter((o) => o.status === "detected").length;
+  const byStage = STAGES.map(({ key, label }) => ({
+    key,
+    label,
+    matching: opportunities.filter((o) => o.status === key),
+  }));
+  const total = byStage.reduce((sum, s) => sum + s.matching.length, 0);
 
-  return STAGES.map(({ key, label }) => {
-    const matching = opportunities.filter((o) => o.status === key);
-    return {
-      key,
-      label,
-      count: matching.length,
-      conversionFromFirst: key === "detected" || firstCount === 0 ? null : matching.length / firstCount,
-      timestamps: matching.map((o) => (key === "detected" ? o.created_at : o.updated_at)),
-    };
-  });
+  return byStage.map(({ key, label, matching }) => ({
+    key,
+    label,
+    count: matching.length,
+    shareOfPipeline: total === 0 ? null : matching.length / total,
+    timestamps: matching.map((o) => (key === "detected" ? o.created_at : o.updated_at)),
+  }));
 }
