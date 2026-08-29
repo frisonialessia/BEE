@@ -36,3 +36,13 @@ export function computeActivityGrid(signals: Signal[]): ActivityCell[] {
   }
   return cells;
 }
+
+/** La celda con más señales — null si la grilla está toda en 0. Alimenta
+ * el renglón de insight bajo el heatmap ("Pico de actividad: ..."). */
+export function mostActiveCell(cells: ActivityCell[]): ActivityCell | null {
+  let best: ActivityCell | null = null;
+  for (const c of cells) {
+    if (c.count > 0 && (!best || c.count > best.count)) best = c;
+  }
+  return best;
+}

@@ -27,7 +27,7 @@ const ROW_STEP = HEX_H * 0.75;
 const MAX_ROWS = 6;
 const PAD = 12;
 const LABEL_W = 128;
-const HEADER_H = 56;
+const HEADER_H = 70;
 
 function hexPoints(cx: number, cy: number, r: number): string {
   return Array.from({ length: 6 }, (_, i) => {
@@ -76,19 +76,25 @@ export function IndustrySignalHeatmap({
 
   return (
     <TooltipPrimitive.Provider delayDuration={100}>
-      <div className="overflow-x-auto">
-        <svg width={width} height={height} role="img" aria-label="Tasa de cierre por industria y tipo de señal">
+      <div className="flex h-full flex-col gap-3">
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          width="100%"
+          style={{ aspectRatio: `${width} / ${height}`, overflow: "visible" }}
+          role="img"
+          aria-label="Tasa de cierre por industria y tipo de señal"
+        >
           {signalTypes.map((t, ci) => {
             const x = LABEL_W + PAD + ci * HEX_W + HEX_W / 2;
             return (
               <text
                 key={t}
                 x={x}
-                y={HEADER_H - 10}
+                y={HEADER_H - 12}
                 textAnchor="start"
-                fontSize={10}
+                fontSize={11}
                 fill="var(--color-muted-foreground)"
-                transform={`rotate(-32 ${x} ${HEADER_H - 10})`}
+                transform={`rotate(-32 ${x} ${HEADER_H - 12})`}
               >
                 {signalTypeLabels[t]}
               </text>
@@ -138,7 +144,7 @@ export function IndustrySignalHeatmap({
           )}
         </svg>
 
-        <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="mt-auto flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <span>Tasa de cierre:</span>
           <span className="h-2.5 w-24 rounded-full" style={{ background: `linear-gradient(to right, ${color(0)}, ${color(50)}, ${color(100)})` }} />
           <span>0%</span>
