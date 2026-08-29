@@ -489,7 +489,7 @@ export async function ingestDarkFunnelSignal(payload: {
   intent_keywords?: string[];
   source_platform?: string;
 }): Promise<FetchResult<DarkFunnelSignal>> {
-  if (isDemoMode()) throw new Error("Pipeline oculto es de solo lectura en el sandbox.");
+  if (isDemoMode()) throw new Error("Dark Funnel es de solo lectura en el sandbox.");
   const res = await beeFetch(`${API_URL}/api/v1/dark-funnel/signals`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

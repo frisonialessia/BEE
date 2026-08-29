@@ -271,7 +271,7 @@ export function SignalHexMap({
       <span className="bee-hex-float" style={{ width: 40, height: 46, top: "40%", right: 24, animationDelay: "2.6s" }} aria-hidden />
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="bee-caption">Pipeline oculto · leads activos</p>
+          <p className="bee-caption">Dark Funnel · leads activos</p>
           <h2 className="mt-0.5 text-base font-semibold tracking-tight">Colmena de intención</h2>
           <p className="bee-caption mt-0.5">{leads.length} leads · haz clic en una celda para ver detalles</p>
         </div>
@@ -304,7 +304,7 @@ export function SignalHexMap({
             className="flex h-full items-center justify-center rounded-2xl bg-[var(--color-primary)]/40 text-sm font-light text-[var(--color-text-muted)]"
             style={{ height }}
           >
-            Todavía no hay leads del pipeline oculto — las señales de intención van a poblar la colmena.
+            Todavía no hay leads del Dark Funnel — las señales de intención van a poblar la colmena.
           </div>
         ) : (
           <div ref={containerRef} className="relative h-full w-full" style={{ height }}>

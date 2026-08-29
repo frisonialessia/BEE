@@ -150,31 +150,27 @@ export function DashboardOverview() {
         <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
       </section>
 
-      <div className="mb-3 grid items-stretch gap-3 lg:grid-cols-2">
-        <section className="bee-surface flex flex-col p-5 space-y-3">
+      <div className="mb-3 grid items-start gap-3 lg:grid-cols-2">
+        <section className="bee-surface p-5 space-y-3">
           <div>
             <p className="bee-eyebrow">Industria × Tipo de señal</p>
             <h2 className="mt-1 text-base font-semibold">Dónde eres más fuerte</h2>
             <p className="bee-caption">Tasa de cierre cruzando industria de la cuenta y tipo de señal</p>
           </div>
-          <div className="flex-1">
-            <IndustrySignalHeatmap
-              opportunities={allOppsResult?.data ?? []}
-              signals={signals}
-              companies={companiesResult?.data ?? []}
-            />
-          </div>
+          <IndustrySignalHeatmap
+            opportunities={allOppsResult?.data ?? []}
+            signals={signals}
+            companies={companiesResult?.data ?? []}
+          />
         </section>
 
-        <section className="bee-surface flex flex-col p-5 space-y-3">
+        <section className="bee-surface p-5 space-y-3">
           <div>
             <p className="bee-eyebrow">Día × hora</p>
             <h2 className="mt-1 text-base font-semibold">Cuándo llega el mercado</h2>
             <p className="bee-caption">Actividad de señales detectadas, por día y horario</p>
           </div>
-          <div className="flex-1">
-            <SignalActivityHeatmap signals={signals} />
-          </div>
+          <SignalActivityHeatmap signals={signals} />
         </section>
       </div>
 

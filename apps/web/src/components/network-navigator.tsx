@@ -232,7 +232,7 @@ export function NetworkNavigatorPanel() {
 
             {pathResult.cold_outreach_fallback && (
               <div className="rounded-sm border p-3 text-xs" style={{ borderColor: "var(--color-chart-1)", background: "color-mix(in srgb, var(--color-chart-1) 15%, var(--color-background))", color: "var(--color-text)" }}>
-                No se encontraron presentaciones cálidas. Usa las señales del pipeline oculto para personalizar el contacto en frío.
+                No se encontraron presentaciones cálidas. Usa las señales del Dark Funnel para personalizar el contacto en frío.
               </div>
             )}
 

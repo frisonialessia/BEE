@@ -53,7 +53,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/dashboard/priority", icon: Crosshair, label: "Priorización" },
       { href: "/dashboard/signals", icon: Radio, label: "Señales" },
       { href: "/dashboard/strategies", icon: Lightbulb, label: "Estrategias" },
-      { href: "/dashboard/dark-funnel", icon: Flame, label: "Pipeline oculto" },
+      { href: "/dashboard/dark-funnel", icon: Flame, label: "Dark Funnel" },
       { href: "/dashboard/forecast", icon: TrendingUp, label: "Pronóstico" },
       { href: "/dashboard/win-loss", icon: Scale, label: "Ganado/Perdido" },
     ],

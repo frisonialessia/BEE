@@ -1,99 +1,103 @@
 "use client";
 
-import { KanbanSquare, Radio } from "lucide-react";
 import Link from "next/link";
 
 import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-heatmap";
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
 import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-heatmap";
-import { MetricCard } from "@/components/metric-card";
 import { AddCompanyForm } from "@/features/probar/add-company-form";
 import { useCompanies } from "@/hooks/queries/use-companies";
+import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
-import { bucketByDay } from "@/lib/trend";
 
-/** Landing page of the sandbox — a light overview (2 summary cards), plus
- * the same cross-cutting widgets the real Dashboard's "Resumen" shows
- * (embudo, heatmap industria × señal, heatmap de actividad) — nav calls
- * this page "Resumen" too, so a visitor exploring the sandbox should see
- * the same depth, not a stripped-down version. Counts/widgets go through
- * the same hooks the rest of the app uses (not lib/demo/store directly) —
+const KPI_TILES = [
+  { key: "signals", label: "Señales", href: "/probar/signals" },
+  { key: "crm", label: "CRM", href: "/probar/crm" },
+  { key: "leads", label: "Leads", href: "/probar/leads" },
+  { key: "companies", label: "Empresas", href: "/probar/companies" },
+] as const;
+
+/** Landing page of the sandbox — nav calls it "Resumen" too, so a visitor
+ * exploring the sandbox should see the same depth the real Dashboard's
+ * "Resumen" shows (embudo, heatmap industria × señal, heatmap de
+ * actividad), fit into one screen: a KPI strip this compact only makes
+ * sense as a quick orientation row, not competing for space with the
+ * widgets that actually carry the depth. Counts/widgets go through the
+ * same hooks the rest of the app uses (not lib/demo/store directly) —
  * TanStack Query's data starts undefined until mounted, matching the
  * server-rendered page (this route is statically prerendered, so there's
  * no localStorage at build time) instead of mismatching it, which a
  * `typeof window` check alone would risk doing on a returning visitor's
- * own browser. */
+ * own browser.
+ *
+ * No "Oportunidades" tile next to "CRM": both nav items already read the
+ * same Opportunity rows (CRM = kanban board, Oportunidades = battlecards
+ * + flow) — a second count next to CRM's would either duplicate it or,
+ * worse, differ by a filter the tile can't explain, reopening the exact
+ * "which number means what" confusion "CRM" vs. "Dark Funnel" already ran
+ * into. Leads and Empresas are genuinely distinct entities with nothing
+ * else counting them on this page. */
 export default function ProbarOverviewPage() {
   const { data: opportunitiesResult } = useOpportunities();
   const { data: signalsResult } = useSignals();
   const { data: companiesResult } = useCompanies(200);
+  const { data: leadsResult } = useLeads(200);
   const opportunities = opportunitiesResult?.data ?? [];
   const signals = signalsResult?.data ?? [];
-  const opportunityCount = opportunities.length;
-  const signalCount = signals.length;
-  const signalsTrend = bucketByDay(signals.map((s) => s.detected_at), 7);
-  const opportunitiesTrend = bucketByDay(opportunities.map((o) => o.created_at), 7);
+
+  const counts: Record<(typeof KPI_TILES)[number]["key"], number> = {
+    signals: signals.length,
+    crm: opportunities.length,
+    leads: leadsResult?.data.length ?? 0,
+    companies: companiesResult?.data.length ?? 0,
+  };
 
   return (
     <div>
-      <header className="mb-6">
-        <p className="bee-eyebrow">Sandbox</p>
-        <h1 className="bee-display">Así ve BEE tu mercado</h1>
-        <p className="bee-caption mt-1 max-w-2xl">
-          Señales detectadas → pipeline priorizado → estrategia lista para ejecutar. Explora con
-          los datos de ejemplo, o simula tu propia empresa para ver cómo BEE la procesaría.
-        </p>
-        <div className="mt-4">
+      <header className="mb-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="bee-display">Así ve BEE tu mercado</h1>
+            <p className="bee-caption mt-1 max-w-xl">
+              Señales detectadas → pipeline priorizado → estrategia lista para ejecutar.
+            </p>
+          </div>
           <AddCompanyForm />
         </div>
       </header>
 
-      {/* Mismo tile de KPI que usa el Dashboard real (MetricCard) — no dos
-       * pills chicas flotando con espacio de sobra alrededor. "CRM", no
-       * "Pipeline": ese nombre ya es de otra sección (Pipeline oculto /
-       * Dark Funnel) — usar la palabra suelta acá confundiría a cuál se
+      {/* Fila compacta de orientación — 4 números, no 2 tarjetas grandes.
+       * "CRM", no "Pipeline": ese nombre ya es de otra sección (Dark
+       * Funnel) — usar la palabra suelta acá confundiría a cuál se
        * refiere el link. */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Link href="/probar/signals" className="block">
-          <MetricCard label="Señales" value={signalCount} hint="triggers de mercado detectados" icon={Radio} trend={signalsTrend} />
-        </Link>
-        <Link href="/probar/crm" className="block">
-          <MetricCard label="CRM" value={opportunityCount} hint="oportunidades en curso" icon={KanbanSquare} trend={opportunitiesTrend} />
-        </Link>
+      <div className="bee-kpi-strip !mt-0 !grid-cols-4">
+        {KPI_TILES.map((tile) => (
+          <Link key={tile.key} href={tile.href} className="bee-kpi-tile bee-glass--hover block">
+            <p className="bee-kpi-tile__label">{tile.label}</p>
+            <p className="bee-kpi-tile__value">{counts[tile.key]}</p>
+          </Link>
+        ))}
       </div>
 
-      <section className="mt-6 space-y-3">
-        <div>
-          <p className="bee-eyebrow">Todas las etapas</p>
-          <h2 className="mt-1 text-base font-semibold">Embudo de cierre</h2>
-        </div>
+      <section className="mt-2 space-y-2">
+        <p className="bee-eyebrow">Todas las etapas · Embudo de cierre</p>
         <PipelineFunnel opportunities={opportunities} />
       </section>
 
-      <div className="mt-3 grid items-stretch gap-3 lg:grid-cols-2">
-        <section className="bee-surface flex flex-col p-5 space-y-3">
-          <div>
-            <p className="bee-eyebrow">Industria × Tipo de señal</p>
-            <h2 className="mt-1 text-base font-semibold">Dónde eres más fuerte</h2>
-          </div>
-          <div className="flex-1">
-            <IndustrySignalHeatmap
-              opportunities={opportunities}
-              signals={signals}
-              companies={companiesResult?.data ?? []}
-            />
-          </div>
+      <div className="mt-2 grid items-start gap-3 lg:grid-cols-2">
+        <section className="bee-surface p-3 space-y-2">
+          <p className="bee-eyebrow">Industria × Tipo de señal · Dónde eres más fuerte</p>
+          <IndustrySignalHeatmap
+            opportunities={opportunities}
+            signals={signals}
+            companies={companiesResult?.data ?? []}
+          />
         </section>
 
-        <section className="bee-surface flex flex-col p-5 space-y-3">
-          <div>
-            <p className="bee-eyebrow">Día × hora</p>
-            <h2 className="mt-1 text-base font-semibold">Cuándo llega el mercado</h2>
-          </div>
-          <div className="flex-1">
-            <SignalActivityHeatmap signals={signals} />
-          </div>
+        <section className="bee-surface p-3 space-y-2">
+          <p className="bee-eyebrow">Día × hora · Cuándo llega el mercado</p>
+          <SignalActivityHeatmap signals={signals} />
         </section>
       </div>
     </div>
