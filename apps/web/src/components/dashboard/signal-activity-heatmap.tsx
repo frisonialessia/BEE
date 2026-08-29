@@ -6,11 +6,11 @@ import { TooltipContent } from "@/components/ui/tooltip";
 import { computeActivityGrid, DAY_LABELS, mostActiveCell } from "@/lib/signal-activity-grid";
 import type { Signal } from "@/types/domain";
 
-const CELL = 22;
-const GAP = 4;
+const CELL = 16;
+const GAP = 3;
 const STEP = CELL + GAP;
-const LABEL_W = 34;
-const HEADER_H = 20;
+const LABEL_W = 30;
+const HEADER_H = 16;
 const HOUR_MARKS = [0, 6, 12, 18];
 
 /** Heatmap día × hora de cuándo llegan las señales de mercado — usa
@@ -34,7 +34,7 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
 
   return (
     <TooltipPrimitive.Provider delayDuration={100}>
-      <div className="flex h-full flex-col gap-3">
+      <div className="flex flex-col gap-3">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           width="100%"
@@ -57,7 +57,7 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
           ))}
         </svg>
 
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <span>
             {peak ? (
               <>

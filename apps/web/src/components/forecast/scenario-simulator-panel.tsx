@@ -162,7 +162,7 @@ export function ScenarioSimulatorPanel() {
               className="w-full accent-[var(--color-chart-4)]"
             />
             <label className="block bee-micro">
-              Calor de pipeline oculto: {heat}
+              Calor de Dark Funnel: {heat}
             </label>
             <input
               type="range"

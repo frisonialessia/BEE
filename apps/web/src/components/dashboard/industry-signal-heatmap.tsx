@@ -20,14 +20,14 @@ const SIGNAL_ORDER: SignalType[] = [
   "other",
 ];
 
-const R = 27; // hex circumradius, px
+const R = 20; // hex circumradius, px
 const HEX_W = Math.sqrt(3) * R;
 const HEX_H = 2 * R;
 const ROW_STEP = HEX_H * 0.75;
-const MAX_ROWS = 6;
-const PAD = 12;
-const LABEL_W = 128;
-const HEADER_H = 70;
+const MAX_ROWS = 4;
+const PAD = 10;
+const LABEL_W = 104;
+const HEADER_H = 66;
 
 function hexPoints(cx: number, cy: number, r: number): string {
   return Array.from({ length: 6 }, (_, i) => {
@@ -76,7 +76,7 @@ export function IndustrySignalHeatmap({
 
   return (
     <TooltipPrimitive.Provider delayDuration={100}>
-      <div className="flex h-full flex-col gap-3">
+      <div className="flex flex-col gap-3">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           width="100%"
@@ -144,7 +144,7 @@ export function IndustrySignalHeatmap({
           )}
         </svg>
 
-        <div className="mt-auto flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <span>Tasa de cierre:</span>
           <span className="h-2.5 w-24 rounded-full" style={{ background: `linear-gradient(to right, ${color(0)}, ${color(50)}, ${color(100)})` }} />
           <span>0%</span>

@@ -337,7 +337,7 @@ class ScenarioSimulator:
             )
         if heat_mod >= 1.30:
             drivers.append(
-                "Calor de pipeline oculto alto: estos leads ya están investigando activamente — contacta ahora (+35%)"
+                "Calor de Dark Funnel alto: estos leads ya están investigando activamente — contacta ahora (+35%)"
             )
         if request.additional_prospecting_reps:
             drivers.append(

@@ -215,7 +215,7 @@ const AGENT_LABELS: Record<string, string> = {
   strategy_generator: "Generador de estrategia",
   executive_agent: "Agente ejecutivo",
   psychographic_analyzer: "Psicográfico",
-  dark_funnel: "Pipeline oculto",
+  dark_funnel: "Dark Funnel",
   smart_engagement: "Engagement",
   agent_orchestrator: "Orquestador",
   workflow_orchestrator: "Flujo de trabajo",

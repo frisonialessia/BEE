@@ -557,7 +557,7 @@
 .bee-btn-ghost--fill:hover { filter: brightness(0.93); background: var(--bee-fill, transparent); }
 
 /* Filter / tab pill row — segmented in-place filters and lightweight tab
- * switchers (Pipeline oculto's stage filter, Resiliencia's estado filter +
+ * switchers (Dark Funnel's stage filter, Resiliencia's estado filter +
  * Cola/Auditoría switcher, Aprendizaje's Aprendizaje/Anomalías switcher).
  * These were 3 slightly different heights (px-2 py-1 / px-3 py-1.5 /
  * px-4 py-2) for the exact same role — one fixed height now, width still
