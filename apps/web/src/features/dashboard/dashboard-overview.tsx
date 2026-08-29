@@ -143,34 +143,38 @@ export function DashboardOverview() {
 
       <section className="mb-3 space-y-3">
         <div>
-          <p className="bee-eyebrow">Todo el pipeline</p>
+          <p className="bee-eyebrow">Todas las etapas</p>
           <h2 className="mt-1 text-base font-semibold">Embudo de cierre</h2>
           <p className="bee-caption">Cuántas oportunidades hay hoy en cada etapa, camino a ganar</p>
         </div>
         <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
       </section>
 
-      <div className="mb-3 grid gap-3 lg:grid-cols-2">
-        <section className="bee-surface p-5 space-y-3">
+      <div className="mb-3 grid items-stretch gap-3 lg:grid-cols-2">
+        <section className="bee-surface flex flex-col p-5 space-y-3">
           <div>
             <p className="bee-eyebrow">Industria × Tipo de señal</p>
             <h2 className="mt-1 text-base font-semibold">Dónde eres más fuerte</h2>
             <p className="bee-caption">Tasa de cierre cruzando industria de la cuenta y tipo de señal</p>
           </div>
-          <IndustrySignalHeatmap
-            opportunities={allOppsResult?.data ?? []}
-            signals={signals}
-            companies={companiesResult?.data ?? []}
-          />
+          <div className="flex-1">
+            <IndustrySignalHeatmap
+              opportunities={allOppsResult?.data ?? []}
+              signals={signals}
+              companies={companiesResult?.data ?? []}
+            />
+          </div>
         </section>
 
-        <section className="bee-surface p-5 space-y-3">
+        <section className="bee-surface flex flex-col p-5 space-y-3">
           <div>
             <p className="bee-eyebrow">Día × hora</p>
             <h2 className="mt-1 text-base font-semibold">Cuándo llega el mercado</h2>
             <p className="bee-caption">Actividad de señales detectadas, por día y horario</p>
           </div>
-          <SignalActivityHeatmap signals={signals} />
+          <div className="flex-1">
+            <SignalActivityHeatmap signals={signals} />
+          </div>
         </section>
       </div>
 

@@ -6,10 +6,12 @@ import Link from "next/link";
 import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-heatmap";
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
 import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-heatmap";
+import { MetricCard } from "@/components/metric-card";
 import { AddCompanyForm } from "@/features/probar/add-company-form";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
+import { bucketByDay } from "@/lib/trend";
 
 /** Landing page of the sandbox — a light overview (2 summary cards), plus
  * the same cross-cutting widgets the real Dashboard's "Resumen" shows
@@ -26,9 +28,12 @@ export default function ProbarOverviewPage() {
   const { data: opportunitiesResult } = useOpportunities();
   const { data: signalsResult } = useSignals();
   const { data: companiesResult } = useCompanies(200);
-  const opportunityCount = opportunitiesResult?.data.length ?? 0;
-  const signalCount = signalsResult?.data.length ?? 0;
+  const opportunities = opportunitiesResult?.data ?? [];
   const signals = signalsResult?.data ?? [];
+  const opportunityCount = opportunities.length;
+  const signalCount = signals.length;
+  const signalsTrend = bucketByDay(signals.map((s) => s.detected_at), 7);
+  const opportunitiesTrend = bucketByDay(opportunities.map((o) => o.created_at), 7);
 
   return (
     <div>
@@ -44,72 +49,51 @@ export default function ProbarOverviewPage() {
         </div>
       </header>
 
-      {/* Tarjetas cortas (un título + un número, nada de texto largo) →
-       * caja con su propio scroll horizontal, mismo patrón que las
-       * columnas del Pipeline (ver crm-board.tsx): el contenedor se
-       * desplaza, la página nunca. SignalsDashboard hace lo contrario a
-       * propósito — sus tarjetas sí tienen texto largo (título +
-       * descripción + tags), así que ahí la columna apilada es la
-       * correcta, no un descuido. */}
-      <div className="flex gap-3 overflow-x-auto pb-2">
-        <Link
-          href="/probar/signals"
-          className="bee-bento bee-bento-pad bee-glass--hover block w-[min(85%,280px)] shrink-0"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-              <Radio className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold">Señales</p>
-              <p className="bee-caption mt-0.5">{signalCount} triggers de mercado detectados</p>
-            </div>
-          </div>
+      {/* Mismo tile de KPI que usa el Dashboard real (MetricCard) — no dos
+       * pills chicas flotando con espacio de sobra alrededor. "CRM", no
+       * "Pipeline": ese nombre ya es de otra sección (Pipeline oculto /
+       * Dark Funnel) — usar la palabra suelta acá confundiría a cuál se
+       * refiere el link. */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Link href="/probar/signals" className="block">
+          <MetricCard label="Señales" value={signalCount} hint="triggers de mercado detectados" icon={Radio} trend={signalsTrend} />
         </Link>
-
-        <Link
-          href="/probar/crm"
-          className="bee-bento bee-bento-pad bee-glass--hover block w-[min(85%,280px)] shrink-0"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-              <KanbanSquare className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold">Pipeline</p>
-              <p className="bee-caption mt-0.5">{opportunityCount} oportunidades en curso</p>
-            </div>
-          </div>
+        <Link href="/probar/crm" className="block">
+          <MetricCard label="CRM" value={opportunityCount} hint="oportunidades en curso" icon={KanbanSquare} trend={opportunitiesTrend} />
         </Link>
       </div>
 
       <section className="mt-6 space-y-3">
         <div>
-          <p className="bee-eyebrow">Todo el pipeline</p>
+          <p className="bee-eyebrow">Todas las etapas</p>
           <h2 className="mt-1 text-base font-semibold">Embudo de cierre</h2>
         </div>
-        <PipelineFunnel opportunities={opportunitiesResult?.data ?? []} />
+        <PipelineFunnel opportunities={opportunities} />
       </section>
 
-      <div className="mt-3 grid gap-3 lg:grid-cols-2">
-        <section className="bee-surface p-5 space-y-3">
+      <div className="mt-3 grid items-stretch gap-3 lg:grid-cols-2">
+        <section className="bee-surface flex flex-col p-5 space-y-3">
           <div>
             <p className="bee-eyebrow">Industria × Tipo de señal</p>
             <h2 className="mt-1 text-base font-semibold">Dónde eres más fuerte</h2>
           </div>
-          <IndustrySignalHeatmap
-            opportunities={opportunitiesResult?.data ?? []}
-            signals={signals}
-            companies={companiesResult?.data ?? []}
-          />
+          <div className="flex-1">
+            <IndustrySignalHeatmap
+              opportunities={opportunities}
+              signals={signals}
+              companies={companiesResult?.data ?? []}
+            />
+          </div>
         </section>
 
-        <section className="bee-surface p-5 space-y-3">
+        <section className="bee-surface flex flex-col p-5 space-y-3">
           <div>
             <p className="bee-eyebrow">Día × hora</p>
             <h2 className="mt-1 text-base font-semibold">Cuándo llega el mercado</h2>
           </div>
-          <SignalActivityHeatmap signals={signals} />
+          <div className="flex-1">
+            <SignalActivityHeatmap signals={signals} />
+          </div>
         </section>
       </div>
     </div>
