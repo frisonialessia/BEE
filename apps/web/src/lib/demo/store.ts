@@ -29,7 +29,37 @@ const SIGNALS_KEY = "bee_demo_signals_v1";
 const BATTLECARDS_KEY = "bee_demo_battlecards_v1";
 const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
 
+/** Bump this whenever `sample-data.ts`/`seed-history.ts` changes in a way
+ * existing visitors should see. Without this, a browser that already
+ * seeded its localStorage on an earlier visit keeps that OLD snapshot
+ * forever — later improvements to the seed data (e.g. richer history)
+ * silently never reach a returning visitor, since `loadJSON` below only
+ * seeds when a key is completely absent. `"1"` is the original 4-signal/
+ * 2-opportunity seed (unversioned, so any stored data with no version tag
+ * counts as "1"); `"2"` is the enriched 18-account history added later. */
+const SEED_VERSION = "2";
+const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
+
+/** Reseeds the base opportunities/signals when the visitor's stored
+ * snapshot predates the current `SEED_VERSION` — including a first-ever
+ * visit, which has no stored version at all. Discards anything added
+ * locally via "Simula tu empresa" under the old version, same as an
+ * explicit `resetDemoData()`; acceptable for a sandbox that's explicitly
+ * "nunca se guarda en nuestra base de datos". Safe to call on every read:
+ * one string comparison when already current. */
+function ensureCurrentSeed(): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (window.localStorage.getItem(SEED_VERSION_KEY) === SEED_VERSION) return;
+    resetDemoData();
+    window.localStorage.setItem(SEED_VERSION_KEY, SEED_VERSION);
+  } catch {
+    // Storage unavailable — nothing to migrate, demo just won't persist.
+  }
+}
+
 function loadJSON<T>(key: string, seed: T): T {
+  ensureCurrentSeed();
   if (typeof window === "undefined") return structuredClone(seed);
   try {
     const raw = window.localStorage.getItem(key);
