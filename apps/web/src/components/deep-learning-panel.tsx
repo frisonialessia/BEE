@@ -52,8 +52,15 @@ function CorrectionLearningPanel() {
             onChange={(e) => setArtifactType(e.target.value)}
             className="text-xs border border-border rounded-sm px-2 py-1.5 w-full bg-[var(--color-card)]"
           >
-            {["email_draft", "meeting_agenda", "linkedin_message", "next_steps"].map((t) => (
-              <option key={t} value={t}>{t.replace(/_/g, " ")}</option>
+            {(
+              [
+                ["email_draft", "Borrador de email"],
+                ["meeting_agenda", "Agenda de reunión"],
+                ["linkedin_message", "Mensaje de LinkedIn"],
+                ["next_steps", "Próximos pasos"],
+              ] as const
+            ).map(([t, label]) => (
+              <option key={t} value={t}>{label}</option>
             ))}
           </select>
         </div>
