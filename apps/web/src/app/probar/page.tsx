@@ -1,5 +1,6 @@
 "use client";
 
+import { Building2, KanbanSquare, Radio, Users } from "lucide-react";
 import Link from "next/link";
 
 import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-heatmap";
@@ -11,11 +12,14 @@ import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 
+// Mismos íconos que nav-items.ts usa para estos 4 destinos — el tile queda
+// visualmente casado con el link al que apunta, no con un ícono elegido
+// aparte.
 const KPI_TILES = [
-  { key: "signals", label: "Señales", href: "/probar/signals" },
-  { key: "crm", label: "CRM", href: "/probar/crm" },
-  { key: "leads", label: "Leads", href: "/probar/leads" },
-  { key: "companies", label: "Empresas", href: "/probar/companies" },
+  { key: "signals", label: "Señales", href: "/probar/signals", icon: Radio },
+  { key: "crm", label: "CRM", href: "/probar/crm", icon: KanbanSquare },
+  { key: "leads", label: "Leads", href: "/probar/leads", icon: Users },
+  { key: "companies", label: "Empresas", href: "/probar/companies", icon: Building2 },
 ] as const;
 
 /** Landing page of the sandbox — nav calls it "Resumen" too, so a visitor
@@ -74,7 +78,10 @@ export default function ProbarOverviewPage() {
       <div className="bee-kpi-strip !mt-0 !grid-cols-4">
         {KPI_TILES.map((tile) => (
           <Link key={tile.key} href={tile.href} className="bee-kpi-tile bee-glass--hover block">
-            <p className="bee-kpi-tile__label">{tile.label}</p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="bee-kpi-tile__label">{tile.label}</p>
+              <tile.icon className="size-3.5 shrink-0 text-muted-foreground stroke-[1.25]" />
+            </div>
             <p className="bee-kpi-tile__value">{counts[tile.key]}</p>
           </Link>
         ))}
