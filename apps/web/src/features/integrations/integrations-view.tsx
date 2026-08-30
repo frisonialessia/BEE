@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useIsDemoMode } from "@/lib/demo/mode";
 import { useAuth } from "@/providers/auth-provider";
 import {
   useConnectOAuthProvider,
@@ -219,7 +220,13 @@ function ServerChannelRow({ status }: { status: IntegrationStatus }) {
 export function IntegrationsView() {
   useOAuthCallbackToast();
   const { user } = useAuth();
-  const canManage = user?.role === "owner" || user?.role === "admin";
+  // In /probar there's no logged-in user at all, so the real owner/admin
+  // check would hide every "Conectar" button — but the sandbox already
+  // blocks the OAuth redirect itself (isDemoMode() in lib/api/integrations.ts
+  // throws before it ever leaves the page), so it's safe to let the buttons
+  // render there too instead of showing an inert, all-read-only screen.
+  const isDemo = useIsDemoMode();
+  const canManage = isDemo || user?.role === "owner" || user?.role === "admin";
   const { data: result, isLoading } = useIntegrations();
   const statuses = result?.data ?? [];
   const gmail = statuses.find((s) => s.provider === "gmail");

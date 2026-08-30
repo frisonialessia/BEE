@@ -17,15 +17,23 @@ export const PROBAR_NAV_GROUPS: NavGroup[] = NAV_GROUPS.map((group) => ({
 /** The sections actually simulated in the sandbox today, read-only except
  * the pipeline itself (drag a card, mark won/lost) — see lib/demo/store.ts
  * and the isDemoMode() guards across lib/api/*.ts. Control, Resiliencia,
- * Red, Voz de marca, and now Integraciones are deliberately NOT here and
- * never will be by faking their data: those show real backend/
- * infrastructure state (worker health, audit logs, relationship graphs, a
- * real connected Gmail account), and inventing that would be lying about
- * the system itself, not illustrating a product feature — the same
- * honesty policy the rest of BEE holds to. Secuencias isn't here either,
- * not on principle — its flow-builder just needs more plumbing than a
- * first pass covered. Everything else in the nav routes to a page that
- * says so honestly instead of faking a working demo. */
+ * Red, and Voz de marca are deliberately NOT here and never will be by
+ * faking their data: those show real backend/infrastructure state (worker
+ * health, audit logs, relationship graphs), and inventing that would be
+ * lying about the system itself, not illustrating a product feature — the
+ * same honesty policy the rest of BEE holds to. Secuencias isn't here
+ * either, not on principle — its flow-builder just needs more plumbing
+ * than a first pass covered.
+ *
+ * Integraciones IS here even though nothing is ever actually connected in
+ * the sandbox: unlike the sections above, "nothing connected yet" is the
+ * real, honest state — the same screen a just-registered account lands on
+ * — so showing it isn't inventing anything (see the DEMO_INTEGRATIONS
+ * comment in lib/api/integrations.ts). Clicking "Conectar" explains you
+ * need a real account instead of faking an OAuth flow.
+ *
+ * Everything else in the nav routes to a page that says so honestly
+ * instead of faking a working demo. */
 export const PROBAR_LIVE_SECTIONS = new Set([
   "/probar",
   "/probar/signals",
@@ -38,4 +46,5 @@ export const PROBAR_LIVE_SECTIONS = new Set([
   "/probar/dark-funnel",
   "/probar/forecast",
   "/probar/win-loss",
+  "/probar/integrations",
 ]);
