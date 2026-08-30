@@ -20,7 +20,40 @@ export type OAuthProvider = "gmail" | "linkedin" | "salesforce";
 
 const READ_ONLY_MESSAGE = "Integraciones no está disponible en el sandbox — conecta una cuenta real desde el Dashboard.";
 
+/** What every brand-new organization actually sees here — nothing
+ *  connected yet, same providers and scopes as the real endpoint (see
+ *  `list_integrations` in `app.api.v1.endpoints.integrations`). No fake
+ *  "connected" state or invented account emails; the honest starting
+ *  point is itself worth showing, since it's the same screen a just-
+ *  registered account lands on. */
+const DEMO_INTEGRATIONS: IntegrationStatus[] = [
+  { provider: "gmail", label: "Gmail", connected: false, scope: "organization", account_email: null, connected_at: null, detail: null, last_error: null },
+  { provider: "linkedin", label: "LinkedIn", connected: false, scope: "organization", account_email: null, connected_at: null, detail: null, last_error: null },
+  { provider: "salesforce", label: "Salesforce", connected: false, scope: "organization", account_email: null, connected_at: null, detail: null, last_error: null },
+  {
+    provider: "email",
+    label: "Email (SMTP)",
+    connected: false,
+    scope: "server",
+    account_email: null,
+    connected_at: null,
+    detail: "Credencial compartida del servidor, no por cuenta — se configura una sola vez para todo el despliegue.",
+    last_error: null,
+  },
+  {
+    provider: "twitter",
+    label: "X / Twitter",
+    connected: false,
+    scope: "server",
+    account_email: null,
+    connected_at: null,
+    detail: "Credencial compartida del servidor, no por cuenta — se configura una sola vez para todo el despliegue.",
+    last_error: null,
+  },
+];
+
 export async function fetchIntegrations(): Promise<FetchResult<IntegrationStatus[]>> {
+  if (isDemoMode()) return { data: DEMO_INTEGRATIONS, live: false };
   try {
     const data = await apiFetch<IntegrationStatus[]>("/api/v1/integrations", { cache: "no-store" });
     return { data, live: true };

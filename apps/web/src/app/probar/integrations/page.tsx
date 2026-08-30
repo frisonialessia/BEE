@@ -1,7 +1,5 @@
-import { Plug } from "lucide-react";
-
-import { ProbarComingSoon } from "@/features/probar/probar-coming-soon";
+import { IntegrationsView } from "@/features/integrations/integrations-view";
 
 export default function ProbarIntegrationsPage() {
-  return <ProbarComingSoon label="Integraciones" icon={Plug} />;
+  return <IntegrationsView />;
 }
