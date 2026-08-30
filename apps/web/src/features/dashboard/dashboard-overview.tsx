@@ -143,8 +143,7 @@ export function DashboardOverview() {
 
       <section className="mb-3 space-y-3">
         <div>
-          <p className="bee-eyebrow">Todas las etapas</p>
-          <h2 className="mt-1 text-base font-semibold">Embudo de cierre</h2>
+          <h3 className="bee-card-title">Embudo de cierre</h3>
           <p className="bee-caption">Cuántas oportunidades hay hoy en cada etapa, camino a ganar</p>
         </div>
         <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
@@ -153,8 +152,7 @@ export function DashboardOverview() {
       <div className="mb-3 grid items-start gap-3 lg:grid-cols-2">
         <section className="bee-surface bee-bento-pad space-y-3">
           <div>
-            <p className="bee-eyebrow">Industria × Tipo de señal</p>
-            <h2 className="mt-1 text-base font-semibold">Dónde eres más fuerte</h2>
+            <h3 className="bee-card-title">Dónde eres más fuerte</h3>
             <p className="bee-caption">Tasa de cierre cruzando industria de la cuenta y tipo de señal</p>
           </div>
           <IndustrySignalHeatmap
@@ -166,8 +164,7 @@ export function DashboardOverview() {
 
         <section className="bee-surface bee-bento-pad space-y-3">
           <div>
-            <p className="bee-eyebrow">Día × hora</p>
-            <h2 className="mt-1 text-base font-semibold">Cuándo llega el mercado</h2>
+            <h3 className="bee-card-title">Cuándo llega el mercado</h3>
             <p className="bee-caption">Actividad de señales detectadas, por día y horario</p>
           </div>
           <SignalActivityHeatmap signals={signals} />
@@ -179,8 +176,7 @@ export function DashboardOverview() {
           <section className="bee-span-8 space-y-3">
             <div className="flex items-end justify-between gap-3">
               <div>
-                <p className="bee-eyebrow">Battlecards CEO</p>
-                <h2 className="mt-1 text-base font-semibold">Briefs enriquecidos</h2>
+                <h3 className="bee-card-title">Briefs enriquecidos</h3>
                 <p className="bee-caption">Pain point · argumento de cierre · ventana de timing</p>
               </div>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -218,8 +214,7 @@ export function DashboardOverview() {
 
         <section className={`${battlecards.length > 0 ? "bee-span-4" : "bee-span-12"} space-y-3`}>
           <div>
-            <p className="bee-eyebrow">Business Operating System</p>
-            <h2 className="mt-1 text-base font-semibold">Proyección de ingresos</h2>
+            <h3 className="bee-card-title">Proyección de ingresos</h3>
             <p className="bee-caption">Qué pasaría si invertimos más en prospección</p>
           </div>
           <RevenueSimulatorWidget />
@@ -229,10 +224,7 @@ export function DashboardOverview() {
 
         <section className="bee-span-12 space-y-3">
           <div className="flex items-end justify-between gap-3">
-            <div>
-              <p className="bee-eyebrow">Feed de señales</p>
-              <h2 className="mt-1 text-base font-semibold">Todas las señales</h2>
-            </div>
+            <h3 className="bee-card-title">Todas las señales</h3>
             <span className="bee-caption">{signals.length} total</span>
           </div>
 

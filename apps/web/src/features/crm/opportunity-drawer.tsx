@@ -152,7 +152,7 @@ export function OpportunityDrawer() {
           )}
 
           <section className="bee-surface bee-bento-pad">
-            <h3 className="mb-3 text-sm font-semibold">Historial</h3>
+            <h3 className="bee-card-title">Historial</h3>
             {opportunityId && <OpportunityTimeline opportunityId={opportunityId} />}
           </section>
 

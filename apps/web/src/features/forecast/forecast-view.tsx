@@ -125,13 +125,14 @@ export function ForecastView() {
               </div>
 
               <section className="bee-surface bee-bento-pad">
-                <h3 className="mb-4 text-sm font-semibold">Pronóstico por mes</h3>
+                <h3 className="bee-card-title">Pronóstico por mes</h3>
+                <p className="bee-caption mb-4">Pipeline ponderado y total, mes a mes</p>
                 <ForecastBarChart buckets={forecast.byMonth} />
               </section>
 
               {hasClosedHistory && (
                 <section className="bee-surface bee-bento-pad">
-                  <h3 className="mb-1 text-sm font-semibold">Tendencia de cierre</h3>
+                  <h3 className="bee-card-title">Tendencia de cierre</h3>
                   <p className="bee-caption mb-4">
                     Oportunidades creadas por mes (barra) y tasa de cierre de lo que se resolvió ese mes
                     (número arriba)
@@ -142,7 +143,7 @@ export function ForecastView() {
 
               {forecast.scoreBucketStats.length > 0 && (
                 <section className="bee-surface bee-bento-pad">
-                  <h3 className="mb-1 text-sm font-semibold">Precisión del pronóstico</h3>
+                  <h3 className="bee-card-title">Precisión del pronóstico</h3>
                   <p className="bee-caption mb-4">
                     Ya hay suficiente histórico para calcular la probabilidad de cierre real por rango de
                     score, en vez de la fija por etapa — esto es lo que se está usando ahora mismo:
@@ -162,7 +163,8 @@ export function ForecastView() {
               )}
 
               <section className="bee-surface bee-bento-pad">
-                <h3 className="mb-3 text-sm font-semibold">Deals en riesgo</h3>
+                <h3 className="bee-card-title">Deals en riesgo</h3>
+                <p className="bee-caption mb-3">Sin fecha de cierre, vencidas o con poca información</p>
                 {forecast.atRisk.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Ninguna oportunidad abierta está en riesgo por ahora.
