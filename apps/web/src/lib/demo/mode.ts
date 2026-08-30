@@ -1,3 +1,5 @@
+import { usePathname } from "next/navigation";
+
 /**
  * Demo sandbox mode — `/probar` and everything under it.
  *
@@ -17,4 +19,20 @@
 export function isDemoMode(): boolean {
   if (typeof window === "undefined") return false;
   return window.location.pathname.startsWith("/probar");
+}
+
+/**
+ * Same check as `isDemoMode()`, for use inside a component's render body
+ * instead of a `lib/api/*` call — `isDemoMode()` reads `window.location`
+ * directly, which doesn't exist during the server render pass and always
+ * resolves to `false` there; if a component uses that result to decide
+ * *which* elements to render (an extra button, a `<div>` vs. a `<Link>`),
+ * the server and client trees come out structurally different and React
+ * throws a hydration mismatch (#418) on every load. `usePathname()` comes
+ * from Next's own router state instead of `window`, so it resolves to the
+ * same `/probar/...` path on both the server render and the client one —
+ * no mismatch. Only worth the extra hook when the result gates *what*
+ * renders, not just a value inside already-identical markup. */
+export function useIsDemoMode(): boolean {
+  return (usePathname() ?? "").startsWith("/probar");
 }

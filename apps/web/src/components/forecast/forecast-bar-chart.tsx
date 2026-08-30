@@ -20,7 +20,7 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
         const totalPct = (b.total / maxValue) * 100;
         const weightedPct = (b.weighted / maxValue) * 100;
         return (
-          <div key={b.key} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
+          <div key={b.key} className="flex h-full w-16 shrink-0 flex-col items-center gap-1.5">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="relative flex w-full flex-1 items-end justify-center rounded-t-[var(--radius-sm)] bg-[var(--color-primary)]/40">

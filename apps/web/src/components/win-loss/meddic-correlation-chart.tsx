@@ -23,7 +23,7 @@ export function MeddicCorrelationChart({ stats }: { stats: MeddicBucketStat[] })
         const total = s.won + s.lost;
         const pct = (total / maxTotal) * 100;
         return (
-          <div key={s.bucketLabel} className="flex flex-1 flex-col items-center gap-1.5">
+          <div key={s.bucketLabel} className="flex h-full flex-1 flex-col items-center gap-1.5">
             <p className="h-4 bee-micro font-medium">
               {s.winRate !== null ? `${Math.round(s.winRate * 100)}%` : "—"}
             </p>
