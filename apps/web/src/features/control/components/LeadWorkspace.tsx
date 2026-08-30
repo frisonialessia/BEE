@@ -57,7 +57,7 @@ export function LeadWorkspace() {
             return (
               <div
                 key={col.id}
-                className="flex items-center justify-between gap-3 rounded-[var(--radius-md)] bg-[var(--color-primary)]/25 px-3 py-2.5"
+                className="bee-bento flex items-center justify-between gap-3 px-3 py-2.5"
               >
                 <span className="text-xs font-medium">{STAGE_LABEL_ES[col.id] ?? col.label}</span>
                 <span className="font-mono text-xs tabular-nums text-muted-foreground">{count}</span>

@@ -149,14 +149,11 @@ export function ForecastView() {
                   </p>
                   <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
                     {forecast.scoreBucketStats.map((s) => (
-                      <div
-                        key={s.bucketStart}
-                        className="rounded-[var(--radius-md)] bg-[var(--color-primary)]/25 p-3 text-center"
-                      >
-                        <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                      <div key={s.bucketStart} className="bee-bento p-3 text-center">
+                        <p className="bee-kpi-tile__label">
                           Score {s.bucketStart}-{s.bucketStart + 19}
                         </p>
-                        <p className="mt-1 text-lg font-semibold">{Math.round(s.winRate * 100)}%</p>
+                        <p className="bee-kpi-sm mt-1">{Math.round(s.winRate * 100)}%</p>
                         <p className="bee-micro">{s.sampleSize} deals cerrados</p>
                       </div>
                     ))}
