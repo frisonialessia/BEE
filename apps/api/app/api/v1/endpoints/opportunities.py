@@ -67,7 +67,7 @@ def _hidden_from(session: Session, current_user: User | None, opportunity) -> bo
 @router.get(
     "",
     response_model=list[dict],
-    summary="List opportunities ready to action",
+    summary="List opportunities, optionally filtered to one status",
 )
 def list_opportunities(
     opp_status: str | None = Query(default=None, alias="status"),
@@ -76,21 +76,35 @@ def list_opportunities(
     session: Session = Depends(get_session),
     current_user: User | None = Depends(get_current_user_optional),
 ) -> list[dict]:
-    """Return opportunities, defaulting to READY_TO_ACTION sorted by score.
+    """Return opportunities — every status by default, or one status when given.
 
-    When the request carries a valid session token (a logged-in dashboard
-    user, as opposed to the shared X-API-Key used by service integrations),
-    results are scoped to what that user is allowed to see: everything in
-    their organization for OWNER/ADMIN, their team's subtree for MANAGER, or
-    only their own assignments for MEMBER (see ``app.services.permissions``).
-    Requests without a session token are unaffected — this keeps existing
-    API-key-only integrations working exactly as before.
+    ``status=ready_to_action`` is special-cased to :meth:`OpportunityRepository.
+    list_ready_to_action` (has-complete-battlecard filter, score-sorted) — the
+    narrow "battlecard queue" used by ``fetchBattlecards``. Every other case,
+    including no ``status`` at all, goes through :meth:`list_scoped`, which
+    returns every status unless a specific one is passed. No frontend caller
+    currently passes ``status`` on this general endpoint (they all want the
+    full pipeline — CRM board, Forecast, Ganado/Perdido, Priorización, the
+    Resumen embudo), so the *no-status* default is the one nearly everyone
+    hits; that's why it now means "all", not "just ready_to_action" (a
+    previous version defaulted narrowly here, which meant that omitted the
+    other 5 stages from every one of those views for a real, non-demo
+    account — see git history for the incident this fixed).
+
+    Scoping is identical either way: with a session token (a logged-in
+    dashboard user, as opposed to the shared X-API-Key used by service
+    integrations), results are scoped to what that user is allowed to see —
+    everything in their organization for OWNER/ADMIN, their team's subtree
+    for MANAGER, or only their own assignments for MEMBER (see
+    ``app.services.permissions``). Requests without a session token are
+    unaffected — this keeps existing API-key-only integrations working
+    exactly as before.
     """
     repo = OpportunityRepository(session)
     visible_user_ids = get_visible_user_ids(session, current_user) if current_user else None
     organization_id = current_user.organization_id if current_user else None
 
-    if opp_status is None or opp_status == "ready_to_action":
+    if opp_status == "ready_to_action":
         items = repo.list_ready_to_action(
             limit=limit,
             offset=offset,
@@ -98,7 +112,13 @@ def list_opportunities(
             organization_id=organization_id,
         )
     else:
+        if opp_status is not None and opp_status not in OpportunityStatus.__members__.values():
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid status: {opp_status!r}.",
+            )
         items = repo.list_scoped(
+            status=opp_status,
             limit=limit,
             offset=offset,
             visible_user_ids=visible_user_ids,

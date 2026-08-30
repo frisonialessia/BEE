@@ -2,7 +2,7 @@ import { Radio } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { BENTO_TONES } from "@/lib/brand/colors";
-import { scoreVariant, signalTypeLabels, timeAgo } from "@/lib/format";
+import { scoreVariant, signalTagLabels, signalTypeLabels, timeAgo } from "@/lib/format";
 import type { Signal } from "@/lib/types";
 
 /** A single detected market signal in the Bento grid. */
@@ -53,7 +53,7 @@ export function SignalCard({
                   className="border border-border bg-background px-1.5 py-0.5 bee-micro"
                   style={{ borderRadius: "var(--radius-sm)" }}
                 >
-                  {tag}
+                  {signalTagLabels[tag] ?? tag}
                 </span>
               ))}
             </div>

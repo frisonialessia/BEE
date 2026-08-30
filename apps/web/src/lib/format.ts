@@ -13,6 +13,42 @@ export const signalTypeLabels: Record<SignalType, string> = {
   other: "Otra",
 };
 
+/** signal.analysis.tags — the keyword an analyzer matched in the raw signal
+ * text (funding/hiring/tech_adoption analyzers), shown as small chips on
+ * each SignalCard. The keywords themselves stay in English in the backend
+ * on purpose — they're matched against real external signal text (funding/
+ * hiring APIs, etc.), which is typically English, so translating them there
+ * would break detection. This is the display-only translation for the
+ * chip; an unrecognized tag (e.g. a free-form `event_type` from a
+ * behavioral/engagement signal) falls back to showing the raw value. */
+export const signalTagLabels: Record<string, string> = {
+  funding: "financiamiento",
+  raised: "levantó capital",
+  "series a": "serie A",
+  "series b": "serie B",
+  "series c": "serie C",
+  "seed round": "ronda semilla",
+  venture: "capital de riesgo",
+  investment: "inversión",
+  hiring: "contratación",
+  "job opening": "vacante",
+  "new role": "nuevo puesto",
+  "we're hiring": "contratando",
+  headcount: "headcount",
+  "vp of": "vp de",
+  "head of": "líder de",
+  chief: "director",
+  adopted: "adoptó",
+  "migrated to": "migró a",
+  "now using": "ahora usa",
+  "integration with": "integración con",
+  stack: "stack",
+  tech: "tecnología",
+  behavioral: "comportamiento",
+  intent: "intención",
+  unclassified: "sin clasificar",
+};
+
 export const opportunityStatusLabels: Record<OpportunityStatus, string> = {
   detected: "Detectada",
   ready_to_action: "Lista para acción",
