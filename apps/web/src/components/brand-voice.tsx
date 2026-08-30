@@ -27,6 +27,15 @@ const CHANNEL_ICONS: Record<string, string> = {
   twitter: "𝕏",
 };
 
+// CSS `capitalize` only uppercases the first letter of each word — fine
+// for "email", wrong for "linkedin" (brand name is camelCase: LinkedIn).
+// Explicit labels instead of leaning on text-transform for a proper noun.
+const CHANNEL_LABELS: Record<string, string> = {
+  email: "Email",
+  linkedin: "LinkedIn",
+  twitter: "Twitter",
+};
+
 const FRAGMENT_CATEGORIES = [
   { value: "example_post", label: "Post de ejemplo" },
   { value: "key_insight", label: "Insight clave" },
@@ -266,7 +275,7 @@ export function BrandVoicePanel() {
                 className={`p-3 text-center ${ch.mock ? "bee-inset" : "bee-bento--warm bee-bento"}`}
               >
                 <p className="text-sm font-bold">{CHANNEL_ICONS[ch.channel] ?? ch.channel}</p>
-                <p className="bee-caption mt-0.5 capitalize">{ch.channel}</p>
+                <p className="bee-caption mt-0.5">{CHANNEL_LABELS[ch.channel] ?? ch.channel}</p>
                 <p className="bee-caption mt-1">
                   {ch.mock ? "sin conectar" : "activo"}
                 </p>

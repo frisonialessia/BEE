@@ -301,7 +301,7 @@ export function SignalHexMap({
           <Skeleton className="h-full w-full rounded-2xl" style={{ height }} />
         ) : leads.length === 0 ? (
           <div
-            className="flex h-full items-center justify-center rounded-2xl bg-[var(--color-primary)]/40 text-sm font-light text-[var(--color-text-muted)]"
+            className="flex h-full items-center justify-center rounded-2xl border-2 border-dashed border-border text-sm font-light text-[var(--color-text-muted)]"
             style={{ height }}
           >
             Todavía no hay leads del Dark Funnel — las señales de intención van a poblar la colmena.

@@ -281,8 +281,8 @@ export function NetworkNavigatorPanel() {
         </div>
       ) : connections.length === 0 ? (
         <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
-          <p className="text-muted-foreground text-sm">No network connections yet.</p>
-          <p className="text-muted-foreground text-xs mt-1">Add connections to enable warm intro path finding.</p>
+          <p className="text-muted-foreground text-sm">Todavía no hay conexiones de red.</p>
+          <p className="text-muted-foreground text-xs mt-1">Agrega conexiones para habilitar la búsqueda de rutas de presentación cálida.</p>
         </div>
       ) : (
         <div className="space-y-2">

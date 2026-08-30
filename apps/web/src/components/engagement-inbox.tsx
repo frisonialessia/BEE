@@ -24,14 +24,22 @@ const SENTIMENT_VARIANT: Record<string, BadgeProps["variant"]> = {
   unknown: "outline",
 };
 
+const SENTIMENT_LABELS: Record<string, string> = {
+  positive: "Positivo",
+  neutral: "Neutral",
+  negative: "Negativo",
+  question: "Pregunta",
+  unknown: "Desconocido",
+};
+
 const INTENT_LABELS: Record<string, string> = {
-  sales_interest: "Sales Interest",
-  objection: "Objection",
-  referral: "Referral",
-  follow_up: "Follow-up",
-  compliment: "Compliment",
+  sales_interest: "Interés de compra",
+  objection: "Objeción",
+  referral: "Referido",
+  follow_up: "Seguimiento",
+  compliment: "Elogio",
   spam: "Spam",
-  other: "Other",
+  other: "Otro",
 };
 
 const INTENT_VARIANT: Record<string, BadgeProps["variant"]> = {
@@ -66,11 +74,13 @@ function EventCard({ event }: { event: EngagementEvent }) {
             {SOURCE_ICONS[event.source] ?? "?"}
           </span>
           <span className="text-xs font-medium">
-            {event.author_name ?? event.author_handle ?? "Anonymous"}
+            {event.author_name ?? event.author_handle ?? "Anónimo"}
           </span>
         </div>
         <div className="flex flex-shrink-0 items-center gap-1.5">
-          <Badge variant={SENTIMENT_VARIANT[event.sentiment] ?? "outline"}>{event.sentiment}</Badge>
+          <Badge variant={SENTIMENT_VARIANT[event.sentiment] ?? "outline"}>
+            {SENTIMENT_LABELS[event.sentiment] ?? event.sentiment}
+          </Badge>
           <Badge variant={INTENT_VARIANT[event.intent] ?? "outline"}>
             {INTENT_LABELS[event.intent] ?? event.intent}
           </Badge>
@@ -86,7 +96,7 @@ function EventCard({ event }: { event: EngagementEvent }) {
           onClick={() => setExpanded(!expanded)}
           className="text-xs font-medium text-[var(--color-chart-2)] hover:underline"
         >
-          {expanded ? "▲ Hide draft" : "▼ Show response draft"}
+          {expanded ? "▲ Ocultar borrador" : "▼ Ver borrador de respuesta"}
         </button>
       )}
 
@@ -95,7 +105,7 @@ function EventCard({ event }: { event: EngagementEvent }) {
           <p className="whitespace-pre-wrap text-xs">{event.response_draft}</p>
           {event.pending_action_id && (
             <p className="mt-1.5 text-xs font-medium text-[var(--color-chart-2)]">
-              Awaiting CEO approval in orchestrator
+              Esperando aprobación del CEO en el orquestador
             </p>
           )}
         </div>
@@ -149,13 +159,13 @@ export function EngagementInboxPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="bee-panel__title">Engagement Inbox</h3>
+          <h3 className="bee-panel__title">Bandeja de Engagement</h3>
           <p className="bee-panel__subtitle">
-            Incoming comments, DMs, and replies — classified and drafted by AI
+            Comentarios, DMs y respuestas entrantes — clasificados y redactados por IA
           </p>
         </div>
         <button onClick={() => setShowSubmit(!showSubmit)} className="bee-btn-ghost">
-          + Simulate Event
+          + Simular evento
         </button>
       </div>
 
@@ -167,20 +177,20 @@ export function EngagementInboxPanel() {
         </div>
         <div className="bee-bento bee-bento--warm p-2">
           <p className="bee-stat__val">{actionable.length}</p>
-          <p className="bee-stat__lbl">Need approval</p>
+          <p className="bee-stat__lbl">Requiere aprobación</p>
         </div>
         <div className="bee-bento bee-bento--primary p-2">
           <p className="bee-stat__val">
             {events.filter((e) => e.intent === "sales_interest").length}
           </p>
-          <p className="bee-stat__lbl">Sales leads</p>
+          <p className="bee-stat__lbl">Leads de venta</p>
         </div>
       </div>
 
       {/* Submit form */}
       {showSubmit && (
         <div className="bee-inset space-y-3 p-4">
-          <p className="bee-eyebrow">Simulate Incoming Event</p>
+          <p className="bee-eyebrow">Simular evento entrante</p>
           <select value={source} onChange={(e) => setSource(e.target.value)} className="bee-input">
             <option value="linkedin">LinkedIn</option>
             <option value="twitter">X (Twitter)</option>
@@ -189,13 +199,13 @@ export function EngagementInboxPanel() {
           <input
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
-            placeholder="Author name (optional)"
+            placeholder="Nombre del autor (opcional)"
             className="bee-input"
           />
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Paste a comment or message..."
+            placeholder="Pega un comentario o mensaje…"
             rows={3}
             className="bee-input resize-none"
           />
@@ -205,10 +215,10 @@ export function EngagementInboxPanel() {
               disabled={submitting || !content}
               className="bee-btn bee-btn--primary"
             >
-              {submitting ? "Processing..." : "Analyse & Draft"}
+              {submitting ? "Procesando…" : "Analizar y redactar"}
             </button>
             <button onClick={() => setShowSubmit(false)} className="bee-btn">
-              Cancel
+              Cancelar
             </button>
           </div>
         </div>
@@ -223,7 +233,7 @@ export function EngagementInboxPanel() {
         </div>
       ) : events.filter((e) => !e.ignored).length === 0 ? (
         <p className="bee-caption py-4 text-center">
-          No events yet. Use &quot;Simulate Event&quot; to test the SmartEngagementEngine.
+          Todavía no hay eventos — usa &quot;Simular evento&quot; para probarlo.
         </p>
       ) : (
         <div className="max-h-80 space-y-2 overflow-y-auto">

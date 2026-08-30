@@ -16,6 +16,15 @@ const ACTION_TYPE_ICONS: Record<string, React.ReactNode> = {
   send_email: <Mail className="size-4 stroke-[1.25]" />,
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  pending_approval: "Pendiente de aprobación",
+  approved: "Aprobado",
+  rejected: "Rechazado",
+  executing: "Ejecutando",
+  completed: "Completado",
+  failed: "Fallido",
+};
+
 const STATUS_STYLES: Record<string, string> = {
   pending_approval: "bg-[color-mix(in_srgb,var(--color-chart-1)_25%,var(--color-background))]",
   approved: "bg-[color-mix(in_srgb,var(--color-chart-5)_20%,var(--color-background))]",
@@ -53,7 +62,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
   }
 
   const isPending = action.status === "pending_approval";
-  const statusLabel = action.status.replace(/_/g, " ");
+  const statusLabel = STATUS_LABELS[action.status] ?? action.status.replace(/_/g, " ");
 
   return (
     <div className="bee-bento bee-bento--primary bee-bento-pad space-y-3">
@@ -154,7 +163,7 @@ export function PendingActionsPanel() {
   const pendingCount = actions.filter((a) => a.status === "pending_approval").length;
 
   return (
-    <div className="bee-bento bee-bento--muted bee-bento-pad space-y-4">
+    <div className="bee-bento bee-bento-pad space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="flex items-center gap-1.5 text-sm font-semibold">

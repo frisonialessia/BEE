@@ -435,8 +435,13 @@
      palabra en esa columna. */
   padding: 0.75rem;
   border-radius: var(--radius-lg);
-  background: var(--color-primary);
-  border: 1px solid var(--color-divider);
+  /* Missed in the Phase 0 white-card pass — this class predates
+     .bee-kpi-tile and never got the same background: var(--color-card) +
+     border: var(--bee-card-border) update, so Control's 2×2 stat grid was
+     the one spot still rendering flat lavender fill against otherwise-white
+     cards. */
+  background: var(--color-card);
+  border: 1px solid var(--bee-card-border);
   min-height: 5rem;
   /* A grid item's default min-width is auto, not 0 — without this its
      content refuses to shrink below its intrinsic width and instead
