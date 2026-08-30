@@ -41,7 +41,7 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
   if (!prediction) return null; // fetch failed outright — nothing honest to show
 
   return (
-    <section className="bee-surface p-5">
+    <section className="bee-surface bee-bento-pad">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-1.5 text-sm font-semibold">
           <Clock className="size-4 stroke-[1.5] text-muted-foreground" />

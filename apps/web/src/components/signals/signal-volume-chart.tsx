@@ -42,7 +42,7 @@ export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
                 {p.hotCount > 0 ? `, ${p.hotCount} de alta intención` : ""}
               </TooltipContent>
             </Tooltip>
-            <p className="text-[10px] text-muted-foreground">{p.label.split(" ")[0]}</p>
+            <p className="bee-micro">{p.label.split(" ")[0]}</p>
           </div>
         );
       })}

@@ -185,7 +185,7 @@ export function SystemHealth() {
     // leftover became a large dead-space gap, pushing AnomaliesPanel almost
     // out of view. Sizing to natural content height lets both cards sit
     // proportionately, same as every other pair of stacked cards in Control.
-    <section className="bee-surface flex flex-col p-5" aria-label="Salud del sistema">
+    <section className="bee-surface flex flex-col bee-bento-pad" aria-label="Salud del sistema">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="bee-eyebrow">Inteligencia</p>

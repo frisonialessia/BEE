@@ -16,7 +16,7 @@ export function TrendsChart({ points }: { points: MonthlyTrendPoint[] }) {
         const pct = (p.created / maxCreated) * 100;
         return (
           <div key={p.key} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
-            <p className="h-4 text-[11px] font-medium text-muted-foreground">
+            <p className="h-4 bee-micro font-medium">
               {p.winRate !== null ? `${Math.round(p.winRate * 100)}%` : "—"}
             </p>
             <Tooltip>
@@ -32,7 +32,7 @@ export function TrendsChart({ points }: { points: MonthlyTrendPoint[] }) {
                 {p.label}: {p.created} creadas, {p.won} ganadas, {p.lost} perdidas
               </TooltipContent>
             </Tooltip>
-            <p className="text-[11px] font-medium text-muted-foreground">{p.label}</p>
+            <p className="bee-micro font-medium">{p.label}</p>
           </div>
         );
       })}

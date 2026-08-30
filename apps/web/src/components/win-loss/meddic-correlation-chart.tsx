@@ -24,7 +24,7 @@ export function MeddicCorrelationChart({ stats }: { stats: MeddicBucketStat[] })
         const pct = (total / maxTotal) * 100;
         return (
           <div key={s.bucketLabel} className="flex flex-1 flex-col items-center gap-1.5">
-            <p className="h-4 text-[11px] font-medium text-muted-foreground">
+            <p className="h-4 bee-micro font-medium">
               {s.winRate !== null ? `${Math.round(s.winRate * 100)}%` : "—"}
             </p>
             <Tooltip>
@@ -40,7 +40,7 @@ export function MeddicCorrelationChart({ stats }: { stats: MeddicBucketStat[] })
                 {s.bucketLabel}: {s.won} ganadas, {s.lost} perdidas
               </TooltipContent>
             </Tooltip>
-            <p className="text-[11px] font-medium text-muted-foreground">{s.bucketLabel}</p>
+            <p className="bee-micro font-medium">{s.bucketLabel}</p>
           </div>
         );
       })}

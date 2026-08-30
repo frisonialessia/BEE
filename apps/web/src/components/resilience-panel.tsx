@@ -43,11 +43,11 @@ function DLQEventRow({ event, onRetry, onResolve }: {
 
   return (
     <div
-      className="rounded-lg border p-3 space-y-2"
+      className="bee-bento p-3 space-y-2"
       style={
         isFailed
           ? { borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 8%, var(--color-card))" }
-          : { borderColor: "var(--color-divider)", background: "var(--color-card)" }
+          : undefined
       }
     >
       <div className="flex items-center gap-2">
@@ -236,11 +236,11 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
 
   return (
     <div
-      className="rounded-lg border p-3 space-y-2"
+      className="bee-bento p-3 space-y-2"
       style={
         entry.manual_review_required
           ? { borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 8%, var(--color-card))" }
-          : { borderColor: "var(--color-divider)", background: "var(--color-card)" }
+          : undefined
       }
     >
       <div className="flex items-center gap-2 flex-wrap">
@@ -325,7 +325,7 @@ function AuditPanel() {
             <p className="bee-stat__lbl">Total de decisiones</p>
           </div>
           <div
-            className="rounded-lg border p-2 text-center"
+            className="bee-bento p-2 text-center"
             style={{ borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 12%, var(--color-background))" }}
           >
             <p className="bee-stat__val" style={{ color: "var(--color-chart-2)" }}>{summary.manual_review_count}</p>

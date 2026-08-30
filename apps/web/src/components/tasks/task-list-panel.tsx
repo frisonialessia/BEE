@@ -89,7 +89,7 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
   }
 
   return (
-    <section className="bee-surface p-5">
+    <section className="bee-surface bee-bento-pad">
       <h3 className="mb-3 text-sm font-semibold">Tareas de seguimiento</h3>
 
       {isLoading ? (

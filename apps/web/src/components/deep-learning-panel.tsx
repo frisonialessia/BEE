@@ -87,7 +87,7 @@ function CorrectionLearningPanel() {
 
       {result && (
         <div
-          className="rounded-lg border p-3 space-y-2"
+          className="bee-bento p-3 space-y-2"
           style={{ borderColor: "var(--color-chart-6)", background: "color-mix(in srgb, var(--color-chart-6) 10%, var(--color-background))" }}
         >
           <div className="flex items-center gap-2">
@@ -123,7 +123,7 @@ function CorrectionLearningPanel() {
       </button>
 
       {profile && profile.total_corrections > 0 && (
-        <div className="rounded-lg border border-border bg-[var(--color-primary)] p-3 space-y-2">
+        <div className="bee-bento p-3 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-foreground">Perfil de estilo actual</span>
             <span className="text-xs text-muted-foreground">
@@ -167,13 +167,13 @@ function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAck
   const varColor = SEVERITY_VAR[alert.severity] ?? null;
   const cardStyle = varColor
     ? { borderColor: varColor, background: `color-mix(in srgb, ${varColor} 8%, var(--color-card))`, color: "var(--color-text)" }
-    : { borderColor: "var(--color-divider)", background: "var(--color-primary)", color: "var(--color-text)" };
+    : undefined;
   const chipStyle = varColor
     ? { color: varColor, borderColor: varColor, background: `color-mix(in srgb, ${varColor} 15%, var(--color-background))` }
     : { color: "var(--color-text)", borderColor: "var(--color-divider)" };
 
   return (
-    <div className="rounded-lg border p-3 space-y-2" style={cardStyle}>
+    <div className="bee-bento p-3 space-y-2" style={cardStyle}>
       <div className="flex items-start gap-2">
         <div className="flex-1">
           <p className="text-xs font-semibold leading-tight">{alert.title}</p>
@@ -257,7 +257,7 @@ function AnomalyAlertsPanel() {
       </button>
 
       {summary && (
-        <div className="text-xs p-2 bg-[var(--color-primary)] border border-border rounded-lg text-muted-foreground">
+        <div className="bee-bento p-2 text-xs text-muted-foreground">
           {summary}
         </div>
       )}

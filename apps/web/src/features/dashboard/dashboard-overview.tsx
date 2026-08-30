@@ -151,7 +151,7 @@ export function DashboardOverview() {
       </section>
 
       <div className="mb-3 grid items-start gap-3 lg:grid-cols-2">
-        <section className="bee-surface p-5 space-y-3">
+        <section className="bee-surface bee-bento-pad space-y-3">
           <div>
             <p className="bee-eyebrow">Industria × Tipo de señal</p>
             <h2 className="mt-1 text-base font-semibold">Dónde eres más fuerte</h2>
@@ -164,7 +164,7 @@ export function DashboardOverview() {
           />
         </section>
 
-        <section className="bee-surface p-5 space-y-3">
+        <section className="bee-surface bee-bento-pad space-y-3">
           <div>
             <p className="bee-eyebrow">Día × hora</p>
             <h2 className="mt-1 text-base font-semibold">Cuándo llega el mercado</h2>

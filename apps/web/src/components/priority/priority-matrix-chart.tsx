@@ -55,7 +55,7 @@ export function PriorityMatrixChart({ priorities }: { priorities: CompanyPriorit
       <line x1={PAD} y1={toY(50)} x2={SIZE - PAD} y2={toY(50)} stroke="var(--color-divider)" strokeWidth={1} />
 
       {/* Ejes */}
-      <text x={SIZE / 2} y={SIZE - 6} textAnchor="middle" className="fill-muted-foreground" fontSize={9}>
+      <text x={SIZE / 2} y={SIZE - 6} textAnchor="middle" className="fill-muted-foreground" fontSize={11}>
         Fit con tu ICP →
       </text>
       <text
@@ -63,7 +63,7 @@ export function PriorityMatrixChart({ priorities }: { priorities: CompanyPriorit
         y={SIZE / 2}
         textAnchor="middle"
         className="fill-muted-foreground"
-        fontSize={9}
+        fontSize={11}
         transform={`rotate(-90 10 ${SIZE / 2})`}
       >
         Intención →

@@ -33,7 +33,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
     const won = opportunity.status === "won";
     const lost = opportunity.status === "lost";
     return (
-      <section className="bee-surface p-5">
+      <section className="bee-surface bee-bento-pad">
         <div className="mb-1 flex items-center gap-2">
           {won && <CheckCircle2 className="size-4 text-[var(--success)]" />}
           {lost && <XCircle className="size-4 text-muted-foreground" />}
@@ -83,7 +83,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
   }
 
   return (
-    <section className="bee-surface p-5">
+    <section className="bee-surface bee-bento-pad">
       <h3 className="mb-3 text-sm font-semibold">Registrar resultado</h3>
 
       {mode === null && (

@@ -40,7 +40,7 @@ export function Leaderboard({
     .slice(0, 5);
 
   return (
-    <div className="bee-surface p-5">
+    <div className="bee-surface bee-bento-pad">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Trophy className="size-4 text-[var(--color-chart-1)]" />

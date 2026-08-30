@@ -523,7 +523,7 @@ function ForecastView() {
           <div className="bee-bento bee-bento--primary bee-bento-pad space-y-2">
             <div className="flex items-center justify-between">
               <span className="bee-kpi-tile__label">Proyección realista</span>
-              <span className="bee-kpi text-xl">
+              <span className="bee-kpi">
                 {realistic?.deals ?? 0}
                 <span className="ml-1 text-xs font-normal text-muted-foreground">operaciones</span>
               </span>

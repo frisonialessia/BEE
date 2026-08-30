@@ -93,7 +93,7 @@ function OAuthProviderRow({
   }
 
   return (
-    <div className="bee-surface p-5">
+    <div className="bee-surface bee-bento-pad">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
@@ -291,7 +291,7 @@ export function IntegrationsView() {
             </p>
           )}
 
-          <section className="bee-surface p-5">
+          <section className="bee-surface bee-bento-pad">
             <div className="mb-3 flex items-center gap-2">
               <Plug className="size-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold">Canales del servidor</h3>

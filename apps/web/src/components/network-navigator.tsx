@@ -41,7 +41,7 @@ function PathCard({ path }: { path: IntroPath }) {
   const introType = INTRO_TYPE_CONFIG[path.intro_type] ?? INTRO_TYPE_CONFIG.cold;
 
   return (
-    <div className="rounded-lg border border-border bg-[var(--color-card)] p-4 space-y-3">
+    <div className="bee-bento bee-bento-pad space-y-3">
       <div className="flex items-center justify-between">
         <span
           className="text-xs px-2 py-0.5 rounded-sm border font-medium"
@@ -193,7 +193,7 @@ export function NetworkNavigatorPanel() {
       )}
 
       {/* Path finder */}
-      <div className="rounded-lg border border-border bg-[var(--color-card)] p-4 space-y-3">
+      <div className="bee-bento bee-bento-pad space-y-3">
         <h3 className="text-sm font-semibold text-foreground">Buscar ruta de presentación</h3>
         <form onSubmit={handleFindPaths} className="flex flex-wrap gap-2">
           <input
