@@ -28,12 +28,12 @@ from app.services.strategy_generator.registry import register_strategy_generator
 
 def _company(ctx: EnrichmentContext) -> str:
     """Return the most specific company identifier available."""
-    return ctx.company_name or ctx.company_domain or "the company"
+    return ctx.company_name or ctx.company_domain or "la empresa"
 
 
 def _lead(ctx: EnrichmentContext) -> str:
     """Return the most specific lead identifier available."""
-    return ctx.lead_name or ctx.lead_title or "the decision-maker"
+    return ctx.lead_name or ctx.lead_title or "quien decide"
 
 
 def _best_similar_win_channel_playbook(
@@ -153,36 +153,38 @@ class FundingStrategyGenerator(StrategyGenerator):
 
         hint_note = ""
         if ctx.best_hint and ctx.best_hint.is_actionable:
-            hint_note = f" [Adaptive: {ctx.best_hint.to_prompt_text()}]"
+            hint_note = f" [Adaptativo: {ctx.best_hint.to_prompt_text()}]"
 
         return StrategySchema(
             pain_point=(
-                f"{company} just closed a {round_label}{amount_str} round and now faces "
-                "the classic scale-up paradox: they have capital to deploy but their "
-                "existing processes, tools, and team aren't ready for the next growth "
-                "phase. Every week of delay is a competitive disadvantage."
+                f"{company} acaba de cerrar una ronda {round_label}{amount_str} y ahora enfrenta "
+                "la paradoja clásica del escalamiento: tiene capital para invertir, pero sus "
+                "procesos, herramientas y equipo actuales no están listos para la siguiente "
+                "etapa de crecimiento. Cada semana de retraso es una desventaja competitiva."
             ),
             closing_argument=(
-                f"Congrats on the {round_label}{amount_str} — companies at this stage "
-                "typically need to 2-3× their go-to-market capacity in the next 90 days. "
-                "We've helped {company}-sized teams do exactly that without the usual "
-                "ramp-time penalty. Would a 20-minute call this week make sense?"
+                f"Felicidades por la ronda {round_label}{amount_str} — las empresas en esta "
+                "etapa normalmente necesitan multiplicar 2-3× su capacidad de go-to-market en "
+                "los próximos 90 días. Ya ayudamos a equipos del tamaño de {company} a lograrlo "
+                "exactamente así, sin la curva de arranque habitual. ¿Tendría sentido una "
+                "llamada de 20 minutos esta semana?"
             ).replace("{company}", company),
             timing_window=TimingWindow(
                 urgency="immediate",
                 reason=(
-                    f"Budget allocation decisions are made in the first 60 days post-{round_label} "
-                    "close. Vendors engaged early are 3× more likely to be selected. "
-                    f"Waiting means competing against whoever {company} already spoke to."
+                    f"Las decisiones de asignación de presupuesto se toman en los primeros 60 días "
+                    f"después del cierre de la ronda {round_label}. Los proveedores que se acercan "
+                    "temprano tienen 3× más probabilidad de ser elegidos. "
+                    f"Esperar significa competir contra quien sea que {company} ya haya contactado."
                 ),
-                expires_at="60 days post-funding close",
+                expires_at="60 días después del cierre de la ronda",
             ),
             playbook=playbook,
             next_best_action="reach_out",
             channel=channel,
             rationale=(
-                f"Signal score {score:.0f}/100 — {company} raised {round_label}{amount_str}. "
-                f"Lead: {lead}.{hint_note}"
+                f"Score de señal {score:.0f}/100 — {company} levantó {round_label}{amount_str}. "
+                f"Contacto: {lead}.{hint_note}"
             ),
             generator=self.name,
             generator_version="1.0.0",
@@ -212,45 +214,50 @@ class HiringStrategyGenerator(StrategyGenerator):
 
         if is_leadership:
             pain_point = (
-                f"{company} just brought in a new {lead}. New executives typically "
-                "spend their first 90 days auditing current vendors, processes, and "
-                "tooling — and making replacement decisions. The ones they meet early "
-                "shape their mental model of 'what good looks like'."
+                f"{company} acaba de sumar a {lead}. Los nuevos ejecutivos normalmente "
+                "pasan sus primeros 90 días auditando proveedores, procesos y herramientas "
+                "actuales — y tomando decisiones de reemplazo. Con quienes hablan primero "
+                "definen su idea de 'cómo se ve lo bueno'."
             )
             closing_argument = (
-                f"I noticed {company} recently welcomed a new {lead}. "
-                "Most RevOps/Sales leaders in that position do a full tech audit "
-                "in their first quarter — we've helped several of them build a "
-                "modern intelligence stack from scratch. Would it be worth a call "
-                "to share what's working for others in your space?"
+                f"Vi que {company} recientemente sumó a {lead}. "
+                "La mayoría de los líderes de RevOps/Ventas en esa posición hacen una "
+                "auditoría tecnológica completa en su primer trimestre — ya ayudamos a "
+                "varios a construir un stack de inteligencia moderno desde cero. "
+                "¿Valdría la pena una llamada para compartir qué le está funcionando "
+                "a otros en tu sector?"
             )
             urgency = "this_week"
             window_reason = (
-                "The first 30-60 days of a new leadership role are the 'blank slate' "
-                "phase — no vendor loyalty, high receptivity, and active tool evaluation."
+                "Los primeros 30-60 días de un nuevo rol de liderazgo son la fase de "
+                "'hoja en blanco' — sin lealtad a proveedores, alta receptividad, y "
+                "evaluación activa de herramientas."
             )
-            expires = "90 days post-hire"
+            expires = "90 días después de la contratación"
             action = "reach_out"
             default_channel = "linkedin"
             default_playbook = "leadership_change_outreach"
         else:
             pain_point = (
-                f"{company} is in active hiring mode — new team members mean new "
-                "onboarding costs, slower ramp times, and increased process fragmentation. "
-                "They need tools and intelligence that scale with headcount, not against it."
+                f"{company} está en modo activo de contratación — sumar gente nueva "
+                "significa nuevos costos de onboarding, tiempos de arranque más lentos, "
+                "y más fragmentación de procesos. Necesitan herramientas e inteligencia "
+                "que escalen con el headcount, no en su contra."
             )
             closing_argument = (
-                f"We noticed {company} is scaling the team. "
-                "High-growth teams at your stage often hit the same bottleneck: "
-                "new reps can't replicate what top performers do instinctively. "
-                "We help solve that systematically. Worth a 15-minute chat?"
+                f"Vimos que {company} está creciendo el equipo. "
+                "Los equipos de alto crecimiento en tu etapa suelen toparse con el mismo "
+                "cuello de botella: los nuevos reps no pueden replicar lo que los top "
+                "performers hacen por instinto. Ayudamos a resolver eso de forma "
+                "sistemática. ¿Vale la pena una plática de 15 minutos?"
             )
             urgency = "this_month"
             window_reason = (
-                "Companies in active hiring mode make tooling decisions to support "
-                "the incoming team. The window is 30-45 days before new reps onboard."
+                "Las empresas en modo activo de contratación toman decisiones de "
+                "herramientas para apoyar al equipo entrante. La ventana es de 30-45 "
+                "días antes de que los nuevos reps se integren."
             )
-            expires = "before next hiring batch onboards"
+            expires = "antes de que arranque el siguiente lote de contrataciones"
             action = "monitor"
             default_channel = "linkedin"
             default_playbook = "hiring_growth_outreach"
@@ -268,7 +275,7 @@ class HiringStrategyGenerator(StrategyGenerator):
             playbook=playbook,
             next_best_action=action,
             channel=channel,
-            rationale=f"Signal score {ctx.signal_score:.0f}/100 — {company} / {lead}.",
+            rationale=f"Score de señal {ctx.signal_score:.0f}/100 — {company} / {lead}.",
             generator=self.name,
             generator_version="1.0.0",
             generated_at=datetime.now(UTC),
@@ -293,34 +300,36 @@ class TechAdoptionStrategyGenerator(StrategyGenerator):
         company = _company(ctx)
         tags = ctx.analysis_tags
 
-        tool = next((t for t in tags if t not in ("tech", "migrated to")), "a new tool")
+        tool = next((t for t in tags if t not in ("tech", "migrated to")), "una nueva herramienta")
 
         return StrategySchema(
             pain_point=(
-                f"{company} is adopting {tool} — which usually signals they're "
-                "re-evaluating adjacent parts of their stack too. Tool migrations "
-                "create integration gaps and force teams to reconsider the full "
-                "workflow, not just the piece they're replacing."
+                f"{company} está adoptando {tool} — lo que normalmente indica que "
+                "también está reevaluando partes adyacentes de su stack. Las "
+                "migraciones de herramientas crean huecos de integración y obligan "
+                "a los equipos a repensar todo el flujo de trabajo, no solo la "
+                "pieza que están reemplazando."
             ),
             closing_argument=(
-                f"We noticed {company} is integrating {tool} into your workflow. "
-                "Teams making that move often discover gaps in their sales intelligence "
-                "layer that {tool} alone doesn't address. We complement it directly — "
-                "could we show you how in 20 minutes?"
+                f"Vimos que {company} está integrando {tool} a su flujo de trabajo. "
+                "Los equipos que hacen ese cambio suelen descubrir huecos en su capa "
+                "de inteligencia de ventas que {tool} por sí solo no cubre. Nosotros "
+                "lo complementamos directamente — ¿te mostramos cómo en 20 minutos?"
             ).replace("{tool}", tool),
             timing_window=TimingWindow(
                 urgency="this_month",
                 reason=(
-                    f"Stack evaluation windows stay open for 30-45 days after a "
-                    f"new tool adoption. {company} is in 'change mode' right now — "
-                    "receptivity to adjacent solutions is at its peak."
+                    f"Las ventanas de evaluación de stack se mantienen abiertas 30-45 "
+                    f"días después de adoptar una nueva herramienta. {company} está en "
+                    "'modo cambio' justo ahora — la receptividad a soluciones "
+                    "adyacentes está en su punto más alto."
                 ),
-                expires_at="45 days post-adoption",
+                expires_at="45 días después de la adopción",
             ),
             playbook="complementary_tech_pitch",
             next_best_action="research",
             channel="email",
-            rationale=f"Signal score {ctx.signal_score:.0f}/100 — {company} adopted {tool}.",
+            rationale=f"Score de señal {ctx.signal_score:.0f}/100 — {company} adoptó {tool}.",
             generator=self.name,
             generator_version="1.0.0",
             generated_at=datetime.now(UTC),
@@ -347,26 +356,27 @@ class GenericStrategyGenerator(StrategyGenerator):
         company = _company(ctx)
         return StrategySchema(
             pain_point=(
-                f"A market signal was detected for {company} that may indicate "
-                "a change event. Full context is limited — manual review recommended "
-                "before outreach to avoid mis-framing the conversation."
+                f"Se detectó una señal de mercado para {company} que podría indicar "
+                "un evento de cambio. El contexto disponible es limitado — se recomienda "
+                "revisión manual antes de contactar para no encuadrar mal la conversación."
             ),
             closing_argument=(
-                f"We spotted some activity around {company} that might be relevant. "
-                "Worth a quick check-in to understand your current priorities?"
+                f"Notamos actividad reciente alrededor de {company} que podría ser "
+                "relevante. ¿Vale la pena un check-in rápido para entender tus "
+                "prioridades actuales?"
             ),
             timing_window=TimingWindow(
                 urgency="watch",
                 reason=(
-                    "Signal confidence is low. Monitor for a confirming second signal "
-                    "before committing outreach time."
+                    "La confianza de la señal es baja. Monitorear hasta tener una "
+                    "segunda señal que la confirme antes de invertir tiempo en contactar."
                 ),
                 expires_at=None,
             ),
             playbook="generic_outreach",
             next_best_action="monitor",
             channel="email",
-            rationale=f"Unclassified signal for {company}. Score {ctx.signal_score:.0f}/100.",
+            rationale=f"Señal sin clasificar para {company}. Score {ctx.signal_score:.0f}/100.",
             generator=self.name,
             generator_version="1.0.0",
             generated_at=datetime.now(UTC),

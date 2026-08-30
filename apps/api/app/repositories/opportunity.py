@@ -84,6 +84,7 @@ class OpportunityRepository(BaseRepository[Opportunity]):
     def list_scoped(
         self,
         *,
+        status: str | None = None,
         limit: int = 100,
         offset: int = 0,
         visible_user_ids: set[uuid.UUID] | None = None,
@@ -92,8 +93,18 @@ class OpportunityRepository(BaseRepository[Opportunity]):
         """Same paging/ordering as :meth:`BaseRepository.list`, with the same
         optional visibility filter as :meth:`list_ready_to_action` — including
         the ``organization_id`` tenant boundary, see its docstring there.
+
+        ``status=None`` (the default) returns every status — this is what
+        every real-account view (CRM board, Forecast, Ganado/Perdido,
+        Priorización, the Resumen embudo…) actually needs, since none of
+        them ask for a single stage. Pass an explicit status to filter to
+        just that one instead.
         """
+        from app.models.base import OpportunityStatus
+
         statement = select(Opportunity).order_by(Opportunity.created_at.desc())  # type: ignore[union-attr]
+        if status is not None:
+            statement = statement.where(Opportunity.status == OpportunityStatus(status))
         if visible_user_ids is not None:
             statement = statement.where(Opportunity.assigned_to_user_id.in_(visible_user_ids))
         statement = scope_by_organization_id(statement, Opportunity.organization_id, organization_id)
