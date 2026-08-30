@@ -171,7 +171,7 @@ export function QuotasSection({
             const actual = actualFor(q);
             const pct = Math.min(100, Math.round((actual / q.target_amount) * 100));
             return (
-              <div key={q.id} className="rounded-[var(--radius-md)] bg-[var(--color-primary)]/20 p-3">
+              <div key={q.id} className="bee-bento p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <p className="text-sm font-medium">{owner ?? "—"}</p>
@@ -198,7 +198,7 @@ export function QuotasSection({
                 </div>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-card)]">
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-primary)]/25">
                       <div
                         className="h-full rounded-full bg-[var(--color-chart-4)] transition-[width]"
                         style={{ width: `${pct}%` }}

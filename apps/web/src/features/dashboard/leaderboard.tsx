@@ -58,7 +58,7 @@ export function Leaderboard({
           {ranked.map((row, i) => {
             const pct = Math.round((row.won / ranked[0].won) * 100);
             return (
-              <li key={row.user.id} className="flex items-center gap-3 rounded-[var(--radius-md)] bg-[var(--color-primary)]/30 p-2.5">
+              <li key={row.user.id} className="bee-bento flex items-center gap-3 p-2.5">
                 <span
                   className="flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                   style={{ background: RANK_COLOR[i] ?? "var(--color-text-muted)" }}

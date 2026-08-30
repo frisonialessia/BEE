@@ -169,7 +169,7 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
       ) : (
         <div className="space-y-2.5">
           {webhooks.map((w) => (
-            <div key={w.id} className="rounded-[var(--radius-md)] bg-[var(--color-primary)]/20 p-3">
+            <div key={w.id} className="bee-bento p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{w.url}</p>
@@ -177,7 +177,7 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
                     {w.event_types.map((t) => (
                       <span
                         key={t}
-                        className="rounded-[var(--radius-sm)] bg-[var(--color-card)] px-1.5 py-0.5 bee-micro"
+                        className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/25 px-1.5 py-0.5 bee-micro"
                       >
                         {EVENT_TYPE_LABELS[t] ?? t}
                       </span>

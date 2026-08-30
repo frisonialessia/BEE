@@ -141,7 +141,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
                 }
               />
             </div>
-            <pre className="text-sm text-foreground bg-[var(--color-primary)] rounded-sm p-3 whitespace-pre-wrap font-sans leading-relaxed border border-border">
+            <pre className="text-sm text-foreground bg-[var(--color-background)] rounded-sm p-3 whitespace-pre-wrap font-sans leading-relaxed border border-border">
               {email_draft.body}
             </pre>
             {email_draft.ps_line && (

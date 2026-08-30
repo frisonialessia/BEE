@@ -94,7 +94,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
       </div>
 
       {expanded && (
-        <div className="mt-2 p-2 bg-[var(--color-primary)] rounded-sm text-xs space-y-1">
+        <div className="mt-2 rounded-sm border border-border bg-[var(--color-background)] p-2 text-xs space-y-1">
           <p><span className="font-medium">Tipo:</span> {event.event_type}</p>
           <p><span className="font-medium">Creado:</span> {new Date(event.created_at).toLocaleString()}</p>
           {event.next_retry_at && (
@@ -273,7 +273,7 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
       {expanded && (
         <div className="mt-1 space-y-2">
           {Object.keys(entry.context_snapshot).length > 0 && (
-            <div className="p-2 bg-[var(--color-primary)] rounded-sm">
+            <div className="rounded-sm border border-border bg-[var(--color-background)] p-2">
               <p className="text-xs font-medium text-muted-foreground mb-1">Contexto</p>
               <pre className="text-xs text-foreground overflow-auto">{JSON.stringify(entry.context_snapshot, null, 2)}</pre>
             </div>
