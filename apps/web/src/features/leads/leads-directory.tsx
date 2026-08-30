@@ -16,7 +16,7 @@ import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBulkUpdateLeads, useLeads, useValidateLead } from "@/hooks/queries/use-leads";
 import { useBulkEnrollLeadsInSequence, useSequences } from "@/hooks/queries/use-sequences";
 import { useUsers } from "@/hooks/queries/use-users";
-import { isDemoMode } from "@/lib/demo/mode";
+import { useIsDemoMode } from "@/lib/demo/mode";
 import { leadStatusLabels, scoreVariant, timeAgo, validationFlagLabels } from "@/lib/format";
 import type { Lead, LeadStatus } from "@/types/domain";
 
@@ -51,7 +51,7 @@ export function LeadsDirectory() {
   const { data: users } = useUsers();
   const validateLead = useValidateLead();
   const bulkUpdate = useBulkUpdateLeads();
-  const demo = isDemoMode();
+  const demo = useIsDemoMode();
   const { data: sequencesResult } = useSequences();
   const bulkEnroll = useBulkEnrollLeadsInSequence();
 
@@ -479,7 +479,7 @@ export function LeadsDirectory() {
             <p className="bee-caption">
               Consejo: los leads todavía no tienen ficha propia — abre la empresa desde{" "}
               <Link
-                href={isDemoMode() ? "/probar/companies" : "/dashboard/companies"}
+                href={demo ? "/probar/companies" : "/dashboard/companies"}
                 className="text-[var(--color-chart-4)] hover:underline"
               >
                 Empresas

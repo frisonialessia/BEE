@@ -11,7 +11,7 @@ import { CompanyDuplicatesPanel } from "@/components/dedup/company-duplicates-pa
 import { useCompanies, useCreateCompany } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
-import { isDemoMode } from "@/lib/demo/mode";
+import { useIsDemoMode } from "@/lib/demo/mode";
 
 function NewCompanyForm({ onDone }: { onDone: () => void }) {
   const createCompany = useCreateCompany();
@@ -93,7 +93,7 @@ export function CompaniesList() {
   const { data: leadsResult } = useLeads(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);
   const [showNew, setShowNew] = useState(false);
-  const demo = isDemoMode();
+  const demo = useIsDemoMode();
 
   const companies = companiesResult?.data ?? [];
   const live = companiesResult?.live ?? false;
