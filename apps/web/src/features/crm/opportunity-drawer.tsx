@@ -107,7 +107,7 @@ export function OpportunityDrawer() {
           {loadingBattlecard ? (
             <Skeleton className="h-64" />
           ) : battlecard ? (
-            <div className="bee-surface p-5">
+            <div className="bee-surface bee-bento-pad">
               <BattlecardView card={battlecard} />
             </div>
           ) : (
@@ -117,7 +117,7 @@ export function OpportunityDrawer() {
           )}
 
           {opportunity?.lead_id && (
-            <section className="bee-surface p-5">
+            <section className="bee-surface bee-bento-pad">
               <h3 className="mb-3 text-sm font-semibold">Perfil de comunicación (DISC)</h3>
               {loadingDisc ? (
                 <Skeleton className="h-48" />
@@ -151,7 +151,7 @@ export function OpportunityDrawer() {
             </section>
           )}
 
-          <section className="bee-surface p-5">
+          <section className="bee-surface bee-bento-pad">
             <h3 className="mb-3 text-sm font-semibold">Historial</h3>
             {opportunityId && <OpportunityTimeline opportunityId={opportunityId} />}
           </section>

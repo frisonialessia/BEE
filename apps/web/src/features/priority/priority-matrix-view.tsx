@@ -131,7 +131,7 @@ export function PriorityMatrixView() {
                 ))}
               </div>
 
-              <section className="bee-surface flex flex-col items-center gap-4 p-5 lg:flex-row lg:items-start">
+              <section className="bee-surface flex flex-col items-center gap-4 bee-bento-pad lg:flex-row lg:items-start">
                 <PriorityMatrixChart priorities={priorities} />
                 <p className="bee-caption max-w-xs">
                   Cada punto es una empresa. Arriba a la derecha: encaja con tu ICP y está caliente ahora — ahí

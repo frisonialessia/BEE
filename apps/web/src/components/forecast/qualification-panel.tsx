@@ -55,7 +55,7 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
   }
 
   return (
-    <section className="bee-surface p-5">
+    <section className="bee-surface bee-bento-pad">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold">Calificación (MEDDIC)</h3>
         <span className="font-mono bee-micro">

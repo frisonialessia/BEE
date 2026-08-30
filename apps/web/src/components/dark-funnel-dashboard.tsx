@@ -53,11 +53,11 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
 
   return (
     <div
-      className="rounded-lg border p-4 space-y-3"
+      className="bee-bento bee-bento-pad space-y-3"
       style={
         lead.is_hot
           ? { borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 8%, var(--color-card))" }
-          : { borderColor: "var(--color-divider)", background: "var(--color-card)" }
+          : undefined
       }
     >
       <div className="flex items-start justify-between gap-2">

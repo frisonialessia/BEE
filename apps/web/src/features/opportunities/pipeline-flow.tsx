@@ -85,7 +85,7 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
   }
 
   return (
-    <div className="bee-surface p-5">
+    <div className="bee-surface bee-bento-pad">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="bee-eyebrow">Flujo del pipeline</p>

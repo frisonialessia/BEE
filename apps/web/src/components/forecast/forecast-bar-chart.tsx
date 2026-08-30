@@ -39,7 +39,7 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
                 {b.count} oportunidad{b.count === 1 ? "" : "es"})
               </TooltipContent>
             </Tooltip>
-            <p className="text-[11px] font-medium text-muted-foreground">{b.label}</p>
+            <p className="bee-micro font-medium">{b.label}</p>
           </div>
         );
       })}

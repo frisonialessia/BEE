@@ -64,7 +64,7 @@ function HiveTooltip({
         {lead.company_name ?? lead.company_domain}
       </p>
       <p className="bee-micro">{lead.company_domain}</p>
-      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+      <div className="mt-2 flex flex-wrap gap-1.5 bee-micro">
         <span className="rounded-lg bg-muted px-2 py-0.5">
           {STAGE_LABELS[lead.buying_stage] ?? lead.buying_stage}
         </span>
@@ -262,7 +262,7 @@ export function SignalHexMap({
 
   return (
     <section
-      className={cn("bee-glass relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] p-5", className)}
+      className={cn("bee-glass relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] bee-bento-pad", className)}
       aria-label="Mapa hexagonal de señales — mapa de calor de la colmena"
     >
       {/* Hexágonos flotantes decorativos — puro CSS, no interactúan. */}
@@ -339,7 +339,7 @@ export function SignalHexMap({
               <span className="h-7 w-[3px] shrink-0 rounded-full" style={{ background: s.color }} />
               <div>
                 <p className="text-base font-bold leading-none tabular-nums">{s.pct}%</p>
-                <p className="mt-1 text-[11px] leading-none text-muted-foreground">{s.label}</p>
+                <p className="mt-1 bee-micro leading-none">{s.label}</p>
               </div>
             </div>
           ))}

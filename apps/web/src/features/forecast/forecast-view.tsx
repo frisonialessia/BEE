@@ -124,13 +124,13 @@ export function ForecastView() {
                 />
               </div>
 
-              <section className="bee-surface p-5">
+              <section className="bee-surface bee-bento-pad">
                 <h3 className="mb-4 text-sm font-semibold">Pronóstico por mes</h3>
                 <ForecastBarChart buckets={forecast.byMonth} />
               </section>
 
               {hasClosedHistory && (
-                <section className="bee-surface p-5">
+                <section className="bee-surface bee-bento-pad">
                   <h3 className="mb-1 text-sm font-semibold">Tendencia de cierre</h3>
                   <p className="bee-caption mb-4">
                     Oportunidades creadas por mes (barra) y tasa de cierre de lo que se resolvió ese mes
@@ -141,7 +141,7 @@ export function ForecastView() {
               )}
 
               {forecast.scoreBucketStats.length > 0 && (
-                <section className="bee-surface p-5">
+                <section className="bee-surface bee-bento-pad">
                   <h3 className="mb-1 text-sm font-semibold">Precisión del pronóstico</h3>
                   <p className="bee-caption mb-4">
                     Ya hay suficiente histórico para calcular la probabilidad de cierre real por rango de
@@ -164,7 +164,7 @@ export function ForecastView() {
                 </section>
               )}
 
-              <section className="bee-surface p-5">
+              <section className="bee-surface bee-bento-pad">
                 <h3 className="mb-3 text-sm font-semibold">Deals en riesgo</h3>
                 {forecast.atRisk.length === 0 ? (
                   <p className="text-sm text-muted-foreground">

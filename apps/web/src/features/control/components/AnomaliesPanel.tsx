@@ -63,7 +63,7 @@ export function AnomaliesPanel() {
     // sibling SystemHealth's root, which carries no margin of its own). The
     // mt-4 that used to live here stacked on top of that gap and doubled the
     // whitespace above this card versus every other card in the column.
-    <section className="bee-surface p-5" aria-label="Anomalías de conversión">
+    <section className="bee-surface bee-bento-pad" aria-label="Anomalías de conversión">
       <div className="mb-1 flex items-center gap-2">
         <AlertTriangle className="size-3.5 text-[var(--color-text-muted)]" />
         <p className="bee-eyebrow">Anomalías</p>
