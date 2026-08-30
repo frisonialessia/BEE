@@ -169,6 +169,21 @@
   color: var(--color-text);
 }
 
+/* Title of a chart/graph/timeline card — one shared size+weight for every
+ * "here's a chart" section instead of each page picking its own (some used
+ * text-base/16px with an eyebrow line above, some text-sm/14px with none).
+ * Standardized on the plain title+caption pattern already used by most
+ * cards (Pronóstico, Ganado/Perdido) rather than adding an eyebrow line to
+ * every card that lacked one — pair with .bee-caption right below for the
+ * one-line description every chart card gets. probar/page.tsx's Resumen is
+ * a deliberate exception (single combined .bee-eyebrow line, no separate
+ * title) to keep that page free of scroll — not an oversight. */
+.bee-card-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
 .bee-kpi {
   font-size: var(--bee-text-kpi);
   font-weight: 700;

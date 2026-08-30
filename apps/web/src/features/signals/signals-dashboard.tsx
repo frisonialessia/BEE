@@ -62,8 +62,9 @@ export function SignalsDashboard() {
         </div>
       ) : (
         <>
-          <section className="bee-surface mb-4 p-4">
-            <p className="bee-eyebrow mb-3">Volumen · últimos 14 días</p>
+          <section className="bee-surface bee-bento-pad mb-4">
+            <h3 className="bee-card-title">Volumen de señales</h3>
+            <p className="bee-caption mb-4">Detectadas por día, últimos 14 días</p>
             <SignalVolumeChart points={dailyVolume} />
           </section>
 

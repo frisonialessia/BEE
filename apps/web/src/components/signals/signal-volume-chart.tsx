@@ -23,7 +23,7 @@ export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
         const totalPct = (p.count / maxCount) * 100;
         const hotPct = (p.hotCount / maxCount) * 100;
         return (
-          <div key={p.key} className="flex w-8 shrink-0 flex-col items-center gap-1">
+          <div key={p.key} className="flex h-full w-8 shrink-0 flex-col items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="relative flex w-full flex-1 items-end justify-center rounded-t-[var(--radius-sm)] bg-[var(--color-primary)]/20">

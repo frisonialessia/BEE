@@ -105,7 +105,7 @@ export function RevenueSimulatorWidget() {
     <div className="bee-bento bee-bento--warm bee-bento-pad space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+          <h3 className="bee-card-title flex items-center gap-1.5">
             <BarChart3 className="size-4 stroke-[1.25]" style={{ color: CHART_PALETTE[3] }} />
             Simulador de ingresos
           </h3>

@@ -103,20 +103,20 @@ export function WinLossView() {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <section className="bee-surface bee-bento-pad">
-              <h3 className="mb-1 text-sm font-semibold">Razones de pérdida</h3>
+              <h3 className="bee-card-title">Razones de pérdida</h3>
               <p className="bee-caption mb-4">Qué se repite más entre los deals perdidos</p>
               <LossReasonChart stats={summary.reasonBreakdown} />
             </section>
 
             <section className="bee-surface bee-bento-pad">
-              <h3 className="mb-1 text-sm font-semibold">Competidores</h3>
+              <h3 className="bee-card-title">Competidores</h3>
               <p className="bee-caption mb-4">Contra quién competimos de verdad al cerrar</p>
               <CompetitorBreakdown stats={summary.competitorBreakdown} />
             </section>
           </div>
 
           <section className="bee-surface bee-bento-pad">
-            <h3 className="mb-1 text-sm font-semibold">Calificación MEDDIC vs. resultado</h3>
+            <h3 className="bee-card-title">Calificación MEDDIC vs. resultado</h3>
             <p className="bee-caption mb-4">
               Tasa de cierre real según qué tan calificado estaba el deal — si calificar más de verdad
               se traduce en más cierres ganados, o si es solo un checklist sin impacto
