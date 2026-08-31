@@ -118,7 +118,7 @@ export function OpportunityDrawer() {
 
           {opportunity?.lead_id && (
             <section className="bee-surface bee-bento-pad">
-              <h3 className="mb-3 text-sm font-semibold">Perfil de comunicación (DISC)</h3>
+              <h3 className="bee-card-title">Perfil de comunicación (DISC)</h3>
               {loadingDisc ? (
                 <Skeleton className="h-48" />
               ) : disc ? (
@@ -157,7 +157,7 @@ export function OpportunityDrawer() {
           </section>
 
           <section>
-            <h3 className="mb-3 text-sm font-semibold">Artefactos de ejecución</h3>
+            <h3 className="bee-card-title">Artefactos de ejecución</h3>
             {loadingArtifacts ? (
               <Skeleton className="h-48" />
             ) : artifacts ? (
