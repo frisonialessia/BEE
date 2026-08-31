@@ -684,25 +684,6 @@
 .bee-bar--5, .bee-bar--c5 { background: var(--color-chart-5); }
 .bee-bar--6, .bee-bar--c6 { background: var(--color-chart-6); }
 
-.bee-status {
-  display: inline-flex;
-  align-items: center;
-  border-radius: var(--radius-sm);
-  padding: 0.125rem 0.5rem;
-  font-size: 0.625rem;
-  font-weight: 500;
-  background: color-mix(in srgb, var(--status-color) 18%, var(--color-card));
-  color: var(--color-text);
-  border: 1px solid color-mix(in srgb, var(--status-color) 35%, transparent);
-}
-
-.bee-status--1 { --status-color: var(--color-chart-1); }
-.bee-status--2 { --status-color: var(--color-chart-2); }
-.bee-status--3 { --status-color: var(--color-chart-3); }
-.bee-status--4 { --status-color: var(--color-chart-4); }
-.bee-status--5 { --status-color: var(--color-chart-5); }
-.bee-status--6 { --status-color: var(--color-chart-6); }
-
 .bee-inner-card {
   background: var(--color-primary);
   border: 1px solid var(--color-divider);

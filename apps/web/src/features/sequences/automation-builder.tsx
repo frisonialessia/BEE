@@ -230,7 +230,7 @@ function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onN
           <Skeleton className="h-16" />
         </div>
       ) : sequences.length === 0 ? (
-        <div className="bee-bento bee-bento-pad py-10 text-center">
+        <div className="bee-bento bee-bento-pad py-12 text-center">
           <Zap className="mx-auto mb-2 size-5 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">Todavía no hay flujos de automatización.</p>
           <p className="bee-caption mt-1">Crea el primero para escalar el alcance sin trabajo manual repetido.</p>
