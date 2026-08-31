@@ -48,6 +48,7 @@ export function BrandVoicePanel() {
   const [profile, setProfile] = useState<VoiceProfile | null>(null);
   const [channels, setChannels] = useState<ChannelStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  const [live, setLive] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [showAddFragment, setShowAddFragment] = useState(false);
   const [fragmentContent, setFragmentContent] = useState("");
@@ -65,6 +66,7 @@ export function BrandVoicePanel() {
       const [p, ch] = await Promise.all([getBrandProfile(), getChannelStatus()]);
       setProfile(p.data);
       setChannels(ch.data);
+      setLive(p.live || ch.live);
       setLoading(false);
     }
     void load();
@@ -123,16 +125,19 @@ export function BrandVoicePanel() {
             Perfil de marca personal del CEO — fundamenta todo el contenido generado por IA
           </p>
         </div>
-        {!profile && (
-          <button onClick={() => setShowCreate(true)} className="bee-btn bee-btn--primary">
-            Configurar voz
-          </button>
-        )}
-        {profile && (
-          <button onClick={() => setShowAddFragment(true)} className="bee-btn-ghost">
-            + Agregar fragmento
-          </button>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          {!profile && (
+            <button onClick={() => setShowCreate(true)} className="bee-btn bee-btn--primary">
+              Configurar voz
+            </button>
+          )}
+          {profile && (
+            <button onClick={() => setShowAddFragment(true)} className="bee-btn-ghost">
+              + Agregar fragmento
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Create profile form */}
@@ -287,7 +292,8 @@ export function BrandVoicePanel() {
           </div>
           {channels.every((c) => c.mock) && (
             <p className="bee-caption mt-2">
-              Todos los canales están en modo simulado. Agrega credenciales en .env para activarlos.
+              Todos los canales están en modo simulado — conéctalos en{" "}
+              <span className="font-medium text-foreground">Integraciones</span> para activarlos.
             </p>
           )}
         </div>

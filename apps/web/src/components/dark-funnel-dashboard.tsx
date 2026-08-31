@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import type { DarkFunnelSummary, HotLeadScore } from "@/lib/types";
 import { getDarkFunnelHotLeads, getDarkFunnelSummary, ingestDarkFunnelSignal } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // BEE's palette has no red — the heat gradient (hottest → coolest) maps onto
 // the chart accents instead: magenta (5, "hot"/success everywhere else in
@@ -134,6 +136,7 @@ export function DarkFunnelDashboard() {
   const [hotLeads, setHotLeads] = useState<HotLeadScore[]>([]);
   const [summary, setSummary] = useState<DarkFunnelSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [live, setLive] = useState(false);
   const [stageFilter, setStageFilter] = useState<string>("");
 
   // Simulate signal form state
@@ -152,6 +155,7 @@ export function DarkFunnelDashboard() {
       ]);
       setHotLeads(leadsResult.data);
       setSummary(summaryResult.data);
+      setLive(leadsResult.live || summaryResult.live);
       setLoading(false);
     }
     load();
@@ -176,6 +180,7 @@ export function DarkFunnelDashboard() {
       ]);
       setHotLeads(leadsResult.data);
       setSummary(summaryResult.data);
+      setLive(leadsResult.live || summaryResult.live);
       setSimDomain("");
       setSimKeywords("");
       setShowSimulate(false);
@@ -189,10 +194,15 @@ export function DarkFunnelDashboard() {
       {/* Summary cards */}
       {summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Same stage colors as STAGE_CONFIG above — this tile row used to
+              paint 'Leads calientes' orange (== --destructive) and 'Etapa
+              de decisión' gold instead of STAGE_CONFIG's amber, so the same
+              stage read as a different color depending on which part of
+              this dashboard you looked at. */}
           {[
-            { label: "Leads calientes", value: summary.total_hot_leads, accent: "var(--color-chart-2)" },
-            { label: "Listos para comprar", value: summary.ready_to_buy_count, accent: "var(--color-chart-1)" },
-            { label: "Etapa de decisión", value: summary.decision_stage_count, accent: "var(--color-chart-3)" },
+            { label: "Leads calientes", value: summary.total_hot_leads, accent: "var(--color-chart-5)" },
+            { label: "Listos para comprar", value: summary.ready_to_buy_count, accent: "var(--color-chart-5)" },
+            { label: "Etapa de decisión", value: summary.decision_stage_count, accent: "var(--color-chart-1)" },
             { label: "Señales de hoy", value: summary.total_signals_today, accent: "var(--color-chart-4)" },
           ].map(({ label, value, accent }) => (
             <div key={label} className="bee-bento p-3 text-center">
@@ -216,12 +226,15 @@ export function DarkFunnelDashboard() {
             </button>
           ))}
         </div>
-        <button
-          onClick={() => setShowSimulate((v) => !v)}
-          className="bee-btn-ghost bee-btn-ghost--dashed ml-auto"
-        >
-          + Simular señal
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          <button
+            onClick={() => setShowSimulate((v) => !v)}
+            className="bee-btn-ghost bee-btn-ghost--dashed"
+          >
+            + Simular señal
+          </button>
+        </div>
       </div>
 
       {/* Formulario de simulación */}
@@ -262,13 +275,13 @@ export function DarkFunnelDashboard() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-36 rounded-lg bg-[var(--color-primary)] animate-pulse" />
+            <Skeleton key={i} className="h-36 rounded-lg" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-border p-10 text-center">
-          <p className="text-muted-foreground text-sm">Todavía no hay señales de intención.</p>
-          <p className="text-muted-foreground text-xs mt-1">Usa el simulador de arriba para enviar una señal de prueba.</p>
+        <div className="bee-bento bee-bento-pad py-12 text-center">
+          <p className="text-sm text-muted-foreground">Todavía no hay señales de intención.</p>
+          <p className="bee-caption mt-1">Usa el simulador de arriba para enviar una señal de prueba.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

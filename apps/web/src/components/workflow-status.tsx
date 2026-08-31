@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 
 import { getWorkflowStatus, getWorkflowTasks } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { WorkflowStatus, WorkflowTask } from "@/lib/types";
 
 const STATUS_ICON: Record<string, React.ReactNode> = {
@@ -73,6 +75,7 @@ export function WorkflowStatusPanel() {
   const [status, setStatus] = useState<WorkflowStatus | null>(null);
   const [tasks, setTasks] = useState<WorkflowTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [live, setLive] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -82,6 +85,7 @@ export function WorkflowStatusPanel() {
       ]);
       setStatus(s.data);
       setTasks(t.data);
+      setLive(s.live || t.live);
       setLoading(false);
     }
     void load();
@@ -89,8 +93,9 @@ export function WorkflowStatusPanel() {
 
   if (loading) {
     return (
-      <div className="bee-bento bee-bento-pad">
-        <div className="h-4 w-32 animate-pulse rounded-sm bg-primary" />
+      <div className="bee-bento bee-bento-pad space-y-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-20 w-full" />
       </div>
     );
   }
@@ -107,9 +112,12 @@ export function WorkflowStatusPanel() {
             Tareas automatizadas despachadas en eventos de negocio
           </p>
         </div>
-        {status && (
-          <span className="text-xs text-muted-foreground">{status.total_tasks} en total</span>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          {status && (
+            <span className="text-xs text-muted-foreground">{status.total_tasks} en total</span>
+          )}
+        </div>
       </div>
 
       {status && (
@@ -132,11 +140,8 @@ export function WorkflowStatusPanel() {
         <div className="flex items-start gap-2 border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
           <Layers className="mt-0.5 size-3.5 shrink-0 stroke-[1.25]" />
           <span>
-            Todas las tareas se ejecutan en modo simulado. Configura{" "}
-            <code className="text-[11px] text-foreground">WORKFLOW_CRM_URL</code>,{" "}
-            <code className="text-[11px] text-foreground">WORKFLOW_DELIVERY_URL</code> o{" "}
-            <code className="text-[11px] text-foreground">WORKFLOW_BILLING_URL</code>{" "}
-            para integraciones en vivo.
+            Todas las tareas se ejecutan en modo simulado — conecta tus integraciones en{" "}
+            <span className="font-medium text-foreground">Integraciones</span> para despacharlas en vivo.
           </span>
         </div>
       )}
