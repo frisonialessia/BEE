@@ -31,6 +31,15 @@ const TARGET_X = 560;
 const BAR_W = 10;
 const GAP = 6;
 
+interface FlowSegment {
+  id: LeadColumnId;
+  count: number;
+  sourceTop: number;
+  sourceBottom: number;
+  targetTop: number;
+  targetBottom: number;
+}
+
 function bandPath(x0: number, y0top: number, y0bot: number, x1: number, y1top: number, y1bot: number) {
   const xm = (x0 + x1) / 2;
   return `M${x0},${y0top} C${xm},${y0top} ${xm},${y1top} ${x1},${y1top} L${x1},${y1bot} C${xm},${y1bot} ${xm},${y0bot} ${x0},${y0bot} Z`;
@@ -55,23 +64,29 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
     };
 
     const availableH = HEIGHT - GAP * (KANBAN_COLUMNS.length - 1);
-    let cursorSource = 0;
-    let cursorTarget = 0;
-    const segments = KANBAN_COLUMNS.map((col) => {
-      const count = grouped[col.id]?.length ?? 0;
-      const h = total > 0 ? (count / total) * availableH : availableH / KANBAN_COLUMNS.length;
-      const seg = {
-        id: col.id,
-        count,
-        sourceTop: cursorSource,
-        sourceBottom: cursorSource + h,
-        targetTop: cursorTarget,
-        targetBottom: cursorTarget + h,
-      };
-      cursorSource += h;
-      cursorTarget += h + GAP;
-      return seg;
-    });
+    // Cada segmento avanza los cursores fuente/destino del anterior — un
+    // reduce en vez de un .map() con variables reasignadas por fuera, para
+    // que cada paso quede como un valor nuevo, no una mutación compartida.
+    const { segments } = KANBAN_COLUMNS.reduce(
+      (acc, col) => {
+        const count = grouped[col.id]?.length ?? 0;
+        const h = total > 0 ? (count / total) * availableH : availableH / KANBAN_COLUMNS.length;
+        const seg: FlowSegment = {
+          id: col.id,
+          count,
+          sourceTop: acc.cursorSource,
+          sourceBottom: acc.cursorSource + h,
+          targetTop: acc.cursorTarget,
+          targetBottom: acc.cursorTarget + h,
+        };
+        return {
+          segments: [...acc.segments, seg],
+          cursorSource: acc.cursorSource + h,
+          cursorTarget: acc.cursorTarget + h + GAP,
+        };
+      },
+      { segments: [] as FlowSegment[], cursorSource: 0, cursorTarget: 0 },
+    );
 
     return { segments, total, closedBreakdown };
   }, [opportunities]);

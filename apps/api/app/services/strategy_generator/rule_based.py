@@ -19,6 +19,7 @@ templated prompts using the same data.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Literal
 
 from app.models.base import SignalType
 from app.schemas.strategy import StrategySchema, TimingWindow
@@ -211,6 +212,10 @@ class HiringStrategyGenerator(StrategyGenerator):
         company = _company(ctx)
         lead = _lead(ctx)
         is_leadership = ctx.signal_type == SignalType.LEADERSHIP_CHANGE
+        # Annotated explicitly — without it mypy infers `str` from the join of
+        # the two branches' literal assignments below, which then fails
+        # TimingWindow's stricter `Literal[...]` field.
+        urgency: Literal["immediate", "this_week", "this_month", "watch"]
 
         if is_leadership:
             pain_point = (

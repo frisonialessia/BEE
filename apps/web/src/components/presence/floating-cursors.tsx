@@ -39,6 +39,10 @@ export function FloatingCursors() {
     const others = (users ?? []).filter((u) => u.id !== currentUser?.id).slice(0, 2);
     if (others.length === 0) return;
 
+    // One-time seed per users/currentUser change, immediately followed by
+    // the interval below — not a state->effect->state loop (same shape as
+    // the mount check in providers/auth-provider.tsx).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCursors(
       others.map((u, i) => ({
         id: u.id,
