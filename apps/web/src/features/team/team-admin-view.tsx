@@ -317,7 +317,7 @@ function UserRow({
                 confirmingDelete
                   ? ({
                       "--bee-fill": "var(--color-chart-2)",
-                      "--bee-fill-text": "#ffffff",
+                      "--bee-fill-text": "var(--color-background)",
                     } as React.CSSProperties)
                   : undefined
               }
