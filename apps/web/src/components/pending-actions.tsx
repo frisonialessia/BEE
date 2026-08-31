@@ -9,6 +9,8 @@ import { useEffect, useState } from "react";
 import { CheckCircle, Clock, Mail, ShieldCheck, XCircle } from "lucide-react";
 
 import { approveAction, getPendingActions, rejectAction } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { PendingAction } from "@/lib/types";
 
 const ACTION_TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -137,10 +139,12 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
 export function PendingActionsPanel() {
   const [actions, setActions] = useState<PendingAction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [live, setLive] = useState(false);
 
   useEffect(() => {
     getPendingActions(20).then((res) => {
       setActions(res.data);
+      setLive(res.live);
       setLoading(false);
     });
   }, []);
@@ -173,22 +177,25 @@ export function PendingActionsPanel() {
             Acciones en espera de aprobación antes de que BEE las ejecute externamente
           </p>
         </div>
-        {pendingCount > 0 && (
-          <span
-            className="rounded-sm border border-border px-2 py-0.5 text-xs font-semibold"
-            style={{
-              background: "color-mix(in srgb, var(--color-chart-1) 25%, var(--color-background))",
-            }}
-          >
-            {pendingCount} pendientes
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          {pendingCount > 0 && (
+            <span
+              className="rounded-sm border border-border px-2 py-0.5 text-xs font-semibold"
+              style={{
+                background: "color-mix(in srgb, var(--color-chart-1) 25%, var(--color-background))",
+              }}
+            >
+              {pendingCount} pendientes
+            </span>
+          )}
+        </div>
       </div>
 
       {loading ? (
         <div className="space-y-2">
           {[1, 2].map((i) => (
-            <div key={i} className="h-12 animate-pulse rounded-sm bg-primary" />
+            <Skeleton key={i} className="h-12 rounded-sm" />
           ))}
         </div>
       ) : actions.length === 0 ? (

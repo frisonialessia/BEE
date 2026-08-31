@@ -52,13 +52,7 @@ export function SignalsDashboard() {
       ) : signals.length === 0 ? (
         <div className="bee-bento bee-bento-pad py-12 text-center">
           <p className="text-sm text-muted-foreground">Aún no hay señales.</p>
-          <p className="bee-caption mt-2">
-            POST a{" "}
-            <code className="border border-border bg-background px-1.5 py-0.5 font-mono text-xs">
-              /api/v1/signals/webhook
-            </code>{" "}
-            para ingerir.
-          </p>
+          <p className="bee-caption mt-2">Aparecen automáticamente al conectar tus fuentes de mercado.</p>
         </div>
       ) : (
         <>

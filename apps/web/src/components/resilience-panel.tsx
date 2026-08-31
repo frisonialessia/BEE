@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { AuditEntry, AuditSummary, DLQSummary, FailedEvent } from "@/lib/types";
 import {
   getAuditDecisions,
@@ -189,14 +190,14 @@ function DLQPanel() {
 
       {loading ? (
         <div className="space-y-2">
-          {[...Array(3)].map((_, i) => <div key={i} className="h-16 rounded-lg bg-[var(--color-primary)] animate-pulse" />)}
+          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
-          <p className="text-muted-foreground text-sm">
+        <div className="py-8 text-center">
+          <p className="text-sm text-muted-foreground">
             No hay eventos fallidos{statusFilter ? ` con estado "${DLQ_STATUS_CONFIG[statusFilter]?.label ?? statusFilter}"` : ""}.
           </p>
-          <p className="text-muted-foreground text-xs mt-1">BEE está gestionando todas las acciones externas sin problemas.</p>
+          <p className="bee-caption mt-1">BEE está gestionando todas las acciones externas sin problemas.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -357,12 +358,12 @@ function AuditPanel() {
 
       {loading ? (
         <div className="space-y-2">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-14 rounded-lg bg-[var(--color-primary)] animate-pulse" />)}
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
         </div>
       ) : entries.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
-          <p className="text-muted-foreground text-sm">Todavía no hay entradas de auditoría.</p>
-          <p className="text-muted-foreground text-xs mt-1">Las decisiones de los agentes van a aparecer aquí a medida que BEE procese señales.</p>
+        <div className="py-8 text-center">
+          <p className="text-sm text-muted-foreground">Todavía no hay entradas de auditoría.</p>
+          <p className="bee-caption mt-1">Las decisiones de los agentes van a aparecer aquí a medida que BEE procese señales.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -381,7 +382,10 @@ export function ResiliencePanel() {
   const [activeTab, setActiveTab] = useState<"dlq" | "audit">("dlq");
 
   return (
-    <div className="space-y-4">
+    // bee-panel — this root used to be a bare <div>, the one card in its
+    // grid row (next to PendingActionsPanel, which is a real card) with no
+    // border or background of its own.
+    <div className="bee-panel space-y-4">
       <div className="bee-filter-tabs">
         {(["dlq", "audit"] as const).map((tab) => (
           <button

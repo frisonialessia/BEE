@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { AnomalyAlert, CorrectionOut, StyleProfileOut } from "@/lib/types";
 import {
   acknowledgeAnomaly,
@@ -270,11 +271,11 @@ function AnomalyAlertsPanel() {
       )}
 
       {loading ? (
-        <div className="space-y-2">{[...Array(2)].map((_, i) => <div key={i} className="h-14 rounded-lg bg-[var(--color-primary)] animate-pulse" />)}</div>
+        <div className="space-y-2">{[...Array(2)].map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
       ) : alerts.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-border p-6 text-center">
+        <div className="py-6 text-center">
           <p className="text-sm text-muted-foreground">No hay alertas de anomalías abiertas.</p>
-          <p className="text-xs text-muted-foreground mt-1">Ejecuta un escaneo para revisar la salud actual de conversión.</p>
+          <p className="bee-caption mt-1">Ejecuta un escaneo para revisar la salud actual de conversión.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -298,7 +299,10 @@ export function DeepLearningPanel() {
   const [tab, setTab] = useState<TabId>("correction");
 
   return (
-    <div className="space-y-4">
+    // bee-panel — this root used to be a bare <div>, the one card in its
+    // grid row (next to BrandVoicePanel, which is a real card) with no
+    // border or background of its own.
+    <div className="bee-panel space-y-4">
       <div className="bee-filter-tabs">
         {TABS.map(({ id, label }) => (
           <button

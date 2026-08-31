@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import type { IntroPath, NetworkConnection, NetworkQueryResult, NetworkStats } from "@/lib/types";
 import { addNetworkConnection, findIntroPaths, getNetworkConnections, getNetworkStats } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // BEE has no green/blue/purple scales of its own — success maps to
 // var(--success) (chart-5, magenta), caution to var(--warning) (chart-1,
@@ -103,6 +105,7 @@ export function NetworkNavigatorPanel() {
   const [connections, setConnections] = useState<NetworkConnection[]>([]);
   const [stats, setStats] = useState<NetworkStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [live, setLive] = useState(false);
 
   // Path finder state
   const [targetDomain, setTargetDomain] = useState("");
@@ -128,6 +131,7 @@ export function NetworkNavigatorPanel() {
       ]);
       setConnections(connsResult.data);
       setStats(statsResult.data);
+      setLive(connsResult.live || statsResult.live);
       setLoading(false);
     }
     load();
@@ -246,14 +250,17 @@ export function NetworkNavigatorPanel() {
       </div>
 
       {/* Add connection */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <h3 className="bee-card-title">Conexiones de red ({connections.length})</h3>
-        <button
-          onClick={() => setShowAdd((v) => !v)}
-          className="bee-btn-ghost bee-btn-ghost--dashed"
-        >
-          + Agregar conexión
-        </button>
+        <div className="flex items-center gap-2">
+          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          <button
+            onClick={() => setShowAdd((v) => !v)}
+            className="bee-btn-ghost bee-btn-ghost--dashed"
+          >
+            + Agregar conexión
+          </button>
+        </div>
       </div>
 
       {showAdd && (
@@ -266,7 +273,7 @@ export function NetworkNavigatorPanel() {
           </div>
           <div className="flex items-center gap-3">
             <label className="text-xs text-muted-foreground shrink-0">Fuerza de la relación: <span className="font-bold text-foreground">{addStrength}/10</span></label>
-            <input type="range" min={1} max={10} value={addStrength} onChange={(e) => setAddStrength(Number(e.target.value))} className="flex-1" />
+            <input type="range" min={1} max={10} value={addStrength} onChange={(e) => setAddStrength(Number(e.target.value))} className="flex-1 accent-[var(--color-chart-4)]" />
           </div>
           <button type="submit" disabled={addLoading} className="bee-btn bee-btn--primary">
             {addLoading ? "Agregando…" : "Agregar conexión"}
@@ -277,12 +284,12 @@ export function NetworkNavigatorPanel() {
       {/* Connection list */}
       {loading ? (
         <div className="space-y-2">
-          {[...Array(4)].map((_, i) => <div key={i} className="h-12 rounded-lg bg-[var(--color-primary)] animate-pulse" />)}
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
         </div>
       ) : connections.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-border p-8 text-center">
-          <p className="text-muted-foreground text-sm">Todavía no hay conexiones de red.</p>
-          <p className="text-muted-foreground text-xs mt-1">Agrega conexiones para habilitar la búsqueda de rutas de presentación cálida.</p>
+        <div className="bee-bento bee-bento-pad py-12 text-center">
+          <p className="text-sm text-muted-foreground">Todavía no hay conexiones de red.</p>
+          <p className="bee-caption mt-1">Agrega conexiones para habilitar la búsqueda de rutas de presentación cálida.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -304,7 +311,7 @@ export function NetworkNavigatorPanel() {
             </div>
           ))}
           {connections.length > 15 && (
-            <p className="text-xs text-muted-foreground text-center py-2">Showing 15 of {connections.length} connections</p>
+            <p className="text-xs text-muted-foreground text-center py-2">Mostrando 15 de {connections.length} conexiones</p>
           )}
         </div>
       )}
