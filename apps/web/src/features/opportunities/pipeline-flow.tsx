@@ -122,7 +122,20 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
         </div>
       </div>
 
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="w-full" role="img" aria-label="Flujo de oportunidades por etapa">
+      {/* maxWidth caps this SVG at its own natural size (1 viewBox unit =
+          1px by design) — width="100%"/w-full alone stretches it to fill
+          whatever the card's width happens to be, and every fontSize below
+          is set in viewBox units, so the {count} · {label} text would scale
+          up right along with a wide card instead of staying a fixed size,
+          the same bug already fixed for the Colmena and the Industria×Señal
+          heatmap. Still shrinks to fit a narrow card/viewport. */}
+      <svg
+        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+        className="w-full"
+        style={{ maxWidth: WIDTH, marginInline: "auto", display: "block" }}
+        role="img"
+        aria-label="Flujo de oportunidades por etapa"
+      >
         {/* Barra fuente — el total, sin dividir, porque es un solo flujo de origen */}
         <rect x={SOURCE_X} y={0} width={BAR_W} height={HEIGHT} rx={4} fill="var(--color-primary)" />
 
