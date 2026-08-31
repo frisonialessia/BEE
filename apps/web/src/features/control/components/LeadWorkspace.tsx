@@ -32,7 +32,7 @@ export function LeadWorkspace() {
       <div className="mb-4 flex shrink-0 items-start justify-between gap-3">
         <div>
           <p className="bee-eyebrow">Zona de acción</p>
-          <h2 className="mt-0.5 text-base font-semibold tracking-tight">Espacio de leads</h2>
+          <h2 className="mt-0.5 bee-card-title">Espacio de leads</h2>
         </div>
         {result?.live === false && (
           <span className="bee-micro">Demo / offline</span>

@@ -44,7 +44,7 @@ export function Leaderboard({
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Trophy className="size-4 text-[var(--color-chart-1)]" />
-          <h2 className="text-base font-semibold tracking-tight">Ranking</h2>
+          <h2 className="bee-card-title">Ranking</h2>
         </div>
         <span className="bee-caption">Oportunidades ganadas</span>
       </div>

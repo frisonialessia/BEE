@@ -272,7 +272,7 @@ export function SignalHexMap({
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="bee-caption">Dark Funnel · leads activos</p>
-          <h2 className="mt-0.5 text-base font-semibold tracking-tight">Colmena de intención</h2>
+          <h2 className="mt-0.5 bee-card-title">Colmena de intención</h2>
           <p className="bee-caption mt-0.5">{leads.length} leads · haz clic en una celda para ver detalles</p>
         </div>
         <div className="flex flex-col items-end gap-2">

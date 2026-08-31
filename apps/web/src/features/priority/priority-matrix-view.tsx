@@ -131,12 +131,16 @@ export function PriorityMatrixView() {
                 ))}
               </div>
 
-              <section className="bee-surface flex flex-col items-center gap-4 bee-bento-pad lg:flex-row lg:items-start">
-                <PriorityMatrixChart priorities={priorities} />
-                <p className="bee-caption max-w-xs">
-                  Cada punto es una empresa. Arriba a la derecha: encaja con tu ICP y está caliente ahora — ahí
-                  debería ir tu tiempo primero. Haz clic en un punto para abrir esa empresa.
-                </p>
+              <section className="bee-surface bee-bento-pad">
+                <h3 className="bee-card-title">Matriz de priorización</h3>
+                <p className="bee-caption mb-4">Encaje con tu ICP × qué tan caliente está la señal</p>
+                <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-start">
+                  <PriorityMatrixChart priorities={priorities} />
+                  <p className="bee-caption max-w-xs">
+                    Cada punto es una empresa. Arriba a la derecha: encaja con tu ICP y está caliente ahora — ahí
+                    debería ir tu tiempo primero. Haz clic en un punto para abrir esa empresa.
+                  </p>
+                </div>
               </section>
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

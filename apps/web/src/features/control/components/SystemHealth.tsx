@@ -189,7 +189,7 @@ export function SystemHealth() {
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="bee-eyebrow">Inteligencia</p>
-          <h2 className="mt-0.5 text-base font-semibold tracking-tight">
+          <h2 className="mt-0.5 bee-card-title">
             {live ? "Conectado" : "Sin conexión"}
           </h2>
         </div>
