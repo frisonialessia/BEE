@@ -28,12 +28,14 @@ function CrmCard({
   onOpen,
   onDragStart,
   onDragEnd,
+  onMove,
 }: {
   opportunity: Opportunity;
   dragging: boolean;
   onOpen: (id: string) => void;
   onDragStart: (e: React.DragEvent, id: string) => void;
   onDragEnd: () => void;
+  onMove: (id: string, stage: CrmStage) => void;
 }) {
   const strategy = opportunity.strategy;
   const channel = strategy?.channel;
@@ -89,6 +91,30 @@ function CrmCard({
       {typeof channel === "string" && channel && (
         <p className="mt-1 bee-eyebrow">vía {channel}</p>
       )}
+
+      {/* Alternativa al drag-and-drop — el HTML5 drag nativo no funciona en
+          touch (celular/tablet), y sin esto no había NINGUNA forma de mover
+          una oportunidad de etapa desde esos dispositivos. stopPropagation
+          en click/pointerDown para que interactuar con el select no abra el
+          drawer (el onClick de la tarjeta) ni intente iniciar un drag. */}
+      <div
+        className="mt-2.5 border-t border-border/60 pt-2"
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <select
+          value={opportunity.status}
+          onChange={(e) => onMove(opportunity.id, e.target.value as CrmStage)}
+          aria-label="Mover a otra etapa"
+          className="w-full rounded-sm border border-border bg-background px-1.5 py-1 text-[11px] text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+        >
+          {CRM_STAGES.map((s) => (
+            <option key={s.id} value={s.id}>
+              Mover a: {s.label}
+            </option>
+          ))}
+        </select>
+      </div>
     </div>
   );
 }
@@ -102,6 +128,7 @@ function CrmColumn({
   onDragStart,
   onDragEnd,
   onDrop,
+  onMove,
 }: {
   stage: CrmStage;
   label: string;
@@ -111,6 +138,7 @@ function CrmColumn({
   onDragStart: (e: React.DragEvent, id: string) => void;
   onDragEnd: () => void;
   onDrop: (stage: CrmStage) => void;
+  onMove: (id: string, stage: CrmStage) => void;
 }) {
   const [over, setOver] = useState(false);
 
@@ -161,6 +189,7 @@ function CrmColumn({
               onOpen={onOpen}
               onDragStart={onDragStart}
               onDragEnd={onDragEnd}
+              onMove={onMove}
             />
           ))
         )}
@@ -194,10 +223,10 @@ export function CrmBoard() {
     setDraggingId(null);
   }
 
-  function handleDrop(stage: CrmStage) {
-    const id = draggingId;
-    setDraggingId(null);
-    if (!id) return;
+  // Compartida por el drop del drag-and-drop y por el <select> "Mover a" de
+  // cada CrmCard (la alternativa no-táctil-dependiente) — un solo camino
+  // para mover una oportunidad, no dos implementaciones que puedan divergir.
+  function moveOpportunity(id: string, stage: CrmStage) {
     const current = opportunities.find((o) => o.id === id);
     if (!current || current.status === stage) return;
 
@@ -213,6 +242,13 @@ export function CrmBoard() {
         },
       },
     );
+  }
+
+  function handleDrop(stage: CrmStage) {
+    const id = draggingId;
+    setDraggingId(null);
+    if (!id) return;
+    moveOpportunity(id, stage);
   }
 
   if (isLoading) {
@@ -238,7 +274,7 @@ export function CrmBoard() {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <p className="bee-caption">Arrastra una tarjeta para moverla de etapa</p>
+        <p className="bee-caption">Arrastra una tarjeta para moverla de etapa, o usa el selector de cada tarjeta</p>
         <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
       </div>
 
@@ -258,6 +294,7 @@ export function CrmBoard() {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             onDrop={handleDrop}
+            onMove={moveOpportunity}
           />
         ))}
 
