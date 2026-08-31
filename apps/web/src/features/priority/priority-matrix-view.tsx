@@ -143,16 +143,22 @@ export function PriorityMatrixView() {
                 </div>
               </section>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {/* items-start (not the grid default, stretch) + max-h +
+                  overflow-y-auto on each column — same fix already applied
+                  to CrmBoard's kanban columns: without it, a quadrant with
+                  many companies stretches every sibling to match, so an
+                  empty quadrant ends up padded with dead whitespace instead
+                  of sitting at its own compact height. */}
+              <div className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {QUADRANT_ORDER.map((q) => (
                   <div key={q} className="flex flex-col">
                     <div className="mb-2 px-1">
                       <h3 className="bee-eyebrow">{QUADRANT_LABELS[q]}</h3>
                       <p className="mt-0.5 bee-micro">{QUADRANT_HINTS[q]}</p>
                     </div>
-                    <div className="flex min-h-[100px] flex-col gap-2 rounded-[var(--radius-lg)] bg-[var(--color-primary)]/20 p-2.5">
+                    <div className="flex min-h-[100px] max-h-[65vh] flex-col gap-2 overflow-y-auto rounded-[var(--radius-lg)] bg-[var(--color-primary)]/20 p-2.5">
                       {byQuadrant[q].length === 0 ? (
-                        <p className="px-2 py-6 text-center bee-micro">Vacío</p>
+                        <p className="px-2 py-6 text-center bee-micro">Sin cuentas en esta zona todavía</p>
                       ) : (
                         byQuadrant[q].map((p) => (
                           <Link
