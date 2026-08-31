@@ -80,7 +80,24 @@ export function IndustrySignalHeatmap({
         <svg
           viewBox={`0 0 ${width} ${height}`}
           width="100%"
-          style={{ aspectRatio: `${width} / ${height}`, overflow: "visible" }}
+          style={{
+            aspectRatio: `${width} / ${height}`,
+            overflow: "visible",
+            // width="100%" alone stretches this SVG to fill however wide
+            // its card happens to be — and every <text> fontSize below is
+            // set in viewBox units, not real CSS px, so it scales up right
+            // along with the grid. On a wide card that blew the row/column
+            // labels up to 2-3x the app's standard 11px captions (nothing
+            // else in the app draws labels this way — they're all
+            // fixed-size HTML text) and inflated this card's height past
+            // its "Cuándo llega el mercado" sibling. maxWidth caps it at
+            // the grid's own natural size (1 viewBox unit = 1px by design)
+            // and centers it — still shrinks to fit a narrow card/viewport,
+            // it just never grows past its intended size.
+            maxWidth: width,
+            marginInline: "auto",
+            display: "block",
+          }}
           role="img"
           aria-label="Tasa de cierre por industria y tipo de señal"
         >
