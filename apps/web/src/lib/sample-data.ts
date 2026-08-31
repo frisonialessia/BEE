@@ -17,8 +17,8 @@ const baseSampleSignals: Signal[] = [
     score: 92,
     confidence: 0.86,
     detected_at: new Date(Date.now() - 1000 * 60 * 42).toISOString(),
-    company_id: "c1",
-    lead_id: "l1",
+    company_id: "demo-company-northwind-labs",
+    lead_id: "demo-lead-alice-mercer",
     analysis: {
       tags: ["funding", "series b"],
       analyzers: ["funding", "generic_fallback"],
@@ -34,8 +34,8 @@ const baseSampleSignals: Signal[] = [
     score: 74,
     confidence: 0.71,
     detected_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-    company_id: "c2",
-    lead_id: "l2",
+    company_id: "demo-company-acme-corp",
+    lead_id: "demo-lead-robert-chen",
     analysis: {
       tags: ["hiring", "vp of"],
       analyzers: ["hiring"],
@@ -103,8 +103,8 @@ const baseSampleOpportunities: Opportunity[] = [
         "Northwind Labs consiguió financiación recientemente — una ventana ideal para contactarlos mientras se asignan los presupuestos.",
     },
     signal_id: "11111111-1111-1111-1111-111111111111",
-    lead_id: "l1",
-    company_id: "c1",
+    lead_id: "demo-lead-alice-mercer",
+    company_id: "demo-company-northwind-labs",
     assigned_to_user_id: null,
     amount: 48000,
     expected_close_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 21)
@@ -140,8 +140,8 @@ const baseSampleOpportunities: Opportunity[] = [
         "Un nuevo líder de RevOps está definiendo activamente decisiones de herramientas en sus primeros 90 días.",
     },
     signal_id: "22222222-2222-2222-2222-222222222222",
-    lead_id: "l2",
-    company_id: "c2",
+    lead_id: "demo-lead-robert-chen",
+    company_id: "demo-company-acme-corp",
     assigned_to_user_id: null,
     amount: 21500,
     expected_close_date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3)

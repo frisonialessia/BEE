@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api/client";
 import { predictCycle } from "@/lib/cycle-prediction";
 import {
+  demoCreateOpportunity,
   demoFetchAllBattlecards,
   demoFetchOpportunities,
   demoFetchSignals,
@@ -40,17 +41,20 @@ export interface OpportunityCreateIn {
 }
 
 /** Carga manual de una oportunidad — el "+ Nueva oportunidad" del CRM y de
- *  la ficha de empresa. Resuelve (o crea) la empresa/lead igual que la
- *  ingesta automática y dispara la misma generación de estrategia con IA —
- *  ver el docstring de `POST /opportunities` en el backend. No existe un
- *  equivalente en el sandbox: crear ahí requeriría simular localmente toda
- *  la generación de battlecard, así que esta acción es solo para cuentas
- *  reales (mismo criterio que `createCompany`). */
+ *  la ficha de empresa. En cuenta real, resuelve (o crea) la empresa/lead
+ *  igual que la ingesta automática y dispara la misma generación de
+ *  estrategia con IA — ver el docstring de `POST /opportunities` en el
+ *  backend. En el sandbox corre el mismo flujo, pero localmente: arma un
+ *  battlecard con las plantillas de `lib/demo/templates.ts`, guardado solo
+ *  en este navegador — misma política de honestidad que el resto del demo
+ *  (nunca se manda a ningún backend real). */
 export async function createOpportunity(body: OpportunityCreateIn): Promise<Opportunity> {
   if (isDemoMode()) {
-    throw new Error(
-      "El CRM es de solo lectura en el sandbox — esta acción solo está disponible en tu cuenta real.",
-    );
+    return demoCreateOpportunity({
+      ...body,
+      signal_type: body.signal_type ?? "other",
+      score: body.score ?? 50,
+    });
   }
   return apiFetch<Opportunity>("/api/v1/opportunities", {
     method: "POST",
