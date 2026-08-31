@@ -18,7 +18,7 @@ export function MeddicCorrelationChart({ stats }: { stats: MeddicBucketStat[] })
   const maxTotal = Math.max(1, ...stats.map((s) => s.won + s.lost));
 
   return (
-    <div className="flex items-end gap-4" style={{ height: 150 }}>
+    <div className="flex items-end gap-4" style={{ height: "var(--bee-chart-h)" }}>
       {stats.map((s) => {
         const total = s.won + s.lost;
         const pct = (total / maxTotal) * 100;

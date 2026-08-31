@@ -15,7 +15,7 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
   const maxValue = Math.max(1, ...buckets.map((b) => b.total));
 
   return (
-    <div className="flex items-end gap-3 overflow-x-auto pb-1" style={{ height: 160 }}>
+    <div className="flex items-end gap-3 overflow-x-auto pb-1" style={{ height: "var(--bee-chart-h)" }}>
       {buckets.map((b) => {
         const totalPct = (b.total / maxValue) * 100;
         const weightedPct = (b.weighted / maxValue) * 100;

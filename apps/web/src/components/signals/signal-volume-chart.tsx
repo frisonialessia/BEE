@@ -18,7 +18,7 @@ export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
   const maxCount = Math.max(1, ...points.map((p) => p.count));
 
   return (
-    <div className="flex items-end gap-1.5 overflow-x-auto pb-1" style={{ height: 110 }}>
+    <div className="flex items-end gap-1.5 overflow-x-auto pb-1" style={{ height: "var(--bee-chart-h)" }}>
       {points.map((p) => {
         const totalPct = (p.count / maxCount) * 100;
         const hotPct = (p.hotCount / maxCount) * 100;
@@ -26,7 +26,7 @@ export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
           <div key={p.key} className="flex h-full w-8 shrink-0 flex-col items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="relative flex w-full flex-1 items-end justify-center rounded-t-[var(--radius-sm)] bg-[var(--color-primary)]/20">
+                <div className="relative flex w-full flex-1 items-end justify-center rounded-t-[var(--radius-sm)] bg-[var(--color-primary)]/40">
                   <div
                     className="w-full rounded-t-[var(--radius-sm)] bg-[var(--color-chart-4)]/50 transition-[height] duration-300"
                     style={{ height: `${Math.max(totalPct, p.count > 0 ? 4 : 0)}%` }}
