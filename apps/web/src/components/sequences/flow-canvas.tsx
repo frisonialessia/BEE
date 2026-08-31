@@ -37,7 +37,7 @@ export function FlowCanvas({
 }) {
   if (steps.length === 0) {
     return (
-      <div className="bee-bento bee-bento-pad py-10 text-center">
+      <div className="bee-bento bee-bento-pad py-12 text-center">
         <p className="text-sm text-muted-foreground">Todavía no hay pasos en este flujo.</p>
         <p className="bee-caption mt-1">Agrega el primero desde la paleta de acciones.</p>
       </div>

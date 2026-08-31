@@ -133,7 +133,10 @@ function WorkerKpis({ worker }: { worker: WorkerHealth }) {
 
 function HealthSkeleton() {
   return (
-    <section className="bee-surface p-8">
+    // bee-bento-pad, not p-8 — the loaded state below uses bee-bento-pad
+    // (20px); this used to be 32px, so the card visibly shrank its own
+    // padding the instant it went from loading to real data.
+    <section className="bee-surface bee-bento-pad">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Skeleton key={i} className="h-[5.5rem] rounded-2xl" />
@@ -161,7 +164,7 @@ export function SystemHealth() {
 
   if (isError || !snapshot) {
     return (
-      <section className="bee-surface flex items-center p-8">
+      <section className="bee-surface flex items-center bee-bento-pad">
         <div className="flex items-center gap-2 text-destructive">
           <WifiOff className="size-4" />
           <p className="text-sm">No se pudo conectar con la API de BEE — revisa NEXT_PUBLIC_API_URL</p>

@@ -139,9 +139,13 @@ export function DashboardOverview() {
       <CriticalAccountsDigest battlecards={battlecards} today={new Date()} />
       <DailyBrief />
 
-      <SignalHexMap className="mb-3" height={320} />
+      {/* mb-4 throughout this stack of full-width report sections — used to
+          drift between mb-3 and mb-4 with no reason (TodayImpactCard,
+          CriticalAccountsDigest and DailyBrief above all self-apply mb-4;
+          these three matched each other at mb-3 but not their siblings). */}
+      <SignalHexMap className="mb-4" height={320} />
 
-      <section className="mb-3 space-y-3">
+      <section className="mb-4 space-y-3">
         <div>
           <h3 className="bee-card-title">Embudo de cierre</h3>
           <p className="bee-caption">Cuántas oportunidades hay hoy en cada etapa, camino a ganar</p>
@@ -149,7 +153,7 @@ export function DashboardOverview() {
         <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
       </section>
 
-      <div className="mb-3 grid items-start gap-3 lg:grid-cols-2">
+      <div className="mb-4 grid items-start gap-3 lg:grid-cols-2">
         <section className="bee-surface bee-bento-pad space-y-3">
           <div>
             <h3 className="bee-card-title">Dónde eres más fuerte</h3>
