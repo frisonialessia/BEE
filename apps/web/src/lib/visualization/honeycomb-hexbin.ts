@@ -56,19 +56,29 @@ export function leadsToPoints(
 ): LeadPoint[] {
   const padX = width * 0.06;
   const padY = height * 0.08;
+  const plotW = width - padX * 2;
+  const plotH = height - padY * 2;
+  // Jitter used to be a flat pixel amount (±12.5px x, ±8px y) no matter how
+  // big the canvas was. That's plenty of spread on a compact card, but on a
+  // wide, tall hero canvas each of the 4 stage columns collapsed into a
+  // tight little dot surrounded by mostly-empty space — same "container
+  // grew, content didn't" bug the chart heights had. Scaling the jitter to
+  // the plotted area itself makes each stage's cluster fill the room it
+  // actually has, on any container size. 0.09 of the stage-column width
+  // stays well under half the 0.26 spacing between STAGE_X columns, so
+  // neighboring stages' clusters never overlap.
+  const jitterX = plotW * 0.09;
+  const jitterY = plotH * 0.07;
 
   return leads.map((lead) => {
     const hash = hashDomain(lead.company_domain);
     const stageKey = lead.buying_stage as BuyingStage;
     const stageX = STAGE_X[stageKey] ?? 0.5;
-    const x =
-      padX +
-      stageX * (width - padX * 2) +
-      ((hash % 100) - 50) * 0.25;
+    const x = padX + stageX * plotW + ((hash % 100) - 50) * (jitterX / 50);
     const y =
       padY +
-      (1 - lead.research_intensity_score / 100) * (height - padY * 2) +
-      (((hash >> 7) % 80) - 40) * 0.2;
+      (1 - lead.research_intensity_score / 100) * plotH +
+      (((hash >> 7) % 80) - 40) * (jitterY / 40);
 
     return {
       x,
