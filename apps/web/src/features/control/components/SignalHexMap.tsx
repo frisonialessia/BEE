@@ -208,12 +208,18 @@ export function SignalHexMap({
     const ro = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) return;
+      // Measure both dimensions off the container's real laid-out box —
+      // used to hardcode height to the `height` prop and only measure
+      // width, so the canvas always drew at exactly that literal px value
+      // even when its flex-1 wrapper (min-height: height, not a fixed
+      // height) ended up taller, leaving blank space below the canvas.
       const w = Math.floor(entry.contentRect.width);
-      setSize({ width: w, height });
+      const h = Math.floor(entry.contentRect.height);
+      setSize({ width: w, height: h });
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [height]);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -296,18 +302,21 @@ export function SignalHexMap({
         </div>
       </div>
 
+      {/* minHeight (not height) on this wrapper only — a floor, not a fixed
+          size, so the canvas/empty-state/skeleton below (all h-full, no
+          inline height of their own) actually fill whatever room a taller
+          flex-1 parent gives them instead of getting pinned to the prop's
+          literal px value with blank space left over underneath. Same
+          "roomy container, small drawn content" bug the bar charts had. */}
       <div className="relative min-h-0 flex-1" style={{ minHeight: height }}>
         {isLoading ? (
-          <Skeleton className="h-full w-full rounded-2xl" style={{ height }} />
+          <Skeleton className="h-full w-full rounded-2xl" />
         ) : leads.length === 0 ? (
-          <div
-            className="flex h-full items-center justify-center rounded-2xl border-2 border-dashed border-border text-sm font-light text-[var(--color-text-muted)]"
-            style={{ height }}
-          >
+          <div className="flex h-full items-center justify-center rounded-2xl border-2 border-dashed border-border text-sm font-light text-[var(--color-text-muted)]">
             Todavía no hay leads del Dark Funnel — las señales de intención van a poblar la colmena.
           </div>
         ) : (
-          <div ref={containerRef} className="relative h-full w-full" style={{ height }}>
+          <div ref={containerRef} className="relative h-full w-full">
             <canvas
               ref={canvasRef}
               className={cn(

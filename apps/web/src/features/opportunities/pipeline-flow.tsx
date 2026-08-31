@@ -24,12 +24,18 @@ const COLUMN_COLOR: Record<LeadColumnId, string> = {
   closed: "var(--color-text-muted)",
 };
 
-const WIDTH = 640;
+// WIDTH used to be 640 with labels starting at TARGET_X + BAR_W + 12 = 582 —
+// only 58 units left before the SVG's own right edge clipped whatever didn't
+// fit. "Listas para actuar", the longest COLUMN_LABELS entry, needs ~115
+// units at this font size — it (and "Enriqueciendo") were being cut off
+// mid-word. 720 leaves enough room for the longest label plus margin.
+const WIDTH = 720;
 const HEIGHT = 300;
 const SOURCE_X = 12;
 const TARGET_X = 560;
 const BAR_W = 10;
 const GAP = 6;
+const MIN_SEGMENT_H = 14;
 
 interface FlowSegment {
   id: LeadColumnId;
@@ -70,7 +76,15 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
     const { segments } = KANBAN_COLUMNS.reduce(
       (acc, col) => {
         const count = grouped[col.id]?.length ?? 0;
-        const h = total > 0 ? (count / total) * availableH : availableH / KANBAN_COLUMNS.length;
+        // Sin este piso, una etapa en 0 colapsa a h=0 — su centro (donde se
+        // ancla la etiqueta "0 · Nombre") cae exactamente sobre el de
+        // cualquier otra etapa también en 0, así que sus textos se dibujan
+        // uno encima del otro. MIN_SEGMENT_H es suficiente alto para
+        // separar esos centros más que el propio texto de la etiqueta.
+        const h =
+          total > 0
+            ? Math.max((count / total) * availableH, MIN_SEGMENT_H)
+            : availableH / KANBAN_COLUMNS.length;
         const seg: FlowSegment = {
           id: col.id,
           count,
@@ -104,7 +118,7 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="bee-eyebrow">Flujo del pipeline</p>
-          <h2 className="mt-1 text-base font-semibold">{total} oportunidades en total</h2>
+          <h2 className="mt-1 bee-card-title">{total} oportunidades en total</h2>
         </div>
       </div>
 
@@ -147,7 +161,7 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
             y={(seg.targetTop + seg.targetBottom) / 2}
             dominantBaseline="middle"
             className="fill-foreground"
-            style={{ fontSize: 13, fontWeight: 600 }}
+            style={{ fontSize: 11, fontWeight: 600 }}
           >
             {seg.count} · {COLUMN_LABELS[seg.id]}
           </text>

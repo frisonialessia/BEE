@@ -63,7 +63,7 @@ function StreamItem({
         <p className="mt-0.5 line-clamp-2 text-sm font-light leading-snug tracking-tight">
           {event.title}
         </p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-[var(--color-text-muted)]">
+        <div className="mt-1.5 flex flex-wrap items-center gap-2 bee-micro">
           <span>{timeAgo(event.timestamp)}</span>
           {event.score != null && (
             <span className="font-mono tabular-nums">{Math.round(event.score)}</span>
