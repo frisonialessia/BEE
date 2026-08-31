@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
@@ -9,6 +10,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
 
 import { fetchMe, login as apiLogin, registerOrganization } from "@/lib/api/auth";
 import { clearStoredToken, getStoredToken, setStoredToken } from "@/lib/auth-storage";
@@ -31,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserOut | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   useEffect(() => {
     const token = getStoredToken();
@@ -72,6 +75,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // it all so the next login never flashes stale, cross-user data.
     queryClient.clear();
   }, [queryClient]);
+
+  useEffect(() => {
+    // apiFetch (lib/api/client.ts) broadcasts this the moment any request
+    // comes back 401 while a session token was actually attached — an
+    // expired token, or a deactivated user. Without this, every individual
+    // fetch* caller just caught the resulting ApiError and quietly
+    // degraded (empty list, stale cached demo data) — nothing ever told
+    // the person their session died; the dashboard just silently stopped
+    // updating. One listener here reacts uniformly instead of every caller
+    // reinventing the check.
+    function handleSessionExpired() {
+      logout();
+      toast.error("Tu sesión expiró — inicia sesión de nuevo.");
+      router.replace("/login");
+    }
+    window.addEventListener("bee:session-expired", handleSessionExpired);
+    return () => window.removeEventListener("bee:session-expired", handleSessionExpired);
+  }, [logout, router]);
 
   return (
     <AuthContext.Provider

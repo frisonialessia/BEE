@@ -17,8 +17,12 @@ from datetime import UTC, datetime
 
 from sqlmodel import Session, select
 
+from app.core.security import create_access_token, hash_password
 from app.models.audit_trail import AgentType, DecisionType
+from app.models.base import UserRole
 from app.models.dead_letter import DLQStatus, FailedEvent, compute_next_retry_delay
+from app.models.organization import Organization
+from app.models.user import User
 from app.services.audit_trail import AuditTrailService
 from app.services.dead_letter import DeadLetterQueueService, register_retry_handler
 
@@ -681,6 +685,30 @@ class TestWorkflowOrchestratorDLQ:
 # API Endpoints
 # ══════════════════════════════════════════════════════════════════
 
+def _auth_headers(session: Session) -> dict:
+    """A valid bearer token for a fresh, persisted OWNER — DLQ mutation
+    endpoints require a resolvable tenant identity, and the admin-only ones
+    (test-enqueue, retry-due) require OWNER/ADMIN specifically."""
+    org = Organization(name="Test Org", slug=f"test-org-{uuid.uuid4().hex[:8]}")
+    session.add(org)
+    session.commit()
+    session.refresh(org)
+
+    user = User(
+        organization_id=org.id,
+        email=f"owner-{uuid.uuid4().hex[:8]}@bee.ai",
+        hashed_password=hash_password("password123"),
+        full_name="Owner",
+        role=UserRole.OWNER,
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    token = create_access_token(user.id, organization_id=org.id, role=user.role.value)
+    return {"Authorization": f"Bearer {token}"}
+
+
 class TestDLQEndpoints:
     def test_get_summary(self, client) -> None:
         resp = client.get("/api/v1/workflow/dlq/summary")
@@ -694,22 +722,35 @@ class TestDLQEndpoints:
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
 
-    def test_test_enqueue(self, client) -> None:
-        resp = client.post("/api/v1/workflow/dlq/test-enqueue", json={
-            "event_name": "test.api.event",
-            "event_type": "webhook",
-            "error_message": "API test enqueue",
-        })
+    def test_test_enqueue(self, client, session: Session) -> None:
+        resp = client.post(
+            "/api/v1/workflow/dlq/test-enqueue",
+            json={
+                "event_name": "test.api.event",
+                "event_type": "webhook",
+                "error_message": "API test enqueue",
+            },
+            headers=_auth_headers(session),
+        )
         assert resp.status_code == 201
         data = resp.json()
         assert data["event_name"] == "test.api.event"
         assert data["status"] == "pending"
 
-    def test_get_event_by_id(self, client) -> None:
-        enqueue_resp = client.post("/api/v1/workflow/dlq/test-enqueue", json={
-            "event_name": "test.get.event",
-            "error_message": "test",
-        })
+    def test_test_enqueue_requires_admin(self, client) -> None:
+        resp = client.post(
+            "/api/v1/workflow/dlq/test-enqueue",
+            json={"event_name": "anon.event", "error_message": "anon"},
+        )
+        assert resp.status_code == 401
+
+    def test_get_event_by_id(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        enqueue_resp = client.post(
+            "/api/v1/workflow/dlq/test-enqueue",
+            json={"event_name": "test.get.event", "error_message": "test"},
+            headers=headers,
+        )
         event_id = enqueue_resp.json()["id"]
 
         resp = client.get(f"/api/v1/workflow/dlq/{event_id}")
@@ -720,46 +761,57 @@ class TestDLQEndpoints:
         resp = client.get(f"/api/v1/workflow/dlq/{uuid.uuid4()}")
         assert resp.status_code == 404
 
-    def test_retry_event(self, client) -> None:
-        enqueue_resp = client.post("/api/v1/workflow/dlq/test-enqueue", json={
-            "event_name": "test.retry.via.api",
-            "error_message": "initial",
-        })
+    def test_retry_event(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        enqueue_resp = client.post(
+            "/api/v1/workflow/dlq/test-enqueue",
+            json={"event_name": "test.retry.via.api", "error_message": "initial"},
+            headers=headers,
+        )
         event_id = enqueue_resp.json()["id"]
 
-        resp = client.post(f"/api/v1/workflow/dlq/{event_id}/retry")
+        resp = client.post(f"/api/v1/workflow/dlq/{event_id}/retry", headers=headers)
         assert resp.status_code == 200
         data = resp.json()
         assert "success" in data
         assert "attempt_count" in data
 
-    def test_resolve_event(self, client) -> None:
-        enqueue_resp = client.post("/api/v1/workflow/dlq/test-enqueue", json={
-            "event_name": "test.resolve.via.api",
-            "error_message": "initial",
-        })
+    def test_resolve_event(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        enqueue_resp = client.post(
+            "/api/v1/workflow/dlq/test-enqueue",
+            json={"event_name": "test.resolve.via.api", "error_message": "initial"},
+            headers=headers,
+        )
         event_id = enqueue_resp.json()["id"]
 
-        resp = client.patch(f"/api/v1/workflow/dlq/{event_id}/resolve", json={
-            "notes": "Fixed manually"
-        })
+        resp = client.patch(
+            f"/api/v1/workflow/dlq/{event_id}/resolve",
+            json={"notes": "Fixed manually"},
+            headers=headers,
+        )
         assert resp.status_code == 200
         assert resp.json()["status"] == "resolved"
 
-    def test_list_events_by_status(self, client) -> None:
-        client.post("/api/v1/workflow/dlq/test-enqueue", json={
-            "event_name": "test.filter.event",
-            "error_message": "err",
-        })
+    def test_list_events_by_status(self, client, session: Session) -> None:
+        client.post(
+            "/api/v1/workflow/dlq/test-enqueue",
+            json={"event_name": "test.filter.event", "error_message": "err"},
+            headers=_auth_headers(session),
+        )
         resp = client.get("/api/v1/workflow/dlq?status=pending")
         assert resp.status_code == 200
         data = resp.json()
         assert all(e["status"] == "pending" for e in data)
 
-    def test_retry_due_events(self, client) -> None:
-        resp = client.post("/api/v1/workflow/dlq/retry-due")
+    def test_retry_due_events(self, client, session: Session) -> None:
+        resp = client.post("/api/v1/workflow/dlq/retry-due", headers=_auth_headers(session))
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
+
+    def test_retry_due_events_requires_admin(self, client) -> None:
+        resp = client.post("/api/v1/workflow/dlq/retry-due")
+        assert resp.status_code == 401
 
 
 class TestAuditEndpoints:

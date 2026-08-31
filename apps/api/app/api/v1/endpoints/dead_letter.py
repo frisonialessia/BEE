@@ -7,8 +7,10 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
-from app.api.deps import get_organization_id
+from app.api.deps import get_organization_id, require_organization_id, require_roles
 from app.core.database import get_session
+from app.models.base import UserRole
+from app.models.user import User
 from app.schemas.dead_letter import (
     DLQEnqueueRequest,
     DLQEventOut,
@@ -89,7 +91,7 @@ def retry_event(
     event_id: uuid.UUID,
     dlq: DeadLetterQueueService = Depends(_get_dlq),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> DLQRetryResult:
     """Manually trigger a retry for a specific DLQ event.
 
@@ -119,11 +121,17 @@ def retry_due_events(
     limit: int = Query(default=50, le=200),
     dlq: DeadLetterQueueService = Depends(_get_dlq),
     session: Session = Depends(get_session),
+    _current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
 ) -> list[DLQRetryResult]:
-    """Retry all events whose next_retry_at is in the past.
+    """Retry all events whose next_retry_at is in the past, across every tenant.
 
-    In production this is called by a background worker every 10 seconds.
-    Expose it as an endpoint for manual triggering and testing.
+    In production this is called by a background worker on a timer, not by
+    an end user — there is no single ``organization_id`` to scope this to,
+    by design (it's a system-wide sweep). Gated to OWNER/ADMIN (rather than
+    the org-scoped :func:`require_organization_id`, which doesn't apply
+    here) so it stays reachable for manual triggering/testing without being
+    open to anyone on the internet, since it acts across every tenant's
+    queue in one call.
     """
     results = dlq.retry_due_events(limit=limit)
     session.commit()
@@ -140,7 +148,7 @@ def resolve_event(
     body: DLQResolveRequest,
     dlq: DeadLetterQueueService = Depends(_get_dlq),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> DLQEventOut:
     """Mark a DLQ event as manually resolved.
 
@@ -164,12 +172,15 @@ def test_enqueue(
     body: DLQEnqueueRequest,
     dlq: DeadLetterQueueService = Depends(_get_dlq),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
 ) -> DLQEventOut:
     """Manually enqueue an event for testing DLQ retry logic.
 
     Do not use this in production flows — events should be enqueued automatically
-    by the WorkflowOrchestrator and OmnichannelGateway on failure.
+    by the WorkflowOrchestrator and OmnichannelGateway on failure. Gated to
+    OWNER/ADMIN (rather than every authenticated user) precisely because it
+    is a testing backdoor left live in production, not a normal feature —
+    restricting who can reach it is the tradeoff for not removing it outright.
     """
     event = dlq.enqueue(
         event_name=body.event_name,
@@ -178,7 +189,7 @@ def test_enqueue(
         error=body.error_message,
         opportunity_id=body.opportunity_id,
         lead_id=body.lead_id,
-        organization_id=organization_id,
+        organization_id=current_user.organization_id,
     )
     session.commit()
     return DLQEventOut.model_validate(event)

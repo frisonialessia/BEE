@@ -7,7 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select
 
-from app.api.deps import get_organization_id
+from app.api.deps import get_organization_id, require_organization_id
 from app.core.database import get_session
 from app.models.engagement_event import IncomingEngagementEvent
 from app.schemas.engagement import EngagementAnalysis, EngagementEventOut, IncomingEventIn
@@ -36,7 +36,7 @@ def submit_event(
     data: IncomingEventIn,
     engine: SmartEngagementEngine = Depends(_get_engine),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> EngagementAnalysis:
     """Submit an incoming engagement event (comment, DM, reply) for processing.
 

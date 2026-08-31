@@ -7,7 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
-from app.api.deps import get_organization_id
+from app.api.deps import get_organization_id, require_organization_id
 from app.core.database import get_session
 from app.schemas.brand import (
     BrandContextQuery,
@@ -37,7 +37,7 @@ def create_or_update_profile(
     data: VoiceProfileCreate,
     svc: PersonalBrandService = Depends(_get_service),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> VoiceProfileOut:
     """Define the CEO's brand DNA (tone, authority topics, forbidden phrases).
 
@@ -77,7 +77,7 @@ def add_fragment(
     data: BrandFragmentCreate,
     svc: PersonalBrandService = Depends(_get_service),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> BrandFragmentOut:
     """Add an example post, key insight, or signature phrase to the knowledge base.
 
@@ -118,7 +118,7 @@ def delete_fragment(
     fragment_id: uuid.UUID,
     svc: PersonalBrandService = Depends(_get_service),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> None:
     ok = svc.delete_fragment(fragment_id, organization_id)
     if not ok:

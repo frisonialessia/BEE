@@ -752,37 +752,51 @@ class TestDynamicSequenceEngine:
 # ══════════════════════════════════════════════════════════════════
 
 class TestBrandEndpoints:
-    def test_create_profile(self, client, session: Session) -> None:  # noqa: ARG002
-        resp = client.post("/api/v1/brand/profile", json={
-            "display_name": "Alex Rivera",
-            "tone_descriptors": ["analytical", "direct"],
-            "authority_topics": ["B2B SaaS"],
-            "language": "en",
-        })
+    def test_create_profile(self, client, session: Session) -> None:
+        resp = client.post(
+            "/api/v1/brand/profile",
+            json={
+                "display_name": "Alex Rivera",
+                "tone_descriptors": ["analytical", "direct"],
+                "authority_topics": ["B2B SaaS"],
+                "language": "en",
+            },
+            headers=_auth_headers(session),
+        )
         assert resp.status_code == 201
         data = resp.json()
         assert data["display_name"] == "Alex Rivera"
         assert data["is_active"] is True
 
+    def test_create_profile_requires_auth(self, client) -> None:
+        resp = client.post("/api/v1/brand/profile", json={"display_name": "Anonymous"})
+        assert resp.status_code == 401
+
     def test_get_profile_not_found(self, client) -> None:
         resp = client.get("/api/v1/brand/profile")
         assert resp.status_code == 404
 
-    def test_create_and_get_profile(self, client) -> None:
-        client.post("/api/v1/brand/profile", json={"display_name": "CEO Test"})
+    def test_create_and_get_profile(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        client.post("/api/v1/brand/profile", json={"display_name": "CEO Test"}, headers=headers)
         resp = client.get("/api/v1/brand/profile")
         assert resp.status_code == 200
         assert resp.json()["display_name"] == "CEO Test"
 
-    def test_add_fragment(self, client) -> None:
-        profile_resp = client.post("/api/v1/brand/profile", json={"display_name": "CEO"})
+    def test_add_fragment(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        profile_resp = client.post("/api/v1/brand/profile", json={"display_name": "CEO"}, headers=headers)
         profile_id = profile_resp.json()["id"]
 
-        resp = client.post(f"/api/v1/brand/profile/{profile_id}/fragments", json={
-            "content": "After a funding round, the first 60 days are critical for GTM.",
-            "category": "key_insight",
-            "tags": ["funding", "SaaS"],
-        })
+        resp = client.post(
+            f"/api/v1/brand/profile/{profile_id}/fragments",
+            json={
+                "content": "After a funding round, the first 60 days are critical for GTM.",
+                "category": "key_insight",
+                "tags": ["funding", "SaaS"],
+            },
+            headers=headers,
+        )
         assert resp.status_code == 201
         data = resp.json()
         assert data["category"] == "key_insight"
@@ -808,33 +822,52 @@ class TestBrandEndpoints:
 # ══════════════════════════════════════════════════════════════════
 
 class TestEngagementEndpoints:
-    def test_submit_positive_event(self, client) -> None:
-        resp = client.post("/api/v1/engagement/events", json={
-            "source": "linkedin",
-            "content": "Great post! Really insightful and helpful content.",
-            "author_name": "Jane Smith",
-        })
+    def test_submit_positive_event(self, client, session: Session) -> None:
+        resp = client.post(
+            "/api/v1/engagement/events",
+            json={
+                "source": "linkedin",
+                "content": "Great post! Really insightful and helpful content.",
+                "author_name": "Jane Smith",
+            },
+            headers=_auth_headers(session),
+        )
         assert resp.status_code == 201
         data = resp.json()
         assert data["processed"] is True
 
-    def test_submit_spam_event(self, client) -> None:
-        resp = client.post("/api/v1/engagement/events", json={
-            "source": "linkedin",
-            "content": "Buy now! Limited offer make money free bitcoin click here!",
-            "author_name": "Spammer",
-        })
+    def test_submit_event_requires_auth(self, client) -> None:
+        resp = client.post(
+            "/api/v1/engagement/events",
+            json={"source": "linkedin", "content": "Anonymous submission.", "author_name": "Nobody"},
+        )
+        assert resp.status_code == 401
+
+    def test_submit_spam_event(self, client, session: Session) -> None:
+        resp = client.post(
+            "/api/v1/engagement/events",
+            json={
+                "source": "linkedin",
+                "content": "Buy now! Limited offer make money free bitcoin click here!",
+                "author_name": "Spammer",
+            },
+            headers=_auth_headers(session),
+        )
         assert resp.status_code == 201
         data = resp.json()
         assert data["ignored"] is True
         assert data["pending_action_id"] is None
 
-    def test_list_events(self, client) -> None:
-        client.post("/api/v1/engagement/events", json={
-            "source": "twitter",
-            "content": "How does your platform handle multi-touch attribution?",
-            "author_name": "Curious User",
-        })
+    def test_list_events(self, client, session: Session) -> None:
+        client.post(
+            "/api/v1/engagement/events",
+            json={
+                "source": "twitter",
+                "content": "How does your platform handle multi-touch attribution?",
+                "author_name": "Curious User",
+            },
+            headers=_auth_headers(session),
+        )
         resp = client.get("/api/v1/engagement/events")
         assert resp.status_code == 200
         events = resp.json()

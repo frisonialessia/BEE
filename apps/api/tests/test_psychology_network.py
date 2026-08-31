@@ -15,8 +15,12 @@ import uuid
 import pytest
 from sqlmodel import Session
 
+from app.core.security import create_access_token, hash_password
+from app.models.base import UserRole
 from app.models.lead import Lead
 from app.models.network import ConnectionType
+from app.models.organization import Organization
+from app.models.user import User
 from app.schemas.dark_funnel import DarkFunnelSignalIn
 from app.schemas.network import NetworkConnectionCreate
 from app.services.dark_funnel import DarkFunnelService
@@ -677,6 +681,29 @@ class TestEnrichmentContextExtensions:
 # API Endpoints
 # ══════════════════════════════════════════════════════════════════
 
+def _auth_headers(session: Session) -> dict:
+    """A valid bearer token for a fresh, persisted OWNER — these endpoints
+    write org-scoped data and require a resolvable tenant identity."""
+    org = Organization(name="Test Org", slug=f"test-org-{uuid.uuid4().hex[:8]}")
+    session.add(org)
+    session.commit()
+    session.refresh(org)
+
+    user = User(
+        organization_id=org.id,
+        email=f"owner-{uuid.uuid4().hex[:8]}@bee.ai",
+        hashed_password=hash_password("password123"),
+        full_name="Owner",
+        role=UserRole.OWNER,
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    token = create_access_token(user.id, organization_id=org.id, role=user.role.value)
+    return {"Authorization": f"Bearer {token}"}
+
+
 class TestPsychographicEndpoints:
     def test_classify_lead(self, client, session: Session) -> None:
         lead = Lead(full_name="Test CEO", email=f"ceo_{uuid.uuid4().hex[:6]}@test.com", title="CEO")
@@ -698,15 +725,30 @@ class TestPsychographicEndpoints:
         session.add(lead)
         session.commit()
 
-        resp = client.post("/api/v1/psychographic/adapt", json={
-            "content": "Hope you're doing well! Just wanted to reach out about our amazing best-in-class product.",
-            "lead_id": str(lead.id),
-            "artifact_type": "email_draft",
-        })
+        resp = client.post(
+            "/api/v1/psychographic/adapt",
+            json={
+                "content": "Hope you're doing well! Just wanted to reach out about our amazing best-in-class product.",
+                "lead_id": str(lead.id),
+                "artifact_type": "email_draft",
+            },
+            headers=_auth_headers(session),
+        )
         assert resp.status_code == 200
         data = resp.json()
         assert data["disc_style"] in ("D", "I", "S", "C", "UNKNOWN")
         assert "adaptations_applied" in data
+
+    def test_adapt_content_requires_auth(self, client, session: Session) -> None:
+        lead = Lead(full_name="Anon Lead", email=f"anon_{uuid.uuid4().hex[:6]}@test.com", title="Engineer")
+        session.add(lead)
+        session.commit()
+
+        resp = client.post(
+            "/api/v1/psychographic/adapt",
+            json={"content": "Anonymous.", "lead_id": str(lead.id), "artifact_type": "email_draft"},
+        )
+        assert resp.status_code == 401
 
     def test_list_profiles(self, client) -> None:
         resp = client.get("/api/v1/psychographic/profiles")
@@ -715,31 +757,44 @@ class TestPsychographicEndpoints:
 
 
 class TestDarkFunnelEndpoints:
-    def test_ingest_signal(self, client) -> None:
-        resp = client.post("/api/v1/dark-funnel/signals", json={
-            "company_domain": "endpoint-test.com",
-            "signal_type": "pricing_view",
-            "intent_keywords": ["crm", "sales automation"],
-        })
+    def test_ingest_signal(self, client, session: Session) -> None:
+        resp = client.post(
+            "/api/v1/dark-funnel/signals",
+            json={
+                "company_domain": "endpoint-test.com",
+                "signal_type": "pricing_view",
+                "intent_keywords": ["crm", "sales automation"],
+            },
+            headers=_auth_headers(session),
+        )
         assert resp.status_code == 201
         data = resp.json()
         assert data["company_domain"] == "endpoint-test.com"
         assert data["weight"] > 0
 
-    def test_get_hot_leads(self, client) -> None:
-        client.post("/api/v1/dark-funnel/signals", json={
-            "company_domain": "hot-endpoint.com",
-            "signal_type": "product_trial",
-        })
+    def test_ingest_signal_requires_auth(self, client) -> None:
+        resp = client.post(
+            "/api/v1/dark-funnel/signals",
+            json={"company_domain": "anon-test.com", "signal_type": "pricing_view"},
+        )
+        assert resp.status_code == 401
+
+    def test_get_hot_leads(self, client, session: Session) -> None:
+        client.post(
+            "/api/v1/dark-funnel/signals",
+            json={"company_domain": "hot-endpoint.com", "signal_type": "product_trial"},
+            headers=_auth_headers(session),
+        )
         resp = client.get("/api/v1/dark-funnel/hot-leads")
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
 
-    def test_get_domain_score(self, client) -> None:
-        client.post("/api/v1/dark-funnel/signals", json={
-            "company_domain": "score-test.io",
-            "signal_type": "review_visit",
-        })
+    def test_get_domain_score(self, client, session: Session) -> None:
+        client.post(
+            "/api/v1/dark-funnel/signals",
+            json={"company_domain": "score-test.io", "signal_type": "review_visit"},
+            headers=_auth_headers(session),
+        )
         resp = client.get("/api/v1/dark-funnel/hot-leads/score-test.io")
         assert resp.status_code == 200
         data = resp.json()
@@ -751,33 +806,55 @@ class TestDarkFunnelEndpoints:
         data = resp.json()
         assert "total_hot_leads" in data
 
-    def test_batch_ingest(self, client) -> None:
-        resp = client.post("/api/v1/dark-funnel/signals/batch", json=[
-            {"company_domain": "batch-a.com", "signal_type": "content_read"},
-            {"company_domain": "batch-b.com", "signal_type": "demo_watch"},
-        ])
+    def test_batch_ingest(self, client, session: Session) -> None:
+        resp = client.post(
+            "/api/v1/dark-funnel/signals/batch",
+            json=[
+                {"company_domain": "batch-a.com", "signal_type": "content_read"},
+                {"company_domain": "batch-b.com", "signal_type": "demo_watch"},
+            ],
+            headers=_auth_headers(session),
+        )
         assert resp.status_code == 201
         assert len(resp.json()) == 2
 
+    def test_batch_ingest_requires_auth(self, client) -> None:
+        resp = client.post(
+            "/api/v1/dark-funnel/signals/batch",
+            json=[{"company_domain": "anon-batch.com", "signal_type": "content_read"}],
+        )
+        assert resp.status_code == 401
+
 
 class TestNetworkEndpoints:
-    def test_add_connection(self, client) -> None:
-        resp = client.post("/api/v1/network/connections", json={
-            "contact_name": "API User",
-            "contact_company": "TestCorp",
-            "contact_domain": "testcorp.com",
-            "relationship_strength": 7,
-        })
+    def test_add_connection(self, client, session: Session) -> None:
+        resp = client.post(
+            "/api/v1/network/connections",
+            json={
+                "contact_name": "API User",
+                "contact_company": "TestCorp",
+                "contact_domain": "testcorp.com",
+                "relationship_strength": 7,
+            },
+            headers=_auth_headers(session),
+        )
         assert resp.status_code == 201
         data = resp.json()
         assert data["contact_name"] == "API User"
 
-    def test_list_connections(self, client) -> None:
-        client.post("/api/v1/network/connections", json={
-            "contact_name": "List Test",
-            "contact_company": "Corp",
-            "contact_domain": "corp.com",
-        })
+    def test_add_connection_requires_auth(self, client) -> None:
+        resp = client.post(
+            "/api/v1/network/connections",
+            json={"contact_name": "Anon", "contact_company": "AnonCo", "contact_domain": "anon.com"},
+        )
+        assert resp.status_code == 401
+
+    def test_list_connections(self, client, session: Session) -> None:
+        client.post(
+            "/api/v1/network/connections",
+            json={"contact_name": "List Test", "contact_company": "Corp", "contact_domain": "corp.com"},
+            headers=_auth_headers(session),
+        )
         resp = client.get("/api/v1/network/connections")
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
@@ -789,13 +866,17 @@ class TestNetworkEndpoints:
         assert data["cold_outreach_fallback"] is True
         assert data["paths_found"] == []
 
-    def test_find_intro_paths_with_connection(self, client) -> None:
-        client.post("/api/v1/network/connections", json={
-            "contact_name": "Direct Contact",
-            "contact_company": "DirectCo",
-            "contact_domain": "directco.com",
-            "relationship_strength": 8,
-        })
+    def test_find_intro_paths_with_connection(self, client, session: Session) -> None:
+        client.post(
+            "/api/v1/network/connections",
+            json={
+                "contact_name": "Direct Contact",
+                "contact_company": "DirectCo",
+                "contact_domain": "directco.com",
+                "relationship_strength": 8,
+            },
+            headers=_auth_headers(session),
+        )
         resp = client.get("/api/v1/network/paths?target_domain=directco.com&target_company=DirectCo")
         assert resp.status_code == 200
         data = resp.json()

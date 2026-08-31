@@ -7,7 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
-from app.api.deps import get_organization_id
+from app.api.deps import get_organization_id, require_organization_id
 from app.core.database import get_session
 from app.schemas.psychographic import AdaptedContent, ContentAdaptRequest, LeadPsychographicOut
 from app.services.psychographic import PsychographicAnalyzer
@@ -73,7 +73,7 @@ def adapt_content(
     body: ContentAdaptRequest,
     analyzer: PsychographicAnalyzer = Depends(_get_analyzer),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> AdaptedContent:
     """Run the content style middleware on a piece of text.
 

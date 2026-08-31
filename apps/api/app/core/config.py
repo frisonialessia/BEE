@@ -368,6 +368,28 @@ class Settings(BaseSettings):
                 "defaults (host=localhost, password=bee) — set DATABASE_URL or "
                 "the real POSTGRES_* values"
             )
+        # BACKEND_CORS_ORIGINS left at its localhost-only dev default means
+        # the real production frontend origin is silently rejected by CORS —
+        # not a security hole, but it fails as a confusing browser-side
+        # "Failed to fetch"/CORS console error with nothing logged
+        # server-side, exactly the kind of gap this check exists to surface
+        # at boot instead of in a support ticket.
+        if self.BACKEND_CORS_ORIGINS == "http://localhost:3000":
+            problems.append(
+                "BACKEND_CORS_ORIGINS is still the localhost-only dev default — "
+                "the real production frontend origin will be rejected by CORS"
+            )
+        # VECTOR_STORE_BACKEND defaulting to "mock" means Sales DNA / brand
+        # voice semantic search silently runs on a non-persistent, in-memory
+        # TF-IDF store that resets on every restart — a real feature quietly
+        # degrading, not fake data returned to a request, but still worth
+        # catching at boot rather than discovering it after every deploy
+        # resets the store.
+        if self.VECTOR_STORE_BACKEND == "mock":
+            problems.append(
+                "VECTOR_STORE_BACKEND is still \"mock\" — Sales DNA/brand-voice "
+                "search will silently reset on every restart instead of persisting"
+            )
 
         if problems:
             logging.getLogger(__name__).critical(
