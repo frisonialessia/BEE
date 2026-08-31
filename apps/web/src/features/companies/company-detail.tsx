@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { RelationshipMap } from "@/components/companies/relationship-map";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useCompany } from "@/hooks/queries/use-companies";
 import { useBulkCreateLeads, useCreateLead, useLeads } from "@/hooks/queries/use-leads";
@@ -150,6 +151,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
   const { openOpportunity } = useOpportunityDrawer();
 
   const [showNewContact, setShowNewContact] = useState(false);
+  const [showNewOpportunity, setShowNewOpportunity] = useState(false);
 
   const company = companyResult?.data;
   const leads = (leadsResult?.data ?? []).filter((l) => l.company_id === companyId);
@@ -298,10 +300,25 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
       )}
 
       <section>
-        <h2 className="flex items-center gap-2 bee-card-title">
-          <Target className="size-4 text-muted-foreground" />
-          Oportunidades ({opportunities.length})
-        </h2>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="flex items-center gap-2 bee-card-title">
+            <Target className="size-4 text-muted-foreground" />
+            Oportunidades ({opportunities.length})
+          </h2>
+          <button
+            type="button"
+            onClick={() => setShowNewOpportunity((v) => !v)}
+            className="bee-btn-ghost text-xs"
+          >
+            + Nueva oportunidad
+          </button>
+        </div>
+        {showNewOpportunity && (
+          <NewOpportunityForm
+            company={{ name: company.name, domain: company.domain }}
+            onDone={() => setShowNewOpportunity(false)}
+          />
+        )}
         {opportunities.length === 0 ? (
           <p className="text-sm text-muted-foreground">Sin oportunidades para esta empresa todavía.</p>
         ) : (

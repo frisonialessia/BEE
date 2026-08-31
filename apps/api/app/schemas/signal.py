@@ -151,6 +151,47 @@ class OpportunityStageIn(BaseModel):
     status: Literal["detected", "ready_to_action", "prioritized", "in_progress"]
 
 
+class OpportunityCreateIn(BaseModel):
+    """Manual opportunity creation — the CRM "+ Nueva oportunidad" counterpart
+    to ``SignalEngine._create_opportunity`` (which only runs during signal
+    ingestion). A rep adding an account to the pipeline by hand instead of
+    waiting for an inbound signal.
+
+    Company/lead fields are flat (``company_name``/``lead_full_name``, not a
+    nested ref or an id) for the same reason ``LeadImportRow`` is: the caller
+    (a browser form) doesn't have — and shouldn't need — an internal
+    ``company_id``/``lead_id`` before the account exists yet. They're resolved
+    with the same get-or-create logic signal ingestion already uses
+    (``CompanyRepository``/``LeadRepository.get_or_create_from_ref``), so
+    submitting a company name/domain that already exists in this organization
+    attaches to that row instead of creating a duplicate.
+
+    ``description`` is the rep's own account of why this is worth pursuing —
+    it becomes the synthesized signal's description and is what the strategy
+    generators read as market context, same as an inbound webhook's payload
+    would be.
+    """
+
+    company_name: str = Field(min_length=1, max_length=255)
+    company_domain: str | None = Field(default=None, max_length=255)
+    company_industry: str | None = Field(default=None, max_length=255)
+    company_country: str | None = Field(default=None, max_length=255)
+
+    lead_full_name: str | None = Field(default=None, max_length=255)
+    lead_email: str | None = Field(default=None, max_length=255)
+    lead_title: str | None = Field(default=None, max_length=255)
+    lead_seniority: str | None = Field(default=None, max_length=64)
+    lead_linkedin_url: str | None = Field(default=None, max_length=500)
+
+    signal_type: SignalType = SignalType.OTHER
+    title: str | None = Field(default=None, max_length=255)
+    description: str = Field(min_length=1, max_length=2000)
+    # Rep's own priority estimate (0-100) — same scale as an analyzer-assigned
+    # signal score, seeding both the synthesized signal's and the
+    # opportunity's score until real signals or outcomes recalibrate it.
+    score: float = Field(default=50.0, ge=0, le=100)
+
+
 class SignalIngestResult(BaseModel):
     """Response returned after processing an inbound webhook.
 

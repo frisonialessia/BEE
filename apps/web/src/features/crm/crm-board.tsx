@@ -7,9 +7,11 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
+import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
 import { useMoveOpportunityStage, useOpportunities } from "@/hooks/queries/use-opportunities";
 import type { CrmStage } from "@/lib/api/opportunities";
 import { CRM_STAGES, groupByCrmStage } from "@/lib/crm-board";
+import { useIsDemoMode } from "@/lib/demo/mode";
 import { scoreVariant } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ApiError } from "@/types/api";
@@ -208,6 +210,8 @@ export function CrmBoard() {
   const { openOpportunity } = useOpportunityDrawer();
   const moveStage = useMoveOpportunityStage();
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [showNew, setShowNew] = useState(false);
+  const demo = useIsDemoMode();
 
   const opportunities = oppsResult?.data ?? [];
   const live = oppsResult?.live ?? false;
@@ -251,6 +255,21 @@ export function CrmBoard() {
     moveOpportunity(id, stage);
   }
 
+  const header = (
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <p className="bee-caption">Arrastra una tarjeta para moverla de etapa, o usa el selector de cada tarjeta</p>
+      <div className="flex items-center gap-2">
+        <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+        {!demo && (
+          <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary text-xs">
+            + Nueva oportunidad
+          </button>
+        )}
+      </div>
+    </div>
+  );
+  const newForm = showNew && <NewOpportunityForm onDone={() => setShowNew(false)} />;
+
   if (isLoading) {
     return (
       <div className="flex gap-4 overflow-x-auto pb-2">
@@ -263,20 +282,24 @@ export function CrmBoard() {
 
   if (opportunities.length === 0) {
     return (
-      <div className="bee-bento bee-bento-pad py-12 text-center">
-        <Inbox className="mx-auto mb-2 size-5 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">Todavía no hay oportunidades en el pipeline.</p>
-        <p className="bee-caption mt-1">En cuanto una señal se convierta en oportunidad, aparece aquí.</p>
+      <div>
+        {header}
+        {newForm}
+        <div className="bee-bento bee-bento-pad py-12 text-center">
+          <Inbox className="mx-auto mb-2 size-5 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Todavía no hay oportunidades en el pipeline.</p>
+          <p className="bee-caption mt-1">
+            En cuanto una señal se convierta en oportunidad, aparece aquí — o agrega la primera a mano.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between">
-        <p className="bee-caption">Arrastra una tarjeta para moverla de etapa, o usa el selector de cada tarjeta</p>
-        <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
-      </div>
+      {header}
+      {newForm}
 
       {/* items-start, not the flex default (stretch) — stretch is exactly
           what forced every column to match the tallest one's natural

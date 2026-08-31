@@ -20,14 +20,25 @@ from sqlmodel import Session
 
 from app.api.deps import get_current_user, get_current_user_optional
 from app.core.database import get_session
-from app.models.base import OpportunityStatus
+from app.models.base import OpportunityStatus, SignalSource
+from app.models.opportunity import Opportunity
+from app.models.signal import Signal
 from app.models.user import User
+from app.repositories.company import CompanyRepository
+from app.repositories.lead import LeadRepository
 from app.repositories.opportunity import OpportunityRepository
 from app.schemas.cycle_prediction import CyclePredictionOut
 from app.schemas.executive import ArtifactBundle
 from app.schemas.feedback import OutcomeIn
 from app.schemas.predictor import OutcomeWithPrediction
-from app.schemas.signal import OpportunityOut, OpportunityStageIn, OpportunityUpdateIn
+from app.schemas.signal import (
+    CompanyRef,
+    LeadRef,
+    OpportunityCreateIn,
+    OpportunityOut,
+    OpportunityStageIn,
+    OpportunityUpdateIn,
+)
 from app.schemas.strategy import (
     BattlecardCompany,
     BattlecardLead,
@@ -40,6 +51,7 @@ from app.services.executive_agent.service import ExecutiveAgent
 from app.services.feedback_loop.service import FeedbackLoopService
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
 from app.services.resource_predictor import ResourcePredictorService, resolve_context
+from app.services.strategy_generator import StrategyGeneratorService
 from app.services.workflow_orchestrator import BeeEvent, WorkflowOrchestrator
 
 router = APIRouter(prefix="/opportunities", tags=["Opportunities"])
@@ -62,6 +74,133 @@ def _hidden_from(session: Session, current_user: User | None, opportunity) -> bo
     ):
         return True
     return not user_can_view_assignment(session, current_user, opportunity.assigned_to_user_id)
+
+
+@router.post(
+    "",
+    response_model=OpportunityOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create an opportunity manually",
+)
+def create_opportunity(
+    data: OpportunityCreateIn,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> OpportunityOut:
+    """The manual-entry counterpart to ``SignalEngine._create_opportunity`` —
+    a rep adding an account to the pipeline by hand instead of waiting for an
+    inbound signal.
+
+    Mirrors the automatic pipeline step for step so a manually-added account
+    gets the exact same treatment as one that arrived by webhook:
+
+    1. Resolve (or create) the company/lead via the same get-or-create logic
+       ingestion uses — a name/domain that already exists in this
+       organization attaches to that row rather than creating a duplicate.
+    2. Synthesize a ``SignalSource.MANUAL`` signal carrying the rep's own
+       title/description as its market context (this is what
+       ``StrategyGeneratorService`` reads to write the battlecard — same
+       ``raw_payload`` shape ``_build_context`` expects from a webhook).
+    3. Create the ``Opportunity`` in ``DETECTED``, assigned to the caller.
+    4. Run it through ``StrategyGeneratorService.enrich`` — the exact same
+       call ``SignalEngine.ingest`` makes — so it's promoted to
+       ``READY_TO_ACTION`` the moment a complete battlecard is generated,
+       gated by the same completeness check as every other opportunity.
+    """
+    org_id = current_user.organization_id
+
+    company = CompanyRepository(session).get_or_create_from_ref(
+        CompanyRef(
+            name=data.company_name,
+            domain=data.company_domain,
+            industry=data.company_industry,
+            country=data.company_country,
+        ),
+        org_id,
+    )
+
+    lead = None
+    if data.lead_full_name or data.lead_email:
+        lead = LeadRepository(session).get_or_create_from_ref(
+            LeadRef(
+                full_name=data.lead_full_name,
+                email=data.lead_email,
+                title=data.lead_title,
+                seniority=data.lead_seniority,
+                linkedin_url=data.lead_linkedin_url,
+            ),
+            company.id if company else None,
+            org_id,
+        )
+
+    company_name = company.name if company else data.company_name
+
+    signal = Signal(
+        organization_id=org_id,
+        company_id=company.id if company else None,
+        lead_id=lead.id if lead else None,
+        signal_type=data.signal_type,
+        source=SignalSource.MANUAL,
+        title=data.title or f"{company_name} — agregado manualmente",
+        description=data.description,
+        score=data.score,
+        confidence=1.0,
+        raw_payload={
+            "company": {
+                "name": data.company_name,
+                "domain": data.company_domain,
+                "industry": data.company_industry,
+                "country": data.company_country,
+            },
+            "lead": (
+                {
+                    "full_name": data.lead_full_name,
+                    "email": data.lead_email,
+                    "title": data.lead_title,
+                    "seniority": data.lead_seniority,
+                    "linkedin_url": data.lead_linkedin_url,
+                }
+                if lead is not None
+                else {}
+            ),
+        },
+        analysis={"tags": ["manual_entry"], "analyzers": ["manual"]},
+    )
+    session.add(signal)
+
+    opportunity = Opportunity(
+        organization_id=org_id,
+        signal_id=signal.id,
+        lead_id=lead.id if lead else None,
+        company_id=company.id if company else None,
+        assigned_to_user_id=current_user.id,
+        title=data.title or f"Oportunidad: {company_name}",
+        score=data.score,
+        strategy={},
+    )
+    session.add(opportunity)
+    session.commit()
+    session.refresh(signal)
+    session.refresh(opportunity)
+
+    # Best-effort, same as every other post-create enrichment in this
+    # codebase (DataValidator after a manual lead, TrendAnalyst after a
+    # webhook) — a generator failure must never fail the create request
+    # that triggered it. The opportunity simply stays DETECTED, same
+    # outcome as a webhook signal none of the generators could enrich.
+    try:
+        StrategyGeneratorService(session).enrich(signal, opportunity)
+        session.commit()
+    except Exception:  # noqa: BLE001
+        session.rollback()
+        import logging
+
+        logging.getLogger(__name__).exception(
+            "StrategyGeneratorService failed for manually-created opportunity %s", opportunity.id
+        )
+    session.refresh(opportunity)
+
+    return OpportunityOut.model_validate(opportunity)
 
 
 @router.get(
