@@ -112,6 +112,19 @@ export function scoreVariant(score: number): "success" | "warning" | "secondary"
   return "secondary";
 }
 
+/** Same ≥75/≥50 thresholds as scoreVariant(), as a CSS color instead of a
+ *  Badge variant — for the handful of places that paint a score directly
+ *  (bars, dots, raw text) instead of rendering a <Badge>. Score/"hot"
+ *  coloring used to be reimplemented independently in half a dozen spots
+ *  with three different thresholds and four different "hot" colors
+ *  (magenta, orange, amber, gold) — this is the one function every one of
+ *  them should call instead of picking their own. */
+export function scoreColorVar(score: number): string {
+  if (score >= 75) return "var(--success)";
+  if (score >= 50) return "var(--warning)";
+  return "var(--color-text-muted)";
+}
+
 export function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diffMs / 60000);

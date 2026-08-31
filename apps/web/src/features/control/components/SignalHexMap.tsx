@@ -157,7 +157,10 @@ export function SignalHexMap({
     const counts: Record<string, number> = {};
     for (const l of leads) counts[l.buying_stage] = (counts[l.buying_stage] ?? 0) + 1;
     const order: Array<{ stage: string; color: string }> = [
-      { stage: "ready_to_buy", color: "var(--color-chart-2)" },
+      // ready_to_buy used to be chart-2/orange — the same hue as
+      // --destructive — for what's actually the best buying stage. Matches
+      // the magenta STAGE_CONFIG uses for this stage in dark-funnel-dashboard.tsx.
+      { stage: "ready_to_buy", color: "var(--color-chart-5)" },
       { stage: "decision", color: "var(--color-chart-1)" },
       { stage: "consideration", color: "var(--color-chart-3)" },
     ];

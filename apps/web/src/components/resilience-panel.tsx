@@ -223,7 +223,12 @@ const AGENT_LABELS: Record<string, string> = {
 };
 
 function ConfidenceBadge({ score }: { score: number }) {
-  const varColor = score >= 0.8 ? "var(--success)" : score >= 0.5 ? "var(--warning)" : "var(--color-chart-2)";
+  // Same ≥0.75/≥0.5 thresholds as scoreColorVar() (lib/format.ts) — this used
+  // to be ≥0.8 with a chart-2/orange floor (the app's destructive color) for
+  // merely low-confidence, not failed. Aligning the threshold and swapping
+  // the floor to muted keeps "confidence" reading as a spectrum instead of
+  // implying an error.
+  const varColor = score >= 0.75 ? "var(--success)" : score >= 0.5 ? "var(--warning)" : "var(--color-text-muted)";
   return (
     <span className="text-xs px-2 py-0.5 rounded-sm border font-mono" style={statusChipStyle(varColor)}>
       {(score * 100).toFixed(0)}%

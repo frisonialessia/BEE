@@ -9,7 +9,6 @@ import { useEffect, useState } from "react";
 import { CheckCircle, Clock, Mail, ShieldCheck, XCircle } from "lucide-react";
 
 import { approveAction, getPendingActions, rejectAction } from "@/lib/api";
-import { CHART_PALETTE } from "@/lib/brand/colors";
 import type { PendingAction } from "@/lib/types";
 
 const ACTION_TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -96,7 +95,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
       )}
 
       {action.retry_count > 0 && (
-        <p className="text-xs" style={{ color: CHART_PALETTE[1] }}>
+        <p className="text-xs" style={{ color: "var(--color-chart-2)" }}>
           Reintento #{action.retry_count}
         </p>
       )}
@@ -167,7 +166,7 @@ export function PendingActionsPanel() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="flex items-center gap-1.5 bee-card-title">
-            <ShieldCheck className="size-4 stroke-[1.25]" style={{ color: CHART_PALETTE[4] }} />
+            <ShieldCheck className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-5)" }} />
             Cola de ejecución
           </h3>
           <p className="bee-caption mt-0.5">
@@ -178,7 +177,7 @@ export function PendingActionsPanel() {
           <span
             className="rounded-sm border border-border px-2 py-0.5 text-xs font-semibold"
             style={{
-              background: `color-mix(in srgb, ${CHART_PALETTE[0]} 25%, var(--color-background))`,
+              background: "color-mix(in srgb, var(--color-chart-1) 25%, var(--color-background))",
             }}
           >
             {pendingCount} pendientes
@@ -196,7 +195,7 @@ export function PendingActionsPanel() {
         <div className="py-6 text-center">
           <CheckCircle
             className="mx-auto mb-2 size-6 stroke-[1.25]"
-            style={{ color: CHART_PALETTE[4] }}
+            style={{ color: "var(--color-chart-5)" }}
           />
           <p className="text-xs text-muted-foreground">No hay acciones pendientes.</p>
           <p className="mt-1 bee-micro">
@@ -219,7 +218,7 @@ export function PendingActionsPanel() {
       <p className="flex items-center gap-1.5 bee-micro">
         <span
           className="inline-block size-1.5"
-          style={{ background: CHART_PALETTE[0] }}
+          style={{ background: "var(--color-chart-1)" }}
         />
         Puerta de seguridad: ninguna acción se ejecuta sin la aprobación explícita del CEO.
       </p>

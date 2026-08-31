@@ -4,6 +4,7 @@ import { AlertCircle, ArrowRight, CheckCircle2, Flame } from "lucide-react";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import { scoreVariant } from "@/lib/format";
 
 /**
  * MarketingBeforeAfter — mismas 6 empresas de ejemplo que el resto del
@@ -37,11 +38,6 @@ const SCORED_ROWS = [
   { company: "Fielder Logistics", score: 41, stage: "Conocimiento" },
 ] as const;
 
-function scoreVariant(score: number): "success" | "warning" | "secondary" {
-  if (score >= 75) return "success";
-  if (score >= 50) return "warning";
-  return "secondary";
-}
 
 export function MarketingBeforeAfter() {
   const [withBee, setWithBee] = useState(false);

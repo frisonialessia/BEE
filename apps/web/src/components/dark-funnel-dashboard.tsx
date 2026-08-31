@@ -5,9 +5,12 @@ import type { DarkFunnelSummary, HotLeadScore } from "@/lib/types";
 import { getDarkFunnelHotLeads, getDarkFunnelSummary, ingestDarkFunnelSignal } from "@/lib/api";
 
 // BEE's palette has no red — the heat gradient (hottest → coolest) maps onto
-// the chart accents instead: orange (2) → amber (1) → gold (3) → blue (4).
+// the chart accents instead: magenta (5, "hot"/success everywhere else in
+// the app) → amber (1) → gold (3) → blue (4). ready_to_buy used to be
+// chart-2/orange — the same hue as --destructive — so the best possible
+// buying stage read as an error.
 const STAGE_CONFIG: Record<string, { label: string; varColor: string }> = {
-  ready_to_buy: { label: "Listo para comprar", varColor: "var(--color-chart-2)" },
+  ready_to_buy: { label: "Listo para comprar", varColor: "var(--color-chart-5)" },
   decision: { label: "Decisión", varColor: "var(--color-chart-1)" },
   consideration: { label: "Consideración", varColor: "var(--color-chart-3)" },
   awareness: { label: "Conocimiento", varColor: "var(--color-chart-4)" },
@@ -29,7 +32,7 @@ const SIGNAL_TYPES = [
 function ScoreBar({ score }: { score: number }) {
   const varColor =
     score >= 80
-      ? "var(--color-chart-2)"
+      ? "var(--color-chart-5)"
       : score >= 55
         ? "var(--color-chart-1)"
         : score >= 30

@@ -32,7 +32,7 @@ export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
                     style={{ height: `${Math.max(totalPct, p.count > 0 ? 4 : 0)}%` }}
                   />
                   <div
-                    className="absolute bottom-0 w-full rounded-t-[var(--radius-sm)] bg-[var(--color-chart-1)] transition-[height] duration-300"
+                    className="absolute bottom-0 w-full rounded-t-[var(--radius-sm)] bg-[var(--success)] transition-[height] duration-300"
                     style={{ height: `${Math.max(hotPct, p.hotCount > 0 ? 4 : 0)}%` }}
                   />
                 </div>
