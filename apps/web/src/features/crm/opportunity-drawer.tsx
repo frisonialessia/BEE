@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { X } from "lucide-react";
+import { toast } from "sonner";
 
 import { BattlecardView } from "@/components/battlecard";
 import { CyclePredictionPanel } from "@/components/cycle-prediction-panel";
@@ -16,8 +17,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useArtifacts, useBattlecard } from "@/hooks/queries/use-artifacts";
-import { useOpportunities } from "@/hooks/queries/use-opportunities";
+import { useMoveOpportunityStage, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useLeadDiscProfile } from "@/hooks/queries/use-psychographic";
+import type { CrmStage } from "@/lib/api/opportunities";
+import { CRM_STAGES } from "@/lib/crm-board";
+import { ApiError } from "@/types/api";
+import { CLOSED_OPPORTUNITY_STATUSES } from "@/types/domain";
 
 const DISC_LABELS: Record<string, string> = {
   D: "Dominante — directo y orientado a resultados",
@@ -30,6 +35,7 @@ const DISC_LABELS: Record<string, string> = {
 /** Drawer CRM — detalle in-place sin navegación. */
 export function OpportunityDrawer() {
   const { opportunityId, closeOpportunity } = useOpportunityDrawer();
+  const moveStage = useMoveOpportunityStage();
 
   const { data: battlecardResult, isLoading: loadingBattlecard } = useBattlecard(
     opportunityId ?? "",
@@ -58,6 +64,28 @@ export function OpportunityDrawer() {
 
   if (!open) return null;
 
+  // Misma acción que el <select> "Mover a" de cada CrmCard en el tablero —
+  // acá también, para que mover de etapa no dependa de estar viendo el
+  // Kanban. Solo para etapas abiertas: cerrar sigue siendo una acción
+  // dedicada (RecordOutcomePanel), no un simple cambio de estado.
+  const isClosed = opportunity ? CLOSED_OPPORTUNITY_STATUSES.includes(opportunity.status) : false;
+
+  function handleMoveStage(stage: CrmStage) {
+    if (!opportunity || opportunity.status === stage) return;
+    moveStage.mutate(
+      { id: opportunity.id, stage },
+      {
+        onError: (err) => {
+          toast.error(
+            err instanceof ApiError
+              ? err.message
+              : "No se pudo mover la oportunidad — intenta de nuevo.",
+          );
+        },
+      },
+    );
+  }
+
   return (
     <>
       <button
@@ -79,14 +107,30 @@ export function OpportunityDrawer() {
               {opportunity?.title.replace(/^Opportunity:\s*/, "") ?? "Cargando…"}
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={closeOpportunity}
-            className="rounded-sm p-2 text-muted-foreground transition-colors hover:bg-primary hover:text-foreground"
-            aria-label="Cerrar"
-          >
-            <X className="size-5 stroke-[1.25]" />
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {opportunity && !isClosed && (
+              <select
+                value={opportunity.status}
+                onChange={(e) => handleMoveStage(e.target.value as CrmStage)}
+                aria-label="Mover a otra etapa"
+                className="rounded-sm border border-border bg-background px-2 py-1.5 text-xs text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+              >
+                {CRM_STAGES.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              type="button"
+              onClick={closeOpportunity}
+              className="rounded-sm p-2 text-muted-foreground transition-colors hover:bg-primary hover:text-foreground"
+              aria-label="Cerrar"
+            >
+              <X className="size-5 stroke-[1.25]" />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
