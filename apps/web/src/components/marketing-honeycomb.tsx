@@ -126,17 +126,30 @@ function buildGrid(): HexCell[] {
 const CELLS = buildGrid();
 const VIEW = HEX_SIZE * 1.5 * RADIUS + HEX_SIZE * 1.5;
 
-/** Frío → azul/lavanda de marca, medio → violeta/magenta, caliente →
- *  dorado/naranja — mismas tres bandas que la barra "Frío → Caliente"
- *  ya usada en SignalHexMap, solo que interpoladas por hexágono en vez
- *  de por posición en una barra lineal. */
+// Mismos 5 tonos y mismo orden que la barra "Frío → Caliente" real
+// (SignalHexMap.tsx, TEMPERATURE_COLORS.cool/mild/warm/hot/peak) — chart-5
+// (magenta) no es parte de esa escala, así que tampoco entra aquí; antes
+// esta función mezclaba chart-6→chart-4 para frío y chart-1→chart-6 para
+// caliente, un orden inventado que además iba en la dirección contraria a
+// la barra real.
+const TEMP_STOPS = [
+  "--color-chart-1",
+  "--color-chart-2",
+  "--color-chart-3",
+  "--color-chart-4",
+  "--color-chart-6",
+] as const;
+
+/** Frío → dorado, medio → naranja/azul, caliente → violeta — interpolado
+ *  por hexágono en vez de por posición en una barra lineal, mismos tonos. */
 function heatColor(heat: number): string {
-  if (heat < 0.5) {
-    const t = heat / 0.5;
-    return `color-mix(in srgb, var(--color-chart-6) ${Math.round(t * 100)}%, var(--color-chart-4) ${Math.round((1 - t) * 100)}%)`;
-  }
-  const t = (heat - 0.5) / 0.5;
-  return `color-mix(in srgb, var(--color-chart-1) ${Math.round(t * 100)}%, var(--color-chart-6) ${Math.round((1 - t) * 100)}%)`;
+  const clamped = Math.min(1, Math.max(0, heat));
+  const segments = TEMP_STOPS.length - 1;
+  const scaled = clamped * segments;
+  const idx = Math.min(segments - 1, Math.floor(scaled));
+  const t = scaled - idx;
+  const toPct = Math.round(t * 100);
+  return `color-mix(in srgb, var(${TEMP_STOPS[idx + 1]}) ${toPct}%, var(${TEMP_STOPS[idx]}) ${100 - toPct}%)`;
 }
 
 function HexTooltip({
