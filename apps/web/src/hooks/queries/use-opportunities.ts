@@ -3,11 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  createOpportunity,
   fetchBattlecards,
   fetchOpportunities,
   moveOpportunityStage,
   updateOpportunity,
   type CrmStage,
+  type OpportunityCreateIn,
   type OpportunityUpdateIn,
 } from "@/lib/api/opportunities";
 import { queryKeys } from "@/lib/query-keys";
@@ -25,6 +27,22 @@ export function useBattlecards() {
   return useQuery({
     queryKey: queryKeys.battlecards.ready(),
     queryFn: async () => fetchBattlecards(),
+  });
+}
+
+/** Alta manual de una oportunidad — invalida Oportunidades, y también
+ *  Empresas/Leads porque el mismo POST puede resolver-o-crear una empresa y
+ *  un lead nuevos (el mismo get-or-create que usa la ingesta automática), no
+ *  solo la oportunidad. */
+export function useCreateOpportunity() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: OpportunityCreateIn) => createOpportunity(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.opportunities.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
+    },
   });
 }
 

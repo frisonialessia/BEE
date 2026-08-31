@@ -18,9 +18,46 @@ import type {
   Opportunity,
   OpportunityStatus,
   OutcomeIn,
+  SignalType,
 } from "@/types/domain";
 import type { CyclePrediction, OutcomeWithPrediction } from "@/types/extended";
 import { sampleArtifacts, sampleBattlecards } from "@/lib/sample-data";
+
+export interface OpportunityCreateIn {
+  company_name: string;
+  company_domain?: string;
+  company_industry?: string;
+  company_country?: string;
+  lead_full_name?: string;
+  lead_email?: string;
+  lead_title?: string;
+  lead_seniority?: string;
+  lead_linkedin_url?: string;
+  signal_type?: SignalType;
+  title?: string;
+  description: string;
+  score?: number;
+}
+
+/** Carga manual de una oportunidad — el "+ Nueva oportunidad" del CRM y de
+ *  la ficha de empresa. Resuelve (o crea) la empresa/lead igual que la
+ *  ingesta automática y dispara la misma generación de estrategia con IA —
+ *  ver el docstring de `POST /opportunities` en el backend. No existe un
+ *  equivalente en el sandbox: crear ahí requeriría simular localmente toda
+ *  la generación de battlecard, así que esta acción es solo para cuentas
+ *  reales (mismo criterio que `createCompany`). */
+export async function createOpportunity(body: OpportunityCreateIn): Promise<Opportunity> {
+  if (isDemoMode()) {
+    throw new Error(
+      "El CRM es de solo lectura en el sandbox — esta acción solo está disponible en tu cuenta real.",
+    );
+  }
+  return apiFetch<Opportunity>("/api/v1/opportunities", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
 
 export async function fetchOpportunities(
   status?: OpportunityStatus,
