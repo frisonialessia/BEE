@@ -89,7 +89,11 @@ class TestOpportunitiesOrgIsolation:
         session.commit()
 
         token = create_access_token(owner_a.id, organization_id=org_a.id, role=owner_a.role.value)
-        resp = client.get("/api/v1/opportunities?status=all", headers=_auth_headers(token))
+        # No status filter — this is the real "everything for my org" request
+        # every actual frontend caller makes (CRM board, Forecast, etc.); an
+        # explicit status has to be a real OpportunityStatus member now (see
+        # list_opportunities' docstring), so "all" isn't a valid value here.
+        resp = client.get("/api/v1/opportunities", headers=_auth_headers(token))
         titles = [o["title"] for o in resp.json()]
         assert titles == ["Opp A"]
 
@@ -117,6 +121,10 @@ class TestOpportunitiesOrgIsolation:
         session.commit()
 
         token = create_access_token(owner_a.id, organization_id=org_a.id, role=owner_a.role.value)
-        resp = client.get("/api/v1/opportunities?status=all", headers=_auth_headers(token))
+        # No status filter — this is the real "everything for my org" request
+        # every actual frontend caller makes (CRM board, Forecast, etc.); an
+        # explicit status has to be a real OpportunityStatus member now (see
+        # list_opportunities' docstring), so "all" isn't a valid value here.
+        resp = client.get("/api/v1/opportunities", headers=_auth_headers(token))
         titles = [o["title"] for o in resp.json()]
         assert "Legacy opp" in titles

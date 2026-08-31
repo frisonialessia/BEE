@@ -6,7 +6,6 @@ import {
   Radio,
   Sparkles,
   Target,
-  Wifi,
   WifiOff,
 } from "lucide-react";
 
