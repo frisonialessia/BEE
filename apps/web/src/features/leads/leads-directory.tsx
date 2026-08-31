@@ -333,31 +333,29 @@ export function LeadsDirectory() {
                   Aplicar
                 </button>
               </div>
-              {!demo && (
-                <div className="flex items-center gap-1.5">
-                  <select
-                    value={bulkSequence}
-                    onChange={(e) => setBulkSequence(e.target.value)}
-                    className="rounded-full border border-border bg-[var(--color-card)] px-2.5 py-1 text-xs outline-none"
-                  >
-                    <option value="">Enviar a secuencia…</option>
-                    {(sequencesResult?.data ?? []).map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={applyBulkSequence}
-                    disabled={!bulkSequence || bulkEnroll.isPending}
-                    className="bee-btn bee-btn--primary inline-flex items-center gap-1 text-xs"
-                  >
-                    <Workflow className="size-3.5" />
-                    {bulkEnroll.isPending ? "Enviando…" : "Aplicar"}
-                  </button>
-                </div>
-              )}
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={bulkSequence}
+                  onChange={(e) => setBulkSequence(e.target.value)}
+                  className="rounded-full border border-border bg-[var(--color-card)] px-2.5 py-1 text-xs outline-none"
+                >
+                  <option value="">Enviar a secuencia…</option>
+                  {(sequencesResult?.data ?? []).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={applyBulkSequence}
+                  disabled={!bulkSequence || bulkEnroll.isPending}
+                  className="bee-btn bee-btn--primary inline-flex items-center gap-1 text-xs"
+                >
+                  <Workflow className="size-3.5" />
+                  {bulkEnroll.isPending ? "Enviando…" : "Aplicar"}
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={() => setSelected(new Set())}

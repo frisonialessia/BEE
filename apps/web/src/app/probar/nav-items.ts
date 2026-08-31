@@ -21,9 +21,7 @@ export const PROBAR_NAV_GROUPS: NavGroup[] = NAV_GROUPS.map((group) => ({
  * faking their data: those show real backend/infrastructure state (worker
  * health, audit logs, relationship graphs), and inventing that would be
  * lying about the system itself, not illustrating a product feature — the
- * same honesty policy the rest of BEE holds to. Secuencias isn't here
- * either, not on principle — its flow-builder just needs more plumbing
- * than a first pass covered.
+ * same honesty policy the rest of BEE holds to.
  *
  * Integraciones IS here even though nothing is ever actually connected in
  * the sandbox: unlike the sections above, "nothing connected yet" is the
@@ -31,6 +29,13 @@ export const PROBAR_NAV_GROUPS: NavGroup[] = NAV_GROUPS.map((group) => ({
  * — so showing it isn't inventing anything (see the DEMO_INTEGRATIONS
  * comment in lib/api/integrations.ts). Clicking "Conectar" explains you
  * need a real account instead of faking an OAuth flow.
+ *
+ * Secuencias is here too, but only partially — see its own page
+ * (`app/probar/sequences/page.tsx`) for why: Biblioteca de mensajes and
+ * Automatizaciones are user-authored content, same category as
+ * Integraciones' own honesty; Estado (SmartEngagementEngine's live AI
+ * classification) is real backend processing like Resiliencia's audit log,
+ * so that one tab stays gated instead of faking an AI engine.
  *
  * Everything else in the nav routes to a page that says so honestly
  * instead of faking a working demo. */
@@ -47,4 +52,5 @@ export const PROBAR_LIVE_SECTIONS = new Set([
   "/probar/forecast",
   "/probar/win-loss",
   "/probar/integrations",
+  "/probar/sequences",
 ]);
