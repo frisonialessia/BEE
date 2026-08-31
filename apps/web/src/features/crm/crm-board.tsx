@@ -132,7 +132,17 @@ function CrmColumn({
           onDrop(stage);
         }}
         className={cn(
-          "flex min-h-[220px] flex-1 flex-col gap-2.5 rounded-[var(--radius-lg)] border-2 border-dashed border-transparent bg-[var(--color-primary)]/25 p-2.5 transition-colors",
+          // max-h + overflow-y-auto, not just min-h: without a cap, this
+          // column relied on the row's default align-items: stretch to
+          // match whatever sibling had the most cards, so an empty column
+          // stretched to that same height too — its "Sin oportunidades
+          // aquí" message floating in space that had nothing to do with
+          // its own content, and the whole page scrolling exactly as far
+          // as the busiest column needed. Capping the height and scrolling
+          // each column on its own (how Trello/Pipedrive-style boards
+          // work) keeps an empty column at its own compact size regardless
+          // of how full its siblings are.
+          "flex min-h-[220px] max-h-[65vh] flex-1 flex-col gap-2.5 overflow-y-auto rounded-[var(--radius-lg)] border-2 border-dashed border-transparent bg-[var(--color-primary)]/25 p-2.5 transition-colors",
           over && "border-[var(--color-chart-4)] bg-[var(--color-chart-4)]/10",
         )}
       >
@@ -232,7 +242,11 @@ export function CrmBoard() {
         <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto pb-2">
+      {/* items-start, not the flex default (stretch) — stretch is exactly
+          what forced every column to match the tallest one's natural
+          height in the first place; each column now sizes to its own
+          content, capped by its own max-h above. */}
+      <div className="flex items-start gap-4 overflow-x-auto pb-2">
         {CRM_STAGES.map((s) => (
           <CrmColumn
             key={s.id}
@@ -253,7 +267,7 @@ export function CrmBoard() {
             <h3 className="bee-eyebrow">Cerradas</h3>
             <span className="font-mono bee-micro">{closed.length}</span>
           </div>
-          <div className="flex min-h-[220px] flex-1 flex-col gap-2.5 rounded-[var(--radius-lg)] bg-[var(--color-block-muted)] p-2.5">
+          <div className="flex min-h-[220px] max-h-[65vh] flex-1 flex-col gap-2.5 overflow-y-auto rounded-[var(--radius-lg)] bg-[var(--color-block-muted)] p-2.5">
             {closed.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-2 py-8 text-center">
                 <p className="bee-micro">Nada cerrado todavía</p>
