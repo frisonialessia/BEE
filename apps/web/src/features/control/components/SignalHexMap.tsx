@@ -126,7 +126,27 @@ export function SignalHexMap({
   const hexRadius = useMemo(() => {
     if (leads.length > 150) return 14;
     if (leads.length > 80) return 16;
-    return 18;
+    // A sparse Dark Funnel (a handful of leads, common early on) used to
+    // draw at the same 18px radius as a mid-size one — small hexagons in a
+    // wide-open canvas read as "almost empty". Growing them further as the
+    // count drops keeps each cell visually substantial instead of shrinking
+    // it to match a data volume the canvas has plenty of room for.
+    if (leads.length > 20) return 18;
+    return 24;
+  }, [leads.length]);
+
+  // Spreading the jitter above (leadsToPoints) only redistributes leads
+  // *within* their fixed stage column — it can't fix the real emptiness,
+  // which is that 4 stage columns plotted across a wide hero card leave
+  // huge gaps between them no matter how the points inside each one are
+  // jittered. The landing mock never has this problem because its card is
+  // a fixed ~220px regardless of data. Capping the actual plotted width to
+  // the data volume (instead of always stretching to the card's full
+  // width) reproduces that density here too, and grows toward full width
+  // once there's enough real data to use it honestly.
+  const contentWidth = useMemo(() => {
+    if (leads.length === 0 || leads.length >= 60) return undefined;
+    return Math.max(300, 140 + leads.length * 26);
   }, [leads.length]);
 
   // Desglose por etapa — igual patrón que "Opened/Clicked/Converted" de un
@@ -277,9 +297,14 @@ export function SignalHexMap({
       <span className="bee-hex-float" style={{ width: 40, height: 46, top: "40%", right: 24, animationDelay: "2.6s" }} aria-hidden />
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="bee-caption">Dark Funnel · leads activos</p>
-          <h2 className="mt-0.5 bee-card-title">Colmena de intención</h2>
-          <p className="bee-caption mt-0.5">{leads.length} leads · haz clic en una celda para ver detalles</p>
+          {/* Two lines (title + caption), same as every other Resumen
+              section header (Embudo de cierre, Dónde eres más fuerte, …) —
+              this used to run a 3rd bee-caption line above the title,
+              heavier than any sibling section on the page. */}
+          <h2 className="bee-card-title">Colmena de intención</h2>
+          <p className="bee-caption mt-0.5">
+            Dark Funnel · {leads.length} leads · haz clic en una celda para ver detalles
+          </p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <Link
@@ -316,7 +341,11 @@ export function SignalHexMap({
             Todavía no hay leads del Dark Funnel — las señales de intención van a poblar la colmena.
           </div>
         ) : (
-          <div ref={containerRef} className="relative h-full w-full">
+          <div
+            ref={containerRef}
+            className="relative h-full w-full"
+            style={contentWidth ? { maxWidth: contentWidth, margin: "0 auto" } : undefined}
+          >
             <canvas
               ref={canvasRef}
               className={cn(
