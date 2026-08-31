@@ -11,7 +11,6 @@ import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
 import { useMoveOpportunityStage, useOpportunities } from "@/hooks/queries/use-opportunities";
 import type { CrmStage } from "@/lib/api/opportunities";
 import { CRM_STAGES, groupByCrmStage } from "@/lib/crm-board";
-import { useIsDemoMode } from "@/lib/demo/mode";
 import { scoreVariant } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ApiError } from "@/types/api";
@@ -211,7 +210,6 @@ export function CrmBoard() {
   const moveStage = useMoveOpportunityStage();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
-  const demo = useIsDemoMode();
 
   const opportunities = oppsResult?.data ?? [];
   const live = oppsResult?.live ?? false;
@@ -260,11 +258,9 @@ export function CrmBoard() {
       <p className="bee-caption">Arrastra una tarjeta para moverla de etapa, o usa el selector de cada tarjeta</p>
       <div className="flex items-center gap-2">
         <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
-        {!demo && (
-          <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary text-xs">
-            + Nueva oportunidad
-          </button>
-        )}
+        <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary text-xs">
+          + Nueva oportunidad
+        </button>
       </div>
     </div>
   );

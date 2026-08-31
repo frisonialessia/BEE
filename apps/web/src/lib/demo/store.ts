@@ -15,7 +15,7 @@ import type {
   MessageTemplateCreateIn,
   MessageTemplateUpdateIn,
 } from "@/lib/api/templates";
-import { buildDemoCompanySet } from "@/lib/demo/templates";
+import { buildDemoCompanySet, buildManualOpportunitySet, type ManualOpportunityInput } from "@/lib/demo/templates";
 import { sampleBattlecards, sampleOpportunities, sampleSignals } from "@/lib/sample-data";
 import type {
   ArtifactBundle,
@@ -45,8 +45,11 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * silently never reach a returning visitor, since `loadJSON` below only
  * seeds when a key is completely absent. `"1"` is the original 4-signal/
  * 2-opportunity seed (unversioned, so any stored data with no version tag
- * counts as "1"); `"2"` is the enriched 18-account history added later. */
-const SEED_VERSION = "2";
+ * counts as "1"); `"2"` is the enriched 18-account history added later;
+ * `"3"` staggers the 6 open seeds' `expected_close_date` across the
+ * 6-month Pronóstico window and adds ambient signals so the 14-day
+ * Volumen de señales chart isn't mostly empty bars. */
+const SEED_VERSION = "3";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Reseeds the base opportunities/signals when the visitor's stored
@@ -209,6 +212,34 @@ export function demoAddCompany(companyName: string, employeeRange: EmployeeRange
   return set.opportunity;
 }
 
+/** "+ Nueva oportunidad" (CRM board / company detail) — the local
+ * counterpart to `POST /opportunities`. Same append pattern as
+ * `demoAddCompany`, just backed by `buildManualOpportunitySet` (a real
+ * prospect the rep names, not the self-referential "Simula tu empresa"
+ * signal) — see that function's docstring for why this is still within the
+ * sandbox's honesty policy. */
+export function demoCreateOpportunity(input: ManualOpportunityInput): Opportunity {
+  const set = buildManualOpportunitySet(input);
+
+  const opportunities = load();
+  opportunities.unshift(set.opportunity);
+  save(opportunities);
+
+  const signals = loadJSON<Signal[]>(SIGNALS_KEY, sampleSignals);
+  signals.unshift(set.signal);
+  saveJSON(SIGNALS_KEY, signals);
+
+  const battlecards = loadJSON<Battlecard[]>(BATTLECARDS_KEY, []);
+  battlecards.push(set.battlecard);
+  saveJSON(BATTLECARDS_KEY, battlecards);
+
+  const artifacts = loadJSON<ArtifactBundle[]>(ARTIFACTS_KEY, []);
+  artifacts.push(set.artifacts);
+  saveJSON(ARTIFACTS_KEY, artifacts);
+
+  return set.opportunity;
+}
+
 /** Wipes this visitor's local edits and restores the original seed data. */
 export function resetDemoData(): void {
   save(structuredClone(sampleOpportunities));
@@ -264,6 +295,12 @@ export function demoFetchCompanies(): Company[] {
     });
   }
   return [...seen.values()];
+}
+
+/** Single-company lookup for the company detail page — same derived,
+ * name-deduped list as `demoFetchCompanies`, just filtered to one id. */
+export function demoFetchCompany(companyId: string): Company | undefined {
+  return demoFetchCompanies().find((c) => c.id === companyId);
 }
 
 export function demoFetchLeads(): Lead[] {

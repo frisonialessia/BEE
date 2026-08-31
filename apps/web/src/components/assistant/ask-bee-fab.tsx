@@ -26,7 +26,8 @@ export function AskBeeFab() {
   }, [messages.length]);
 
   // La página completa ya es el chat — no hace falta el flotante ahí encima.
-  if (pathname?.startsWith("/dashboard/assistant")) return null;
+  if (pathname?.startsWith("/dashboard/assistant") || pathname?.startsWith("/probar/assistant")) return null;
+  const assistantHref = pathname?.startsWith("/probar") ? "/probar/assistant" : "/dashboard/assistant";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -86,7 +87,7 @@ export function AskBeeFab() {
               </button>
             </form>
             <Link
-              href="/dashboard/assistant"
+              href={assistantHref}
               className="mt-1.5 block text-center bee-micro hover:text-[var(--color-cta)]"
             >
               Abrir conversación completa →

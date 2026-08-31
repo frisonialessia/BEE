@@ -149,6 +149,14 @@ interface SeedDef {
   qualifiedCount: number;
   lossReason?: LossReason;
   competitor?: string | null;
+  /** Only meaningful on an open (non-won/lost) seed — how many days from
+   * "now" its `expected_close_date` lands. Pronóstico buckets open pipeline
+   * 6 months forward (see lib/forecast.ts's `byMonth`); leaving this unset
+   * on every open seed piled all of them into whichever single month sits
+   * ~14 days out, so 5 of the 6 forward months rendered empty. Staggered
+   * across the 6 open seeds below so the forecast chart shows a real
+   * month-over-month distribution instead of one spike. */
+  daysUntilClose?: number;
   /** Illustrates the "recalibración de ciclo por señales intermedias"
    * feature (see lib/cycle-prediction.ts): a second, later signal on the
    * same company, detected while this deal was still open. Only set on a
@@ -174,21 +182,21 @@ const SEEDS: SeedDef[] = [
   { id: "s01", company: "Vantage Studio", domain: "vantagestudio.mx", industry: "Diseño de producto", country: "México", signalType: "funding_round", leadName: "Camila Reyes", leadTitle: "Directora Comercial", seniority: "director", amount: 38000, score: 88, daysAgoCreated: 142, outcome: "won", cycleDays: 34, qualifiedCount: 6, intermediateSignal: { type: "hiring", description: "Vantage Studio abrió una posición comercial mientras evaluaba la propuesta." } },
   { id: "s02", company: "Río Verde Logística", domain: "rioverdelog.com", industry: "Logística", country: "México", signalType: "expansion", leadName: "Héctor Salinas", leadTitle: "VP de Operaciones", seniority: "vp", amount: 26000, score: 61, daysAgoCreated: 118, outcome: "lost", cycleDays: 52, qualifiedCount: 2, lossReason: "budget", competitor: "HubSpot" },
   { id: "s03", company: "Cumbre Salud", domain: "cumbresalud.co", industry: "Salud digital", country: "Colombia", signalType: "funding_round", leadName: "Valentina Ospina", leadTitle: "CEO", seniority: "c_level", amount: 61000, score: 94, daysAgoCreated: 156, outcome: "won", cycleDays: 28, qualifiedCount: 6, intermediateSignal: { type: "engagement", description: "Cumbre Salud mostró actividad sostenida de investigación mientras el deal seguía abierto." } },
-  { id: "s04", company: "Bright Retail Co", domain: "brightretail.com", industry: "Retail", country: "Estados Unidos", signalType: "tech_adoption", leadName: "Marcus Webb", leadTitle: "Head of Sales", seniority: "director", amount: 33000, score: 68, daysAgoCreated: 22, outcome: "in_progress", qualifiedCount: 3 },
+  { id: "s04", company: "Bright Retail Co", domain: "brightretail.com", industry: "Retail", country: "Estados Unidos", signalType: "tech_adoption", leadName: "Marcus Webb", leadTitle: "Head of Sales", seniority: "director", amount: 33000, score: 68, daysAgoCreated: 22, outcome: "in_progress", qualifiedCount: 3, daysUntilClose: 155 },
   { id: "s05", company: "Andina Fintech", domain: "andinafintech.pe", industry: "Fintech", country: "Perú", signalType: "leadership_change", leadName: "Rodrigo Paz", leadTitle: "VP Revenue Operations", seniority: "vp", amount: 45000, score: 72, daysAgoCreated: 95, outcome: "lost", cycleDays: 41, qualifiedCount: 3, lossReason: "no_decision", competitor: null },
   { id: "s06", company: "Solaris Manufactura", domain: "solarismfg.mx", industry: "Manufactura", country: "México", signalType: "hiring", leadName: "Patricia León", leadTitle: "Gerente Comercial", seniority: "manager", amount: 19500, score: 65, daysAgoCreated: 130, outcome: "won", cycleDays: 45, qualifiedCount: 5 },
-  { id: "s07", company: "Nimbus Cloud Systems", domain: "nimbuscloud.io", industry: "Infraestructura cloud", country: "Estados Unidos", signalType: "product_launch", leadName: "Ashley Turner", leadTitle: "VP Sales", seniority: "vp", amount: 72000, score: 89, daysAgoCreated: 6, outcome: "ready_to_action", qualifiedCount: 5 },
+  { id: "s07", company: "Nimbus Cloud Systems", domain: "nimbuscloud.io", industry: "Infraestructura cloud", country: "Estados Unidos", signalType: "product_launch", leadName: "Ashley Turner", leadTitle: "VP Sales", seniority: "vp", amount: 72000, score: 89, daysAgoCreated: 6, outcome: "ready_to_action", qualifiedCount: 5, daysUntilClose: 65 },
   { id: "s08", company: "EduNova", domain: "edunova.mx", industry: "EdTech", country: "México", signalType: "engagement", leadName: "Daniela Cruz", leadTitle: "Directora de Ventas", seniority: "director", amount: 15000, score: 54, daysAgoCreated: 88, outcome: "lost", cycleDays: 22, qualifiedCount: 1, lossReason: "price", competitor: "Salesforce", intermediateSignal: { type: "hiring", description: "EduNova contrató para el área que hubiera usado el producto, a mitad del ciclo." } },
   { id: "s09", company: "Horizonte Legal", domain: "horizontelegal.cl", industry: "LegalTech", country: "Chile", signalType: "news_mention", leadName: "Ignacio Fuentes", leadTitle: "Socio Director", seniority: "c_level", amount: 29000, score: 79, daysAgoCreated: 104, outcome: "won", cycleDays: 39, qualifiedCount: 5 },
-  { id: "s10", company: "Puerto Digital", domain: "puertodigital.mx", industry: "Comercio exterior", country: "México", signalType: "expansion", leadName: "Sofía Bravo", leadTitle: "VP Comercial", seniority: "vp", amount: 41000, score: 70, daysAgoCreated: 11, outcome: "in_progress", qualifiedCount: 4 },
+  { id: "s10", company: "Puerto Digital", domain: "puertodigital.mx", industry: "Comercio exterior", country: "México", signalType: "expansion", leadName: "Sofía Bravo", leadTitle: "VP Comercial", seniority: "vp", amount: 41000, score: 70, daysAgoCreated: 11, outcome: "in_progress", qualifiedCount: 4, daysUntilClose: 95 },
   { id: "s11", company: "Meridian Health Group", domain: "meridianhealth.com", industry: "Salud", country: "Estados Unidos", signalType: "funding_round", leadName: "Jordan Ellis", leadTitle: "CRO", seniority: "c_level", amount: 85000, score: 83, daysAgoCreated: 76, outcome: "lost", cycleDays: 60, qualifiedCount: 3, lossReason: "timing", competitor: null },
   { id: "s12", company: "Terra Agro Analytics", domain: "terraagro.com.ar", industry: "AgTech", country: "Argentina", signalType: "tech_adoption", leadName: "Lucía Fernández", leadTitle: "Gerente General", seniority: "c_level", amount: 24000, score: 66, daysAgoCreated: 112, outcome: "won", cycleDays: 31, qualifiedCount: 5, intermediateSignal: { type: "engagement", description: "Terra Agro Analytics intensificó su investigación de la categoría a mitad del ciclo." } },
-  { id: "s13", company: "Vega Real Estate Tech", domain: "vegaretech.mx", industry: "PropTech", country: "México", signalType: "hiring", leadName: "Emilio Duarte", leadTitle: "Director de Ventas", seniority: "director", amount: 18000, score: 47, daysAgoCreated: 2, outcome: "detected", qualifiedCount: 0 },
+  { id: "s13", company: "Vega Real Estate Tech", domain: "vegaretech.mx", industry: "PropTech", country: "México", signalType: "hiring", leadName: "Emilio Duarte", leadTitle: "Director de Ventas", seniority: "director", amount: 18000, score: 47, daysAgoCreated: 2, outcome: "detected", qualifiedCount: 0, daysUntilClose: 12 },
   { id: "s14", company: "Kaizen Manufacturing", domain: "kaizenmfg.com", industry: "Manufactura", country: "Estados Unidos", signalType: "leadership_change", leadName: "Brian Kessler", leadTitle: "VP Sales", seniority: "vp", amount: 52000, score: 71, daysAgoCreated: 68, outcome: "lost", cycleDays: 35, qualifiedCount: 2, lossReason: "product_fit", competitor: "Pipedrive", intermediateSignal: { type: "hiring", description: "Kaizen Manufacturing contrató comercial nuevo mientras evaluaba proveedores." } },
   { id: "s15", company: "Onda Media Group", domain: "ondamedia.mx", industry: "Medios", country: "México", signalType: "product_launch", leadName: "Renata Cabrera", leadTitle: "Directora Comercial", seniority: "director", amount: 22000, score: 75, daysAgoCreated: 90, outcome: "won", cycleDays: 26, qualifiedCount: 4, intermediateSignal: { type: "engagement", description: "Onda Media Group aceleró su evaluación con actividad de investigación adicional." } },
-  { id: "s16", company: "Cobre Insurtech", domain: "cobreinsurtech.co", industry: "Seguros", country: "Colombia", signalType: "funding_round", leadName: "Andrés Molina", leadTitle: "VP Growth", seniority: "vp", amount: 47000, score: 77, daysAgoCreated: 16, outcome: "in_progress", qualifiedCount: 4 },
+  { id: "s16", company: "Cobre Insurtech", domain: "cobreinsurtech.co", industry: "Seguros", country: "Colombia", signalType: "funding_round", leadName: "Andrés Molina", leadTitle: "VP Growth", seniority: "vp", amount: 47000, score: 77, daysAgoCreated: 16, outcome: "in_progress", qualifiedCount: 4, daysUntilClose: 125 },
   { id: "s17", company: "Silo Data Works", domain: "silodata.io", industry: "Datos / Analytics", country: "Estados Unidos", signalType: "engagement", leadName: "Taylor Brooks", leadTitle: "Head of Revenue", seniority: "director", amount: 39000, score: 81, daysAgoCreated: 145, outcome: "won", cycleDays: 48, qualifiedCount: 6 },
-  { id: "s18", company: "Raíz Educación", domain: "raizeducacion.mx", industry: "EdTech", country: "México", signalType: "news_mention", leadName: "Fernanda Ríos", leadTitle: "Gerente Comercial", seniority: "manager", amount: 12500, score: 58, daysAgoCreated: 4, outcome: "ready_to_action", qualifiedCount: 3 },
+  { id: "s18", company: "Raíz Educación", domain: "raizeducacion.mx", industry: "EdTech", country: "México", signalType: "news_mention", leadName: "Fernanda Ríos", leadTitle: "Gerente Comercial", seniority: "manager", amount: 12500, score: 58, daysAgoCreated: 4, outcome: "ready_to_action", qualifiedCount: 3, daysUntilClose: 40 },
 ];
 
 function buildStrategy(def: SeedDef, template: Template, createdAtIso: string): BattlecardStrategy {
@@ -259,7 +267,50 @@ const intermediateSignals: Signal[] = SEEDS.filter(
   analysis: { tags: [def.intermediateSignal.type], analyzers: [def.intermediateSignal.type], primary_analyzer: def.intermediateSignal.type },
 }));
 
-export const historicalSignals: Signal[] = [...originSignals, ...intermediateSignals];
+/** Additional lightweight signals with no linked opportunity — exist purely
+ * to give Señales → "Volumen de señales" (a 14-day daily bar chart, see
+ * `lib/signal-trends.ts`'s `computeDailySignalVolume`) a realistically
+ * populated shape. The 18 SEEDS above are one-off narrative events spread
+ * across ~5 months (by design — see the comment above SEEDS: they exist to
+ * give Ganado/Perdido, Pronóstico, and cycle-prediction real depth), so on
+ * any single day inside the last 14 only 3-4 of them land, leaving most
+ * days as empty bars. A real BEE account sees far more raw signals than
+ * opportunities — not every signal clears an analyzer's threshold — so
+ * these fill that gap honestly: no company_id/lead_id, exactly like a
+ * signal that got detected and scored but never became a pipeline entry. */
+const AMBIENT_SIGNAL_DEFS: { daysAgo: number; hours: number; type: SignalType; score: number; company: string }[] = [
+  { daysAgo: 1, hours: 4, type: "engagement", score: 42, company: "Loop Ventures" },
+  { daysAgo: 1, hours: 14, type: "news_mention", score: 55, company: "Faro Robotics" },
+  { daysAgo: 2, hours: 9, type: "tech_adoption", score: 61, company: "Delta Insurance Group" },
+  { daysAgo: 3, hours: 3, type: "hiring", score: 48, company: "Bloom Wellness" },
+  { daysAgo: 5, hours: 11, type: "engagement", score: 39, company: "Cursor Freight" },
+  { daysAgo: 6, hours: 20, type: "expansion", score: 53, company: "Norte Payments" },
+  { daysAgo: 7, hours: 8, type: "product_launch", score: 60, company: "Alto Analytics" },
+  { daysAgo: 8, hours: 15, type: "engagement", score: 44, company: "Vela Biotech" },
+  { daysAgo: 9, hours: 2, type: "news_mention", score: 50, company: "Perch HR" },
+  { daysAgo: 10, hours: 18, type: "hiring", score: 46, company: "Grano Foods" },
+  { daysAgo: 12, hours: 7, type: "tech_adoption", score: 57, company: "Cielo Travel" },
+  { daysAgo: 13, hours: 12, type: "engagement", score: 41, company: "Mesa Legal" },
+];
+
+const ambientSignals: Signal[] = AMBIENT_SIGNAL_DEFS.map((def, i) => {
+  const template = TEMPLATES[def.type];
+  return {
+    id: `demo-signal-ambient-${i + 1}`,
+    signal_type: def.type,
+    source: "webhook",
+    title: template.signalTitle(def.company),
+    description: template.signalDescription,
+    score: def.score,
+    confidence: Math.round((def.score / 100) * 0.8 * 100) / 100,
+    detected_at: daysAgoIso(def.daysAgo, def.hours),
+    company_id: null,
+    lead_id: null,
+    analysis: { tags: [def.type], analyzers: [def.type], primary_analyzer: def.type },
+  };
+});
+
+export const historicalSignals: Signal[] = [...originSignals, ...intermediateSignals, ...ambientSignals];
 
 export const historicalOpportunities: Opportunity[] = SEEDS.map((def) => {
   const template = TEMPLATES[def.signalType];
@@ -279,7 +330,7 @@ export const historicalOpportunities: Opportunity[] = SEEDS.map((def) => {
     company_id: companySlug(def.company),
     assigned_to_user_id: null,
     amount: def.amount,
-    expected_close_date: isClosed ? null : dateOnly(daysAgoIso(-14)),
+    expected_close_date: isClosed ? null : dateOnly(daysAgoIso(-(def.daysUntilClose ?? 14))),
     qualification: qualificationWith(def.qualifiedCount),
     created_at: createdAtIso,
     updated_at: closedAtIso ?? createdAtIso,

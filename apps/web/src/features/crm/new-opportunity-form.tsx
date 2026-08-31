@@ -69,7 +69,7 @@ export function NewOpportunityForm({
         description: description.trim(),
         score,
       });
-      toast.success("Oportunidad agregada — generando su estrategia con IA…");
+      toast.success("Oportunidad agregada — estrategia generada.");
       reset();
       onDone();
     } catch (err) {

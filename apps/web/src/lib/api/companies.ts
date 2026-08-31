@@ -1,6 +1,6 @@
 import { apiFetch } from "@/lib/api/client";
 import { isDemoMode } from "@/lib/demo/mode";
-import { demoFetchCompanies } from "@/lib/demo/store";
+import { demoFetchCompanies, demoFetchCompany } from "@/lib/demo/store";
 import type { FetchResult } from "@/types/api";
 import type { Company } from "@/types/domain";
 
@@ -40,6 +40,7 @@ export async function fetchCompanies(limit = 50): Promise<FetchResult<Company[]>
 }
 
 export async function fetchCompany(companyId: string): Promise<FetchResult<Company | null>> {
+  if (isDemoMode()) return { data: demoFetchCompany(companyId) ?? null, live: false };
   try {
     const data = await apiFetch<Company>(`/api/v1/companies/${companyId}`, {
       cache: "no-store",

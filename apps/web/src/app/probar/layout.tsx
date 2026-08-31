@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { AskBeeFab } from "@/components/assistant/ask-bee-fab";
 import { DashboardRail } from "@/components/dashboard/dashboard-rail";
 import { MobileNavProvider } from "@/components/dashboard/mobile-nav-context";
 import { MobileNavToggle } from "@/components/dashboard/mobile-nav-toggle";
@@ -58,6 +59,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
             <div className="bee-scroll">{children}</div>
           </div>
           <OpportunityDrawer />
+          <AskBeeFab />
         </div>
       </MobileNavProvider>
     </OpportunityDrawerProvider>

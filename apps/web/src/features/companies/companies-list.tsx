@@ -211,22 +211,10 @@ export function CompaniesList() {
               </>
             );
 
-            // En el sandbox no existe /probar/companies/[id] (solo lectura,
-            // sin ficha de detalle) — mostrar la tarjeta sin link en vez de
-            // uno que caería en /dashboard/companies/[id] y te mandaría a
-            // /login sin sesión.
-            if (demo) {
-              return (
-                <div key={company.id} className="bee-bento bee-bento-pad">
-                  {cardContent}
-                </div>
-              );
-            }
-
             return (
               <Link
                 key={company.id}
-                href={`/dashboard/companies/${company.id}`}
+                href={`${demo ? "/probar" : "/dashboard"}/companies/${company.id}`}
                 className="bee-bento bee-bento-pad transition-colors hover:border-[var(--color-chart-4)]"
               >
                 {cardContent}
