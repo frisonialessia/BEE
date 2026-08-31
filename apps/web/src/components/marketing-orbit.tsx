@@ -71,7 +71,7 @@ export function MarketingOrbit() {
             key={card.label}
             className={`group w-36 shrink-0 origin-bottom transition-transform duration-300 ease-out hover:z-10 hover:-translate-y-2 hover:rotate-0 hover:scale-110 sm:w-44 ${card.tilt}`}
           >
-            <div className="bee-glass flex h-full flex-col rounded-[var(--radius-lg)] p-3.5 shadow-[0_20px_40px_-24px_rgba(34,34,34,0.35)] transition-shadow duration-300 group-hover:shadow-[0_28px_48px_-20px_rgba(34,34,34,0.4)] sm:p-4">
+            <div className="bee-glass flex h-full flex-col rounded-[var(--radius-lg)] p-3.5 shadow-[0_20px_40px_-24px_color-mix(in_srgb,var(--color-text)_35%,transparent)] transition-shadow duration-300 group-hover:shadow-[0_28px_48px_-20px_color-mix(in_srgb,var(--color-text)_40%,transparent)] sm:p-4">
               <div
                 className="flex size-8 items-center justify-center rounded-[var(--radius-md)] sm:size-9"
                 style={{ background: `color-mix(in srgb, ${card.accent} 18%, white)`, color: card.accent }}
