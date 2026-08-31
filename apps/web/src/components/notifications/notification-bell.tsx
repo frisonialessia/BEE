@@ -15,8 +15,11 @@ const KIND_ICON: Record<AppNotification["kind"], typeof Flame> = {
 };
 
 const KIND_COLOR: Record<AppNotification["kind"], string> = {
+  // hot_signal used to be chart-2 (orange, the app's destructive color) —
+  // same "urgent, look now" meaning as hot_lead, which is magenta
+  // everywhere else in the app, so it gets the same color here too.
   hot_lead: "var(--color-chart-5)",
-  hot_signal: "var(--color-chart-2)",
+  hot_signal: "var(--color-chart-5)",
   review_required: "var(--color-chart-1)",
 };
 

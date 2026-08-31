@@ -14,6 +14,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { MarketingHoneycomb } from "@/components/marketing-honeycomb";
+import { scoreVariant } from "@/lib/format";
 
 /**
  * MarketingDemoPanel — vista previa con pestañas del producto para la
@@ -254,11 +255,6 @@ const LEADS = [
   { name: "Diego Farro", title: "Head of Growth", company: "Anchor Freight", score: 88, stage: "Listo para comprar", status: "Convertido" },
 ] as const;
 
-function scoreVariant(score: number): "success" | "warning" | "secondary" {
-  if (score >= 75) return "success";
-  if (score >= 50) return "warning";
-  return "secondary";
-}
 
 // Distribución real por status sobre TODO el array (no el filtrado) — el
 // resumen de abajo de la tabla, no otro número inventado.

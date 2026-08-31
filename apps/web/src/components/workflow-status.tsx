@@ -11,15 +11,14 @@ import {
 } from "lucide-react";
 
 import { getWorkflowStatus, getWorkflowTasks } from "@/lib/api";
-import { CHART_PALETTE } from "@/lib/brand/colors";
 import type { WorkflowStatus, WorkflowTask } from "@/lib/types";
 
 const STATUS_ICON: Record<string, React.ReactNode> = {
   mock_dispatched: <Layers className="size-3 stroke-[1.25] text-muted-foreground" />,
-  dispatched: <Zap className="size-3 stroke-[1.25]" style={{ color: CHART_PALETTE[3] }} />,
-  completed: <CheckCircle2 className="size-3 stroke-[1.25]" style={{ color: CHART_PALETTE[4] }} />,
-  failed: <XCircle className="size-3 stroke-[1.25]" style={{ color: CHART_PALETTE[1] }} />,
-  pending: <Clock className="size-3 stroke-[1.25]" style={{ color: CHART_PALETTE[0] }} />,
+  dispatched: <Zap className="size-3 stroke-[1.25]" style={{ color: "var(--color-chart-4)" }} />,
+  completed: <CheckCircle2 className="size-3 stroke-[1.25]" style={{ color: "var(--color-chart-5)" }} />,
+  failed: <XCircle className="size-3 stroke-[1.25]" style={{ color: "var(--color-chart-2)" }} />,
+  pending: <Clock className="size-3 stroke-[1.25]" style={{ color: "var(--color-chart-1)" }} />,
   skipped: <AlertTriangle className="size-3 stroke-[1.25] text-muted-foreground" />,
 };
 
@@ -101,7 +100,7 @@ export function WorkflowStatusPanel() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="flex items-center gap-1.5 bee-card-title">
-            <Zap className="size-4 stroke-[1.25]" style={{ color: CHART_PALETTE[0] }} />
+            <Zap className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-1)" }} />
             Bus de workflows
           </h3>
           <p className="bee-caption mt-0.5">
