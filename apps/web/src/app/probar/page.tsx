@@ -7,6 +7,7 @@ import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-he
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
 import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-heatmap";
 import { AddCompanyForm } from "@/features/probar/add-company-form";
+import { SignalHexMap } from "@/features/control/components/SignalHexMap";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -24,8 +25,8 @@ const KPI_TILES = [
 
 /** Landing page of the sandbox — nav calls it "Resumen" too, so a visitor
  * exploring the sandbox should see the same depth the real Dashboard's
- * "Resumen" shows (embudo, heatmap industria × señal, heatmap de
- * actividad), fit into one screen: a KPI strip this compact only makes
+ * "Resumen" shows (colmena de intención, embudo, heatmap industria ×
+ * señal, heatmap de actividad), fit into one screen: a KPI strip this compact only makes
  * sense as a quick orientation row, not competing for space with the
  * widgets that actually carry the depth. Counts/widgets go through the
  * same hooks the rest of the app uses (not lib/demo/store directly) —
@@ -86,6 +87,15 @@ export default function ProbarOverviewPage() {
           </Link>
         ))}
       </div>
+
+      {/* Mismo orden que el Resumen real (dashboard-overview.tsx): Colmena
+       * antes del embudo. Trae su propio título — no lo envolvemos en un
+       * bee-eyebrow como al resto de esta página, igual que en el
+       * dashboard real. height=240 (el tamaño de Control, no los 320 del
+       * Resumen real) para no romper el "todo en una pantalla" que el
+       * resto de esta página persigue; useHiveLeads ya cae a
+       * sampleHotLeads sin sesión, así que no hace falta datos aparte. */}
+      <SignalHexMap className="mt-2" height={240} />
 
       <section className="mt-2 space-y-2">
         <p className="bee-eyebrow">Todas las etapas · Embudo de cierre</p>
