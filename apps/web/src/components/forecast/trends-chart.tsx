@@ -11,7 +11,7 @@ export function TrendsChart({ points }: { points: MonthlyTrendPoint[] }) {
   const maxCreated = Math.max(1, ...points.map((p) => p.created));
 
   return (
-    <div className="flex items-end gap-3 overflow-x-auto pb-1" style={{ height: 170 }}>
+    <div className="flex items-end gap-3 overflow-x-auto pb-1" style={{ height: "var(--bee-chart-h)" }}>
       {points.map((p) => {
         const pct = (p.created / maxCreated) * 100;
         return (

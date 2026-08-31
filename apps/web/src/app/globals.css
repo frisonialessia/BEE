@@ -87,6 +87,15 @@
   --bee-pad-surface: 1.25rem;
   --bee-pad-surface-lg: 1.5rem;
 
+  /* Shared drawing-area height for every hand-built bar chart (Volumen de
+   * señales, Pronóstico por mes, Creadas vs. tasa de cierre, MEDDIC vs.
+   * resultado) — these used to each pick their own value (110/150/160/170px)
+   * with no relation to one another, which is why they never lined up when
+   * placed near each other. One token now; a chart with genuinely more
+   * content above its bars (a win-rate % line) still fits inside it, it's
+   * not the tightest of the four. */
+  --bee-chart-h: 160px;
+
   --background: var(--color-background);
   --foreground: var(--color-text);
   --card: var(--color-card);
