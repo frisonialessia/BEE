@@ -142,7 +142,13 @@ function SignalsView() {
             <p className="bee-eyebrow">Colmena de intención</p>
             <div className="flex items-center gap-1.5 bee-micro">
               <span>Frío</span>
-              <span className="h-1.5 w-10 rounded-full" style={{ background: "linear-gradient(90deg, var(--color-chart-4), var(--color-chart-6), var(--color-chart-1))" }} />
+              <span
+                className="h-1.5 w-10 rounded-full"
+                style={{
+                  background:
+                    "linear-gradient(90deg, var(--color-chart-1), var(--color-chart-2), var(--color-chart-3), var(--color-chart-4), var(--color-chart-6))",
+                }}
+              />
               <span>Caliente</span>
             </div>
           </div>
