@@ -308,7 +308,28 @@ export async function getBrandContext(query: string, top_k = 5): Promise<FetchRe
   }
 }
 
+/** Same "never invent 'conectado'" rule as everywhere else — in demo mode
+ * every channel honestly reports mock/unauthenticated, matching what a
+ * brand-new real org sees before connecting anything (see Integraciones). */
+const DEMO_CHANNEL_STATUS: ChannelStatus[] = [
+  {
+    channel: "email",
+    authenticated: false,
+    mock: true,
+    tokens_remaining: null,
+    rate_limit: { requests_per_day: 0, requests_per_hour: 0, min_interval_seconds: 0 },
+  },
+  {
+    channel: "linkedin",
+    authenticated: false,
+    mock: true,
+    tokens_remaining: null,
+    rate_limit: { requests_per_day: 0, requests_per_hour: 0, min_interval_seconds: 0 },
+  },
+];
+
 export async function getChannelStatus(): Promise<FetchResult<ChannelStatus[]>> {
+  if (isDemoMode()) return { data: DEMO_CHANNEL_STATUS, live: false };
   try {
     const res = await beeFetch(`${API_URL}/api/v1/brand/channels/status`, { cache: "no-store" });
     if (!res.ok) throw new Error(`API responded ${res.status}`);

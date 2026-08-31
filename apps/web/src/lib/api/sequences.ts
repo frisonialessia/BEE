@@ -1,4 +1,11 @@
 import { apiFetch } from "@/lib/api/client";
+import { isDemoMode } from "@/lib/demo/mode";
+import {
+  demoCreateSequence,
+  demoFetchSequence,
+  demoFetchSequences,
+  demoStartSequenceExecution,
+} from "@/lib/demo/store";
 import type { FetchResult } from "@/types/api";
 
 // Mismo contrato que app.schemas.sequence en el backend (DynamicSequenceEngine).
@@ -49,6 +56,7 @@ export interface DynamicSequenceOut {
 }
 
 export async function fetchSequences(limit = 50): Promise<FetchResult<DynamicSequenceOut[]>> {
+  if (isDemoMode()) return { data: demoFetchSequences(limit), live: false };
   try {
     const data = await apiFetch<DynamicSequenceOut[]>(`/api/v1/sequences?limit=${limit}`, {
       cache: "no-store",
@@ -60,10 +68,12 @@ export async function fetchSequences(limit = 50): Promise<FetchResult<DynamicSeq
 }
 
 export async function fetchSequence(id: string): Promise<DynamicSequenceOut> {
+  if (isDemoMode()) return demoFetchSequence(id);
   return apiFetch<DynamicSequenceOut>(`/api/v1/sequences/${id}`, { cache: "no-store" });
 }
 
 export async function createSequence(body: SequenceCreateIn): Promise<DynamicSequenceOut> {
+  if (isDemoMode()) return demoCreateSequence(body);
   return apiFetch<DynamicSequenceOut>("/api/v1/sequences", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -71,11 +81,16 @@ export async function createSequence(body: SequenceCreateIn): Promise<DynamicSeq
   });
 }
 
+/** Queues the first step for a lead/opportunity — approval-gated on the
+ * real backend (nothing sends without the CEO's sign-off in the
+ * orchestrator), so recording it as queued locally in demo mode is exactly
+ * as honest as what actually happens live. */
 export async function startSequenceExecution(body: {
   sequence_id: string;
   lead_id?: string;
   opportunity_id?: string;
 }): Promise<{ id: string; status: string }> {
+  if (isDemoMode()) return demoStartSequenceExecution(body.sequence_id);
   return apiFetch("/api/v1/sequences/executions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -97,6 +112,20 @@ export async function bulkEnrollLeadsInSequence(
   sequenceId: string,
   leadIds: string[],
 ): Promise<BulkExecutionResult> {
+  if (isDemoMode()) {
+    try {
+      demoFetchSequence(sequenceId);
+    } catch {
+      return {
+        created: [],
+        failed: leadIds.map((lead_id) => ({ lead_id, error: "Secuencia no encontrada en el sandbox." })),
+      };
+    }
+    return {
+      created: leadIds.map((lead_id) => ({ id: demoStartSequenceExecution(sequenceId).id, lead_id })),
+      failed: [],
+    };
+  }
   return apiFetch<BulkExecutionResult>("/api/v1/sequences/executions/bulk", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

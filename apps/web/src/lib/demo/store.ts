@@ -6,6 +6,15 @@
  */
 import type { EmployeeRange } from "@/lib/api/organizations";
 import type { CrmStage, OpportunityUpdateIn } from "@/lib/api/opportunities";
+import type {
+  DynamicSequenceOut,
+  SequenceCreateIn,
+} from "@/lib/api/sequences";
+import type {
+  MessageTemplate,
+  MessageTemplateCreateIn,
+  MessageTemplateUpdateIn,
+} from "@/lib/api/templates";
 import { buildDemoCompanySet } from "@/lib/demo/templates";
 import { sampleBattlecards, sampleOpportunities, sampleSignals } from "@/lib/sample-data";
 import type {
@@ -286,4 +295,196 @@ export function demoFetchLeads(): Lead[] {
     });
   }
   return [...seen.values()];
+}
+
+// ── Message templates (Biblioteca de mensajes) ──────────────────────────────
+
+const TEMPLATES_KEY = "bee_demo_templates_v1";
+
+const SEED_TEMPLATES: MessageTemplate[] = [
+  {
+    id: "demo-template-funding",
+    name: "Apertura post-financiamiento",
+    channel: "email",
+    subject: "Felicidades por la ronda — una pregunta rápida",
+    body:
+      "Hola {{first_name}},\n\nVi que {{company_name}} acaba de cerrar una ronda — felicidades. " +
+      "¿Vale la pena una llamada de 15 minutos para platicar cómo están pensando escalar el equipo de ventas?\n\nSaludos,",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "demo-template-hiring-linkedin",
+    name: "Seguimiento LinkedIn — nueva contratación",
+    channel: "linkedin",
+    subject: null,
+    body:
+      "Hola {{first_name}}, vi que te uniste a {{company_name}} — felicidades por el nuevo rol. " +
+      "Me encantaría compartir cómo ayudamos a equipos en etapas similares a acortar el ciclo de ventas. " +
+      "¿Tienes 15 minutos esta semana?",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "demo-template-reactivation",
+    name: "Reactivación — sin respuesta",
+    channel: "email",
+    subject: "¿Seguimos platicando?",
+    body:
+      "Hola {{first_name}},\n\nNo quiero ser inoportuno — ¿este sigue siendo un buen momento para platicar " +
+      "sobre {{company_name}}? Si no, dime y no te vuelvo a escribir.\n\nSaludos,",
+    created_at: new Date().toISOString(),
+  },
+];
+
+const loadTemplates = () => loadJSON<MessageTemplate[]>(TEMPLATES_KEY, SEED_TEMPLATES);
+const saveTemplates = (list: MessageTemplate[]) => saveJSON(TEMPLATES_KEY, list);
+
+export function demoFetchTemplates(limit = 100): MessageTemplate[] {
+  return loadTemplates().slice(0, limit);
+}
+
+export function demoCreateTemplate(body: MessageTemplateCreateIn): MessageTemplate {
+  const list = loadTemplates();
+  const created: MessageTemplate = {
+    id: `demo-template-${Date.now()}`,
+    name: body.name,
+    channel: body.channel,
+    subject: body.subject ?? null,
+    body: body.body,
+    created_at: new Date().toISOString(),
+  };
+  list.unshift(created);
+  saveTemplates(list);
+  return created;
+}
+
+function findTemplateOrThrow(list: MessageTemplate[], id: string): number {
+  const idx = list.findIndex((t) => t.id === id);
+  if (idx === -1) {
+    throw new Error(`Demo template ${id} not found — it only exists in this browser's local demo data.`);
+  }
+  return idx;
+}
+
+export function demoUpdateTemplate(id: string, patch: MessageTemplateUpdateIn): MessageTemplate {
+  const list = loadTemplates();
+  const idx = findTemplateOrThrow(list, id);
+  const current = list[idx];
+  list[idx] = {
+    ...current,
+    name: patch.name ?? current.name,
+    channel: patch.channel ?? current.channel,
+    subject: patch.subject !== undefined ? patch.subject : current.subject,
+    body: patch.body ?? current.body,
+  };
+  saveTemplates(list);
+  return list[idx];
+}
+
+export function demoDeleteTemplate(id: string): void {
+  saveTemplates(loadTemplates().filter((t) => t.id !== id));
+}
+
+// ── Sequences (Automatizaciones) ────────────────────────────────────────────
+//
+// Building/previewing a flow (StepComposer, FlowCanvas) is already pure
+// client-side state in AutomationBuilder — only the list/get/save calls
+// need a demo backing. "Disparar secuencia" (CriticalAccountsDigest, on
+// Resumen) and "Enviar a secuencia" (Leads) both resolve locally too, same
+// honesty as demoRecordOutcome: recorded in this browser, nothing actually
+// sent — DynamicSequenceEngine's approval-gated execution isn't real
+// infrastructure state the way Resiliencia/Control's queues are, it's just
+// a record of "this got queued," which a local store can represent exactly.
+
+const SEQUENCES_KEY = "bee_demo_sequences_v1";
+
+const SEED_SEQUENCES: DynamicSequenceOut[] = [
+  {
+    id: "demo-sequence-funding",
+    name: "Financiamiento → primer contacto",
+    description: "Cadencia de 3 pasos para señales de ronda de financiamiento recién detectada.",
+    signal_type: "funding_round",
+    industry: null,
+    seniority: null,
+    entry_step_id: "s1",
+    steps: [
+      {
+        id: "s1",
+        name: "Enviar email",
+        action: "send_email",
+        channel: "email",
+        transitions: [{ condition: "no_response", next_step_id: "s2", delay_days: 3 }],
+        max_wait_days: 7,
+        notes: null,
+      },
+      {
+        id: "s2",
+        name: "Solicitud de conexión",
+        action: "linkedin_connect",
+        channel: "linkedin",
+        transitions: [{ condition: "no_response", next_step_id: "s3", delay_days: 4 }],
+        max_wait_days: 7,
+        notes: null,
+      },
+      {
+        id: "s3",
+        name: "Seguimiento",
+        action: "follow_up",
+        channel: "email",
+        transitions: [{ condition: "no_response", next_step_id: null, delay_days: 5 }],
+        max_wait_days: 7,
+        notes: null,
+      },
+    ],
+    max_days: 30,
+    status: "active",
+    version: 1,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+
+const loadSequences = () => loadJSON<DynamicSequenceOut[]>(SEQUENCES_KEY, SEED_SEQUENCES);
+const saveSequences = (list: DynamicSequenceOut[]) => saveJSON(SEQUENCES_KEY, list);
+
+export function demoFetchSequences(limit = 50): DynamicSequenceOut[] {
+  return loadSequences().slice(0, limit);
+}
+
+export function demoFetchSequence(id: string): DynamicSequenceOut {
+  const found = loadSequences().find((s) => s.id === id);
+  if (!found) {
+    throw new Error(`Demo sequence ${id} not found — it only exists in this browser's local demo data.`);
+  }
+  return found;
+}
+
+export function demoCreateSequence(body: SequenceCreateIn): DynamicSequenceOut {
+  const list = loadSequences();
+  const now = new Date().toISOString();
+  const created: DynamicSequenceOut = {
+    id: `demo-sequence-${Date.now()}`,
+    name: body.name,
+    description: body.description ?? null,
+    signal_type: body.signal_type ?? null,
+    industry: body.industry ?? null,
+    seniority: body.seniority ?? null,
+    entry_step_id: body.entry_step_id,
+    steps: body.steps,
+    max_days: body.max_days,
+    status: "active",
+    version: 1,
+    created_at: now,
+    updated_at: now,
+  };
+  list.unshift(created);
+  saveSequences(list);
+  return created;
+}
+
+/** "Disparar secuencia"/"Enviar a secuencia" in demo mode — validates the
+ * sequence exists locally and reports success without dispatching anything
+ * real, matching demoRecordOutcome's honesty. */
+export function demoStartSequenceExecution(sequenceId: string): { id: string; status: string } {
+  demoFetchSequence(sequenceId); // throws if the sequence isn't real
+  return { id: `demo-execution-${Date.now()}`, status: "active" };
 }
