@@ -224,7 +224,7 @@ export function DarkFunnelDashboard() {
       {/* Formulario de simulación */}
       {showSimulate && (
         <form onSubmit={handleSimulate} className="rounded-lg border border-dashed border-border bg-[var(--color-primary)] p-4 space-y-3">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Simular una señal de intención</p>
+          <p className="bee-eyebrow">Simular una señal de intención</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <input
               value={simDomain}
