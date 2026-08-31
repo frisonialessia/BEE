@@ -59,16 +59,16 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
       </div>
 
       <div>
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <p className="bee-eyebrow">
           Por qué importa
         </p>
-        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+        <p className="mt-0.5 bee-micro leading-relaxed">
           {battlecard.signal.description || battlecard.signal.title}
         </p>
       </div>
 
       <div>
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <p className="bee-eyebrow">
           Ángulo recomendado
         </p>
         <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed">{battlecard.strategy.closing_argument}</p>

@@ -90,7 +90,7 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
 
   return (
     <section className="bee-surface bee-bento-pad">
-      <h3 className="mb-3 text-sm font-semibold">Tareas de seguimiento</h3>
+      <h3 className="bee-card-title">Tareas de seguimiento</h3>
 
       {isLoading ? (
         <p className="text-xs text-muted-foreground">Cargando…</p>

@@ -100,7 +100,7 @@ export function WorkflowStatusPanel() {
     <div className="bee-bento bee-bento-pad space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+          <h3 className="flex items-center gap-1.5 bee-card-title">
             <Zap className="size-4 stroke-[1.25]" style={{ color: CHART_PALETTE[0] }} />
             Bus de workflows
           </h3>

@@ -82,12 +82,12 @@ function CrmCard({
       </div>
 
       {typeof nextAction === "string" && nextAction && (
-        <p className="mt-2 line-clamp-1 text-[11px] font-medium text-muted-foreground">
+        <p className="mt-2 line-clamp-1 bee-micro font-medium">
           {nextAction.replace(/_/g, " ")}
         </p>
       )}
       {typeof channel === "string" && channel && (
-        <p className="mt-1 text-[11px] uppercase tracking-wider text-muted-foreground">vía {channel}</p>
+        <p className="mt-1 bee-eyebrow">vía {channel}</p>
       )}
     </div>
   );

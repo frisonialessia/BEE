@@ -227,7 +227,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 text-sm font-semibold">
+          <h2 className="flex items-center gap-2 bee-card-title">
             <Mail className="size-4 text-muted-foreground" />
             Contactos ({leads.length})
           </h2>
@@ -282,7 +282,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
 
       {leads.length > 0 && (
         <section>
-          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+          <h2 className="flex items-center gap-2 bee-card-title">
             <Users className="size-4 text-muted-foreground" />
             Mapa de relaciones
           </h2>
@@ -298,7 +298,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
       )}
 
       <section>
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+        <h2 className="flex items-center gap-2 bee-card-title">
           <Target className="size-4 text-muted-foreground" />
           Oportunidades ({opportunities.length})
         </h2>
@@ -326,7 +326,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
       </section>
 
       <section>
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+        <h2 className="flex items-center gap-2 bee-card-title">
           <Radio className="size-4 text-muted-foreground" />
           Señales ({signals.length})
         </h2>

@@ -107,7 +107,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <Zap className="w-4 h-4 text-[var(--color-chart-6)]" />
-        <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
+        <h3 className="bee-card-title">
           Artefactos de ejecución
         </h3>
         <span className="text-xs text-muted-foreground">

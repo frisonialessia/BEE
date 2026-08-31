@@ -238,7 +238,7 @@ export function RevenueSimulatorWidget() {
             {showDetails ? "Ocultar" : "Mostrar"} metodología
           </button>
           {showDetails && (
-            <p className="text-[11px] leading-relaxed text-muted-foreground">
+            <p className="bee-micro leading-relaxed">
               {result.disclaimer}
             </p>
           )}

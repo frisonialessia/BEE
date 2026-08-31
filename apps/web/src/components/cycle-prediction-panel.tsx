@@ -43,7 +43,7 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
   return (
     <section className="bee-surface bee-bento-pad">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+        <h3 className="flex items-center gap-1.5 bee-card-title">
           <Clock className="size-4 stroke-[1.5] text-muted-foreground" />
           Predicción de ciclo de venta
         </h3>
