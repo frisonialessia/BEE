@@ -102,9 +102,18 @@ export default function ProbarOverviewPage() {
         <PipelineFunnel opportunities={opportunities} />
       </section>
 
+      {/* Mismo título/caption que estas dos secciones ya usan en el Resumen
+       * real (dashboard-overview.tsx) — acá corrían con un solo renglón
+       * bee-eyebrow en mayúsculas, el único par de secciones de esta
+       * página que no coincidía con su versión real. Con la Colmena de
+       * arriba usando bee-card-title, esa diferencia de peso tipográfico
+       * quedaba mucho más visible que antes de agregarla. */}
       <div className="mt-2 grid items-start gap-3 lg:grid-cols-2">
-        <section className="bee-surface p-3 space-y-2">
-          <p className="bee-eyebrow">Industria × Tipo de señal · Dónde eres más fuerte</p>
+        <section className="bee-surface bee-bento-pad space-y-3">
+          <div>
+            <h3 className="bee-card-title">Dónde eres más fuerte</h3>
+            <p className="bee-caption">Tasa de cierre cruzando industria de la cuenta y tipo de señal</p>
+          </div>
           <IndustrySignalHeatmap
             opportunities={opportunities}
             signals={signals}
@@ -112,8 +121,11 @@ export default function ProbarOverviewPage() {
           />
         </section>
 
-        <section className="bee-surface p-3 space-y-2">
-          <p className="bee-eyebrow">Día × hora · Cuándo llega el mercado</p>
+        <section className="bee-surface bee-bento-pad space-y-3">
+          <div>
+            <h3 className="bee-card-title">Cuándo llega el mercado</h3>
+            <p className="bee-caption">Actividad de señales detectadas, por día y horario</p>
+          </div>
           <SignalActivityHeatmap signals={signals} />
         </section>
       </div>
