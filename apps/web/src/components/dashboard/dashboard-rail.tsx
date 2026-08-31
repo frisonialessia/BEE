@@ -56,7 +56,7 @@ export function DashboardRail({
           {groups.map((group, gi) => (
             <div key={group.label ?? `group-${gi}`} className={gi > 0 ? "mt-3" : undefined}>
               {group.label && (
-                <p className="mb-1 px-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                <p className="mb-1 px-2.5 bee-eyebrow">
                   {group.label}
                 </p>
               )}

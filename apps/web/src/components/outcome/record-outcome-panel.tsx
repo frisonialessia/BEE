@@ -37,7 +37,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
         <div className="mb-1 flex items-center gap-2">
           {won && <CheckCircle2 className="size-4 text-[var(--success)]" />}
           {lost && <XCircle className="size-4 text-muted-foreground" />}
-          <h3 className="text-sm font-semibold">
+          <h3 className="bee-card-title">
             {won ? "Ganada" : lost ? "Perdida" : "Descartada"}
           </h3>
           {opportunity.closed_at && (
@@ -84,7 +84,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
 
   return (
     <section className="bee-surface bee-bento-pad">
-      <h3 className="mb-3 text-sm font-semibold">Registrar resultado</h3>
+      <h3 className="bee-card-title">Registrar resultado</h3>
 
       {mode === null && (
         <div className="flex gap-2">

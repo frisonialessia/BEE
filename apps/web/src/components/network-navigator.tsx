@@ -194,7 +194,7 @@ export function NetworkNavigatorPanel() {
 
       {/* Path finder */}
       <div className="bee-bento bee-bento-pad space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Buscar ruta de presentación</h3>
+        <h3 className="bee-card-title">Buscar ruta de presentación</h3>
         <form onSubmit={handleFindPaths} className="flex flex-wrap gap-2">
           <input
             value={targetDomain}
@@ -247,7 +247,7 @@ export function NetworkNavigatorPanel() {
 
       {/* Add connection */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">Conexiones de red ({connections.length})</h3>
+        <h3 className="bee-card-title">Conexiones de red ({connections.length})</h3>
         <button
           onClick={() => setShowAdd((v) => !v)}
           className="bee-btn-ghost bee-btn-ghost--dashed"

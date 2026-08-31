@@ -122,7 +122,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
       </div>
 
       <div className="border border-border bg-background p-4">
-        <h3 className="flex items-center gap-2 text-sm font-semibold">
+        <h3 className="flex items-center gap-2 bee-card-title">
           <AlertCircle className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-1)" }} />
           Punto de dolor
         </h3>
@@ -130,7 +130,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
       </div>
 
       <div className="border border-border bg-primary/40 p-4">
-        <h3 className="flex items-center gap-2 text-sm font-semibold">
+        <h3 className="flex items-center gap-2 bee-card-title">
           <Zap className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-4)" }} />
           Argumento de cierre
           <span className="ml-auto text-xs font-normal text-muted-foreground">
@@ -143,7 +143,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
       </div>
 
       <div className="border border-border bg-background p-4">
-        <h3 className="flex items-center gap-2 text-sm font-semibold">
+        <h3 className="flex items-center gap-2 bee-card-title">
           <Clock className="size-4 stroke-[1.25]" />
           Ventana de timing
           <span
