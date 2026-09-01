@@ -86,11 +86,39 @@ export async function apiFetch<T>(
   const { next, headers, ...rest } = options;
   const url = `${getApiBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 
-  const res = await fetch(url, {
-    ...rest,
-    headers: buildApiHeaders(headers),
-    ...(next !== undefined ? { next } : {}),
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...rest,
+      headers: buildApiHeaders(headers),
+      ...(next !== undefined ? { next } : {}),
+    });
+  } catch (err) {
+    // fetch() itself throwing (as opposed to resolving with a non-2xx
+    // response, handled below) means the request never reached the API at
+    // all — a CORS rejection, DNS failure, or the API being unreachable.
+    // Every caller in this codebase catches ApiError and falls back to
+    // `err instanceof ApiError ? err.message : <generic fallback>` (see
+    // e.g. app/register/page.tsx) — without this, that branch collapses a
+    // CORS misconfiguration, a wrong NEXT_PUBLIC_API_URL, and a real
+    // backend outage into the exact same opaque string, with the actual
+    // browser error (which names the real cause) never logged anywhere a
+    // person would think to look. Logging it here, once, at the one choke
+    // point every API call passes through, means the real cause is always
+    // one DevTools Console open away instead of a support investigation.
+    console.error(
+      `[BEE API] Request to ${url} failed before a response was received ` +
+        `— likely CORS (check BACKEND_CORS_ORIGINS on the API includes this ` +
+        `site's exact origin, no trailing slash), a wrong NEXT_PUBLIC_API_URL, ` +
+        `or the API being unreachable. Underlying error:`,
+      err,
+    );
+    throw new ApiError(
+      "No se pudo conectar con el servidor. Intenta de nuevo en un momento.",
+      0,
+      err,
+    );
+  }
 
   if (!res.ok) {
     const detail = await res.json().catch(() => undefined);

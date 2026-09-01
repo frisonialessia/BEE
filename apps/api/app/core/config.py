@@ -310,8 +310,25 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
-        """Parse the comma-separated CORS origins into a list."""
-        return [origin.strip() for origin in self.BACKEND_CORS_ORIGINS.split(",") if origin.strip()]
+        """Parse the comma-separated CORS origins into a list.
+
+        Trailing slashes are stripped from each origin. Starlette's
+        ``CORSMiddleware`` does an *exact* string match against the
+        browser's ``Origin`` header, which per spec never has a trailing
+        slash (``https://example.com``, not ``https://example.com/``) — a
+        value copy-pasted from a browser's address bar or a "visit site"
+        link commonly does have one, and without this normalization that
+        one extra character silently breaks every cross-origin request
+        with no server-side log line at all, surfacing only as a
+        browser-console CORS error nobody's watching in production. Cheap
+        to always do; there's no legitimate origin that both wants CORS
+        and wants a trailing slash preserved.
+        """
+        return [
+            origin.strip().rstrip("/")
+            for origin in self.BACKEND_CORS_ORIGINS.split(",")
+            if origin.strip()
+        ]
 
     @model_validator(mode="after")
     def _warn_on_production_hardening_gaps(self) -> Settings:
@@ -378,6 +395,17 @@ class Settings(BaseSettings):
             problems.append(
                 "BACKEND_CORS_ORIGINS is still the localhost-only dev default — "
                 "the real production frontend origin will be rejected by CORS"
+            )
+        # A trailing slash on a configured origin used to silently break CORS
+        # entirely (see cors_origins' docstring — now auto-stripped there),
+        # but still flag it here: whoever set the value should fix it at the
+        # source rather than rely on the runtime normalization forever.
+        if any(origin.strip().endswith("/") for origin in self.BACKEND_CORS_ORIGINS.split(",")):
+            problems.append(
+                "BACKEND_CORS_ORIGINS has an origin with a trailing slash "
+                f"({self.BACKEND_CORS_ORIGINS!r}) — browsers never send a trailing "
+                "slash in the Origin header, so this is auto-corrected at runtime, "
+                "but fix the stored value so it isn't relying on that"
             )
         # VECTOR_STORE_BACKEND defaulting to "mock" means Sales DNA / brand
         # voice semantic search silently runs on a non-persistent, in-memory
