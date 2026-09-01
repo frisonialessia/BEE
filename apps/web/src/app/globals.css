@@ -396,6 +396,44 @@
   padding: 1rem 1.25rem 1.5rem;
 }
 
+/* Standard "fill the available page height, scroll internally" pattern
+ * for data-dense pages — a Kanban board, a long list — that want to show
+ * more at once than a short, arbitrary vh-based cap allows, without the
+ * whole page scrolling arbitrarily far (a busy CRM column shouldn't drag
+ * the header off-screen with it).
+ *
+ * height: 100% (not a vh value): .bee-scroll is already shorter than
+ * 100vh (DashboardHeader/the demo banner sit above it) and has its own
+ * padding — a vh-based height on a descendant measures the *browser*
+ * viewport and overshoots by however tall that chrome is (this is the
+ * exact bug Control's bottom row had — see its fix in globals.css above).
+ * .bee-app establishes the one real height: 100vh at the true root; every
+ * .bee-scroll child below it can reliably use height: 100% instead,
+ * which correctly resolves through that flex chain to what's actually
+ * visible, chrome already excluded.
+ *
+ * min-height is a floor for short viewports (laptop screens, a maximized
+ * half-split window) where 100% of .bee-scroll would otherwise be
+ * uncomfortably short — below it, .bee-scroll's own overflow-y-auto is
+ * the fallback (the page scrolls a bit, same as any other page), it just
+ * isn't the primary mechanism the way it is on a normal list/detail page.
+ *
+ * Pair with .bee-panel-fill on the actual scrollable content within (a
+ * Kanban column's card list, a table body) — flex: 1 + min-height: 0 is
+ * what lets *that* be the thing that scrolls, not .bee-page-fill itself.
+ */
+.bee-page-fill {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 28rem;
+}
+
+.bee-panel-fill {
+  flex: 1;
+  min-height: 0;
+}
+
 /* Sidebar tab switches swap `.bee-scroll`'s child for an entirely new page
  * component (Next.js unmounts the old route, mounts the new one), which
  * means the new page's root element is a fresh DOM node every time — this
