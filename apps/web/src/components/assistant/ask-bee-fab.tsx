@@ -44,7 +44,7 @@ export function AskBeeFab() {
         <div className="bee-fab-panel mb-3 flex h-[420px] w-[min(340px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border bg-[var(--color-background)] shadow-[0_8px_32px_color-mix(in_srgb,var(--color-text)_16%,transparent)]">
           <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, no una foto */}
-            <img src="/icon.svg" alt="" className="size-7 shrink-0" aria-hidden="true" />
+            <img src="/assistant-bee.svg" alt="" className="size-7 shrink-0" aria-hidden="true" />
             <p className="text-sm font-semibold">{t("fab.title")}</p>
           </div>
 
@@ -94,8 +94,8 @@ export function AskBeeFab() {
         {open ? (
           <X className="size-5" />
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca
-          <img src="/icon.svg" alt="" className="size-8" aria-hidden="true" />
+          // eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, sin fondo propio (a diferencia de icon.svg, que trae su hexágono claro — visible aquí encima del círculo morado del botón)
+          <img src="/assistant-bee.svg" alt="" className="size-8" aria-hidden="true" />
         )}
       </button>
     </div>
