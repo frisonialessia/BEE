@@ -95,6 +95,7 @@ class SignalSource(str, Enum):
     CRM = "crm"
     ENRICHMENT = "enrichment"
     BEHAVIORAL = "behavioral"  # BehavioralCollector intent events
+    MARKET_SCAN = "market_scan"  # MarketScanOrchestrator's proactive cron tick
 
 
 class BehavioralEventType(str, Enum):

@@ -114,10 +114,16 @@ class Settings(BaseSettings):
     # neither X-API-Key nor our Authorization bearer — they authenticate via
     # their own signed ``state`` param instead (see
     # app.core.security.decode_oauth_state_token).
+    # /api/v1/internal/market-scan/tick is exempt too: Vercel Cron issues a
+    # plain GET with only the Authorization: Bearer $CRON_SECRET header it
+    # auto-injects (see CRON_SECRET below) — it cannot also be configured to
+    # send X-API-Key. That Bearer check is this path's real authentication;
+    # if you override this value, keep the path listed or the cron tick will
+    # start requiring an API key Vercel will never send.
     API_KEY_EXEMPT_PATHS: str = (
         "/api/v1/health,/api/v1/ready,/api/v1/webhooks/receive,/api/v1/contact,"
         "/api/v1/integrations/gmail/callback,/api/v1/integrations/linkedin/callback,"
-        "/api/v1/integrations/salesforce/callback"
+        "/api/v1/integrations/salesforce/callback,/api/v1/internal/market-scan/tick"
     )
 
     # ----- Multi-tenant user auth (Organization / Team / User) ------------------
@@ -235,6 +241,28 @@ class Settings(BaseSettings):
     # STRICT mode blocks the confirmation when risk_level is HIGH.
     RESOURCE_PREDICTION_ENABLED: bool = False
     RESOURCE_PREDICTION_STRICT: bool = False
+
+    # ----- MarketScanOrchestrator (proactive market scan, opt-in) ---------------
+    # See app.services.market_scan and app.api.v1.endpoints.internal_market_scan.
+    # CRON_SECRET: Vercel's own reserved name — when a Vercel Cron Job invokes
+    # this project's deployment, Vercel automatically sends
+    # `Authorization: Bearer $CRON_SECRET` if a project env var by that exact
+    # name is set (https://vercel.com/docs/cron-jobs/manage-cron-jobs). Unset
+    # (the default) means the tick endpoint 404s, same "off by default, no
+    # extra surface" convention as SUPPORT_ADMIN_SECRET above — it is
+    # deliberately its own secret, never API_SECRET_KEY/JWT_SECRET_KEY.
+    CRON_SECRET: str | None = None
+    # Independent of CRON_SECRET being set: this is the actual "do real work"
+    # switch. Lets the cron wiring + auth be deployed and verified (ticks
+    # land in market_scan_logs as 0-company no-ops) before flipping this on.
+    MARKET_SCAN_ENABLED: bool = False
+    # Companies processed per tick. Tuned against Vercel's maxDuration=60s
+    # (apps/api/vercel.json) — keep conservative; raising this trades tick
+    # latency for scan throughput, sanity-check against real tick
+    # duration_ms in market_scan_logs before increasing.
+    MARKET_SCAN_BATCH_SIZE: int = 20
+    # Minimum time between two scans of the same company.
+    MARKET_SCAN_INTERVAL_HOURS: int = 24
 
     # ----- WorkflowOrchestrator webhooks (all opt-in) ---------------------------
     # Set any of these to activate the corresponding workflow handler.

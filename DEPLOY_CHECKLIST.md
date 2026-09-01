@@ -47,6 +47,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 | `AI_PROVIDER=openai` + `AI_API_KEY` | LLM-powered strategy/artifact generation |
 | `LINKEDIN_ACCESS_TOKEN` | Real LinkedIn profile enrichment (mock fallback without it) |
 | `EXTERNAL_INGESTION_ENABLED=true` | Starts `IngestionWorker` on app boot |
+| `CRON_SECRET` + `MARKET_SCAN_ENABLED=true` | Proactive market scan (Vercel Cron) — see §3.8 below |
 
 Full reference: `apps/api/.env.example`
 
@@ -137,6 +138,32 @@ Two things, both matter:
 
 Symptom if this is wrong: intermittent `"too many connections"` errors
 under real concurrent load that never reproduce testing alone.
+
+### 8. Proactive market scan (`CRON_SECRET` / `MARKET_SCAN_ENABLED`)
+
+`apps/api/vercel.json` declares a Vercel Cron Job hitting
+`GET /api/v1/internal/market-scan/tick` every 15 minutes — this ships
+enabled at the infra level regardless of the feature flag below, so **until
+you set `CRON_SECRET`, every one of those invocations 404s** (visible as a
+failed run in Vercel's Cron dashboard — harmless, no data touched, but
+expect to see it until you configure the secret).
+
+1. Set `CRON_SECRET` (exact name — Vercel auto-injects
+   `Authorization: Bearer $CRON_SECRET` on cron-triggered requests only when
+   the project env var is named exactly this). Generate the same way as
+   `API_SECRET_KEY`. This alone only fixes the 404s — the tick still no-ops
+   (`enabled: false` in the response) until the next step.
+2. Set `MARKET_SCAN_ENABLED=true` to let ticks actually pick up due
+   companies. As of this writing `_scan_company` is still a Phase 1
+   placeholder (see `app.services.market_scan.orchestrator`'s docstring) —
+   turning this on exercises the scheduling/cursor/audit-log pipeline
+   end-to-end, but produces 0 signals until a real provider (Google/hiring)
+   is wired into it.
+3. Requires migration `026_market_scan_scaffold` (`Company.next_scan_due_at`
+   / `.last_scanned_at`, the `market_scan_logs` table) — run
+   `alembic upgrade head` before setting either variable above.
+4. Check `market_scan_logs` after a few ticks to confirm it's actually
+   running (`companies_scanned`, `duration_ms` per tick) before trusting it.
 
 ---
 

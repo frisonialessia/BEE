@@ -6,6 +6,7 @@ intelligence.
 """
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import JSON, Column, UniqueConstraint
@@ -66,6 +67,20 @@ class Company(TimestampMixin, table=True):
     # Firmographic enrichment and provider-specific fields are kept in a JSON
     # column so the schema stays stable while integrations evolve.
     attributes: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+
+    # ----- Proactive market scan cursor -----------------------------------------
+    # Drives MarketScanOrchestrator's cron tick (see app.services.market_scan):
+    # a tick pulls whichever companies are due, oldest-due-first, across every
+    # organization — the timestamp itself is the queue, no separate queue table
+    # needed at this scale. NULL means "never scanned" and sorts first (a
+    # company just added should get its first scan before one that's already
+    # been checked recently), same "unset sorts as most-urgent" convention as
+    # nullable-FK-means-unowned elsewhere in this model.
+    next_scan_due_at: datetime | None = Field(default=None, index=True)
+    # Observability only — not read by the scheduler itself, which relies on
+    # next_scan_due_at. Lets a human answer "when did we last actually check
+    # this account" without querying MarketScanLog.
+    last_scanned_at: datetime | None = Field(default=None)
 
     # ----- Relationships -------------------------------------------------------
     leads: list["Lead"] = Relationship(back_populates="company")
