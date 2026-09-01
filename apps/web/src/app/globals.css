@@ -241,6 +241,7 @@
 .bee-bento--primary { background: var(--color-primary); }
 .bee-bento--warm { background: color-mix(in srgb, var(--color-accent-warm) 40%, var(--color-background)); }
 .bee-bento--muted { background: var(--color-block-muted); }
+.bee-bento--violet { background: color-mix(in srgb, var(--color-chart-6) 40%, var(--color-background)); }
 
 .bee-bento-pad { padding: var(--bee-pad-surface); }
 .bee-bento-pad-lg { padding: var(--bee-pad-surface-lg); }
