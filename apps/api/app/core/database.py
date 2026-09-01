@@ -26,13 +26,19 @@ def _build_engine() -> Engine:
 
     ``pool_pre_ping`` transparently recycles stale connections, which is
     important for managed Postgres instances that close idle connections. The
-    engine is created once at import time and shared across the app.
+    engine is created once at import time and shared across the app — but
+    "the app" is one serverless function instance on Vercel, not one
+    long-lived process, so ``pool_size``/``max_overflow`` are set from
+    ``settings`` (deliberately small defaults) rather than left at
+    SQLAlchemy's own — see ``Settings.DB_POOL_SIZE``'s docstring for why.
     """
     connect_args: dict = {}
     return create_engine(
         settings.sqlalchemy_database_uri,
         echo=settings.DEBUG,
         pool_pre_ping=True,
+        pool_size=settings.DB_POOL_SIZE,
+        max_overflow=settings.DB_MAX_OVERFLOW,
         connect_args=connect_args,
     )
 
