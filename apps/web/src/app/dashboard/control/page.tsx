@@ -2,6 +2,7 @@
 
 import {
   AnomaliesPanel,
+  ApiStatusPanel,
   ControlLayout,
   LeadWorkspace,
   SignalHexMap,
@@ -22,19 +23,12 @@ export default function ControlPage() {
           </p>
         </>
       }
-      workspace={<LeadWorkspace />}
-      intelligence={
-        <>
-          <SignalHexMap height={240} maxLeads={200} className="h-full" />
-          <SignalStream />
-        </>
-      }
-      health={
-        <>
-          <SystemHealth />
-          <AnomaliesPanel />
-        </>
-      }
+      action={<LeadWorkspace />}
+      hive={<SignalHexMap height={240} maxLeads={200} className="h-full" />}
+      intelligence={<SystemHealth />}
+      stream={<SignalStream />}
+      apiStatus={<ApiStatusPanel />}
+      anomalies={<AnomaliesPanel />}
     />
   );
 }

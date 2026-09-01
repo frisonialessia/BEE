@@ -28,7 +28,12 @@ export function LeadWorkspace() {
   const hotCount = cards.filter((c) => c.hot_lead).length;
 
   return (
-    <section className="bee-surface flex min-h-0 flex-col bee-bento-pad" aria-label="Espacio de leads">
+    // h-full: this card is one of three equal-height siblings in the grid's
+    // top row (see ControlLayout/globals.css) — every sibling in that row
+    // stretches to the row's own (compact) height by design. The stage-rows
+    // list below already carries flex-1, so the extra room this card gains
+    // pushes "Abrir CRM" to the bottom instead of leaving a gap past it.
+    <section className="bee-surface flex h-full min-h-0 flex-col bee-bento-pad" aria-label="Espacio de leads">
       <div className="mb-4 flex shrink-0 items-start justify-between gap-3">
         <div>
           <p className="bee-eyebrow">Zona de acción</p>

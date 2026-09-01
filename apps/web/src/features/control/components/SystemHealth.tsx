@@ -1,34 +1,11 @@
 "use client";
 
-import { Activity, Database, Radio, Wifi, WifiOff } from "lucide-react";
+import { Activity, Database, Wifi, WifiOff } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSystemHealth } from "@/hooks/queries/use-system-health";
 import { cn } from "@/lib/utils";
-import type { ProviderHealthState, ProviderStatus, WorkerHealth } from "@/types/control";
-
-const PROVIDER_LABELS: Record<string, string> = {
-  linkedin: "LinkedIn",
-  g2: "G2",
-  google_search: "Google Search",
-  capterra: "Capterra",
-};
-
-const HEALTH_DOT: Record<ProviderHealthState, string> = {
-  online: "bg-[var(--color-primary)]",
-  degraded: "bg-[var(--color-chart-1)]",
-  mock: "bg-[var(--color-text-muted)]/40",
-  offline: "bg-[var(--color-chart-2)]/70",
-};
-
-function StatusDot({ className }: { className?: string }) {
-  return (
-    <span
-      className={cn("inline-block size-2 shrink-0 rounded-full", className)}
-      aria-hidden
-    />
-  );
-}
+import type { WorkerHealth } from "@/types/control";
 
 function KpiCard({
   label,
@@ -62,44 +39,6 @@ function KpiCard({
   );
 }
 
-function ProviderRow({ provider }: { provider: ProviderStatus }) {
-  const label = PROVIDER_LABELS[provider.name] ?? provider.name;
-  const pct =
-    provider.tokens_capacity > 0
-      ? Math.round((provider.tokens_remaining / provider.tokens_capacity) * 100)
-      : 100;
-
-  return (
-    <div className="flex items-center justify-between gap-3 py-3">
-      <div className="flex min-w-0 items-center gap-3">
-        <StatusDot className={HEALTH_DOT[provider.health]} />
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium tracking-tight">{label}</p>
-          <p className="truncate text-xs text-muted-foreground">
-            {provider.configured ? "API configurada" : "Modo simulado"}
-            {provider.webhook_configured ? " · Webhook ✓" : " · Sin secreto"}
-          </p>
-        </div>
-      </div>
-      {/* shrink-0: sin esto, en la columna angosta de Control (~300px), este
-          bloque competía por espacio con el label de la izquierda y el
-          conteo de tokens terminaba envolviéndose debajo de la barra de
-          progreso — la caja de "APIs externas" se veía rota/apretada. */}
-      <div className="shrink-0 text-right">
-        <p className="font-mono text-xs tabular-nums text-muted-foreground">
-          {provider.tokens_remaining}/{provider.tokens_capacity}
-        </p>
-        <div className="mt-1.5 h-1 w-16 overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-[var(--color-primary)] transition-all duration-500"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function WorkerKpis({ worker }: { worker: WorkerHealth }) {
   const stateLabel = {
     idle: "Inactivo",
@@ -110,10 +49,10 @@ function WorkerKpis({ worker }: { worker: WorkerHealth }) {
 
   return (
     // grid-cols-2 fijo, no .bee-kpi-strip: esa clase usa auto-fit/minmax que
-    // en la columna angosta de Control (~300px) salta entre 1, 2 y 4
-    // columnas según el ancho exacto del viewport — mismo componente, layout
-    // distinto en cada resolución. Acá siempre son 4 tarjetas en un
-    // contenedor angosto, así que fijamos 2×2 para que sea predecible.
+    // en la columna angosta de Control salta entre 1, 2 y 4 columnas según
+    // el ancho exacto del viewport — mismo componente, layout distinto en
+    // cada resolución. Acá siempre son 4 tarjetas en un contenedor angosto,
+    // así que fijamos 2×2 para que sea predecible.
     <div className="grid grid-cols-2 gap-3">
       <KpiCard label="Ingesta" value={worker.running ? stateLabel : "Apagado"} text />
       <KpiCard label="Cola" value={String(worker.queue_depth)} mono />
@@ -133,25 +72,25 @@ function WorkerKpis({ worker }: { worker: WorkerHealth }) {
 
 function HealthSkeleton() {
   return (
-    // bee-bento-pad, not p-8 — the loaded state below uses bee-bento-pad
-    // (20px); this used to be 32px, so the card visibly shrank its own
-    // padding the instant it went from loading to real data.
-    <section className="bee-surface bee-bento-pad">
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+    <section className="bee-surface flex h-full flex-col bee-bento-pad">
+      <div className="grid flex-1 grid-cols-2 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-[5.5rem] rounded-2xl" />
+          <Skeleton key={i} className="h-full rounded-2xl" />
         ))}
       </div>
-      <Skeleton className="mt-8 h-24 rounded-2xl" />
     </section>
   );
 }
 
 /**
- * SystemHealth — top widget for the BEE control dashboard.
- *
- * Shows API connectivity, IngestionWorker load, and external provider status
- * (LinkedIn / G2 / Google). Polls every 10s via TanStack Query.
+ * SystemHealth — API connectivity + IngestionWorker load, one of the
+ * Control bento grid's top-row cards (see ControlLayout). Deliberately
+ * scoped to just connectivity/worker KPIs now — external-provider status
+ * used to live inside this same card but reads as a materially different
+ * thing (an operational status widget vs. a per-integration status list)
+ * and was making this card disproportionately tall next to its row
+ * siblings; see ApiStatusPanel, its own bottom-row card, for that content.
+ * Polls every 10s via TanStack Query.
  */
 export function SystemHealth() {
   const { data: result, isLoading, isError, dataUpdatedAt } = useSystemHealth();
@@ -164,7 +103,7 @@ export function SystemHealth() {
 
   if (isError || !snapshot) {
     return (
-      <section className="bee-surface flex items-center bee-bento-pad">
+      <section className="bee-surface flex h-full items-center bee-bento-pad">
         <div className="flex items-center gap-2 text-destructive">
           <WifiOff className="size-4" />
           <p className="text-sm">No se pudo conectar con la API de BEE — revisa NEXT_PUBLIC_API_URL</p>
@@ -180,15 +119,11 @@ export function SystemHealth() {
   });
 
   return (
-    // No h-full: this card used to be the only occupant of its column, so
-    // stretching to fill the column's full height was harmless. Now that
-    // AnomaliesPanel sits below it as a flex sibling, h-full made this card
-    // claim the entire column height for itself — its own content (KPI grid
-    // + a max-h-24-capped APIs list) doesn't need nearly that much, so the
-    // leftover became a large dead-space gap, pushing AnomaliesPanel almost
-    // out of view. Sizing to natural content height lets both cards sit
-    // proportionately, same as every other pair of stacked cards in Control.
-    <section className="bee-surface flex flex-col bee-bento-pad" aria-label="Salud del sistema">
+    // h-full: this card is now one of three equal-height siblings in the
+    // grid's top row (see ControlLayout/globals.css) — every sibling in
+    // that row stretches to the row's height by design, unlike the old
+    // single-column stack where a stretched card meant a lopsided one.
+    <section className="bee-surface flex h-full flex-col bee-bento-pad" aria-label="Salud del sistema">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="bee-eyebrow">Inteligencia</p>
@@ -216,30 +151,9 @@ export function SystemHealth() {
         </div>
       </div>
 
-      <WorkerKpis worker={snapshot.worker} />
-
-      {snapshot.providers.length > 0 && (
-        <div className="mt-4 flex-1 overflow-hidden">
-          <div className="mb-1 flex items-center gap-2">
-            <Radio className="size-3.5 text-[var(--color-text-muted)]" />
-            <p className="bee-eyebrow">APIs externas</p>
-          </div>
-          {/* max-h-24 used to cap this at under one full row (only 4
-           * providers ever exist — linkedin/g2/google_search/capterra — so
-           * there was never a real overflow case to guard against), which
-           * is what made "APIs externas" read as clipped. max-h-80 comfortably
-           * fits all 4 without scrolling on any real viewport; overscroll-contain
-           * stays for the rare narrow-viewport case where it still scrolls —
-           * this column (.bee-crm-control__metrics) is itself scrollable,
-           * and without it the leftover wheel delta hands off to the column
-           * and the whole card jumps. */}
-          <div className="max-h-80 overflow-y-auto overscroll-contain">
-            {snapshot.providers.map((p) => (
-              <ProviderRow key={p.name} provider={p} />
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="flex flex-1 flex-col justify-center">
+        <WorkerKpis worker={snapshot.worker} />
+      </div>
 
       {!live && (
         <p className="mt-4 text-xs text-muted-foreground">

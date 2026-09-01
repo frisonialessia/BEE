@@ -90,7 +90,11 @@ export function SignalStream() {
     // sibling) is the outer guarantee: whatever the ScrollArea does inside,
     // nothing — a scrolled row, its connector line, a highlighted item's
     // -mx-2 bleed — can ever render past this card's own rounded border.
-    <aside className="bee-surface flex min-h-[200px] flex-col overflow-hidden bee-bento-pad" aria-label="Flujo de señales">
+    // h-full: one of three equal-height siblings in the grid's bottom row
+    // (see ControlLayout/globals.css) — the row claims the remaining
+    // viewport height and this card stretches to match its APIs
+    // externas/Anomalías siblings.
+    <aside className="bee-surface flex h-full min-h-[200px] flex-col overflow-hidden bee-bento-pad" aria-label="Flujo de señales">
       <div className="mb-3 flex shrink-0 items-start justify-between gap-2">
         <div>
           <h2 className="bee-eyebrow">Flujo de señales</h2>

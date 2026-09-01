@@ -54,32 +54,31 @@ export function AnomaliesPanel() {
   const alerts = result?.data ?? [];
 
   if (isLoading) {
-    return <Skeleton className="h-24 rounded-2xl" />;
+    return <Skeleton className="h-full min-h-[200px] rounded-2xl" />;
   }
 
   return (
-    // No mt-4 here — this section is a flex child of .bee-crm-control__metrics,
-    // which already spaces its children with gap: 0.75rem (same as its
-    // sibling SystemHealth's root, which carries no margin of its own). The
-    // mt-4 that used to live here stacked on top of that gap and doubled the
-    // whitespace above this card versus every other card in the column.
-    <section className="bee-surface bee-bento-pad" aria-label="Anomalías de conversión">
-      <div className="mb-1 flex items-center gap-2">
+    // h-full: one of three equal-height siblings in the grid's bottom row
+    // (see ControlLayout/globals.css) — the row itself claims the
+    // remaining viewport height, and this card stretches to match its
+    // Flujo de señales / APIs externas siblings rather than sizing to its
+    // own (often much shorter) content.
+    <section className="bee-surface flex h-full flex-col bee-bento-pad" aria-label="Anomalías de conversión">
+      <div className="mb-1 flex shrink-0 items-center gap-2">
         <AlertTriangle className="size-3.5 text-[var(--color-text-muted)]" />
         <p className="bee-eyebrow">Anomalías</p>
       </div>
-      {/* max-h-56 only fit ~2 alerts before clipping the 3rd mid-row, which
-       * is what made this panel read as cut off. max-h-[32rem] gives it real
-       * room; overscroll-contain below is the same nested-scroll fix as
-       * SystemHealth's APIs externas list — this card also sits inside the
-       * independently scrollable .bee-crm-control__metrics column. */}
       {alerts.length === 0 ? (
         <p className="flex items-center gap-1.5 py-2 text-xs text-muted-foreground">
           <ShieldCheck className="size-3.5" />
           Sin caídas de conversión fuera de lo normal
         </p>
       ) : (
-        <div className="max-h-[32rem] divide-y divide-border overflow-y-auto overscroll-contain">
+        // overscroll-contain: this card sits inside the independently
+        // scrollable bottom row (see globals.css) — without it, scrolling
+        // this list to its edge hands the leftover wheel delta to the row
+        // and the whole card jumps.
+        <div className="flex-1 divide-y divide-border overflow-y-auto overscroll-contain">
           {alerts.map((alert) => (
             <AlertRow key={alert.id} alert={alert} />
           ))}

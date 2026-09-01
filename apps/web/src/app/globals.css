@@ -854,7 +854,11 @@
   font-family: var(--bee-font);
 }
 
-/* Control — 3 column layout */
+/* Control — a real 2×3 bento grid (see ControlLayout's docstring for why:
+ * grouping widgets by natural content weight per row, instead of one row
+ * of 3 columns each stacking widgets of very different lengths, is what
+ * actually fixes "one card empty, another clipped" rather than endlessly
+ * retuning heights within the old shape). */
 .bee-crm-control {
   display: flex;
   flex-direction: column;
@@ -866,41 +870,45 @@
 
 .bee-crm-control__header { flex-shrink: 0; }
 
-.bee-crm-control__body {
+.bee-crm-control__row {
   display: grid;
-  /* Acción (conteos por etapa) is the sparsest of the three columns — it
-   * doesn't need the lion's share of the row. Flujo de señales/APIs
-   * externas/Anomalías carry more actual content and were the ones
-   * running out of room, so they get the width Acción gives up. */
-  grid-template-columns: minmax(0, 3fr) minmax(0, 5fr) minmax(0, 4fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
   min-height: 0;
-  flex: 1;
+  /* align-items stays the grid default (stretch): every cell in a row
+   * matches that row's tallest natural content — the whole point of
+   * grouping by weight below. */
 }
 
-.bee-crm-control__action,
-.bee-crm-control__viz,
-.bee-crm-control__metrics {
+/* Zona de acción / Colmena de intención / Inteligencia: all three are
+ * naturally compact (a stage count, a fixed-height hex grid, a KPI strip),
+ * so this row sizes to its own content (flex-shrink: 0, no flex: 1) rather
+ * than being stretched to fill leftover space no sibling here needs. */
+.bee-crm-control__row--top {
+  flex-shrink: 0;
+}
+
+/* Flujo de señales / APIs externas / Anomalías: the three genuinely
+ * scrollable, variable-length widgets — grouped together they stretch to
+ * match *each other* (this row claims the remaining viewport height) and
+ * each scrolls independently within its own equal-height card when its
+ * own content runs long, instead of any one of them dictating the whole
+ * page's height like in the old single-row layout. */
+.bee-crm-control__row--bottom {
+  flex: 1;
+  min-height: 0;
+}
+
+.bee-crm-control__cell {
   min-height: 0;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  overflow-y: auto;
-}
-
-/* Acción's own content (5 stage rows + a button) is far shorter than
- * Flujo de señales/APIs externas/Anomalías, which still need the full row
- * height (stretch, the grid default) plus their own overflow-y-auto to
- * scroll internally within the fixed-height cockpit. Without this
- * align-self, the grid forces Acción to that same full height too, which
- * shows up as a large dead white area below its card. */
-.bee-crm-control__action {
-  align-self: start;
 }
 
 @media (max-width: 1100px) {
-  .bee-crm-control__body { grid-template-columns: 1fr; }
+  .bee-crm-control__row { grid-template-columns: 1fr; }
+  .bee-crm-control__row--bottom { flex: none; }
   .bee-crm-control { height: auto; min-height: 0; }
 }
 
