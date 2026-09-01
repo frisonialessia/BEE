@@ -232,11 +232,17 @@ export function DashboardOverview() {
             <span className="bee-caption">{signals.length} total</span>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {signalPagination.pageItems.map((signal, i) => (
-              <SignalCard key={signal.id} signal={signal} toneIndex={i} />
-            ))}
-          </div>
+          {signals.length === 0 ? (
+            <p className="bee-caption py-6 text-center">
+              Aún no hay señales. Aparecen automáticamente al conectar tus fuentes de mercado.
+            </p>
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {signalPagination.pageItems.map((signal, i) => (
+                <SignalCard key={signal.id} signal={signal} toneIndex={i} />
+              ))}
+            </div>
+          )}
 
           <PaginationBar
             page={signalPagination.page}

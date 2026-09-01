@@ -119,7 +119,11 @@ export async function fetchBattlecards(): Promise<FetchResult<Battlecard[]>> {
       .map((r) => r.value.data);
     return { data: cards, live: true };
   } catch {
-    return { data: sampleBattlecards, live: false };
+    // Honest empty, not fabricated demo data — same convention as
+    // fetchSignals/fetchOpportunities. In practice this catch is dead code
+    // today (fetchOpportunities already swallows its own errors and never
+    // throws), but it must degrade the same way if that ever changes.
+    return { data: [], live: false };
   }
 }
 

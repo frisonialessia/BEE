@@ -8,7 +8,6 @@ import {
 } from "@/lib/control/pipeline-builder";
 import { isDemoMode } from "@/lib/demo/mode";
 import { demoFetchOpportunities, demoFetchSignals } from "@/lib/demo/store";
-import { sampleOpportunities, sampleSignals } from "@/lib/sample-data";
 import type { FetchResult } from "@/types/api";
 import type {
   ApiConnectivity,
@@ -229,22 +228,15 @@ export async function fetchSignalStream(limit = 40): Promise<FetchResult<SignalS
       },
     };
   } catch {
-    const events = buildSignalPipelineEvents(sampleSignals, sampleOpportunities, {
-      running: true,
-      queue_depth: 0,
-      processed_count: 12,
-      error_count: 0,
-      providers: [],
-      rate_limits: {},
-    });
+    // Honest empty, not fabricated demo data — same convention as
+    // fetchSignals/fetchOpportunities. In practice this catch is dead code
+    // today (both of those already swallow their own errors and never
+    // throw), but it must degrade the same way if that ever changes: a
+    // real account must never see a pipeline feed built from illustrative
+    // companies as if it were their own activity.
     return {
       live: false,
-      data: {
-        events,
-        live: false,
-        ready_count: countReadyEvents(events),
-        fetched_at,
-      },
+      data: { events: [], live: false, ready_count: 0, fetched_at },
     };
   }
 }

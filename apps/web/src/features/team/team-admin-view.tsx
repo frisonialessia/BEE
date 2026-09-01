@@ -428,12 +428,13 @@ function ChangePasswordSection() {
  */
 export function TeamAdminView() {
   const { user: currentUser } = useAuth();
-  const { data: teams, isLoading: teamsLoading } = useTeams();
-  const { data: users, isLoading: usersLoading } = useUsers();
+  const { data: teams, isLoading: teamsLoading, isError: teamsError } = useTeams();
+  const { data: users, isLoading: usersLoading, isError: usersError } = useUsers();
   const { depthOf, ordered } = useTeamTree(teams ?? []);
 
   const canManage = currentUser?.role === "owner" || currentUser?.role === "admin";
   const loading = teamsLoading || usersLoading;
+  const hasError = teamsError || usersError;
 
   return (
     <div>
@@ -452,6 +453,10 @@ export function TeamAdminView() {
           <Skeleton className="h-32" />
           <Skeleton className="h-64" />
         </div>
+      ) : hasError ? (
+        <p className="bee-caption">
+          No se pudo cargar el equipo — revisa tu conexión y vuelve a intentar en un momento.
+        </p>
       ) : (
         <div className="space-y-6">
           <ChangePasswordSection />
