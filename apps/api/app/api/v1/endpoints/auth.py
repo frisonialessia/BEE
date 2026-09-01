@@ -13,7 +13,13 @@ from app.core.database import get_session
 from app.core.security import create_access_token, hash_password, verify_password
 from app.core.signup_guard import get_signup_guard
 from app.models.user import User
-from app.schemas.auth import OrganizationRegister, PasswordChangeIn, TokenResponse, UserLogin, UserOut
+from app.schemas.auth import (
+    OrganizationRegister,
+    PasswordChangeIn,
+    TokenResponse,
+    UserLogin,
+    UserOut,
+)
 from app.services.auth import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -54,9 +60,10 @@ def register(
     """
     settings = get_settings()
 
-    if settings.SIGNUP_INVITE_CODE:
-        if not data.invite_code or not hmac.compare_digest(data.invite_code, settings.SIGNUP_INVITE_CODE):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing invite code.")
+    if settings.SIGNUP_INVITE_CODE and (
+        not data.invite_code or not hmac.compare_digest(data.invite_code, settings.SIGNUP_INVITE_CODE)
+    ):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing invite code.")
 
     if not get_signup_guard().try_consume(_client_key(request)):
         raise HTTPException(

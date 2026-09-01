@@ -74,7 +74,7 @@ class TestBulkCreateLeads:
         assert resp.json()["created_count"] == 1
 
         listed = client.get("/api/v1/leads", headers=headers).json()
-        lead = next(l for l in listed if l["full_name"] == "Needs Validation")
+        lead = next(item for item in listed if item["full_name"] == "Needs Validation")
         assert lead["last_validated_at"] is not None
         # No email/linkedin on this row → DataValidator must flag it, not
         # leave the freshness score at its untouched default of 1.0.

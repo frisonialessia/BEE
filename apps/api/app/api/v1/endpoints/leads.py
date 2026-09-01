@@ -331,7 +331,7 @@ def list_duplicate_leads(
     organization_id = current_user.organization_id if current_user else None
     groups = repo.find_duplicate_groups(organization_id)
     return [
-        LeadDuplicateGroup(key=key, leads=[LeadOut.model_validate(l) for l in items])
+        LeadDuplicateGroup(key=key, leads=[LeadOut.model_validate(lead) for lead in items])
         for key, items in groups
     ]
 

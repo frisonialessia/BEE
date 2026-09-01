@@ -224,8 +224,11 @@ class AgentOrchestrator:
         return action
 
     def complete(
-        self, action_id: uuid.UUID, body: ExecutionCompleteIn, organization_id: uuid.UUID | None = None
-    ) -> PendingAction:  # noqa: ARG002
+        self,
+        action_id: uuid.UUID,
+        body: ExecutionCompleteIn,  # noqa: ARG002
+        organization_id: uuid.UUID | None = None,
+    ) -> PendingAction:
         """Mark an action as completed successfully."""
         action = self._get_or_raise(action_id, organization_id)
         self._assert_status(action, ActionStatus.EXECUTING, "complete")

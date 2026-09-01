@@ -17,9 +17,9 @@ from sqlmodel import Session
 
 from app.core.security import create_access_token, hash_password
 from app.models.base import OpportunityStatus, UserRole
+from app.models.opportunity import Opportunity
 from app.models.organization import Organization
 from app.models.user import User
-from app.models.opportunity import Opportunity
 from app.models.workflow_task import WorkflowTask, WorkflowTaskStatus
 from app.schemas.predictor import ResourcePrediction
 from app.schemas.workflow import BeeEvent

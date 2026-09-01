@@ -125,8 +125,8 @@ class IngestionWorker:
 
     def _send_to_dlq(self, task: IngestionTask, error: str) -> None:
         try:
-            from app.services.dead_letter import DeadLetterQueueService
             from app.models.dead_letter import DLQEventType
+            from app.services.dead_letter import DeadLetterQueueService
 
             with session_scope() as session:
                 DeadLetterQueueService(session).enqueue(

@@ -17,10 +17,13 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.models.base import ActionStatus, ActionType, InsightType
+from app.core.security import create_access_token, hash_password
+from app.models.base import ActionStatus, ActionType, InsightType, UserRole
 from app.models.lead import Lead
 from app.models.market_insight import MarketInsight
+from app.models.organization import Organization
 from app.models.tactic_variant import TacticVariant
+from app.models.user import User
 from app.schemas.executive import (
     ArtifactBundle,
     EmailDraftArtifact,
@@ -38,10 +41,6 @@ from app.schemas.orchestrator import (
 )
 from app.schemas.strategy import StrategySchema, TimingWindow
 from app.schemas.variants import ActiveVariantRef
-from app.core.security import create_access_token, hash_password
-from app.models.base import UserRole
-from app.models.organization import Organization
-from app.models.user import User
 from app.services.data_validator.service import DataValidator
 from app.services.observability.service import CONFIDENCE_THRESHOLD, ObservabilityService
 from app.services.omnichannel.gateway import OmnichannelGateway

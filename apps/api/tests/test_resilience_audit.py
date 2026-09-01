@@ -617,6 +617,8 @@ class TestWorkflowOrchestratorDLQ:
         from app.services.workflow_orchestrator.base import WorkflowHandler
         from app.services.workflow_orchestrator.registry import (
             clear_registry,
+        )
+        from app.services.workflow_orchestrator.registry import (
             register_workflow_handler as register_handler,
         )
         from app.services.workflow_orchestrator.service import (

@@ -19,7 +19,7 @@ class QuotaCreateIn(BaseModel):
     target_amount: float = Field(gt=0)
 
     @model_validator(mode="after")
-    def _exactly_one_owner(self) -> "QuotaCreateIn":
+    def _exactly_one_owner(self) -> QuotaCreateIn:
         if (self.user_id is None) == (self.team_id is None):
             raise ValueError("Set exactly one of user_id or team_id, not both or neither.")
         if self.period_end < self.period_start:

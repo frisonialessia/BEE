@@ -1,0 +1,80 @@
+name: CI
+
+# Runs on every push to main AND on every PR targeting main. The PR trigger
+# is what actually closes the gap: main auto-deploys to Vercel on push, so a
+# check that only ran *after* the push to main would be reporting on code
+# that's already live in production. Gating the PR is what stops a broken
+# change from reaching main (and therefore production) in the first place.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel a still-running run for the same branch/PR when a new commit lands,
+# so we're not burning minutes validating a commit that's already obsolete.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (pytest, ruff, mypy)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: apps/api/requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      # Hermetic — in-memory SQLite, no Postgres service needed (see CLAUDE.md).
+      - name: Run tests
+        run: pytest
+
+      - name: Lint (ruff)
+        run: ruff check app tests
+
+      # Known pre-existing debt (~200 errors, mostly SQLModel/SQLAlchemy typing
+      # noise — see PR that introduced this workflow). Non-blocking for now so
+      # it doesn't gate every unrelated PR; the report still shows up in the
+      # job log. Flip to blocking once the backlog is paid down.
+      - name: Type check (mypy) — informational, non-blocking
+        run: mypy app
+        continue-on-error: true
+
+  frontend:
+    name: Frontend (lint, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - name: Install dependencies
+        # Root lockfile is canonical (pnpm-workspace.yaml) — see
+        # DEPLOY_CHECKLIST.md §6 "Option B".
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint (eslint)
+        run: pnpm --filter web lint
+
+      - name: Build
+        # No NEXT_PUBLIC_* vars needed here — apps/web/src/lib/env.ts falls
+        # back to http://localhost:8000 when NEXT_PUBLIC_API_URL is unset, so
+        # a CI build never needs real production values.
+        run: pnpm --filter web build

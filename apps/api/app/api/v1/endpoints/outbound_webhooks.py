@@ -24,8 +24,8 @@ from app.models.outbound_webhook import OutboundWebhook
 from app.models.user import User
 from app.schemas.outbound_webhook import (
     AVAILABLE_EVENT_TYPES,
-    OutboundWebhookCreateIn,
     OutboundWebhookCreated,
+    OutboundWebhookCreateIn,
     OutboundWebhookOut,
     OutboundWebhookUpdateIn,
 )

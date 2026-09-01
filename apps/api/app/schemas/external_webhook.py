@@ -31,7 +31,7 @@ class ExternalWebhookIn(BaseModel):
     event: str | None = None
 
     @model_validator(mode="after")
-    def _require_some_event_identifier(self) -> "ExternalWebhookIn":
+    def _require_some_event_identifier(self) -> ExternalWebhookIn:
         if not self.event_type and not self.event:
             raise ValueError("Webhook payload must include either 'event_type' or 'event'.")
         return self

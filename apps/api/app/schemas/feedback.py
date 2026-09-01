@@ -70,7 +70,7 @@ class OutcomeIn(BaseModel):
     )
 
     @model_validator(mode="after")
-    def _loss_reason_requires_lost(self) -> "OutcomeIn":
+    def _loss_reason_requires_lost(self) -> OutcomeIn:
         if self.loss_reason is not None and self.outcome != "lost":
             raise ValueError("loss_reason only applies when outcome='lost'")
         return self
