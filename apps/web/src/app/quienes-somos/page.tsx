@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { CheckCircle2, ShieldCheck, Target, UserCheck } from "lucide-react";
+import { CheckCircle2, Code2, ShieldCheck, Target, UserCheck } from "lucide-react";
 
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
@@ -54,7 +54,7 @@ export default async function QuienesSomosPage() {
           </div>
         </section>
 
-        <section className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-20">
+        <section className="mx-auto w-full max-w-3xl space-y-4 px-6 py-16 sm:py-20">
           <div className="bee-bento bee-bento-pad-lg">
             <div className="flex items-start gap-3">
               <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[var(--color-chart-4)]" />
@@ -72,6 +72,16 @@ export default async function QuienesSomosPage() {
                     ),
                   })}
                 </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bee-bento bee-bento-pad-lg">
+            <div className="flex items-start gap-3">
+              <Code2 className="mt-0.5 size-5 shrink-0 text-[var(--color-chart-4)]" />
+              <div>
+                <h3 className="text-sm font-semibold">{t("openSourceTitle")}</h3>
+                <p className="bee-caption mt-1.5">{t("openSourceBody")}</p>
               </div>
             </div>
           </div>

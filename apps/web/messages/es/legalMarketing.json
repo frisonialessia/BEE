@@ -113,7 +113,9 @@
       }
     },
     "smallTeamTitle": "Un equipo chico, todavía",
-    "smallTeamBody": "BEE está en una etapa temprana — preferimos decir esto claramente en vez de simular una escala que todavía no tenemos. Si te interesa lo que estamos construyendo, la mejor forma de hablar con nosotros es directamente desde <link>Contacto</link>."
+    "smallTeamBody": "BEE está en una etapa temprana — preferimos decir esto claramente en vez de simular una escala que todavía no tenemos. Si te interesa lo que estamos construyendo, la mejor forma de hablar con nosotros es directamente desde <link>Contacto</link>.",
+    "openSourceTitle": "Un MVP de código abierto, no un producto que te vendemos",
+    "openSourceBody": "Lo que estás usando acá es una demostración pública del código de BEE — la fuente está abierta en GitHub. No cobramos por el acceso. Si quieres ver cómo se podría poner precio a un proyecto así como producto real, publicamos una hoja de ruta de monetización como ejemplo de trabajo, no como una factura que te estemos mandando."
   },
   "seguridad": {
     "meta": {
@@ -177,7 +179,9 @@
     "afterSubmitTitle": "¿Qué pasa después de enviar esto?",
     "afterSubmitBody": "Un mensaje real llega directo a nuestro equipo — queda registrado, nunca se descarta en silencio. Te contactamos por el email que dejes aquí.",
     "haveAccountTitle": "¿Ya tienes cuenta?",
-    "haveAccountBody": "Este formulario es para organizaciones nuevas. Si ya usas BEE, inicia sesión directamente en vez de escribirnos aquí."
+    "haveAccountBody": "Este formulario es para organizaciones nuevas. Si ya usas BEE, inicia sesión directamente en vez de escribirnos aquí.",
+    "mvpNoticeTitle": "Esto es un MVP de código abierto, no una oferta de venta",
+    "mvpNoticeBody": "BEE no es algo que te estemos vendiendo aquí — el código está abierto en GitHub, y este sitio es una demostración pública. Si estás evaluando BEE para construir tu propio producto comercial, este formulario es un buen lugar para hacer preguntas; no es un embudo de ventas."
   },
   "soporte": {
     "meta": {
@@ -232,7 +236,11 @@
         "body": "Podemos actualizar estos términos. Si el cambio es material, te lo vamos a comunicar por email o dentro de la plataforma antes de que entre en vigencia."
       },
       {
-        "title": "8. Contacto",
+        "title": "8. Estado de MVP y ejemplos de monetización",
+        "body": "BEE, tal como se publica en este repositorio y se despliega para demostración pública, es un MVP de código abierto — una implementación de referencia, no un servicio comercial que te estemos vendiendo. Cualquier nivel de precios, plan o estrategia de monetización mencionada en la documentación de este proyecto (ver docs/MONETIZATION_ROADMAP.md en el repositorio) son ejemplos ilustrativos para desarrolladores que quieran construir su propio producto comercial sobre este código. No constituyen una oferta de venta, y actualmente no se cobra ningún pago a través de este despliegue."
+      },
+      {
+        "title": "9. Contacto",
         "body": "Para cualquier consulta sobre estos términos, escríbenos desde la página de Contacto."
       }
     ],
@@ -274,6 +282,10 @@
       {
         "title": "7. Cambios a esta política",
         "body": "Si cambiamos algo material sobre cómo recolectamos o usamos datos, lo vamos a reflejar en esta misma página."
+      },
+      {
+        "title": "8. MVP de código abierto, no un servicio comercial",
+        "body": "Este despliegue de BEE es un MVP público y de código abierto — una demostración del producto, no un servicio pago. No vendemos acceso, y no se recopila información de facturación. Si haces un fork de este código para construir tu propio producto comercial, eres responsable de tu propia política de privacidad para los datos de tus usuarios — este documento describe únicamente este despliegue de referencia."
       }
     ],
     "securityBody": "Ver la página de <link>Seguridad</link> para el detalle técnico: aislamiento multi-tenant, autenticación en capas, secretos que nunca se persisten en la base ni se registran en logs.",

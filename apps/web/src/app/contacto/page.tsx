@@ -51,6 +51,10 @@ export default async function ContactoPage({
                   <p className="text-sm font-semibold">{t("haveAccountTitle")}</p>
                   <p className="bee-caption mt-1.5">{t("haveAccountBody")}</p>
                 </div>
+                <div className="bee-bento bee-bento-pad">
+                  <p className="text-sm font-semibold">{t("mvpNoticeTitle")}</p>
+                  <p className="bee-caption mt-1.5">{t("mvpNoticeBody")}</p>
+                </div>
               </div>
             </div>
 

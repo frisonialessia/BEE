@@ -113,7 +113,9 @@
       }
     },
     "smallTeamTitle": "A small team, still",
-    "smallTeamBody": "BEE is at an early stage — we'd rather say that plainly than fake a scale we don't have yet. If you're interested in what we're building, the best way to reach us is straight from <link>Contact</link>."
+    "smallTeamBody": "BEE is at an early stage — we'd rather say that plainly than fake a scale we don't have yet. If you're interested in what we're building, the best way to reach us is straight from <link>Contact</link>.",
+    "openSourceTitle": "An open-source MVP, not a product we're selling",
+    "openSourceBody": "What you're using here is a public demo of BEE's codebase — the source is open on GitHub. We're not charging for access. If you want to see how a project like this could be priced as a real product, we published a monetization roadmap as a worked example, not as a bill we're sending you."
   },
   "seguridad": {
     "meta": {
@@ -177,7 +179,9 @@
     "afterSubmitTitle": "What happens after you send this?",
     "afterSubmitBody": "A real message lands directly with our team — it gets logged, never silently dropped. We'll reach out at the email you leave here.",
     "haveAccountTitle": "Already have an account?",
-    "haveAccountBody": "This form is for new organizations. If you already use BEE, sign in directly instead of writing to us here."
+    "haveAccountBody": "This form is for new organizations. If you already use BEE, sign in directly instead of writing to us here.",
+    "mvpNoticeTitle": "This is an open-source MVP, not a sales pitch",
+    "mvpNoticeBody": "BEE isn't something we're selling you here — the code is open on GitHub, and this site is a public demo. If you're evaluating BEE to build your own commercial product, this form is a good place to ask questions; it isn't a sales funnel."
   },
   "soporte": {
     "meta": {
@@ -232,7 +236,11 @@
         "body": "We may update these terms. If the change is material, we will notify you by email or within the platform before it takes effect."
       },
       {
-        "title": "8. Contact",
+        "title": "8. MVP status and monetization examples",
+        "body": "BEE, as published in this repository and deployed for public demonstration, is an open-source MVP — a reference implementation, not a commercial service we are selling you. Any pricing tiers, plans, or monetization strategy referenced in this project's documentation (see docs/MONETIZATION_ROADMAP.md in the source repository) are illustrative examples for developers who may want to build their own commercial product on top of this codebase. They are not an offer to sell, and no payment is currently collected through this deployment."
+      },
+      {
+        "title": "9. Contact",
         "body": "For any question about these terms, write to us from the Contact page."
       }
     ],
@@ -274,6 +282,10 @@
       {
         "title": "7. Changes to this policy",
         "body": "If we change anything material about how we collect or use data, we will reflect it on this same page."
+      },
+      {
+        "title": "8. Open-source MVP, not a commercial service",
+        "body": "This deployment of BEE is a public, open-source MVP — a demonstration of the product, not a paid service. We are not selling access, and no billing information is collected. If you fork this codebase to build your own commercial product, you are responsible for your own privacy policy covering your users' data — this document describes only this reference deployment."
       }
     ],
     "securityBody": "See the <link>Security</link> page for the technical detail: multi-tenant isolation, layered authentication, secrets that are never persisted in the database or logged.",
