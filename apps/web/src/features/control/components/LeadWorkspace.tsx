@@ -2,18 +2,11 @@
 
 import { ArrowRight, Flame, KanbanSquare } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLeadBoard } from "@/hooks/queries/use-lead-board";
 import { KANBAN_COLUMNS, groupLeadCards } from "@/lib/control/lead-board";
-
-const STAGE_LABEL_ES: Record<string, string> = {
-  detected: "Detectadas",
-  enriching: "Enriqueciendo",
-  ready_to_action: "Listas",
-  in_progress: "En progreso",
-  closed: "Cerradas",
-};
 
 /** Espacio de leads — resumen compacto del pipeline (no un Kanban completo:
  *  ese es el trabajo dedicado de CRM, con drag-and-drop real). Esto es
@@ -22,6 +15,7 @@ const STAGE_LABEL_ES: Record<string, string> = {
  *  tenía la versión anterior — mismo dato (useLeadBoard), presentación
  *  honesta a su verdadero peso en esta pantalla de 3 columnas. */
 export function LeadWorkspace() {
+  const t = useTranslations("probarNetworkBrandControl.control.leadWorkspace");
   const { data: result, isLoading } = useLeadBoard(100);
   const cards = result?.cards ?? [];
   const grouped = groupLeadCards(cards);
@@ -33,14 +27,14 @@ export function LeadWorkspace() {
     // stretches to the row's own (compact) height by design. The stage-rows
     // list below already carries flex-1, so the extra room this card gains
     // pushes "Abrir CRM" to the bottom instead of leaving a gap past it.
-    <section className="bee-surface flex h-full min-h-0 flex-col bee-bento-pad" aria-label="Espacio de leads">
+    <section className="bee-surface flex h-full min-h-0 flex-col bee-bento-pad" aria-label={t("ariaLabel")}>
       <div className="mb-4 flex shrink-0 items-start justify-between gap-3">
         <div>
-          <p className="bee-eyebrow">Zona de acción</p>
-          <h2 className="mt-0.5 bee-card-title">Espacio de leads</h2>
+          <p className="bee-eyebrow">{t("eyebrow")}</p>
+          <h2 className="mt-0.5 bee-card-title">{t("title")}</h2>
         </div>
         {result?.live === false && (
-          <span className="bee-micro">Demo / offline</span>
+          <span className="bee-micro">{t("demoOffline")}</span>
         )}
       </div>
 
@@ -53,7 +47,7 @@ export function LeadWorkspace() {
       ) : cards.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
           <KanbanSquare className="size-5 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Sin señales activas en el pipeline todavía.</p>
+          <p className="text-sm text-muted-foreground">{t("empty")}</p>
         </div>
       ) : (
         <div className="flex-1 space-y-2">
@@ -64,7 +58,7 @@ export function LeadWorkspace() {
                 key={col.id}
                 className="bee-bento flex items-center justify-between gap-3 px-3 py-2.5"
               >
-                <span className="text-xs font-medium">{STAGE_LABEL_ES[col.id] ?? col.label}</span>
+                <span className="text-xs font-medium">{t(`stages.${col.id}`)}</span>
                 <span className="font-mono text-xs tabular-nums text-muted-foreground">{count}</span>
               </div>
             );
@@ -72,7 +66,7 @@ export function LeadWorkspace() {
           {hotCount > 0 && (
             <p className="flex items-center gap-1.5 pt-1 text-[11px] text-[var(--color-chart-5)]">
               <Flame className="size-3" />
-              {hotCount} lead{hotCount === 1 ? "" : "s"} caliente{hotCount === 1 ? "" : "s"}
+              {t("hotLeads", { count: hotCount })}
             </p>
           )}
         </div>
@@ -82,7 +76,7 @@ export function LeadWorkspace() {
         href="/dashboard/crm"
         className="bee-btn-ghost mt-4 w-full shrink-0 justify-center text-xs"
       >
-        Abrir CRM
+        {t("openCrm")}
         <ArrowRight className="size-3.5" />
       </Link>
     </section>

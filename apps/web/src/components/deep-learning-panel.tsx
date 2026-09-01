@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AnomalyAlert, CorrectionOut, StyleProfileOut } from "@/lib/types";
@@ -14,12 +15,23 @@ import {
 // ── Correction Learning Panel ─────────────────────────────────────────────────
 
 function CorrectionLearningPanel() {
+  const t = useTranslations("probarNetworkBrandControl.deepLearning.correction");
   const [profile, setProfile] = useState<StyleProfileOut | null>(null);
   const [result, setResult] = useState<CorrectionOut | null>(null);
   const [loading, setLoading] = useState(false);
-  const [original, setOriginal] = useState("¡Espero que estés bien! Somos líderes de la industria en inteligencia de ventas y queríamos contactarte.");
-  const [edited, setEdited] = useState("Tu CAC está 40% por encima del promedio de tu sector. Así cerramos esa brecha en 60 días.");
+  // Seeded example values, not just placeholders — same "plausible starting
+  // point, in the interface's own language" reasoning as BrandVoicePanel's
+  // create-profile form.
+  const [original, setOriginal] = useState(t("defaultOriginal"));
+  const [edited, setEdited] = useState(t("defaultEdited"));
   const [artifactType, setArtifactType] = useState("email_draft");
+
+  const ARTIFACT_TYPES = [
+    ["email_draft", t("artifactTypes.email_draft")],
+    ["meeting_agenda", t("artifactTypes.meeting_agenda")],
+    ["linkedin_message", t("artifactTypes.linkedin_message")],
+    ["next_steps", t("artifactTypes.next_steps")],
+  ] as const;
 
   async function handleLoadProfile() {
     const r = await getStyleProfile();
@@ -40,34 +52,24 @@ function CorrectionLearningPanel() {
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">
-        Envía un artefacto corregido y BEE extraerá tus preferencias de estilo de escritura automáticamente.
-        La IA aplicará estas reglas en cada generación futura — sin necesidad de configuración.
-      </p>
+      <p className="text-xs text-muted-foreground">{t("description")}</p>
 
       <div className="grid gap-3">
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Tipo de artefacto</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">{t("artifactTypeLabel")}</label>
           <select
             value={artifactType}
             onChange={(e) => setArtifactType(e.target.value)}
             className="text-xs border border-border rounded-sm px-2 py-1.5 w-full bg-[var(--color-card)]"
           >
-            {(
-              [
-                ["email_draft", "Borrador de email"],
-                ["meeting_agenda", "Agenda de reunión"],
-                ["linkedin_message", "Mensaje de LinkedIn"],
-                ["next_steps", "Próximos pasos"],
-              ] as const
-            ).map(([t, label]) => (
-              <option key={t} value={t}>{label}</option>
+            {ARTIFACT_TYPES.map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Original (salida de BEE)</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">{t("originalLabel")}</label>
           <textarea
             value={original}
             onChange={(e) => setOriginal(e.target.value)}
@@ -78,7 +80,7 @@ function CorrectionLearningPanel() {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-muted-foreground mb-1">Editado (tu versión)</label>
+          <label className="block text-xs font-medium text-muted-foreground mb-1">{t("editedLabel")}</label>
           <textarea
             value={edited}
             onChange={(e) => setEdited(e.target.value)}
@@ -89,7 +91,7 @@ function CorrectionLearningPanel() {
         </div>
 
         <button onClick={handleSubmit} disabled={loading} className="bee-btn bee-btn--primary">
-          {loading ? "Aprendiendo..." : "Enviar corrección"}
+          {loading ? t("learning") : t("submit")}
         </button>
       </div>
 
@@ -99,17 +101,17 @@ function CorrectionLearningPanel() {
           style={{ borderColor: "var(--color-chart-6)", background: "color-mix(in srgb, var(--color-chart-6) 10%, var(--color-background))" }}
         >
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold" style={{ color: "var(--color-chart-6)" }}>Resultado del aprendizaje</span>
+            <span className="text-xs font-semibold" style={{ color: "var(--color-chart-6)" }}>{t("resultTitle")}</span>
             <span
               className="text-xs px-2 py-0.5 rounded-sm"
               style={{ background: "color-mix(in srgb, var(--color-chart-6) 20%, var(--color-background))", color: "var(--color-chart-6)" }}
             >
-              v{result.profile_version} — {result.total_corrections} corrección{result.total_corrections !== 1 ? "es" : ""}
+              {t("versionBadge", { version: result.profile_version, count: result.total_corrections })}
             </span>
           </div>
           {result.extracted_rules.length > 0 && (
             <div>
-              <p className="text-xs font-medium mb-1" style={{ color: "var(--color-chart-6)" }}>Reglas aprendidas de esta edición:</p>
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--color-chart-6)" }}>{t("rulesLearnedTitle")}</p>
               <ul className="space-y-0.5">
                 {result.extracted_rules.map((r) => (
                   <li key={r} className="text-xs text-foreground flex items-center gap-1">
@@ -121,21 +123,21 @@ function CorrectionLearningPanel() {
             </div>
           )}
           <p className="text-xs text-muted-foreground">
-            Ratio de cambio: {(result.change_ratio * 100).toFixed(0)}% · {result.authoritative_rules_count} regla{result.authoritative_rules_count !== 1 ? "s" : ""} autoritativa{result.authoritative_rules_count !== 1 ? "s" : ""}
+            {t("changeRatio", { pct: (result.change_ratio * 100).toFixed(0), count: result.authoritative_rules_count })}
           </p>
         </div>
       )}
 
       <button onClick={handleLoadProfile} className="text-xs text-muted-foreground hover:text-muted-foreground underline underline-offset-2">
-        Ver perfil de estilo completo
+        {t("viewFullProfile")}
       </button>
 
       {profile && profile.total_corrections > 0 && (
         <div className="bee-bento p-3 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-foreground">Perfil de estilo actual</span>
+            <span className="text-xs font-semibold text-foreground">{t("currentProfileTitle")}</span>
             <span className="text-xs text-muted-foreground">
-              {profile.authoritative_rules_count} autoritativas · {profile.total_corrections} correcciones
+              {t("profileStats", { authoritative: profile.authoritative_rules_count, total: profile.total_corrections })}
             </span>
           </div>
           {profile.style_summary ? (
@@ -143,7 +145,7 @@ function CorrectionLearningPanel() {
               {profile.style_summary}
             </pre>
           ) : (
-            <p className="text-xs text-muted-foreground">Se necesitan más correcciones para construir reglas autoritativas.</p>
+            <p className="text-xs text-muted-foreground">{t("needMoreCorrections")}</p>
           )}
         </div>
       )}
@@ -163,14 +165,14 @@ const SEVERITY_VAR: Record<string, string | null> = {
   low: null,
 };
 
-const SEVERITY_LABEL: Record<string, string> = {
-  critical: "crítica",
-  high: "alta",
-  medium: "media",
-  low: "baja",
-};
-
 function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAcknowledge: (id: string) => void }) {
+  const t = useTranslations("probarNetworkBrandControl.deepLearning.anomaly");
+  const SEVERITY_LABEL: Record<string, string> = {
+    critical: t("severity.critical"),
+    high: t("severity.high"),
+    medium: t("severity.medium"),
+    low: t("severity.low"),
+  };
   const [expanded, setExpanded] = useState(false);
   const varColor = SEVERITY_VAR[alert.severity] ?? null;
   const cardStyle = varColor
@@ -186,8 +188,11 @@ function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAck
         <div className="flex-1">
           <p className="text-xs font-semibold leading-tight">{alert.title}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Actual: {(alert.rolling_rate * 100).toFixed(1)}% vs. base {(alert.baseline_rate * 100).toFixed(1)}%
-            {" "}({alert.deviation_pct.toFixed(1)}%)
+            {t("currentVsBase", {
+              rolling: (alert.rolling_rate * 100).toFixed(1),
+              baseline: (alert.baseline_rate * 100).toFixed(1),
+              deviation: alert.deviation_pct.toFixed(1),
+            })}
           </p>
         </div>
         <span className="text-xs font-bold uppercase px-2 py-0.5 rounded-sm border" style={chipStyle}>
@@ -200,12 +205,12 @@ function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAck
           onClick={() => onAcknowledge(alert.id)}
           className="text-xs px-3 py-1 rounded-sm border border-current hover:opacity-75 transition-opacity"
         >
-          Confirmar
+          {t("acknowledge")}
         </button>
       )}
 
       <button onClick={() => setExpanded(v => !v)} className="text-xs underline underline-offset-2 opacity-60">
-        {expanded ? "Ocultar" : "Detalles y acciones"}
+        {expanded ? t("hideDetails") : t("showDetails")}
       </button>
 
       {expanded && (
@@ -225,6 +230,7 @@ function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAck
 }
 
 function AnomalyAlertsPanel() {
+  const t = useTranslations("probarNetworkBrandControl.deepLearning.anomaly");
   const [alerts, setAlerts] = useState<AnomalyAlert[]>([]);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -249,19 +255,16 @@ function AnomalyAlertsPanel() {
   }
 
   async function handleAcknowledge(id: string) {
-    await acknowledgeAnomaly(id, "Revisado desde el panel");
+    await acknowledgeAnomaly(id, t("acknowledgeNote"));
     await load();
   }
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">
-        Monitorea la tasa de conversión reciente contra el histórico por canal y sector.
-        Las caídas anómalas disparan alertas de estrategia que requieren revisión del CEO antes de cualquier cambio.
-      </p>
+      <p className="text-xs text-muted-foreground">{t("description")}</p>
 
       <button onClick={handleCheck} disabled={checking} className="bee-btn bee-btn--primary">
-        {checking ? "Escaneando…" : "Ejecutar escaneo de anomalías"}
+        {checking ? t("scanning") : t("runScan")}
       </button>
 
       {summary && (
@@ -274,8 +277,8 @@ function AnomalyAlertsPanel() {
         <div className="space-y-2">{[...Array(2)].map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
       ) : alerts.length === 0 ? (
         <div className="py-6 text-center">
-          <p className="text-sm text-muted-foreground">No hay alertas de anomalías abiertas.</p>
-          <p className="bee-caption mt-1">Ejecuta un escaneo para revisar la salud actual de conversión.</p>
+          <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
+          <p className="bee-caption mt-1">{t("empty.hint")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -288,15 +291,15 @@ function AnomalyAlertsPanel() {
 
 // ── Combined Deep Learning Panel (exported) ───────────────────────────────────
 
-const TABS = [
-  { id: "correction", label: "Aprendizaje de estilo" },
-  { id: "anomaly", label: "Monitor de anomalías" },
-] as const;
-
-type TabId = typeof TABS[number]["id"];
+type TabId = "correction" | "anomaly";
 
 export function DeepLearningPanel() {
+  const t = useTranslations("probarNetworkBrandControl.deepLearning.tabs");
   const [tab, setTab] = useState<TabId>("correction");
+  const TABS: { id: TabId; label: string }[] = [
+    { id: "correction", label: t("correction") },
+    { id: "anomaly", label: t("anomaly") },
+  ];
 
   return (
     // bee-panel — this root used to be a bare <div>, the one card in its
@@ -314,10 +317,10 @@ export function DeepLearningPanel() {
           </button>
         ))}
       </div>
-      {/* min-h reserves the height of the taller tab (Aprendizaje de estilo,
-       * with its two textareas) so switching to the shorter one (Monitor de
-       * anomalías) doesn't shrink this card — which, as a grid sibling of
-       * BrandVoicePanel on the Voz de marca page, would otherwise drag that
+      {/* min-h reserves the height of the taller tab (Style learning, with
+       * its two textareas) so switching to the shorter one (Anomaly
+       * monitor) doesn't shrink this card — which, as a grid sibling of
+       * BrandVoicePanel on the Brand Voice page, would otherwise drag that
        * whole row's height down with it and read as a layout jump. */}
       <div className="min-h-[420px]">
         {tab === "correction" && <CorrectionLearningPanel />}

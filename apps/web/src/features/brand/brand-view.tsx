@@ -1,19 +1,22 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { BrandVoicePanel } from "@/components/brand-voice";
 import { DeepLearningPanel } from "@/components/deep-learning-panel";
 
 /** Voz de marca — perfil de tono personal y adaptación psicográfica (DISC) del contenido. */
 export function BrandView() {
+  const tNav = useTranslations("nav.items");
+  const t = useTranslations("probarNetworkBrandControl.brand");
+
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Marca personal · Psicográfico</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1">
-          <h1 className="bee-display">Voz de marca</h1>
-          <p className="bee-caption mt-1">
-            Perfil de voz y fragmentos de estilo, más el análisis DISC que adapta cada mensaje
-          </p>
+          <h1 className="bee-display">{tNav("brand")}</h1>
+          <p className="bee-caption mt-1">{t("caption")}</p>
         </div>
       </header>
 

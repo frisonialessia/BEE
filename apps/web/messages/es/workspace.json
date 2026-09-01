@@ -425,6 +425,7 @@
     }
   },
   "assistant": {
+    "navLabel": "Asistente",
     "thinking": "Pensando…",
     "page": {
       "greeting": {

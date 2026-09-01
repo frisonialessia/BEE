@@ -1,0 +1,6 @@
+{
+  "resilience": {
+    "eyebrow": "Audit · Failed events · Anomaly detector",
+    "subtitle": "System observability — agent decisions, failed retries, and strategy alerts"
+  }
+}

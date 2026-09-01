@@ -1,0 +1,6 @@
+{
+  "resilience": {
+    "eyebrow": "Auditoría · Eventos fallidos · Detector de anomalías",
+    "subtitle": "Observabilidad del sistema — decisiones de agentes, reintentos fallidos y alertas de estrategia"
+  }
+}

@@ -13,8 +13,15 @@
     "sandboxLabel": "Test sandbox"
   },
   "commandPalette": {
+    "openAria": "Open command palette",
+    "hintTitle": "Command palette",
     "closeAria": "Close command palette",
     "dialogAria": "Command palette",
+    "kinds": {
+      "company": "Company",
+      "opportunity": "Opportunity",
+      "contact": "Contact"
+    },
     "placeholder": "Go to a section, search a company, opportunity, or contact…",
     "noResults": "No results.",
     "groupResults": "Results",

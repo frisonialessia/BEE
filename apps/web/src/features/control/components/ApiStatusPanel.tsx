@@ -1,6 +1,7 @@
 "use client";
 
 import { Radio, WifiOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSystemHealth } from "@/hooks/queries/use-system-health";
@@ -32,6 +33,7 @@ function StatusDot({ className }: { className?: string }) {
 }
 
 function ProviderRow({ provider }: { provider: ProviderStatus }) {
+  const t = useTranslations("probarNetworkBrandControl.control.apiStatus");
   const label = PROVIDER_LABELS[provider.name] ?? provider.name;
   const pct =
     provider.tokens_capacity > 0
@@ -45,8 +47,8 @@ function ProviderRow({ provider }: { provider: ProviderStatus }) {
         <div className="min-w-0">
           <p className="truncate text-sm font-medium tracking-tight">{label}</p>
           <p className="truncate text-xs text-muted-foreground">
-            {provider.configured ? "API configurada" : "Modo simulado"}
-            {provider.webhook_configured ? " · Webhook ✓" : " · Sin secreto"}
+            {provider.configured ? t("configured") : t("mockMode")}
+            {provider.webhook_configured ? ` · ${t("webhookConfigured")}` : ` · ${t("webhookMissing")}`}
           </p>
         </div>
       </div>
@@ -74,6 +76,7 @@ function ProviderRow({ provider }: { provider: ProviderStatus }) {
  * concurrent call, this isn't a second network round trip.
  */
 export function ApiStatusPanel() {
+  const t = useTranslations("probarNetworkBrandControl.control.apiStatus");
   const { data: result, isLoading, isError } = useSystemHealth();
   const snapshot = result?.data;
 
@@ -86,17 +89,17 @@ export function ApiStatusPanel() {
       <section className="bee-surface flex h-full items-center bee-bento-pad">
         <div className="flex items-center gap-2 text-destructive">
           <WifiOff className="size-4" />
-          <p className="text-sm">APIs externas no disponible.</p>
+          <p className="text-sm">{t("unavailable")}</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="bee-surface flex h-full flex-col bee-bento-pad" aria-label="APIs externas">
+    <section className="bee-surface flex h-full flex-col bee-bento-pad" aria-label={t("ariaLabel")}>
       <div className="mb-1 flex items-center gap-2">
         <Radio className="size-3.5 text-[var(--color-text-muted)]" />
-        <p className="bee-eyebrow">APIs externas</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
       </div>
       {/* overscroll-contain: this card sits inside the independently
        * scrollable bottom row (see globals.css) — without it, scrolling
