@@ -36,6 +36,7 @@ from app.services.external_api.interface import (
 )
 from app.services.external_api.providers.g2 import G2Provider
 from app.services.external_api.providers.google_search import GoogleSearchProvider
+from app.services.external_api.providers.hiring import HiringProvider
 from app.services.external_api.providers.linkedin import LinkedInProvider
 from app.services.external_api.rate_limiter import get_rate_limiter
 
@@ -52,7 +53,7 @@ class ExternalAPIOrchestrator:
         self._register_defaults()
 
     def _register_defaults(self) -> None:
-        for provider in (LinkedInProvider(), G2Provider(), GoogleSearchProvider()):
+        for provider in (LinkedInProvider(), G2Provider(), GoogleSearchProvider(), HiringProvider()):
             self.register_provider(provider)
 
     def register_provider(self, provider: IExternalProvider) -> None:
@@ -175,6 +176,31 @@ class ExternalAPIOrchestrator:
                 success=False,
                 query=company_domain,
                 error="Google Search not registered",
+            )
+        return provider.search_market_news(company_domain=company_domain, company_name=company_name)
+
+    def scan_hiring_signals(
+        self, *, company_domain: str, company_name: str | None = None
+    ) -> ExternalSearchResult:
+        """Hiring-surge signal for MarketScanOrchestrator (see
+        app.services.market_scan) — same rate-limit-then-delegate shape as
+        scan_market_news above, routed to the "hiring" provider
+        (HiringProvider, Greenhouse public boards) instead of google_search.
+        """
+        if not self._acquire_rate_limit("hiring"):
+            return ExternalSearchResult(
+                provider="hiring",
+                success=False,
+                query=company_domain,
+                error="Hiring provider rate limit exceeded",
+            )
+        provider = self._providers.get("hiring")
+        if not provider:
+            return ExternalSearchResult(
+                provider="hiring",
+                success=False,
+                query=company_domain,
+                error="Hiring provider not registered",
             )
         return provider.search_market_news(company_domain=company_domain, company_name=company_name)
 

@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
@@ -22,6 +23,22 @@ from app.models.company import Company
 from app.models.market_scan_log import MarketScanLog
 from app.models.signal import Signal
 from app.services.external_api.interface import ExternalSearchResult
+
+
+@pytest.fixture(autouse=True)
+def _no_real_hiring_network_calls():
+    """HiringProvider.is_configured() is always True (Greenhouse's
+    boards-api needs no credentials) — unlike GoogleSearchProvider, there's
+    no missing-API-key gate keeping it out of a real network call. Every
+    test in this file gets a safe, zero-item default for it; tests that
+    specifically exercise the Hiring provider override this explicitly.
+    Hermetic test suite, no exceptions — see CLAUDE.md.
+    """
+    with patch(
+        "app.services.market_scan.orchestrator.ExternalAPIOrchestrator.scan_hiring_signals",
+        return_value=ExternalSearchResult(provider="hiring", success=True, query="", items=[]),
+    ):
+        yield
 
 
 class TestMarketScanTickAuth:
@@ -369,3 +386,188 @@ class TestMarketScanPhase2GoogleProvider:
         assert body["companies_scanned"] == 2
         assert body["signals_created"] == 1
         assert len(body["errors"]) == 1
+
+
+class TestMarketScanPhase3HiringProvider:
+    """_scan_company also calls ExternalAPIOrchestrator.scan_hiring_signals
+    (mocked to a zero-item default for every other test in this file via
+    the autouse fixture above) — these tests override that default to
+    exercise the Hiring-specific path. GoogleSearchProvider's own mock
+    mode (no API key configured) already returns zero items by default,
+    so it needs no separate patching here."""
+
+    def _enabled(self):
+        from app.core.config import settings as app_settings
+
+        return patch.multiple(
+            app_settings,
+            CRON_SECRET="super-secret-value",
+            MARKET_SCAN_ENABLED=True,
+            MARKET_SCAN_BATCH_SIZE=20,
+        )
+
+    def test_hiring_surge_becomes_a_signal(self, client: TestClient, session: Session):
+        company = Company(name="Delta Sales Co", domain="delta-sales.example.com")
+        session.add(company)
+        session.commit()
+        session.refresh(company)
+
+        hiring_result = ExternalSearchResult(
+            provider="hiring",
+            success=True,
+            query="delta-sales",
+            items=[
+                {
+                    "title": "Delta Sales Co has 8 open positions including 3 in Sales/GTM roles — hiring surge",
+                    "link": "https://boards.greenhouse.io/delta-sales",
+                    "snippet": "8 open roles found on Delta Sales Co's Greenhouse board.",
+                }
+            ],
+            mock=False,
+        )
+        with (
+            self._enabled(),
+            patch(
+                "app.services.market_scan.orchestrator.ExternalAPIOrchestrator.scan_hiring_signals",
+                return_value=hiring_result,
+            ),
+        ):
+            resp = client.get(
+                "/api/v1/internal/market-scan/tick",
+                headers={"Authorization": "Bearer super-secret-value"},
+            )
+        assert resp.status_code == 200, resp.text
+        body = resp.json()
+        assert body["companies_scanned"] == 1
+        assert body["signals_created"] == 1
+
+        signals = session.exec(select(Signal).where(Signal.company_id == company.id)).all()
+        assert len(signals) == 1
+        assert signals[0].source == SignalSource.MARKET_SCAN
+        assert signals[0].signal_type in (SignalType.HIRING, SignalType.EXPANSION)
+        assert signals[0].external_id.startswith(f"market_scan:hiring:{company.id}:")
+
+    def test_google_and_hiring_signals_both_land_independently(
+        self, client: TestClient, session: Session
+    ):
+        """Two different providers about the same company, in the same
+        tick — each gets its own Signal (different provider_key in the
+        idempotency key means no cross-provider collision)."""
+        company = Company(name="Epsilon Corp", domain="epsilon.example.com")
+        session.add(company)
+        session.commit()
+
+        news = ExternalSearchResult(
+            provider="google_search",
+            success=True,
+            query="Epsilon Corp",
+            items=[{"title": "Epsilon Corp announces new partnership", "link": "https://news.example.com/epsilon"}],
+        )
+        hiring_result = ExternalSearchResult(
+            provider="hiring",
+            success=True,
+            query="epsilon",
+            items=[{"title": "Epsilon Corp is hiring — 6 open roles", "link": "https://boards.greenhouse.io/epsilon"}],
+        )
+        with (
+            self._enabled(),
+            patch(
+                "app.services.market_scan.orchestrator.ExternalAPIOrchestrator.scan_market_news",
+                return_value=news,
+            ),
+            patch(
+                "app.services.market_scan.orchestrator.ExternalAPIOrchestrator.scan_hiring_signals",
+                return_value=hiring_result,
+            ),
+        ):
+            resp = client.get(
+                "/api/v1/internal/market-scan/tick",
+                headers={"Authorization": "Bearer super-secret-value"},
+            )
+        assert resp.json()["signals_created"] == 2
+
+    def test_hiring_provider_error_does_not_block_google_signal(
+        self, client: TestClient, session: Session
+    ):
+        session.add(Company(name="Zeta Inc", domain="zeta.example.com"))
+        session.commit()
+
+        news = ExternalSearchResult(
+            provider="google_search",
+            success=True,
+            query="Zeta Inc",
+            items=[{"title": "Zeta Inc raises Series A", "link": "https://news.example.com/zeta"}],
+        )
+        hiring_error = ExternalSearchResult(
+            provider="hiring", success=False, query="zeta", error="Greenhouse lookup timed out"
+        )
+        with (
+            self._enabled(),
+            patch(
+                "app.services.market_scan.orchestrator.ExternalAPIOrchestrator.scan_market_news",
+                return_value=news,
+            ),
+            patch(
+                "app.services.market_scan.orchestrator.ExternalAPIOrchestrator.scan_hiring_signals",
+                return_value=hiring_error,
+            ),
+        ):
+            resp = client.get(
+                "/api/v1/internal/market-scan/tick",
+                headers={"Authorization": "Bearer super-secret-value"},
+            )
+        assert resp.status_code == 200, resp.text
+        body = resp.json()
+        assert body["signals_created"] == 1  # Google's signal still landed
+        assert body["errors"] == []  # a provider returning success=False isn't a tick-level error
+
+
+class TestHiringProviderUnit:
+    """HiringProvider in isolation — the Greenhouse HTTP call itself is
+    mocked (via httpx.Client.get, patched at the module the provider
+    imports it from) rather than hitting a real network endpoint."""
+
+    def test_board_not_found_is_a_clean_zero_not_an_error(self):
+        from unittest.mock import MagicMock
+
+        from app.services.external_api.providers.hiring import HiringProvider
+
+        provider = HiringProvider()
+        fake_response = MagicMock(status_code=404)
+        with patch("httpx.Client.get", return_value=fake_response):
+            result = provider.search_market_news(company_domain="totally-not-on-greenhouse.example.com")
+
+        assert result.success is True
+        assert result.items == []
+
+    def test_few_open_roles_is_not_a_surge(self):
+        from unittest.mock import MagicMock
+
+        from app.services.external_api.providers.hiring import HiringProvider
+
+        provider = HiringProvider()
+        fake_response = MagicMock(status_code=200)
+        fake_response.json.return_value = {"jobs": [{"title": "Office Manager"}]}  # 1 job, below threshold
+        with patch("httpx.Client.get", return_value=fake_response):
+            result = provider.search_market_news(company_domain="small-co.example.com", company_name="Small Co")
+
+        assert result.success is True
+        assert result.items == []
+
+    def test_many_open_roles_produces_one_surge_item(self):
+        from unittest.mock import MagicMock
+
+        from app.services.external_api.providers.hiring import HiringProvider
+
+        provider = HiringProvider()
+        fake_response = MagicMock(status_code=200)
+        fake_response.json.return_value = {
+            "jobs": [{"title": f"Role {i}", "departments": []} for i in range(7)]
+        }
+        with patch("httpx.Client.get", return_value=fake_response):
+            result = provider.search_market_news(company_domain="growing-co.example.com", company_name="Growing Co")
+
+        assert result.success is True
+        assert len(result.items) == 1
+        assert "7 open positions" in result.items[0]["title"]
+        assert result.mock is False  # a real (mocked-HTTP) attempt, not fabricated placeholder data

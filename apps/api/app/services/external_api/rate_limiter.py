@@ -22,6 +22,9 @@ DEFAULT_LIMITS: dict[ProviderName, RateLimitConfig] = {
     "g2": RateLimitConfig(requests_per_hour=60, min_interval_seconds=2.0),
     "google_search": RateLimitConfig(requests_per_hour=100, min_interval_seconds=1.0),
     "capterra": RateLimitConfig(requests_per_hour=60, min_interval_seconds=2.0),
+    # No official rate limit published for Greenhouse's public boards-api —
+    # conservative by convention, same shape as every other provider here.
+    "hiring": RateLimitConfig(requests_per_hour=100, min_interval_seconds=1.0),
 }
 
 
