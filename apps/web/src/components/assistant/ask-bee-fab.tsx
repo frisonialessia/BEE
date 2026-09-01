@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle, Send, Sparkles, X } from "lucide-react";
+import { Send, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -41,22 +41,11 @@ export function AskBeeFab() {
   return (
     <div className="fixed bottom-5 right-5 z-40">
       {open && (
-        <div className="mb-3 flex h-[420px] w-[min(340px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border bg-[var(--color-background)] shadow-[0_8px_32px_color-mix(in_srgb,var(--color-text)_16%,transparent)]">
-          <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
-            <div className="flex items-center gap-2">
-              <span className="flex size-6 items-center justify-center rounded-full bg-[var(--color-cta)] text-white">
-                <Sparkles className="size-3" />
-              </span>
-              <p className="text-sm font-semibold">{t("fab.title")}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="rounded-full p-1 text-muted-foreground hover:bg-[var(--color-primary)] hover:text-foreground"
-              aria-label={t("fab.headerCloseAria")}
-            >
-              <X className="size-4" />
-            </button>
+        <div className="bee-fab-panel mb-3 flex h-[420px] w-[min(340px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border bg-[var(--color-background)] shadow-[0_8px_32px_color-mix(in_srgb,var(--color-text)_16%,transparent)]">
+          <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3">
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, no una foto */}
+            <img src="/icon.svg" alt="" className="size-7 shrink-0" aria-hidden="true" />
+            <p className="text-sm font-semibold">{t("fab.title")}</p>
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
@@ -99,10 +88,15 @@ export function AskBeeFab() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex size-12 items-center justify-center rounded-full bg-[var(--color-cta)] text-white transition-transform hover:scale-105"
+        className="flex size-12 items-center justify-center rounded-full bg-[var(--color-cta)] text-white shadow-[0_4px_16px_color-mix(in_srgb,var(--color-cta)_45%,transparent)] transition-transform hover:scale-105"
         aria-label={open ? t("fab.toggleCloseAria") : t("fab.toggleOpenAria")}
       >
-        {open ? <X className="size-5" /> : <MessageCircle className="size-5" />}
+        {open ? (
+          <X className="size-5" />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca
+          <img src="/icon.svg" alt="" className="size-8" aria-hidden="true" />
+        )}
       </button>
     </div>
   );

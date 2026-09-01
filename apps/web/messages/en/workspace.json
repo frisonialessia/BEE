@@ -412,7 +412,6 @@
     },
     "fab": {
       "title": "BEE Assistant",
-      "headerCloseAria": "Close",
       "emptyHint": "Ask me about your pipeline, your hot leads, or the team ranking.",
       "quickPlaceholder": "Quick question…",
       "sendAria": "Send",
