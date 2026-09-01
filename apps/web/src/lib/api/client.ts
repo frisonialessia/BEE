@@ -76,6 +76,23 @@ export async function apiFetch<T>(
     process.env.NODE_ENV === "production" &&
     !process.env.NEXT_PUBLIC_API_URL
   ) {
+    // This throw happens before fetch() is ever called — nothing hits the
+    // Network tab, and (previously) nothing hit the Console either, which
+    // made a misconfigured *deployment* indistinguishable from a real API
+    // failure to whoever was looking. It has a known real-world cause: a
+    // second/stale Vercel project auto-deploying the same repo (a
+    // duplicate created before this project was renamed, still connected
+    // to GitHub) without NEXT_PUBLIC_API_URL configured on *it* — so
+    // logging window.location.origin here is what tells you that's what
+    // happened, instead of re-checking the right project's env vars over
+    // and over while the wrong project silently eats every request.
+    console.error(
+      `[BEE API] NEXT_PUBLIC_API_URL is not set on this deployment ` +
+        `(origin: ${window.location.origin}). If the correct Vercel project ` +
+        `has this configured, you are probably looking at a different, stale ` +
+        `deployment/domain — check Vercel for a duplicate project still ` +
+        `auto-deploying this same repo without the env var set.`,
+    );
     throw new Error(
       "NEXT_PUBLIC_API_URL is not set. Configure it in the production environment " +
         "(e.g. Vercel project settings) — it cannot silently default to localhost:8000 " +
