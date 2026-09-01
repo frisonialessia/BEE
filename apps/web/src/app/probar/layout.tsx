@@ -11,6 +11,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
+import { useScrollResetOnNavigate } from "@/hooks/use-scroll-reset-on-navigate";
 import { PROBAR_NAV_GROUPS } from "@/app/probar/nav-items";
 
 /**
@@ -28,6 +29,7 @@ import { PROBAR_NAV_GROUPS } from "@/app/probar/nav-items";
  */
 export default function ProbarLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations("common.probarBanner");
+  const scrollRef = useScrollResetOnNavigate<HTMLDivElement>();
 
   return (
     <OpportunityDrawerProvider>
@@ -61,7 +63,9 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
               <LanguageSwitcher variant="subtle" className="ml-auto hidden sm:inline-flex" />
             </header>
 
-            <div className="bee-scroll">{children}</div>
+            <div className="bee-scroll" ref={scrollRef}>
+              {children}
+            </div>
           </div>
           <OpportunityDrawer />
           <AskBeeFab />

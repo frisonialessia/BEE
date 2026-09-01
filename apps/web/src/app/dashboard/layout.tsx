@@ -14,6 +14,7 @@ import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
 import { OnboardingIntro } from "@/features/onboarding/onboarding-intro";
 import { OnboardingProvider } from "@/features/onboarding/onboarding-context";
+import { useScrollResetOnNavigate } from "@/hooks/use-scroll-reset-on-navigate";
 import { useAuth } from "@/providers/auth-provider";
 
 /** Shell CRM — rail 52px + workspace + drawer lateral. */
@@ -24,6 +25,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
+  const scrollRef = useScrollResetOnNavigate<HTMLDivElement>();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -50,7 +52,9 @@ export default function DashboardLayout({
               <DashboardRail />
               <div className="bee-main">
                 <DashboardHeader />
-                <div className="bee-scroll">{children}</div>
+                <div className="bee-scroll" ref={scrollRef}>
+                  {children}
+                </div>
               </div>
               <OpportunityDrawer />
               <OnboardingIntro />
