@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useCreateTask, useDeleteTask, useOpportunityTasks, useUpdateTask } from "@/hooks/queries/use-tasks";
 import { cn } from "@/lib/utils";
@@ -77,6 +78,19 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
   const open = tasks.filter((t) => !t.completed_at);
   const completed = tasks.filter((t) => t.completed_at);
 
+  function toggleTask(taskId: string, completed: boolean) {
+    updateTask.mutate(
+      { id: taskId, body: { completed } },
+      { onError: (err) => toast.error(err instanceof Error ? err.message : t("error")) },
+    );
+  }
+
+  function removeTask(taskId: string) {
+    deleteTask.mutate(taskId, {
+      onError: (err) => toast.error(err instanceof Error ? err.message : t("error")),
+    });
+  }
+
   function submit() {
     if (title.trim() === "") return;
     createTask.mutate(
@@ -90,6 +104,7 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
           setTitle("");
           setDueAt("");
         },
+        onError: (err) => toast.error(err instanceof Error ? err.message : t("error")),
       },
     );
   }
@@ -110,8 +125,8 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
               key={task.id}
               task={task}
               toggling={updateTask.isPending && updateTask.variables?.id === task.id}
-              onToggle={(completed) => updateTask.mutate({ id: task.id, body: { completed } })}
-              onDelete={() => deleteTask.mutate(task.id)}
+              onToggle={(completed) => toggleTask(task.id, completed)}
+              onDelete={() => removeTask(task.id)}
             />
           ))}
           {completed.length > 0 && (
@@ -125,8 +140,8 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
                     key={task.id}
                     task={task}
                     toggling={updateTask.isPending && updateTask.variables?.id === task.id}
-                    onToggle={(completed) => updateTask.mutate({ id: task.id, body: { completed } })}
-                    onDelete={() => deleteTask.mutate(task.id)}
+                    onToggle={(completed) => toggleTask(task.id, completed)}
+                    onDelete={() => removeTask(task.id)}
                   />
                 ))}
               </div>

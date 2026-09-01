@@ -17,6 +17,7 @@ class CompanyCreateIn(BaseModel):
     industry: str | None = Field(default=None, max_length=255)
     size: str | None = Field(default=None, max_length=64)
     country: str | None = Field(default=None, max_length=255)
+    revenue_range: str | None = Field(default=None, max_length=64)
     website: str | None = Field(default=None, max_length=500)
     description: str | None = Field(default=None, max_length=2000)
 
@@ -32,6 +33,7 @@ class CompanyOut(BaseModel):
     industry: str | None
     size: str | None
     country: str | None
+    revenue_range: str | None
     website: str | None
     description: str | None
     attributes: dict[str, Any]

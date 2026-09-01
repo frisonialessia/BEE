@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api/client";
+import { getDemoLocale } from "@/lib/demo/locale";
 import { isDemoMode } from "@/lib/demo/mode";
 import type { FetchResult } from "@/types/api";
 
@@ -6,7 +7,36 @@ export interface IcpCriteria {
   industries: string[];
   sizes: string[];
   countries: string[];
+  revenue_ranges: string[];
+  job_titles: string[];
+  seniorities: string[];
+  tech_keywords: string[];
 }
+
+/** Empty ICP — "not configured", never a fallback default with values in
+ * it. Every dimension left out means "no opinion", not "nothing matches" —
+ * see lib/icp.ts's isIcpConfigured/computeFitScore. */
+export const EMPTY_ICP_CRITERIA: IcpCriteria = {
+  industries: [],
+  sizes: [],
+  countries: [],
+  revenue_ranges: [],
+  job_titles: [],
+  seniorities: [],
+  tech_keywords: [],
+};
+
+/** Suggested revenue bands for the ICP form's helper text — unlike
+ * EMPLOYEE_RANGES this isn't backend-validated (Company.revenue_range is
+ * free text, same reasoning as Company.size), just a starting point. */
+export const REVENUE_RANGE_SUGGESTIONS = [
+  "<$1M",
+  "$1M-$10M",
+  "$10M-$50M",
+  "$50M-$100M",
+  "$100M-$500M",
+  "$500M+",
+] as const;
 
 /** Fixed brackets — must match app.models.base.EmployeeRange on the
  * backend exactly (the API rejects anything else with a 422). */
@@ -47,12 +77,52 @@ export async function updateOrganizationProfile(
   });
 }
 
+/** Read-only sandbox ICP — matches the seeded demo companies/leads/signals
+ * closely enough that the Priority Matrix actually shows a mix of all four
+ * quadrants instead of sitting on the "not configured" empty state, which a
+ * visitor with no real account can't fill in themselves. Every value here
+ * is chosen because it genuinely appears in the seed data (see
+ * lib/demo/seed-history.ts, lib/sample-data.ts) — not padding for its own
+ * sake. "stack" and the seniority tiers are identical in both locales
+ * (jargon/raw codes, never translated); industries/countries/job title
+ * keywords have real ES/EN pairs. */
+function getDemoIcpCriteria(): IcpCriteria {
+  const locale = getDemoLocale();
+  if (locale === "en") {
+    return {
+      industries: ["Fintech", "Logistics", "Cloud infrastructure"],
+      sizes: ["11-50", "51-200"],
+      countries: ["Mexico", "Colombia"],
+      revenue_ranges: ["$10M-$50M", "$50M-$100M"],
+      job_titles: ["VP", "Head of", "Director"],
+      seniorities: ["c_level", "vp"],
+      tech_keywords: ["stack"],
+    };
+  }
+  return {
+    industries: ["Fintech", "Logística", "Infraestructura cloud"],
+    sizes: ["11-50", "51-200"],
+    countries: ["México", "Colombia"],
+    revenue_ranges: ["$10M-$50M", "$50M-$100M"],
+    job_titles: ["VP", "Director", "Gerente"],
+    seniorities: ["c_level", "vp"],
+    tech_keywords: ["stack"],
+  };
+}
+
 export async function fetchIcpCriteria(): Promise<FetchResult<IcpCriteria>> {
+  if (isDemoMode()) {
+    // Pre-seeded and read-only in the sandbox (see updateIcpCriteria below)
+    // — a visitor can't fill in their own ICP without a real account, so the
+    // Priority Matrix demonstrates the feature with a realistic one instead
+    // of sitting on the "not configured" empty state forever.
+    return { data: getDemoIcpCriteria(), live: false };
+  }
   try {
     const data = await apiFetch<IcpCriteria>("/api/v1/organizations/icp", { cache: "no-store" });
     return { data, live: true };
   } catch {
-    return { data: { industries: [], sizes: [], countries: [] }, live: false };
+    return { data: { ...EMPTY_ICP_CRITERIA }, live: false };
   }
 }
 

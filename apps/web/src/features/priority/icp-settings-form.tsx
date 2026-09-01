@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { useUpdateIcpCriteria } from "@/hooks/queries/use-icp";
 import type { IcpCriteria } from "@/lib/api/organizations";
@@ -17,16 +18,24 @@ function fromCsv(value: string): string[] {
     .filter(Boolean);
 }
 
-/** Formulario del Perfil de Cliente Ideal — tres listas separadas por coma.
+/** Formulario del Perfil de Cliente Ideal — listas separadas por coma.
  *  Una dimensión vacía significa "no me importa", no "nada califica" (ver
- *  lib/icp.ts computeFitScore). */
+ *  lib/icp.ts computeFitScore). Cubre tanto firmográficos de la cuenta
+ *  (industria/tamaño/país/ingresos) como el buyer persona real dentro de
+ *  esa cuenta (cargo/seniority) y señales de stack tecnológico. */
 export function IcpSettingsForm({
   initial,
   suggestions,
   onDone,
 }: {
   initial: IcpCriteria;
-  suggestions: { industries: string[]; sizes: string[]; countries: string[] };
+  suggestions: {
+    industries: string[];
+    sizes: string[];
+    countries: string[];
+    revenueRanges: string[];
+    seniorities: string[];
+  };
   onDone: () => void;
 }) {
   const t = useTranslations("opportunitiesPriority.icpForm");
@@ -34,15 +43,27 @@ export function IcpSettingsForm({
   const [industries, setIndustries] = useState(toCsv(initial.industries));
   const [sizes, setSizes] = useState(toCsv(initial.sizes));
   const [countries, setCountries] = useState(toCsv(initial.countries));
+  const [revenueRanges, setRevenueRanges] = useState(toCsv(initial.revenue_ranges));
+  const [jobTitles, setJobTitles] = useState(toCsv(initial.job_titles));
+  const [seniorities, setSeniorities] = useState(toCsv(initial.seniorities));
+  const [techKeywords, setTechKeywords] = useState(toCsv(initial.tech_keywords));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await updateIcp.mutateAsync({
-      industries: fromCsv(industries),
-      sizes: fromCsv(sizes),
-      countries: fromCsv(countries),
-    });
-    onDone();
+    try {
+      await updateIcp.mutateAsync({
+        industries: fromCsv(industries),
+        sizes: fromCsv(sizes),
+        countries: fromCsv(countries),
+        revenue_ranges: fromCsv(revenueRanges),
+        job_titles: fromCsv(jobTitles),
+        seniorities: fromCsv(seniorities),
+        tech_keywords: fromCsv(techKeywords),
+      });
+      onDone();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("saveError"));
+    }
   }
 
   return (
@@ -95,6 +116,65 @@ export function IcpSettingsForm({
               {t("alreadyUsing", { values: suggestions.countries.join(", ") })}
             </p>
           )}
+        </div>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">
+            {t("revenueRanges.label")}
+          </label>
+          <input
+            value={revenueRanges}
+            onChange={(e) => setRevenueRanges(e.target.value)}
+            placeholder={t("revenueRanges.placeholder")}
+            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+          />
+          {suggestions.revenueRanges.length > 0 && (
+            <p className="mt-1 bee-micro">
+              {t("alreadyUsing", { values: suggestions.revenueRanges.join(", ") })}
+            </p>
+          )}
+        </div>
+
+        {/* Buyer persona: no longer just "which accounts", also "who at
+         * that account" — cargo/seniority se validan contra los Leads
+         * reales de la cuenta, no contra la Company (ver computeFitScore). */}
+        <div className="border-t border-dashed border-border pt-2.5">
+          <p className="bee-micro font-medium uppercase tracking-wide text-muted-foreground">
+            {t("buyerPersonaLabel")}
+          </p>
+        </div>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">{t("jobTitles.label")}</label>
+          <input
+            value={jobTitles}
+            onChange={(e) => setJobTitles(e.target.value)}
+            placeholder={t("jobTitles.placeholder")}
+            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+          />
+        </div>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">{t("seniorities.label")}</label>
+          <input
+            value={seniorities}
+            onChange={(e) => setSeniorities(e.target.value)}
+            placeholder={t("seniorities.placeholder")}
+            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+          />
+          {suggestions.seniorities.length > 0 && (
+            <p className="mt-1 bee-micro">
+              {t("alreadyUsing", { values: suggestions.seniorities.join(", ") })}
+            </p>
+          )}
+        </div>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground">
+            {t("techKeywords.label")}
+          </label>
+          <input
+            value={techKeywords}
+            onChange={(e) => setTechKeywords(e.target.value)}
+            placeholder={t("techKeywords.placeholder")}
+            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+          />
         </div>
       </div>
 

@@ -1,4 +1,6 @@
 import { apiFetch } from "@/lib/api/client";
+import { demoSuccessPatterns } from "@/lib/demo/store";
+import { isDemoMode } from "@/lib/demo/mode";
 import type { FetchResult } from "@/types/api";
 
 export interface SuccessPattern {
@@ -19,6 +21,13 @@ export interface SuccessPattern {
 export async function fetchSuccessPatterns(
   signalType?: string,
 ): Promise<FetchResult<SuccessPattern[]>> {
+  if (isDemoMode()) {
+    // Same aggregation the real FeedbackLoopService runs (grouped win rate
+    // over closed deals, min-sample floor, confidence bands) — see
+    // demoSuccessPatterns' docstring — computed over the seed history
+    // instead of a real StrategyOutcome table.
+    return { data: demoSuccessPatterns(signalType), live: false };
+  }
   try {
     const qs = signalType ? `?signal_type=${encodeURIComponent(signalType)}` : "";
     const data = await apiFetch<SuccessPattern[]>(`/api/v1/feedback/patterns${qs}`, {

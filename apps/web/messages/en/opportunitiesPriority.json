@@ -94,12 +94,39 @@
   "icpForm": {
     "title": "Ideal Customer Profile (ICP)",
     "subtitle": "Separate each value with commas. Leave a list empty if that dimension doesn't matter to you — it won't penalize anyone.",
-    "industries": { "label": "Industries", "placeholder": "SaaS, Fintech, Logistics…" },
-    "sizes": { "label": "Company sizes", "placeholder": "11-50, 51-200…" },
-    "countries": { "label": "Countries", "placeholder": "Mexico, Colombia…" },
+    "industries": {
+      "label": "Industries",
+      "placeholder": "SaaS, Fintech, Logistics…"
+    },
+    "sizes": {
+      "label": "Company sizes",
+      "placeholder": "11-50, 51-200…"
+    },
+    "countries": {
+      "label": "Countries",
+      "placeholder": "Mexico, Colombia…"
+    },
+    "revenueRanges": {
+      "label": "Annual revenue range",
+      "placeholder": "$1M-$10M, $10M-$50M…"
+    },
+    "buyerPersonaLabel": "Buyer persona (who to target inside the account)",
+    "jobTitles": {
+      "label": "Target job titles",
+      "placeholder": "VP Sales, Head of Revenue, Director…"
+    },
+    "seniorities": {
+      "label": "Target seniority",
+      "placeholder": "c_level, vp, director, manager, ic"
+    },
+    "techKeywords": {
+      "label": "Tech stack",
+      "placeholder": "Salesforce, Snowflake, HubSpot…"
+    },
     "alreadyUsing": "Already in use: {values}",
     "save": "Save",
     "saving": "Saving…",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "saveError": "Couldn't save the ICP."
   }
 }

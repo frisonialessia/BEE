@@ -46,6 +46,10 @@ class Company(TimestampMixin, table=True):
     # Free-form headcount band (e.g. "11-50") to stay provider-agnostic.
     size: str | None = Field(default=None)
     country: str | None = Field(default=None, index=True)
+    # Free-form annual-revenue band (e.g. "$1M-$10M") — same provider-agnostic
+    # reasoning as size: enrichment sources report revenue in too many
+    # inconsistent shapes to force into a closed set.
+    revenue_range: str | None = Field(default=None)
     website: str | None = Field(default=None)
     description: str | None = Field(default=None)
 

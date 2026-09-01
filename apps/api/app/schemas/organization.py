@@ -10,17 +10,34 @@ from app.models.base import EmployeeRange
 
 class ICPCriteriaIn(BaseModel):
     """Replaces the org's ICP criteria wholesale — simpler than a partial
-    patch for three short lists a rep edits together in one form."""
+    patch for a handful of short lists a rep edits together in one form.
+
+    Firmographic dimensions (industries/sizes/countries/revenue_ranges)
+    match against Company fields directly. Buyer-persona dimensions
+    (job_titles/seniorities) match against that company's Leads — BEE
+    doesn't just track the account, it tracks who to actually reach there.
+    tech_keywords matches against that company's tech_adoption signals — see
+    lib/icp.ts's computeFitScore on the frontend for exactly how each
+    dimension is scored; every one of these is an *optional* dimension, same
+    "empty = no opinion, not no match" rule as the original three."""
 
     industries: list[str] = Field(default_factory=list, max_length=50)
     sizes: list[str] = Field(default_factory=list, max_length=50)
     countries: list[str] = Field(default_factory=list, max_length=50)
+    revenue_ranges: list[str] = Field(default_factory=list, max_length=50)
+    job_titles: list[str] = Field(default_factory=list, max_length=50)
+    seniorities: list[str] = Field(default_factory=list, max_length=50)
+    tech_keywords: list[str] = Field(default_factory=list, max_length=50)
 
 
 class ICPCriteriaOut(BaseModel):
     industries: list[str]
     sizes: list[str]
     countries: list[str]
+    revenue_ranges: list[str]
+    job_titles: list[str]
+    seniorities: list[str]
+    tech_keywords: list[str]
 
 
 class OrganizationProfileIn(BaseModel):
