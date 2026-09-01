@@ -868,7 +868,11 @@
 
 .bee-crm-control__body {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 4fr) minmax(0, 3fr);
+  /* Acción (conteos por etapa) is the sparsest of the three columns — it
+   * doesn't need the lion's share of the row. Flujo de señales/APIs
+   * externas/Anomalías carry more actual content and were the ones
+   * running out of room, so they get the width Acción gives up. */
+  grid-template-columns: minmax(0, 3fr) minmax(0, 5fr) minmax(0, 4fr);
   gap: 0.75rem;
   min-height: 0;
   flex: 1;
