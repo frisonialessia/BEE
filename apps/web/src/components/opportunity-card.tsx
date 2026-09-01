@@ -1,12 +1,18 @@
+"use client";
+
 import { ArrowUpRight, Target } from "lucide-react";
+import { useLocale } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
-import { opportunityStatusLabels, scoreVariant } from "@/lib/format";
+import type { Locale } from "@/i18n/locales";
+import { getOpportunityStatusLabels, scoreVariant } from "@/lib/format";
 import type { Opportunity } from "@/lib/types";
 
 /** Oportunidad accionable: lead + señal + estrategia recomendada. */
 export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
+  const locale = useLocale() as Locale;
   const { strategy } = opportunity;
+  const opportunityStatusLabels = getOpportunityStatusLabels(locale);
 
   return (
     <article className="bee-bento bee-bento-pad transition-colors hover:border-[var(--color-chart-4)]">

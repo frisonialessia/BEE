@@ -6,7 +6,7 @@ import { CheckCircle2, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { useRecordOutcome } from "@/hooks/mutations/use-record-outcome";
-import { lossReasonLabels } from "@/lib/format";
+import { getLossReasonLabels, lossReasonLabels } from "@/lib/format";
 import { formatDate } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
 import { CLOSED_OPPORTUNITY_STATUSES, type LossReason, type Opportunity } from "@/types/domain";
@@ -26,6 +26,7 @@ const LOSS_REASONS = Object.keys(lossReasonLabels) as LossReason[];
 export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }) {
   const locale = useLocale() as Locale;
   const t = useTranslations("sharedB.outcome");
+  const lossReasonLabelsForLocale = getLossReasonLabels(locale);
   const recordOutcome = useRecordOutcome(opportunity.id);
   const [mode, setMode] = useState<"won" | "lost" | null>(null);
   const [lossReason, setLossReason] = useState<LossReason | "">("");
@@ -56,7 +57,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
             {opportunity.loss_reason && (
               <>
                 {t("reasonPrefix")}{" "}
-                {lossReasonLabels[opportunity.loss_reason as LossReason] ?? opportunity.loss_reason}
+                {lossReasonLabelsForLocale[opportunity.loss_reason as LossReason] ?? opportunity.loss_reason}
               </>
             )}
             {opportunity.loss_reason && opportunity.competitor && " · "}
@@ -137,7 +138,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
                 <option value="">{t("reasonPlaceholder")}</option>
                 {LOSS_REASONS.map((r) => (
                   <option key={r} value={r}>
-                    {lossReasonLabels[r]}
+                    {lossReasonLabelsForLocale[r]}
                   </option>
                 ))}
               </select>

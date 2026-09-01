@@ -1,14 +1,14 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { useCreateOpportunity } from "@/hooks/queries/use-opportunities";
-import { signalTypeLabels } from "@/lib/format";
+import type { Locale } from "@/i18n/locales";
+import { getSignalTypeLabels } from "@/lib/format";
 import type { SignalType } from "@/types/domain";
 
-const SIGNAL_TYPE_OPTIONS = Object.entries(signalTypeLabels) as [SignalType, string][];
 
 const INPUT_CLASS =
   "rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]";
@@ -30,7 +30,9 @@ export function NewOpportunityForm({
   company?: { name: string; domain: string | null };
   onDone: () => void;
 }) {
+  const locale = useLocale() as Locale;
   const t = useTranslations("crm.form");
+  const signalTypeOptions = Object.entries(getSignalTypeLabels(locale)) as [SignalType, string][];
   const createOpportunity = useCreateOpportunity();
   const [companyName, setCompanyName] = useState(company?.name ?? "");
   const [companyDomain, setCompanyDomain] = useState(company?.domain ?? "");
@@ -141,7 +143,7 @@ export function NewOpportunityForm({
           aria-label={t("signalType")}
           className={INPUT_CLASS}
         >
-          {SIGNAL_TYPE_OPTIONS.map(([value, label]) => (
+          {signalTypeOptions.map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>

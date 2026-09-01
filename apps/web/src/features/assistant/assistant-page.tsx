@@ -1,31 +1,33 @@
 "use client";
 
 import { Send, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 import { ChatMessage } from "@/components/assistant/chat-message";
 import { useAssistantChat } from "@/features/assistant/use-assistant-chat";
 import { useAuth } from "@/providers/auth-provider";
 
-const EXAMPLES = [
-  "¿Cómo va mi pipeline?",
-  "¿Cuáles son mis leads calientes?",
-  "¿Cuántas señales tengo esta semana?",
-  "¿Quién va ganando en el equipo?",
-];
-
-function greeting(hour: number): string {
-  if (hour < 12) return "Buenos días";
-  if (hour < 19) return "Buenas tardes";
-  return "Buenas noches";
+function greeting(t: ReturnType<typeof useTranslations>, hour: number): string {
+  if (hour < 12) return t("greeting.morning");
+  if (hour < 19) return t("greeting.afternoon");
+  return t("greeting.evening");
 }
 
 /** Asistente BEE — página completa, historial de conversación en el hilo actual. */
 export function AssistantPage() {
+  const t = useTranslations("workspace.assistant.page");
+  const tAssistant = useTranslations("workspace.assistant");
   const { user } = useAuth();
   const { messages, send, pending } = useAssistantChat();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const examples = [
+    t("examples.pipeline"),
+    t("examples.hotLeads"),
+    t("examples.signalsThisWeek"),
+    t("examples.teamRanking"),
+  ];
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -49,10 +51,10 @@ export function AssistantPage() {
           </span>
           <div>
             <p className="text-2xl font-semibold tracking-tight">
-              {greeting(new Date().getHours())}
+              {greeting(t, new Date().getHours())}
               {user ? `, ${user.full_name.split(" ")[0]}` : ""}
             </p>
-            <p className="mt-1 text-lg text-muted-foreground">¿Qué tienes en mente?</p>
+            <p className="mt-1 text-lg text-muted-foreground">{t("whatsOnMind")}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="w-full max-w-xl">
@@ -60,14 +62,14 @@ export function AssistantPage() {
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Pregúntale algo al Asistente BEE…"
+                placeholder={t("inputPlaceholder")}
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
               <button
                 type="submit"
                 disabled={!input.trim()}
                 className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-cta)] text-white transition-opacity disabled:opacity-40"
-                aria-label="Enviar"
+                aria-label={t("sendAria")}
               >
                 <Send className="size-3.5" />
               </button>
@@ -75,7 +77,7 @@ export function AssistantPage() {
           </form>
 
           <div className="grid w-full max-w-xl grid-cols-1 gap-2 sm:grid-cols-2">
-            {EXAMPLES.map((ex) => (
+            {examples.map((ex) => (
               <button
                 key={ex}
                 type="button"
@@ -98,7 +100,7 @@ export function AssistantPage() {
                 <span className="flex size-7 items-center justify-center rounded-full bg-[var(--color-cta)] text-white">
                   <Sparkles className="size-3.5" />
                 </span>
-                Pensando…
+                {tAssistant("thinking")}
               </div>
             )}
             <div ref={bottomRef} />
@@ -109,14 +111,14 @@ export function AssistantPage() {
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Pregúntale algo al Asistente BEE…"
+                placeholder={t("inputPlaceholder")}
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || pending}
                 className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-cta)] text-white transition-opacity disabled:opacity-40"
-                aria-label="Enviar"
+                aria-label={t("sendAria")}
               >
                 <Send className="size-3.5" />
               </button>

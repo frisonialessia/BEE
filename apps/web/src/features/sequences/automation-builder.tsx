@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, Plus, Zap } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { FlowCanvas } from "@/components/sequences/flow-canvas";
@@ -14,7 +14,8 @@ import {
   useSequence,
   useSequences,
 } from "@/hooks/queries/use-sequences";
-import { signalTypeLabels } from "@/lib/format";
+import type { Locale } from "@/i18n/locales";
+import { getSignalTypeLabels } from "@/lib/format";
 import { TIER_LABELS, type SeniorityTier } from "@/lib/relationship-map";
 import type { SignalType } from "@/lib/types";
 import type { StepDefinition } from "@/lib/api/sequences";
@@ -67,7 +68,9 @@ function ChannelStatusBadges() {
 }
 
 function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
+  const locale = useLocale() as Locale;
   const t = useTranslations("workspace.sequences.automation");
+  const signalTypeLabels = getSignalTypeLabels(locale);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [signalType, setSignalType] = useState<SignalType | "">("");
@@ -210,7 +213,9 @@ function SequenceViewer({ sequenceId, onBack }: { sequenceId: string; onBack: ()
 }
 
 function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onNew: () => void }) {
+  const locale = useLocale() as Locale;
   const t = useTranslations("workspace.sequences.automation.list");
+  const signalTypeLabels = getSignalTypeLabels(locale);
   const { data: seqResult, isLoading } = useSequences();
   const sequences = seqResult?.data ?? [];
 

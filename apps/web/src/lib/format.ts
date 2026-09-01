@@ -1,7 +1,9 @@
+import type { Locale } from "@/i18n/locales";
+import { defaultLocale } from "@/i18n/locales";
 import type { OpportunityStatus, SignalType, TimingUrgency } from "@/lib/types";
 import type { LeadStatus, LossReason } from "@/types/domain";
 
-export const signalTypeLabels: Record<SignalType, string> = {
+const SIGNAL_TYPE_LABELS_ES: Record<SignalType, string> = {
   funding_round: "Ronda de financiación",
   hiring: "Contratación",
   tech_adoption: "Adopción de tecnología",
@@ -13,6 +15,29 @@ export const signalTypeLabels: Record<SignalType, string> = {
   other: "Otra",
 };
 
+const SIGNAL_TYPE_LABELS_EN: Record<SignalType, string> = {
+  funding_round: "Funding round",
+  hiring: "Hiring",
+  tech_adoption: "Tech adoption",
+  leadership_change: "Leadership change",
+  product_launch: "Product launch",
+  engagement: "Engagement",
+  news_mention: "Press mention",
+  expansion: "Expansion",
+  other: "Other",
+};
+
+/** Locale-aware version of `signalTypeLabels` — call with the visitor's
+ *  locale (from `useLocale()`) instead of importing a static dict. */
+export function getSignalTypeLabels(locale: Locale = defaultLocale): Record<SignalType, string> {
+  return locale === "en" ? SIGNAL_TYPE_LABELS_EN : SIGNAL_TYPE_LABELS_ES;
+}
+
+/** @deprecated Use `getSignalTypeLabels(locale)` instead — this static
+ *  export always renders Spanish. Kept only for any caller not yet
+ *  migrated. */
+export const signalTypeLabels = SIGNAL_TYPE_LABELS_ES;
+
 /** signal.analysis.tags — the keyword an analyzer matched in the raw signal
  * text (funding/hiring/tech_adoption analyzers), shown as small chips on
  * each SignalCard. The keywords themselves stay in English in the backend
@@ -21,7 +46,7 @@ export const signalTypeLabels: Record<SignalType, string> = {
  * would break detection. This is the display-only translation for the
  * chip; an unrecognized tag (e.g. a free-form `event_type` from a
  * behavioral/engagement signal) falls back to showing the raw value. */
-export const signalTagLabels: Record<string, string> = {
+const SIGNAL_TAG_LABELS_ES: Record<string, string> = {
   funding: "financiamiento",
   raised: "levantó capital",
   "series a": "serie A",
@@ -49,7 +74,43 @@ export const signalTagLabels: Record<string, string> = {
   unclassified: "sin clasificar",
 };
 
-export const opportunityStatusLabels: Record<OpportunityStatus, string> = {
+const SIGNAL_TAG_LABELS_EN: Record<string, string> = {
+  funding: "funding",
+  raised: "raised",
+  "series a": "series A",
+  "series b": "series B",
+  "series c": "series C",
+  "seed round": "seed round",
+  venture: "venture capital",
+  investment: "investment",
+  hiring: "hiring",
+  "job opening": "job opening",
+  "new role": "new role",
+  "we're hiring": "we're hiring",
+  headcount: "headcount",
+  "vp of": "VP of",
+  "head of": "head of",
+  chief: "chief",
+  adopted: "adopted",
+  "migrated to": "migrated to",
+  "now using": "now using",
+  "integration with": "integration with",
+  stack: "stack",
+  tech: "tech",
+  behavioral: "behavioral",
+  intent: "intent",
+  unclassified: "unclassified",
+};
+
+/** Locale-aware version of `signalTagLabels`. */
+export function getSignalTagLabels(locale: Locale = defaultLocale): Record<string, string> {
+  return locale === "en" ? SIGNAL_TAG_LABELS_EN : SIGNAL_TAG_LABELS_ES;
+}
+
+/** @deprecated Use `getSignalTagLabels(locale)` instead. */
+export const signalTagLabels = SIGNAL_TAG_LABELS_ES;
+
+const OPPORTUNITY_STATUS_LABELS_ES: Record<OpportunityStatus, string> = {
   detected: "Detectada",
   ready_to_action: "Lista para acción",
   prioritized: "Priorizada",
@@ -59,12 +120,47 @@ export const opportunityStatusLabels: Record<OpportunityStatus, string> = {
   dismissed: "Descartada",
 };
 
-export const urgencyLabels: Record<TimingUrgency, string> = {
+const OPPORTUNITY_STATUS_LABELS_EN: Record<OpportunityStatus, string> = {
+  detected: "Detected",
+  ready_to_action: "Ready to action",
+  prioritized: "Prioritized",
+  in_progress: "In progress",
+  won: "Won",
+  lost: "Lost",
+  dismissed: "Dismissed",
+};
+
+/** Locale-aware version of `opportunityStatusLabels`. */
+export function getOpportunityStatusLabels(
+  locale: Locale = defaultLocale,
+): Record<OpportunityStatus, string> {
+  return locale === "en" ? OPPORTUNITY_STATUS_LABELS_EN : OPPORTUNITY_STATUS_LABELS_ES;
+}
+
+/** @deprecated Use `getOpportunityStatusLabels(locale)` instead. */
+export const opportunityStatusLabels = OPPORTUNITY_STATUS_LABELS_ES;
+
+const URGENCY_LABELS_ES: Record<TimingUrgency, string> = {
   immediate: "Contactar de inmediato",
   this_week: "Contactar esta semana",
   this_month: "Contactar este mes",
   watch: "Monitorear",
 };
+
+const URGENCY_LABELS_EN: Record<TimingUrgency, string> = {
+  immediate: "Contact immediately",
+  this_week: "Contact this week",
+  this_month: "Contact this month",
+  watch: "Monitor",
+};
+
+/** Locale-aware version of `urgencyLabels`. */
+export function getUrgencyLabels(locale: Locale = defaultLocale): Record<TimingUrgency, string> {
+  return locale === "en" ? URGENCY_LABELS_EN : URGENCY_LABELS_ES;
+}
+
+/** @deprecated Use `getUrgencyLabels(locale)` instead. */
+export const urgencyLabels = URGENCY_LABELS_ES;
 
 export const urgencyColors: Record<TimingUrgency, string> = {
   immediate: "text-[var(--success)]",
@@ -73,7 +169,7 @@ export const urgencyColors: Record<TimingUrgency, string> = {
   watch: "text-muted-foreground",
 };
 
-export const leadStatusLabels: Record<LeadStatus, string> = {
+const LEAD_STATUS_LABELS_ES: Record<LeadStatus, string> = {
   new: "Nuevo",
   qualified: "Calificado",
   engaged: "En conversación",
@@ -81,9 +177,24 @@ export const leadStatusLabels: Record<LeadStatus, string> = {
   disqualified: "Descartado",
 };
 
-/** Etiquetas en español para el picklist fijo de razones de pérdida
- *  (app.schemas.feedback.LossReason en el backend). */
-export const lossReasonLabels: Record<LossReason, string> = {
+const LEAD_STATUS_LABELS_EN: Record<LeadStatus, string> = {
+  new: "New",
+  qualified: "Qualified",
+  engaged: "In conversation",
+  converted: "Converted",
+  disqualified: "Disqualified",
+};
+
+/** Locale-aware version of `leadStatusLabels`. */
+export function getLeadStatusLabels(locale: Locale = defaultLocale): Record<LeadStatus, string> {
+  return locale === "en" ? LEAD_STATUS_LABELS_EN : LEAD_STATUS_LABELS_ES;
+}
+
+/** @deprecated Use `getLeadStatusLabels(locale)` instead. */
+export const leadStatusLabels = LEAD_STATUS_LABELS_ES;
+
+/** Picklist fijo de razones de pérdida (app.schemas.feedback.LossReason en el backend). */
+const LOSS_REASON_LABELS_ES: Record<LossReason, string> = {
   price: "Precio",
   budget: "Sin presupuesto",
   timing: "Momento no oportuno",
@@ -95,8 +206,28 @@ export const lossReasonLabels: Record<LossReason, string> = {
   other: "Otra razón",
 };
 
-/** Etiquetas en español para las banderas que arma DataValidator en el backend. */
-export const validationFlagLabels: Record<string, string> = {
+const LOSS_REASON_LABELS_EN: Record<LossReason, string> = {
+  price: "Price",
+  budget: "No budget",
+  timing: "Bad timing",
+  competitor: "Chose a competitor",
+  no_decision: "No decision (status quo)",
+  lost_champion: "Lost internal champion",
+  product_fit: "Product didn't fit",
+  no_response: "Stopped responding",
+  other: "Other reason",
+};
+
+/** Locale-aware version of `lossReasonLabels`. */
+export function getLossReasonLabels(locale: Locale = defaultLocale): Record<LossReason, string> {
+  return locale === "en" ? LOSS_REASON_LABELS_EN : LOSS_REASON_LABELS_ES;
+}
+
+/** @deprecated Use `getLossReasonLabels(locale)` instead. */
+export const lossReasonLabels = LOSS_REASON_LABELS_ES;
+
+/** Banderas que arma DataValidator en el backend. */
+const VALIDATION_FLAG_LABELS_ES: Record<string, string> = {
   email_missing: "Sin email",
   email_invalid: "Email inválido",
   linkedin_invalid: "LinkedIn inválido",
@@ -105,6 +236,24 @@ export const validationFlagLabels: Record<string, string> = {
   seniority_mismatch: "Cargo y seniority no coinciden",
   name_too_short: "Nombre incompleto",
 };
+
+const VALIDATION_FLAG_LABELS_EN: Record<string, string> = {
+  email_missing: "No email",
+  email_invalid: "Invalid email",
+  linkedin_invalid: "Invalid LinkedIn",
+  title_missing: "No title",
+  stale_data: "Stale data",
+  seniority_mismatch: "Title/seniority mismatch",
+  name_too_short: "Incomplete name",
+};
+
+/** Locale-aware version of `validationFlagLabels`. */
+export function getValidationFlagLabels(locale: Locale = defaultLocale): Record<string, string> {
+  return locale === "en" ? VALIDATION_FLAG_LABELS_EN : VALIDATION_FLAG_LABELS_ES;
+}
+
+/** @deprecated Use `getValidationFlagLabels(locale)` instead. */
+export const validationFlagLabels = VALIDATION_FLAG_LABELS_ES;
 
 export function scoreVariant(score: number): "success" | "warning" | "secondary" {
   if (score >= 75) return "success";
@@ -123,22 +272,4 @@ export function scoreColorVar(score: number): string {
   if (score >= 75) return "var(--success)";
   if (score >= 50) return "var(--warning)";
   return "var(--color-text-muted)";
-}
-
-/** @deprecated Use `formatRelativeTime` from `lib/i18n/format.ts` instead
- *  — that one takes the visitor's actual locale (from `useLocale()`)
- *  instead of always rendering Spanish. Kept here, unchanged, only so
- *  callers not yet migrated (see that file's docstring for the full list)
- *  keep compiling and rendering exactly what they did before i18n
- *  existed — never silently flips to a different format underneath a
- *  caller nobody's touched yet. */
-export function timeAgo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.round(diffMs / 60000);
-  if (mins < 1) return "ahora mismo";
-  if (mins < 60) return `hace ${mins}m`;
-  const hours = Math.round(mins / 60);
-  if (hours < 24) return `hace ${hours}h`;
-  const days = Math.round(hours / 24);
-  return `hace ${days}d`;
 }

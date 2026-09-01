@@ -1,12 +1,13 @@
 "use client";
 
 import { ArrowRight, CheckCircle2, Rocket, Zap } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useSequences, useStartSequenceExecution } from "@/hooks/queries/use-sequences";
-import { signalTypeLabels } from "@/lib/format";
+import type { Locale } from "@/i18n/locales";
+import { getSignalTypeLabels } from "@/lib/format";
 import type { SignalType } from "@/lib/types";
 import type { Battlecard } from "@/types/domain";
 
@@ -22,6 +23,7 @@ function findMatchingSequence(
 }
 
 function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
+  const locale = useLocale() as Locale;
   const t = useTranslations("dashboardOverview.criticalAccounts");
   const { data: seqResult } = useSequences();
   const startExecution = useStartSequenceExecution();
@@ -30,7 +32,9 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
 
   const sequences = seqResult?.data ?? [];
   const matchingSequence = findMatchingSequence(battlecard, sequences);
-  const signalLabel = signalTypeLabels[battlecard.signal.signal_type as SignalType] ?? battlecard.signal.signal_type;
+  const signalLabel =
+    getSignalTypeLabels(locale)[battlecard.signal.signal_type as SignalType] ??
+    battlecard.signal.signal_type;
 
   async function handleTrigger() {
     if (!matchingSequence) return;

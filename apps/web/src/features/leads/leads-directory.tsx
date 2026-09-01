@@ -4,7 +4,7 @@ import { Flame, RefreshCw, Search, Upload, Workflow } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { LeadDuplicatesPanel } from "@/components/dedup/lead-duplicates-panel";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
@@ -17,8 +17,10 @@ import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBulkUpdateLeads, useLeads, useValidateLead } from "@/hooks/queries/use-leads";
 import { useBulkEnrollLeadsInSequence, useSequences } from "@/hooks/queries/use-sequences";
 import { useUsers } from "@/hooks/queries/use-users";
+import type { Locale } from "@/i18n/locales";
 import { useIsDemoMode } from "@/lib/demo/mode";
-import { leadStatusLabels, scoreVariant, timeAgo, validationFlagLabels } from "@/lib/format";
+import { formatRelativeTime } from "@/lib/i18n/format";
+import { getLeadStatusLabels, getValidationFlagLabels, scoreVariant } from "@/lib/format";
 import type { Lead, LeadStatus } from "@/types/domain";
 
 type SortKey = "score_desc" | "score_asc" | "recent" | "name";
@@ -47,7 +49,10 @@ const STATUS_OPTIONS: LeadStatus[] = ["new", "qualified", "engaged", "converted"
  *  Todo se calcula en el cliente a partir de lo que ya está cargado, mismo
  *  patrón que el resto de la BI de BEE — sin endpoint de búsqueda aparte. */
 export function LeadsDirectory() {
+  const locale = useLocale() as Locale;
   const t = useTranslations("companiesLeads.leadsDirectory");
+  const leadStatusLabels = getLeadStatusLabels(locale);
+  const validationFlagLabels = getValidationFlagLabels(locale);
   const { data: leadsResult, isLoading: leadsLoading } = useLeads(300);
   const { data: companiesResult, isLoading: companiesLoading } = useCompanies(300);
   const { data: users } = useUsers();
@@ -453,7 +458,7 @@ export function LeadsDirectory() {
                           ) : (
                             <span className="bee-micro">
                               {lead.last_validated_at
-                                ? t("table.validatedAgo", { timeAgo: timeAgo(lead.last_validated_at) })
+                                ? t("table.validatedAgo", { timeAgo: formatRelativeTime(lead.last_validated_at, locale) })
                                 : t("table.notValidated")}
                             </span>
                           )}

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Locale } from "@/i18n/locales";
 import { formatRelativeTime } from "@/lib/i18n/format";
 import { BENTO_TONES } from "@/lib/brand/colors";
-import { scoreVariant, signalTagLabels, signalTypeLabels } from "@/lib/format";
+import { getSignalTagLabels, getSignalTypeLabels, scoreVariant } from "@/lib/format";
 import type { Signal } from "@/lib/types";
 
 /** A single detected market signal in the Bento grid. */
@@ -19,6 +19,8 @@ export function SignalCard({
   toneIndex?: number;
 }) {
   const locale = useLocale() as Locale;
+  const signalTypeLabels = getSignalTypeLabels(locale);
+  const signalTagLabels = getSignalTagLabels(locale);
   const tags = signal.analysis?.tags ?? [];
   const primary = signal.analysis?.primary_analyzer;
   const bg = BENTO_TONES[toneIndex % BENTO_TONES.length];

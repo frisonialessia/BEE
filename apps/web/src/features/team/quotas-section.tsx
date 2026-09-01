@@ -1,7 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -21,6 +21,7 @@ function QuotaForm({
   teams: TeamOut[];
   onDone: () => void;
 }) {
+  const t = useTranslations("workspace.team.quotas.form");
   const createQuota = useCreateQuota();
   const [ownerType, setOwnerType] = useState<"user" | "team">("user");
   const [ownerId, setOwnerId] = useState("");
@@ -45,7 +46,7 @@ function QuotaForm({
       onSubmit={handleSubmit}
       className="mb-4 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-4"
     >
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Nueva cuota</p>
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("newTitle")}</p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
         <select
           value={ownerType}
@@ -55,8 +56,8 @@ function QuotaForm({
           }}
           className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none"
         >
-          <option value="user">Por persona</option>
-          <option value="team">Por equipo</option>
+          <option value="user">{t("byPerson")}</option>
+          <option value="team">{t("byTeam")}</option>
         </select>
         <select
           value={ownerId}
@@ -64,7 +65,7 @@ function QuotaForm({
           required
           className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none"
         >
-          <option value="">{ownerType === "user" ? "Elegir persona…" : "Elegir equipo…"}</option>
+          <option value="">{ownerType === "user" ? t("choosePerson") : t("chooseTeam")}</option>
           {(ownerType === "user" ? users : teams).map((item) => (
             <option key={item.id} value={item.id}>
               {"full_name" in item ? item.full_name : item.name}
@@ -90,7 +91,7 @@ function QuotaForm({
         type="number"
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
-        placeholder="Monto objetivo (USD)"
+        placeholder={t("amountPlaceholder")}
         required
         min="1"
         className="mt-2 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
@@ -101,10 +102,10 @@ function QuotaForm({
           disabled={!ownerId || !periodStart || !periodEnd || !amount || createQuota.isPending}
           className="bee-btn bee-btn--primary"
         >
-          {createQuota.isPending ? "Guardando…" : "Guardar"}
+          {createQuota.isPending ? t("saving") : t("save")}
         </button>
         <button type="button" onClick={onDone} className="bee-btn-ghost">
-          Cancelar
+          {t("cancel")}
         </button>
       </div>
     </form>
@@ -124,6 +125,7 @@ export function QuotasSection({
   teams: TeamOut[];
   canManage: boolean;
 }) {
+  const t = useTranslations("workspace.team.quotas");
   const locale = useLocale() as Locale;
   const { data: quotasResult, isLoading: quotasLoading } = useQuotas();
   const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 300);
@@ -144,12 +146,12 @@ export function QuotasSection({
     <section className="bee-bento bee-bento-pad-lg space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="bee-eyebrow">Territorios y cuotas</p>
-          <h2 className="mt-1 text-base font-semibold">Objetivo vs. logrado</h2>
+          <p className="bee-eyebrow">{t("eyebrow")}</p>
+          <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
         </div>
         {canManage && (
           <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary text-xs">
-            + Nueva cuota
+            {t("newQuota")}
           </button>
         )}
       </div>
@@ -157,11 +159,9 @@ export function QuotasSection({
       {showNew && <QuotaForm users={users} teams={teams} onDone={() => setShowNew(false)} />}
 
       {loading ? (
-        <p className="bee-caption">Cargando…</p>
+        <p className="bee-caption">{t("loading")}</p>
       ) : quotas.length === 0 ? (
-        <p className="bee-caption">
-          {canManage ? "Todavía no hay cuotas — crea la primera arriba." : "Todavía no hay cuotas asignadas."}
-        </p>
+        <p className="bee-caption">{canManage ? t("emptyManage") : t("emptyView")}</p>
       ) : (
         <div className="space-y-2.5">
           {quotas.map((q) => {
@@ -172,7 +172,7 @@ export function QuotasSection({
               <div key={q.id} className="bee-bento p-3">
                 <div className="flex items-center justify-between gap-2">
                   <div>
-                    <p className="text-sm font-medium">{owner ?? "—"}</p>
+                    <p className="text-sm font-medium">{owner ?? t("ownerFallback")}</p>
                     <p className="bee-micro">
                       {q.period_start} → {q.period_end}
                     </p>
@@ -187,7 +187,7 @@ export function QuotasSection({
                         onClick={() => deleteQuota.mutate(q.id)}
                         disabled={deleteQuota.isPending}
                         className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-chart-2)]"
-                        aria-label="Eliminar cuota"
+                        aria-label={t("deleteAria")}
                       >
                         <Trash2 className="size-3.5" />
                       </button>
@@ -204,7 +204,11 @@ export function QuotasSection({
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {formatCurrencyUSD(actual, locale)} de {formatCurrencyUSD(q.target_amount, locale)} ({pct}%)
+                    {t("tooltip", {
+                      actual: formatCurrencyUSD(actual, locale),
+                      target: formatCurrencyUSD(q.target_amount, locale),
+                      pct,
+                    })}
                   </TooltipContent>
                 </Tooltip>
               </div>

@@ -15,23 +15,27 @@ import {
   User,
   Zap,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
+import type { Locale } from "@/i18n/locales";
+import { formatRelativeTime } from "@/lib/i18n/format";
 import {
-  signalTypeLabels,
+  getSignalTypeLabels,
+  getUrgencyLabels,
   scoreVariant,
-  timeAgo,
-  urgencyLabels,
 } from "@/lib/format";
 import type { Battlecard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 /** CEO Battlecard — full synthesized brief in Bento editorial layout. */
 export function BattlecardView({ card }: { card: Battlecard }) {
+  const locale = useLocale() as Locale;
   const t = useTranslations("shared.battlecard");
   const { strategy, company, lead, signal } = card;
   const urgency = strategy.timing_window.urgency;
+  const signalTypeLabels = getSignalTypeLabels(locale);
+  const urgencyLabels = getUrgencyLabels(locale);
 
   return (
     <div className="space-y-4">
@@ -61,7 +65,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
             {card.title.replace(/^Opportunity:\s*/, "")}
           </h2>
           <p className="text-xs text-muted-foreground">
-            {t("signalDetected", { time: timeAgo(signal.detected_at) })}{" "}
+            {t("signalDetected", { time: formatRelativeTime(signal.detected_at, locale) })}{" "}
             <span className="font-medium">{strategy.generator}</span>
             {strategy.confidence_score !== undefined && (
               <span className="ml-2">

@@ -1,9 +1,10 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { lossReasonLabels } from "@/lib/format";
+import type { Locale } from "@/i18n/locales";
+import { getLossReasonLabels } from "@/lib/format";
 import type { LossReasonStat } from "@/lib/win-loss";
 
 /** Barras horizontales rankeadas por frecuencia — la razón más común de
@@ -12,7 +13,9 @@ import type { LossReasonStat } from "@/lib/win-loss";
  *  el valor exacto se pueda leer al pasar el mouse sin depender del ancho
  *  fijo de la etiqueta truncada. */
 export function LossReasonChart({ stats }: { stats: LossReasonStat[] }) {
+  const locale = useLocale() as Locale;
   const t = useTranslations("forecastWinLoss.lossReasonChart");
+  const lossReasonLabels = getLossReasonLabels(locale);
 
   if (stats.length === 0) {
     return <p className="py-6 text-center text-xs text-muted-foreground">{t("empty")}</p>;

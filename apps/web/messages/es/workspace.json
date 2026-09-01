@@ -276,7 +276,6 @@
     "title": "Equipo",
     "subtitle": "Jerarquía de equipos y visibilidad por rol — quién ve qué en el pipeline",
     "loadError": "No se pudo cargar el equipo — revisa tu conexión y vuelve a intentar en un momento.",
-    "you": "(tú)",
     "password": {
       "eyebrow": "Mi cuenta",
       "title": "Contraseña",
@@ -306,6 +305,7 @@
     },
     "people": {
       "eyebrow": "Personas",
+      "you": "(tú)",
       "allOrg": "Toda la organización",
       "youAndTeam": "Tú y tu equipo",
       "table": {

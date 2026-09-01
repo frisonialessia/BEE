@@ -1,12 +1,13 @@
 "use client";
 
 import { Tooltip as TooltipPrimitive } from "radix-ui";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { TooltipContent } from "@/components/ui/tooltip";
+import type { Locale } from "@/i18n/locales";
 import { createTemperatureColorScale } from "@/lib/visualization/honeycomb-hexbin";
 import { computeIndustrySignalGrid, type IndustrySignalCell } from "@/lib/industry-signal-grid";
-import { signalTypeLabels } from "@/lib/format";
+import { getSignalTypeLabels } from "@/lib/format";
 import type { Company, Opportunity, Signal, SignalType } from "@/types/domain";
 
 const SIGNAL_ORDER: SignalType[] = [
@@ -49,7 +50,9 @@ export function IndustrySignalHeatmap({
   signals: Signal[];
   companies: Company[];
 }) {
+  const locale = useLocale() as Locale;
   const t = useTranslations("dashboardOverview.industryHeatmap");
+  const signalTypeLabels = getSignalTypeLabels(locale);
   const cells = computeIndustrySignalGrid(opportunities, signals, companies);
 
   if (cells.length === 0) {
@@ -171,7 +174,9 @@ export function IndustrySignalHeatmap({
 }
 
 function HexCell({ x, y, cell, fill }: { x: number; y: number; cell: IndustrySignalCell; fill: string }) {
+  const locale = useLocale() as Locale;
   const t = useTranslations("dashboardOverview.industryHeatmap");
+  const signalTypeLabels = getSignalTypeLabels(locale);
 
   return (
     <TooltipPrimitive.Root>

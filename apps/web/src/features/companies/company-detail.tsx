@@ -13,7 +13,7 @@ import { useCompany } from "@/hooks/queries/use-companies";
 import { useBulkCreateLeads, useCreateLead, useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
-import { opportunityStatusLabels, validationFlagLabels } from "@/lib/format";
+import { getOpportunityStatusLabels, getValidationFlagLabels } from "@/lib/format";
 import { formatDate } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
 import { parseCsv, pickColumn as pick } from "@/lib/csv";
@@ -151,6 +151,8 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
 export function CompanyDetail({ companyId }: { companyId: string }) {
   const t = useTranslations("companiesLeads.companyDetail");
   const locale = useLocale() as Locale;
+  const opportunityStatusLabels = getOpportunityStatusLabels(locale);
+  const validationFlagLabels = getValidationFlagLabels(locale);
   const { data: companyResult, isLoading } = useCompany(companyId);
   const { data: leadsResult } = useLeads(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);

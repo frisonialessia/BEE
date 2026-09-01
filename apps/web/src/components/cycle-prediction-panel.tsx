@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCyclePrediction } from "@/hooks/queries/use-artifacts";
 import type { Locale } from "@/i18n/locales";
 import { formatLongDate } from "@/lib/i18n/format";
-import { signalTypeLabels } from "@/lib/format";
+import { getSignalTypeLabels } from "@/lib/format";
 import type { SignalType } from "@/types/domain";
 import type { CycleSignalRecalibration } from "@/types/extended";
 
@@ -116,6 +116,7 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
  *  número principal — nunca se mezcla con `predicted_cycle_days`, solo se
  *  muestra junto a él. Ver el docstring de CyclePredictorService. */
 function SignalRecalibrationNote({ recal }: { recal: CycleSignalRecalibration }) {
+  const locale = useLocale() as Locale;
   const t = useTranslations("shared.cyclePrediction.recalibration");
   if (!recal.available) return null;
   const faster = (recal.delta_days ?? 0) < 0;
@@ -142,7 +143,7 @@ function SignalRecalibrationNote({ recal }: { recal: CycleSignalRecalibration })
             {recal.target_new_signal_types.length > 0
               ? t("newSignalWithTypes", {
                   types: recal.target_new_signal_types
-                    .map((type) => signalTypeLabels[type as SignalType] ?? type)
+                    .map((type) => getSignalTypeLabels(locale)[type as SignalType] ?? type)
                     .join(", "),
                 })
               : t("newSignal")}

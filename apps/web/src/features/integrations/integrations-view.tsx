@@ -246,14 +246,10 @@ export function IntegrationsView() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Cuentas conectadas</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1">
-          <h1 className="bee-display">Integraciones</h1>
-          <p className="bee-caption mt-1">
-            Conecta tus propias cuentas para que BEE actúe en tu nombre — el envío de secuencias
-            por Gmail o LinkedIn sale desde tu cuenta real, no desde una compartida del servidor.
-            Salesforce trae tu CRM a BEE, de solo lectura.
-          </p>
+          <h1 className="bee-display">{t("title")}</h1>
+          <p className="bee-caption mt-1">{t("subtitle")}</p>
         </div>
       </header>
 
@@ -273,8 +269,8 @@ export function IntegrationsView() {
               icon={Mail}
               status={gmail}
               canManage={canManage}
-              connectedCopy={(account) => `Las secuencias envían correos desde ${account}, no desde un servidor compartido.`}
-              disconnectedCopy="Conecta tu cuenta de Gmail para que las secuencias envíen correos desde tu propia bandeja."
+              connectedCopy={(account) => t("gmail.connectedCopy", { account })}
+              disconnectedCopy={t("gmail.disconnectedCopy")}
             />
           )}
           {linkedin && (
@@ -284,8 +280,8 @@ export function IntegrationsView() {
               icon={Users}
               status={linkedin}
               canManage={canManage}
-              connectedCopy={(account) => `Los mensajes y solicitudes de conexión salen desde ${account}, no desde un token compartido.`}
-              disconnectedCopy="Conecta tu cuenta de LinkedIn para que las secuencias envíen mensajes y solicitudes de conexión desde tu propio perfil."
+              connectedCopy={(account) => t("linkedin.connectedCopy", { account })}
+              disconnectedCopy={t("linkedin.disconnectedCopy")}
             />
           )}
           {salesforce && (
@@ -295,27 +291,20 @@ export function IntegrationsView() {
               icon={Cloud}
               status={salesforce}
               canManage={canManage}
-              connectedCopy={(account) => `Conectado a ${account}. Trae Accounts, Contacts, Leads y Opportunities cuando quieras — nunca escribe de vuelta en Salesforce.`}
-              disconnectedCopy="Conecta tu org de Salesforce para traer tu CRM a BEE — empresas, contactos y oportunidades, de solo lectura."
+              connectedCopy={(account) => t("salesforce.connectedCopy", { account })}
+              disconnectedCopy={t("salesforce.disconnectedCopy")}
             >
               {canManage && <SalesforceImportButton />}
             </OAuthProviderRow>
           )}
-          {!canManage && (
-            <p className="bee-caption">
-              Solo el dueño o un administrador de la organización puede conectar o desconectar cuentas.
-            </p>
-          )}
+          {!canManage && <p className="bee-caption">{t("manageNotice")}</p>}
 
           <section className="bee-surface bee-bento-pad">
             <div className="mb-3 flex items-center gap-2">
               <Plug className="size-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Canales del servidor</h3>
+              <h3 className="text-sm font-semibold">{t("serverChannels.title")}</h3>
             </div>
-            <p className="bee-caption mb-3">
-              Configurados una sola vez para todo el despliegue de BEE, no por cuenta — ver
-              variables de entorno del backend si necesitas cambiarlos.
-            </p>
+            <p className="bee-caption mb-3">{t("serverChannels.caption")}</p>
             <div>
               {serverChannels.map((s) => (
                 <ServerChannelRow key={s.provider} status={s} />

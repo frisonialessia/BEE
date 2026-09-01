@@ -953,6 +953,7 @@ export function demoFindIntroPaths(params: {
   target_domain: string;
   target_company?: string;
 }): NetworkQueryResult {
+  const locale = getDemoLocale();
   const domain = params.target_domain.toLowerCase().trim();
   const companyLabel = params.target_company || domain;
   const matches = loadNetwork().filter((c) => c.active && c.contact_domain.toLowerCase() === domain);
@@ -961,6 +962,7 @@ export function demoFindIntroPaths(params: {
     .sort((a, b) => b.relationship_strength - a.relationship_strength)
     .map((conn) => {
       const introType = conn.connection_type === "referral" ? "referral" : conn.connection_type === "alumni" ? "alumni" : "warm_intro";
+      const connectionTypeLabel = conn.connection_type.replace(/_/g, " ");
       return {
         target_name: null,
         target_company: companyLabel,
@@ -974,12 +976,21 @@ export function demoFindIntroPaths(params: {
           {
             person: conn.contact_name,
             company: conn.contact_company,
-            relationship_to_next: `Conexión directa (${conn.connection_type.replace(/_/g, " ")})`,
+            relationship_to_next:
+              locale === "en"
+                ? `Direct connection (${connectionTypeLabel})`
+                : `Conexión directa (${connectionTypeLabel})`,
             strength: conn.relationship_strength,
           },
         ],
-        action_recommendation: `Pídele a ${conn.contact_name} una presentación cálida en ${companyLabel} — la relación es fuerte (${conn.relationship_strength}/10).`,
-        draft_ask: `Hola ${conn.contact_name.split(" ")[0]},\n\n¿Me harías el favor de presentarme con alguien de ${companyLabel}? Estamos viendo cómo encajaría BEE en su operación comercial y tu opinión pesaría mucho.\n\nGracias,`,
+        action_recommendation:
+          locale === "en"
+            ? `Ask ${conn.contact_name} for a warm introduction at ${companyLabel} — the relationship is strong (${conn.relationship_strength}/10).`
+            : `Pídele a ${conn.contact_name} una presentación cálida en ${companyLabel} — la relación es fuerte (${conn.relationship_strength}/10).`,
+        draft_ask:
+          locale === "en"
+            ? `Hi ${conn.contact_name.split(" ")[0]},\n\nWould you be up for introducing me to someone at ${companyLabel}? We're exploring how BEE would fit their sales operation and your take would carry a lot of weight.\n\nThanks,`
+            : `Hola ${conn.contact_name.split(" ")[0]},\n\n¿Me harías el favor de presentarme con alguien de ${companyLabel}? Estamos viendo cómo encajaría BEE en su operación comercial y tu opinión pesaría mucho.\n\nGracias,`,
       };
     });
 
@@ -1400,13 +1411,18 @@ export function demoFetchAnomalyAlerts(params?: { status?: string; severity?: st
 /** No new anomalies fabricated on demand — an honest "nothing new" scan,
  * same restraint as demoCheckAnomalies' sibling functions across the demo. */
 export function demoCheckAnomalies(): AnomalyCheckResult {
+  const locale = getDemoLocale();
   const open = loadDeepAnomalies().filter((a) => a.status === "open");
+  const summary =
+    locale === "en"
+      ? `No new anomalies — ${open.length} alert${open.length === 1 ? "" : "s"} open under monitoring.`
+      : `Sin nuevas anomalías — ${open.length} alerta${open.length === 1 ? "" : "s"} abierta${open.length === 1 ? "" : "s"} bajo monitoreo.`;
   return {
     checked_at: new Date().toISOString(),
     new_alerts: [],
     resolved_alerts: [],
     open_alerts: open,
-    summary: `Sin nuevas anomalías — ${open.length} alerta${open.length === 1 ? "" : "s"} abierta${open.length === 1 ? "" : "s"} bajo monitoreo.`,
+    summary,
     checked_segments: 12,
   };
 }
@@ -1679,6 +1695,7 @@ function findDLQOrThrow(list: FailedEvent[], id: string): number {
  * demoRecordOutcome: this is a local record of "this got retried," not a
  * dice roll standing in for real infrastructure. */
 export function demoRetryDLQEvent(eventId: string): DLQRetryResult {
+  const locale = getDemoLocale();
   const list = loadDLQ();
   const idx = findDLQOrThrow(list, eventId);
   const now = new Date().toISOString();
@@ -1695,20 +1712,21 @@ export function demoRetryDLQEvent(eventId: string): DLQRetryResult {
     event_id: eventId,
     success: true,
     status: "resolved",
-    message: "Reintento exitoso — el evento se resolvió.",
+    message: locale === "en" ? "Retry succeeded — the event was resolved." : "Reintento exitoso — el evento se resolvió.",
     attempt_count: list[idx].attempt_count,
     next_retry_at: null,
   };
 }
 
 export function demoResolveDLQEvent(eventId: string, notes?: string): FailedEvent {
+  const locale = getDemoLocale();
   const list = loadDLQ();
   const idx = findDLQOrThrow(list, eventId);
   list[idx] = {
     ...list[idx],
     status: "resolved",
     resolved_at: new Date().toISOString(),
-    resolution_notes: notes ?? "Resuelto manualmente desde el panel.",
+    resolution_notes: notes ?? (locale === "en" ? "Resolved manually from the panel." : "Resuelto manualmente desde el panel."),
   };
   saveDLQ(list);
   return list[idx];

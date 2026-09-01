@@ -276,7 +276,6 @@
     "title": "Team",
     "subtitle": "Team hierarchy and role-based visibility — who sees what in the pipeline",
     "loadError": "Couldn't load the team — check your connection and try again in a moment.",
-    "you": "(you)",
     "password": {
       "eyebrow": "My account",
       "title": "Password",
@@ -306,6 +305,7 @@
     },
     "people": {
       "eyebrow": "People",
+      "you": "(you)",
       "allOrg": "Whole organization",
       "youAndTeam": "You and your team",
       "table": {
