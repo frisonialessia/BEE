@@ -49,7 +49,7 @@ export default async function SoportePage() {
         </section>
 
         <section className="mx-auto w-full max-w-5xl px-6 pb-16 sm:pb-20">
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
+          <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
             <div className="space-y-4">
               <a
                 href="#formulario"

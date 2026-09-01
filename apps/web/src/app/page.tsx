@@ -66,6 +66,15 @@ const GUARANTEE_ICONS = {
   secureByDesign: Radio,
 } as const;
 const GUARANTEE_KEYS = ["noHallucinations", "humanApproval", "multiTenant", "secureByDesign"] as const;
+// Reuses the same 4 bento tones as MODULE_TONES above, in the same order —
+// one tone per card, cycling through the whole palette instead of leaving
+// every card on a flat white background (the "más colores de BEE" ask).
+const GUARANTEE_TONES = [
+  "bee-bento--primary",
+  "bee-bento--warm",
+  "bee-bento--violet",
+  "bee-bento--muted",
+] as const;
 
 /** Manchas de gradiente detrás del hero — mezcla de la paleta institucional,
  * blureadas y de baja opacidad para que el texto #222222 siga siendo
@@ -184,11 +193,16 @@ export default async function Home() {
           </div>
 
           <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {GUARANTEE_KEYS.map((key) => {
+            {GUARANTEE_KEYS.map((key, i) => {
               const Icon = GUARANTEE_ICONS[key];
               return (
-                <div key={key} className="bee-bento bee-bento-pad">
-                  <Icon className="size-5 stroke-[1.5] text-[var(--color-chart-5)]" />
+                <div
+                  key={key}
+                  className={`bee-bento bee-bento-pad bee-glass--hover ${GUARANTEE_TONES[i]}`}
+                >
+                  <div className="flex size-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
+                    <Icon className="size-4.5 stroke-[1.5] text-[var(--color-chart-4)]" />
+                  </div>
                   <h3 className="mt-3 text-sm font-semibold tracking-tight">{t(`guarantees.${key}.title`)}</h3>
                   <p className="bee-caption mt-1.5">{t(`guarantees.${key}.description`)}</p>
                 </div>

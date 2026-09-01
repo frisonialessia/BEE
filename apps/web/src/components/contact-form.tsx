@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { FormEvent, useState } from "react";
 
 import { submitContact } from "@/lib/api/contact";
@@ -22,6 +23,7 @@ interface ContactFormProps {
  * un humano nunca lo ve ni lo tabula.
  */
 export function ContactForm({ source }: ContactFormProps) {
+  const t = useTranslations("legalMarketing.contactForm");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -48,11 +50,7 @@ export function ContactForm({ source }: ContactFormProps) {
       setStatus("success");
     } catch (err) {
       setStatus("error");
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "No pudimos enviar tu mensaje. Prueba de nuevo en un momento.",
-      );
+      setError(err instanceof ApiError ? err.message : t("genericError"));
     }
   }
 
@@ -60,10 +58,8 @@ export function ContactForm({ source }: ContactFormProps) {
     return (
       <div className="flex flex-col items-center gap-3 py-10 text-center" role="status">
         <CheckCircle2 className="size-10 text-[var(--color-chart-4)]" />
-        <h2 className="text-lg font-semibold">Mensaje enviado</h2>
-        <p className="bee-caption max-w-xs">
-          Recibimos tu mensaje. Te vamos a responder por email en menos de 24 horas hábiles.
-        </p>
+        <h2 className="text-lg font-semibold">{t("successTitle")}</h2>
+        <p className="bee-caption max-w-xs">{t("successBody")}</p>
       </div>
     );
   }
@@ -73,7 +69,7 @@ export function ContactForm({ source }: ContactFormProps) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <label htmlFor="fullName" className="bee-caption block">
-            Nombre completo
+            {t("fullNameLabel")}
           </label>
           <input
             id="fullName"
@@ -81,12 +77,12 @@ export function ContactForm({ source }: ContactFormProps) {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             className="bee-input"
-            placeholder="Jane Prospect"
+            placeholder={t("fullNamePlaceholder")}
           />
         </div>
         <div className="space-y-1.5">
           <label htmlFor="email" className="bee-caption block">
-            Email de trabajo
+            {t("emailLabel")}
           </label>
           <input
             id="email"
@@ -96,7 +92,7 @@ export function ContactForm({ source }: ContactFormProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="bee-input"
-            placeholder="tu@empresa.com"
+            placeholder={t("emailPlaceholder")}
           />
         </div>
       </div>
@@ -104,19 +100,19 @@ export function ContactForm({ source }: ContactFormProps) {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <label htmlFor="companyName" className="bee-caption block">
-            Empresa <span className="text-muted-foreground">(opcional)</span>
+            {t("companyLabel")} <span className="text-muted-foreground">{t("optional")}</span>
           </label>
           <input
             id="companyName"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
             className="bee-input"
-            placeholder="Acme Inc"
+            placeholder={t("companyPlaceholder")}
           />
         </div>
         <div className="space-y-1.5">
           <label htmlFor="phone" className="bee-caption block">
-            Teléfono <span className="text-muted-foreground">(opcional)</span>
+            {t("phoneLabel")} <span className="text-muted-foreground">{t("optional")}</span>
           </label>
           <input
             id="phone"
@@ -124,14 +120,14 @@ export function ContactForm({ source }: ContactFormProps) {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="bee-input"
-            placeholder="+54 9 11 0000 0000"
+            placeholder={t("phonePlaceholder")}
           />
         </div>
       </div>
 
       <div className="space-y-1.5">
         <label htmlFor="message" className="bee-caption block">
-          Cuéntanos qué necesitas
+          {t("messageLabel")}
         </label>
         <textarea
           id="message"
@@ -140,7 +136,7 @@ export function ContactForm({ source }: ContactFormProps) {
           rows={5}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Tamaño de tu equipo comercial, qué CRM usas hoy, qué te gustaría automatizar…"
+          placeholder={t("messagePlaceholder")}
           className="w-full resize-y rounded-[var(--radius-sm)] border border-[var(--color-divider)] bg-background px-2 py-2 font-[var(--bee-font)] text-xs text-[var(--color-text)] focus:border-[var(--color-chart-4)] focus:outline-none"
         />
       </div>
@@ -149,7 +145,7 @@ export function ContactForm({ source }: ContactFormProps) {
        * visitante real; un bot que completa cada input del formulario sin
        * discriminar lo llena igual. */}
       <div className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
-        <label htmlFor="company">No completar este campo</label>
+        <label htmlFor="company">{t("honeypotLabel")}</label>
         <input
           id="company"
           name="company"
@@ -172,7 +168,7 @@ export function ContactForm({ source }: ContactFormProps) {
         disabled={status === "submitting"}
         className="bee-btn bee-btn--primary w-full"
       >
-        {status === "submitting" ? "Enviando…" : "Enviar mensaje"}
+        {status === "submitting" ? t("submitting") : t("submit")}
       </button>
     </form>
   );

@@ -168,14 +168,33 @@
     "meanwhileTitle": "Así pensamos cuando construimos.",
     "meanwhileBody": "Cero datos inventados, aprobación humana antes de cualquier acción externa, aislamiento estricto por cuenta desde el diseño — no reglas de marketing, es cómo está hecho el producto. Si eso te resuena, probablemente encajemos."
   },
+  "contactForm": {
+    "fullNameLabel": "Nombre completo",
+    "fullNamePlaceholder": "Jane Prospect",
+    "emailLabel": "Email de trabajo",
+    "emailPlaceholder": "tu@empresa.com",
+    "companyLabel": "Empresa",
+    "optional": "(opcional)",
+    "companyPlaceholder": "Acme Inc",
+    "phoneLabel": "Teléfono",
+    "phonePlaceholder": "+54 9 11 0000 0000",
+    "messageLabel": "Cuéntanos qué necesitas",
+    "messagePlaceholder": "Tamaño de tu equipo comercial, qué CRM usas hoy, qué te gustaría automatizar…",
+    "honeypotLabel": "No completar este campo",
+    "submit": "Enviar mensaje",
+    "submitting": "Enviando…",
+    "successTitle": "Mensaje enviado",
+    "successBody": "Recibimos tu mensaje. Te vamos a responder por email en menos de 24 horas hábiles.",
+    "genericError": "No pudimos enviar tu mensaje. Prueba de nuevo en un momento."
+  },
   "contacto": {
     "meta": {
       "title": "Contacto — BEE",
       "description": "Habla con el equipo de BEE. Te respondemos en menos de 24 horas hábiles."
     },
     "eyebrow": "Contacto",
-    "heroTitle": "Hablemos de tu pipeline.",
-    "heroSubtitle": "Cuéntanos un poco de tu equipo comercial y te respondemos en menos de 24 horas hábiles — sin bots de ventas, sin formularios que se pierden en el aire.",
+    "heroTitle": "Este código es abierto. Pregúntanos lo que necesites.",
+    "heroSubtitle": "BEE es un proyecto de código abierto, no una oferta de venta — escríbenos si tienes preguntas específicas sobre la plataforma o el código, y te respondemos en menos de 24 horas hábiles.",
     "afterSubmitTitle": "¿Qué pasa después de enviar esto?",
     "afterSubmitBody": "Un mensaje real llega directo a nuestro equipo — queda registrado, nunca se descarta en silencio. Te contactamos por el email que dejes aquí.",
     "haveAccountTitle": "¿Ya tienes cuenta?",

@@ -17,10 +17,10 @@ import { getTranslations } from "next-intl/server";
  */
 
 const INTEGRATIONS = [
-  { icon: Users, name: "LinkedIn", id: "linkedin" },
-  { icon: Star, name: "G2", id: "g2" },
-  { icon: Search, name: "Google Search", id: "googleSearch" },
-  { icon: Mail, name: "Email", id: "email" },
+  { icon: Users, name: "LinkedIn", id: "linkedin", tone: "bee-bento--primary" },
+  { icon: Star, name: "G2", id: "g2", tone: "bee-bento--warm" },
+  { icon: Search, name: "Google Search", id: "googleSearch", tone: "bee-bento--violet" },
+  { icon: Mail, name: "Email", id: "email", tone: "bee-bento--muted" },
 ] as const;
 
 export async function MarketingIntegrations() {
@@ -34,7 +34,10 @@ export async function MarketingIntegrations() {
       </div>
       <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {INTEGRATIONS.map((i) => (
-          <div key={i.name} className="bee-bento bee-bento-pad flex items-start gap-3">
+          <div
+            key={i.name}
+            className={`bee-bento bee-bento-pad bee-glass--hover flex items-start gap-3 ${i.tone}`}
+          >
             <div className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
               <i.icon className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
             </div>
