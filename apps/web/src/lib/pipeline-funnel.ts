@@ -15,7 +15,6 @@ import type { Opportunity } from "@/types/domain";
 
 export interface FunnelStage {
   key: "detected" | "ready_to_action" | "in_progress" | "won";
-  label: string;
   count: number;
   /** % del total de oportunidades en estas 4 etapas (nunca de "Detectada" —
    * ese bucket es chico y transitorio por naturaleza, así que un % contra
@@ -30,24 +29,23 @@ export interface FunnelStage {
   timestamps: string[];
 }
 
-const STAGES: { key: FunnelStage["key"]; label: string }[] = [
-  { key: "detected", label: "Detectada" },
-  { key: "ready_to_action", label: "Battlecard listo" },
-  { key: "in_progress", label: "En curso" },
-  { key: "won", label: "Ganada" },
-];
+// Labels live with the component, not here (see PipelineFunnel in
+// components/dashboard/pipeline-funnel.tsx) — this is a plain utility
+// function, not a component, so it has no access to useTranslations().
+// Hardcoding Spanish text here is exactly what left this funnel's stage
+// badges untranslated in EN even on pages where everything around them
+// correctly switched language.
+const STAGE_KEYS: FunnelStage["key"][] = ["detected", "ready_to_action", "in_progress", "won"];
 
 export function computeFunnelStages(opportunities: Opportunity[]): FunnelStage[] {
-  const byStage = STAGES.map(({ key, label }) => ({
+  const byStage = STAGE_KEYS.map((key) => ({
     key,
-    label,
     matching: opportunities.filter((o) => o.status === key),
   }));
   const total = byStage.reduce((sum, s) => sum + s.matching.length, 0);
 
-  return byStage.map(({ key, label, matching }) => ({
+  return byStage.map(({ key, matching }) => ({
     key,
-    label,
     count: matching.length,
     shareOfPipeline: total === 0 ? null : matching.length / total,
     timestamps: matching.map((o) => (key === "detected" ? o.created_at : o.updated_at)),

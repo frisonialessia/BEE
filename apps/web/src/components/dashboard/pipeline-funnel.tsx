@@ -22,6 +22,19 @@ const STAGE_ICONS: Record<FunnelStage["key"], typeof Radar> = {
  * solo cuánto hay en cada bucket. Ver lib/pipeline-funnel.ts. */
 export function PipelineFunnel({ opportunities }: { opportunities: Opportunity[] }) {
   const t = useTranslations("dashboardOverview.pipelineFunnel");
+  // Reuses crm.board's own stage/status labels — same words a rep already
+  // sees on the CRM board itself for "detected"/"ready_to_action"/
+  // "in_progress", and the same "Won" the closed column uses — one
+  // vocabulary for the same 4 concepts, not a second set of labels that
+  // could drift from the first.
+  const tStages = useTranslations("crm.board.stages");
+  const tClosedStatus = useTranslations("crm.board.closedStatus");
+  const STAGE_LABELS: Record<FunnelStage["key"], string> = {
+    detected: tStages("detected"),
+    ready_to_action: tStages("ready_to_action"),
+    in_progress: tStages("in_progress"),
+    won: tClosedStatus("won"),
+  };
   const stages = computeFunnelStages(opportunities);
   const maxCount = Math.max(...stages.map((s) => s.count), 1);
 
@@ -32,7 +45,7 @@ export function PipelineFunnel({ opportunities }: { opportunities: Opportunity[]
         return (
           <div key={stage.key} className="bee-bento space-y-1.5 p-3">
             <div className="flex items-center justify-between gap-2">
-              <p className="bee-eyebrow">{stage.label}</p>
+              <p className="bee-eyebrow">{STAGE_LABELS[stage.key]}</p>
               <Icon className="size-3.5 shrink-0 text-muted-foreground stroke-[1.25]" />
             </div>
             <div className="flex items-baseline gap-2">
