@@ -5,6 +5,7 @@ import { AssistantHeaderLink } from "@/components/dashboard/assistant-header-lin
 import { MobileNavToggle } from "@/components/dashboard/mobile-nav-toggle";
 import { OnboardingHeaderButton } from "@/components/dashboard/onboarding-header-button";
 import { CommandPaletteHint } from "@/components/command-palette/command-palette-hint";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { TeamPresence } from "@/components/presence/presence-bar";
 import { GlobalSearch } from "@/components/search/global-search";
@@ -27,6 +28,12 @@ export function DashboardHeader() {
           <TeamPresence />
           <div className="h-6 w-px bg-border" aria-hidden />
         </div>
+        {/* hidden below sm — this cluster is already tight on a
+         * phone-width header (MobileNavToggle + GlobalSearch already
+         * compete for space there); the dashboard rail itself is full-
+         * width on mobile and has room to carry this control instead, a
+         * follow-up not yet wired. */}
+        <LanguageSwitcher variant="subtle" className="hidden sm:inline-flex" />
         <NotificationBell />
         <AccountMenu />
       </div>

@@ -1,15 +1,17 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useState } from "react";
 
 import { useCompanyDuplicates, useMergeCompanies } from "@/hooks/queries/use-companies";
+import type { Locale } from "@/i18n/locales";
+import { formatDate } from "@/lib/i18n/format";
 import type { Company } from "@/types/domain";
-
-const dateFmt = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short", year: "numeric" });
 
 function GroupRow({ groupKey, companies }: { groupKey: string; companies: Company[] }) {
   const mergeCompanies = useMergeCompanies();
+  const locale = useLocale() as Locale;
   // Por defecto se conserva la más antigua — suele ser la que ya tiene más
   // actividad relacionada (leads, oportunidades, señales) acumulada.
   const sorted = [...companies].sort((a, b) => a.created_at.localeCompare(b.created_at));
@@ -39,7 +41,7 @@ function GroupRow({ groupKey, companies }: { groupKey: string; companies: Compan
             />
             <span className="font-medium">{c.name}</span>
             <span className="text-muted-foreground">
-              · creada el {dateFmt.format(new Date(c.created_at))}
+              · creada el {formatDate(c.created_at, locale)}
             </span>
           </label>
         ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -9,6 +10,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/types/api";
 
 export default function RegisterPage() {
+  const t = useTranslations("auth.register");
   const router = useRouter();
   const { register } = useAuth();
   const [organizationName, setOrganizationName] = useState("");
@@ -33,7 +35,7 @@ export default function RegisterPage() {
       });
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo crear la organización.");
+      setError(err instanceof ApiError ? err.message : t("genericError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -47,16 +49,14 @@ export default function RegisterPage() {
         </div>
 
         <div className="bee-bento bee-bento-pad-lg">
-          <p className="bee-eyebrow">Empieza gratis</p>
-          <h1 className="mt-1 text-lg font-semibold">Crea tu organización</h1>
-          <p className="bee-caption mt-1">
-            Vas a quedar como Owner — desde ahí invitas al resto del equipo.
-          </p>
+          <p className="bee-eyebrow">{t("eyebrow")}</p>
+          <h1 className="mt-1 text-lg font-semibold">{t("title")}</h1>
+          <p className="bee-caption mt-1">{t("subtitle")}</p>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div className="space-y-1.5">
               <label htmlFor="organizationName" className="bee-caption block">
-                Nombre de la organización
+                {t("orgNameLabel")}
               </label>
               <input
                 id="organizationName"
@@ -71,7 +71,7 @@ export default function RegisterPage() {
 
             <div className="space-y-1.5">
               <label htmlFor="fullName" className="bee-caption block">
-                Tu nombre
+                {t("fullNameLabel")}
               </label>
               <input
                 id="fullName"
@@ -85,7 +85,7 @@ export default function RegisterPage() {
 
             <div className="space-y-1.5">
               <label htmlFor="email" className="bee-caption block">
-                Email
+                {t("emailLabel")}
               </label>
               <input
                 id="email"
@@ -101,7 +101,7 @@ export default function RegisterPage() {
 
             <div className="space-y-1.5">
               <label htmlFor="password" className="bee-caption block">
-                Contraseña
+                {t("passwordLabel")}
               </label>
               <input
                 id="password"
@@ -112,20 +112,20 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bee-input"
-                placeholder="Mínimo 8 caracteres"
+                placeholder={t("passwordHint")}
               />
             </div>
 
             <div className="space-y-1.5">
               <label htmlFor="inviteCode" className="bee-caption block">
-                Código de invitación <span className="text-muted-foreground">(si te dieron uno)</span>
+                {t("inviteCodeLabel")} <span className="text-muted-foreground">{t("inviteCodeOptionalNote")}</span>
               </label>
               <input
                 id="inviteCode"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value)}
                 className="bee-input"
-                placeholder="Opcional"
+                placeholder={t("inviteCodePlaceholder")}
               />
             </div>
 
@@ -140,15 +140,15 @@ export default function RegisterPage() {
               disabled={isSubmitting}
               className="bee-btn bee-btn--primary w-full"
             >
-              {isSubmitting ? "Creando…" : "Crear organización"}
+              {isSubmitting ? t("submitting") : t("submit")}
             </button>
           </form>
         </div>
 
         <p className="bee-caption mt-6 text-center">
-          ¿Ya tienes cuenta?{" "}
+          {t("alreadyHaveAccount")}{" "}
           <Link href="/login" className="font-medium text-foreground underline underline-offset-4">
-            Inicia sesión
+            {t("signIn")}
           </Link>
         </p>
       </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   ArrowRight,
   Lock,
@@ -28,69 +29,43 @@ import { MarketingSignalTicker } from "@/components/marketing-signal-ticker";
  * de logos de clientes ni métricas inventadas: la sección de autoridad se
  * apoya en garantías técnicas verificables del sistema en vez de prueba
  * social fabricada.
+ *
+ * NOTE (i18n): only this file's own copy (hero, módulos, garantías, CTA de
+ * cierre) is wired to messages/{locale}/marketing.json today. The 7
+ * sub-components it renders below (MarketingOrbit, MarketingSignalTicker,
+ * MarketingDemoPanel, MarketingHowItWorks, MarketingBeforeAfter,
+ * MarketingIntegrations, MarketingFAQ) still have hardcoded Spanish copy —
+ * tracked as follow-up work, not silently skipped.
  */
 
-const MODULES = [
-  {
-    icon: Radio,
-    title: "Motor de señales en tiempo real",
-    description:
-      "Detecta rondas de financiamiento, contrataciones clave y cambios de stack tecnológico apenas ocurren — sin que nadie tenga que ir a buscarlos.",
-    href: "/funcionalidades#senales",
-    tone: "bee-bento--primary",
-    span: "bee-span-8",
-  },
-  {
-    icon: Sparkles,
-    title: "Brief del día",
-    description:
-      "Un resumen ejecutivo cada mañana con lo que de verdad importa en tu pipeline — cero fricción cognitiva antes de la primera llamada.",
-    href: "/funcionalidades#brief",
-    tone: "bee-bento--warm",
-    span: "bee-span-4",
-  },
-  {
-    icon: TrendingUp,
-    title: "Simulador de ingresos",
-    description:
-      "Proyecta escenarios de pipeline basados en intención de compra real — no en promedios genéricos del sector.",
-    href: "/funcionalidades#simulador",
-    tone: "",
-    span: "bee-span-4",
-  },
-  {
-    icon: Share2,
-    title: "Automatización multicanal",
-    description:
-      "Diseña secuencias de alcance por email, LinkedIn y más que avanzan solas según cómo responde cada lead — siempre con tu aprobación antes de enviar nada.",
-    href: "/funcionalidades#automatizacion",
-    tone: "bee-bento--muted",
-    span: "bee-span-8",
-  },
-] as const;
+const MODULE_ICONS = { signals: Radio, brief: Sparkles, simulator: TrendingUp, automation: Share2 } as const;
+const MODULE_HREFS = {
+  signals: "/funcionalidades#senales",
+  brief: "/funcionalidades#brief",
+  simulator: "/funcionalidades#simulador",
+  automation: "/funcionalidades#automatizacion",
+} as const;
+const MODULE_TONES = {
+  signals: "bee-bento--primary",
+  brief: "bee-bento--warm",
+  simulator: "",
+  automation: "bee-bento--muted",
+} as const;
+const MODULE_SPANS = {
+  signals: "bee-span-8",
+  brief: "bee-span-4",
+  simulator: "bee-span-4",
+  automation: "bee-span-8",
+} as const;
+const MODULE_KEYS = ["signals", "brief", "simulator", "automation"] as const;
 
-const GUARANTEES = [
-  {
-    icon: ShieldCheck,
-    title: "Cero alucinaciones",
-    description: "Cada score y cada métrica sale de datos reales. Si no hay dato, el sistema muestra vacío — nunca lo inventa.",
-  },
-  {
-    icon: UserCheck,
-    title: "Aprobación humana siempre",
-    description: "Ninguna acción externa — un email, un mensaje, una secuencia — se ejecuta sin luz verde explícita.",
-  },
-  {
-    icon: Lock,
-    title: "Multi-tenant real",
-    description: "Aislamiento estricto de datos por organización, de punta a punta, no una bandera opcional.",
-  },
-  {
-    icon: Radio,
-    title: "Seguro desde el diseño",
-    description: "Webhooks firmados con HMAC y secretos por entorno — las credenciales nunca tocan el código.",
-  },
-] as const;
+const GUARANTEE_ICONS = {
+  noHallucinations: ShieldCheck,
+  humanApproval: UserCheck,
+  multiTenant: Lock,
+  secureByDesign: Radio,
+} as const;
+const GUARANTEE_KEYS = ["noHallucinations", "humanApproval", "multiTenant", "secureByDesign"] as const;
 
 /** Manchas de gradiente detrás del hero — mezcla de la paleta institucional,
  * blureadas y de baja opacidad para que el texto #222222 siga siendo
@@ -107,7 +82,9 @@ function HeroAtmosphere() {
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const t = await getTranslations("marketing.landing");
+
   return (
     <div className="flex min-h-full flex-col bg-background">
       <MarketingHeader />
@@ -118,20 +95,17 @@ export default function Home() {
           <HeroAtmosphere />
 
           <div className="relative mx-auto w-full max-w-4xl px-6 pb-8 pt-16 text-center sm:pt-24">
-            <p className="bee-eyebrow">Sales Force Intelligence</p>
+            <p className="bee-eyebrow">{t("eyebrow")}</p>
             <h1 className="mx-auto mt-5 max-w-3xl text-balance text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              Inteligencia comercial autónoma que decide en tiempo real.
+              {t("heroTitle")}
             </h1>
-            <p className="bee-caption mx-auto mt-6 max-w-xl text-base sm:text-lg">
-              BEE vigila el mercado, prioriza tu pipeline y prepara la próxima jugada mientras tú cierras —
-              sin fricción, sin datos inventados, sin perder el control de cada decisión.
-            </p>
+            <p className="bee-caption mx-auto mt-6 max-w-xl text-base sm:text-lg">{t("heroSubtitle")}</p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
               <Link href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary">
-                Comenzar ahora <ArrowRight className="size-4" />
+                {t("ctaStart")} <ArrowRight className="size-4" />
               </Link>
               <Link href="/probar" className="bee-btn-ghost">
-                <PlayCircle className="size-4" /> Probar sin registrarte
+                <PlayCircle className="size-4" /> {t("ctaTry")}
               </Link>
             </div>
           </div>
@@ -152,10 +126,8 @@ export default function Home() {
         {/* ── Vista previa del producto ───────────────────────────────────── */}
         <section id="producto" className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="bee-eyebrow">Demo en vivo</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-              De la señal a la oportunidad — explora el panel tú mismo.
-            </h2>
+            <p className="bee-eyebrow">{t("demoEyebrow")}</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("demoTitle")}</h2>
           </div>
           <div className="mt-10">
             <MarketingDemoPanel />
@@ -169,31 +141,34 @@ export default function Home() {
         {/* ── Módulos de valor ─────────────────────────────────────────────── */}
         <section id="modulos" className="border-t border-border bg-[var(--color-primary)]/15">
           <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
-            <p className="bee-eyebrow">Plataforma</p>
+            <p className="bee-eyebrow">{t("modulesEyebrow")}</p>
             <h2 className="mt-2 max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
-              Cuatro motores, un solo flujo de trabajo.
+              {t("modulesTitle")}
             </h2>
             <div className="bee-bento-grid mt-10">
-              {MODULES.map((m) => (
-                <Link
-                  key={m.title}
-                  href={m.href}
-                  className={`${m.span} bee-bento bee-bento-pad bee-glass--hover group block ${m.tone}`}
-                >
-                  <div className="flex h-full gap-4">
-                    <div className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-                      <m.icon className="size-5 stroke-[1.5] text-[var(--color-chart-4)]" />
+              {MODULE_KEYS.map((key) => {
+                const Icon = MODULE_ICONS[key];
+                return (
+                  <Link
+                    key={key}
+                    href={MODULE_HREFS[key]}
+                    className={`${MODULE_SPANS[key]} bee-bento bee-bento-pad bee-glass--hover group block ${MODULE_TONES[key]}`}
+                  >
+                    <div className="flex h-full gap-4">
+                      <div className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
+                        <Icon className="size-5 stroke-[1.5] text-[var(--color-chart-4)]" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-semibold tracking-tight">{t(`modules.${key}.title`)}</h3>
+                        <p className="bee-caption mt-1.5">{t(`modules.${key}.description`)}</p>
+                        <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] opacity-0 transition-opacity group-hover:opacity-100">
+                          {t("modulesExplore")} <ArrowRight className="size-3" />
+                        </span>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="text-sm font-semibold tracking-tight">{m.title}</h3>
-                      <p className="bee-caption mt-1.5">{m.description}</p>
-                      <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] opacity-0 transition-opacity group-hover:opacity-100">
-                        Explorar <ArrowRight className="size-3" />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -203,23 +178,22 @@ export default function Home() {
         {/* ── Autoridad / garantías del sistema ───────────────────────────── */}
         <section id="features" className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="bee-eyebrow">Por qué confiar en BEE</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-              Diseñado para equipos comerciales de alto rendimiento.
-            </h2>
-            <p className="bee-caption mt-3">
-              No promesas — garantías de arquitectura que sostienen cada decisión que BEE toma por ti.
-            </p>
+            <p className="bee-eyebrow">{t("guaranteesEyebrow")}</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("guaranteesTitle")}</h2>
+            <p className="bee-caption mt-3">{t("guaranteesSubtitle")}</p>
           </div>
 
           <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {GUARANTEES.map((g) => (
-              <div key={g.title} className="bee-bento bee-bento-pad">
-                <g.icon className="size-5 stroke-[1.5] text-[var(--color-chart-5)]" />
-                <h3 className="mt-3 text-sm font-semibold tracking-tight">{g.title}</h3>
-                <p className="bee-caption mt-1.5">{g.description}</p>
-              </div>
-            ))}
+            {GUARANTEE_KEYS.map((key) => {
+              const Icon = GUARANTEE_ICONS[key];
+              return (
+                <div key={key} className="bee-bento bee-bento-pad">
+                  <Icon className="size-5 stroke-[1.5] text-[var(--color-chart-5)]" />
+                  <h3 className="mt-3 text-sm font-semibold tracking-tight">{t(`guarantees.${key}.title`)}</h3>
+                  <p className="bee-caption mt-1.5">{t(`guarantees.${key}.description`)}</p>
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -228,11 +202,9 @@ export default function Home() {
         {/* ── CTA de cierre ────────────────────────────────────────────────── */}
         <section className="border-t border-border">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 py-16 text-center sm:py-20">
-            <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
-              Tu próximo cliente ya está mandando señales. La pregunta es si las estás viendo.
-            </h2>
+            <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">{t("closingTitle")}</h2>
             <Link href="/contacto?source=closing_cta" className="bee-btn bee-btn--primary">
-              Comenzar ahora <ArrowRight className="size-4" />
+              {t("closingCta")} <ArrowRight className="size-4" />
             </Link>
           </div>
         </section>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
 import { Logo } from "@/components/logo";
@@ -36,6 +37,7 @@ export function DashboardRail({
 }) {
   const pathname = usePathname();
   const { open, close } = useMobileNav();
+  const t = useTranslations("nav");
 
   return (
     <>
@@ -43,25 +45,25 @@ export function DashboardRail({
         <button
           type="button"
           className="bee-rail-overlay"
-          aria-label="Cerrar menú de navegación"
+          aria-label={t("closeMenu")}
           onClick={close}
         />
       )}
-      <aside className={cn("bee-rail", open && "bee-rail--open")} aria-label="Navegación principal">
+      <aside className={cn("bee-rail", open && "bee-rail--open")} aria-label={t("mainNavigation")}>
         <Link href={homeHref} className="mb-4 px-1.5" aria-label="Inicio BEE" onClick={close}>
           <Logo />
         </Link>
 
         <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain">
           {groups.map((group, gi) => (
-            <div key={group.label ?? `group-${gi}`} className={gi > 0 ? "mt-3" : undefined}>
-              {group.label && (
+            <div key={group.groupKey ?? `group-${gi}`} className={gi > 0 ? "mt-3" : undefined}>
+              {group.groupKey && (
                 <p className="mb-1 px-2.5 bee-eyebrow">
-                  {group.label}
+                  {t(`groups.${group.groupKey}`)}
                 </p>
               )}
               <div className="flex flex-col gap-0.5">
-                {group.items.map(({ href, icon: Icon, label, ...rest }) => {
+                {group.items.map(({ href, icon: Icon, labelKey, ...rest }) => {
                   const exact = "exact" in rest && rest.exact;
                   const active = exact ? pathname === href : pathname.startsWith(href);
 
@@ -73,7 +75,7 @@ export function DashboardRail({
                       className={cn("bee-rail-link", active && "bee-rail-link--active")}
                     >
                       <Icon className="size-4 shrink-0 stroke-[1.5]" />
-                      <span>{label}</span>
+                      <span>{t(`items.${labelKey}`)}</span>
                     </Link>
                   );
                 })}

@@ -1,10 +1,13 @@
 "use client";
 
 import { Clock, Radar } from "lucide-react";
+import { useLocale } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCyclePrediction } from "@/hooks/queries/use-artifacts";
+import type { Locale } from "@/i18n/locales";
+import { formatLongDate } from "@/lib/i18n/format";
 import { signalTypeLabels } from "@/lib/format";
 import type { SignalType } from "@/types/domain";
 import type { CycleSignalRecalibration } from "@/types/extended";
@@ -15,12 +18,8 @@ const CONFIDENCE_LABEL: Record<string, string> = {
   high: "Confianza alta",
 };
 
-function formatCloseDate(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("es-MX", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+function formatCloseDate(iso: string, locale: Locale): string {
+  return formatLongDate(`${iso}T00:00:00`, locale);
 }
 
 /** Predicción de ciclo de venta — cuántos días le faltan a ESTA oportunidad
@@ -33,6 +32,7 @@ function formatCloseDate(iso: string): string {
  *  ambos casos el panel explica por qué en vez de no mostrar nada o inventar
  *  un número. */
 export function CyclePredictionPanel({ opportunityId }: { opportunityId: string }) {
+  const locale = useLocale() as Locale;
   const { data: result, isLoading } = useCyclePrediction(opportunityId);
 
   if (isLoading) return <Skeleton className="h-32" />;
@@ -70,7 +70,7 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
             <div>
               <p className="text-xs text-muted-foreground">Cierre estimado</p>
               <p className="font-medium">
-                {prediction.predicted_close_date ? formatCloseDate(prediction.predicted_close_date) : "—"}
+                {prediction.predicted_close_date ? formatCloseDate(prediction.predicted_close_date, locale) : "—"}
               </p>
             </div>
             <div>

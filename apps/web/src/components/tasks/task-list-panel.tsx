@@ -1,10 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 
 import { useCreateTask, useDeleteTask, useOpportunityTasks, useUpdateTask } from "@/hooks/queries/use-tasks";
 import { cn } from "@/lib/utils";
+import { formatDate } from "@/lib/i18n/format";
+import type { Locale } from "@/i18n/locales";
 import type { OpportunityTask } from "@/types/domain";
 
 function isOverdue(task: OpportunityTask): boolean {
@@ -22,6 +25,7 @@ function TaskRow({
   onToggle: (completed: boolean) => void;
   onDelete: () => void;
 }) {
+  const locale = useLocale() as Locale;
   const overdue = isOverdue(task);
   return (
     <div className="group flex items-start gap-2 rounded-[var(--radius-md)] px-2 py-1.5 hover:bg-[var(--color-primary)]/20">
@@ -38,7 +42,7 @@ function TaskRow({
         </p>
         {task.due_at && (
           <p className={cn("text-[11px]", overdue ? "text-destructive" : "text-muted-foreground")}>
-            {new Date(task.due_at).toLocaleDateString()} {overdue && "· vencida"}
+            {formatDate(task.due_at, locale)} {overdue && "· vencida"}
           </p>
         )}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Building2, LogOut, Search, Target, User as UserIcon, type LucideIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -35,6 +36,8 @@ export function CommandPalette() {
   const { open, setOpen } = useCommandPalette();
   const router = useRouter();
   const { logout } = useAuth();
+  const t = useTranslations("common.commandPalette");
+  const tNav = useTranslations("nav.items");
 
   const { data: companiesResult } = useCompanies(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);
@@ -77,36 +80,40 @@ export function CommandPalette() {
         label: r.title,
         sublabel: r.subtitle,
         icon: ENTITY_ICON[r.kind],
-        groupLabel: "Resultados",
+        groupLabel: t("groupResults"),
         onSelect: () => router.push(r.href),
       }),
     );
-  }, [query, companiesResult?.data, oppsResult?.data, leadsResult?.data, router]);
+  }, [query, companiesResult?.data, oppsResult?.data, leadsResult?.data, router, t]);
 
   const navEntries = useMemo((): PaletteEntry[] => {
     const q = query.trim().toLowerCase();
-    return NAV_ITEMS.filter((item) => !q || item.label.toLowerCase().includes(q)).map((item) => ({
-      id: `nav-${item.href}`,
-      label: item.label,
-      icon: item.icon,
-      groupLabel: "Ir a",
-      onSelect: () => router.push(item.href),
-    }));
-  }, [query, router]);
+    return NAV_ITEMS.map((item) => ({ item, label: tNav(item.labelKey) }))
+      .filter(({ label }) => !q || label.toLowerCase().includes(q))
+      .map(
+        ({ item, label }): PaletteEntry => ({
+          id: `nav-${item.href}`,
+          label,
+          icon: item.icon,
+          groupLabel: t("groupGoTo"),
+          onSelect: () => router.push(item.href),
+        }),
+      );
+  }, [query, router, t, tNav]);
 
   const actionEntries = useMemo((): PaletteEntry[] => {
     const q = query.trim().toLowerCase();
     const actions: PaletteEntry[] = [
       {
         id: "action-logout",
-        label: "Cerrar sesión",
+        label: t("logout"),
         icon: LogOut,
-        groupLabel: "Acciones",
+        groupLabel: t("groupActions"),
         onSelect: logout,
       },
     ];
     return actions.filter((a) => !q || a.label.toLowerCase().includes(q));
-  }, [query, logout]);
+  }, [query, logout, t]);
 
   const entries = useMemo(
     () => [...navEntries, ...searchEntries, ...actionEntries],
@@ -157,13 +164,13 @@ export function CommandPalette() {
       <button
         type="button"
         className="bee-drawer-overlay"
-        aria-label="Cerrar paleta de comandos"
+        aria-label={t("closeAria")}
         onClick={() => setOpen(false)}
       />
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Paleta de comandos"
+        aria-label={t("dialogAria")}
         className="bee-glass fixed left-1/2 top-24 z-[60] w-[min(560px,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-[var(--radius-lg)]"
       >
         <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
@@ -173,7 +180,7 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ir a una sección, buscar una empresa, oportunidad o contacto…"
+            placeholder={t("placeholder")}
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
           <kbd className="shrink-0 rounded-[var(--radius-sm)] border border-border px-1.5 py-0.5 bee-micro">
@@ -183,7 +190,7 @@ export function CommandPalette() {
 
         <div ref={listRef} className="max-h-[60vh] overflow-y-auto py-2">
           {entries.length === 0 ? (
-            <p className="px-4 py-6 text-center text-xs text-muted-foreground">Sin resultados.</p>
+            <p className="px-4 py-6 text-center text-xs text-muted-foreground">{t("noResults")}</p>
           ) : (
             [...groups.entries()].map(([groupLabel, items]) => (
               <div key={groupLabel} className="mb-1.5 last:mb-0">

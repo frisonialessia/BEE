@@ -1,20 +1,19 @@
+"use client";
+
 import { Sparkles, TrendingUp } from "lucide-react";
+import { useLocale } from "next-intl";
 import Link from "next/link";
 
+import type { Locale } from "@/i18n/locales";
+import { formatCurrencyUSDCompact } from "@/lib/i18n/format";
 import type { TodayImpact } from "@/lib/today-impact";
-
-const currency = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-  notation: "compact",
-});
 
 /** "Si actúas hoy…" — el número que abre la mañana. Nunca inventa una
  *  cifra: si no hay suficiente histórico de cierre o ningún monto cargado
  *  en las oportunidades, cae a un mensaje honesto en vez de un $0 o un
  *  estimado disfrazado de medición. Ver `computeTodayImpact`. */
 export function TodayImpactCard({ impact }: { impact: TodayImpact }) {
+  const locale = useLocale() as Locale;
   const { hotSignalsToday, projectedUplift, winRate, avgDealValue, winRateSampleSize } = impact;
 
   if (hotSignalsToday.length === 0) {
@@ -40,12 +39,12 @@ export function TodayImpactCard({ impact }: { impact: TodayImpact }) {
             {projectedUplift !== null ? (
               <>
                 <p className="mt-1 text-2xl font-bold tracking-tight">
-                  +{currency.format(projectedUplift)} de pipeline proyectado
+                  +{formatCurrencyUSDCompact(projectedUplift, locale)} de pipeline proyectado
                 </p>
                 <p className="bee-caption mt-1">
                   {hotSignalsToday.length} señal{hotSignalsToday.length === 1 ? "" : "es"} de alta intención
                   hoy × {Math.round((winRate ?? 0) * 100)}% de cierre histórico ({winRateSampleSize} deals) ×{" "}
-                  {currency.format(avgDealValue ?? 0)} de valor promedio por deal
+                  {formatCurrencyUSDCompact(avgDealValue ?? 0, locale)} de valor promedio por deal
                 </p>
               </>
             ) : (

@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
 
 /**
@@ -17,6 +19,8 @@ import { Logo } from "@/components/logo";
  * directas, igual que en cualquier otra página del producto.
  */
 export function MarketingHeader() {
+  const t = useTranslations("marketing.header");
+
   return (
     <header className="sticky top-0 z-40 border-b border-[color-mix(in_srgb,var(--color-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--color-background)_75%,transparent)] backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-6">
@@ -38,17 +42,20 @@ export function MarketingHeader() {
          * fuerza su propio display. */}
         <nav className="flex shrink-0 items-center gap-2">
           <span className="hidden sm:inline-flex">
+            <LanguageSwitcher />
+          </span>
+          <span className="hidden sm:inline-flex">
             <Link href="/funcionalidades" className="bee-btn-ghost">
-              Funcionalidades
+              {t("features")}
             </Link>
           </span>
           <span className="hidden sm:inline-flex">
             <Link href="/login" className="bee-btn-ghost">
-              Iniciar sesión
+              {t("login")}
             </Link>
           </span>
           <Link href="/probar" className="bee-btn bee-btn--primary">
-            Probar sin registrarte
+            {t("tryFree")}
           </Link>
         </nav>
       </div>

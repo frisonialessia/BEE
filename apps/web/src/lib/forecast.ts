@@ -1,3 +1,4 @@
+import { localeTags, defaultLocale, type Locale } from "@/i18n/locales";
 import { CLOSED_OPPORTUNITY_STATUSES, type Opportunity, type OpportunityStatus } from "@/types/domain";
 
 /** Checklist MEDDIC — un criterio por pilar del framework de calificación.
@@ -125,7 +126,9 @@ export interface ForecastSummary {
   scoreBucketStats: ScoreBucketStat[];
 }
 
-const MONTH_LABEL = new Intl.DateTimeFormat("es-MX", { month: "short", year: "2-digit" });
+function monthLabelFormatter(locale: Locale): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat(localeTags[locale], { month: "short", year: "2-digit" });
+}
 
 /** Parsea un "YYYY-MM-DD" como fecha local — `new Date("YYYY-MM-DD")` lo
  *  interpreta como medianoche UTC, y con offsets negativos (América) eso
@@ -140,7 +143,12 @@ function parseLocalDate(value: string): Date {
  *  cargada — mismo patrón que el resto de la BI de BEE: todo el cálculo
  *  vive en el cliente, sin endpoint de agregación aparte. `today` se recibe
  *  como parámetro para que el cálculo sea determinista y testeable. */
-export function computeForecast(opportunities: Opportunity[], today: Date): ForecastSummary {
+export function computeForecast(
+  opportunities: Opportunity[],
+  today: Date,
+  locale: Locale = defaultLocale,
+): ForecastSummary {
+  const monthLabel = monthLabelFormatter(locale);
   const open = opportunities.filter((o) => !CLOSED_OPPORTUNITY_STATUSES.includes(o.status));
   const won = opportunities.filter((o) => o.status === "won");
   const bucketStats = computeScoreBucketStats(opportunities).filter(
@@ -161,7 +169,7 @@ export function computeForecast(opportunities: Opportunity[], today: Date): Fore
   for (let i = 0; i < 6; i++) {
     const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    bucketsByKey.set(key, { key, label: MONTH_LABEL.format(d), weighted: 0, total: 0, count: 0 });
+    bucketsByKey.set(key, { key, label: monthLabel.format(d), weighted: 0, total: 0, count: 0 });
   }
   const sinFecha: ForecastMonthBucket = { key: "sin_fecha", label: "Sin fecha", weighted: 0, total: 0, count: 0 };
 

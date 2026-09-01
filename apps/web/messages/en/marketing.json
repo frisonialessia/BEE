@@ -1,0 +1,90 @@
+{
+  "header": {
+    "features": "Features",
+    "login": "Sign in",
+    "tryFree": "Try without signing up"
+  },
+  "footer": {
+    "tagline": "Autonomous sales intelligence for revenue teams who don't have time to go looking for the signal — only to act on it.",
+    "product": "Product",
+    "productLinks": {
+      "features": "Features",
+      "solutions": "Solutions",
+      "preview": "Preview",
+      "apiDocs": "API documentation"
+    },
+    "company": "Company",
+    "companyLinks": {
+      "about": "About us",
+      "careers": "Careers",
+      "security": "Security"
+    },
+    "account": "Account",
+    "accountLinks": {
+      "login": "Sign in",
+      "register": "Create account",
+      "contact": "Contact",
+      "support": "Support"
+    },
+    "legal": "Legal",
+    "legalLinks": {
+      "terms": "Terms of Service",
+      "privacy": "Privacy"
+    },
+    "copyright": "© {year} BEE Intelligence — Sales Force Intelligence",
+    "tagline2": "Modular · Efficient · Market-aware"
+  },
+  "landing": {
+    "eyebrow": "Sales Force Intelligence",
+    "heroTitle": "Autonomous sales intelligence that decides in real time.",
+    "heroSubtitle": "BEE watches the market, prioritizes your pipeline, and prepares your next move while you close — no friction, no fabricated data, never losing control of a single decision.",
+    "ctaStart": "Get started",
+    "ctaTry": "Try without signing up",
+    "demoEyebrow": "Live demo",
+    "demoTitle": "From signal to opportunity — explore the dashboard yourself.",
+    "modulesEyebrow": "Platform",
+    "modulesTitle": "Four engines, one workflow.",
+    "modulesExplore": "Explore",
+    "modules": {
+      "signals": {
+        "title": "Real-time signal engine",
+        "description": "Detects funding rounds, key hires, and tech-stack changes the moment they happen — no one has to go looking for them."
+      },
+      "brief": {
+        "title": "Daily brief",
+        "description": "An executive summary every morning with what actually matters in your pipeline — zero cognitive friction before your first call."
+      },
+      "simulator": {
+        "title": "Revenue simulator",
+        "description": "Projects pipeline scenarios based on real buying intent — not generic industry averages."
+      },
+      "automation": {
+        "title": "Multi-channel automation",
+        "description": "Design outreach sequences across email, LinkedIn, and more that advance on their own based on how each lead responds — always with your approval before anything sends."
+      }
+    },
+    "guaranteesEyebrow": "Why trust BEE",
+    "guaranteesTitle": "Built for high-performing sales teams.",
+    "guaranteesSubtitle": "Not promises — architectural guarantees behind every decision BEE makes on your behalf.",
+    "guarantees": {
+      "noHallucinations": {
+        "title": "Zero hallucinations",
+        "description": "Every score and every metric comes from real data. When there's no data, the system shows empty — it never invents one."
+      },
+      "humanApproval": {
+        "title": "Human approval, always",
+        "description": "No external action — an email, a message, a sequence — ever fires without explicit go-ahead."
+      },
+      "multiTenant": {
+        "title": "Real multi-tenancy",
+        "description": "Strict data isolation per organization, end to end — not an optional flag."
+      },
+      "secureByDesign": {
+        "title": "Secure by design",
+        "description": "HMAC-signed webhooks and per-environment secrets — credentials never touch the codebase."
+      }
+    },
+    "closingTitle": "Your next customer is already sending signals. The question is whether you're seeing them.",
+    "closingCta": "Get started"
+  }
+}

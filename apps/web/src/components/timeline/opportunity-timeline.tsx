@@ -1,8 +1,11 @@
 "use client";
 
+import { useLocale } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Locale } from "@/i18n/locales";
+import { formatDateTimePadded } from "@/lib/i18n/format";
 import { getAuditDecisions } from "@/lib/api";
 import type { AuditEntry } from "@/types/extended";
 
@@ -28,9 +31,8 @@ const AGENT_DOT_COLOR: Record<string, string> = {
   trend_analyst: "var(--color-chart-4)",
 };
 
-function timeLabel(iso: string) {
-  const date = new Date(iso);
-  return date.toLocaleString("es-MX", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+function timeLabel(iso: string, locale: Locale) {
+  return formatDateTimePadded(iso, locale);
 }
 
 /**
@@ -39,6 +41,7 @@ function timeLabel(iso: string) {
  * (ya existía, registra cada decisión) — no es un log inventado.
  */
 export function OpportunityTimeline({ opportunityId }: { opportunityId: string }) {
+  const locale = useLocale() as Locale;
   const [entries, setEntries] = useState<AuditEntry[] | null>(null);
 
   useEffect(() => {
@@ -87,7 +90,7 @@ export function OpportunityTimeline({ opportunityId }: { opportunityId: string }
                 {entry.decision_type.replace(/_/g, " ")}
               </span>
               <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-                {timeLabel(entry.created_at)}
+                {timeLabel(entry.created_at, locale)}
               </span>
             </div>
             {entry.strategy_reasoning && (

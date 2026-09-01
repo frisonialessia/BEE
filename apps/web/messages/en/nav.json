@@ -1,0 +1,28 @@
+{
+  "closeMenu": "Close navigation menu",
+  "mainNavigation": "Main navigation",
+  "groups": {
+    "accounts": "Accounts",
+    "intelligence": "Intelligence",
+    "operations": "Operations"
+  },
+  "items": {
+    "overview": "Overview",
+    "crm": "CRM",
+    "companies": "Companies",
+    "leads": "Leads",
+    "opportunities": "Opportunities",
+    "priority": "Prioritization",
+    "signals": "Signals",
+    "strategies": "Strategies",
+    "darkFunnel": "Dark Funnel",
+    "forecast": "Forecast",
+    "winLoss": "Win/Loss",
+    "control": "Control",
+    "network": "Network",
+    "brand": "Brand Voice",
+    "sequences": "Sequences",
+    "integrations": "Integrations",
+    "resilience": "Resilience"
+  }
+}

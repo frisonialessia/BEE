@@ -1,3 +1,4 @@
+import { localeTags, defaultLocale, type Locale } from "@/i18n/locales";
 import type { Opportunity } from "@/types/domain";
 
 export interface MonthlyTrendPoint {
@@ -11,7 +12,9 @@ export interface MonthlyTrendPoint {
   winRate: number | null;
 }
 
-const MONTH_LABEL = new Intl.DateTimeFormat("es-MX", { month: "short", year: "2-digit" });
+function monthLabelFormatter(locale: Locale): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat(localeTags[locale], { month: "short", year: "2-digit" });
+}
 
 function monthKey(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -28,12 +31,14 @@ export function computeMonthlyTrends(
   opportunities: Opportunity[],
   today: Date,
   monthsBack = 6,
+  locale: Locale = defaultLocale,
 ): MonthlyTrendPoint[] {
+  const monthLabel = monthLabelFormatter(locale);
   const points = new Map<string, MonthlyTrendPoint>();
   for (let i = monthsBack - 1; i >= 0; i--) {
     const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
     const key = monthKey(d);
-    points.set(key, { key, label: MONTH_LABEL.format(d), created: 0, won: 0, lost: 0, winRate: null });
+    points.set(key, { key, label: monthLabel.format(d), created: 0, won: 0, lost: 0, winRate: null });
   }
 
   for (const o of opportunities) {

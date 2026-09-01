@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, DollarSign, TrendingUp, Trophy } from "lucide-react";
+import { useLocale } from "next-intl";
 
 import { ForecastBarChart } from "@/components/forecast/forecast-bar-chart";
 import { ScenarioSimulatorPanel } from "@/components/forecast/scenario-simulator-panel";
@@ -12,14 +13,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
+import type { Locale } from "@/i18n/locales";
+import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeForecast, qualificationScore, type AtRiskOpportunity } from "@/lib/forecast";
 import { computeMonthlyTrends } from "@/lib/trends";
-
-const currency = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
 
 const RISK_LABEL: Record<AtRiskOpportunity["reason"], string> = {
   sin_fecha_de_cierre: "Sin fecha de cierre",
@@ -31,6 +28,7 @@ const RISK_LABEL: Record<AtRiskOpportunity["reason"], string> = {
  *  deals en riesgo, y el simulador de escenarios "qué pasaría si" — el
  *  mismo motor financiero que le pregunta un director, todo en un lugar. */
 export function ForecastView() {
+  const locale = useLocale() as Locale;
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 200);
   const { data: companiesResult } = useCompanies(200);
   const { openOpportunity } = useOpportunityDrawer();
@@ -40,8 +38,8 @@ export function ForecastView() {
   const companyById = new Map((companiesResult?.data ?? []).map((c) => [c.id, c]));
 
   const today = new Date();
-  const forecast = computeForecast(opportunities, today);
-  const trends = computeMonthlyTrends(opportunities, today);
+  const forecast = computeForecast(opportunities, today, locale);
+  const trends = computeMonthlyTrends(opportunities, today, 6, locale);
   const withAmount = opportunities.some((o) => o.amount !== null);
   const hasClosedHistory = trends.some((t) => t.won + t.lost > 0);
 
@@ -95,13 +93,13 @@ export function ForecastView() {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
                   label="Pipeline abierto"
-                  value={currency.format(forecast.pipelineValue)}
+                  value={formatCurrencyUSD(forecast.pipelineValue, locale)}
                   hint={`${forecast.openCount} oportunidades sin cerrar`}
                   icon={DollarSign}
                 />
                 <MetricCard
                   label="Pronóstico ponderado"
-                  value={currency.format(forecast.weightedForecast)}
+                  value={formatCurrencyUSD(forecast.weightedForecast, locale)}
                   hint={
                     forecast.scoreBucketStats.length > 0
                       ? "Monto × probabilidad real de cierre (histórico) o por etapa"
@@ -111,7 +109,7 @@ export function ForecastView() {
                 />
                 <MetricCard
                   label="Ganado"
-                  value={currency.format(forecast.wonValue)}
+                  value={formatCurrencyUSD(forecast.wonValue, locale)}
                   hint="Oportunidades cerradas como ganadas"
                   icon={Trophy}
                 />

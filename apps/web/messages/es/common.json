@@ -1,0 +1,25 @@
+{
+  "languageSwitcher": {
+    "label": "Idioma",
+    "es": "Español",
+    "en": "English"
+  },
+  "probarBanner": {
+    "title": "Estás probando BEE con datos de ejemplo",
+    "subtitle": " — guardados solo en este navegador, nunca en nuestra base de datos.",
+    "createAccount": "Crear cuenta gratis",
+    "contactUs": "Contáctanos",
+    "homeAria": "BEE — inicio",
+    "sandboxLabel": "Sandbox de prueba"
+  },
+  "commandPalette": {
+    "closeAria": "Cerrar paleta de comandos",
+    "dialogAria": "Paleta de comandos",
+    "placeholder": "Ir a una sección, buscar una empresa, oportunidad o contacto…",
+    "noResults": "Sin resultados.",
+    "groupResults": "Resultados",
+    "groupGoTo": "Ir a",
+    "groupActions": "Acciones",
+    "logout": "Cerrar sesión"
+  }
+}

@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from "next-intl";
+
 import { SignalCard } from "@/components/signal-card";
 import { SignalVolumeChart } from "@/components/signals/signal-volume-chart";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
@@ -7,17 +9,19 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSignals } from "@/hooks/queries/use-signals";
+import type { Locale } from "@/i18n/locales";
 import { computeDailySignalVolume } from "@/lib/signal-trends";
 
 /** Panel de señales — triggers de mercado del Signal Engine. */
 export function SignalsDashboard() {
+  const locale = useLocale() as Locale;
   const { data: result, isLoading, isError } = useSignals(200);
 
   const signals = result?.data ?? [];
   const live = result?.live ?? false;
   const hotCount = signals.filter((s) => s.score >= 75).length;
   const pagination = usePagination(signals);
-  const dailyVolume = computeDailySignalVolume(signals, new Date(), 14);
+  const dailyVolume = computeDailySignalVolume(signals, new Date(), 14, locale);
 
   return (
     <div>
