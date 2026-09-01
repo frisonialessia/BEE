@@ -1,8 +1,13 @@
+"use client";
+
 import { Radio } from "lucide-react";
+import { useLocale } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
+import type { Locale } from "@/i18n/locales";
+import { formatRelativeTime } from "@/lib/i18n/format";
 import { BENTO_TONES } from "@/lib/brand/colors";
-import { scoreVariant, signalTagLabels, signalTypeLabels, timeAgo } from "@/lib/format";
+import { getSignalTagLabels, getSignalTypeLabels, scoreVariant } from "@/lib/format";
 import type { Signal } from "@/lib/types";
 
 /** A single detected market signal in the Bento grid. */
@@ -13,6 +18,9 @@ export function SignalCard({
   signal: Signal;
   toneIndex?: number;
 }) {
+  const locale = useLocale() as Locale;
+  const signalTypeLabels = getSignalTypeLabels(locale);
+  const signalTagLabels = getSignalTagLabels(locale);
   const tags = signal.analysis?.tags ?? [];
   const primary = signal.analysis?.primary_analyzer;
   const bg = BENTO_TONES[toneIndex % BENTO_TONES.length];
@@ -34,7 +42,7 @@ export function SignalCard({
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline">{signalTypeLabels[signal.signal_type]}</Badge>
             <span className="bee-micro">
-              {timeAgo(signal.detected_at)} · {signal.source}
+              {formatRelativeTime(signal.detected_at, locale)} · {signal.source}
             </span>
           </div>
 

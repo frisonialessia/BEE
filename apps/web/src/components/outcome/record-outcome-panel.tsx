@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { useRecordOutcome } from "@/hooks/mutations/use-record-outcome";
-import { lossReasonLabels } from "@/lib/format";
+import { getLossReasonLabels, lossReasonLabels } from "@/lib/format";
 import { formatDate } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
 import { CLOSED_OPPORTUNITY_STATUSES, type LossReason, type Opportunity } from "@/types/domain";
@@ -25,6 +25,8 @@ const LOSS_REASONS = Object.keys(lossReasonLabels) as LossReason[];
  */
 export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }) {
   const locale = useLocale() as Locale;
+  const t = useTranslations("sharedB.outcome");
+  const lossReasonLabelsForLocale = getLossReasonLabels(locale);
   const recordOutcome = useRecordOutcome(opportunity.id);
   const [mode, setMode] = useState<"won" | "lost" | null>(null);
   const [lossReason, setLossReason] = useState<LossReason | "">("");
@@ -42,7 +44,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
           {won && <CheckCircle2 className="size-4 text-[var(--success)]" />}
           {lost && <XCircle className="size-4 text-muted-foreground" />}
           <h3 className="bee-card-title">
-            {won ? "Ganada" : lost ? "Perdida" : "Descartada"}
+            {won ? t("statusLabel.won") : lost ? t("statusLabel.lost") : t("statusLabel.dismissed")}
           </h3>
           {opportunity.closed_at && (
             <span className="ml-auto bee-micro">
@@ -53,14 +55,23 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
         {lost && (opportunity.loss_reason || opportunity.competitor) && (
           <p className="text-xs text-muted-foreground">
             {opportunity.loss_reason && (
-              <>Razón: {lossReasonLabels[opportunity.loss_reason as LossReason] ?? opportunity.loss_reason}</>
+              <>
+                {t("reasonPrefix")}{" "}
+                {lossReasonLabelsForLocale[opportunity.loss_reason as LossReason] ?? opportunity.loss_reason}
+              </>
             )}
             {opportunity.loss_reason && opportunity.competitor && " · "}
-            {opportunity.competitor && <>Competidor: {opportunity.competitor}</>}
+            {opportunity.competitor && (
+              <>
+                {t("competitorPrefix")} {opportunity.competitor}
+              </>
+            )}
           </p>
         )}
         {won && opportunity.competitor && (
-          <p className="text-xs text-muted-foreground">Competidor superado: {opportunity.competitor}</p>
+          <p className="text-xs text-muted-foreground">
+            {t("competitorBeatenPrefix")} {opportunity.competitor}
+          </p>
         )}
       </section>
     );
@@ -88,7 +99,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
 
   return (
     <section className="bee-surface bee-bento-pad">
-      <h3 className="bee-card-title">Registrar resultado</h3>
+      <h3 className="bee-card-title">{t("sectionTitle")}</h3>
 
       {mode === null && (
         <div className="flex gap-2">
@@ -98,14 +109,14 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
             className="bee-btn-ghost flex-1 justify-center"
             style={{ borderColor: "var(--success)", color: "var(--success)" }}
           >
-            <CheckCircle2 className="size-3.5" /> Marcar ganada
+            <CheckCircle2 className="size-3.5" /> {t("markWon")}
           </button>
           <button
             type="button"
             onClick={() => setMode("lost")}
             className="bee-btn-ghost flex-1 justify-center"
           >
-            <XCircle className="size-3.5" /> Marcar perdida
+            <XCircle className="size-3.5" /> {t("markLost")}
           </button>
         </div>
       )}
@@ -113,21 +124,21 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
       {mode !== null && (
         <div className="space-y-3">
           <Badge variant={mode === "won" ? "success" : "secondary"}>
-            {mode === "won" ? "Ganada" : "Perdida"}
+            {mode === "won" ? t("statusLabel.won") : t("statusLabel.lost")}
           </Badge>
 
           {mode === "lost" && (
             <label className="block text-xs text-muted-foreground">
-              Razón (obligatoria)
+              {t("reasonRequiredLabel")}
               <select
                 value={lossReason}
                 onChange={(e) => setLossReason(e.target.value as LossReason)}
                 className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
               >
-                <option value="">Selecciona una razón…</option>
+                <option value="">{t("reasonPlaceholder")}</option>
                 {LOSS_REASONS.map((r) => (
                   <option key={r} value={r}>
-                    {lossReasonLabels[r]}
+                    {lossReasonLabelsForLocale[r]}
                   </option>
                 ))}
               </select>
@@ -135,28 +146,28 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
           )}
 
           <label className="block text-xs text-muted-foreground">
-            {mode === "won" ? "Competidor superado (opcional)" : "Competidor que ganó (opcional)"}
+            {mode === "won" ? t("competitorWonLabel") : t("competitorLostLabel")}
             <input
               value={competitor}
               onChange={(e) => setCompetitor(e.target.value)}
-              placeholder="Nombre del competidor"
+              placeholder={t("competitorPlaceholder")}
               className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
             />
           </label>
 
           <label className="block text-xs text-muted-foreground">
-            Notas (opcional)
+            {t("notesLabel")}
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              placeholder="Contexto adicional del cierre…"
+              placeholder={t("notesPlaceholder")}
               className="mt-1 w-full resize-none rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
             />
           </label>
 
           {recordOutcome.isError && (
-            <p className="text-xs text-destructive">No se pudo registrar — intenta de nuevo.</p>
+            <p className="text-xs text-destructive">{t("error")}</p>
           )}
 
           <div className="flex gap-2">
@@ -166,10 +177,10 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
               disabled={recordOutcome.isPending || (mode === "lost" && !lossReason)}
               className="bee-btn bee-btn--primary flex-1"
             >
-              {recordOutcome.isPending ? "Guardando…" : "Confirmar"}
+              {recordOutcome.isPending ? t("saving") : t("confirm")}
             </button>
             <button type="button" onClick={reset} className="bee-btn-ghost">
-              Cancelar
+              {t("cancel")}
             </button>
           </div>
         </div>

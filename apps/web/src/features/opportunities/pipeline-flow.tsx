@@ -1,18 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 import { KANBAN_COLUMNS, groupLeadCards, opportunityToLeadCard } from "@/lib/control/lead-board";
 import type { LeadColumnId } from "@/types/control";
 import type { Opportunity } from "@/types/domain";
-
-const COLUMN_LABELS: Record<LeadColumnId, string> = {
-  detected: "Detectadas",
-  enriching: "Enriqueciendo",
-  ready_to_action: "Listas para actuar",
-  in_progress: "En progreso",
-  closed: "Cerradas",
-};
 
 // Mismo mapeo de color que las columnas del Kanban de Control (LeadWorkspace), para que
 // una etapa se vea igual en las dos vistas.
@@ -58,6 +51,7 @@ function bandPath(x0: number, y0top: number, y0bot: number, x1: number, y1top: n
  * desde el total hacia cada grupo. Mismas etapas y colores que el Kanban.
  */
 export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }) {
+  const t = useTranslations("opportunitiesPriority.pipelineFlow");
   const { segments, total, closedBreakdown } = useMemo(() => {
     const cards = opportunities.map(opportunityToLeadCard);
     const grouped = groupLeadCards(cards);
@@ -108,7 +102,7 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
   if (total === 0) {
     return (
       <div className="bee-bento bee-bento-pad py-12 text-center">
-        <p className="text-sm text-muted-foreground">Aún no hay oportunidades para mostrar el flujo.</p>
+        <p className="text-sm text-muted-foreground">{t("empty")}</p>
       </div>
     );
   }
@@ -117,8 +111,8 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
     <div className="bee-surface bee-bento-pad">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="bee-eyebrow">Flujo del pipeline</p>
-          <h2 className="mt-1 bee-card-title">{total} oportunidades en total</h2>
+          <p className="bee-eyebrow">{t("eyebrow")}</p>
+          <h2 className="mt-1 bee-card-title">{t("title", { count: total })}</h2>
         </div>
       </div>
 
@@ -134,7 +128,7 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
         className="w-full"
         style={{ maxWidth: WIDTH, marginInline: "auto", display: "block" }}
         role="img"
-        aria-label="Flujo de oportunidades por etapa"
+        aria-label={t("ariaLabel")}
       >
         {/* Barra fuente — el total, sin dividir, porque es un solo flujo de origen */}
         <rect x={SOURCE_X} y={0} width={BAR_W} height={HEIGHT} rx={4} fill="var(--color-primary)" />
@@ -176,24 +170,24 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
             className="fill-foreground"
             style={{ fontSize: 11, fontWeight: 600 }}
           >
-            {seg.count} · {COLUMN_LABELS[seg.id]}
+            {seg.count} · {t(`columns.${seg.id}`)}
           </text>
         ))}
       </svg>
 
       <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">Dentro de Cerradas:</span>
+        <span className="font-medium text-foreground">{t("closedBreakdown.label")}</span>
         <span className="inline-flex items-center gap-1.5">
           <span className="size-2 rounded-full" style={{ background: "var(--success)" }} />
-          {closedBreakdown.won} ganadas
+          {t("closedBreakdown.won", { count: closedBreakdown.won })}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="size-2 rounded-full" style={{ background: "var(--destructive)" }} />
-          {closedBreakdown.lost} perdidas
+          {t("closedBreakdown.lost", { count: closedBreakdown.lost })}
         </span>
         <span className="inline-flex items-center gap-1.5">
           <span className="size-2 rounded-full bg-muted-foreground/40" />
-          {closedBreakdown.dismissed} descartadas
+          {t("closedBreakdown.dismissed", { count: closedBreakdown.dismissed })}
         </span>
       </div>
     </div>

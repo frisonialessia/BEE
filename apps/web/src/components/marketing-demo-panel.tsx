@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import {
   ArrowDownToLine,
@@ -26,12 +27,18 @@ import { scoreVariant } from "@/lib/format";
  * se replican sus MISMAS clases (.bee-bar-track, .bee-stat-grid, Badge con
  * las mismas variantes/colores) para que un visitante que luego inicie
  * sesión reconozca exactamente lo que vio acá.
+ *
+ * Todos los textos de las 3 pestañas viven en landing.demo.* — los datos
+ * fijos (nombres propios, scores, porcentajes) se quedan en los arrays de
+ * este archivo, referenciados por `id` estable, y `useTranslations`
+ * resuelve la copia por ese id — ver el patrón ya usado en
+ * marketing-honeycomb.tsx/marketing-before-after.tsx para `stage`.
  */
 
 const TABS = [
-  { id: "signals", label: "Señales" },
-  { id: "leads", label: "Leads" },
-  { id: "forecast", label: "Simulador" },
+  { id: "signals" },
+  { id: "leads" },
+  { id: "forecast" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -39,55 +46,54 @@ type TabId = (typeof TABS)[number]["id"];
 // ── Señales: réplica compacta de las 3 columnas de Control ────────────────
 
 const SIGNAL_FEED = [
-  { icon: Radio, label: "Webhook recibido", title: "Northwind Robotics levantó una Serie C de USD 40M", time: "hace 2h" },
-  { icon: ArrowDownToLine, label: "Enriquecida", title: "Vantage Health está contratando 20 AEs", time: "hace 5h" },
-  { icon: Sparkles, label: "Estrategia lista", title: "Solace Data nombró un nuevo CRO", time: "hace 1d" },
+  { id: "webhook", icon: Radio },
+  { id: "enriched", icon: ArrowDownToLine },
+  { id: "strategy", icon: Sparkles },
 ] as const;
 
 // Mismas 5 etapas que el Espacio de leads real (Control → LeadWorkspace,
 // STAGE_LABEL_ES) — no una versión recortada solo para que quepa acá.
 const ACTION_ZONE = [
-  { label: "Detectadas", value: 4 },
-  { label: "Enriqueciendo", value: 2 },
-  { label: "Listas", value: 7 },
-  { label: "En progreso", value: 3 },
-  { label: "Cerradas", value: 5 },
+  { id: "detected", value: 4 },
+  { id: "enriching", value: 2 },
+  { id: "ready", value: 7 },
+  { id: "inProgress", value: 3 },
+  { id: "closed", value: 5 },
 ] as const;
 
-const NEXT_ACTION = {
-  company: "Northwind Robotics",
-  reason: "Levantó una Serie C de USD 40M — el momento de mayor propensión a comprar.",
-} as const;
+const NEXT_ACTION = { company: "Northwind Robotics" } as const;
 
-const ZONE_ACTIVITY = [
-  { text: "Aisha Bello pasó a Calificado", time: "hace 3h" },
-  { text: "Tom Reyes fue asignado a un AE", time: "hace 6h" },
-] as const;
+const ZONE_ACTIVITY = [{ id: "qualified" }, { id: "assigned" }] as const;
 
 // Mismo patrón que stageStats en SignalHexMap real (barra de color + %),
 // solo que con datos de ejemplo fijos en vez de calculados de useHiveLeads.
+// `id` referencia landing.stages (misma fuente que marketing-before-after.tsx
+// y marketing-honeycomb.tsx).
 const STAGE_STATS = [
-  { label: "Listo para comprar", pct: 28, color: "var(--color-chart-2)" },
-  { label: "Decisión", pct: 34, color: "var(--color-chart-1)" },
-  { label: "Consideración", pct: 38, color: "var(--color-chart-3)" },
+  { id: "ready_to_buy", pct: 28, color: "var(--color-chart-2)" },
+  { id: "decision", pct: 34, color: "var(--color-chart-1)" },
+  { id: "consideration", pct: 38, color: "var(--color-chart-3)" },
 ] as const;
 
 const KPI_TILES = [
-  { label: "Ingesta", value: "Activo" },
-  { label: "Cola", value: "3" },
-  { label: "Hechos", value: "128" },
-  { label: "Errores", value: "0" },
-  { label: "Latencia", value: "180ms" },
-  { label: "Fuentes activas", value: "5" },
+  { id: "ingestion", value: null },
+  { id: "queue", value: "3" },
+  { id: "facts", value: "128" },
+  { id: "errors", value: "0" },
+  { id: "latency", value: "180ms" },
+  { id: "activeSources", value: "5" },
 ] as const;
 
 const PROVIDERS = [
-  { name: "LinkedIn", status: "Modo simulado", quota: "100/100" },
-  { name: "G2", status: "Modo simulado", quota: "60/60" },
-  { name: "Google Search", status: "Modo simulado", quota: "40/40" },
+  { name: "LinkedIn", quota: "100/100" },
+  { name: "G2", quota: "60/60" },
+  { name: "Google Search", quota: "40/40" },
 ] as const;
 
 function SignalsView() {
+  const t = useTranslations("landing.demo.signalsView");
+  const tStages = useTranslations("landing.stages");
+
   return (
     <div className="grid flex-1 grid-cols-1 gap-3 lg:grid-cols-3">
       {/* flex flex-col justify-between (no solo space-y) en las 3
@@ -99,50 +105,50 @@ function SignalsView() {
        * entre los bloques en vez de acumularse en uno solo. */}
       <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3">
         <div className="space-y-2">
-          <p className="bee-eyebrow">Zona de acción</p>
+          <p className="bee-eyebrow">{t("actionZoneTitle")}</p>
           {ACTION_ZONE.map((row) => (
-            <div key={row.label} className="flex items-center justify-between rounded-sm bg-[var(--color-primary)]/50 px-2.5 py-2">
-              <span className="text-xs font-medium">{row.label}</span>
+            <div key={row.id} className="flex items-center justify-between rounded-sm bg-[var(--color-primary)]/50 px-2.5 py-2">
+              <span className="text-xs font-medium">{t(`actionZone.${row.id}`)}</span>
               <span className="text-xs font-semibold tabular-nums">{row.value}</span>
             </div>
           ))}
           <p className="flex items-center gap-1.5 text-[11px] text-[var(--color-chart-5)]">
             <Flame className="size-3" />
-            3 leads calientes
+            {t("hotLeads", { count: 3 })}
           </p>
         </div>
         <div className="grid grid-cols-2 gap-1.5 border-t border-[var(--color-divider)] pt-3">
           <div>
-            <p className="bee-kpi-tile__label">Tiempo a 1ª acción</p>
+            <p className="bee-kpi-tile__label">{t("timeToFirstAction")}</p>
             <p className="text-sm font-semibold tabular-nums">4.2h</p>
           </div>
           <div>
-            <p className="bee-kpi-tile__label">Conversión de zona</p>
+            <p className="bee-kpi-tile__label">{t("zoneConversion")}</p>
             <p className="text-sm font-semibold tabular-nums">24%</p>
           </div>
         </div>
         <div className="space-y-1.5 border-t border-[var(--color-divider)] pt-3">
-          <p className="bee-kpi-tile__label">Actividad reciente</p>
+          <p className="bee-kpi-tile__label">{t("recentActivity")}</p>
           {ZONE_ACTIVITY.map((a) => (
-            <div key={a.text} className="flex items-center justify-between gap-2 text-xs">
-              <span className="leading-snug">{a.text}</span>
-              <span className="bee-micro shrink-0">{a.time}</span>
+            <div key={a.id} className="flex items-center justify-between gap-2 text-xs">
+              <span className="leading-snug">{t(`activity.${a.id}.text`)}</span>
+              <span className="bee-micro shrink-0">{t(`activity.${a.id}.time`)}</span>
             </div>
           ))}
         </div>
         <div className="space-y-1.5 rounded-sm border border-dashed border-[var(--color-divider)] p-2.5">
-          <p className="bee-kpi-tile__label">Próxima acción sugerida</p>
+          <p className="bee-kpi-tile__label">{t("nextActionLabel")}</p>
           <p className="text-xs font-medium leading-snug">{NEXT_ACTION.company}</p>
-          <p className="bee-micro leading-snug">{NEXT_ACTION.reason}</p>
+          <p className="bee-micro leading-snug">{t("nextActionReason")}</p>
         </div>
       </div>
 
       <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3">
         <div>
           <div className="flex items-center justify-between">
-            <p className="bee-eyebrow">Colmena de intención</p>
+            <p className="bee-eyebrow">{t("hiveTitle")}</p>
             <div className="flex items-center gap-1.5 bee-micro">
-              <span>Frío</span>
+              <span>{t("cold")}</span>
               <span
                 className="h-1.5 w-10 rounded-full"
                 style={{
@@ -150,7 +156,7 @@ function SignalsView() {
                     "linear-gradient(90deg, var(--color-chart-1), var(--color-chart-2), var(--color-chart-3), var(--color-chart-4), var(--color-chart-6))",
                 }}
               />
-              <span>Caliente</span>
+              <span>{t("hot")}</span>
             </div>
           </div>
           <div className="mt-2 flex h-40 items-center justify-center">
@@ -158,16 +164,16 @@ function SignalsView() {
           </div>
         </div>
         <div className="space-y-2.5 border-t border-[var(--color-divider)] pt-3">
-          <p className="bee-eyebrow">Flujo de señales</p>
+          <p className="bee-eyebrow">{t("signalFlowTitle")}</p>
           {SIGNAL_FEED.map((event) => (
-            <div key={event.title} className="flex gap-2">
+            <div key={event.id} className="flex gap-2">
               <div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--color-chart-4)]">
                 <event.icon className="size-3" strokeWidth={1.75} />
               </div>
               <div className="min-w-0">
-                <p className="bee-micro">{event.label}</p>
-                <p className="line-clamp-1 text-xs leading-snug">{event.title}</p>
-                <p className="bee-micro mt-0.5">{event.time}</p>
+                <p className="bee-micro">{t(`feed.${event.id}.label`)}</p>
+                <p className="line-clamp-1 text-xs leading-snug">{t(`feed.${event.id}.title`)}</p>
+                <p className="bee-micro mt-0.5">{t(`feed.${event.id}.time`)}</p>
               </div>
             </div>
           ))}
@@ -175,43 +181,47 @@ function SignalsView() {
         <div className="space-y-2 border-t border-[var(--color-divider)] pt-3">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
             {STAGE_STATS.map((s) => (
-              <div key={s.label} className="flex items-center gap-1.5">
+              <div key={s.id} className="flex items-center gap-1.5">
                 <span className="h-5 w-[3px] shrink-0 rounded-full" style={{ background: s.color }} aria-hidden />
                 <div>
                   <p className="text-xs font-bold leading-none tabular-nums">{s.pct}%</p>
-                  <p className="mt-0.5 text-[10px] leading-none text-muted-foreground">{s.label}</p>
+                  <p className="mt-0.5 text-[10px] leading-none text-muted-foreground">{tStages(s.id)}</p>
                 </div>
               </div>
             ))}
           </div>
           <div className="flex items-center justify-between rounded-sm bg-[var(--color-primary)]/40 px-2.5 py-2">
-            <span className="bee-kpi-tile__label">Señales hoy</span>
-            <span className="text-xs font-semibold text-[var(--color-chart-4)]">24 detectadas · +6 nuevas</span>
+            <span className="bee-kpi-tile__label">{t("signalsToday")}</span>
+            <span className="text-xs font-semibold text-[var(--color-chart-4)]">
+              {t("signalsTodayValue", { detected: 24, new: 6 })}
+            </span>
           </div>
         </div>
       </div>
 
       <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3">
         <div className="space-y-3">
-          <p className="bee-eyebrow">Inteligencia</p>
+          <p className="bee-eyebrow">{t("intelligenceTitle")}</p>
           <div className="grid grid-cols-2 gap-1.5">
             {KPI_TILES.map((kpi) => (
-              <div key={kpi.label} className="rounded-sm bg-[var(--color-primary)]/50 px-2 py-1.5">
-                <p className="bee-kpi-tile__label">{kpi.label}</p>
-                <p className="text-sm font-semibold tabular-nums">{kpi.value}</p>
+              <div key={kpi.id} className="rounded-sm bg-[var(--color-primary)]/50 px-2 py-1.5">
+                <p className="bee-kpi-tile__label">{t(`kpis.${kpi.id}`)}</p>
+                <p className="text-sm font-semibold tabular-nums">
+                  {kpi.value ?? t("kpis.ingestionActive")}
+                </p>
               </div>
             ))}
           </div>
         </div>
         <div className="space-y-1.5 border-t border-[var(--color-divider)] pt-3">
-          <p className="bee-eyebrow">APIs externas</p>
+          <p className="bee-eyebrow">{t("externalApis")}</p>
           {PROVIDERS.map((p) => (
             <div key={p.name} className="flex items-center justify-between rounded-sm bg-[var(--color-primary)]/40 px-2 py-1.5">
               <div className="flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full bg-[var(--color-text-muted)]/50" aria-hidden />
                 <div>
                   <p className="text-xs font-medium leading-none">{p.name}</p>
-                  <p className="bee-micro mt-0.5">{p.status}</p>
+                  <p className="bee-micro mt-0.5">{t("simulatedMode")}</p>
                 </div>
               </div>
               <span className="bee-micro">{p.quota}</span>
@@ -220,17 +230,17 @@ function SignalsView() {
         </div>
         <div className="grid grid-cols-2 gap-1.5 border-t border-[var(--color-divider)] pt-3">
           <div>
-            <p className="bee-kpi-tile__label">Última sincronización</p>
-            <p className="text-sm font-semibold tabular-nums">hace 3 min</p>
+            <p className="bee-kpi-tile__label">{t("lastSync")}</p>
+            <p className="text-sm font-semibold tabular-nums">{t("lastSyncValue")}</p>
           </div>
           <div>
-            <p className="bee-kpi-tile__label">Próxima corrida</p>
-            <p className="text-sm font-semibold tabular-nums">en 12 min</p>
+            <p className="bee-kpi-tile__label">{t("nextRun")}</p>
+            <p className="text-sm font-semibold tabular-nums">{t("nextRunValue")}</p>
           </div>
         </div>
         <div className="space-y-1.5 border-t border-[var(--color-divider)] pt-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="bee-kpi-tile__label">Confianza del modelo</span>
+            <span className="bee-kpi-tile__label">{t("modelConfidence")}</span>
             <span className="font-semibold tabular-nums">94%</span>
           </div>
           <div className="bee-bar-track">
@@ -244,36 +254,47 @@ function SignalsView() {
 
 // ── Leads: réplica de la tabla real (mismos Badge/variantes/columnas) ─────
 
-const LEAD_STATUS_TABS = ["Todos", "Nuevo", "Calificado", "Convertido"] as const;
+const LEAD_STATUS_TABS = ["all", "new", "qualified", "converted"] as const;
+type LeadStatusId = (typeof LEAD_STATUS_TABS)[number];
 
 const LEADS = [
-  { name: "Elena Cross", title: "VP Sales", company: "Northwind Robotics", score: 92, stage: "Listo para comprar", status: "Convertido" },
-  { name: "Marcus Diaz", title: "Head of RevOps", company: "Vantage Health", score: 78, stage: "Decisión", status: "Calificado" },
-  { name: "Priya Shah", title: "CRO", company: "Solace Data", score: 65, stage: "Consideración", status: "Calificado" },
-  { name: "Tom Reyes", title: "Director of Ops", company: "Fielder Logistics", score: 41, stage: "Conocimiento", status: "Nuevo" },
-  { name: "Aisha Bello", title: "VP RevOps", company: "Bright Path Analytics", score: 58, stage: "Consideración", status: "Nuevo" },
-  { name: "Diego Farro", title: "Head of Growth", company: "Anchor Freight", score: 88, stage: "Listo para comprar", status: "Convertido" },
-] as const;
-
+  { id: "elena", name: "Elena Cross", company: "Northwind Robotics", score: 92, stage: "ready_to_buy", status: "converted" },
+  { id: "marcus", name: "Marcus Diaz", company: "Vantage Health", score: 78, stage: "decision", status: "qualified" },
+  { id: "priya", name: "Priya Shah", company: "Solace Data", score: 65, stage: "consideration", status: "qualified" },
+  { id: "tom", name: "Tom Reyes", company: "Fielder Logistics", score: 41, stage: "awareness", status: "new" },
+  { id: "aisha", name: "Aisha Bello", company: "Bright Path Analytics", score: 58, stage: "consideration", status: "new" },
+  { id: "diego", name: "Diego Farro", company: "Anchor Freight", score: 88, stage: "ready_to_buy", status: "converted" },
+] as const satisfies ReadonlyArray<{
+  id: string;
+  name: string;
+  company: string;
+  score: number;
+  stage: string;
+  status: LeadStatusId;
+}>;
 
 // Distribución real por status sobre TODO el array (no el filtrado) — el
 // resumen de abajo de la tabla, no otro número inventado.
-const STATUS_COUNTS: Record<(typeof LEAD_STATUS_TABS)[number], number> = LEAD_STATUS_TABS.reduce(
-  (acc, s) => ({ ...acc, [s]: s === "Todos" ? LEADS.length : LEADS.filter((l) => l.status === s).length }),
-  {} as Record<(typeof LEAD_STATUS_TABS)[number], number>,
+const STATUS_COUNTS: Record<LeadStatusId, number> = LEAD_STATUS_TABS.reduce(
+  (acc, s) => ({ ...acc, [s]: s === "all" ? LEADS.length : LEADS.filter((l) => l.status === s).length }),
+  {} as Record<LeadStatusId, number>,
 );
+
+const LEADS_TOTAL = 128;
 
 // Filtro + búsqueda REALES sobre el array de arriba, no solo una pestaña que
 // cambia de color: esto es lo que hace que la pestaña sea "una herramienta
 // para probar" y no una captura de pantalla interactiva a medias.
 function LeadsView() {
-  const [statusTab, setStatusTab] = useState<(typeof LEAD_STATUS_TABS)[number]>("Todos");
+  const t = useTranslations("landing.demo.leadsView");
+  const tStages = useTranslations("landing.stages");
+  const [statusTab, setStatusTab] = useState<LeadStatusId>("all");
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return LEADS.filter((lead) => {
-      const matchesStatus = statusTab === "Todos" || lead.status === statusTab;
+      const matchesStatus = statusTab === "all" || lead.status === statusTab;
       const matchesQuery =
         q.length === 0 ||
         lead.name.toLowerCase().includes(q) ||
@@ -288,7 +309,7 @@ function LeadsView() {
     <div className="bee-bento bee-bento-pad flex flex-1 flex-col justify-between gap-3">
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="bee-eyebrow">Leads priorizados por score</p>
+          <p className="bee-eyebrow">{t("title")}</p>
           <div className="flex flex-wrap items-center gap-2">
             <div className="bee-filter-tabs">
               {LEAD_STATUS_TABS.map((s) => (
@@ -297,7 +318,7 @@ function LeadsView() {
                   onClick={() => setStatusTab(s)}
                   className={`bee-filter-tab ${statusTab === s ? "bee-filter-tab--active" : ""}`}
                 >
-                  {s}
+                  {t(`statusTabs.${s}`)}
                 </button>
               ))}
             </div>
@@ -312,7 +333,7 @@ function LeadsView() {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar…"
+                placeholder={t("searchPlaceholder")}
                 className="bee-input"
               />
             </div>
@@ -322,18 +343,18 @@ function LeadsView() {
           <table className="w-full min-w-[420px] text-left text-xs">
             <thead>
               <tr className="text-muted-foreground">
-                <th className="pb-2 font-medium">Contacto</th>
-                <th className="pb-2 font-medium">Empresa</th>
-                <th className="pb-2 font-medium">Score</th>
-                <th className="pb-2 font-medium">Etapa</th>
+                <th className="pb-2 font-medium">{t("columns.contact")}</th>
+                <th className="pb-2 font-medium">{t("columns.company")}</th>
+                <th className="pb-2 font-medium">{t("columns.score")}</th>
+                <th className="pb-2 font-medium">{t("columns.stage")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filtered.map((lead) => (
-                <tr key={lead.name}>
+                <tr key={lead.id}>
                   <td className="py-2">
                     <p className="font-medium">{lead.name}</p>
-                    <p className="bee-micro">{lead.title}</p>
+                    <p className="bee-micro">{t(`leads.${lead.id}.title`)}</p>
                   </td>
                   <td className="py-2">{lead.company}</td>
                   <td className="py-2">
@@ -343,48 +364,46 @@ function LeadsView() {
                     </Badge>
                   </td>
                   <td className="py-2">
-                    <Badge variant="outline">{lead.stage}</Badge>
+                    <Badge variant="outline">{tStages(lead.stage)}</Badge>
                   </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={4} className="py-6 text-center text-muted-foreground">
-                    Ningún lead coincide con ese filtro.
+                    {t("emptyFiltered")}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-        <p className="bee-micro">
-          {filtered.length} de 128 leads · ordenado por score
-        </p>
+        <p className="bee-micro">{t("summary", { count: filtered.length, total: LEADS_TOTAL })}</p>
       </div>
 
       <div className="flex items-center gap-3 rounded-sm border border-dashed border-[var(--color-divider)] p-2.5">
         <Flame className="size-4 shrink-0 text-[var(--color-chart-5)]" />
         <div className="min-w-0">
-          <p className="bee-kpi-tile__label">Score más alto</p>
+          <p className="bee-kpi-tile__label">{t("topScoreLabel")}</p>
           <p className="text-xs font-medium leading-snug">
             {topLead.name} · {topLead.company}
           </p>
           <p className="bee-micro leading-snug">
-            Score {topLead.score} · {topLead.stage} — prioridad de contacto hoy.
+            {t("topScoreDetail", { score: topLead.score, stage: tStages(topLead.stage) })}
           </p>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-4 border-t border-[var(--color-divider)] pt-3">
-        <span className="bee-kpi-tile__label">Distribución por estado</span>
-        {(["Nuevo", "Calificado", "Convertido"] as const).map((s) => (
+        <span className="bee-kpi-tile__label">{t("statusDistribution")}</span>
+        {(["new", "qualified", "converted"] as const).map((s) => (
           <div key={s} className="flex items-center gap-1.5 text-[11px]">
             <span
               className="size-1.5 rounded-full"
-              style={{ background: s === "Convertido" ? "var(--color-chart-2)" : s === "Calificado" ? "var(--color-chart-1)" : "var(--color-chart-4)" }}
+              style={{ background: s === "converted" ? "var(--color-chart-2)" : s === "qualified" ? "var(--color-chart-1)" : "var(--color-chart-4)" }}
               aria-hidden
             />
-            <span className="text-muted-foreground">{s}</span>
+            <span className="text-muted-foreground">{t(`statusTabs.${s}`)}</span>
             <span className="font-semibold tabular-nums">{STATUS_COUNTS[s]}</span>
           </div>
         ))}
@@ -396,26 +415,26 @@ function LeadsView() {
 // ── Simulador: réplica del widget real, con el multiplicador interactivo ──
 
 const SCENARIOS = [
-  { label: "Conservador", base: 12, bar: "bee-bar--3" },
-  { label: "Realista", base: 18, bar: "bee-bar--4" },
-  { label: "Optimista", base: 26, bar: "bee-bar--1" },
+  { id: "conservative", base: 12, bar: "bee-bar--3" },
+  { id: "realistic", base: 18, bar: "bee-bar--4" },
+  { id: "optimistic", base: 26, bar: "bee-bar--1" },
 ] as const;
 
-const MONTHS = ["Ago", "Sep", "Oct", "Nov", "Dic", "Ene"] as const;
+const MONTHS_COUNT = 6;
 
 /** Curva mensual de operaciones proyectadas para el escenario realista, a
  *  partir del multiplicador — una rampa suave (no lineal) hasta el valor
  *  final, para que la tendencia se vea como una proyección real y no una
  *  recta artificial. */
 function buildTrend(finalValue: number): number[] {
-  return MONTHS.map((_, i) => {
-    const t = (i + 1) / MONTHS.length;
+  return Array.from({ length: MONTHS_COUNT }, (_, i) => {
+    const t = (i + 1) / MONTHS_COUNT;
     const eased = t * t * (3 - 2 * t); // smoothstep — arranque y cierre suaves
     return Math.round(finalValue * 0.35 + finalValue * 0.65 * eased);
   });
 }
 
-function TrendChart({ values }: { values: number[] }) {
+function TrendChart({ values, months }: { values: number[]; months: string[] }) {
   const w = 100;
   const h = 100;
   const max = Math.max(...values, 1);
@@ -440,8 +459,8 @@ function TrendChart({ values }: { values: number[] }) {
         ))}
       </svg>
       <div className="mt-1 flex justify-between bee-micro">
-        {MONTHS.map((m) => (
-          <span key={m}>{m}</span>
+        {months.map((m, i) => (
+          <span key={i}>{m}</span>
         ))}
       </div>
     </div>
@@ -449,6 +468,8 @@ function TrendChart({ values }: { values: number[] }) {
 }
 
 function ForecastView() {
+  const t = useTranslations("landing.demo.forecastView");
+  const months = t.raw("months") as string[];
   const [factor, setFactor] = useState(2);
   const [running, setRunning] = useState(false);
   // Poblado desde el arranque (factor=2 por defecto) para que la pestaña
@@ -463,7 +484,7 @@ function ForecastView() {
     [ranFactor],
   );
   const maxDeals = Math.max(...scenarios.map((s) => s.deals), 1);
-  const realistic = scenarios.find((s) => s.label === "Realista");
+  const realistic = scenarios.find((s) => s.id === "realistic");
   const trend = useMemo(() => buildTrend(realistic?.deals ?? 0), [realistic]);
 
   function handleRun() {
@@ -481,26 +502,26 @@ function ForecastView() {
           <div>
             <h3 className="flex items-center gap-1.5 text-sm font-semibold">
               <BarChart3 className="size-4 stroke-[1.25] text-[var(--color-chart-3)]" />
-              Simulador de ingresos
+              {t("title")}
             </h3>
-            <p className="bee-caption mt-0.5">Proyecta el impacto de aumentar la prospección en un segmento</p>
+            <p className="bee-caption mt-0.5">{t("subtitle")}</p>
           </div>
-          <span className="bee-eyebrow">Confianza alta</span>
+          <span className="bee-eyebrow">{t("highConfidence")}</span>
         </div>
-  
+
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div className="space-y-1">
-            <label className="bee-kpi-tile__label">Señal</label>
+            <label className="bee-kpi-tile__label">{t("signalLabel")}</label>
             <select className="bee-input" disabled defaultValue="funding_round">
-              <option value="funding_round">Ronda de financiación</option>
+              <option value="funding_round">{t("fundingRound")}</option>
             </select>
           </div>
           <div className="space-y-1">
-            <label className="bee-kpi-tile__label">Industria</label>
-            <input type="text" className="bee-input" disabled placeholder="p. ej. SaaS" />
+            <label className="bee-kpi-tile__label">{t("industryLabel")}</label>
+            <input type="text" className="bee-input" disabled placeholder={t("industryPlaceholder")} />
           </div>
           <div className="space-y-1">
-            <label className="bee-kpi-tile__label">Multiplicador ({factor}×)</label>
+            <label className="bee-kpi-tile__label">{t("multiplierLabel", { factor })}</label>
             <input
               type="range"
               min={1.5}
@@ -512,11 +533,11 @@ function ForecastView() {
             />
           </div>
         </div>
-  
+
         <button type="button" onClick={handleRun} disabled={running} className="bee-btn bee-btn--primary w-full">
-          {running ? "Simulando…" : `Ejecutar simulación ${factor}×`}
+          {running ? t("running") : t("runButton", { factor })}
         </button>
-  
+
         {/* Proyección + tendencia a la izquierda, escenarios + stats a la
          * derecha — en 2 columnas en vez de todo apilado, para que esta
          * pestaña converja a una altura parecida a Señales/Leads en vez de
@@ -524,27 +545,25 @@ function ForecastView() {
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           <div className="bee-bento bee-bento--primary bee-bento-pad space-y-2">
             <div className="flex items-center justify-between">
-              <span className="bee-kpi-tile__label">Proyección realista</span>
+              <span className="bee-kpi-tile__label">{t("projectionLabel")}</span>
               <span className="bee-kpi">
                 {realistic?.deals ?? 0}
-                <span className="ml-1 text-xs font-normal text-muted-foreground">operaciones</span>
+                <span className="ml-1 text-xs font-normal text-muted-foreground">{t("operationsUnit")}</span>
               </span>
             </div>
-            <p className="text-xs leading-relaxed">
-              Subir la prospección {ranFactor}× en este segmento sostiene el ritmo actual de cierre sin saturar al equipo.
-            </p>
-            <TrendChart values={trend} />
+            <p className="text-xs leading-relaxed">{t("projectionNote", { factor: ranFactor })}</p>
+            <TrendChart values={trend} months={months} />
           </div>
-  
+
           <div className="space-y-3">
             <div className="space-y-2">
               {scenarios.map((s) => {
                 const pct = Math.round((s.deals / maxDeals) * 100);
                 return (
-                  <div key={s.label} className="space-y-1">
+                  <div key={s.id} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="w-24 text-muted-foreground">{s.label}</span>
-                      <span className="font-semibold tabular-nums">{s.deals} operaciones</span>
+                      <span className="w-24 text-muted-foreground">{t(`scenarios.${s.id}`)}</span>
+                      <span className="font-semibold tabular-nums">{t("dealsCount", { count: s.deals })}</span>
                     </div>
                     <div className="bee-bar-track">
                       <div className={`bee-bar ${s.bar} transition-[width] duration-300`} style={{ width: `${pct}%` }} />
@@ -553,19 +572,19 @@ function ForecastView() {
                 );
               })}
             </div>
-  
+
             <div className="bee-stat-grid">
               <div className="bee-stat">
                 <div className="bee-stat__val">68%</div>
-                <div className="bee-stat__lbl">Tasa de éxito</div>
+                <div className="bee-stat__lbl">{t("successRate")}</div>
               </div>
               <div className="bee-stat">
                 <div className="bee-stat__val">54</div>
-                <div className="bee-stat__lbl">Pipeline</div>
+                <div className="bee-stat__lbl">{t("pipeline")}</div>
               </div>
               <div className="bee-stat">
                 <div className="bee-stat__val">312</div>
-                <div className="bee-stat__lbl">Puntos de datos</div>
+                <div className="bee-stat__lbl">{t("dataPoints")}</div>
               </div>
             </div>
           </div>
@@ -574,26 +593,26 @@ function ForecastView() {
 
       <div className="grid grid-cols-1 gap-2 border-t border-[var(--color-divider)] pt-3 sm:grid-cols-3">
         <div>
-          <p className="bee-kpi-tile__label">Ciclo de venta promedio</p>
-          <p className="text-sm font-semibold tabular-nums">34 días</p>
+          <p className="bee-kpi-tile__label">{t("avgSalesCycle")}</p>
+          <p className="text-sm font-semibold tabular-nums">{t("avgSalesCycleValue")}</p>
         </div>
         <div>
-          <p className="bee-kpi-tile__label">Ticket promedio</p>
-          <p className="text-sm font-semibold tabular-nums">USD 18.400</p>
+          <p className="bee-kpi-tile__label">{t("avgTicket")}</p>
+          <p className="text-sm font-semibold tabular-nums">{t("avgTicketValue")}</p>
         </div>
         <div>
-          <p className="bee-kpi-tile__label">Próxima actualización</p>
-          <p className="text-sm font-semibold tabular-nums">en 24h</p>
+          <p className="bee-kpi-tile__label">{t("nextUpdate")}</p>
+          <p className="text-sm font-semibold tabular-nums">{t("nextUpdateValue")}</p>
         </div>
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-[var(--color-divider)] pt-3 text-[11px] text-muted-foreground">
-        <span>Basado en 312 puntos de intención de compra de los últimos 90 días.</span>
+        <span>{t("basedOn")}</span>
         <Link
           href="/funcionalidades#simulador"
           className="inline-flex shrink-0 items-center gap-1 font-medium text-[var(--color-chart-4)] hover:underline"
         >
-          Ver más <ArrowUpRight className="size-3" />
+          {t("viewMore")} <ArrowUpRight className="size-3" />
         </Link>
       </div>
     </div>
@@ -607,6 +626,7 @@ const VIEWS: Record<TabId, () => React.ReactElement> = {
 };
 
 export function MarketingDemoPanel() {
+  const t = useTranslations("landing.demo");
   const [tab, setTab] = useState<TabId>("signals");
   const ActiveView = VIEWS[tab];
 
@@ -622,13 +642,13 @@ export function MarketingDemoPanel() {
           </span>
         </div>
         <div className="bee-filter-tabs">
-          {TABS.map((t) => (
+          {TABS.map((tabItem) => (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`bee-filter-tab ${tab === t.id ? "bee-filter-tab--active" : ""}`}
+              key={tabItem.id}
+              onClick={() => setTab(tabItem.id)}
+              className={`bee-filter-tab ${tab === tabItem.id ? "bee-filter-tab--active" : ""}`}
             >
-              {t.label}
+              {t(`tabs.${tabItem.id}`)}
             </button>
           ))}
         </div>
@@ -656,7 +676,7 @@ export function MarketingDemoPanel() {
 
       <div className="flex items-center gap-1.5 border-t border-[var(--color-divider)] px-4 py-2 sm:px-5">
         <CheckCircle2 className="size-3 text-[var(--color-text-muted)]" />
-        <p className="bee-micro">Vista ilustrativa — datos de ejemplo, no una cuenta real.</p>
+        <p className="bee-micro">{t("illustrativeNote")}</p>
       </div>
     </div>
   );

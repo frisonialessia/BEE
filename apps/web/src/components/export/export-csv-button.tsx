@@ -1,6 +1,7 @@
 "use client";
 
 import { Download } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { downloadCsv, toCsv } from "@/lib/csv";
 
@@ -15,6 +16,8 @@ export function ExportCsvButton<T extends Record<string, unknown>>({
   columns: { key: keyof T; header: string }[];
   filename: string;
 }) {
+  const t = useTranslations("sharedB.exportCsv");
+
   function handleClick() {
     const csv = toCsv(rows, columns);
     downloadCsv(filename, csv);
@@ -28,7 +31,7 @@ export function ExportCsvButton<T extends Record<string, unknown>>({
       className="bee-btn-ghost inline-flex items-center gap-1.5"
     >
       <Download className="size-3.5" />
-      Exportar CSV
+      {t("button")}
     </button>
   );
 }

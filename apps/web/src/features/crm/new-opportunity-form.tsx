@@ -1,13 +1,14 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { useCreateOpportunity } from "@/hooks/queries/use-opportunities";
-import { signalTypeLabels } from "@/lib/format";
+import type { Locale } from "@/i18n/locales";
+import { getSignalTypeLabels } from "@/lib/format";
 import type { SignalType } from "@/types/domain";
 
-const SIGNAL_TYPE_OPTIONS = Object.entries(signalTypeLabels) as [SignalType, string][];
 
 const INPUT_CLASS =
   "rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]";
@@ -29,6 +30,9 @@ export function NewOpportunityForm({
   company?: { name: string; domain: string | null };
   onDone: () => void;
 }) {
+  const locale = useLocale() as Locale;
+  const t = useTranslations("crm.form");
+  const signalTypeOptions = Object.entries(getSignalTypeLabels(locale)) as [SignalType, string][];
   const createOpportunity = useCreateOpportunity();
   const [companyName, setCompanyName] = useState(company?.name ?? "");
   const [companyDomain, setCompanyDomain] = useState(company?.domain ?? "");
@@ -69,13 +73,11 @@ export function NewOpportunityForm({
         description: description.trim(),
         score,
       });
-      toast.success("Oportunidad agregada — estrategia generada.");
+      toast.success(t("successToast"));
       reset();
       onDone();
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "No se pudo crear la oportunidad — intenta de nuevo.",
-      );
+      toast.error(err instanceof Error ? err.message : t("errorToast"));
     }
   }
 
@@ -85,7 +87,7 @@ export function NewOpportunityForm({
       className="mb-4 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-4"
     >
       <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Nueva oportunidad
+        {t("title")}
       </p>
 
       {!companyLocked && (
@@ -93,20 +95,20 @@ export function NewOpportunityForm({
           <input
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
-            placeholder="Empresa *"
+            placeholder={t("companyName")}
             required
             className={INPUT_CLASS}
           />
           <input
             value={companyDomain}
             onChange={(e) => setCompanyDomain(e.target.value)}
-            placeholder="dominio.com"
+            placeholder={t("companyDomain")}
             className={INPUT_CLASS}
           />
           <input
             value={companyIndustry}
             onChange={(e) => setCompanyIndustry(e.target.value)}
-            placeholder="Industria"
+            placeholder={t("companyIndustry")}
             className={INPUT_CLASS}
           />
         </div>
@@ -116,19 +118,19 @@ export function NewOpportunityForm({
         <input
           value={leadFullName}
           onChange={(e) => setLeadFullName(e.target.value)}
-          placeholder="Contacto (opcional)"
+          placeholder={t("contactName")}
           className={INPUT_CLASS}
         />
         <input
           value={leadTitle}
           onChange={(e) => setLeadTitle(e.target.value)}
-          placeholder="Cargo"
+          placeholder={t("contactTitle")}
           className={INPUT_CLASS}
         />
         <input
           value={leadEmail}
           onChange={(e) => setLeadEmail(e.target.value)}
-          placeholder="Correo"
+          placeholder={t("contactEmail")}
           type="email"
           className={INPUT_CLASS}
         />
@@ -138,10 +140,10 @@ export function NewOpportunityForm({
         <select
           value={signalType}
           onChange={(e) => setSignalType(e.target.value as SignalType)}
-          aria-label="Tipo de señal"
+          aria-label={t("signalType")}
           className={INPUT_CLASS}
         >
-          {SIGNAL_TYPE_OPTIONS.map(([value, label]) => (
+          {signalTypeOptions.map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>
@@ -149,7 +151,7 @@ export function NewOpportunityForm({
         </select>
         <div className={`flex items-center gap-2 ${INPUT_CLASS}`}>
           <label htmlFor="new-opp-score" className="shrink-0 text-xs text-muted-foreground">
-            Prioridad
+            {t("priority")}
           </label>
           <input
             id="new-opp-score"
@@ -167,7 +169,7 @@ export function NewOpportunityForm({
       <textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="¿Por qué es una oportunidad? Este contexto alimenta la estrategia que genera la IA. *"
+        placeholder={t("descriptionPlaceholder")}
         required
         rows={2}
         className={`w-full resize-none ${INPUT_CLASS}`}
@@ -179,10 +181,10 @@ export function NewOpportunityForm({
           disabled={!companyName.trim() || !description.trim() || createOpportunity.isPending}
           className="bee-btn bee-btn--primary"
         >
-          {createOpportunity.isPending ? "Guardando…" : "Guardar"}
+          {createOpportunity.isPending ? t("saving") : t("save")}
         </button>
         <button type="button" onClick={onDone} className="bee-btn-ghost">
-          Cancelar
+          {t("cancel")}
         </button>
       </div>
     </form>

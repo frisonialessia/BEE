@@ -1,6 +1,7 @@
 "use client";
 
 import { Mail, Pencil, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -13,12 +14,6 @@ import {
 } from "@/hooks/queries/use-templates";
 import type { MessageTemplate } from "@/lib/api/templates";
 
-const CHANNEL_LABELS: Record<string, string> = {
-  email: "Email",
-  linkedin: "LinkedIn",
-  other: "Otro",
-};
-
 function TemplateForm({
   initial,
   onDone,
@@ -26,6 +21,7 @@ function TemplateForm({
   initial?: MessageTemplate;
   onDone: () => void;
 }) {
+  const t = useTranslations("workspace.sequences.library");
   const createTemplate = useCreateTemplate();
   const updateTemplate = useUpdateTemplate();
   const [name, setName] = useState(initial?.name ?? "");
@@ -58,13 +54,13 @@ function TemplateForm({
       className="mb-4 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-4"
     >
       <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {initial ? "Editar plantilla" : "Nueva plantilla"}
+        {initial ? t("form.editTitle") : t("form.newTitle")}
       </p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Nombre *"
+          placeholder={t("form.namePlaceholder")}
           required
           className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         />
@@ -73,15 +69,15 @@ function TemplateForm({
           onChange={(e) => setChannel(e.target.value)}
           className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none"
         >
-          <option value="email">Email</option>
-          <option value="linkedin">LinkedIn</option>
-          <option value="other">Otro</option>
+          <option value="email">{t("channels.email")}</option>
+          <option value="linkedin">{t("channels.linkedin")}</option>
+          <option value="other">{t("channels.other")}</option>
         </select>
         {channel === "email" && (
           <input
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            placeholder="Asunto"
+            placeholder={t("form.subjectPlaceholder")}
             className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
         )}
@@ -89,7 +85,7 @@ function TemplateForm({
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        placeholder="Cuerpo del mensaje — usa {{first_name}}, {{company_name}}, etc. como marcadores"
+        placeholder={t("form.bodyPlaceholder")}
         required
         rows={4}
         className="mt-2 w-full resize-y rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
@@ -100,10 +96,10 @@ function TemplateForm({
           disabled={!name.trim() || !body.trim() || pending}
           className="bee-btn bee-btn--primary"
         >
-          {pending ? "Guardando…" : "Guardar"}
+          {pending ? t("form.saving") : t("form.save")}
         </button>
         <button type="button" onClick={onDone} className="bee-btn-ghost">
-          Cancelar
+          {t("form.cancel")}
         </button>
       </div>
     </form>
@@ -115,6 +111,7 @@ function TemplateForm({
  *  todavía con DynamicSequence; el siguiente paso natural es que un step
  *  pueda apuntar a una plantilla por id. */
 export function MessageLibrary() {
+  const t = useTranslations("workspace.sequences.library");
   const { data: result, isLoading } = useTemplates();
   const deleteTemplate = useDeleteTemplate();
   const [showNew, setShowNew] = useState(false);
@@ -125,9 +122,7 @@ export function MessageLibrary() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <p className="bee-caption">
-          Contenido reutilizable para tus secuencias — escribe el mensaje una vez, úsalo siempre
-        </p>
+        <p className="bee-caption">{t("caption")}</p>
         <button
           type="button"
           onClick={() => {
@@ -136,7 +131,7 @@ export function MessageLibrary() {
           }}
           className="bee-btn bee-btn--primary shrink-0"
         >
-          + Nueva plantilla
+          {t("newTemplate")}
         </button>
       </div>
 
@@ -151,44 +146,44 @@ export function MessageLibrary() {
         </div>
       ) : templates.length === 0 ? (
         <div className="bee-bento bee-bento-pad py-12 text-center">
-          <p className="text-sm text-muted-foreground">Todavía no hay plantillas guardadas.</p>
-          <p className="bee-caption mt-1">Crea la primera para reutilizarla en tus secuencias.</p>
+          <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
+          <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {templates.map((t) => (
-            <div key={t.id} className="bee-bento bee-bento-pad">
+          {templates.map((tpl) => (
+            <div key={tpl.id} className="bee-bento bee-bento-pad">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Mail className="size-3.5 text-muted-foreground" />
-                  <p className="text-sm font-semibold">{t.name}</p>
+                  <p className="text-sm font-semibold">{tpl.name}</p>
                 </div>
-                <Badge variant="outline">{CHANNEL_LABELS[t.channel] ?? t.channel}</Badge>
+                <Badge variant="outline">{t.has(`channels.${tpl.channel}`) ? t(`channels.${tpl.channel}`) : tpl.channel}</Badge>
               </div>
-              {t.subject && (
-                <p className="mt-2 truncate text-xs font-medium text-muted-foreground">{t.subject}</p>
+              {tpl.subject && (
+                <p className="mt-2 truncate text-xs font-medium text-muted-foreground">{tpl.subject}</p>
               )}
-              <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{t.body}</p>
+              <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{tpl.body}</p>
               <div className="mt-3 flex items-center gap-1.5 border-t border-border pt-2.5">
                 <button
                   type="button"
                   onClick={() => {
                     setShowNew(false);
-                    setEditing(t);
+                    setEditing(tpl);
                   }}
                   className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 bee-micro transition-colors hover:bg-[var(--color-primary)]/40 hover:text-foreground"
                 >
                   <Pencil className="size-3" />
-                  Editar
+                  {t("edit")}
                 </button>
                 <button
                   type="button"
-                  onClick={() => deleteTemplate.mutate(t.id)}
+                  onClick={() => deleteTemplate.mutate(tpl.id)}
                   disabled={deleteTemplate.isPending}
                   className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 bee-micro transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-chart-2)]"
                 >
                   <Trash2 className="size-3" />
-                  Eliminar
+                  {t("delete")}
                 </button>
               </div>
             </div>

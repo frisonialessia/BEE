@@ -12,6 +12,7 @@ import {
   demoUpdateOpportunity,
 } from "@/lib/demo/store";
 import { isDemoMode } from "@/lib/demo/mode";
+import { getDemoLocale } from "@/lib/demo/locale";
 import type { FetchResult } from "@/types/api";
 import type {
   ArtifactBundle,
@@ -22,7 +23,7 @@ import type {
   SignalType,
 } from "@/types/domain";
 import type { CyclePrediction, OutcomeWithPrediction } from "@/types/extended";
-import { sampleArtifacts, sampleBattlecards } from "@/lib/sample-data";
+import { getSampleArtifacts, getSampleBattlecards } from "@/lib/sample-data";
 
 export interface OpportunityCreateIn {
   company_name: string;
@@ -88,7 +89,7 @@ export async function fetchBattlecard(
 ): Promise<FetchResult<Battlecard>> {
   if (isDemoMode()) {
     const sample =
-      sampleBattlecards.find((b) => b.opportunity_id === opportunityId) ??
+      getSampleBattlecards(getDemoLocale()).find((b) => b.opportunity_id === opportunityId) ??
       demoFindBattlecard(opportunityId);
     if (sample) return { data: sample, live: false };
     throw new Error(`No demo battlecard for opportunity ${opportunityId}`);
@@ -100,7 +101,7 @@ export async function fetchBattlecard(
     );
     return { data, live: true };
   } catch {
-    const sample = sampleBattlecards.find((b) => b.opportunity_id === opportunityId);
+    const sample = getSampleBattlecards(getDemoLocale()).find((b) => b.opportunity_id === opportunityId);
     if (sample) return { data: sample, live: false };
     throw new Error(`No battlecard for opportunity ${opportunityId}`);
   }
@@ -133,7 +134,7 @@ export async function fetchArtifacts(
 ): Promise<FetchResult<ArtifactBundle>> {
   if (isDemoMode()) {
     const sample =
-      sampleArtifacts.find((a) => a.opportunity_id === opportunityId) ??
+      getSampleArtifacts(getDemoLocale()).find((a) => a.opportunity_id === opportunityId) ??
       demoFindArtifacts(opportunityId);
     if (sample) return { data: sample, live: false };
     throw new Error(`No demo artifacts for opportunity ${opportunityId}`);
@@ -143,7 +144,7 @@ export async function fetchArtifacts(
     const data = await apiFetch<ArtifactBundle>(path, { cache: "no-store" });
     return { data, live: true };
   } catch {
-    const sample = sampleArtifacts.find((a) => a.opportunity_id === opportunityId);
+    const sample = getSampleArtifacts(getDemoLocale()).find((a) => a.opportunity_id === opportunityId);
     if (sample) return { data: sample, live: false };
     throw new Error(`No artifacts for opportunity ${opportunityId}`);
   }

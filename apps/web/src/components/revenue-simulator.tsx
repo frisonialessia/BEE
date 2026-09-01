@@ -8,26 +8,20 @@ import {
   ChevronUp,
   TrendingUp,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { runRevenueSimulation } from "@/lib/api";
 import { CHART_PALETTE } from "@/lib/brand/colors";
 import type { RevenueSimulation, SimulatorScenario } from "@/lib/types";
 
-const SIGNAL_TYPES = [
-  { value: "funding_round", label: "Ronda de financiación" },
-  { value: "hiring", label: "Aumento de contrataciones" },
-  { value: "leadership_change", label: "Cambio de liderazgo" },
-  { value: "tech_adoption", label: "Adopción tecnológica" },
-  { value: "product_launch", label: "Lanzamiento de producto" },
-  { value: "expansion", label: "Expansión" },
-];
-
-const CONFIDENCE_LABEL: Record<string, string> = {
-  none: "Sin datos aún",
-  low: "Confianza baja",
-  medium: "Confianza media",
-  high: "Confianza alta",
-};
+const SIGNAL_TYPE_VALUES = [
+  "funding_round",
+  "hiring",
+  "leadership_change",
+  "tech_adoption",
+  "product_launch",
+  "expansion",
+] as const;
 
 const SCENARIO_BAR: Record<string, string> = {
   Conservative: "bee-bar--3",
@@ -42,6 +36,7 @@ function ScenarioBar({
   scenario: SimulatorScenario;
   maxDeals: number;
 }) {
+  const t = useTranslations("shared.revenueSimulator");
   const pct =
     maxDeals > 0 ? Math.round((scenario.projected_won_deals / maxDeals) * 100) : 0;
 
@@ -49,10 +44,12 @@ function ScenarioBar({
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
         <span className="w-24 text-muted-foreground">{scenario.label}</span>
-        <span className="font-semibold">{scenario.projected_won_deals} operaciones</span>
+        <span className="font-semibold">
+          {scenario.projected_won_deals} {t("deals")}
+        </span>
         {scenario.uplift_vs_baseline > 0 && (
           <span className="bee-micro">
-            +{scenario.uplift_vs_baseline} vs línea base
+            +{scenario.uplift_vs_baseline} {t("vsBaseline")}
           </span>
         )}
       </div>
@@ -67,6 +64,7 @@ function ScenarioBar({
 }
 
 export function RevenueSimulatorWidget() {
+  const t = useTranslations("shared.revenueSimulator");
   const [signalType, setSignalType] = useState("funding_round");
   const [industry, setIndustry] = useState("");
   const [factor, setFactor] = useState(2);
@@ -87,10 +85,10 @@ export function RevenueSimulatorWidget() {
       if (res.live && res.data) {
         setResult(res.data);
       } else {
-        setError("No se pudo conectar con la API de BEE. Asegúrate de que el backend esté en ejecución.");
+        setError(t("errors.offline"));
       }
     } catch {
-      setError("La simulación falló. Inténtalo de nuevo.");
+      setError(t("errors.failed"));
     } finally {
       setLoading(false);
     }
@@ -107,46 +105,46 @@ export function RevenueSimulatorWidget() {
         <div>
           <h3 className="bee-card-title flex items-center gap-1.5">
             <BarChart3 className="size-4 stroke-[1.25]" style={{ color: CHART_PALETTE[3] }} />
-            Simulador de ingresos
+            {t("heading")}
           </h3>
           <p className="bee-caption mt-0.5">
-            Proyecta el impacto de aumentar la prospección en un segmento
+            {t("caption")}
           </p>
         </div>
         {result && (
-          <span className="bee-eyebrow">{CONFIDENCE_LABEL[result.data_confidence]}</span>
+          <span className="bee-eyebrow">{t(`confidence.${result.data_confidence}`)}</span>
         )}
       </div>
 
       <div className="grid grid-cols-3 gap-2">
         <div className="space-y-1">
-          <label className="bee-kpi-tile__label">Señal</label>
+          <label className="bee-kpi-tile__label">{t("form.signal")}</label>
           <select
             value={signalType}
             onChange={(e) => setSignalType(e.target.value)}
             className="bee-input"
           >
-            {SIGNAL_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            {SIGNAL_TYPE_VALUES.map((value) => (
+              <option key={value} value={value}>
+                {t(`signalTypes.${value}`)}
               </option>
             ))}
           </select>
         </div>
 
         <div className="space-y-1">
-          <label className="bee-kpi-tile__label">Industria</label>
+          <label className="bee-kpi-tile__label">{t("form.industry")}</label>
           <input
             type="text"
             value={industry}
             onChange={(e) => setIndustry(e.target.value)}
-            placeholder="p. ej. SaaS"
+            placeholder={t("form.industryPlaceholder")}
             className="bee-input"
           />
         </div>
 
         <div className="space-y-1">
-          <label className="bee-kpi-tile__label">Multiplicador ({factor}×)</label>
+          <label className="bee-kpi-tile__label">{t("form.multiplier", { factor })}</label>
           <input
             type="range"
             min={1.5}
@@ -165,7 +163,7 @@ export function RevenueSimulatorWidget() {
         disabled={loading}
         className="bee-btn bee-btn--primary w-full"
       >
-        {loading ? "Simulando…" : `Simular prospección ${factor}×`}
+        {loading ? t("running") : t("runButton", { factor })}
       </button>
 
       {error && (
@@ -179,11 +177,11 @@ export function RevenueSimulatorWidget() {
         <div className="space-y-4 border-t border-border pt-4">
           <div className="bee-bento bee-bento--primary bee-bento-pad space-y-2">
             <div className="flex items-center justify-between">
-              <span className="bee-kpi-tile__label">Proyección realista</span>
+              <span className="bee-kpi-tile__label">{t("realisticProjection")}</span>
               <span className="bee-kpi">
                 {realistic?.projected_won_deals ?? 0}
                 <span className="ml-1 text-xs font-normal text-muted-foreground">
-                  operaciones
+                  {t("deals")}
                 </span>
               </span>
             </div>
@@ -191,11 +189,11 @@ export function RevenueSimulatorWidget() {
             {result.top_playbook && (
               <div className="flex items-center gap-2 bee-micro">
                 <TrendingUp className="size-3" style={{ color: CHART_PALETTE[4] }} />
-                Táctica principal: <span className="text-foreground">{result.top_playbook}</span>
+                {t("topPlaybook")} <span className="text-foreground">{result.top_playbook}</span>
                 {result.top_channel && (
                   <>
                     {" "}
-                    vía <span className="text-foreground">{result.top_channel}</span>
+                    {t("via")} <span className="text-foreground">{result.top_channel}</span>
                   </>
                 )}
               </div>
@@ -213,15 +211,15 @@ export function RevenueSimulatorWidget() {
               <div className="bee-stat__val">
                 {Math.round(result.historical_win_rate * 100)}%
               </div>
-              <div className="bee-stat__lbl">Tasa de éxito</div>
+              <div className="bee-stat__lbl">{t("stats.winRate")}</div>
             </div>
             <div className="bee-stat">
               <div className="bee-stat__val">{result.current_pipeline_count}</div>
-              <div className="bee-stat__lbl">Pipeline</div>
+              <div className="bee-stat__lbl">{t("stats.pipeline")}</div>
             </div>
             <div className="bee-stat">
               <div className="bee-stat__val">{result.sample_size}</div>
-              <div className="bee-stat__lbl">Puntos de datos</div>
+              <div className="bee-stat__lbl">{t("stats.dataPoints")}</div>
             </div>
           </div>
 
@@ -235,7 +233,7 @@ export function RevenueSimulatorWidget() {
             ) : (
               <ChevronDown className="size-3" />
             )}
-            {showDetails ? "Ocultar" : "Mostrar"} metodología
+            {showDetails ? t("methodology.hide") : t("methodology.show")}
           </button>
           {showDetails && (
             <p className="bee-micro leading-relaxed">

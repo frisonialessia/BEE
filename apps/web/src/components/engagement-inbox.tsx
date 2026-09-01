@@ -10,6 +10,7 @@
  * the CEO reviews and approves before anything is sent (authenticity gate).
  */
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { getEngagementEvents, submitEngagementEvent } from "@/lib/api";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
@@ -22,24 +23,6 @@ const SENTIMENT_VARIANT: Record<string, BadgeProps["variant"]> = {
   negative: "destructive",
   question: "default",
   unknown: "outline",
-};
-
-const SENTIMENT_LABELS: Record<string, string> = {
-  positive: "Positivo",
-  neutral: "Neutral",
-  negative: "Negativo",
-  question: "Pregunta",
-  unknown: "Desconocido",
-};
-
-const INTENT_LABELS: Record<string, string> = {
-  sales_interest: "Interés de compra",
-  objection: "Objeción",
-  referral: "Referido",
-  follow_up: "Seguimiento",
-  compliment: "Elogio",
-  spam: "Spam",
-  other: "Otro",
 };
 
 const INTENT_VARIANT: Record<string, BadgeProps["variant"]> = {
@@ -61,6 +44,7 @@ const SOURCE_ICONS: Record<string, string> = {
 };
 
 function EventCard({ event }: { event: EngagementEvent }) {
+  const t = useTranslations("workspace.sequences.engagementInbox");
   const [expanded, setExpanded] = useState(false);
 
   if (event.ignored) return null;
@@ -74,15 +58,15 @@ function EventCard({ event }: { event: EngagementEvent }) {
             {SOURCE_ICONS[event.source] ?? "?"}
           </span>
           <span className="text-xs font-medium">
-            {event.author_name ?? event.author_handle ?? "Anónimo"}
+            {event.author_name ?? event.author_handle ?? t("anonymous")}
           </span>
         </div>
         <div className="flex flex-shrink-0 items-center gap-1.5">
           <Badge variant={SENTIMENT_VARIANT[event.sentiment] ?? "outline"}>
-            {SENTIMENT_LABELS[event.sentiment] ?? event.sentiment}
+            {t.has(`sentiment.${event.sentiment}`) ? t(`sentiment.${event.sentiment}`) : event.sentiment}
           </Badge>
           <Badge variant={INTENT_VARIANT[event.intent] ?? "outline"}>
-            {INTENT_LABELS[event.intent] ?? event.intent}
+            {t.has(`intent.${event.intent}`) ? t(`intent.${event.intent}`) : event.intent}
           </Badge>
         </div>
       </div>
@@ -96,7 +80,7 @@ function EventCard({ event }: { event: EngagementEvent }) {
           onClick={() => setExpanded(!expanded)}
           className="text-xs font-medium text-[var(--color-chart-2)] hover:underline"
         >
-          {expanded ? "▲ Ocultar borrador" : "▼ Ver borrador de respuesta"}
+          {expanded ? t("hideDraft") : t("showDraft")}
         </button>
       )}
 
@@ -105,7 +89,7 @@ function EventCard({ event }: { event: EngagementEvent }) {
           <p className="whitespace-pre-wrap text-xs">{event.response_draft}</p>
           {event.pending_action_id && (
             <p className="mt-1.5 text-xs font-medium text-[var(--color-chart-2)]">
-              Esperando aprobación del CEO en el orquestador
+              {t("waitingApproval")}
             </p>
           )}
         </div>
@@ -115,6 +99,7 @@ function EventCard({ event }: { event: EngagementEvent }) {
 }
 
 export function EngagementInboxPanel() {
+  const t = useTranslations("workspace.sequences.engagementInbox");
   const [events, setEvents] = useState<EngagementEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSubmit, setShowSubmit] = useState(false);
@@ -159,13 +144,11 @@ export function EngagementInboxPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="bee-panel__title">Bandeja de Engagement</h3>
-          <p className="bee-panel__subtitle">
-            Comentarios, DMs y respuestas entrantes — clasificados y redactados por IA
-          </p>
+          <h3 className="bee-panel__title">{t("title")}</h3>
+          <p className="bee-panel__subtitle">{t("subtitle")}</p>
         </div>
         <button onClick={() => setShowSubmit(!showSubmit)} className="bee-btn-ghost">
-          + Simular evento
+          {t("simulateEvent")}
         </button>
       </div>
 
@@ -173,39 +156,39 @@ export function EngagementInboxPanel() {
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="bee-inset p-2">
           <p className="bee-stat__val">{events.length}</p>
-          <p className="bee-stat__lbl">Total</p>
+          <p className="bee-stat__lbl">{t("stats.total")}</p>
         </div>
         <div className="bee-bento bee-bento--warm p-2">
           <p className="bee-stat__val">{actionable.length}</p>
-          <p className="bee-stat__lbl">Requiere aprobación</p>
+          <p className="bee-stat__lbl">{t("stats.needsApproval")}</p>
         </div>
         <div className="bee-bento bee-bento--primary p-2">
           <p className="bee-stat__val">
             {events.filter((e) => e.intent === "sales_interest").length}
           </p>
-          <p className="bee-stat__lbl">Leads de venta</p>
+          <p className="bee-stat__lbl">{t("stats.salesLeads")}</p>
         </div>
       </div>
 
       {/* Submit form */}
       {showSubmit && (
         <div className="bee-inset space-y-3 p-4">
-          <p className="bee-eyebrow">Simular evento entrante</p>
+          <p className="bee-eyebrow">{t("form.title")}</p>
           <select value={source} onChange={(e) => setSource(e.target.value)} className="bee-input">
-            <option value="linkedin">LinkedIn</option>
-            <option value="twitter">X (Twitter)</option>
-            <option value="email">Email</option>
+            <option value="linkedin">{t("form.sources.linkedin")}</option>
+            <option value="twitter">{t("form.sources.twitter")}</option>
+            <option value="email">{t("form.sources.email")}</option>
           </select>
           <input
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
-            placeholder="Nombre del autor (opcional)"
+            placeholder={t("form.authorPlaceholder")}
             className="bee-input"
           />
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Pega un comentario o mensaje…"
+            placeholder={t("form.contentPlaceholder")}
             rows={3}
             className="bee-input resize-none"
           />
@@ -215,10 +198,10 @@ export function EngagementInboxPanel() {
               disabled={submitting || !content}
               className="bee-btn bee-btn--primary"
             >
-              {submitting ? "Procesando…" : "Analizar y redactar"}
+              {submitting ? t("form.analyzing") : t("form.analyze")}
             </button>
             <button onClick={() => setShowSubmit(false)} className="bee-btn">
-              Cancelar
+              {t("form.cancel")}
             </button>
           </div>
         </div>
@@ -232,9 +215,7 @@ export function EngagementInboxPanel() {
           ))}
         </div>
       ) : events.filter((e) => !e.ignored).length === 0 ? (
-        <p className="bee-caption py-4 text-center">
-          Todavía no hay eventos — usa &quot;Simular evento&quot; para probarlo.
-        </p>
+        <p className="bee-caption py-4 text-center">{t("empty")}</p>
       ) : (
         <div className="max-h-80 space-y-2 overflow-y-auto">
           {events.map((event) => (

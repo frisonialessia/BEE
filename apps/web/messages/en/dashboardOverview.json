@@ -1,0 +1,111 @@
+{
+  "overview": {
+    "eyebrow": "Signal intelligence",
+    "title": "Overview",
+    "subtitle": "Real-time market signals → CEO battlecards → closed deals",
+    "statusLive": "Live · API connected",
+    "statusDemo": "Demo · API disconnected",
+    "kpis": {
+      "signals": "Signals",
+      "hotSignals": "High intent",
+      "hotSignalsHint": "score ≥ 75",
+      "ready": "Ready to action",
+      "readyHint": "battlecard complete",
+      "hotLeads": "Hot leads",
+      "hotLeadsHint": "buying intent",
+      "avgScore": "Average score"
+    },
+    "itemLabels": {
+      "battlecards": "battlecards",
+      "signals": "signals"
+    },
+    "sections": {
+      "funnel": {
+        "title": "Closing funnel",
+        "caption": "How many opportunities are in each stage today, on the way to won"
+      },
+      "industryHeatmap": {
+        "title": "Where you're strongest",
+        "caption": "Win rate crossing account industry with signal type"
+      },
+      "activityHeatmap": {
+        "title": "When the market shows up",
+        "caption": "Detected signal activity, by day and time"
+      },
+      "battlecards": {
+        "title": "Enriched briefs",
+        "caption": "Pain point · closing argument · timing window",
+        "strategyBadge": "Strategy · rule_based"
+      },
+      "revenueSimulator": {
+        "title": "Revenue projection",
+        "caption": "What would happen if we invested more in prospecting"
+      },
+      "allSignals": {
+        "title": "All signals",
+        "total": "{count} total",
+        "empty": "No signals yet. They appear automatically once you connect your market sources."
+      }
+    }
+  },
+  "pagination": {
+    "summary": "{count} {label} · Page {page} of {totalPages}",
+    "defaultItemLabel": "items",
+    "density": "Density",
+    "perPageOption": "{count} / page",
+    "itemsPerPage": "Items per page",
+    "navigation": "Pagination",
+    "previousPage": "Previous page",
+    "nextPage": "Next page"
+  },
+  "industryHeatmap": {
+    "empty": "Not enough closed deals with an identified industry and signal type yet for this map.",
+    "ariaLabel": "Win rate by industry and signal type",
+    "legendLabel": "Win rate:",
+    "tooltipDeals": "{won} of {closed} closed deals won ({pct}%)"
+  },
+  "pipelineFunnel": {
+    "shareOfPipeline": "{pct}% of pipeline"
+  },
+  "activityHeatmap": {
+    "empty": "No signals yet to map by time of day.",
+    "ariaLabel": "Signal activity by day and hour",
+    "peakActivity": "Peak activity:",
+    "noActivity": "No activity recorded yet.",
+    "less": "Less",
+    "more": "More",
+    "signalsDetected": "{count, plural, one {# signal detected} other {# signals detected}}"
+  },
+  "todayImpact": {
+    "emptyState": "No high-intent signals detected in the last 24h — nothing urgent to project today.",
+    "eyebrow": "If you act today",
+    "upliftHeadline": "+{amount} of projected pipeline",
+    "upliftDetail": "{count, plural, one {# high-intent signal} other {# high-intent signals}} today × {winRate}% historical win rate ({sampleSize} deals) × {avgDealValue} average deal value",
+    "signalsHeadline": "{count, plural, one {# high-intent signal} other {# high-intent signals}} today",
+    "needMoreDeals": "Not enough closed deals yet to calculate a real $ impact ({sampleSize}/5 minimum)",
+    "addDealValue": "Add an estimated amount to your opportunities to see the $ impact",
+    "cta": "View these accounts"
+  },
+  "dailyBrief": {
+    "title": "Daily brief",
+    "empty": "Nothing urgent right now — pipeline, quotas and data look on track."
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "subtitle": "Opportunities won",
+    "empty": "No opportunities won by a team member yet.",
+    "tooltip": "{won, plural, one {# won} other {# won}} · {pct}% of the leader ({leaderName})"
+  },
+  "criticalAccounts": {
+    "title": "Today's critical accounts",
+    "unnamedAccount": "Unnamed account",
+    "hotBadge": "hot",
+    "whyItMatters": "Why it matters",
+    "recommendedAngle": "Recommended angle",
+    "viaChannel": "{playbook} via {channel}",
+    "sequenceStarted": "Sequence started — first step awaiting your approval in Control",
+    "triggering": "Starting…",
+    "triggerSequence": "Trigger \"{name}\"",
+    "viewBattlecard": "View battlecard"
+  }
+}

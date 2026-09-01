@@ -3,6 +3,7 @@
 import { Building2, Globe } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +15,7 @@ import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useIsDemoMode } from "@/lib/demo/mode";
 
 function NewCompanyForm({ onDone }: { onDone: () => void }) {
+  const t = useTranslations("companiesLeads.companiesList.newCompanyForm");
   const createCompany = useCreateCompany();
   const [name, setName] = useState("");
   const [domain, setDomain] = useState("");
@@ -42,32 +44,32 @@ function NewCompanyForm({ onDone }: { onDone: () => void }) {
       className="mb-4 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-4"
     >
       <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Nueva empresa
+        {t("heading")}
       </p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Nombre *"
+          placeholder={t("namePlaceholder")}
           required
           className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         />
         <input
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
-          placeholder="dominio.com"
+          placeholder={t("domainPlaceholder")}
           className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         />
         <input
           value={industry}
           onChange={(e) => setIndustry(e.target.value)}
-          placeholder="Industria"
+          placeholder={t("industryPlaceholder")}
           className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         />
         <input
           value={country}
           onChange={(e) => setCountry(e.target.value)}
-          placeholder="País"
+          placeholder={t("countryPlaceholder")}
           className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         />
       </div>
@@ -77,10 +79,10 @@ function NewCompanyForm({ onDone }: { onDone: () => void }) {
           disabled={!name.trim() || createCompany.isPending}
           className="bee-btn bee-btn--primary"
         >
-          {createCompany.isPending ? "Guardando…" : "Guardar"}
+          {createCompany.isPending ? t("saving") : t("save")}
         </button>
         <button type="button" onClick={onDone} className="bee-btn-ghost">
-          Cancelar
+          {t("cancel")}
         </button>
       </div>
     </form>
@@ -89,6 +91,7 @@ function NewCompanyForm({ onDone }: { onDone: () => void }) {
 
 /** Empresas — la cuenta como unidad, con cuántos contactos y oportunidades tiene cada una. */
 export function CompaniesList() {
+  const t = useTranslations("companiesLeads.companiesList");
   const { data: companiesResult, isLoading } = useCompanies(100);
   const { data: leadsResult } = useLeads(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);
@@ -123,33 +126,33 @@ export function CompaniesList() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Cuentas</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="bee-display">Empresas</h1>
+            <h1 className="bee-display">{t("title")}</h1>
             <p className="bee-caption mt-1">
-              Cada empresa con sus contactos, oportunidades y señales en un solo lugar
+              {t("subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+            <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
             <ExportCsvButton
               rows={exportRows}
               filename="bee-empresas.csv"
               columns={[
-                { key: "nombre", header: "Nombre" },
-                { key: "dominio", header: "Dominio" },
-                { key: "industria", header: "Industria" },
-                { key: "tamano", header: "Tamaño" },
-                { key: "pais", header: "País" },
-                { key: "sitio_web", header: "Sitio web" },
-                { key: "contactos", header: "Contactos" },
-                { key: "oportunidades", header: "Oportunidades" },
+                { key: "nombre", header: t("export.columns.name") },
+                { key: "dominio", header: t("export.columns.domain") },
+                { key: "industria", header: t("export.columns.industry") },
+                { key: "tamano", header: t("export.columns.size") },
+                { key: "pais", header: t("export.columns.country") },
+                { key: "sitio_web", header: t("export.columns.website") },
+                { key: "contactos", header: t("export.columns.contacts") },
+                { key: "oportunidades", header: t("export.columns.opportunities") },
               ]}
             />
             {!demo && (
               <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary">
-                + Nueva empresa
+                {t("newCompanyButton")}
               </button>
             )}
           </div>
@@ -168,8 +171,8 @@ export function CompaniesList() {
         </div>
       ) : companies.length === 0 ? (
         <div className="bee-bento bee-bento-pad py-12 text-center">
-          <p className="text-sm text-muted-foreground">Todavía no hay empresas registradas.</p>
-          <p className="bee-caption mt-1">Aparecen automáticamente al llegar señales o leads.</p>
+          <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
+          <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
         </div>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -205,8 +208,8 @@ export function CompaniesList() {
                 </div>
 
                 <div className="mt-3 flex items-center gap-4 border-t border-border pt-2.5 text-xs text-muted-foreground">
-                  <span>{leadCountByCompany.get(company.id) ?? 0} contactos</span>
-                  <span>{oppCountByCompany.get(company.id) ?? 0} oportunidades</span>
+                  <span>{leadCountByCompany.get(company.id) ?? 0} {t("card.contacts")}</span>
+                  <span>{oppCountByCompany.get(company.id) ?? 0} {t("card.opportunities")}</span>
                 </div>
               </>
             );

@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, Circle, MinusCircle, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { TIER_LABELS, type OpportunityLinkStatus, type RelationshipTierGroup } from "@/lib/relationship-map";
 import { cn } from "@/lib/utils";
@@ -21,14 +22,6 @@ const STATUS_ICON: Record<OpportunityLinkStatus, typeof Circle> = {
   none: Circle,
 };
 
-const STATUS_HINT: Record<OpportunityLinkStatus, string> = {
-  won: "Ligado a una oportunidad ganada",
-  open: "Ligado a una oportunidad abierta",
-  lost: "Solo ligado a oportunidades perdidas",
-  dismissed: "Solo ligado a oportunidades descartadas — nunca se compitió por ellas",
-  none: "Sin ninguna oportunidad ligada todavía",
-};
-
 /** Mapa de relaciones — el comité de compra de esta cuenta, agrupado por
  *  nivel real (no una jerarquía de reporte inventada: BEE no tiene ese
  *  dato) y coloreado por si ya hay una oportunidad ligada a cada contacto.
@@ -41,9 +34,11 @@ export function RelationshipMap({
   groups: RelationshipTierGroup[];
   onOpenOpportunity: (opportunityId: string) => void;
 }) {
+  const t = useTranslations("sharedB.relationshipMap");
+
   if (groups.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">Sin contactos registrados todavía para mapear.</p>
+      <p className="text-sm text-muted-foreground">{t("empty")}</p>
     );
   }
 
@@ -66,8 +61,8 @@ export function RelationshipMap({
                   onClick={clickable ? () => onOpenOpportunity(node.singleOpportunityId!) : undefined}
                   title={
                     node.opportunityCount > 1
-                      ? `${node.opportunityCount} oportunidades ligadas`
-                      : STATUS_HINT[node.opportunityStatus]
+                      ? t("multipleOpportunities", { count: node.opportunityCount })
+                      : t(`statusHint.${node.opportunityStatus}`)
                   }
                   className={cn(
                     "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-left text-xs transition-colors",

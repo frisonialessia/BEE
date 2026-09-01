@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { EngagementInboxPanel } from "@/components/engagement-inbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorkflowStatusPanel } from "@/components/workflow-status";
@@ -9,28 +11,28 @@ import { MessageLibrary } from "@/features/sequences/message-library";
 /** Secuencias — estado de DynamicSequence, bandeja de engagement entrante,
  *  y la biblioteca de mensajes reutilizables para armarlas. */
 export function SequencesView() {
+  const t = useTranslations("workspace.sequences.view");
+
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Secuencia dinámica · Engagement inteligente</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1">
-          <h1 className="bee-display">Secuencias</h1>
-          <p className="bee-caption mt-1">
-            Cadencias multicanal en curso, eventos entrantes que requieren respuesta, y el contenido con el que arrancarlas
-          </p>
+          <h1 className="bee-display">{t("title")}</h1>
+          <p className="bee-caption mt-1">{t("subtitle")}</p>
         </div>
       </header>
 
       <Tabs defaultValue="estado">
         <TabsList className="border border-border bg-background">
           <TabsTrigger value="estado" className="rounded-sm">
-            Estado
+            {t("tabs.status")}
           </TabsTrigger>
           <TabsTrigger value="biblioteca" className="rounded-sm">
-            Biblioteca de mensajes
+            {t("tabs.library")}
           </TabsTrigger>
           <TabsTrigger value="automatizaciones" className="rounded-sm">
-            Automatizaciones
+            {t("tabs.automations")}
           </TabsTrigger>
         </TabsList>
 

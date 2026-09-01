@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertCircle, ArrowUpRight, Flame, Inbox } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -38,6 +39,7 @@ function CrmCard({
   onDragEnd: () => void;
   onMove: (id: string, stage: CrmStage) => void;
 }) {
+  const t = useTranslations("crm.board");
   const strategy = opportunity.strategy;
   const channel = strategy?.channel;
   const nextAction = strategy?.next_best_action;
@@ -76,11 +78,11 @@ function CrmCard({
         {isHot && (
           <span className="inline-flex items-center gap-1 text-[11px] text-[var(--color-chart-5)]">
             <Flame className="size-3" />
-            Caliente
+            {t("hot")}
           </span>
         )}
         {reviewRequired && (
-          <AlertCircle className="size-3 text-[var(--color-chart-1)]" aria-label="Requiere revisión" />
+          <AlertCircle className="size-3 text-[var(--color-chart-1)]" aria-label={t("reviewRequired")} />
         )}
       </div>
 
@@ -90,7 +92,7 @@ function CrmCard({
         </p>
       )}
       {typeof channel === "string" && channel && (
-        <p className="mt-1 bee-eyebrow">vía {channel}</p>
+        <p className="mt-1 bee-eyebrow">{t("viaChannel", { channel })}</p>
       )}
 
       {/* Alternativa al drag-and-drop — el HTML5 drag nativo no funciona en
@@ -106,12 +108,12 @@ function CrmCard({
         <select
           value={opportunity.status}
           onChange={(e) => onMove(opportunity.id, e.target.value as CrmStage)}
-          aria-label="Mover a otra etapa"
+          aria-label={t("moveToStage")}
           className="w-full rounded-sm border border-border bg-background px-1.5 py-1 text-[11px] text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         >
           {CRM_STAGES.map((s) => (
             <option key={s.id} value={s.id}>
-              Mover a: {s.label}
+              {t("moveToOption", { stage: t(`stages.${s.id}`) })}
             </option>
           ))}
         </select>
@@ -141,6 +143,7 @@ function CrmColumn({
   onDrop: (stage: CrmStage) => void;
   onMove: (id: string, stage: CrmStage) => void;
 }) {
+  const t = useTranslations("crm.board");
   const [over, setOver] = useState(false);
 
   return (
@@ -178,8 +181,8 @@ function CrmColumn({
         {cards.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-2 py-8 text-center">
             <Inbox className="size-4 text-muted-foreground" />
-            <p className="bee-micro">Sin oportunidades aquí</p>
-            <p className="bee-micro">Arrastra una tarjeta para moverla</p>
+            <p className="bee-micro">{t("emptyColumn.title")}</p>
+            <p className="bee-micro">{t("emptyColumn.hint")}</p>
           </div>
         ) : (
           cards.map((opp) => (
@@ -205,6 +208,7 @@ function CrmColumn({
  *  (MEDDIC, razón de pérdida, competidor), nunca un simple drop — "Cerradas"
  *  es de solo lectura a propósito. */
 export function CrmBoard() {
+  const t = useTranslations("crm.board");
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 300);
   const { openOpportunity } = useOpportunityDrawer();
   const moveStage = useMoveOpportunityStage();
@@ -236,11 +240,7 @@ export function CrmBoard() {
       { id, stage },
       {
         onError: (err) => {
-          toast.error(
-            err instanceof ApiError
-              ? err.message
-              : "No se pudo mover la oportunidad — intenta de nuevo.",
-          );
+          toast.error(err instanceof ApiError ? err.message : t("moveError"));
         },
       },
     );
@@ -255,11 +255,11 @@ export function CrmBoard() {
 
   const header = (
     <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-      <p className="bee-caption">Arrastra una tarjeta para moverla de etapa, o usa el selector de cada tarjeta</p>
+      <p className="bee-caption">{t("toolbarHint")}</p>
       <div className="flex items-center gap-2">
-        <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+        <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demo")}</Badge>
         <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary text-xs">
-          + Nueva oportunidad
+          {t("newOpportunity")}
         </button>
       </div>
     </div>
@@ -283,10 +283,8 @@ export function CrmBoard() {
         {newForm}
         <div className="bee-bento bee-bento-pad py-12 text-center">
           <Inbox className="mx-auto mb-2 size-5 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Todavía no hay oportunidades en el pipeline.</p>
-          <p className="bee-caption mt-1">
-            En cuanto una señal se convierta en oportunidad, aparece aquí — o agrega la primera a mano.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("emptyState.title")}</p>
+          <p className="bee-caption mt-1">{t("emptyState.hint")}</p>
         </div>
       </div>
     );
@@ -306,7 +304,7 @@ export function CrmBoard() {
           <CrmColumn
             key={s.id}
             stage={s.id}
-            label={s.label}
+            label={t(`stages.${s.id}`)}
             cards={stages[s.id]}
             draggingId={draggingId}
             onOpen={openOpportunity}
@@ -320,13 +318,13 @@ export function CrmBoard() {
         {/* Cerradas — solo lectura, ganar/perder es una acción dedicada, no un drop. */}
         <div className="flex w-[min(100%,280px)] shrink-0 flex-col">
           <div className="mb-3 flex items-baseline justify-between px-1">
-            <h3 className="bee-eyebrow">Cerradas</h3>
+            <h3 className="bee-eyebrow">{t("stages.closed")}</h3>
             <span className="font-mono bee-micro">{closed.length}</span>
           </div>
           <div className="flex min-h-[220px] max-h-[65vh] flex-1 flex-col gap-2.5 overflow-y-auto rounded-[var(--radius-lg)] bg-[var(--color-block-muted)] p-2.5">
             {closed.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-2 py-8 text-center">
-                <p className="bee-micro">Nada cerrado todavía</p>
+                <p className="bee-micro">{t("emptyClosed")}</p>
               </div>
             ) : (
               closed.map((opp) => (
@@ -346,7 +344,11 @@ export function CrmBoard() {
                     variant={opp.status === "won" ? "success" : "secondary"}
                     className="mt-2 text-[11px]"
                   >
-                    {opp.status === "won" ? "Ganada" : opp.status === "lost" ? "Perdida" : "Descartada"}
+                    {opp.status === "won"
+                      ? t("closedStatus.won")
+                      : opp.status === "lost"
+                        ? t("closedStatus.lost")
+                        : t("closedStatus.dismissed")}
                   </Badge>
                 </button>
               ))

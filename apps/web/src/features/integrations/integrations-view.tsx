@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import type { ReactNode } from "react";
 import { CheckCircle2, Cloud, Download, Mail, Plug, Users, XCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -18,13 +19,6 @@ import {
 } from "@/hooks/queries/use-integrations";
 import type { IntegrationStatus, OAuthProvider, SalesforceImportSummary } from "@/lib/api/integrations";
 
-const CALLBACK_ERROR_MESSAGES: Record<string, string> = {
-  denied: "Cancelaste la conexión — no se conectó nada.",
-  invalid_state: "El enlace de conexión expiró o no es válido. Intenta de nuevo.",
-  invalid_request: "El proveedor no envió los datos esperados. Intenta de nuevo.",
-  exchange_failed: "El proveedor rechazó la conexión. Intenta de nuevo en unos minutos.",
-};
-
 const CONNECTED_LABELS: Record<string, string> = { gmail: "Gmail", linkedin: "LinkedIn", salesforce: "Salesforce" };
 
 /** Reads the one-time ?connected=<provider> / ?integration_error=... query
@@ -35,19 +29,28 @@ const CONNECTED_LABELS: Record<string, string> = { gmail: "Gmail", linkedin: "Li
  * statically prerendered like the rest of the Dashboard, matching every
  * other client-only browser read in this codebase (e.g. lib/demo/mode.ts). */
 function useOAuthCallbackToast() {
+  const t = useTranslations("workspace.integrations");
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const connected = params.get("connected");
     const error = params.get("integration_error");
     if (!connected && !error) return;
 
-    if (connected) toast.success(`${CONNECTED_LABELS[connected] ?? connected} conectado correctamente.`);
-    if (error) toast.error(CALLBACK_ERROR_MESSAGES[error] ?? "No se pudo completar la conexión.");
+    if (connected) {
+      toast.success(t("connectedToast", { label: CONNECTED_LABELS[connected] ?? connected }));
+    }
+    if (error) {
+      toast.error(
+        t.has(`callbackErrors.${error}`) ? t(`callbackErrors.${error}`) : t("callbackErrors.generic"),
+      );
+    }
 
     const url = new URL(window.location.href);
     url.searchParams.delete("connected");
     url.searchParams.delete("integration_error");
     window.history.replaceState({}, "", url.toString());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
 
@@ -72,15 +75,16 @@ function OAuthProviderRow({
    * action Salesforce gets that Gmail/LinkedIn don't. */
   children?: ReactNode;
 }) {
+  const t = useTranslations("workspace.integrations");
   const connect = useConnectOAuthProvider(provider);
   const disconnect = useDisconnectOAuthProvider(provider);
 
   async function handleDisconnect() {
     try {
       await disconnect.mutateAsync();
-      toast.success(`${label} desconectado.`);
+      toast.success(t("disconnectedToast", { label }));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo desconectar.");
+      toast.error(err instanceof Error ? err.message : t("disconnectError"));
     }
   }
 
@@ -89,7 +93,7 @@ function OAuthProviderRow({
       await connect.mutateAsync();
       // On success the browser navigates away to the provider — nothing else to do here.
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo iniciar la conexión.");
+      toast.error(err instanceof Error ? err.message : t("connectError"));
     }
   }
 
@@ -104,14 +108,16 @@ function OAuthProviderRow({
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm font-semibold">{label}</p>
               <Badge variant={status.connected ? "success" : "outline"}>
-                {status.connected ? "Conectado" : "No conectado"}
+                {status.connected ? t("connected") : t("notConnected")}
               </Badge>
             </div>
             <p className="bee-caption mt-1">
-              {status.connected ? connectedCopy(status.account_email ?? "esta cuenta") : disconnectedCopy}
+              {status.connected ? connectedCopy(status.account_email ?? t("defaultAccountLabel")) : disconnectedCopy}
             </p>
             {status.last_error && (
-              <p className="mt-1 text-[11px] text-[var(--color-chart-2)]">{status.last_error} — reconecta la cuenta.</p>
+              <p className="mt-1 text-[11px] text-[var(--color-chart-2)]">
+                {status.last_error} {t("lastErrorSuffix")}
+              </p>
             )}
             {status.detail && !status.connected && <p className="bee-caption mt-1">{status.detail}</p>}
           </div>
@@ -126,7 +132,7 @@ function OAuthProviderRow({
                 disabled={disconnect.isPending}
                 className="bee-btn-ghost text-xs"
               >
-                {disconnect.isPending ? "Desconectando…" : "Desconectar"}
+                {disconnect.isPending ? t("disconnecting") : t("disconnect")}
               </button>
             ) : (
               <button
@@ -135,7 +141,7 @@ function OAuthProviderRow({
                 disabled={connect.isPending}
                 className="bee-btn bee-btn--primary text-xs"
               >
-                {connect.isPending ? "Redirigiendo…" : `Conectar ${label}`}
+                {connect.isPending ? t("redirecting") : t("connectPrefix", { label })}
               </button>
             )}
           </div>
@@ -146,32 +152,33 @@ function OAuthProviderRow({
   );
 }
 
-function summarizeImport(summary: SalesforceImportSummary): string {
+function summarizeImport(t: ReturnType<typeof useTranslations>, summary: SalesforceImportSummary): string {
   const total =
     summary.companies.created + summary.companies.updated +
     summary.leads.created + summary.leads.updated +
     summary.opportunities.created + summary.opportunities.updated;
-  if (total === 0) return "No había nada nuevo que importar.";
-  return (
-    `${summary.companies.created + summary.companies.updated} empresa${summary.companies.created + summary.companies.updated === 1 ? "" : "s"}, ` +
-    `${summary.leads.created + summary.leads.updated} lead${summary.leads.created + summary.leads.updated === 1 ? "" : "s"}, ` +
-    `${summary.opportunities.created + summary.opportunities.updated} oportunidad${summary.opportunities.created + summary.opportunities.updated === 1 ? "" : "es"} desde Salesforce.`
-  );
+  if (total === 0) return t("import.noNew");
+  return t("import.summary", {
+    companies: summary.companies.created + summary.companies.updated,
+    leads: summary.leads.created + summary.leads.updated,
+    opportunities: summary.opportunities.created + summary.opportunities.updated,
+  });
 }
 
 function SalesforceImportButton() {
+  const t = useTranslations("workspace.integrations");
   const importFromSalesforce = useImportFromSalesforce();
 
   async function handleImport() {
     try {
       const summary = await importFromSalesforce.mutateAsync();
       if (summary.errors.length > 0) {
-        toast.warning(`${summarizeImport(summary)} Con errores: ${summary.errors.join(" · ")}`);
+        toast.warning(`${summarizeImport(t, summary)} ${t("import.withErrorsPrefix")} ${summary.errors.join(" · ")}`);
       } else {
-        toast.success(summarizeImport(summary));
+        toast.success(summarizeImport(t, summary));
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo importar de Salesforce.");
+      toast.error(err instanceof Error ? err.message : t("import.genericError"));
     }
   }
 
@@ -184,13 +191,14 @@ function SalesforceImportButton() {
         className="bee-btn-ghost inline-flex items-center gap-1.5 text-xs"
       >
         <Download className="size-3.5" />
-        {importFromSalesforce.isPending ? "Importando…" : "Importar Accounts, Contacts, Leads y Opportunities"}
+        {importFromSalesforce.isPending ? t("import.importing") : t("import.button")}
       </button>
     </div>
   );
 }
 
 function ServerChannelRow({ status }: { status: IntegrationStatus }) {
+  const t = useTranslations("workspace.integrations.serverChannels");
   return (
     <div className="flex items-center justify-between gap-3 border-b border-[var(--color-divider)] py-3 last:border-b-0">
       <div className="flex items-center gap-2.5">
@@ -205,7 +213,7 @@ function ServerChannelRow({ status }: { status: IntegrationStatus }) {
         </div>
       </div>
       <Badge variant={status.connected ? "success" : "outline"} className="text-[11px]">
-        {status.connected ? "conectado" : "modo simulado"}
+        {status.connected ? t("connected") : t("mock")}
       </Badge>
     </div>
   );
@@ -218,6 +226,7 @@ function ServerChannelRow({ status }: { status: IntegrationStatus }) {
  *  cuenta — se muestran aparte, de solo lectura, para que quede claro que
  *  son otra cosa (ver app.services.omnichannel). */
 export function IntegrationsView() {
+  const t = useTranslations("workspace.integrations");
   useOAuthCallbackToast();
   const { user } = useAuth();
   // In /probar there's no logged-in user at all, so the real owner/admin
@@ -237,14 +246,10 @@ export function IntegrationsView() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Cuentas conectadas</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1">
-          <h1 className="bee-display">Integraciones</h1>
-          <p className="bee-caption mt-1">
-            Conecta tus propias cuentas para que BEE actúe en tu nombre — el envío de secuencias
-            por Gmail o LinkedIn sale desde tu cuenta real, no desde una compartida del servidor.
-            Salesforce trae tu CRM a BEE, de solo lectura.
-          </p>
+          <h1 className="bee-display">{t("title")}</h1>
+          <p className="bee-caption mt-1">{t("subtitle")}</p>
         </div>
       </header>
 
@@ -264,8 +269,8 @@ export function IntegrationsView() {
               icon={Mail}
               status={gmail}
               canManage={canManage}
-              connectedCopy={(account) => `Las secuencias envían correos desde ${account}, no desde un servidor compartido.`}
-              disconnectedCopy="Conecta tu cuenta de Gmail para que las secuencias envíen correos desde tu propia bandeja."
+              connectedCopy={(account) => t("gmail.connectedCopy", { account })}
+              disconnectedCopy={t("gmail.disconnectedCopy")}
             />
           )}
           {linkedin && (
@@ -275,8 +280,8 @@ export function IntegrationsView() {
               icon={Users}
               status={linkedin}
               canManage={canManage}
-              connectedCopy={(account) => `Los mensajes y solicitudes de conexión salen desde ${account}, no desde un token compartido.`}
-              disconnectedCopy="Conecta tu cuenta de LinkedIn para que las secuencias envíen mensajes y solicitudes de conexión desde tu propio perfil."
+              connectedCopy={(account) => t("linkedin.connectedCopy", { account })}
+              disconnectedCopy={t("linkedin.disconnectedCopy")}
             />
           )}
           {salesforce && (
@@ -286,27 +291,20 @@ export function IntegrationsView() {
               icon={Cloud}
               status={salesforce}
               canManage={canManage}
-              connectedCopy={(account) => `Conectado a ${account}. Trae Accounts, Contacts, Leads y Opportunities cuando quieras — nunca escribe de vuelta en Salesforce.`}
-              disconnectedCopy="Conecta tu org de Salesforce para traer tu CRM a BEE — empresas, contactos y oportunidades, de solo lectura."
+              connectedCopy={(account) => t("salesforce.connectedCopy", { account })}
+              disconnectedCopy={t("salesforce.disconnectedCopy")}
             >
               {canManage && <SalesforceImportButton />}
             </OAuthProviderRow>
           )}
-          {!canManage && (
-            <p className="bee-caption">
-              Solo el dueño o un administrador de la organización puede conectar o desconectar cuentas.
-            </p>
-          )}
+          {!canManage && <p className="bee-caption">{t("manageNotice")}</p>}
 
           <section className="bee-surface bee-bento-pad">
             <div className="mb-3 flex items-center gap-2">
               <Plug className="size-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">Canales del servidor</h3>
+              <h3 className="text-sm font-semibold">{t("serverChannels.title")}</h3>
             </div>
-            <p className="bee-caption mb-3">
-              Configurados una sola vez para todo el despliegue de BEE, no por cuenta — ver
-              variables de entorno del backend si necesitas cambiarlos.
-            </p>
+            <p className="bee-caption mb-3">{t("serverChannels.caption")}</p>
             <div>
               {serverChannels.map((s) => (
                 <ServerChannelRow key={s.provider} status={s} />

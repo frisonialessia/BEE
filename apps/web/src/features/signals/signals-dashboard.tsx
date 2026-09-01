@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { SignalCard } from "@/components/signal-card";
 import { SignalVolumeChart } from "@/components/signals/signal-volume-chart";
@@ -15,6 +15,7 @@ import { computeDailySignalVolume } from "@/lib/signal-trends";
 /** Panel de señales — triggers de mercado del Signal Engine. */
 export function SignalsDashboard() {
   const locale = useLocale() as Locale;
+  const t = useTranslations("signalsStrategies.signals");
   const { data: result, isLoading, isError } = useSignals(200);
 
   const signals = result?.data ?? [];
@@ -26,22 +27,22 @@ export function SignalsDashboard() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Motor de señales</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="bee-display">Señales</h1>
+            <h1 className="bee-display">{t("title")}</h1>
             <p className="bee-caption mt-1">
-              Triggers de mercado — funding, contrataciones, adopción tecnológica y más
+              {t("subtitle")}
             </p>
           </div>
           <Badge variant={live ? "success" : "warning"}>
-            {live ? "En vivo" : "Datos demo"}
+            {live ? t("live") : t("demo")}
           </Badge>
         </div>
 
         <div className="mt-4 flex gap-4 text-sm text-muted-foreground">
-          <span>{signals.length} total</span>
-          <span>{hotCount} alta intención (≥75)</span>
+          <span>{t("totalCount", { count: signals.length })}</span>
+          <span>{t("hotCount", { count: hotCount })}</span>
         </div>
       </header>
 
@@ -52,17 +53,17 @@ export function SignalsDashboard() {
           ))}
         </div>
       ) : isError ? (
-        <p className="text-sm text-destructive">Error al cargar señales.</p>
+        <p className="text-sm text-destructive">{t("loadError")}</p>
       ) : signals.length === 0 ? (
         <div className="bee-bento bee-bento-pad py-12 text-center">
-          <p className="text-sm text-muted-foreground">Aún no hay señales.</p>
-          <p className="bee-caption mt-2">Aparecen automáticamente al conectar tus fuentes de mercado.</p>
+          <p className="text-sm text-muted-foreground">{t("emptyTitle")}</p>
+          <p className="bee-caption mt-2">{t("emptySubtitle")}</p>
         </div>
       ) : (
         <>
           <section className="bee-surface bee-bento-pad mb-4">
-            <h3 className="bee-card-title">Volumen de señales</h3>
-            <p className="bee-caption mb-4">Detectadas por día, últimos 14 días</p>
+            <h3 className="bee-card-title">{t("volumeTitle")}</h3>
+            <p className="bee-caption mb-4">{t("volumeSubtitle")}</p>
             <SignalVolumeChart points={dailyVolume} />
           </section>
 
@@ -85,7 +86,7 @@ export function SignalsDashboard() {
             totalItems={pagination.totalItems}
             onPageChange={pagination.goToPage}
             onPageSizeChange={pagination.changePageSize}
-            itemLabel="señales"
+            itemLabel={t("itemLabel")}
           />
         </>
       )}

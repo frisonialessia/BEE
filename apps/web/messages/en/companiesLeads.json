@@ -1,0 +1,214 @@
+{
+  "backToCompanies": "Back to Companies",
+  "companiesList": {
+    "eyebrow": "Accounts",
+    "title": "Companies",
+    "subtitle": "Every company with its contacts, opportunities, and signals in one place",
+    "live": "Live",
+    "demoData": "Demo data",
+    "newCompanyButton": "+ New company",
+    "newCompanyForm": {
+      "heading": "New company",
+      "namePlaceholder": "Name *",
+      "domainPlaceholder": "domain.com",
+      "industryPlaceholder": "Industry",
+      "countryPlaceholder": "Country",
+      "saving": "Saving…",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "empty": {
+      "title": "No companies registered yet.",
+      "subtitle": "They appear automatically when signals or leads come in."
+    },
+    "card": {
+      "contacts": "contacts",
+      "opportunities": "opportunities"
+    },
+    "export": {
+      "columns": {
+        "name": "Name",
+        "domain": "Domain",
+        "industry": "Industry",
+        "size": "Size",
+        "country": "Country",
+        "website": "Website",
+        "contacts": "Contacts",
+        "opportunities": "Opportunities"
+      }
+    }
+  },
+  "companyDetail": {
+    "notFound": "This company could not be found.",
+    "employeesSuffix": "employees",
+    "website": "Website",
+    "kpi": {
+      "contacts": "Contacts",
+      "opportunities": "Opportunities",
+      "signals": "Signals"
+    },
+    "contacts": {
+      "heading": "Contacts ({count})",
+      "addContact": "+ Add contact",
+      "empty": "No contacts registered yet.",
+      "noTitle": "No title on file",
+      "staleWarning": "Not validated in over 90 days",
+      "incompleteAria": "Incomplete or outdated data",
+      "newContactForm": {
+        "namePlaceholder": "Full name *",
+        "titlePlaceholder": "Title",
+        "emailPlaceholder": "Email",
+        "saving": "Saving…",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "csvImport": {
+        "importing": "Importing…",
+        "importCsv": "Import CSV",
+        "resultImported": "{count} contacts imported",
+        "resultSkipped": "{count} without a name (skipped)",
+        "resultErrors": "{count} with errors"
+      }
+    },
+    "relationshipMap": {
+      "heading": "Relationship map",
+      "description": "Contacts grouped by real seniority level and colored by whether an opportunity is already linked — to see whether the buying committee is covered or all the weight is on one person"
+    },
+    "opportunities": {
+      "heading": "Opportunities ({count})",
+      "addOpportunity": "+ New opportunity",
+      "empty": "No opportunities for this company yet."
+    },
+    "signals": {
+      "heading": "Signals ({count})",
+      "empty": "No signals for this company yet.",
+      "score": "Score {score}"
+    }
+  },
+  "leadsDirectory": {
+    "eyebrow": "CRM",
+    "title": "Leads",
+    "subtitle": "The full history of detected prospects, with an intent score to know who to focus on",
+    "live": "Live",
+    "demoData": "Demo data",
+    "importButton": "Import prospects",
+    "export": {
+      "columns": {
+        "name": "Name",
+        "company": "Company",
+        "title": "Title",
+        "email": "Email",
+        "phone": "Phone",
+        "linkedin": "LinkedIn",
+        "status": "Status",
+        "intentScore": "Intent score",
+        "dataFreshness": "Data freshness (%)",
+        "createdAt": "Created"
+      }
+    },
+    "empty": {
+      "title": "No leads registered yet.",
+      "subtitle": "They appear automatically when signals come in, or add them from a company."
+    },
+    "metrics": {
+      "total": "Total leads",
+      "avgScore": "Average intent score",
+      "hot": "Hot leads (≥75)",
+      "staleIncomplete": "With incomplete/stale data"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by name, email, or company…",
+      "allStatuses": "All statuses",
+      "sortScoreDesc": "Highest intent score",
+      "sortScoreAsc": "Lowest intent score",
+      "sortRecent": "Most recent",
+      "sortName": "Name (A-Z)",
+      "staleOnlyLabel": "Only incomplete/stale data"
+    },
+    "bulk": {
+      "selected": "{count, plural, one {# selected} other {# selected}}",
+      "changeStatusTo": "Change status to…",
+      "apply": "Apply",
+      "reassignTo": "Reassign to…",
+      "sendToSequence": "Send to sequence…",
+      "sending": "Sending…",
+      "cancelSelection": "Cancel selection"
+    },
+    "table": {
+      "selectAllVisible": "Select all visible",
+      "selectRow": "Select {name}",
+      "headers": {
+        "name": "Name",
+        "company": "Company",
+        "title": "Title",
+        "status": "Status",
+        "intentScore": "Intent score",
+        "data": "Data"
+      },
+      "noMatch": "No leads match these filters.",
+      "staleWarning": "Not validated in over 90 days",
+      "issues": "{count, plural, one {# issue} other {# issues}}",
+      "outdated": "Outdated",
+      "validatedAgo": "Validated {timeAgo}",
+      "notValidated": "Not validated",
+      "validateTitle": "Re-validate data",
+      "validate": "Validate"
+    },
+    "tip": {
+      "prefix": "Tip: leads don't have their own detail page yet — open the company from",
+      "linkText": "Companies",
+      "suffix": "to see the full contact."
+    },
+    "toasts": {
+      "enrolledSuccess": "{count, plural, one {# lead sent} other {# leads sent}} to the sequence.",
+      "enrolledPartial": "{created, plural, one {# enrolled} other {# enrolled}}, {failed, plural, one {# failed} other {# failed}}.",
+      "enrollError": "Could not send to the sequence."
+    }
+  },
+  "leadImportPanel": {
+    "closeAria": "Close prospect import",
+    "panelAria": "Import prospects",
+    "eyebrow": "Smart upload",
+    "heading": "Import prospects",
+    "closeButtonAria": "Close",
+    "step1": {
+      "title": "1. Download the template",
+      "description": "Name, email, title, seniority, LinkedIn, phone, company, domain, industry, and country — only the name or the email is required per row.",
+      "downloadButton": "Download .csv template"
+    },
+    "step2": {
+      "title": "2. Upload your file (.csv or .xlsx)",
+      "description": "Drag the file here or choose it manually.",
+      "dropReady": "Drop to upload",
+      "chooseFile": "Choose file",
+      "rowsRead": "{count, plural, one {# row read} other {# rows read}}",
+      "rowsSkipped": "{count, plural, one {# without a name or email (won't be imported)} other {# without a name or email (won't be imported)}}",
+      "unsupportedFormat": "Unsupported format — upload a .csv or .xlsx file.",
+      "readError": "Could not read the file — make sure it is a valid .csv or .xlsx."
+    },
+    "step3": {
+      "title": "3. Preview",
+      "headers": {
+        "name": "Name",
+        "email": "Email",
+        "company": "Company"
+      },
+      "moreRows": "{count, plural, one {+# more row} other {+# more rows}}"
+    },
+    "result": {
+      "title": "Result",
+      "newLeads": "{count, plural, one {# new lead} other {# new leads}}",
+      "matchedLeads": "{count, plural, one {# already existed (merged by email)} other {# already existed (merged by email)}}",
+      "newCompanies": "{count, plural, one {# new company} other {# new companies}}",
+      "reusedCompanies": "{count, plural, one {# company reused} other {# companies reused}}",
+      "skippedRows": "{count, plural, one {# row skipped for missing name and email} other {# rows skipped for missing name and email}}",
+      "rowError": "Row {row}: {message}"
+    },
+    "importError": "Could not import — try again.",
+    "actions": {
+      "importing": "Importing…",
+      "importLeads": "{count, plural, one {Import # lead} other {Import # leads}}",
+      "startOver": "Start over"
+    }
+  }
+}

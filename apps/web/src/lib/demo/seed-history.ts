@@ -11,7 +11,18 @@
  * fechas son relativas a "ahora" (Date.now() - N días), igual que los 2
  * ejemplos originales, así que el historial siempre luce reciente sin
  * importar cuándo se abra el sandbox.
+ *
+ * Localización: `SEEDS`/`AMBIENT_SIGNAL_DEFS` store their narrative fields
+ * (industry, country, lead title, per-signal-type templates) in Spanish as
+ * the single canonical source — `LOCALIZED` below translates every one of
+ * them into English, keyed off the exact same strings, so nothing can drift
+ * between the two languages independently. `historicalSignals`/
+ * `historicalOpportunities`/`historicalBattlecards` all now take a
+ * `Locale` and build the requested language on demand rather than being
+ * precomputed once; see `lib/demo/store.ts` for where that locale comes
+ * from (the `NEXT_LOCALE` cookie, via `getDemoLocale()`).
  */
+import { defaultLocale, type Locale } from "@/i18n/locales";
 import type {
   Battlecard,
   BattlecardStrategy,
@@ -32,7 +43,8 @@ function dateOnly(iso: string): string {
 /** Matches lib/demo/store.ts's `slugify` exactly — company identity in this
  * demo is a name-derived key, not a real row, so both files must derive it
  * the same way for a Signal's `company_id` to line up with an
- * Opportunity's. */
+ * Opportunity's. Company/lead/domain names are proper nouns — not
+ * translated between locales, same convention real product demos follow. */
 function companySlug(name: string): string {
   return `demo-company-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-+|-+$)/g, "") || "demo"}`;
 }
@@ -46,7 +58,7 @@ interface Template {
   signalDescription: string;
 }
 
-const TEMPLATES: Record<SignalType, Template> = {
+const TEMPLATES_ES: Record<SignalType, Template> = {
   funding_round: {
     painPoint: (c) => `${c} acaba de levantar una ronda y ahora tiene que escalar go-to-market más rápido de lo que sus procesos actuales aguantan.`,
     closingArgument: (c) => `Felicitaciones a ${c} por la ronda — es justo el momento en que priorizar bien las cuentas correctas define si ese capital rinde en el primer trimestre.`,
@@ -121,6 +133,133 @@ const TEMPLATES: Record<SignalType, Template> = {
   },
 };
 
+const TEMPLATES_EN: Record<SignalType, Template> = {
+  funding_round: {
+    painPoint: (c) => `${c} just raised a round and now has to scale go-to-market faster than its current processes can keep up with.`,
+    closingArgument: (c) => `Congrats to ${c} on the round — this is exactly the moment when prioritizing the right accounts decides whether that capital pays off in the first quarter.`,
+    playbook: "post_funding_outreach",
+    channel: "email",
+    signalTitle: (c) => `${c} closed a funding round`,
+    signalDescription: "Round publicly announced — active budget-allocation window.",
+  },
+  hiring: {
+    painPoint: (c) => `${c} is hiring for sales faster than its current stack can support — every new hire without good signal takes longer to ramp.`,
+    closingArgument: (c) => `Saw ${c} growing the sales team — teams growing this fast usually need a prioritization system before hiring pace outruns results.`,
+    playbook: "hiring_signal_outreach",
+    channel: "linkedin",
+    signalTitle: (c) => `${c} opened several sales roles`,
+    signalDescription: "Multiple sales/RevOps openings posted in the last few weeks.",
+  },
+  tech_adoption: {
+    painPoint: (c) => `${c} migrated part of its stack recently — that usually surfaces gaps in how market signal connects to the sales team.`,
+    closingArgument: (c) => `We noticed ${c} adopted new technology in its stack — that tends to open a short window to review what else in the sales process is worth modernizing at the same time.`,
+    playbook: "tech_adoption_outreach",
+    channel: "email",
+    signalTitle: (c) => `${c} adopted new technology in its stack`,
+    signalDescription: "Stack change detected — new integrations visible publicly.",
+  },
+  leadership_change: {
+    painPoint: (c) => `${c}'s new leadership is auditing vendors and tools in their first 90 days — that's when replacement decisions get made.`,
+    closingArgument: (c) => `Saw the new leadership hire at ${c} — the first 90 days of a role like that are usually when it's decided what stack stays and what gets replaced.`,
+    playbook: "leadership_change_outreach",
+    channel: "linkedin",
+    signalTitle: (c) => `${c} added new leadership to the sales team`,
+    signalDescription: "New leadership hire detected from public sources.",
+  },
+  product_launch: {
+    painPoint: (c) => `${c} just launched a new product — that usually triggers a wave of prospecting the team doesn't have a process for yet.`,
+    closingArgument: (c) => `Congrats on the launch — ${c} is likely to see a spike in inbound interest worth prioritizing well from day one.`,
+    playbook: "product_launch_outreach",
+    channel: "email",
+    signalTitle: (c) => `${c} launched a new product`,
+    signalDescription: "Public launch detected — expected spike in inbound interest.",
+  },
+  engagement: {
+    painPoint: (c) => `${c} has been engaging with category content for weeks — genuine interest, but without a system to capture it in time, it cools off.`,
+    closingArgument: (c) => `${c} has been quite active researching the category — worth a conversation before that interest gets diverted to another priority.`,
+    playbook: "engagement_outreach",
+    channel: "email",
+    signalTitle: (c) => `${c} shows sustained research activity`,
+    signalDescription: "Multiple interactions with category content in the last few weeks.",
+  },
+  news_mention: {
+    painPoint: (c) => `${c} made the press for its growth — media attention usually brings more inbound than the sales team can qualify by hand.`,
+    closingArgument: (c) => `Saw ${c}'s press mention — good moment to make sure the inbound that generates doesn't get lost for lack of prioritization.`,
+    playbook: "news_mention_outreach",
+    channel: "email",
+    signalTitle: (c) => `${c} appeared in recent press coverage`,
+    signalDescription: "Media mention detected — possible associated inbound spike.",
+  },
+  expansion: {
+    painPoint: (c) => `${c} is expanding operations — coordinating sales priorities across more teams without a central system is where consistency starts to slip.`,
+    closingArgument: (c) => `Good time to talk — ${c} is expanding right when having a shared view of which account to chase first matters most.`,
+    playbook: "expansion_outreach",
+    channel: "email",
+    signalTitle: (c) => `${c} announced operations expansion`,
+    signalDescription: "New location or market announced — signals new regional budget.",
+  },
+  other: {
+    painPoint: (c) => `${c} showed a relevant market signal worth qualifying before it cools off.`,
+    closingArgument: (c) => `We saw recent activity from ${c} that suggests this is a good time for a conversation.`,
+    playbook: "generic_outreach",
+    channel: "email",
+    signalTitle: (c) => `Market signal detected at ${c}`,
+    signalDescription: "Signal captured by the general detection engine.",
+  },
+};
+
+const TEMPLATES: Record<Locale, Record<SignalType, Template>> = { es: TEMPLATES_ES, en: TEMPLATES_EN };
+
+/** Industry/country/lead-title strings in `SEEDS` are Spanish (the
+ * canonical source); this is the English lookup for every distinct value
+ * used there, so a display value only ever needs `translate(x, locale)`. */
+const EN_LOOKUP: Record<string, string> = {
+  // industries
+  "Diseño de producto": "Product design",
+  "Logística": "Logistics",
+  "Salud digital": "Digital health",
+  "Retail": "Retail",
+  "Fintech": "Fintech",
+  "Manufactura": "Manufacturing",
+  "Infraestructura cloud": "Cloud infrastructure",
+  "EdTech": "EdTech",
+  "LegalTech": "LegalTech",
+  "Comercio exterior": "Foreign trade",
+  "Salud": "Healthcare",
+  "AgTech": "AgTech",
+  "PropTech": "PropTech",
+  "Medios": "Media",
+  "Seguros": "Insurance",
+  "Datos / Analytics": "Data / Analytics",
+  // countries
+  "México": "Mexico",
+  "Colombia": "Colombia",
+  "Estados Unidos": "United States",
+  "Perú": "Peru",
+  "Chile": "Chile",
+  "Argentina": "Argentina",
+  // lead titles
+  "Directora Comercial": "Commercial Director",
+  "VP de Operaciones": "VP of Operations",
+  "CEO": "CEO",
+  "Head of Sales": "Head of Sales",
+  "VP Revenue Operations": "VP of Revenue Operations",
+  "Gerente Comercial": "Sales Manager",
+  "VP Sales": "VP of Sales",
+  "Directora de Ventas": "Sales Director",
+  "Socio Director": "Managing Partner",
+  "VP Comercial": "VP of Sales",
+  "CRO": "CRO",
+  "Gerente General": "General Manager",
+  "Director de Ventas": "Sales Director",
+  "Head of Revenue": "Head of Revenue",
+};
+
+function translate(value: string, locale: Locale): string {
+  if (locale === "es") return value;
+  return EN_LOOKUP[value] ?? value;
+}
+
 const MEDDIC_KEYS = ["metric", "economic_buyer", "decision_criteria", "decision_process", "identify_pain", "champion"] as const;
 
 function qualificationWith(trueCount: number): Record<string, boolean> {
@@ -161,8 +300,9 @@ interface SeedDef {
    * feature (see lib/cycle-prediction.ts): a second, later signal on the
    * same company, detected while this deal was still open. Only set on a
    * handful of closed deals — see the comment above SEEDS for why this is
-   * a designed illustration, not a discovered pattern. */
-  intermediateSignal?: { type: SignalType; description: string };
+   * a designed illustration, not a discovered pattern. Keyed by locale
+   * since it's hand-written narrative text, not template-generated. */
+  intermediateSignal?: { type: SignalType; description: Record<Locale, string> };
 }
 
 /**
@@ -179,35 +319,54 @@ interface SeedDef {
  * unnecessary and the real endpoint takes over unchanged.
  */
 const SEEDS: SeedDef[] = [
-  { id: "s01", company: "Vantage Studio", domain: "vantagestudio.mx", industry: "Diseño de producto", country: "México", signalType: "funding_round", leadName: "Camila Reyes", leadTitle: "Directora Comercial", seniority: "director", amount: 38000, score: 88, daysAgoCreated: 142, outcome: "won", cycleDays: 34, qualifiedCount: 6, intermediateSignal: { type: "hiring", description: "Vantage Studio abrió una posición comercial mientras evaluaba la propuesta." } },
+  { id: "s01", company: "Vantage Studio", domain: "vantagestudio.mx", industry: "Diseño de producto", country: "México", signalType: "funding_round", leadName: "Camila Reyes", leadTitle: "Directora Comercial", seniority: "director", amount: 38000, score: 88, daysAgoCreated: 142, outcome: "won", cycleDays: 34, qualifiedCount: 6, intermediateSignal: { type: "hiring", description: { es: "Vantage Studio abrió una posición comercial mientras evaluaba la propuesta.", en: "Vantage Studio opened a sales role while evaluating the proposal." } } },
   { id: "s02", company: "Río Verde Logística", domain: "rioverdelog.com", industry: "Logística", country: "México", signalType: "expansion", leadName: "Héctor Salinas", leadTitle: "VP de Operaciones", seniority: "vp", amount: 26000, score: 61, daysAgoCreated: 118, outcome: "lost", cycleDays: 52, qualifiedCount: 2, lossReason: "budget", competitor: "HubSpot" },
-  { id: "s03", company: "Cumbre Salud", domain: "cumbresalud.co", industry: "Salud digital", country: "Colombia", signalType: "funding_round", leadName: "Valentina Ospina", leadTitle: "CEO", seniority: "c_level", amount: 61000, score: 94, daysAgoCreated: 156, outcome: "won", cycleDays: 28, qualifiedCount: 6, intermediateSignal: { type: "engagement", description: "Cumbre Salud mostró actividad sostenida de investigación mientras el deal seguía abierto." } },
+  { id: "s03", company: "Cumbre Salud", domain: "cumbresalud.co", industry: "Salud digital", country: "Colombia", signalType: "funding_round", leadName: "Valentina Ospina", leadTitle: "CEO", seniority: "c_level", amount: 61000, score: 94, daysAgoCreated: 156, outcome: "won", cycleDays: 28, qualifiedCount: 6, intermediateSignal: { type: "engagement", description: { es: "Cumbre Salud mostró actividad sostenida de investigación mientras el deal seguía abierto.", en: "Cumbre Salud showed sustained research activity while the deal was still open." } } },
   { id: "s04", company: "Bright Retail Co", domain: "brightretail.com", industry: "Retail", country: "Estados Unidos", signalType: "tech_adoption", leadName: "Marcus Webb", leadTitle: "Head of Sales", seniority: "director", amount: 33000, score: 68, daysAgoCreated: 22, outcome: "in_progress", qualifiedCount: 3, daysUntilClose: 155 },
   { id: "s05", company: "Andina Fintech", domain: "andinafintech.pe", industry: "Fintech", country: "Perú", signalType: "leadership_change", leadName: "Rodrigo Paz", leadTitle: "VP Revenue Operations", seniority: "vp", amount: 45000, score: 72, daysAgoCreated: 95, outcome: "lost", cycleDays: 41, qualifiedCount: 3, lossReason: "no_decision", competitor: null },
   { id: "s06", company: "Solaris Manufactura", domain: "solarismfg.mx", industry: "Manufactura", country: "México", signalType: "hiring", leadName: "Patricia León", leadTitle: "Gerente Comercial", seniority: "manager", amount: 19500, score: 65, daysAgoCreated: 130, outcome: "won", cycleDays: 45, qualifiedCount: 5 },
   { id: "s07", company: "Nimbus Cloud Systems", domain: "nimbuscloud.io", industry: "Infraestructura cloud", country: "Estados Unidos", signalType: "product_launch", leadName: "Ashley Turner", leadTitle: "VP Sales", seniority: "vp", amount: 72000, score: 89, daysAgoCreated: 6, outcome: "ready_to_action", qualifiedCount: 5, daysUntilClose: 65 },
-  { id: "s08", company: "EduNova", domain: "edunova.mx", industry: "EdTech", country: "México", signalType: "engagement", leadName: "Daniela Cruz", leadTitle: "Directora de Ventas", seniority: "director", amount: 15000, score: 54, daysAgoCreated: 88, outcome: "lost", cycleDays: 22, qualifiedCount: 1, lossReason: "price", competitor: "Salesforce", intermediateSignal: { type: "hiring", description: "EduNova contrató para el área que hubiera usado el producto, a mitad del ciclo." } },
+  { id: "s08", company: "EduNova", domain: "edunova.mx", industry: "EdTech", country: "México", signalType: "engagement", leadName: "Daniela Cruz", leadTitle: "Directora de Ventas", seniority: "director", amount: 15000, score: 54, daysAgoCreated: 88, outcome: "lost", cycleDays: 22, qualifiedCount: 1, lossReason: "price", competitor: "Salesforce", intermediateSignal: { type: "hiring", description: { es: "EduNova contrató para el área que hubiera usado el producto, a mitad del ciclo.", en: "EduNova hired for the team that would have used the product, midway through the cycle." } } },
   { id: "s09", company: "Horizonte Legal", domain: "horizontelegal.cl", industry: "LegalTech", country: "Chile", signalType: "news_mention", leadName: "Ignacio Fuentes", leadTitle: "Socio Director", seniority: "c_level", amount: 29000, score: 79, daysAgoCreated: 104, outcome: "won", cycleDays: 39, qualifiedCount: 5 },
   { id: "s10", company: "Puerto Digital", domain: "puertodigital.mx", industry: "Comercio exterior", country: "México", signalType: "expansion", leadName: "Sofía Bravo", leadTitle: "VP Comercial", seniority: "vp", amount: 41000, score: 70, daysAgoCreated: 11, outcome: "in_progress", qualifiedCount: 4, daysUntilClose: 95 },
   { id: "s11", company: "Meridian Health Group", domain: "meridianhealth.com", industry: "Salud", country: "Estados Unidos", signalType: "funding_round", leadName: "Jordan Ellis", leadTitle: "CRO", seniority: "c_level", amount: 85000, score: 83, daysAgoCreated: 76, outcome: "lost", cycleDays: 60, qualifiedCount: 3, lossReason: "timing", competitor: null },
-  { id: "s12", company: "Terra Agro Analytics", domain: "terraagro.com.ar", industry: "AgTech", country: "Argentina", signalType: "tech_adoption", leadName: "Lucía Fernández", leadTitle: "Gerente General", seniority: "c_level", amount: 24000, score: 66, daysAgoCreated: 112, outcome: "won", cycleDays: 31, qualifiedCount: 5, intermediateSignal: { type: "engagement", description: "Terra Agro Analytics intensificó su investigación de la categoría a mitad del ciclo." } },
+  { id: "s12", company: "Terra Agro Analytics", domain: "terraagro.com.ar", industry: "AgTech", country: "Argentina", signalType: "tech_adoption", leadName: "Lucía Fernández", leadTitle: "Gerente General", seniority: "c_level", amount: 24000, score: 66, daysAgoCreated: 112, outcome: "won", cycleDays: 31, qualifiedCount: 5, intermediateSignal: { type: "engagement", description: { es: "Terra Agro Analytics intensificó su investigación de la categoría a mitad del ciclo.", en: "Terra Agro Analytics ramped up its category research midway through the cycle." } } },
   { id: "s13", company: "Vega Real Estate Tech", domain: "vegaretech.mx", industry: "PropTech", country: "México", signalType: "hiring", leadName: "Emilio Duarte", leadTitle: "Director de Ventas", seniority: "director", amount: 18000, score: 47, daysAgoCreated: 2, outcome: "detected", qualifiedCount: 0, daysUntilClose: 12 },
-  { id: "s14", company: "Kaizen Manufacturing", domain: "kaizenmfg.com", industry: "Manufactura", country: "Estados Unidos", signalType: "leadership_change", leadName: "Brian Kessler", leadTitle: "VP Sales", seniority: "vp", amount: 52000, score: 71, daysAgoCreated: 68, outcome: "lost", cycleDays: 35, qualifiedCount: 2, lossReason: "product_fit", competitor: "Pipedrive", intermediateSignal: { type: "hiring", description: "Kaizen Manufacturing contrató comercial nuevo mientras evaluaba proveedores." } },
-  { id: "s15", company: "Onda Media Group", domain: "ondamedia.mx", industry: "Medios", country: "México", signalType: "product_launch", leadName: "Renata Cabrera", leadTitle: "Directora Comercial", seniority: "director", amount: 22000, score: 75, daysAgoCreated: 90, outcome: "won", cycleDays: 26, qualifiedCount: 4, intermediateSignal: { type: "engagement", description: "Onda Media Group aceleró su evaluación con actividad de investigación adicional." } },
+  { id: "s14", company: "Kaizen Manufacturing", domain: "kaizenmfg.com", industry: "Manufactura", country: "Estados Unidos", signalType: "leadership_change", leadName: "Brian Kessler", leadTitle: "VP Sales", seniority: "vp", amount: 52000, score: 71, daysAgoCreated: 68, outcome: "lost", cycleDays: 35, qualifiedCount: 2, lossReason: "product_fit", competitor: "Pipedrive", intermediateSignal: { type: "hiring", description: { es: "Kaizen Manufacturing contrató comercial nuevo mientras evaluaba proveedores.", en: "Kaizen Manufacturing hired a new sales rep while evaluating vendors." } } },
+  { id: "s15", company: "Onda Media Group", domain: "ondamedia.mx", industry: "Medios", country: "México", signalType: "product_launch", leadName: "Renata Cabrera", leadTitle: "Directora Comercial", seniority: "director", amount: 22000, score: 75, daysAgoCreated: 90, outcome: "won", cycleDays: 26, qualifiedCount: 4, intermediateSignal: { type: "engagement", description: { es: "Onda Media Group aceleró su evaluación con actividad de investigación adicional.", en: "Onda Media Group sped up its evaluation with additional research activity." } } },
   { id: "s16", company: "Cobre Insurtech", domain: "cobreinsurtech.co", industry: "Seguros", country: "Colombia", signalType: "funding_round", leadName: "Andrés Molina", leadTitle: "VP Growth", seniority: "vp", amount: 47000, score: 77, daysAgoCreated: 16, outcome: "in_progress", qualifiedCount: 4, daysUntilClose: 125 },
   { id: "s17", company: "Silo Data Works", domain: "silodata.io", industry: "Datos / Analytics", country: "Estados Unidos", signalType: "engagement", leadName: "Taylor Brooks", leadTitle: "Head of Revenue", seniority: "director", amount: 39000, score: 81, daysAgoCreated: 145, outcome: "won", cycleDays: 48, qualifiedCount: 6 },
   { id: "s18", company: "Raíz Educación", domain: "raizeducacion.mx", industry: "EdTech", country: "México", signalType: "news_mention", leadName: "Fernanda Ríos", leadTitle: "Gerente Comercial", seniority: "manager", amount: 12500, score: 58, daysAgoCreated: 4, outcome: "ready_to_action", qualifiedCount: 3, daysUntilClose: 40 },
 ];
 
-function buildStrategy(def: SeedDef, template: Template, createdAtIso: string): BattlecardStrategy {
+const EVALUATION_WINDOW_REASON: Record<Locale, string> = {
+  es: "Ventana de evaluación activa",
+  en: "Active evaluation window",
+};
+
+const SCORE_RATIONALE: Record<Locale, (score: number, company: string, industry: string, country: string) => string> = {
+  es: (score, company, industry, country) => `Puntaje de señal ${score}/100 — ${company} (${industry}, ${country}).`,
+  en: (score, company, industry, country) => `Signal score ${score}/100 — ${company} (${industry}, ${country}).`,
+};
+
+const MID_CYCLE_SIGNAL_TITLE: Record<Locale, (company: string) => string> = {
+  es: (c) => `${c}: nueva señal detectada durante el ciclo`,
+  en: (c) => `${c}: new signal detected mid-cycle`,
+};
+
+const OPPORTUNITY_TITLE_PREFIX: Record<Locale, string> = { es: "Oportunidad: ", en: "Opportunity: " };
+
+function buildStrategy(def: SeedDef, template: Template, createdAtIso: string, locale: Locale): BattlecardStrategy {
+  const industry = translate(def.industry, locale);
+  const country = translate(def.country, locale);
   return {
     pain_point: template.painPoint(def.company),
     closing_argument: template.closingArgument(def.company),
-    timing_window: { urgency: def.outcome === "ready_to_action" ? "immediate" : "this_week", reason: "Ventana de evaluación activa", expires_at: null },
+    timing_window: { urgency: def.outcome === "ready_to_action" ? "immediate" : "this_week", reason: EVALUATION_WINDOW_REASON[locale], expires_at: null },
     playbook: template.playbook,
     next_best_action: "reach_out",
     channel: template.channel,
-    rationale: `Puntaje de señal ${def.score}/100 — ${def.company} (${def.industry}, ${def.country}).`,
+    rationale: SCORE_RATIONALE[locale](def.score, def.company, industry, country),
     generator: "rule_based",
     generator_version: "1.0.0",
     generated_at: createdAtIso,
@@ -227,45 +386,50 @@ function statusFor(outcome: SeedDef["outcome"]): Opportunity["status"] {
 
 const hasFullStrategy = (outcome: SeedDef["outcome"]) => outcome !== "detected";
 
-const originSignals: Signal[] = SEEDS.map((def) => {
-  const template = TEMPLATES[def.signalType];
-  const createdAtIso = daysAgoIso(def.daysAgoCreated, 3);
-  return {
-    id: `demo-signal-${def.id}`,
-    signal_type: def.signalType,
-    source: "webhook",
-    title: template.signalTitle(def.company),
-    description: template.signalDescription,
-    score: def.score,
-    confidence: Math.round((def.score / 100) * 0.9 * 100) / 100,
-    detected_at: createdAtIso,
-    company_id: companySlug(def.company),
-    lead_id: null,
-    analysis: { tags: [def.signalType], analyzers: [def.signalType], primary_analyzer: def.signalType },
-  };
-});
+function buildOriginSignals(locale: Locale): Signal[] {
+  const templates = TEMPLATES[locale];
+  return SEEDS.map((def) => {
+    const template = templates[def.signalType];
+    const createdAtIso = daysAgoIso(def.daysAgoCreated, 3);
+    return {
+      id: `demo-signal-${def.id}`,
+      signal_type: def.signalType,
+      source: "webhook",
+      title: template.signalTitle(def.company),
+      description: template.signalDescription,
+      score: def.score,
+      confidence: Math.round((def.score / 100) * 0.9 * 100) / 100,
+      detected_at: createdAtIso,
+      company_id: companySlug(def.company),
+      lead_id: null,
+      analysis: { tags: [def.signalType], analyzers: [def.signalType], primary_analyzer: def.signalType },
+    };
+  });
+}
 
 /** The second signal for each of the 6 deals marked `intermediateSignal`
  * above — detected roughly at the midpoint of the deal's actual cycle, so
  * it always lands strictly inside (created_at, closed_at] regardless of
  * when the sandbox is opened. See the comment above SEEDS for why this
  * split exists and what it is (and isn't) evidence of. */
-const intermediateSignals: Signal[] = SEEDS.filter(
-  (def): def is SeedDef & { cycleDays: number; intermediateSignal: NonNullable<SeedDef["intermediateSignal"]> } =>
-    def.cycleDays !== undefined && def.intermediateSignal !== undefined,
-).map((def) => ({
-  id: `demo-signal-${def.id}-mid`,
-  signal_type: def.intermediateSignal.type,
-  source: "webhook",
-  title: `${def.company}: nueva señal detectada durante el ciclo`,
-  description: def.intermediateSignal.description,
-  score: def.score,
-  confidence: 0.65,
-  detected_at: daysAgoIso(def.daysAgoCreated - def.cycleDays / 2, 3),
-  company_id: companySlug(def.company),
-  lead_id: null,
-  analysis: { tags: [def.intermediateSignal.type], analyzers: [def.intermediateSignal.type], primary_analyzer: def.intermediateSignal.type },
-}));
+function buildIntermediateSignals(locale: Locale): Signal[] {
+  return SEEDS.filter(
+    (def): def is SeedDef & { cycleDays: number; intermediateSignal: NonNullable<SeedDef["intermediateSignal"]> } =>
+      def.cycleDays !== undefined && def.intermediateSignal !== undefined,
+  ).map((def) => ({
+    id: `demo-signal-${def.id}-mid`,
+    signal_type: def.intermediateSignal.type,
+    source: "webhook",
+    title: MID_CYCLE_SIGNAL_TITLE[locale](def.company),
+    description: def.intermediateSignal.description[locale],
+    score: def.score,
+    confidence: 0.65,
+    detected_at: daysAgoIso(def.daysAgoCreated - def.cycleDays / 2, 3),
+    company_id: companySlug(def.company),
+    lead_id: null,
+    analysis: { tags: [def.intermediateSignal.type], analyzers: [def.intermediateSignal.type], primary_analyzer: def.intermediateSignal.type },
+  }));
+}
 
 /** Additional lightweight signals with no linked opportunity — exist purely
  * to give Señales → "Volumen de señales" (a 14-day daily bar chart, see
@@ -293,86 +457,97 @@ const AMBIENT_SIGNAL_DEFS: { daysAgo: number; hours: number; type: SignalType; s
   { daysAgo: 13, hours: 12, type: "engagement", score: 41, company: "Mesa Legal" },
 ];
 
-const ambientSignals: Signal[] = AMBIENT_SIGNAL_DEFS.map((def, i) => {
-  const template = TEMPLATES[def.type];
-  return {
-    id: `demo-signal-ambient-${i + 1}`,
-    signal_type: def.type,
-    source: "webhook",
-    title: template.signalTitle(def.company),
-    description: template.signalDescription,
-    score: def.score,
-    confidence: Math.round((def.score / 100) * 0.8 * 100) / 100,
-    detected_at: daysAgoIso(def.daysAgo, def.hours),
-    company_id: null,
-    lead_id: null,
-    analysis: { tags: [def.type], analyzers: [def.type], primary_analyzer: def.type },
-  };
-});
+function buildAmbientSignals(locale: Locale): Signal[] {
+  const templates = TEMPLATES[locale];
+  return AMBIENT_SIGNAL_DEFS.map((def, i) => {
+    const template = templates[def.type];
+    return {
+      id: `demo-signal-ambient-${i + 1}`,
+      signal_type: def.type,
+      source: "webhook",
+      title: template.signalTitle(def.company),
+      description: template.signalDescription,
+      score: def.score,
+      confidence: Math.round((def.score / 100) * 0.8 * 100) / 100,
+      detected_at: daysAgoIso(def.daysAgo, def.hours),
+      company_id: null,
+      lead_id: null,
+      analysis: { tags: [def.type], analyzers: [def.type], primary_analyzer: def.type },
+    };
+  });
+}
 
-export const historicalSignals: Signal[] = [...originSignals, ...intermediateSignals, ...ambientSignals];
+export function historicalSignals(locale: Locale = defaultLocale): Signal[] {
+  return [...buildOriginSignals(locale), ...buildIntermediateSignals(locale), ...buildAmbientSignals(locale)];
+}
 
-export const historicalOpportunities: Opportunity[] = SEEDS.map((def) => {
-  const template = TEMPLATES[def.signalType];
-  const createdAtIso = daysAgoIso(def.daysAgoCreated, 3);
-  const isClosed = def.outcome === "won" || def.outcome === "lost";
-  const closedAtIso = isClosed && def.cycleDays ? daysAgoIso(def.daysAgoCreated - def.cycleDays, 3) : null;
-  const strategy = hasFullStrategy(def.outcome) ? buildStrategy(def, template, createdAtIso) : {};
+export function historicalOpportunities(locale: Locale = defaultLocale): Opportunity[] {
+  const templates = TEMPLATES[locale];
+  return SEEDS.map((def) => {
+    const template = templates[def.signalType];
+    const createdAtIso = daysAgoIso(def.daysAgoCreated, 3);
+    const isClosed = def.outcome === "won" || def.outcome === "lost";
+    const closedAtIso = isClosed && def.cycleDays ? daysAgoIso(def.daysAgoCreated - def.cycleDays, 3) : null;
+    const strategy = hasFullStrategy(def.outcome) ? buildStrategy(def, template, createdAtIso, locale) : {};
 
-  return {
-    id: `demo-opp-${def.id}`,
-    title: `Oportunidad: ${template.signalTitle(def.company)}`,
-    status: statusFor(def.outcome),
-    score: def.score,
-    strategy,
-    signal_id: `demo-signal-${def.id}`,
-    lead_id: null,
-    company_id: companySlug(def.company),
-    assigned_to_user_id: null,
-    amount: def.amount,
-    expected_close_date: isClosed ? null : dateOnly(daysAgoIso(-(def.daysUntilClose ?? 14))),
-    qualification: qualificationWith(def.qualifiedCount),
-    created_at: createdAtIso,
-    updated_at: closedAtIso ?? createdAtIso,
-    loss_reason: def.outcome === "lost" ? (def.lossReason ?? "other") : null,
-    competitor: def.competitor ?? null,
-    closed_at: closedAtIso,
-  };
-});
+    return {
+      id: `demo-opp-${def.id}`,
+      title: `${OPPORTUNITY_TITLE_PREFIX[locale]}${template.signalTitle(def.company)}`,
+      status: statusFor(def.outcome),
+      score: def.score,
+      strategy,
+      signal_id: `demo-signal-${def.id}`,
+      lead_id: null,
+      company_id: companySlug(def.company),
+      assigned_to_user_id: null,
+      amount: def.amount,
+      expected_close_date: isClosed ? null : dateOnly(daysAgoIso(-(def.daysUntilClose ?? 14))),
+      qualification: qualificationWith(def.qualifiedCount),
+      created_at: createdAtIso,
+      updated_at: closedAtIso ?? createdAtIso,
+      loss_reason: def.outcome === "lost" ? (def.lossReason ?? "other") : null,
+      competitor: def.competitor ?? null,
+      closed_at: closedAtIso,
+    };
+  });
+}
 
 /** Solo las oportunidades suficientemente calificadas (ready_to_action o
  * mejor) tienen battlecard completo — igual que en la app real, donde
  * READY_TO_ACTION es el gate que exige que la estrategia esté enriquecida
  * del todo. Una oportunidad "detected" recién detectada no tiene battlecard
  * todavía, ni en la demo ni en producción. */
-export const historicalBattlecards: Battlecard[] = SEEDS.filter((def) =>
-  ["won", "lost", "in_progress", "ready_to_action"].includes(def.outcome),
-).map((def) => {
-  const template = TEMPLATES[def.signalType];
-  const createdAtIso = daysAgoIso(def.daysAgoCreated, 3);
-  const strategy = buildStrategy(def, template, createdAtIso);
+export function historicalBattlecards(locale: Locale = defaultLocale): Battlecard[] {
+  const templates = TEMPLATES[locale];
+  return SEEDS.filter((def) =>
+    ["won", "lost", "in_progress", "ready_to_action"].includes(def.outcome),
+  ).map((def) => {
+    const template = templates[def.signalType];
+    const createdAtIso = daysAgoIso(def.daysAgoCreated, 3);
+    const strategy = buildStrategy(def, template, createdAtIso, locale);
 
-  return {
-    opportunity_id: `demo-opp-${def.id}`,
-    title: template.signalTitle(def.company),
-    status: statusFor(def.outcome),
-    score: def.score,
-    ready_to_action: true,
-    hot_lead: def.score >= 75,
-    manual_review_required: false,
-    company: { name: def.company, domain: def.domain, industry: def.industry, country: def.country },
-    lead: { full_name: def.leadName, title: def.leadTitle, email: `${def.leadName.split(" ")[0].toLowerCase()}@${def.domain}`, seniority: def.seniority, linkedin_url: null },
-    signal: {
-      id: `demo-signal-${def.id}`,
-      signal_type: def.signalType,
+    return {
+      opportunity_id: `demo-opp-${def.id}`,
       title: template.signalTitle(def.company),
-      description: template.signalDescription,
+      status: statusFor(def.outcome),
       score: def.score,
-      detected_at: createdAtIso,
-      tags: [def.signalType],
-    },
-    strategy,
-    created_at: createdAtIso,
-    updated_at: createdAtIso,
-  };
-});
+      ready_to_action: true,
+      hot_lead: def.score >= 75,
+      manual_review_required: false,
+      company: { name: def.company, domain: def.domain, industry: translate(def.industry, locale), country: translate(def.country, locale) },
+      lead: { full_name: def.leadName, title: translate(def.leadTitle, locale), email: `${def.leadName.split(" ")[0].toLowerCase()}@${def.domain}`, seniority: def.seniority, linkedin_url: null },
+      signal: {
+        id: `demo-signal-${def.id}`,
+        signal_type: def.signalType,
+        title: template.signalTitle(def.company),
+        description: template.signalDescription,
+        score: def.score,
+        detected_at: createdAtIso,
+        tags: [def.signalType],
+      },
+      strategy,
+      created_at: createdAtIso,
+      updated_at: createdAtIso,
+    };
+  });
+}

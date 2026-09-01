@@ -2,7 +2,7 @@
 
 import { CalendarClock, DollarSign, Percent, Trophy } from "lucide-react";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { CompetitorBreakdown } from "@/components/win-loss/competitor-breakdown";
 import { LossReasonChart } from "@/components/win-loss/loss-reason-chart";
@@ -22,6 +22,7 @@ import { computeWinLoss } from "@/lib/win-loss";
  *  (razón de pérdida, competidor) desde el panel del drawer. */
 export function WinLossView() {
   const locale = useLocale() as Locale;
+  const t = useTranslations("forecastWinLoss");
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 300);
 
   const opportunities = oppsResult?.data ?? [];
@@ -31,16 +32,13 @@ export function WinLossView() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Inteligencia de ingresos</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="bee-display">Ganado/Perdido</h1>
-            <p className="bee-caption mt-1">
-              Por qué se ganan y se pierden los deals — razones, competidores, y si calificar más
-              realmente se traduce en más cierres
-            </p>
+            <h1 className="bee-display">{t("winLoss.title")}</h1>
+            <p className="bee-caption mt-1">{t("winLoss.subtitle")}</p>
           </div>
-          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          <Badge variant={live ? "success" : "warning"}>{live ? t("liveBadge") : t("demoBadge")}</Badge>
         </div>
       </header>
 
@@ -55,46 +53,47 @@ export function WinLossView() {
         </div>
       ) : summary.totalClosed === 0 ? (
         <div className="bee-bento bee-bento-pad py-12 text-center">
-          <p className="text-sm text-muted-foreground">Todavía no hay ninguna oportunidad cerrada.</p>
-          <p className="bee-caption mt-1">
-            Marca una oportunidad como ganada o perdida desde su panel de detalle para empezar a ver
-            el análisis aquí.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("winLoss.emptyState.title")}</p>
+          <p className="bee-caption mt-1">{t("winLoss.emptyState.subtitle")}</p>
         </div>
       ) : (
         <div className="space-y-6">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard
-              label="Tasa de cierre"
+              label={t("winLoss.kpis.winRate.label")}
               value={summary.winRate !== null ? `${Math.round(summary.winRate * 100)}%` : "—"}
-              hint={`${summary.won} ganadas de ${summary.totalClosed} cerradas`}
+              hint={t("winLoss.kpis.winRate.hint", { won: summary.won, total: summary.totalClosed })}
               icon={Percent}
             />
             <MetricCard
-              label="Valor ganado"
+              label={t("winLoss.kpis.wonValue.label")}
               value={formatCurrencyUSD(summary.wonValue, locale)}
-              hint="Suma de monto en deals ganados"
+              hint={t("winLoss.kpis.wonValue.hint")}
               icon={Trophy}
             />
             <MetricCard
-              label="Valor perdido"
+              label={t("winLoss.kpis.lostValue.label")}
               value={formatCurrencyUSD(summary.lostValue, locale)}
-              hint="Suma de monto en deals perdidos"
+              hint={t("winLoss.kpis.lostValue.hint")}
               icon={DollarSign}
             />
             <MetricCard
-              label="Días a cierre (ganados)"
+              label={t("winLoss.kpis.daysToClose.label")}
               value={
                 summary.avgDaysToCloseWon !== null ? `${Math.round(summary.avgDaysToCloseWon)}d` : "—"
               }
               hint={
                 summary.avgDaysToCloseWon === null
                   ? summary.avgDaysToCloseLost !== null
-                    ? `Sin ganados todavía · ${Math.round(summary.avgDaysToCloseLost)}d perdidos en promedio`
-                    : "Sin deals cerrados con fecha registrada"
+                    ? t("winLoss.kpis.daysToClose.hintNoWonHasLost", {
+                        days: Math.round(summary.avgDaysToCloseLost),
+                      })
+                    : t("winLoss.kpis.daysToClose.hintNoWonNoLost")
                   : summary.avgDaysToCloseLost !== null
-                    ? `${Math.round(summary.avgDaysToCloseLost)}d perdidos en promedio`
-                    : "Promedio en deals ganados"
+                    ? t("winLoss.kpis.daysToClose.hintHasWonHasLost", {
+                        days: Math.round(summary.avgDaysToCloseLost),
+                      })
+                    : t("winLoss.kpis.daysToClose.hintHasWonNoLost")
               }
               icon={CalendarClock}
             />
@@ -108,24 +107,21 @@ export function WinLossView() {
               already applied to the two Resumen heatmaps below). */}
           <div className="grid items-start gap-4 lg:grid-cols-2">
             <section className="bee-surface bee-bento-pad">
-              <h3 className="bee-card-title">Razones de pérdida</h3>
-              <p className="bee-caption mb-4">Qué se repite más entre los deals perdidos</p>
+              <h3 className="bee-card-title">{t("winLoss.reasons.title")}</h3>
+              <p className="bee-caption mb-4">{t("winLoss.reasons.caption")}</p>
               <LossReasonChart stats={summary.reasonBreakdown} />
             </section>
 
             <section className="bee-surface bee-bento-pad">
-              <h3 className="bee-card-title">Competidores</h3>
-              <p className="bee-caption mb-4">Contra quién competimos de verdad al cerrar</p>
+              <h3 className="bee-card-title">{t("winLoss.competitors.title")}</h3>
+              <p className="bee-caption mb-4">{t("winLoss.competitors.caption")}</p>
               <CompetitorBreakdown stats={summary.competitorBreakdown} />
             </section>
           </div>
 
           <section className="bee-surface bee-bento-pad">
-            <h3 className="bee-card-title">Calificación MEDDIC vs. resultado</h3>
-            <p className="bee-caption mb-4">
-              Tasa de cierre real según qué tan calificado estaba el deal — si calificar más de verdad
-              se traduce en más cierres ganados, o si es solo un checklist sin impacto
-            </p>
+            <h3 className="bee-card-title">{t("winLoss.meddic.title")}</h3>
+            <p className="bee-caption mb-4">{t("winLoss.meddic.caption")}</p>
             <MeddicCorrelationChart stats={summary.meddicCorrelation} />
           </section>
         </div>

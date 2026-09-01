@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { useCompanyDuplicates, useMergeCompanies } from "@/hooks/queries/use-companies";
@@ -12,6 +12,7 @@ import type { Company } from "@/types/domain";
 function GroupRow({ groupKey, companies }: { groupKey: string; companies: Company[] }) {
   const mergeCompanies = useMergeCompanies();
   const locale = useLocale() as Locale;
+  const t = useTranslations("sharedB.companyDuplicates");
   // Por defecto se conserva la más antigua — suele ser la que ya tiene más
   // actividad relacionada (leads, oportunidades, señales) acumulada.
   const sorted = [...companies].sort((a, b) => a.created_at.localeCompare(b.created_at));
@@ -27,7 +28,7 @@ function GroupRow({ groupKey, companies }: { groupKey: string; companies: Compan
   return (
     <div className="rounded-[var(--radius-md)] border border-dashed border-border p-3">
       <p className="mb-2 text-xs font-medium text-muted-foreground">
-        Mismo {companies[0].domain ? "dominio" : "nombre"}: <span className="font-mono">{groupKey}</span>
+        {companies[0].domain ? t("sameDomain") : t("sameName")} <span className="font-mono">{groupKey}</span>
       </p>
       <div className="space-y-1.5">
         {companies.map((c) => (
@@ -41,7 +42,7 @@ function GroupRow({ groupKey, companies }: { groupKey: string; companies: Compan
             />
             <span className="font-medium">{c.name}</span>
             <span className="text-muted-foreground">
-              · creada el {formatDate(c.created_at, locale)}
+              · {t("createdOn", { date: formatDate(c.created_at, locale) })}
             </span>
           </label>
         ))}
@@ -52,7 +53,7 @@ function GroupRow({ groupKey, companies }: { groupKey: string; companies: Compan
         disabled={mergeCompanies.isPending}
         className="bee-btn bee-btn--primary mt-3 text-xs"
       >
-        {mergeCompanies.isPending ? "Fusionando…" : "Fusionar en la seleccionada"}
+        {mergeCompanies.isPending ? t("merging") : t("mergeButton")}
       </button>
     </div>
   );
@@ -62,6 +63,7 @@ function GroupRow({ groupKey, companies }: { groupKey: string; companies: Compan
  *  (o nombre, si ninguna tiene dominio) en más de un registro. No se borra
  *  nada solo: el rep elige cuál conservar y fusiona a demanda. */
 export function CompanyDuplicatesPanel() {
+  const t = useTranslations("sharedB.companyDuplicates");
   const { data: result } = useCompanyDuplicates();
   const groups = result?.data ?? [];
 
@@ -72,7 +74,7 @@ export function CompanyDuplicatesPanel() {
       <div className="mb-3 flex items-center gap-2">
         <AlertTriangle className="size-4 text-[var(--color-chart-1)]" />
         <p className="text-sm font-semibold">
-          {groups.length} posible{groups.length === 1 ? "" : "s"} duplicado{groups.length === 1 ? "" : "s"} de empresa
+          {t("heading", { count: groups.length })}
         </p>
       </div>
       <div className="space-y-2">

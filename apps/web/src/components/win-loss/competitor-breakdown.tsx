@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { CompetitorStat } from "@/lib/win-loss";
 
@@ -5,12 +9,10 @@ import type { CompetitorStat } from "@/lib/win-loss";
  *  "contra quién competimos de verdad", no solo el nombre suelto que hoy vive
  *  enterrado en `notes` de texto libre. */
 export function CompetitorBreakdown({ stats }: { stats: CompetitorStat[] }) {
+  const t = useTranslations("forecastWinLoss.competitorBreakdown");
+
   if (stats.length === 0) {
-    return (
-      <p className="py-6 text-center text-xs text-muted-foreground">
-        Todavía no se registró ningún competidor en un cierre.
-      </p>
-    );
+    return <p className="py-6 text-center text-xs text-muted-foreground">{t("empty")}</p>;
   }
 
   return (
@@ -22,9 +24,7 @@ export function CompetitorBreakdown({ stats }: { stats: CompetitorStat[] }) {
           <div key={s.competitor}>
             <div className="flex items-center justify-between gap-2">
               <p className="truncate text-xs font-medium">{s.competitor}</p>
-              <p className="shrink-0 bee-micro">
-                {s.wins} ganadas · {s.losses} perdidas
-              </p>
+              <p className="shrink-0 bee-micro">{t("record", { wins: s.wins, losses: s.losses })}</p>
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -40,8 +40,7 @@ export function CompetitorBreakdown({ stats }: { stats: CompetitorStat[] }) {
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                {s.competitor}: {Math.round(winPct)}% de tasa de cierre en {total} deal{total === 1 ? "" : "s"}{" "}
-                enfrentados
+                {t("tooltip", { competitor: s.competitor, percent: Math.round(winPct), count: total })}
               </TooltipContent>
             </Tooltip>
           </div>

@@ -1,10 +1,13 @@
 "use client";
 
 import { AlertCircle, Bell, Flame, Radio } from "lucide-react";
+import { useLocale } from "next-intl";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { useNotifications } from "@/hooks/use-notifications";
+import type { Locale } from "@/i18n/locales";
+import { formatRelativeTime } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 import type { AppNotification } from "@/lib/notifications/build-notifications";
 
@@ -23,18 +26,10 @@ const KIND_COLOR: Record<AppNotification["kind"], string> = {
   review_required: "var(--color-chart-1)",
 };
 
-function timeAgo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.round(diffMs / 60000);
-  if (mins < 1) return "ahora";
-  if (mins < 60) return `hace ${mins}m`;
-  const hours = Math.round(mins / 60);
-  if (hours < 24) return `hace ${hours}h`;
-  return `hace ${Math.round(hours / 24)}d`;
-}
 
 /** Campana de notificaciones — vive en el encabezado, no en el sidebar. */
 export function NotificationBell() {
+  const locale = useLocale() as Locale;
   const { notifications, unreadCount, markAllSeen, isLoading } = useNotifications();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -101,7 +96,7 @@ export function NotificationBell() {
                         <p className="mt-0.5 line-clamp-2 bee-micro">
                           {n.description}
                         </p>
-                        <p className="mt-1 bee-micro">{timeAgo(n.timestamp)}</p>
+                        <p className="mt-1 bee-micro">{formatRelativeTime(n.timestamp, locale)}</p>
                       </div>
                     </Link>
                   </li>

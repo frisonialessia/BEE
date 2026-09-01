@@ -1,0 +1,120 @@
+{
+  "outcome": {
+    "statusLabel": {
+      "won": "Ganada",
+      "lost": "Perdida",
+      "dismissed": "Descartada"
+    },
+    "reasonPrefix": "Razón:",
+    "competitorPrefix": "Competidor:",
+    "competitorBeatenPrefix": "Competidor superado:",
+    "sectionTitle": "Registrar resultado",
+    "markWon": "Marcar ganada",
+    "markLost": "Marcar perdida",
+    "reasonRequiredLabel": "Razón (obligatoria)",
+    "reasonPlaceholder": "Selecciona una razón…",
+    "competitorWonLabel": "Competidor superado (opcional)",
+    "competitorLostLabel": "Competidor que ganó (opcional)",
+    "competitorPlaceholder": "Nombre del competidor",
+    "notesLabel": "Notas (opcional)",
+    "notesPlaceholder": "Contexto adicional del cierre…",
+    "error": "No se pudo registrar — intenta de nuevo.",
+    "saving": "Guardando…",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
+  "timeline": {
+    "agentLabels": {
+      "strategy_generator": "Generador de estrategias",
+      "executive_agent": "Agente ejecutivo",
+      "psychographic_analyzer": "Analizador psicográfico",
+      "dark_funnel": "Dark Funnel",
+      "smart_engagement": "Engagement inteligente",
+      "agent_orchestrator": "Orquestador",
+      "workflow_orchestrator": "Flujo de trabajo",
+      "trend_analyst": "Analista de tendencias"
+    },
+    "empty": "Todavía no hay actividad registrada para esta oportunidad.",
+    "manualReviewRequired": "Requiere revisión manual — confianza {confidence}%"
+  },
+  "tasks": {
+    "sectionTitle": "Tareas de seguimiento",
+    "loading": "Cargando…",
+    "empty": "Sin tareas todavía.",
+    "overdue": "vencida",
+    "completedCount": "{count, plural, one {# completada} other {# completadas}}",
+    "deleteTask": "Eliminar tarea",
+    "newTaskPlaceholder": "Nueva tarea…",
+    "addTask": "Agregar tarea"
+  },
+  "priorityMatrix": {
+    "ariaLabel": "Matriz de priorización: fit vs. intención por empresa",
+    "fitAxis": "Fit con tu ICP →",
+    "intentAxis": "Intención →",
+    "tooltip": "{name} — fit {fit}, intención {intent}"
+  },
+  "successPatterns": {
+    "confidenceLabel": {
+      "low": "Confianza baja",
+      "medium": "Confianza media",
+      "high": "Confianza alta"
+    },
+    "emptyTitle": "Todavía no hay suficientes deals cerrados para aprender un patrón.",
+    "emptySubtitle": "En cuanto se cierren más oportunidades con el mismo playbook y canal, aparece aquí.",
+    "viaChannel": "{playbook} vía {channel}",
+    "dealsClosed": "{count, plural, one {# deal cerrado} other {# deals cerrados}}",
+    "avgDaysToClose": "{days} días promedio a cierre"
+  },
+  "signalVolume": {
+    "empty": "Sin señales todavía en esta ventana de tiempo.",
+    "tooltip": "{label}: {count, plural, one {# señal} other {# señales}}",
+    "tooltipHot": "{label}: {count, plural, one {# señal} other {# señales}}, {hotCount} de alta intención"
+  },
+  "companyDuplicates": {
+    "sameDomain": "Mismo dominio:",
+    "sameName": "Mismo nombre:",
+    "createdOn": "creada el {date}",
+    "merging": "Fusionando…",
+    "mergeButton": "Fusionar en la seleccionada",
+    "heading": "{count, plural, one {# posible duplicado de empresa} other {# posibles duplicados de empresa}}"
+  },
+  "leadDuplicates": {
+    "sameEmail": "Mismo email:",
+    "createdOn": "creado el {date}",
+    "merging": "Fusionando…",
+    "mergeButton": "Fusionar en el seleccionado",
+    "heading": "{count, plural, one {# posible duplicado de contacto} other {# posibles duplicados de contacto}}"
+  },
+  "exportCsv": {
+    "button": "Exportar CSV"
+  },
+  "savedViews": {
+    "trigger": "Vistas guardadas",
+    "empty": "Todavía no hay vistas guardadas.",
+    "teamBadge": "equipo",
+    "deleteView": "Eliminar vista",
+    "namePlaceholder": "Nombre de la vista…",
+    "shareWithTeam": "Compartir con el equipo",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "saveCurrent": "+ Guardar vista actual"
+  },
+  "relationshipMap": {
+    "empty": "Sin contactos registrados todavía para mapear.",
+    "multipleOpportunities": "{count} oportunidades ligadas",
+    "statusHint": {
+      "won": "Ligado a una oportunidad ganada",
+      "open": "Ligado a una oportunidad abierta",
+      "lost": "Solo ligado a oportunidades perdidas",
+      "dismissed": "Solo ligado a oportunidades descartadas — nunca se compitió por ellas",
+      "none": "Sin ninguna oportunidad ligada todavía"
+    }
+  },
+  "opportunityDetail": {
+    "backToStrategies": "Volver a estrategias",
+    "demoData": "Datos demo",
+    "battlecardUnavailable": "Battlecard no disponible — la oportunidad puede estar enriqueciéndose.",
+    "executionArtifacts": "Artefactos de ejecución",
+    "artifactsUnavailable": "Los artefactos se generarán en la primera solicitud vía Executive Agent."
+  }
+}

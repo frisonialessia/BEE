@@ -1,0 +1,105 @@
+{
+  "opportunities": {
+    "eyebrow": "Battlecards y análisis",
+    "title": "Oportunidades",
+    "subtitle": "Battlecards enriquecidos con pain point, argumento de cierre y ventana de timing — el pipeline arrastrable vive en CRM",
+    "live": "En vivo",
+    "demoData": "Datos demo",
+    "exportFilename": "bee-oportunidades.csv",
+    "csv": {
+      "title": "Título",
+      "status": "Estado",
+      "score": "Puntaje",
+      "company": "Empresa",
+      "owner": "Responsable"
+    },
+    "tabs": {
+      "battlecards": "Battlecards ({count})",
+      "flow": "Flujo"
+    },
+    "battlecardsHint": "Clic en una tarjeta para abrir el drawer de oportunidad",
+    "emptyBattlecards": {
+      "title": "Aún no hay battlecards listas para acción.",
+      "subtitle": "Las señales deben enriquecerse primero."
+    },
+    "status": {
+      "detected": "Detectada",
+      "ready_to_action": "Lista para actuar",
+      "prioritized": "Priorizada",
+      "in_progress": "En progreso",
+      "won": "Ganada",
+      "lost": "Perdida",
+      "dismissed": "Descartada"
+    }
+  },
+  "pipelineFlow": {
+    "empty": "Aún no hay oportunidades para mostrar el flujo.",
+    "eyebrow": "Flujo del pipeline",
+    "title": "{count} oportunidades en total",
+    "ariaLabel": "Flujo de oportunidades por etapa",
+    "columns": {
+      "detected": "Detectadas",
+      "enriching": "Enriqueciendo",
+      "ready_to_action": "Listas para actuar",
+      "in_progress": "En progreso",
+      "closed": "Cerradas"
+    },
+    "closedBreakdown": {
+      "label": "Dentro de Cerradas:",
+      "won": "{count} ganadas",
+      "lost": "{count} perdidas",
+      "dismissed": "{count} descartadas"
+    }
+  },
+  "priority": {
+    "eyebrow": "Inteligencia",
+    "title": "Priorización",
+    "subtitle": "Qué cuentas encajan con tu cliente ideal y están mostrando interés real ahora mismo",
+    "live": "En vivo",
+    "demoData": "Datos demo",
+    "editIcp": "Editar ICP",
+    "configureIcp": "Configurar ICP",
+    "emptyIcp": {
+      "title": "Todavía no configuraste tu Perfil de Cliente Ideal",
+      "subtitle": "Sin eso no podemos calcular qué tan buen fit es cada cuenta — solo tendríamos el score de intención, que ya ves en Leads y Oportunidades. Defínelo para ver la matriz completa.",
+      "cta": "Configurar ahora"
+    },
+    "emptyCompanies": "Todavía no hay empresas para priorizar.",
+    "matrixSection": {
+      "title": "Matriz de priorización",
+      "subtitle": "Encaje con tu ICP × qué tan caliente está la señal",
+      "description": "Cada punto es una empresa. Arriba a la derecha: encaja con tu ICP y está caliente ahora — ahí debería ir tu tiempo primero. Haz clic en un punto para abrir esa empresa."
+    },
+    "quadrants": {
+      "priority": {
+        "label": "Prioridad máxima",
+        "hint": "Encaja con tu cliente ideal y está mostrando intención real ahora — enfoca aquí primero."
+      },
+      "nurture": {
+        "label": "Cultivar",
+        "hint": "Encaja con tu cliente ideal pero todavía no está caliente — vale la pena seguirla en el tiempo."
+      },
+      "opportunistic": {
+        "label": "Oportunista",
+        "hint": "Está caliente pero no es tu cliente ideal — puede cerrar rápido, pero no repitas el patrón."
+      },
+      "deprioritize": {
+        "label": "Bajo interés",
+        "hint": "Ni encaja ni está caliente — no es donde debería ir tu tiempo ahora."
+      }
+    },
+    "emptyQuadrant": "Sin cuentas en esta zona todavía",
+    "fitIntent": "Fit {fit} · Intención {intent}"
+  },
+  "icpForm": {
+    "title": "Perfil de Cliente Ideal (ICP)",
+    "subtitle": "Separa cada valor con comas. Deja una lista vacía si esa dimensión no te importa — no penaliza a nadie.",
+    "industries": { "label": "Industrias", "placeholder": "SaaS, Fintech, Logística…" },
+    "sizes": { "label": "Tamaños de empresa", "placeholder": "11-50, 51-200…" },
+    "countries": { "label": "Países", "placeholder": "México, Colombia…" },
+    "alreadyUsing": "Ya usas: {values}",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "cancel": "Cancelar"
+  }
+}

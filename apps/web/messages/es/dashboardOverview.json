@@ -1,0 +1,111 @@
+{
+  "overview": {
+    "eyebrow": "Inteligencia de señales",
+    "title": "Resumen",
+    "subtitle": "Señales de mercado en tiempo real → battlecards CEO → cierre de deals",
+    "statusLive": "En vivo · API conectada",
+    "statusDemo": "Demo · API desconectada",
+    "kpis": {
+      "signals": "Señales",
+      "hotSignals": "Alta intención",
+      "hotSignalsHint": "score ≥ 75",
+      "ready": "Listas para acción",
+      "readyHint": "battlecard completo",
+      "hotLeads": "Leads calientes",
+      "hotLeadsHint": "intención de compra",
+      "avgScore": "Score medio"
+    },
+    "itemLabels": {
+      "battlecards": "battlecards",
+      "signals": "señales"
+    },
+    "sections": {
+      "funnel": {
+        "title": "Embudo de cierre",
+        "caption": "Cuántas oportunidades hay hoy en cada etapa, camino a ganar"
+      },
+      "industryHeatmap": {
+        "title": "Dónde eres más fuerte",
+        "caption": "Tasa de cierre cruzando industria de la cuenta y tipo de señal"
+      },
+      "activityHeatmap": {
+        "title": "Cuándo llega el mercado",
+        "caption": "Actividad de señales detectadas, por día y horario"
+      },
+      "battlecards": {
+        "title": "Briefs enriquecidos",
+        "caption": "Pain point · argumento de cierre · ventana de timing",
+        "strategyBadge": "Estrategia · rule_based"
+      },
+      "revenueSimulator": {
+        "title": "Proyección de ingresos",
+        "caption": "Qué pasaría si invertimos más en prospección"
+      },
+      "allSignals": {
+        "title": "Todas las señales",
+        "total": "{count} total",
+        "empty": "Aún no hay señales. Aparecen automáticamente al conectar tus fuentes de mercado."
+      }
+    }
+  },
+  "pagination": {
+    "summary": "{count} {label} · Página {page} de {totalPages}",
+    "defaultItemLabel": "elementos",
+    "density": "Densidad",
+    "perPageOption": "{count} / pág.",
+    "itemsPerPage": "Elementos por página",
+    "navigation": "Paginación",
+    "previousPage": "Página anterior",
+    "nextPage": "Página siguiente"
+  },
+  "industryHeatmap": {
+    "empty": "Todavía no hay suficientes deals cerrados con industria y tipo de señal identificados para este mapa.",
+    "ariaLabel": "Tasa de cierre por industria y tipo de señal",
+    "legendLabel": "Tasa de cierre:",
+    "tooltipDeals": "{won} de {closed} deals cerrados ganados ({pct}%)"
+  },
+  "pipelineFunnel": {
+    "shareOfPipeline": "{pct}% del pipeline"
+  },
+  "activityHeatmap": {
+    "empty": "Todavía no hay señales para mapear por horario.",
+    "ariaLabel": "Actividad de señales por día y hora",
+    "peakActivity": "Pico de actividad:",
+    "noActivity": "Sin actividad registrada todavía.",
+    "less": "Menos",
+    "more": "Más",
+    "signalsDetected": "{count, plural, one {# señal detectada} other {# señales detectadas}}"
+  },
+  "todayImpact": {
+    "emptyState": "Ninguna señal de alta intención detectada en las últimas 24h — nada urgente que proyectar hoy.",
+    "eyebrow": "Si actúas hoy",
+    "upliftHeadline": "+{amount} de pipeline proyectado",
+    "upliftDetail": "{count, plural, one {# señal} other {# señales}} de alta intención hoy × {winRate}% de cierre histórico ({sampleSize} deals) × {avgDealValue} de valor promedio por deal",
+    "signalsHeadline": "{count, plural, one {# señal} other {# señales}} de alta intención hoy",
+    "needMoreDeals": "Faltan deals cerrados para calcular un impacto en $ real ({sampleSize}/5 mínimo)",
+    "addDealValue": "Agrega el monto estimado a tus oportunidades para ver el impacto en $",
+    "cta": "Ver estas cuentas"
+  },
+  "dailyBrief": {
+    "title": "Brief del día",
+    "empty": "Nada urgente por ahora — pipeline, cuotas y datos se ven en orden."
+  },
+  "leaderboard": {
+    "title": "Ranking",
+    "subtitle": "Oportunidades ganadas",
+    "empty": "Todavía no hay oportunidades ganadas asignadas a un miembro del equipo.",
+    "tooltip": "{won, plural, one {# ganada} other {# ganadas}} · {pct}% del líder ({leaderName})"
+  },
+  "criticalAccounts": {
+    "title": "Cuentas críticas de hoy",
+    "unnamedAccount": "Cuenta sin nombre",
+    "hotBadge": "caliente",
+    "whyItMatters": "Por qué importa",
+    "recommendedAngle": "Ángulo recomendado",
+    "viaChannel": "{playbook} vía {channel}",
+    "sequenceStarted": "Secuencia iniciada — primer paso pendiente de tu aprobación en Control",
+    "triggering": "Iniciando…",
+    "triggerSequence": "Disparar \"{name}\"",
+    "viewBattlecard": "Ver battlecard"
+  }
+}

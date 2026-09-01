@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Locale } from "@/i18n/locales";
@@ -13,6 +13,7 @@ import type { ForecastMonthBucket } from "@/lib/forecast";
  *  El tooltip es real (Radix), no el title nativo del navegador. */
 export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }) {
   const locale = useLocale() as Locale;
+  const t = useTranslations("forecastWinLoss.barChart");
   const maxValue = Math.max(1, ...buckets.map((b) => b.total));
 
   return (
@@ -36,8 +37,12 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                {b.label}: {formatCurrencyUSD(b.weighted, locale)} ponderado de {formatCurrencyUSD(b.total, locale)} en pipeline (
-                {b.count} oportunidad{b.count === 1 ? "" : "es"})
+                {t("tooltip", {
+                  label: b.label,
+                  weighted: formatCurrencyUSD(b.weighted, locale),
+                  total: formatCurrencyUSD(b.total, locale),
+                  count: b.count,
+                })}
               </TooltipContent>
             </Tooltip>
             <p className="bee-micro font-medium">{b.label}</p>
@@ -46,10 +51,10 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
       })}
       <div className="ml-2 flex shrink-0 flex-col justify-end gap-1.5 pb-4 bee-micro">
         <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-[2px] bg-[var(--color-chart-2)]" /> Ponderado
+          <span className="size-2 rounded-[2px] bg-[var(--color-chart-2)]" /> {t("legendWeighted")}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-[2px] bg-[var(--color-chart-4)]" /> Pipeline total
+          <span className="size-2 rounded-[2px] bg-[var(--color-chart-4)]" /> {t("legendTotal")}
         </span>
       </div>
     </div>

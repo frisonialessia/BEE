@@ -1,0 +1,88 @@
+{
+  "view": {
+    "eyebrow": "Pipeline comercial",
+    "title": "CRM",
+    "description": "El pipeline real, etapa por etapa — arrastra una tarjeta para moverla"
+  },
+  "board": {
+    "toolbarHint": "Arrastra una tarjeta para moverla de etapa, o usa el selector de cada tarjeta",
+    "live": "En vivo",
+    "demo": "Datos demo",
+    "newOpportunity": "+ Nueva oportunidad",
+    "moveToStage": "Mover a otra etapa",
+    "moveToOption": "Mover a: {stage}",
+    "hot": "Caliente",
+    "reviewRequired": "Requiere revisión",
+    "viaChannel": "vía {channel}",
+    "stages": {
+      "detected": "Detectadas",
+      "ready_to_action": "Listas para actuar",
+      "prioritized": "Priorizadas",
+      "in_progress": "En progreso",
+      "closed": "Cerradas"
+    },
+    "emptyColumn": {
+      "title": "Sin oportunidades aquí",
+      "hint": "Arrastra una tarjeta para moverla"
+    },
+    "emptyClosed": "Nada cerrado todavía",
+    "closedStatus": {
+      "won": "Ganada",
+      "lost": "Perdida",
+      "dismissed": "Descartada"
+    },
+    "emptyState": {
+      "title": "Todavía no hay oportunidades en el pipeline.",
+      "hint": "En cuanto una señal se convierta en oportunidad, aparece aquí — o agrega la primera a mano."
+    },
+    "moveError": "No se pudo mover la oportunidad — intenta de nuevo."
+  },
+  "drawer": {
+    "closeOverlay": "Cerrar panel de detalle",
+    "dialogLabel": "Detalle de oportunidad",
+    "eyebrow": "Oportunidad",
+    "loading": "Cargando…",
+    "moveToStage": "Mover a otra etapa",
+    "close": "Cerrar",
+    "demo": "Datos demo",
+    "battlecardUnavailable": "Battlecard no disponible — la oportunidad puede estar enriqueciéndose.",
+    "disc": {
+      "title": "Perfil de comunicación (DISC)",
+      "dominantStyle": "Estilo dominante:",
+      "preferredTone": "Tono preferido:",
+      "messages": "Mensajes:",
+      "confidence": "Confianza:",
+      "unavailable": "Perfil DISC no disponible todavía para este lead.",
+      "labels": {
+        "D": "Dominante — directo y orientado a resultados",
+        "I": "Influyente — entusiasta y sociable",
+        "S": "Estable — paciente y confiable",
+        "C": "Analítico — preciso y orientado a datos",
+        "UNKNOWN": "Sin clasificar"
+      }
+    },
+    "history": "Historial",
+    "artifacts": {
+      "title": "Artefactos de ejecución",
+      "unavailable": "Los artefactos se generarán en la primera solicitud vía Executive Agent."
+    },
+    "moveError": "No se pudo mover la oportunidad — intenta de nuevo."
+  },
+  "form": {
+    "title": "Nueva oportunidad",
+    "companyName": "Empresa *",
+    "companyDomain": "dominio.com",
+    "companyIndustry": "Industria",
+    "contactName": "Contacto (opcional)",
+    "contactTitle": "Cargo",
+    "contactEmail": "Correo",
+    "signalType": "Tipo de señal",
+    "priority": "Prioridad",
+    "descriptionPlaceholder": "¿Por qué es una oportunidad? Este contexto alimenta la estrategia que genera la IA. *",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "successToast": "Oportunidad agregada — estrategia generada.",
+    "errorToast": "No se pudo crear la oportunidad — intenta de nuevo."
+  }
+}

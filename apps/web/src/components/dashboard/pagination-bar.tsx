@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { PAGE_SIZE_OPTIONS } from "@/hooks/use-pagination";
 
@@ -22,8 +23,10 @@ export function PaginationBar({
   totalItems,
   onPageChange,
   onPageSizeChange,
-  itemLabel = "elementos",
+  itemLabel,
 }: PaginationBarProps) {
+  const t = useTranslations("dashboardOverview.pagination");
+
   if (totalItems === 0) return null;
 
   const pages = buildPageNumbers(page, totalPages);
@@ -31,33 +34,38 @@ export function PaginationBar({
   return (
     <div className="bee-pagination">
       <p className="bee-caption">
-        {totalItems} {itemLabel} · Página {page} de {totalPages}
+        {t("summary", {
+          count: totalItems,
+          label: itemLabel ?? t("defaultItemLabel"),
+          page,
+          totalPages,
+        })}
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-2 text-xs text-muted-foreground">
-          Densidad
+          {t("density")}
           <select
             className="bee-pagination__select"
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            aria-label="Elementos por página"
+            aria-label={t("itemsPerPage")}
           >
             {PAGE_SIZE_OPTIONS.map((n) => (
               <option key={n} value={n}>
-                {n} / pág.
+                {t("perPageOption", { count: n })}
               </option>
             ))}
           </select>
         </label>
 
-        <div className="bee-pagination__pages" role="navigation" aria-label="Paginación">
+        <div className="bee-pagination__pages" role="navigation" aria-label={t("navigation")}>
           <button
             type="button"
             className="bee-pagination__btn"
             disabled={page <= 1}
             onClick={() => onPageChange(page - 1)}
-            aria-label="Página anterior"
+            aria-label={t("previousPage")}
           >
             <ChevronLeft className="size-4" />
           </button>
@@ -85,7 +93,7 @@ export function PaginationBar({
             className="bee-pagination__btn"
             disabled={page >= totalPages}
             onClick={() => onPageChange(page + 1)}
-            aria-label="Página siguiente"
+            aria-label={t("nextPage")}
           >
             <ChevronRight className="size-4" />
           </button>

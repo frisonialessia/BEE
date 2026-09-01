@@ -1,0 +1,424 @@
+{
+  "sequences": {
+    "view": {
+      "eyebrow": "Secuencia dinámica · Engagement inteligente",
+      "title": "Secuencias",
+      "subtitle": "Cadencias multicanal en curso, eventos entrantes que requieren respuesta, y el contenido con el que arrancarlas",
+      "tabs": {
+        "status": "Estado",
+        "library": "Biblioteca de mensajes",
+        "automations": "Automatizaciones"
+      }
+    },
+    "probarPage": {
+      "subtitle": "El contenido con el que arrancarlas y el flujo multicanal que las define — el estado en vivo y la bandeja de engagement necesitan una cuenta real."
+    },
+    "comingSoon": {
+      "title": "{label} — no está simulado en este sandbox",
+      "description": "Esta herramienta funciona por completo en una cuenta real, con tus propios datos. Acá todavía no la armamos como demo — para no mostrarte algo que no es de verdad.",
+      "createAccount": "Crear cuenta gratis",
+      "backToSignals": "Volver a Señales"
+    },
+    "library": {
+      "channels": {
+        "email": "Email",
+        "linkedin": "LinkedIn",
+        "other": "Otro"
+      },
+      "caption": "Contenido reutilizable para tus secuencias — escribe el mensaje una vez, úsalo siempre",
+      "newTemplate": "+ Nueva plantilla",
+      "form": {
+        "editTitle": "Editar plantilla",
+        "newTitle": "Nueva plantilla",
+        "namePlaceholder": "Nombre *",
+        "subjectPlaceholder": "Asunto",
+        "bodyPlaceholder": "Cuerpo del mensaje — usa '{{first_name}}', '{{company_name}}', etc. como marcadores",
+        "saving": "Guardando…",
+        "save": "Guardar",
+        "cancel": "Cancelar"
+      },
+      "empty": {
+        "title": "Todavía no hay plantillas guardadas.",
+        "subtitle": "Crea la primera para reutilizarla en tus secuencias."
+      },
+      "edit": "Editar",
+      "delete": "Eliminar"
+    },
+    "automation": {
+      "channelStatus": {
+        "mock": "modo simulado",
+        "connected": "conectado"
+      },
+      "config": {
+        "title": "Configuración del flujo",
+        "namePlaceholder": "Nombre del flujo *",
+        "descriptionPlaceholder": "Descripción (opcional)",
+        "anySignal": "Cualquier señal",
+        "industryPlaceholder": "Industria (opcional)",
+        "anySeniority": "Cualquier cargo",
+        "note": "Industria y cargo son descriptivos — para quién se pensó este flujo. La inscripción siempre es manual desde Leads, nunca automática por coincidencia."
+      },
+      "save": "Guardar flujo",
+      "saving": "Guardando…",
+      "saveError": "No se pudo guardar — intenta de nuevo.",
+      "preview": "Vista previa",
+      "viewer": {
+        "back": "Volver a automatizaciones",
+        "loadError": "No se pudo cargar este flujo."
+      },
+      "list": {
+        "count": "{count, plural, one {# flujo definido} other {# flujos definidos}}",
+        "newFlow": "Nuevo flujo",
+        "stepsCount": "{count, plural, one {# paso} other {# pasos}}",
+        "empty": {
+          "title": "Todavía no hay flujos de automatización.",
+          "subtitle": "Crea el primero para escalar el alcance sin trabajo manual repetido."
+        }
+      }
+    },
+    "flowCanvas": {
+      "conditions": {
+        "opened": "cuando abren",
+        "clicked": "cuando hacen clic",
+        "replied": "cuando responden",
+        "accepted": "cuando aceptan",
+        "no_response": "sin respuesta"
+      },
+      "timeout": "si no hay \"{event}\" en {days, plural, one {# día} other {# días}}",
+      "advance": "avanza {condition}",
+      "removeStepAria": "Quitar paso",
+      "end": "Fin de la secuencia",
+      "empty": {
+        "title": "Todavía no hay pasos en este flujo.",
+        "subtitle": "Agrega el primero desde la paleta de acciones."
+      }
+    },
+    "stepComposer": {
+      "title": "Agregar paso",
+      "namePlaceholder": "Nombre del paso",
+      "conditions": {
+        "opened": "Cuando abren el email",
+        "clicked": "Cuando hacen clic en un enlace",
+        "replied": "Cuando responden",
+        "no_response": "Si no hay respuesta",
+        "accepted": "Cuando aceptan la conexión"
+      },
+      "advancedCondition": "Condición avanzada…",
+      "customPlaceholder": "ej. not_replied_3d",
+      "customFormatPrefix": "Formato",
+      "customFormatEvent": "evento",
+      "customFormatHelp": "Este deploy no tiene un scheduler propio — se evalúa la próxima vez que llegue un evento a esta ejecución, no automáticamente cada día.",
+      "notesPlaceholder": "Notas (opcional)",
+      "addButton": "Agregar al flujo"
+    },
+    "actions": {
+      "send_email": {
+        "label": "Enviar email",
+        "description": "Email personalizado, generado por el ExecutiveAgent"
+      },
+      "linkedin_profile_view": {
+        "label": "Visitar perfil de LinkedIn",
+        "description": "Deja huella pasiva antes del contacto directo"
+      },
+      "linkedin_like": {
+        "label": "Dar like a una publicación",
+        "description": "Calienta el contacto antes del mensaje"
+      },
+      "linkedin_connect": {
+        "label": "Solicitud de conexión",
+        "description": "Invitación con nota personalizada"
+      },
+      "linkedin_inmail": {
+        "label": "InMail personalizado (IA)",
+        "description": "Mensaje directo generado con el contexto de la señal"
+      },
+      "send_content": {
+        "label": "Enviar contenido",
+        "description": "Caso de estudio o recurso relevante"
+      },
+      "book_meeting": {
+        "label": "Agendar reunión",
+        "description": "Invitación a llamada — normalmente el cierre del flujo"
+      },
+      "follow_up": {
+        "label": "Seguimiento",
+        "description": "Recordatorio si no hubo respuesta"
+      }
+    },
+    "engagementInbox": {
+      "title": "Bandeja de Engagement",
+      "subtitle": "Comentarios, DMs y respuestas entrantes — clasificados y redactados por IA",
+      "simulateEvent": "+ Simular evento",
+      "anonymous": "Anónimo",
+      "stats": {
+        "total": "Total",
+        "needsApproval": "Requiere aprobación",
+        "salesLeads": "Leads de venta"
+      },
+      "sentiment": {
+        "positive": "Positivo",
+        "neutral": "Neutral",
+        "negative": "Negativo",
+        "question": "Pregunta",
+        "unknown": "Desconocido"
+      },
+      "intent": {
+        "sales_interest": "Interés de compra",
+        "objection": "Objeción",
+        "referral": "Referido",
+        "follow_up": "Seguimiento",
+        "compliment": "Elogio",
+        "spam": "Spam",
+        "other": "Otro"
+      },
+      "showDraft": "▼ Ver borrador de respuesta",
+      "hideDraft": "▲ Ocultar borrador",
+      "waitingApproval": "Esperando aprobación del CEO en el orquestador",
+      "form": {
+        "title": "Simular evento entrante",
+        "sources": {
+          "linkedin": "LinkedIn",
+          "twitter": "X (Twitter)",
+          "email": "Email"
+        },
+        "authorPlaceholder": "Nombre del autor (opcional)",
+        "contentPlaceholder": "Pega un comentario o mensaje…",
+        "analyze": "Analizar y redactar",
+        "analyzing": "Procesando…",
+        "cancel": "Cancelar"
+      },
+      "empty": "Todavía no hay eventos — usa \"Simular evento\" para probarlo."
+    },
+    "workflowStatus": {
+      "title": "Bus de workflows",
+      "subtitle": "Tareas automatizadas despachadas en eventos de negocio",
+      "live": "En vivo",
+      "demoData": "Datos demo",
+      "totalSuffix": "en total",
+      "taskSimulatedTag": "simulado",
+      "statusLabels": {
+        "mock_dispatched": "Simulado",
+        "dispatched": "Despachado",
+        "completed": "Completado",
+        "failed": "Fallido",
+        "pending": "Pendiente",
+        "skipped": "Omitido"
+      },
+      "stats": {
+        "mock": "Simulado",
+        "live": "En vivo",
+        "failed": "Fallido",
+        "pending": "Pendiente"
+      },
+      "mockNoticePrefix": "Todas las tareas se ejecutan en modo simulado — conecta tus integraciones en",
+      "mockNoticeHighlight": "Integraciones",
+      "mockNoticeSuffix": "para despacharlas en vivo.",
+      "recentTasks": "Tareas recientes",
+      "empty": {
+        "title": "Aún no se han despachado tareas.",
+        "subtitle": "Cierra una oportunidad como GANADA para activar el bus de eventos."
+      }
+    }
+  },
+  "integrations": {
+    "eyebrow": "Cuentas conectadas",
+    "title": "Integraciones",
+    "subtitle": "Conecta tus propias cuentas para que BEE actúe en tu nombre — el envío de secuencias por Gmail o LinkedIn sale desde tu cuenta real, no desde una compartida del servidor. Salesforce trae tu CRM a BEE, de solo lectura.",
+    "callbackErrors": {
+      "denied": "Cancelaste la conexión — no se conectó nada.",
+      "invalid_state": "El enlace de conexión expiró o no es válido. Intenta de nuevo.",
+      "invalid_request": "El proveedor no envió los datos esperados. Intenta de nuevo.",
+      "exchange_failed": "El proveedor rechazó la conexión. Intenta de nuevo en unos minutos.",
+      "generic": "No se pudo completar la conexión."
+    },
+    "connectedToast": "{label} conectado correctamente.",
+    "disconnectedToast": "{label} desconectado.",
+    "disconnectError": "No se pudo desconectar.",
+    "connectError": "No se pudo iniciar la conexión.",
+    "connected": "Conectado",
+    "notConnected": "No conectado",
+    "lastErrorSuffix": "— reconecta la cuenta.",
+    "disconnecting": "Desconectando…",
+    "disconnect": "Desconectar",
+    "redirecting": "Redirigiendo…",
+    "connectPrefix": "Conectar {label}",
+    "defaultAccountLabel": "esta cuenta",
+    "gmail": {
+      "disconnectedCopy": "Conecta tu cuenta de Gmail para que las secuencias envíen correos desde tu propia bandeja.",
+      "connectedCopy": "Las secuencias envían correos desde {account}, no desde un servidor compartido."
+    },
+    "linkedin": {
+      "disconnectedCopy": "Conecta tu cuenta de LinkedIn para que las secuencias envíen mensajes y solicitudes de conexión desde tu propio perfil.",
+      "connectedCopy": "Los mensajes y solicitudes de conexión salen desde {account}, no desde un token compartido."
+    },
+    "salesforce": {
+      "disconnectedCopy": "Conecta tu org de Salesforce para traer tu CRM a BEE — empresas, contactos y oportunidades, de solo lectura.",
+      "connectedCopy": "Conectado a {account}. Trae Accounts, Contacts, Leads y Opportunities cuando quieras — nunca escribe de vuelta en Salesforce."
+    },
+    "import": {
+      "noNew": "No había nada nuevo que importar.",
+      "summary": "{companies, plural, one {# empresa} other {# empresas}}, {leads, plural, one {# lead} other {# leads}}, {opportunities, plural, one {# oportunidad} other {# oportunidades}} desde Salesforce.",
+      "withErrorsPrefix": "Con errores:",
+      "genericError": "No se pudo importar de Salesforce.",
+      "button": "Importar Accounts, Contacts, Leads y Opportunities",
+      "importing": "Importando…"
+    },
+    "manageNotice": "Solo el dueño o un administrador de la organización puede conectar o desconectar cuentas.",
+    "serverChannels": {
+      "title": "Canales del servidor",
+      "caption": "Configurados una sola vez para todo el despliegue de BEE, no por cuenta — ver variables de entorno del backend si necesitas cambiarlos.",
+      "connected": "conectado",
+      "mock": "modo simulado"
+    }
+  },
+  "team": {
+    "eyebrow": "Organización",
+    "title": "Equipo",
+    "subtitle": "Jerarquía de equipos y visibilidad por rol — quién ve qué en el pipeline",
+    "loadError": "No se pudo cargar el equipo — revisa tu conexión y vuelve a intentar en un momento.",
+    "password": {
+      "eyebrow": "Mi cuenta",
+      "title": "Contraseña",
+      "change": "Cambiar contraseña",
+      "currentPlaceholder": "Contraseña actual",
+      "newPlaceholder": "Contraseña nueva (mín. 8 caracteres)",
+      "saving": "Guardando…",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "updated": "Contraseña actualizada",
+      "updateError": "No se pudo cambiar la contraseña."
+    },
+    "teams": {
+      "eyebrow": "Equipos",
+      "title": "Jerarquía de managers",
+      "empty": "Todavía no hay equipos — crea el primero abajo.",
+      "form": {
+        "newTeamLabel": "Nuevo equipo",
+        "namePlaceholder": "Ej. Sales EMEA",
+        "reportsToLabel": "Reporta a",
+        "topLevelOption": "— Nivel superior —",
+        "creating": "Creando…",
+        "create": "Crear equipo"
+      },
+      "created": "Equipo creado",
+      "createError": "No se pudo crear el equipo."
+    },
+    "people": {
+      "eyebrow": "Personas",
+      "you": "(tú)",
+      "allOrg": "Toda la organización",
+      "youAndTeam": "Tú y tu equipo",
+      "table": {
+        "person": "Persona",
+        "role": "Rol",
+        "team": "Equipo",
+        "status": "Estado"
+      },
+      "noTeam": "Sin equipo",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "confirmDelete": "¿Confirmar?",
+      "delete": "Eliminar",
+      "roleUpdated": "Rol actualizado a {role}",
+      "roleUpdateError": "No se pudo actualizar el rol.",
+      "teamUpdated": "Equipo actualizado",
+      "teamUpdateError": "No se pudo actualizar el equipo.",
+      "memberRemoved": "{name} ya no tiene acceso",
+      "removeError": "No se pudo eliminar el miembro.",
+      "form": {
+        "fullNamePlaceholder": "Nombre completo",
+        "emailPlaceholder": "Email",
+        "passwordPlaceholder": "Contraseña temporal",
+        "adding": "Agregando…",
+        "add": "Agregar miembro del equipo",
+        "added": "Miembro del equipo agregado",
+        "addError": "No se pudo agregar al miembro del equipo."
+      }
+    },
+    "quotas": {
+      "eyebrow": "Territorios y cuotas",
+      "title": "Objetivo vs. logrado",
+      "newQuota": "+ Nueva cuota",
+      "loading": "Cargando…",
+      "emptyManage": "Todavía no hay cuotas — crea la primera arriba.",
+      "emptyView": "Todavía no hay cuotas asignadas.",
+      "ownerFallback": "—",
+      "deleteAria": "Eliminar cuota",
+      "tooltip": "{actual} de {target} ({pct}%)",
+      "form": {
+        "newTitle": "Nueva cuota",
+        "byPerson": "Por persona",
+        "byTeam": "Por equipo",
+        "choosePerson": "Elegir persona…",
+        "chooseTeam": "Elegir equipo…",
+        "amountPlaceholder": "Monto objetivo (USD)",
+        "saving": "Guardando…",
+        "save": "Guardar",
+        "cancel": "Cancelar"
+      }
+    },
+    "webhooks": {
+      "eyebrow": "Integraciones",
+      "title": "Webhooks salientes",
+      "subtitle": "BEE avisa a tu Zapier, Make, Slack, o sistema propio cuando algo pasa — sin credenciales de socio",
+      "newWebhook": "+ Nuevo webhook",
+      "loading": "Cargando…",
+      "emptyManage": "Todavía no hay webhooks configurados — crea el primero arriba.",
+      "emptyView": "Todavía no hay webhooks configurados.",
+      "active": "Activo",
+      "deleteAria": "Eliminar webhook",
+      "secretPrefix": "secreto",
+      "eventTypes": {
+        "opportunityWon": "Oportunidad ganada",
+        "opportunityLost": "Oportunidad perdida",
+        "opportunityReadyToAction": "Battlecard lista para actuar"
+      },
+      "status": {
+        "noAttempts": "Sin intentos todavía",
+        "delivered": "Entregado",
+        "lastFailed": "Falló la última entrega"
+      },
+      "form": {
+        "newTitle": "Nuevo webhook",
+        "urlPlaceholder": "https://hooks.zapier.com/hooks/catch/...",
+        "saving": "Guardando…",
+        "save": "Guardar"
+      },
+      "secretReveal": {
+        "title": "Guarda este secreto ahora — no se vuelve a mostrar",
+        "helpPrefix": "BEE firma cada envío con este secreto (header",
+        "helpSuffix": ") para que tu sistema pueda verificar que el evento realmente vino de BEE.",
+        "confirm": "Ya lo guardé"
+      }
+    }
+  },
+  "assistant": {
+    "thinking": "Pensando…",
+    "page": {
+      "greeting": {
+        "morning": "Buenos días",
+        "afternoon": "Buenas tardes",
+        "evening": "Buenas noches"
+      },
+      "whatsOnMind": "¿Qué tienes en mente?",
+      "inputPlaceholder": "Pregúntale algo al Asistente BEE…",
+      "sendAria": "Enviar",
+      "examples": {
+        "pipeline": "¿Cómo va mi pipeline?",
+        "hotLeads": "¿Cuáles son mis leads calientes?",
+        "signalsThisWeek": "¿Cuántas señales tengo esta semana?",
+        "teamRanking": "¿Quién va ganando en el equipo?"
+      }
+    },
+    "fab": {
+      "title": "Asistente BEE",
+      "headerCloseAria": "Cerrar",
+      "emptyHint": "Pregúntame sobre tu pipeline, tus leads calientes, o el ranking del equipo.",
+      "quickPlaceholder": "Pregunta rápido…",
+      "sendAria": "Enviar",
+      "openFull": "Abrir conversación completa →",
+      "toggleOpenAria": "Abrir asistente",
+      "toggleCloseAria": "Cerrar asistente"
+    }
+  }
+}

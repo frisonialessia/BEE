@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, CheckCircle2, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import {
@@ -12,13 +13,21 @@ import {
 } from "@/hooks/queries/use-outbound-webhooks";
 import type { OutboundWebhookCreated } from "@/lib/api/outbound-webhooks";
 
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  "opportunity.won": "Oportunidad ganada",
-  "opportunity.lost": "Oportunidad perdida",
-  "opportunity.ready_to_action": "Battlecard lista para actuar",
-};
+/** Event type values use dots (`opportunity.won`) which next-intl reads as
+ * nested-key separators — so the lookup goes through this map (translated
+ * keys, camelCase) instead of `t(`eventTypes.${type}`)` directly. */
+function useEventTypeLabels(): Record<string, string> {
+  const t = useTranslations("workspace.team.webhooks.eventTypes");
+  return {
+    "opportunity.won": t("opportunityWon"),
+    "opportunity.lost": t("opportunityLost"),
+    "opportunity.ready_to_action": t("opportunityReadyToAction"),
+  };
+}
 
 function NewWebhookForm({ eventTypes, onDone }: { eventTypes: string[]; onDone: (secret: OutboundWebhookCreated) => void }) {
+  const t = useTranslations("workspace.team.webhooks.form");
+  const eventTypeLabels = useEventTypeLabels();
   const createWebhook = useCreateOutboundWebhook();
   const [url, setUrl] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
@@ -39,11 +48,11 @@ function NewWebhookForm({ eventTypes, onDone }: { eventTypes: string[]; onDone: 
       onSubmit={handleSubmit}
       className="mb-4 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-4"
     >
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Nuevo webhook</p>
+      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("newTitle")}</p>
       <input
         value={url}
         onChange={(e) => setUrl(e.target.value)}
-        placeholder="https://hooks.zapier.com/hooks/catch/..."
+        placeholder={t("urlPlaceholder")}
         required
         className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
       />
@@ -59,7 +68,7 @@ function NewWebhookForm({ eventTypes, onDone }: { eventTypes: string[]; onDone: 
               onChange={() => toggle(type)}
               className="size-3.5 accent-[var(--color-chart-4)]"
             />
-            {EVENT_TYPE_LABELS[type] ?? type}
+            {eventTypeLabels[type] ?? type}
           </label>
         ))}
       </div>
@@ -69,7 +78,7 @@ function NewWebhookForm({ eventTypes, onDone }: { eventTypes: string[]; onDone: 
           disabled={!url.trim() || selected.length === 0 || createWebhook.isPending}
           className="bee-btn bee-btn--primary"
         >
-          {createWebhook.isPending ? "Guardando…" : "Guardar"}
+          {createWebhook.isPending ? t("saving") : t("save")}
         </button>
       </div>
     </form>
@@ -77,16 +86,17 @@ function NewWebhookForm({ eventTypes, onDone }: { eventTypes: string[]; onDone: 
 }
 
 function StatusBadge({ status }: { status: "success" | "failed" | null }) {
+  const t = useTranslations("workspace.team.webhooks.status");
   if (status === null) {
-    return <span className="bee-micro">Sin intentos todavía</span>;
+    return <span className="bee-micro">{t("noAttempts")}</span>;
   }
   return status === "success" ? (
     <span className="inline-flex items-center gap-1 text-[11px] text-[var(--success)]">
-      <CheckCircle2 className="size-3" /> Entregado
+      <CheckCircle2 className="size-3" /> {t("delivered")}
     </span>
   ) : (
     <span className="inline-flex items-center gap-1 text-[11px] text-destructive">
-      <AlertTriangle className="size-3" /> Falló la última entrega
+      <AlertTriangle className="size-3" /> {t("lastFailed")}
     </span>
   );
 }
@@ -98,6 +108,8 @@ function StatusBadge({ status }: { status: "success" | "failed" | null }) {
  *  lista) a Zapier, Make, un webhook entrante de Slack, o su propio
  *  sistema — sin credenciales de socio de por medio en ningún lado. */
 export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
+  const t = useTranslations("workspace.team.webhooks");
+  const eventTypeLabels = useEventTypeLabels();
   const { data: webhooksResult, isLoading } = useOutboundWebhooks();
   const { data: eventTypes } = useOutboundWebhookEventTypes();
   const updateWebhook = useUpdateOutboundWebhook();
@@ -111,11 +123,9 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
     <section className="bee-bento bee-bento-pad-lg space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="bee-eyebrow">Integraciones</p>
-          <h2 className="mt-1 text-base font-semibold">Webhooks salientes</h2>
-          <p className="bee-caption mt-1">
-            BEE avisa a tu Zapier, Make, Slack, o sistema propio cuando algo pasa — sin credenciales de socio
-          </p>
+          <p className="bee-eyebrow">{t("eyebrow")}</p>
+          <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
+          <p className="bee-caption mt-1">{t("subtitle")}</p>
         </div>
         {canManage && (
           <button
@@ -123,27 +133,27 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
             onClick={() => setShowNew((v) => !v)}
             className="bee-btn bee-btn--primary text-xs"
           >
-            + Nuevo webhook
+            {t("newWebhook")}
           </button>
         )}
       </div>
 
       {justCreated && (
         <div className="rounded-[var(--radius-lg)] border border-[var(--color-chart-4)]/40 bg-[var(--color-chart-4)]/10 p-4">
-          <p className="text-xs font-semibold">Guarda este secreto ahora — no se vuelve a mostrar</p>
+          <p className="text-xs font-semibold">{t("secretReveal.title")}</p>
           <code className="mt-2 block break-all rounded-[var(--radius-md)] bg-[var(--color-card)] px-3 py-2 text-xs">
             {justCreated.secret}
           </code>
           <p className="mt-2 bee-micro">
-            BEE firma cada envío con este secreto (header <code>X-BEE-Signature</code>) para que tu sistema
-            pueda verificar que el evento realmente vino de BEE.
+            {t("secretReveal.helpPrefix")} <code>X-BEE-Signature</code>
+            {t("secretReveal.helpSuffix")}
           </p>
           <button
             type="button"
             onClick={() => setJustCreated(null)}
             className="bee-btn-ghost mt-2 text-xs"
           >
-            Ya lo guardé
+            {t("secretReveal.confirm")}
           </button>
         </div>
       )}
@@ -159,13 +169,9 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
       )}
 
       {isLoading ? (
-        <p className="bee-caption">Cargando…</p>
+        <p className="bee-caption">{t("loading")}</p>
       ) : webhooks.length === 0 ? (
-        <p className="bee-caption">
-          {canManage
-            ? "Todavía no hay webhooks configurados — crea el primero arriba."
-            : "Todavía no hay webhooks configurados."}
-        </p>
+        <p className="bee-caption">{canManage ? t("emptyManage") : t("emptyView")}</p>
       ) : (
         <div className="space-y-2.5">
           {webhooks.map((w) => (
@@ -174,17 +180,17 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{w.url}</p>
                   <div className="mt-1 flex flex-wrap gap-1.5">
-                    {w.event_types.map((t) => (
+                    {w.event_types.map((et) => (
                       <span
-                        key={t}
+                        key={et}
                         className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/25 px-1.5 py-0.5 bee-micro"
                       >
-                        {EVENT_TYPE_LABELS[t] ?? t}
+                        {eventTypeLabels[et] ?? et}
                       </span>
                     ))}
                   </div>
                   <p className="mt-1 font-mono bee-micro">
-                    secreto {w.secret_preview}… · <StatusBadge status={w.last_status} />
+                    {t("secretPrefix")} {w.secret_preview}… · <StatusBadge status={w.last_status} />
                   </p>
                 </div>
                 {canManage && (
@@ -198,14 +204,14 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
                         }
                         className="size-3.5 accent-[var(--color-chart-4)]"
                       />
-                      Activo
+                      {t("active")}
                     </label>
                     <button
                       type="button"
                       onClick={() => deleteWebhook.mutate(w.id)}
                       disabled={deleteWebhook.isPending}
                       className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-chart-2)]"
-                      aria-label="Eliminar webhook"
+                      aria-label={t("deleteAria")}
                     >
                       <Trash2 className="size-3.5" />
                     </button>

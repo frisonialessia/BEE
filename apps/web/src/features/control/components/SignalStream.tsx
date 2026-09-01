@@ -8,12 +8,14 @@ import {
   Target,
   WifiOff,
 } from "lucide-react";
+import { useLocale } from "next-intl";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useSignalStream } from "@/hooks/queries/use-signal-stream";
-import { timeAgo } from "@/lib/format";
+import type { Locale } from "@/i18n/locales";
+import { formatRelativeTime } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 import type { SignalPipelineEvent, SignalPipelineStage } from "@/types/control";
 
@@ -35,6 +37,7 @@ function StreamItem({
   event: SignalPipelineEvent;
   onOpen: (id: string) => void;
 }) {
+  const locale = useLocale() as Locale;
   const meta = STAGE_META[event.stage];
   const Icon = meta.icon;
   const isReady = event.stage === "ready";
@@ -64,7 +67,7 @@ function StreamItem({
           {event.title}
         </p>
         <div className="mt-1.5 flex flex-wrap items-center gap-2 bee-micro">
-          <span>{timeAgo(event.timestamp)}</span>
+          <span>{formatRelativeTime(event.timestamp, locale)}</span>
           {event.score != null && (
             <span className="font-mono tabular-nums">{Math.round(event.score)}</span>
           )}

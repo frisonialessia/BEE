@@ -1,4 +1,7 @@
+"use client";
+
 import { Trophy } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { UserOut } from "@/types/auth";
@@ -25,6 +28,7 @@ export function Leaderboard({
   opportunities: Opportunity[];
   users: UserOut[];
 }) {
+  const t = useTranslations("dashboardOverview.leaderboard");
   const usersById = new Map(users.map((u) => [u.id, u]));
 
   const wonCounts = new Map<string, number>();
@@ -44,15 +48,13 @@ export function Leaderboard({
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Trophy className="size-4 text-[var(--color-chart-1)]" />
-          <h2 className="bee-card-title">Ranking</h2>
+          <h2 className="bee-card-title">{t("title")}</h2>
         </div>
-        <span className="bee-caption">Oportunidades ganadas</span>
+        <span className="bee-caption">{t("subtitle")}</span>
       </div>
 
       {ranked.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Todavía no hay oportunidades ganadas asignadas a un miembro del equipo.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("empty")}</p>
       ) : (
         <ul className="space-y-2">
           {ranked.map((row, i) => {
@@ -80,7 +82,7 @@ export function Leaderboard({
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      {row.won} ganada{row.won === 1 ? "" : "s"} · {pct}% del líder ({ranked[0].user.full_name})
+                      {t("tooltip", { won: row.won, pct, leaderName: ranked[0].user.full_name })}
                     </TooltipContent>
                   </Tooltip>
                 </div>

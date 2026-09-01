@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, Plus, Zap } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { FlowCanvas } from "@/components/sequences/flow-canvas";
@@ -13,7 +14,8 @@ import {
   useSequence,
   useSequences,
 } from "@/hooks/queries/use-sequences";
-import { signalTypeLabels } from "@/lib/format";
+import type { Locale } from "@/i18n/locales";
+import { getSignalTypeLabels } from "@/lib/format";
 import { TIER_LABELS, type SeniorityTier } from "@/lib/relationship-map";
 import type { SignalType } from "@/lib/types";
 import type { StepDefinition } from "@/lib/api/sequences";
@@ -49,6 +51,7 @@ function assembleSteps(local: LocalStep[]): StepDefinition[] {
 }
 
 function ChannelStatusBadges() {
+  const t = useTranslations("workspace.sequences.automation.channelStatus");
   const { data: statusResult } = useChannelStatus();
   const statuses = statusResult?.data ?? [];
   if (statuses.length === 0) return null;
@@ -57,7 +60,7 @@ function ChannelStatusBadges() {
     <div className="flex flex-wrap items-center gap-1.5">
       {statuses.map((s) => (
         <Badge key={s.channel} variant={s.mock ? "outline" : "success"} className="text-[11px]">
-          {s.channel}: {s.mock ? "modo simulado" : "conectado"}
+          {s.channel}: {s.mock ? t("mock") : t("connected")}
         </Badge>
       ))}
     </div>
@@ -65,6 +68,9 @@ function ChannelStatusBadges() {
 }
 
 function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
+  const locale = useLocale() as Locale;
+  const t = useTranslations("workspace.sequences.automation");
+  const signalTypeLabels = getSignalTypeLabels(locale);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [signalType, setSignalType] = useState<SignalType | "">("");
@@ -102,17 +108,17 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
     <div className="grid gap-4 lg:grid-cols-2">
       <div className="space-y-4">
         <div className="bee-bento bee-bento-pad space-y-2">
-          <p className="text-xs font-semibold">Configuración del flujo</p>
+          <p className="text-xs font-semibold">{t("config.title")}</p>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Nombre del flujo *"
+            placeholder={t("config.namePlaceholder")}
             className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
           />
           <input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Descripción (opcional)"
+            placeholder={t("config.descriptionPlaceholder")}
             className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
           />
           <div className="grid grid-cols-2 gap-2">
@@ -121,7 +127,7 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
               onChange={(e) => setSignalType(e.target.value as SignalType | "")}
               className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
             >
-              <option value="">Cualquier señal</option>
+              <option value="">{t("config.anySignal")}</option>
               {Object.entries(signalTypeLabels).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
@@ -131,7 +137,7 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
             <input
               value={industry}
               onChange={(e) => setIndustry(e.target.value)}
-              placeholder="Industria (opcional)"
+              placeholder={t("config.industryPlaceholder")}
               className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
             />
             <select
@@ -139,7 +145,7 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
               onChange={(e) => setSeniority(e.target.value)}
               className="col-span-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
             >
-              <option value="">Cualquier cargo</option>
+              <option value="">{t("config.anySeniority")}</option>
               {SENIORITY_OPTIONS.map((tier) => (
                 <option key={tier} value={tier}>
                   {TIER_LABELS[tier]}
@@ -147,10 +153,7 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
               ))}
             </select>
           </div>
-          <p className="bee-caption">
-            Industria y cargo son descriptivos — para quién se pensó este flujo. La inscripción
-            siempre es manual desde Leads, nunca automática por coincidencia.
-          </p>
+          <p className="bee-caption">{t("config.note")}</p>
           <ChannelStatusBadges />
         </div>
 
@@ -163,16 +166,16 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
             disabled={!name.trim() || steps.length === 0 || createSequence.isPending}
             className="bee-btn bee-btn--primary text-xs"
           >
-            {createSequence.isPending ? "Guardando…" : "Guardar flujo"}
+            {createSequence.isPending ? t("saving") : t("save")}
           </button>
           {createSequence.isError && (
-            <p className="text-[11px] text-[var(--color-chart-2)]">No se pudo guardar — intenta de nuevo.</p>
+            <p className="text-[11px] text-[var(--color-chart-2)]">{t("saveError")}</p>
           )}
         </div>
       </div>
 
       <div>
-        <p className="bee-eyebrow mb-2">Vista previa</p>
+        <p className="bee-eyebrow mb-2">{t("preview")}</p>
         <FlowCanvas steps={assembled} onRemoveStep={handleRemove} />
       </div>
     </div>
@@ -180,16 +183,17 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
 }
 
 function SequenceViewer({ sequenceId, onBack }: { sequenceId: string; onBack: () => void }) {
+  const t = useTranslations("workspace.sequences.automation");
   const { data: seq, isLoading, isError } = useSequence(sequenceId);
 
   return (
     <div>
       <button type="button" onClick={onBack} className="bee-btn-ghost mb-4 text-xs">
         <ArrowLeft className="size-3.5" />
-        Volver a automatizaciones
+        {t("viewer.back")}
       </button>
       {isError ? (
-        <p className="text-xs text-muted-foreground">No se pudo cargar este flujo.</p>
+        <p className="text-xs text-muted-foreground">{t("viewer.loadError")}</p>
       ) : isLoading || !seq ? (
         <Skeleton className="h-64" />
       ) : (
@@ -209,18 +213,19 @@ function SequenceViewer({ sequenceId, onBack }: { sequenceId: string; onBack: ()
 }
 
 function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onNew: () => void }) {
+  const locale = useLocale() as Locale;
+  const t = useTranslations("workspace.sequences.automation.list");
+  const signalTypeLabels = getSignalTypeLabels(locale);
   const { data: seqResult, isLoading } = useSequences();
   const sequences = seqResult?.data ?? [];
 
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <p className="bee-caption">
-          {sequences.length} flujo{sequences.length === 1 ? "" : "s"} definido{sequences.length === 1 ? "" : "s"}
-        </p>
+        <p className="bee-caption">{t("count", { count: sequences.length })}</p>
         <button type="button" onClick={onNew} className="bee-btn bee-btn--primary text-xs">
           <Plus className="size-3.5" />
-          Nuevo flujo
+          {t("newFlow")}
         </button>
       </div>
 
@@ -232,8 +237,8 @@ function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onN
       ) : sequences.length === 0 ? (
         <div className="bee-bento bee-bento-pad py-12 text-center">
           <Zap className="mx-auto mb-2 size-5 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Todavía no hay flujos de automatización.</p>
-          <p className="bee-caption mt-1">Crea el primero para escalar el alcance sin trabajo manual repetido.</p>
+          <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
+          <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
         </div>
       ) : (
         <div className="grid gap-2.5 sm:grid-cols-2">
@@ -251,7 +256,7 @@ function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onN
                 </Badge>
               </div>
               <p className="bee-caption mt-1">
-                {seq.steps.length} paso{seq.steps.length === 1 ? "" : "s"}
+                {t("stepsCount", { count: seq.steps.length })}
                 {seq.signal_type ? ` · ${signalTypeLabels[seq.signal_type as SignalType] ?? seq.signal_type}` : ""}
                 {seq.industry ? ` · ${seq.industry}` : ""}
                 {seq.seniority ? ` · ${TIER_LABELS[seq.seniority as SeniorityTier] ?? seq.seniority}` : ""}
@@ -271,6 +276,7 @@ function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onN
  *  es solo la capa visual — la ejecución, el gate de aprobación y el
  *  mock/live de LinkedIn ya viven en el backend, sin cambios. */
 export function AutomationBuilder() {
+  const t = useTranslations("workspace.sequences.automation");
   const [view, setView] = useState<{ mode: "list" | "build" | "view"; sequenceId?: string }>({
     mode: "list",
   });
@@ -284,7 +290,7 @@ export function AutomationBuilder() {
           className="bee-btn-ghost mb-4 text-xs"
         >
           <ArrowLeft className="size-3.5" />
-          Volver a automatizaciones
+          {t("viewer.back")}
         </button>
         <SequenceBuilder onSaved={() => setView({ mode: "list" })} />
       </div>

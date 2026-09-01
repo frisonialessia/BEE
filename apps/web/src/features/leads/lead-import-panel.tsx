@@ -2,6 +2,7 @@
 
 import { AlertCircle, CheckCircle2, Download, Upload, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useImportLeads } from "@/hooks/queries/use-leads";
 import { downloadCsv, parseCsv, pickColumn, toCsv } from "@/lib/csv";
@@ -75,6 +76,7 @@ async function parseFile(file: File): Promise<Record<string, string>[]> {
 // ── Panel ────────────────────────────────────────────────────────────────
 
 export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const t = useTranslations("companiesLeads.leadImportPanel");
   const [rows, setRows] = useState<LeadImportRow[]>([]);
   const [fileName, setFileName] = useState<string | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -100,7 +102,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
     setParseError(null);
     importMutation.reset();
     if (!/\.(csv|xlsx?)$/i.test(file.name)) {
-      setParseError("Formato no admitido — sube un archivo .csv o .xlsx.");
+      setParseError(t("step2.unsupportedFormat"));
       setRows([]);
       setFileName(null);
       return;
@@ -113,7 +115,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
       setParseError(
         err instanceof Error
           ? err.message
-          : "No se pudo leer el archivo — confirma que sea un .csv o .xlsx válido.",
+          : t("step2.readError"),
       );
       setRows([]);
       setFileName(null);
@@ -160,30 +162,29 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
       <button
         type="button"
         className="bee-drawer-overlay"
-        aria-label="Cerrar importación de prospectos"
+        aria-label={t("closeAria")}
         onClick={onClose}
       />
-      <aside className="bee-drawer" role="dialog" aria-modal="true" aria-label="Importar prospectos">
+      <aside className="bee-drawer" role="dialog" aria-modal="true" aria-label={t("panelAria")}>
         <div className="flex items-center justify-between gap-3 border-b border-border px-6 py-4">
           <div>
-            <p className="bee-eyebrow">Carga inteligente</p>
-            <h2 className="mt-1 text-lg font-semibold tracking-tight">Importar prospectos</h2>
+            <p className="bee-eyebrow">{t("eyebrow")}</p>
+            <h2 className="mt-1 text-lg font-semibold tracking-tight">{t("heading")}</h2>
           </div>
-          <button type="button" onClick={onClose} className="bee-btn-ghost" aria-label="Cerrar">
+          <button type="button" onClick={onClose} className="bee-btn-ghost" aria-label={t("closeButtonAria")}>
             <X className="size-4" />
           </button>
         </div>
 
         <div className="space-y-5 overflow-y-auto overscroll-contain px-6 py-5">
           <section className="bee-bento bee-bento-pad space-y-2">
-            <p className="text-xs font-semibold">1. Descarga la plantilla</p>
+            <p className="text-xs font-semibold">{t("step1.title")}</p>
             <p className="bee-caption">
-              Nombre, correo, cargo, seniority, LinkedIn, teléfono, empresa, dominio, industria y país —
-              solo el nombre o el correo son obligatorios por fila.
+              {t("step1.description")}
             </p>
             <button type="button" onClick={downloadTemplate} className="bee-btn-ghost text-xs">
               <Download className="size-3.5" />
-              Descargar plantilla .csv
+              {t("step1.downloadButton")}
             </button>
           </section>
 
@@ -195,15 +196,15 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
               isDragging ? "border-[var(--color-chart-4)] bg-[var(--color-chart-4)]/5" : ""
             }`}
           >
-            <p className="text-xs font-semibold">2. Sube tu archivo (.csv o .xlsx)</p>
-            <p className="bee-caption">Arrastra el archivo aquí o elígelo manualmente.</p>
+            <p className="text-xs font-semibold">{t("step2.title")}</p>
+            <p className="bee-caption">{t("step2.description")}</p>
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
               className="bee-btn-ghost text-xs"
             >
               <Upload className="size-3.5" />
-              {isDragging ? "Suelta para cargar" : "Elegir archivo"}
+              {isDragging ? t("step2.dropReady") : t("step2.chooseFile")}
             </button>
             <input
               ref={inputRef}
@@ -214,10 +215,9 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
             />
             {fileName && (
               <p className="bee-micro">
-                {fileName} · {rows.length} fila{rows.length === 1 ? "" : "s"} leída
-                {rows.length === 1 ? "" : "s"}
+                {fileName} · {t("step2.rowsRead", { count: rows.length })}
                 {importable.length < rows.length &&
-                  ` · ${rows.length - importable.length} sin nombre ni correo (no se importarán)`}
+                  ` · ${t("step2.rowsSkipped", { count: rows.length - importable.length })}`}
               </p>
             )}
             {parseError && (
@@ -230,14 +230,14 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
 
           {rows.length > 0 && (
             <section className="bee-bento bee-bento-pad space-y-2">
-              <p className="text-xs font-semibold">3. Vista previa</p>
+              <p className="text-xs font-semibold">{t("step3.title")}</p>
               <div className="overflow-x-auto rounded-[var(--radius-md)] border border-border">
                 <table className="w-full text-[11px]">
                   <thead className="bg-[var(--color-muted)]/40 text-left text-muted-foreground">
                     <tr>
-                      <th className="px-2 py-1.5 font-medium">Nombre</th>
-                      <th className="px-2 py-1.5 font-medium">Correo</th>
-                      <th className="px-2 py-1.5 font-medium">Empresa</th>
+                      <th className="px-2 py-1.5 font-medium">{t("step3.headers.name")}</th>
+                      <th className="px-2 py-1.5 font-medium">{t("step3.headers.email")}</th>
+                      <th className="px-2 py-1.5 font-medium">{t("step3.headers.company")}</th>
                       <th className="px-2 py-1.5 font-medium"></th>
                     </tr>
                   </thead>
@@ -260,22 +260,18 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
                 </table>
               </div>
               {rows.length > 8 && (
-                <p className="bee-caption">+{rows.length - 8} fila{rows.length - 8 === 1 ? "" : "s"} más</p>
+                <p className="bee-caption">{t("step3.moreRows", { count: rows.length - 8 })}</p>
               )}
             </section>
           )}
 
           {result && (
             <section className="bee-bento bee-bento-pad space-y-1.5">
-              <p className="text-xs font-semibold">Resultado</p>
+              <p className="text-xs font-semibold">{t("result.title")}</p>
               <p className="bee-micro">
-                {result.leads_created} lead{result.leads_created === 1 ? "" : "s"} nuevo
-                {result.leads_created === 1 ? "" : "s"} · {result.leads_matched} ya existía
-                {result.leads_matched === 1 ? "" : "n"} (fusionado{result.leads_matched === 1 ? "" : "s"} por
-                correo) · {result.companies_created} empresa{result.companies_created === 1 ? "" : "s"} nueva
-                {result.companies_created === 1 ? "" : "s"}
-                {result.companies_matched > 0 && ` · ${result.companies_matched} empresa(s) reutilizada(s)`}
-                {result.skipped > 0 && ` · ${result.skipped} fila(s) omitida(s) sin nombre ni correo`}
+                {t("result.newLeads", { count: result.leads_created })} · {t("result.matchedLeads", { count: result.leads_matched })} · {t("result.newCompanies", { count: result.companies_created })}
+                {result.companies_matched > 0 && ` · ${t("result.reusedCompanies", { count: result.companies_matched })}`}
+                {result.skipped > 0 && ` · ${t("result.skippedRows", { count: result.skipped })}`}
               </p>
               {result.rows.some((r) => r.status === "error") && (
                 <ul className="mt-1 space-y-0.5 text-[11px] text-[var(--color-chart-2)]">
@@ -284,7 +280,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
                     .slice(0, 10)
                     .map((r) => (
                       <li key={r.row}>
-                        Fila {r.row + 1}: {r.message}
+                        {t("result.rowError", { row: r.row + 1, message: r.message ?? "" })}
                       </li>
                     ))}
                 </ul>
@@ -295,7 +291,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
           {importMutation.isError && (
             <p className="flex items-center gap-1.5 text-[11px] text-[var(--color-chart-2)]">
               <AlertCircle className="size-3.5 shrink-0" />
-              No se pudo importar — intenta de nuevo.
+              {t("importError")}
             </p>
           )}
 
@@ -307,12 +303,12 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
               className="bee-btn bee-btn--primary text-xs"
             >
               {importMutation.isPending
-                ? "Importando…"
-                : `Importar ${importable.length} lead${importable.length === 1 ? "" : "s"}`}
+                ? t("actions.importing")
+                : t("actions.importLeads", { count: importable.length })}
             </button>
             {rows.length > 0 && (
               <button type="button" onClick={handleReset} className="bee-btn-ghost text-xs">
-                Empezar de nuevo
+                {t("actions.startOver")}
               </button>
             )}
           </div>

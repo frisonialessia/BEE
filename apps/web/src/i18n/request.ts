@@ -78,7 +78,23 @@ export { locales };
  * translated at a time. Each namespace file is merged into one messages
  * object here; add a new one by adding it to this list, not by editing an
  * existing file. */
-const NAMESPACES = ["common", "nav", "marketing", "auth"] as const;
+const NAMESPACES = [
+  "common",
+  "nav",
+  "marketing",
+  "auth",
+  "crm",
+  "dashboardOverview",
+  "opportunitiesPriority",
+  "signalsStrategies",
+  "forecastWinLoss",
+  "companiesLeads",
+  "sharedB",
+  "shared",
+  "workspace",
+  "legalMarketing",
+  "landing",
+] as const;
 
 async function loadMessages(locale: Locale) {
   const modules = await Promise.all(

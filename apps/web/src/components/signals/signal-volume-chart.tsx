@@ -1,3 +1,5 @@
+import { useTranslations } from "next-intl";
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { DailySignalPoint } from "@/lib/signal-trends";
 
@@ -6,11 +8,12 @@ import type { DailySignalPoint } from "@/lib/signal-trends";
  *  ForecastBarChart (total tenue + porción destacada). Sin librería de
  *  gráficas, tooltip real (Radix) por barra. */
 export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
+  const t = useTranslations("sharedB.signalVolume");
   const anyData = points.some((p) => p.count > 0);
   if (!anyData) {
     return (
       <p className="py-6 text-center text-xs text-muted-foreground">
-        Sin señales todavía en esta ventana de tiempo.
+        {t("empty")}
       </p>
     );
   }
@@ -38,8 +41,9 @@ export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                {p.label}: {p.count} señal{p.count === 1 ? "" : "es"}
-                {p.hotCount > 0 ? `, ${p.hotCount} de alta intención` : ""}
+                {p.hotCount > 0
+                  ? t("tooltipHot", { label: p.label, count: p.count, hotCount: p.hotCount })
+                  : t("tooltip", { label: p.label, count: p.count })}
               </TooltipContent>
             </Tooltip>
             <p className="bee-micro">{p.label.split(" ")[0]}</p>

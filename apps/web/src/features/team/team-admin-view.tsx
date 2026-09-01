@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +51,7 @@ function useTeamTree(teams: TeamOut[]) {
 }
 
 function CreateTeamForm({ teams }: { teams: TeamOut[] }) {
+  const t = useTranslations("workspace.team.teams");
   const createTeam = useCreateTeam();
   const [name, setName] = useState("");
   const [parentTeamId, setParentTeamId] = useState("");
@@ -63,9 +65,9 @@ function CreateTeamForm({ teams }: { teams: TeamOut[] }) {
       });
       setName("");
       setParentTeamId("");
-      toast.success("Equipo creado");
+      toast.success(t("created"));
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo crear el equipo.");
+      toast.error(err instanceof ApiError ? err.message : t("createError"));
     }
   }
 
@@ -73,7 +75,7 @@ function CreateTeamForm({ teams }: { teams: TeamOut[] }) {
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2">
       <div className="space-y-1.5">
         <label htmlFor="team-name" className="bee-caption block">
-          Nuevo equipo
+          {t("form.newTeamLabel")}
         </label>
         <input
           id="team-name"
@@ -81,12 +83,12 @@ function CreateTeamForm({ teams }: { teams: TeamOut[] }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="bee-input w-48"
-          placeholder="Ej. Sales EMEA"
+          placeholder={t("form.namePlaceholder")}
         />
       </div>
       <div className="space-y-1.5">
         <label htmlFor="team-parent" className="bee-caption block">
-          Reporta a
+          {t("form.reportsToLabel")}
         </label>
         <select
           id="team-parent"
@@ -94,7 +96,7 @@ function CreateTeamForm({ teams }: { teams: TeamOut[] }) {
           onChange={(e) => setParentTeamId(e.target.value)}
           className="bee-input w-48"
         >
-          <option value="">— Nivel superior —</option>
+          <option value="">{t("form.topLevelOption")}</option>
           {teams.map((team) => (
             <option key={team.id} value={team.id}>
               {team.name}
@@ -103,13 +105,14 @@ function CreateTeamForm({ teams }: { teams: TeamOut[] }) {
         </select>
       </div>
       <button type="submit" disabled={createTeam.isPending} className="bee-btn bee-btn--primary">
-        {createTeam.isPending ? "Creando…" : "Crear equipo"}
+        {createTeam.isPending ? t("form.creating") : t("form.create")}
       </button>
     </form>
   );
 }
 
 function InviteUserForm({ teams }: { teams: TeamOut[] }) {
+  const t = useTranslations("workspace.team.people");
   const createUser = useCreateUser();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
@@ -132,9 +135,9 @@ function InviteUserForm({ teams }: { teams: TeamOut[] }) {
       setPassword("");
       setRole("member");
       setTeamId("");
-      toast.success("Miembro del equipo agregado");
+      toast.success(t("form.added"));
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo agregar al miembro del equipo.");
+      toast.error(err instanceof ApiError ? err.message : t("form.addError"));
     }
   }
 
@@ -146,7 +149,7 @@ function InviteUserForm({ teams }: { teams: TeamOut[] }) {
         value={fullName}
         onChange={(e) => setFullName(e.target.value)}
         className="bee-input"
-        placeholder="Nombre completo"
+        placeholder={t("form.fullNamePlaceholder")}
       />
       <input
         required
@@ -154,7 +157,7 @@ function InviteUserForm({ teams }: { teams: TeamOut[] }) {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="bee-input"
-        placeholder="Email"
+        placeholder={t("form.emailPlaceholder")}
       />
       <input
         required
@@ -163,7 +166,7 @@ function InviteUserForm({ teams }: { teams: TeamOut[] }) {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="bee-input"
-        placeholder="Contraseña temporal"
+        placeholder={t("form.passwordPlaceholder")}
       />
       <select
         value={role}
@@ -177,7 +180,7 @@ function InviteUserForm({ teams }: { teams: TeamOut[] }) {
         ))}
       </select>
       <select value={teamId} onChange={(e) => setTeamId(e.target.value)} className="bee-input">
-        <option value="">Sin equipo</option>
+        <option value="">{t("noTeam")}</option>
         {teams.map((team) => (
           <option key={team.id} value={team.id}>
             {team.name}
@@ -189,7 +192,7 @@ function InviteUserForm({ teams }: { teams: TeamOut[] }) {
         disabled={createUser.isPending}
         className="bee-btn bee-btn--primary sm:col-span-2 lg:col-span-5"
       >
-        {createUser.isPending ? "Agregando…" : "Agregar miembro del equipo"}
+        {createUser.isPending ? t("form.adding") : t("form.add")}
       </button>
     </form>
   );
@@ -206,10 +209,11 @@ function UserRow({
   canManage: boolean;
   isSelf: boolean;
 }) {
+  const t = useTranslations("workspace.team.people");
   const updateUser = useUpdateUser();
   const deleteUser = useDeleteUser();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const teamName = teams.find((t) => t.id === user.team_id)?.name ?? "—";
+  const teamName = teams.find((tm) => tm.id === user.team_id)?.name ?? "—";
   // The org OWNER's role can't be changed (backend enforces this too — see
   // app/api/v1/endpoints/users.py) so editing it here would just 403.
   const canEditRole = canManage && user.role !== "owner";
@@ -221,18 +225,18 @@ function UserRow({
   async function handleRoleChange(role: UserRole) {
     try {
       await updateUser.mutateAsync({ userId: user.id, body: { role } });
-      toast.success(`Rol actualizado a ${ROLE_LABELS[role]}`);
+      toast.success(t("roleUpdated", { role: ROLE_LABELS[role] }));
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo actualizar el rol.");
+      toast.error(err instanceof ApiError ? err.message : t("roleUpdateError"));
     }
   }
 
   async function handleTeamChange(teamId: string) {
     try {
       await updateUser.mutateAsync({ userId: user.id, body: { team_id: teamId || null } });
-      toast.success("Equipo actualizado");
+      toast.success(t("teamUpdated"));
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo actualizar el equipo.");
+      toast.error(err instanceof ApiError ? err.message : t("teamUpdateError"));
     }
   }
 
@@ -243,9 +247,9 @@ function UserRow({
     }
     try {
       await deleteUser.mutateAsync(user.id);
-      toast.success(`${user.full_name} ya no tiene acceso`);
+      toast.success(t("memberRemoved", { name: user.full_name }));
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo eliminar el miembro.");
+      toast.error(err instanceof ApiError ? err.message : t("removeError"));
     } finally {
       setConfirmingDelete(false);
     }
@@ -256,7 +260,7 @@ function UserRow({
       <td className="py-2.5 pr-3">
         <div className="font-medium">
           {user.full_name}
-          {isSelf && <span className="bee-caption ml-1.5">(tú)</span>}
+          {isSelf && <span className="bee-caption ml-1.5">{t("you")}</span>}
         </div>
         <div className="bee-caption">{user.email}</div>
       </td>
@@ -288,7 +292,7 @@ function UserRow({
             className="bee-input w-40"
             disabled={updateUser.isPending}
           >
-            <option value="">Sin equipo</option>
+            <option value="">{t("noTeam")}</option>
             {teams.map((team) => (
               <option key={team.id} value={team.id}>
                 {team.name}
@@ -301,7 +305,7 @@ function UserRow({
       </td>
       <td className="py-2.5 pr-3">
         <Badge variant={user.is_active ? "success" : "warning"}>
-          {user.is_active ? "Activo" : "Inactivo"}
+          {user.is_active ? t("active") : t("inactive")}
         </Badge>
       </td>
       {canManage && (
@@ -322,7 +326,7 @@ function UserRow({
                   : undefined
               }
             >
-              {confirmingDelete ? "¿Confirmar?" : "Eliminar"}
+              {confirmingDelete ? t("confirmDelete") : t("delete")}
             </button>
           )}
         </td>
@@ -335,6 +339,7 @@ function UserRow({
  * (the backend endpoint requires no role at all, only being logged in — see
  * PATCH /auth/me/password). */
 function ChangePasswordSection() {
+  const t = useTranslations("workspace.team.password");
   const changePassword = useChangePassword();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -347,12 +352,12 @@ function ChangePasswordSection() {
         current_password: currentPassword,
         new_password: newPassword,
       });
-      toast.success("Contraseña actualizada");
+      toast.success(t("updated"));
       setCurrentPassword("");
       setNewPassword("");
       setOpen(false);
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo cambiar la contraseña.");
+      toast.error(err instanceof ApiError ? err.message : t("updateError"));
     }
   }
 
@@ -360,12 +365,12 @@ function ChangePasswordSection() {
     <section className="bee-bento bee-bento-pad-lg space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <p className="bee-eyebrow">Mi cuenta</p>
-          <h2 className="mt-1 text-base font-semibold">Contraseña</h2>
+          <p className="bee-eyebrow">{t("eyebrow")}</p>
+          <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
         </div>
         {!open && (
           <button type="button" onClick={() => setOpen(true)} className="bee-btn-ghost">
-            Cambiar contraseña
+            {t("change")}
           </button>
         )}
       </div>
@@ -379,7 +384,7 @@ function ChangePasswordSection() {
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
             className="bee-input"
-            placeholder="Contraseña actual"
+            placeholder={t("currentPlaceholder")}
           />
           <input
             type="password"
@@ -389,7 +394,7 @@ function ChangePasswordSection() {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className="bee-input"
-            placeholder="Contraseña nueva (mín. 8 caracteres)"
+            placeholder={t("newPlaceholder")}
           />
           <div className="flex gap-2">
             <button
@@ -397,7 +402,7 @@ function ChangePasswordSection() {
               disabled={changePassword.isPending}
               className="bee-btn bee-btn--primary flex-1"
             >
-              {changePassword.isPending ? "Guardando…" : "Guardar"}
+              {changePassword.isPending ? t("saving") : t("save")}
             </button>
             <button
               type="button"
@@ -408,7 +413,7 @@ function ChangePasswordSection() {
               }}
               className="bee-btn-ghost"
             >
-              Cancelar
+              {t("cancel")}
             </button>
           </div>
         </form>
@@ -427,6 +432,7 @@ function ChangePasswordSection() {
  * server-side regardless.
  */
 export function TeamAdminView() {
+  const t = useTranslations("workspace.team");
   const { user: currentUser } = useAuth();
   const { data: teams, isLoading: teamsLoading, isError: teamsError } = useTeams();
   const { data: users, isLoading: usersLoading, isError: usersError } = useUsers();
@@ -439,12 +445,10 @@ export function TeamAdminView() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Organización</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1">
-          <h1 className="bee-display">Equipo</h1>
-          <p className="bee-caption mt-1">
-            Jerarquía de equipos y visibilidad por rol — quién ve qué en el pipeline
-          </p>
+          <h1 className="bee-display">{t("title")}</h1>
+          <p className="bee-caption mt-1">{t("subtitle")}</p>
         </div>
       </header>
 
@@ -454,21 +458,19 @@ export function TeamAdminView() {
           <Skeleton className="h-64" />
         </div>
       ) : hasError ? (
-        <p className="bee-caption">
-          No se pudo cargar el equipo — revisa tu conexión y vuelve a intentar en un momento.
-        </p>
+        <p className="bee-caption">{t("loadError")}</p>
       ) : (
         <div className="space-y-6">
           <ChangePasswordSection />
 
           <section className="bee-bento bee-bento-pad-lg space-y-4">
             <div>
-              <p className="bee-eyebrow">Equipos</p>
-              <h2 className="mt-1 text-base font-semibold">Jerarquía de managers</h2>
+              <p className="bee-eyebrow">{t("teams.eyebrow")}</p>
+              <h2 className="mt-1 text-base font-semibold">{t("teams.title")}</h2>
             </div>
 
             {ordered.length === 0 ? (
-              <p className="bee-caption">Todavía no hay equipos — crea el primero abajo.</p>
+              <p className="bee-caption">{t("teams.empty")}</p>
             ) : (
               <ul className="space-y-1.5">
                 {ordered.map((team) => (
@@ -491,9 +493,9 @@ export function TeamAdminView() {
 
           <section className="bee-bento bee-bento-pad-lg space-y-4">
             <div>
-              <p className="bee-eyebrow">Personas</p>
+              <p className="bee-eyebrow">{t("people.eyebrow")}</p>
               <h2 className="mt-1 text-base font-semibold">
-                {canManage ? "Toda la organización" : "Tú y tu equipo"}
+                {canManage ? t("people.allOrg") : t("people.youAndTeam")}
               </h2>
             </div>
 
@@ -501,10 +503,10 @@ export function TeamAdminView() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-border text-xs text-muted-foreground">
-                    <th className="pb-2 pr-3 font-medium">Persona</th>
-                    <th className="pb-2 pr-3 font-medium">Rol</th>
-                    <th className="pb-2 pr-3 font-medium">Equipo</th>
-                    <th className="pb-2 pr-3 font-medium">Estado</th>
+                    <th className="pb-2 pr-3 font-medium">{t("people.table.person")}</th>
+                    <th className="pb-2 pr-3 font-medium">{t("people.table.role")}</th>
+                    <th className="pb-2 pr-3 font-medium">{t("people.table.team")}</th>
+                    <th className="pb-2 pr-3 font-medium">{t("people.table.status")}</th>
                     {canManage && <th className="pb-2 font-medium" />}
                   </tr>
                 </thead>

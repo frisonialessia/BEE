@@ -1,6 +1,7 @@
 "use client";
 
 import { Bot } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { BattlecardView } from "@/components/battlecard";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
@@ -16,6 +17,7 @@ import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunit
 
 /** Estrategias y battlecards — plays listos para el CEO. */
 export function StrategiesDashboard() {
+  const t = useTranslations("signalsStrategies.strategies");
   const { data: battlecardsResult, isLoading: loadingBattlecards } = useBattlecards();
   const { data: allOppsResult, isLoading: loadingOpps } = useOpportunities(undefined, 200);
   const { data: patternsResult, isLoading: loadingPatterns } = useSuccessPatterns();
@@ -33,16 +35,16 @@ export function StrategiesDashboard() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Playbooks</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="bee-display">Estrategias</h1>
+            <h1 className="bee-display">{t("title")}</h1>
             <p className="bee-caption mt-1">
-              Oportunidades enriquecidas con pain point, argumento de cierre y ventana de timing
+              {t("subtitle")}
             </p>
           </div>
           <Badge variant={live ? "success" : "warning"}>
-            {live ? "En vivo" : "Datos demo"}
+            {live ? t("live") : t("demo")}
           </Badge>
         </div>
       </header>
@@ -56,13 +58,13 @@ export function StrategiesDashboard() {
         <Tabs defaultValue="battlecards">
           <TabsList className="border border-border bg-background">
             <TabsTrigger value="battlecards" className="rounded-sm">
-              Battlecards ({battlecards.length})
+              {t("tabBattlecards", { count: battlecards.length })}
             </TabsTrigger>
             <TabsTrigger value="pipeline" className="rounded-sm">
-              Pipeline ({opportunities.length})
+              {t("tabPipeline", { count: opportunities.length })}
             </TabsTrigger>
             <TabsTrigger value="learning" className="rounded-sm">
-              Aprendizaje ({patterns.length})
+              {t("tabLearning", { count: patterns.length })}
             </TabsTrigger>
           </TabsList>
 
@@ -70,15 +72,15 @@ export function StrategiesDashboard() {
             {battlecards.length === 0 ? (
               <div className="bee-bento bee-bento-pad py-12 text-center">
                 <p className="text-sm text-muted-foreground">
-                  Aún no hay battlecards listas para acción.
+                  {t("battlecardsEmptyTitle")}
                 </p>
-                <p className="bee-caption mt-1">Las señales deben enriquecerse primero.</p>
+                <p className="bee-caption mt-1">{t("battlecardsEmptySubtitle")}</p>
               </div>
             ) : (
               <>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Bot className="size-3.5" />
-                  Clic en una tarjeta para abrir el drawer de oportunidad
+                  {t("battlecardsHint")}
                 </div>
                 <div className="grid gap-3 lg:grid-cols-2">
                   {battlecardPagination.pageItems.map((card, i) => (
@@ -101,7 +103,7 @@ export function StrategiesDashboard() {
                   totalItems={battlecardPagination.totalItems}
                   onPageChange={battlecardPagination.goToPage}
                   onPageSizeChange={battlecardPagination.changePageSize}
-                  itemLabel="battlecards"
+                  itemLabel={t("battlecardsItemLabel")}
                 />
               </>
             )}
@@ -127,14 +129,13 @@ export function StrategiesDashboard() {
               totalItems={pipelinePagination.totalItems}
               onPageChange={pipelinePagination.goToPage}
               onPageSizeChange={pipelinePagination.changePageSize}
-              itemLabel="oportunidades"
+              itemLabel={t("pipelineItemLabel")}
             />
           </TabsContent>
 
           <TabsContent value="learning" className="mt-6 space-y-4">
             <p className="bee-caption">
-              Patrones de éxito reales, aprendidos de deals ya cerrados — lo que hoy sesga
-              la generación de battlecards nuevas.
+              {t("learningCaption")}
             </p>
             {loadingPatterns ? (
               <Skeleton className="h-40" />

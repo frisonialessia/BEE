@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { MonthlyTrendPoint } from "@/lib/trends";
 
@@ -8,6 +12,7 @@ import type { MonthlyTrendPoint } from "@/lib/trends";
  *  distintas y mezclarlas sería engañoso. Tooltip real (Radix), no el title
  *  nativo del navegador. */
 export function TrendsChart({ points }: { points: MonthlyTrendPoint[] }) {
+  const t = useTranslations("forecastWinLoss");
   const maxCreated = Math.max(1, ...points.map((p) => p.created));
 
   return (
@@ -29,7 +34,7 @@ export function TrendsChart({ points }: { points: MonthlyTrendPoint[] }) {
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                {p.label}: {p.created} creadas, {p.won} ganadas, {p.lost} perdidas
+                {t("trendsChart.tooltip", { label: p.label, created: p.created, won: p.won, lost: p.lost })}
               </TooltipContent>
             </Tooltip>
             <p className="bee-micro font-medium">{p.label}</p>

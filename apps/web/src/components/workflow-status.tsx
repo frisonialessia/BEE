@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import {
   AlertTriangle,
@@ -24,15 +25,6 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
   skipped: <AlertTriangle className="size-3 stroke-[1.25] text-muted-foreground" />,
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  mock_dispatched: "Simulado",
-  dispatched: "Despachado",
-  completed: "Completado",
-  failed: "Fallido",
-  pending: "Pendiente",
-  skipped: "Omitido",
-};
-
 function HandlerIcon({ name }: { name: string }) {
   const map: Record<string, string> = {
     crm_update: "CRM",
@@ -48,6 +40,7 @@ function HandlerIcon({ name }: { name: string }) {
 }
 
 function TaskRow({ task }: { task: WorkflowTask }) {
+  const t = useTranslations("workspace.sequences.workflowStatus");
   return (
     <div className="flex items-center justify-between border-b border-border py-1.5 last:border-0">
       <div className="flex min-w-0 items-center gap-2">
@@ -60,18 +53,19 @@ function TaskRow({ task }: { task: WorkflowTask }) {
         </span>
         {task.mock && (
           <span className="rounded-sm border border-border px-1 bee-micro">
-            simulado
+            {t("taskSimulatedTag")}
           </span>
         )}
       </div>
       <span className="bee-eyebrow text-[11px] normal-case tracking-normal">
-        {STATUS_LABEL[task.status] ?? task.status}
+        {t.has(`statusLabels.${task.status}`) ? t(`statusLabels.${task.status}`) : task.status}
       </span>
     </div>
   );
 }
 
 export function WorkflowStatusPanel() {
+  const t = useTranslations("workspace.sequences.workflowStatus");
   const [status, setStatus] = useState<WorkflowStatus | null>(null);
   const [tasks, setTasks] = useState<WorkflowTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -106,16 +100,16 @@ export function WorkflowStatusPanel() {
         <div>
           <h3 className="flex items-center gap-1.5 bee-card-title">
             <Zap className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-1)" }} />
-            Bus de workflows
+            {t("title")}
           </h3>
-          <p className="bee-caption mt-0.5">
-            Tareas automatizadas despachadas en eventos de negocio
-          </p>
+          <p className="bee-caption mt-0.5">{t("subtitle")}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
           {status && (
-            <span className="text-xs text-muted-foreground">{status.total_tasks} en total</span>
+            <span className="text-xs text-muted-foreground">
+              {status.total_tasks} {t("totalSuffix")}
+            </span>
           )}
         </div>
       </div>
@@ -123,10 +117,10 @@ export function WorkflowStatusPanel() {
       {status && (
         <div className="bee-stat-grid">
           {[
-            { label: "Simulado", value: status.mock_dispatched },
-            { label: "En vivo", value: status.dispatched + status.completed },
-            { label: "Fallido", value: status.failed },
-            { label: "Pendiente", value: status.pending },
+            { label: t("stats.mock"), value: status.mock_dispatched },
+            { label: t("stats.live"), value: status.dispatched + status.completed },
+            { label: t("stats.failed"), value: status.failed },
+            { label: t("stats.pending"), value: status.pending },
           ].map((stat) => (
             <div key={stat.label} className="bee-stat">
               <div className="bee-stat__val">{stat.value}</div>
@@ -140,25 +134,24 @@ export function WorkflowStatusPanel() {
         <div className="flex items-start gap-2 border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
           <Layers className="mt-0.5 size-3.5 shrink-0 stroke-[1.25]" />
           <span>
-            Todas las tareas se ejecutan en modo simulado — conecta tus integraciones en{" "}
-            <span className="font-medium text-foreground">Integraciones</span> para despacharlas en vivo.
+            {t("mockNoticePrefix")}{" "}
+            <span className="font-medium text-foreground">{t("mockNoticeHighlight")}</span>{" "}
+            {t("mockNoticeSuffix")}
           </span>
         </div>
       )}
 
       {tasks.length > 0 ? (
         <div>
-          <p className="bee-kpi-tile__label mb-2">Tareas recientes</p>
-          {tasks.map((t) => (
-            <TaskRow key={t.id} task={t} />
+          <p className="bee-kpi-tile__label mb-2">{t("recentTasks")}</p>
+          {tasks.map((task) => (
+            <TaskRow key={task.id} task={task} />
           ))}
         </div>
       ) : (
         <div className="py-4 text-center">
-          <p className="text-xs text-muted-foreground">Aún no se han despachado tareas.</p>
-          <p className="mt-1 bee-micro">
-            Cierra una oportunidad como GANADA para activar el bus de eventos.
-          </p>
+          <p className="text-xs text-muted-foreground">{t("empty.title")}</p>
+          <p className="mt-1 bee-micro">{t("empty.subtitle")}</p>
         </div>
       )}
     </div>

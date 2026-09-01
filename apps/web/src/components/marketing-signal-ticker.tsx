@@ -1,4 +1,5 @@
 import { Building2, Flame, Radio, TrendingUp, UserPlus } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 /**
  * MarketingSignalTicker — cinta horizontal de ejemplos de señales en loop
@@ -13,45 +14,45 @@ import { Building2, Flame, Radio, TrendingUp, UserPlus } from "lucide-react";
  * de honestidad que el resto de la landing (ver MarketingOrbit). El punto
  * acá no es el dato puntual, es transmitir "esto pasa todo el tiempo, en
  * tiempo real" antes de que el visitante llegue al Demo en vivo.
+ *
+ * Server component (async, `getTranslations`) — el scroll es puro CSS, así
+ * que no necesita `"use client"` ni `useTranslations` pese a "animar".
  */
 
-const TICKER_ITEMS = [
-  { icon: TrendingUp, text: "Northwind Robotics levantó una Serie C de USD 40M" },
-  { icon: UserPlus, text: "Vantage Health está contratando 20 Account Executives" },
-  { icon: Building2, text: "Solace Data nombró un nuevo CRO" },
-  { icon: Flame, text: "Anchor Freight alcanzó temperatura de cierre alta" },
-  { icon: Radio, text: "Bright Path Analytics visitó la página de pricing" },
-  { icon: TrendingUp, text: "Fielder Logistics cerró una ronda Serie B" },
-  { icon: UserPlus, text: "Cursive Systems publicó 8 vacantes de RevOps" },
-  { icon: Building2, text: "Loom & Co abrió una nueva oficina regional" },
-] as const;
+const TICKER_ICONS = [TrendingUp, UserPlus, Building2, Flame, Radio, TrendingUp, UserPlus, Building2] as const;
 
-function TickerContent() {
+function TickerContent({ items }: { items: readonly string[] }) {
   return (
     <>
-      {TICKER_ITEMS.map((item, i) => (
-        <div
-          key={i}
-          className="flex shrink-0 items-center gap-2 border-r border-[var(--color-divider)] px-6 py-3"
-        >
-          <item.icon className="size-3.5 shrink-0 text-[var(--color-chart-4)]" strokeWidth={1.75} />
-          <span className="whitespace-nowrap text-xs text-muted-foreground">{item.text}</span>
-        </div>
-      ))}
+      {items.map((text, i) => {
+        const Icon = TICKER_ICONS[i];
+        return (
+          <div
+            key={i}
+            className="flex shrink-0 items-center gap-2 border-r border-[var(--color-divider)] px-6 py-3"
+          >
+            <Icon className="size-3.5 shrink-0 text-[var(--color-chart-4)]" strokeWidth={1.75} />
+            <span className="whitespace-nowrap text-xs text-muted-foreground">{text}</span>
+          </div>
+        );
+      })}
     </>
   );
 }
 
-export function MarketingSignalTicker() {
+export async function MarketingSignalTicker() {
+  const t = await getTranslations("landing.ticker");
+  const items = t.raw("items") as string[];
+
   return (
     <div
       className="overflow-hidden border-y border-[var(--color-divider)] bg-[var(--color-primary)]/15"
       role="img"
-      aria-label="Ejemplos de señales de mercado detectadas en tiempo real — vista ilustrativa"
+      aria-label={t("ariaLabel")}
     >
       <div className="bee-ticker-track">
-        <TickerContent />
-        <TickerContent />
+        <TickerContent items={items} />
+        <TickerContent items={items} />
       </div>
     </div>
   );

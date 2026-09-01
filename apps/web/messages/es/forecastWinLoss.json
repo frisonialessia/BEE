@@ -1,0 +1,172 @@
+{
+  "eyebrow": "Inteligencia de ingresos",
+  "liveBadge": "En vivo",
+  "demoBadge": "Datos demo",
+  "forecast": {
+    "title": "Pronóstico",
+    "subtitle": "Pipeline ponderado por probabilidad de cierre, mes a mes, y qué deals están en riesgo",
+    "tabs": {
+      "forecast": "Pronóstico",
+      "simulator": "Simulador de escenarios"
+    },
+    "emptyState": {
+      "title": "Todavía no hay monto estimado en ninguna oportunidad.",
+      "subtitle": "Agrega el monto y la fecha esperada de cierre desde el panel de calificación de cada oportunidad para ver el pronóstico."
+    },
+    "kpis": {
+      "pipeline": {
+        "label": "Pipeline abierto",
+        "hint": "{count, plural, one {# oportunidad sin cerrar} other {# oportunidades sin cerrar}}"
+      },
+      "weighted": {
+        "label": "Pronóstico ponderado",
+        "hintHistorical": "Monto × probabilidad real de cierre (histórico) o por etapa",
+        "hintDefault": "Monto × probabilidad de cierre por etapa"
+      },
+      "won": {
+        "label": "Ganado",
+        "hint": "Oportunidades cerradas como ganadas"
+      },
+      "atRisk": {
+        "label": "En riesgo",
+        "hint": "Sin fecha, vencidas o poco calificadas"
+      }
+    },
+    "byMonth": {
+      "title": "Pronóstico por mes",
+      "caption": "Pipeline ponderado y total, mes a mes"
+    },
+    "trend": {
+      "title": "Tendencia de cierre",
+      "caption": "Oportunidades creadas por mes (barra) y tasa de cierre de lo que se resolvió ese mes (número arriba)"
+    },
+    "accuracy": {
+      "title": "Precisión del pronóstico",
+      "caption": "Ya hay suficiente histórico para calcular la probabilidad de cierre real por rango de score, en vez de la fija por etapa — esto es lo que se está usando ahora mismo:",
+      "scoreLabel": "Score {start}-{end}",
+      "sampleSize": "{count, plural, one {# deal cerrado} other {# deals cerrados}}"
+    },
+    "atRiskSection": {
+      "title": "Deals en riesgo",
+      "caption": "Sin fecha de cierre, vencidas o con poca información",
+      "empty": "Ninguna oportunidad abierta está en riesgo por ahora.",
+      "noCompany": "Sin empresa",
+      "qualifiedPercent": "{percent}% calificada",
+      "riskLabels": {
+        "sin_fecha_de_cierre": "Sin fecha de cierre",
+        "fecha_vencida": "Fecha de cierre vencida",
+        "poco_calificada": "Poco calificada para su etapa"
+      }
+    }
+  },
+  "trendsChart": {
+    "tooltip": "{label}: {created} creadas, {won} ganadas, {lost} perdidas"
+  },
+  "qualification": {
+    "title": "Calificación (MEDDIC)",
+    "amountLabel": "Monto estimado",
+    "amountPlaceholder": "USD",
+    "closeDateLabel": "Cierre esperado"
+  },
+  "barChart": {
+    "tooltip": "{label}: {weighted} ponderado de {total} en pipeline ({count, plural, one {# oportunidad} other {# oportunidades}})",
+    "legendWeighted": "Ponderado",
+    "legendTotal": "Pipeline total"
+  },
+  "simulator": {
+    "signalTypes": {
+      "funding_round": "Ronda de financiación",
+      "hiring_surge": "Aumento de contrataciones",
+      "executive_change": "Cambio de liderazgo",
+      "expansion": "Expansión",
+      "product_launch": "Lanzamiento de producto"
+    },
+    "channels": {
+      "email": "Email",
+      "linkedin": "LinkedIn",
+      "warm_intro": "Intro cálida",
+      "twitter": "Twitter/X"
+    },
+    "variants": {
+      "conservative": "Conservador",
+      "realistic": "Realista",
+      "optimistic": "Optimista"
+    },
+    "perMonth": "{value}/mes",
+    "winRateSuffix": "{percent}% de cierre",
+    "paramsTitle": "Parámetros del escenario",
+    "sectorPlaceholder": "Industria (ej. fintech)",
+    "anyDiscStyle": "Cualquier estilo DISC",
+    "discStyle": "Estilo {letter}",
+    "monthlySignalsLabel": "Señales mensuales objetivo: {value}",
+    "heatLabel": "Calor de Dark Funnel: {value}",
+    "repsLabel": "Reps adicionales: {value}",
+    "runButton": "Correr escenario",
+    "runningButton": "Simulando…",
+    "errorMessage": "No se pudo simular — intenta de nuevo.",
+    "emptyState": "Configura un escenario y corre la simulación.",
+    "noHistoricalData": "Sin historial de resultados en tu organización todavía — estas proyecciones son estimados genéricos de industria, no tu desempeño real. Registra tus primeros resultados (Ganado/Perdido) para desbloquear proyecciones basadas en tus propios datos.",
+    "lowConfidence": "Confianza de datos baja — solo {count, plural, one {# resultado histórico} other {# resultados históricos}} para este segmento. Las proyecciones tienen un margen de error amplio.",
+    "defaultDealValue": "El valor de deal ({value}) es un estimado de industria — todavía no hay suficientes deals cerrados con monto real en este segmento. Agrega el monto al calificar cada oportunidad para que esta cifra sea la tuya.",
+    "effectiveWinRate": "Tasa de cierre efectiva: {percent}%",
+    "baseWinRate": "(base {percent}%)",
+    "keyDrivers": "Impulsores clave:",
+    "recommendedActions": "Recomendado:",
+    "riskFactors": "Riesgos:"
+  },
+  "winLoss": {
+    "title": "Ganado/Perdido",
+    "subtitle": "Por qué se ganan y se pierden los deals — razones, competidores, y si calificar más realmente se traduce en más cierres",
+    "emptyState": {
+      "title": "Todavía no hay ninguna oportunidad cerrada.",
+      "subtitle": "Marca una oportunidad como ganada o perdida desde su panel de detalle para empezar a ver el análisis aquí."
+    },
+    "kpis": {
+      "winRate": {
+        "label": "Tasa de cierre",
+        "hint": "{won} ganadas de {total} cerradas"
+      },
+      "wonValue": {
+        "label": "Valor ganado",
+        "hint": "Suma de monto en deals ganados"
+      },
+      "lostValue": {
+        "label": "Valor perdido",
+        "hint": "Suma de monto en deals perdidos"
+      },
+      "daysToClose": {
+        "label": "Días a cierre (ganados)",
+        "hintNoWonHasLost": "Sin ganados todavía · {days}d perdidos en promedio",
+        "hintNoWonNoLost": "Sin deals cerrados con fecha registrada",
+        "hintHasWonHasLost": "{days}d perdidos en promedio",
+        "hintHasWonNoLost": "Promedio en deals ganados"
+      }
+    },
+    "reasons": {
+      "title": "Razones de pérdida",
+      "caption": "Qué se repite más entre los deals perdidos"
+    },
+    "competitors": {
+      "title": "Competidores",
+      "caption": "Contra quién competimos de verdad al cerrar"
+    },
+    "meddic": {
+      "title": "Calificación MEDDIC vs. resultado",
+      "caption": "Tasa de cierre real según qué tan calificado estaba el deal — si calificar más de verdad se traduce en más cierres ganados, o si es solo un checklist sin impacto"
+    }
+  },
+  "lossReasonChart": {
+    "empty": "Todavía no hay deals perdidos con razón registrada.",
+    "unspecified": "Sin razón registrada",
+    "tooltip": "{label}: {count, plural, one {# deal} other {# deals}} · {percent}% de lo perdido"
+  },
+  "competitorBreakdown": {
+    "empty": "Todavía no se registró ningún competidor en un cierre.",
+    "record": "{wins} ganadas · {losses} perdidas",
+    "tooltip": "{competitor}: {percent}% de tasa de cierre en {count, plural, one {# deal} other {# deals}} enfrentados"
+  },
+  "meddicChart": {
+    "empty": "Todavía no hay suficientes deals cerrados con calificación MEDDIC.",
+    "tooltip": "{label}: {won} ganadas, {lost} perdidas"
+  }
+}

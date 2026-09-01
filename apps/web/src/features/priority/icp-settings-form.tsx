@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { useUpdateIcpCriteria } from "@/hooks/queries/use-icp";
@@ -28,6 +29,7 @@ export function IcpSettingsForm({
   suggestions: { industries: string[]; sizes: string[]; countries: string[] };
   onDone: () => void;
 }) {
+  const t = useTranslations("opportunitiesPriority.icpForm");
   const updateIcp = useUpdateIcpCriteria();
   const [industries, setIndustries] = useState(toCsv(initial.industries));
   const [sizes, setSizes] = useState(toCsv(initial.sizes));
@@ -49,50 +51,48 @@ export function IcpSettingsForm({
       className="mb-4 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-4"
     >
       <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Perfil de Cliente Ideal (ICP)
+        {t("title")}
       </p>
-      <p className="bee-caption mb-3">
-        Separa cada valor con comas. Deja una lista vacía si esa dimensión no te importa — no penaliza a nadie.
-      </p>
+      <p className="bee-caption mb-3">{t("subtitle")}</p>
 
       <div className="space-y-2.5">
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Industrias</label>
+          <label className="text-xs font-medium text-muted-foreground">{t("industries.label")}</label>
           <input
             value={industries}
             onChange={(e) => setIndustries(e.target.value)}
-            placeholder="SaaS, Fintech, Logística…"
+            placeholder={t("industries.placeholder")}
             className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
           {suggestions.industries.length > 0 && (
             <p className="mt-1 bee-micro">
-              Ya usas: {suggestions.industries.join(", ")}
+              {t("alreadyUsing", { values: suggestions.industries.join(", ") })}
             </p>
           )}
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Tamaños de empresa</label>
+          <label className="text-xs font-medium text-muted-foreground">{t("sizes.label")}</label>
           <input
             value={sizes}
             onChange={(e) => setSizes(e.target.value)}
-            placeholder="11-50, 51-200…"
+            placeholder={t("sizes.placeholder")}
             className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
           {suggestions.sizes.length > 0 && (
-            <p className="mt-1 bee-micro">Ya usas: {suggestions.sizes.join(", ")}</p>
+            <p className="mt-1 bee-micro">{t("alreadyUsing", { values: suggestions.sizes.join(", ") })}</p>
           )}
         </div>
         <div>
-          <label className="text-xs font-medium text-muted-foreground">Países</label>
+          <label className="text-xs font-medium text-muted-foreground">{t("countries.label")}</label>
           <input
             value={countries}
             onChange={(e) => setCountries(e.target.value)}
-            placeholder="México, Colombia…"
+            placeholder={t("countries.placeholder")}
             className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
           {suggestions.countries.length > 0 && (
             <p className="mt-1 bee-micro">
-              Ya usas: {suggestions.countries.join(", ")}
+              {t("alreadyUsing", { values: suggestions.countries.join(", ") })}
             </p>
           )}
         </div>
@@ -100,10 +100,10 @@ export function IcpSettingsForm({
 
       <div className="mt-3 flex items-center gap-2">
         <button type="submit" disabled={updateIcp.isPending} className="bee-btn bee-btn--primary">
-          {updateIcp.isPending ? "Guardando…" : "Guardar"}
+          {updateIcp.isPending ? t("saving") : t("save")}
         </button>
         <button type="button" onClick={onDone} className="bee-btn-ghost">
-          Cancelar
+          {t("cancel")}
         </button>
       </div>
     </form>

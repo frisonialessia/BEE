@@ -15,72 +15,26 @@ import {
  *  a los valores libres que `DynamicSequenceEngine._execute_step` ya acepta
  *  (`action`/`channel` son texto libre en el backend; esto es solo el menú
  *  curado que el builder ofrece). Cada acción crea, al ejecutarse, una
- *  `PendingAction` que el CEO aprueba — el motor nunca dispara nada solo. */
+ *  `PendingAction` que el CEO aprueba — el motor nunca dispara nada solo.
+ *
+ *  `label`/`description` viven en `messages/{locale}/workspace.json` bajo
+ *  `sequences.actions.<action>` (ver step-composer.tsx / flow-canvas.tsx) —
+ *  este catálogo solo trae el `action` value que sirve de llave de traducción. */
 export interface ActionDef {
   action: string;
-  label: string;
   channel: "email" | "linkedin";
   icon: LucideIcon;
-  description: string;
 }
 
 export const ACTION_PALETTE: ActionDef[] = [
-  {
-    action: "send_email",
-    label: "Enviar email",
-    channel: "email",
-    icon: Mail,
-    description: "Email personalizado, generado por el ExecutiveAgent",
-  },
-  {
-    action: "linkedin_profile_view",
-    label: "Visitar perfil de LinkedIn",
-    channel: "linkedin",
-    icon: Eye,
-    description: "Deja huella pasiva antes del contacto directo",
-  },
-  {
-    action: "linkedin_like",
-    label: "Dar like a una publicación",
-    channel: "linkedin",
-    icon: ThumbsUp,
-    description: "Calienta el contacto antes del mensaje",
-  },
-  {
-    action: "linkedin_connect",
-    label: "Solicitud de conexión",
-    channel: "linkedin",
-    icon: UserPlus,
-    description: "Invitación con nota personalizada",
-  },
-  {
-    action: "linkedin_inmail",
-    label: "InMail personalizado (IA)",
-    channel: "linkedin",
-    icon: Sparkles,
-    description: "Mensaje directo generado con el contexto de la señal",
-  },
-  {
-    action: "send_content",
-    label: "Enviar contenido",
-    channel: "email",
-    icon: FileText,
-    description: "Caso de estudio o recurso relevante",
-  },
-  {
-    action: "book_meeting",
-    label: "Agendar reunión",
-    channel: "email",
-    icon: CalendarCheck,
-    description: "Invitación a llamada — normalmente el cierre del flujo",
-  },
-  {
-    action: "follow_up",
-    label: "Seguimiento",
-    channel: "email",
-    icon: RotateCcw,
-    description: "Recordatorio si no hubo respuesta",
-  },
+  { action: "send_email", channel: "email", icon: Mail },
+  { action: "linkedin_profile_view", channel: "linkedin", icon: Eye },
+  { action: "linkedin_like", channel: "linkedin", icon: ThumbsUp },
+  { action: "linkedin_connect", channel: "linkedin", icon: UserPlus },
+  { action: "linkedin_inmail", channel: "linkedin", icon: Sparkles },
+  { action: "send_content", channel: "email", icon: FileText },
+  { action: "book_meeting", channel: "email", icon: CalendarCheck },
+  { action: "follow_up", channel: "email", icon: RotateCcw },
 ];
 
 export const ACTION_BY_VALUE: Record<string, ActionDef> = Object.fromEntries(

@@ -1,6 +1,7 @@
 "use client";
 
 import { Clock, Radar, ShieldCheck, Trophy } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { computeFunnelStages, type FunnelStage } from "@/lib/pipeline-funnel";
 import type { Opportunity } from "@/types/domain";
@@ -20,6 +21,7 @@ const STAGE_ICONS: Record<FunnelStage["key"], typeof Radar> = {
  * KPI strip en una sola narrativa: dónde se concentra el pipeline hoy, no
  * solo cuánto hay en cada bucket. Ver lib/pipeline-funnel.ts. */
 export function PipelineFunnel({ opportunities }: { opportunities: Opportunity[] }) {
+  const t = useTranslations("dashboardOverview.pipelineFunnel");
   const stages = computeFunnelStages(opportunities);
   const maxCount = Math.max(...stages.map((s) => s.count), 1);
 
@@ -37,7 +39,7 @@ export function PipelineFunnel({ opportunities }: { opportunities: Opportunity[]
               <span className="bee-kpi-sm">{stage.count}</span>
               {stage.shareOfPipeline !== null && (
                 <span className="text-xs text-muted-foreground">
-                  {Math.round(stage.shareOfPipeline * 100)}% del pipeline
+                  {t("shareOfPipeline", { pct: Math.round(stage.shareOfPipeline * 100) })}
                 </span>
               )}
             </div>

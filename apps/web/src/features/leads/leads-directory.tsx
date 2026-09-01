@@ -4,6 +4,7 @@ import { Flame, RefreshCw, Search, Upload, Workflow } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useLocale, useTranslations } from "next-intl";
 
 import { LeadDuplicatesPanel } from "@/components/dedup/lead-duplicates-panel";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
@@ -16,8 +17,10 @@ import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBulkUpdateLeads, useLeads, useValidateLead } from "@/hooks/queries/use-leads";
 import { useBulkEnrollLeadsInSequence, useSequences } from "@/hooks/queries/use-sequences";
 import { useUsers } from "@/hooks/queries/use-users";
+import type { Locale } from "@/i18n/locales";
 import { useIsDemoMode } from "@/lib/demo/mode";
-import { leadStatusLabels, scoreVariant, timeAgo, validationFlagLabels } from "@/lib/format";
+import { formatRelativeTime } from "@/lib/i18n/format";
+import { getLeadStatusLabels, getValidationFlagLabels, scoreVariant } from "@/lib/format";
 import type { Lead, LeadStatus } from "@/types/domain";
 
 type SortKey = "score_desc" | "score_asc" | "recent" | "name";
@@ -46,6 +49,10 @@ const STATUS_OPTIONS: LeadStatus[] = ["new", "qualified", "engaged", "converted"
  *  Todo se calcula en el cliente a partir de lo que ya está cargado, mismo
  *  patrón que el resto de la BI de BEE — sin endpoint de búsqueda aparte. */
 export function LeadsDirectory() {
+  const locale = useLocale() as Locale;
+  const t = useTranslations("companiesLeads.leadsDirectory");
+  const leadStatusLabels = getLeadStatusLabels(locale);
+  const validationFlagLabels = getValidationFlagLabels(locale);
   const { data: leadsResult, isLoading: leadsLoading } = useLeads(300);
   const { data: companiesResult, isLoading: companiesLoading } = useCompanies(300);
   const { data: users } = useUsers();
@@ -136,16 +143,16 @@ export function LeadsDirectory() {
     try {
       const result = await bulkEnroll.mutateAsync({ sequenceId: bulkSequence, leadIds: [...selected] });
       if (result.failed.length === 0) {
-        toast.success(`${result.created.length} lead${result.created.length === 1 ? "" : "s"} enviado${result.created.length === 1 ? "" : "s"} a la secuencia.`);
+        toast.success(t("toasts.enrolledSuccess", { count: result.created.length }));
       } else {
         toast.warning(
-          `${result.created.length} inscrito${result.created.length === 1 ? "" : "s"}, ${result.failed.length} falló${result.failed.length === 1 ? "" : "aron"}.`,
+          t("toasts.enrolledPartial", { created: result.created.length, failed: result.failed.length }),
         );
       }
       setSelected(new Set());
       setBulkSequence("");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "No se pudo enviar a la secuencia.");
+      toast.error(err instanceof Error ? err.message : t("toasts.enrollError"));
     }
   }
 
@@ -172,34 +179,34 @@ export function LeadsDirectory() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">CRM</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="bee-display">Leads</h1>
+            <h1 className="bee-display">{t("title")}</h1>
             <p className="bee-caption mt-1">
-              Todo el histórico de prospectos detectados, con puntaje de intención para saber a quién enfocar
+              {t("subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+            <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
             <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost inline-flex items-center gap-1.5">
               <Upload className="size-3.5" />
-              Importar prospectos
+              {t("importButton")}
             </button>
             <ExportCsvButton
               rows={exportRows}
               filename="bee-leads.csv"
               columns={[
-                { key: "nombre", header: "Nombre" },
-                { key: "empresa", header: "Empresa" },
-                { key: "cargo", header: "Cargo" },
-                { key: "email", header: "Email" },
-                { key: "telefono", header: "Teléfono" },
-                { key: "linkedin", header: "LinkedIn" },
-                { key: "estado", header: "Estado" },
-                { key: "intent_score", header: "Puntaje de intención" },
-                { key: "frescura_datos", header: "Frescura de datos (%)" },
-                { key: "creado", header: "Creado" },
+                { key: "nombre", header: t("export.columns.name") },
+                { key: "empresa", header: t("export.columns.company") },
+                { key: "cargo", header: t("export.columns.title") },
+                { key: "email", header: t("export.columns.email") },
+                { key: "telefono", header: t("export.columns.phone") },
+                { key: "linkedin", header: t("export.columns.linkedin") },
+                { key: "estado", header: t("export.columns.status") },
+                { key: "intent_score", header: t("export.columns.intentScore") },
+                { key: "frescura_datos", header: t("export.columns.dataFreshness") },
+                { key: "creado", header: t("export.columns.createdAt") },
               ]}
             />
           </div>
@@ -220,21 +227,21 @@ export function LeadsDirectory() {
         </div>
       ) : leads.length === 0 ? (
         <div className="bee-bento bee-bento-pad py-12 text-center">
-          <p className="text-sm text-muted-foreground">Todavía no hay leads registrados.</p>
-          <p className="bee-caption mt-1">Aparecen automáticamente al llegar señales, o agrégalos desde una empresa.</p>
+          <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
+          <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard label="Total de leads" value={leads.length} />
+            <MetricCard label={t("metrics.total")} value={leads.length} />
             <MetricCard
-              label="Puntaje de intención promedio"
+              label={t("metrics.avgScore")}
               value={avgScore}
               tone={avgScore >= 60 ? "default" : "muted"}
             />
-            <MetricCard label="Leads calientes (≥75)" value={hotCount} icon={Flame} tone="warm" />
+            <MetricCard label={t("metrics.hot")} value={hotCount} icon={Flame} tone="warm" />
             <MetricCard
-              label="Con datos incompletos/vencidos"
+              label={t("metrics.staleIncomplete")}
               value={staleCount}
               tone={staleCount > 0 ? "warm" : "default"}
             />
@@ -246,7 +253,7 @@ export function LeadsDirectory() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Buscar por nombre, email o empresa…"
+                placeholder={t("filters.searchPlaceholder")}
                 className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground"
               />
             </div>
@@ -255,7 +262,7 @@ export function LeadsDirectory() {
               onChange={(e) => setStatusFilter(e.target.value as LeadStatus | "all")}
               className="rounded-full border border-border bg-[var(--color-card)] px-3 py-1.5 text-xs outline-none"
             >
-              <option value="all">Todos los estados</option>
+              <option value="all">{t("filters.allStatuses")}</option>
               {STATUS_OPTIONS.map((s) => (
                 <option key={s} value={s}>
                   {leadStatusLabels[s]}
@@ -267,10 +274,10 @@ export function LeadsDirectory() {
               onChange={(e) => setSortKey(e.target.value as SortKey)}
               className="rounded-full border border-border bg-[var(--color-card)] px-3 py-1.5 text-xs outline-none"
             >
-              <option value="score_desc">Mayor intent score</option>
-              <option value="score_asc">Menor intent score</option>
-              <option value="recent">Más recientes</option>
-              <option value="name">Nombre (A-Z)</option>
+              <option value="score_desc">{t("filters.sortScoreDesc")}</option>
+              <option value="score_asc">{t("filters.sortScoreAsc")}</option>
+              <option value="recent">{t("filters.sortRecent")}</option>
+              <option value="name">{t("filters.sortName")}</option>
             </select>
             <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <input
@@ -279,7 +286,7 @@ export function LeadsDirectory() {
                 onChange={(e) => setStaleOnly(e.target.checked)}
                 className="accent-[var(--color-chart-4)]"
               />
-              Solo con datos incompletos/vencidos
+              {t("filters.staleOnlyLabel")}
             </label>
             <SavedViewsControl page="leads" currentConfig={currentViewConfig} onApply={applyViewConfig} />
           </div>
@@ -287,7 +294,7 @@ export function LeadsDirectory() {
           {selected.size > 0 && (
             <div className="flex flex-wrap items-center gap-2 rounded-[var(--radius-lg)] border border-[var(--color-chart-4)]/40 bg-[var(--color-chart-4)]/10 px-4 py-2.5">
               <p className="text-xs font-medium">
-                {selected.size} seleccionado{selected.size === 1 ? "" : "s"}
+                {t("bulk.selected", { count: selected.size })}
               </p>
               <div className="flex items-center gap-1.5">
                 <select
@@ -295,7 +302,7 @@ export function LeadsDirectory() {
                   onChange={(e) => setBulkStatus(e.target.value as LeadStatus | "")}
                   className="rounded-full border border-border bg-[var(--color-card)] px-2.5 py-1 text-xs outline-none"
                 >
-                  <option value="">Cambiar estado a…</option>
+                  <option value="">{t("bulk.changeStatusTo")}</option>
                   {STATUS_OPTIONS.map((s) => (
                     <option key={s} value={s}>
                       {leadStatusLabels[s]}
@@ -308,7 +315,7 @@ export function LeadsDirectory() {
                   disabled={!bulkStatus || bulkUpdate.isPending}
                   className="bee-btn bee-btn--primary text-xs"
                 >
-                  Aplicar
+                  {t("bulk.apply")}
                 </button>
               </div>
               <div className="flex items-center gap-1.5">
@@ -317,7 +324,7 @@ export function LeadsDirectory() {
                   onChange={(e) => setBulkAssignee(e.target.value)}
                   className="rounded-full border border-border bg-[var(--color-card)] px-2.5 py-1 text-xs outline-none"
                 >
-                  <option value="">Reasignar a…</option>
+                  <option value="">{t("bulk.reassignTo")}</option>
                   {(users ?? []).map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.full_name}
@@ -330,7 +337,7 @@ export function LeadsDirectory() {
                   disabled={!bulkAssignee || bulkUpdate.isPending}
                   className="bee-btn bee-btn--primary text-xs"
                 >
-                  Aplicar
+                  {t("bulk.apply")}
                 </button>
               </div>
               <div className="flex items-center gap-1.5">
@@ -339,7 +346,7 @@ export function LeadsDirectory() {
                   onChange={(e) => setBulkSequence(e.target.value)}
                   className="rounded-full border border-border bg-[var(--color-card)] px-2.5 py-1 text-xs outline-none"
                 >
-                  <option value="">Enviar a secuencia…</option>
+                  <option value="">{t("bulk.sendToSequence")}</option>
                   {(sequencesResult?.data ?? []).map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
@@ -353,7 +360,7 @@ export function LeadsDirectory() {
                   className="bee-btn bee-btn--primary inline-flex items-center gap-1 text-xs"
                 >
                   <Workflow className="size-3.5" />
-                  {bulkEnroll.isPending ? "Enviando…" : "Aplicar"}
+                  {bulkEnroll.isPending ? t("bulk.sending") : t("bulk.apply")}
                 </button>
               </div>
               <button
@@ -361,7 +368,7 @@ export function LeadsDirectory() {
                 onClick={() => setSelected(new Set())}
                 className="bee-btn-ghost ml-auto text-xs"
               >
-                Cancelar selección
+                {t("bulk.cancelSelection")}
               </button>
             </div>
           )}
@@ -376,15 +383,15 @@ export function LeadsDirectory() {
                       checked={filtered.length > 0 && filtered.every((l) => selected.has(l.id))}
                       onChange={toggleAllVisible}
                       className="accent-[var(--color-chart-4)]"
-                      aria-label="Seleccionar todos los visibles"
+                      aria-label={t("table.selectAllVisible")}
                     />
                   </th>
-                  <th className="px-4 py-2.5 font-medium">Nombre</th>
-                  <th className="px-4 py-2.5 font-medium">Empresa</th>
-                  <th className="px-4 py-2.5 font-medium">Cargo</th>
-                  <th className="px-4 py-2.5 font-medium">Estado</th>
-                  <th className="px-4 py-2.5 font-medium">Puntaje de intención</th>
-                  <th className="px-4 py-2.5 font-medium">Datos</th>
+                  <th className="px-4 py-2.5 font-medium">{t("table.headers.name")}</th>
+                  <th className="px-4 py-2.5 font-medium">{t("table.headers.company")}</th>
+                  <th className="px-4 py-2.5 font-medium">{t("table.headers.title")}</th>
+                  <th className="px-4 py-2.5 font-medium">{t("table.headers.status")}</th>
+                  <th className="px-4 py-2.5 font-medium">{t("table.headers.intentScore")}</th>
+                  <th className="px-4 py-2.5 font-medium">{t("table.headers.data")}</th>
                   <th className="px-4 py-2.5 font-medium" />
                 </tr>
               </thead>
@@ -392,7 +399,7 @@ export function LeadsDirectory() {
                 {filtered.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
-                      Ningún lead coincide con estos filtros.
+                      {t("table.noMatch")}
                     </td>
                   </tr>
                 ) : (
@@ -407,7 +414,7 @@ export function LeadsDirectory() {
                             checked={selected.has(lead.id)}
                             onChange={() => toggleOne(lead.id)}
                             className="accent-[var(--color-chart-4)]"
-                            aria-label={`Seleccionar ${lead.full_name}`}
+                            aria-label={t("table.selectRow", { name: lead.full_name })}
                           />
                         </td>
                         <td className="px-4 py-2.5">
@@ -440,17 +447,19 @@ export function LeadsDirectory() {
                             <span
                               title={[
                                 ...lead.validation_flags.map((f) => validationFlagLabels[f] ?? f),
-                                ...(lead.stale_risk ? ["Sin validar en más de 90 días"] : []),
+                                ...(lead.stale_risk ? [t("table.staleWarning")] : []),
                               ].join(" · ")}
                               className="text-[11px] text-[var(--color-chart-1)]"
                             >
                               {lead.validation_flags.length > 0
-                                ? `${lead.validation_flags.length} problema${lead.validation_flags.length === 1 ? "" : "s"}`
-                                : "Desactualizado"}
+                                ? t("table.issues", { count: lead.validation_flags.length })
+                                : t("table.outdated")}
                             </span>
                           ) : (
                             <span className="bee-micro">
-                              {lead.last_validated_at ? `Validado ${timeAgo(lead.last_validated_at)}` : "Sin validar"}
+                              {lead.last_validated_at
+                                ? t("table.validatedAgo", { timeAgo: formatRelativeTime(lead.last_validated_at, locale) })
+                                : t("table.notValidated")}
                             </span>
                           )}
                         </td>
@@ -460,10 +469,10 @@ export function LeadsDirectory() {
                             onClick={() => validateLead.mutate(lead.id)}
                             disabled={validateLead.isPending}
                             className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 bee-micro transition-colors hover:bg-[var(--color-primary)]/40 hover:text-foreground"
-                            title="Re-validar datos"
+                            title={t("table.validateTitle")}
                           >
                             <RefreshCw className="size-3" />
-                            Validar
+                            {t("table.validate")}
                           </button>
                         </td>
                       </tr>
@@ -475,14 +484,14 @@ export function LeadsDirectory() {
           </div>
           {filtered.some((l) => l.company_id) && (
             <p className="bee-caption">
-              Consejo: los leads todavía no tienen ficha propia — abre la empresa desde{" "}
+              {t("tip.prefix")}{" "}
               <Link
                 href={demo ? "/probar/companies" : "/dashboard/companies"}
                 className="text-[var(--color-chart-4)] hover:underline"
               >
-                Empresas
+                {t("tip.linkText")}
               </Link>{" "}
-              para ver el contacto completo.
+              {t("tip.suffix")}
             </p>
           )}
         </div>

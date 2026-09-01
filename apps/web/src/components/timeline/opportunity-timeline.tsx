@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,17 +8,6 @@ import type { Locale } from "@/i18n/locales";
 import { formatDateTimePadded } from "@/lib/i18n/format";
 import { getAuditDecisions } from "@/lib/api";
 import type { AuditEntry } from "@/types/extended";
-
-const AGENT_LABELS: Record<string, string> = {
-  strategy_generator: "Generador de estrategias",
-  executive_agent: "Agente ejecutivo",
-  psychographic_analyzer: "Analizador psicográfico",
-  dark_funnel: "Dark Funnel",
-  smart_engagement: "Engagement inteligente",
-  agent_orchestrator: "Orquestador",
-  workflow_orchestrator: "Flujo de trabajo",
-  trend_analyst: "Analista de tendencias",
-};
 
 const AGENT_DOT_COLOR: Record<string, string> = {
   strategy_generator: "var(--color-chart-1)",
@@ -42,6 +31,7 @@ function timeLabel(iso: string, locale: Locale) {
  */
 export function OpportunityTimeline({ opportunityId }: { opportunityId: string }) {
   const locale = useLocale() as Locale;
+  const t = useTranslations("sharedB.timeline");
   const [entries, setEntries] = useState<AuditEntry[] | null>(null);
 
   useEffect(() => {
@@ -61,7 +51,7 @@ export function OpportunityTimeline({ opportunityId }: { opportunityId: string }
   if (entries.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Todavía no hay actividad registrada para esta oportunidad.
+        {t("empty")}
       </p>
     );
   }
@@ -84,7 +74,9 @@ export function OpportunityTimeline({ opportunityId }: { opportunityId: string }
           <div className="min-w-0 flex-1 pb-1">
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm font-medium">
-                {AGENT_LABELS[entry.agent_type] ?? entry.agent_type}
+                {t.has(`agentLabels.${entry.agent_type}`)
+                  ? t(`agentLabels.${entry.agent_type}`)
+                  : entry.agent_type}
               </p>
               <span className="text-xs text-muted-foreground">
                 {entry.decision_type.replace(/_/g, " ")}
@@ -98,7 +90,7 @@ export function OpportunityTimeline({ opportunityId }: { opportunityId: string }
             )}
             {entry.manual_review_required && (
               <p className="mt-1 text-xs font-medium" style={{ color: "var(--color-chart-2)" }}>
-                Requiere revisión manual — confianza {(entry.confidence_score * 100).toFixed(0)}%
+                {t("manualReviewRequired", { confidence: (entry.confidence_score * 100).toFixed(0) })}
               </p>
             )}
           </div>
