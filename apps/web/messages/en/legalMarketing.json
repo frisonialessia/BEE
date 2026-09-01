@@ -168,14 +168,33 @@
     "meanwhileTitle": "This is how we think when we build.",
     "meanwhileBody": "Zero invented data, human approval before any external action, strict per-account isolation from the design stage — not marketing rules, it's how the product is made. If that resonates with you, we probably fit."
   },
+  "contactForm": {
+    "fullNameLabel": "Full name",
+    "fullNamePlaceholder": "Jane Prospect",
+    "emailLabel": "Work email",
+    "emailPlaceholder": "you@company.com",
+    "companyLabel": "Company",
+    "optional": "(optional)",
+    "companyPlaceholder": "Acme Inc",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "+1 415 555 0100",
+    "messageLabel": "Tell us what you need",
+    "messagePlaceholder": "Size of your sales team, what CRM you use today, what you'd like to automate…",
+    "honeypotLabel": "Do not fill this field",
+    "submit": "Send message",
+    "submitting": "Sending…",
+    "successTitle": "Message sent",
+    "successBody": "We received your message. We'll reply by email within 24 business hours.",
+    "genericError": "We couldn't send your message. Try again in a moment."
+  },
   "contacto": {
     "meta": {
       "title": "Contact — BEE",
       "description": "Talk to the BEE team. We reply within 24 business hours."
     },
     "eyebrow": "Contact",
-    "heroTitle": "Let's talk about your pipeline.",
-    "heroSubtitle": "Tell us a bit about your sales team and we'll reply within 24 business hours — no sales bots, no forms that vanish into the void.",
+    "heroTitle": "This is open source. Ask us anything you need.",
+    "heroSubtitle": "BEE is an open-source project, not a sales pitch — write to us if you have specific questions about the platform or the code, and we'll reply within 24 business hours.",
     "afterSubmitTitle": "What happens after you send this?",
     "afterSubmitBody": "A real message lands directly with our team — it gets logged, never silently dropped. We'll reach out at the email you leave here.",
     "haveAccountTitle": "Already have an account?",

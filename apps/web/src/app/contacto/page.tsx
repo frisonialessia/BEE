@@ -34,7 +34,7 @@ export default async function ContactoPage({
 
       <main className="flex-1">
         <section className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-20">
-          <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
+          <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
             <div>
               <p className="bee-eyebrow">{t("eyebrow")}</p>
               <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">

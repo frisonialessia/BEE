@@ -236,6 +236,10 @@
   border: 1px solid var(--bee-card-border);
   border-radius: var(--radius-lg);
   box-shadow: none;
+  /* Only affects cards that also opt into a hover effect (.bee-glass--hover,
+     hover:border-*) — a plain .bee-bento with no hover rule never changes
+     these properties, so this transition never fires for it. */
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .bee-bento--primary { background: var(--color-primary); }

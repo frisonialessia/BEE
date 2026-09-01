@@ -33,15 +33,27 @@ function StepCard({
   title: string;
   description: string;
 }) {
-  const { ref, inView } = useInView<HTMLDivElement>({ threshold: 0.3 });
+  // rootMargin extends the trigger zone 200px past the real viewport
+  // bottom, so a card starts revealing itself while it's still below the
+  // fold — well before a normal scroll actually brings it into view. Without
+  // this, threshold-based reveal + the staggered per-card delay below could
+  // still be mid-fade (or, worst case, not yet triggered at all) by the time
+  // the visitor's eyes reach the section: a step of "four steps" reading as
+  // blank space, which is exactly the kind of empty-while-scrolling gap
+  // this page has been flagged for. A snappier 90ms stagger / 450ms duration
+  // (was 120ms / 700ms) shrinks that window further.
+  const { ref, inView } = useInView<HTMLDivElement>({
+    threshold: 0.15,
+    rootMargin: "0px 0px 200px 0px",
+  });
 
   return (
     <div
       ref={ref}
-      className={`bee-bento bee-bento-pad relative transition-all duration-700 ease-out ${
+      className={`bee-bento bee-bento-pad relative transition-all duration-[450ms] ease-out ${
         inView ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
       }`}
-      style={{ transitionDelay: inView ? `${index * 120}ms` : "0ms" }}
+      style={{ transitionDelay: inView ? `${index * 90}ms` : "0ms" }}
     >
       <div className="flex size-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
         <step.icon className="size-4.5 stroke-[1.5] text-[var(--color-chart-4)]" />
