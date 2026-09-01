@@ -83,6 +83,19 @@
       "heading": "Signals ({count})",
       "empty": "No signals for this company yet.",
       "score": "Score {score}"
+    },
+    "owner": {
+      "label": "Owner",
+      "unassigned": "Unassigned",
+      "reassignPlaceholder": "Reassign to…",
+      "reassignError": "Couldn't reassign this account."
+    },
+    "activity": {
+      "heading": "Activity",
+      "empty": "No activity recorded yet.",
+      "viewed": "{name} viewed this account",
+      "edited": "{name} edited this account",
+      "assigned": "{name} reassigned this account"
     }
   },
   "leadsDirectory": {

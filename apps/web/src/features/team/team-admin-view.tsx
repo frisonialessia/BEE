@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/providers/auth-provider";
 import { useChangePassword } from "@/hooks/queries/use-auth";
 import { useCreateTeam, useTeams } from "@/hooks/queries/use-teams";
-import { useCreateUser, useDeleteUser, useUpdateUser, useUsers } from "@/hooks/queries/use-users";
+import {
+  useCreateUser,
+  useDeleteMyAccount,
+  useDeleteUser,
+  useUpdateMyProfile,
+  useUpdateUser,
+  useUsers,
+} from "@/hooks/queries/use-users";
 import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
 import { QuotasSection } from "@/features/team/quotas-section";
 import { ROLE_LABELS, type TeamOut, type UserOut, type UserRole } from "@/types/auth";
@@ -335,6 +343,199 @@ function UserRow({
   );
 }
 
+/** Self-service profile — name, avatar, phone, bio. Every role gets this,
+ * same "no role required, just logged in" posture as ChangePasswordSection
+ * below (PATCH /users/me has no role dependency either). */
+function MyProfileSection() {
+  const t = useTranslations("workspace.team.profile");
+  const { user: currentUser, setUser } = useAuth();
+  const updateProfile = useUpdateMyProfile();
+  const [open, setOpen] = useState(false);
+  const [fullName, setFullName] = useState(currentUser?.full_name ?? "");
+  const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatar_url ?? "");
+  const [phone, setPhone] = useState(currentUser?.phone ?? "");
+  const [bio, setBio] = useState(currentUser?.bio ?? "");
+
+  function openForm() {
+    setFullName(currentUser?.full_name ?? "");
+    setAvatarUrl(currentUser?.avatar_url ?? "");
+    setPhone(currentUser?.phone ?? "");
+    setBio(currentUser?.bio ?? "");
+    setOpen(true);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    try {
+      const updated = await updateProfile.mutateAsync({
+        full_name: fullName.trim() || undefined,
+        avatar_url: avatarUrl.trim() || null,
+        phone: phone.trim() || null,
+        bio: bio.trim() || null,
+      });
+      setUser(updated);
+      toast.success(t("updated"));
+      setOpen(false);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : t("updateError"));
+    }
+  }
+
+  return (
+    <section className="bee-bento bee-bento-pad-lg space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="bee-eyebrow">{t("eyebrow")}</p>
+          <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
+        </div>
+        {!open && (
+          <button type="button" onClick={openForm} className="bee-btn-ghost">
+            {t("edit")}
+          </button>
+        )}
+      </div>
+
+      {open ? (
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1 text-xs">
+              <span className="bee-caption">{t("nameLabel")}</span>
+              <input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="bee-input"
+              />
+            </label>
+            <label className="space-y-1 text-xs">
+              <span className="bee-caption">{t("phoneLabel")}</span>
+              <input
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="bee-input"
+                placeholder={t("phonePlaceholder")}
+              />
+            </label>
+            <label className="space-y-1 text-xs">
+              <span className="bee-caption">{t("avatarLabel")}</span>
+              <input
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+                className="bee-input"
+                placeholder={t("avatarPlaceholder")}
+              />
+            </label>
+            <label className="space-y-1 text-xs">
+              <span className="bee-caption">{t("bioLabel")}</span>
+              <input
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                className="bee-input"
+                placeholder={t("bioPlaceholder")}
+              />
+            </label>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={updateProfile.isPending}
+              className="bee-btn bee-btn--primary"
+            >
+              {updateProfile.isPending ? t("saving") : t("save")}
+            </button>
+            <button type="button" onClick={() => setOpen(false)} className="bee-btn-ghost">
+              {t("cancel")}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <dl className="grid gap-2 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="bee-caption">{t("phoneLabel")}</dt>
+            <dd>{currentUser?.phone || t("empty")}</dd>
+          </div>
+          <div>
+            <dt className="bee-caption">{t("bioLabel")}</dt>
+            <dd>{currentUser?.bio || t("empty")}</dd>
+          </div>
+        </dl>
+      )}
+    </section>
+  );
+}
+
+/** Self-service account deletion — deactivation, not a hard delete (see
+ * DELETE /users/me's docstring on the backend). Two-click confirm, same
+ * pattern as UserRow's own remove-teammate action above, just with an
+ * explicit warning box given the destination is "you can no longer log
+ * in" rather than "removed from a list". */
+function DeleteAccountSection() {
+  const t = useTranslations("workspace.team.deleteAccount");
+  const { user: currentUser, logout } = useAuth();
+  const deleteAccount = useDeleteMyAccount();
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
+
+  async function handleDelete() {
+    try {
+      await deleteAccount.mutateAsync();
+      logout();
+      router.replace("/login");
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError
+          ? err.status === 403
+            ? t("ownerBlocked")
+            : err.message
+          : t("deleteError"),
+      );
+      setConfirming(false);
+    }
+  }
+
+  if (currentUser?.role === "owner") {
+    // Same guard as the backend (DELETE /users/me returns 403 for OWNER) —
+    // shown up front instead of letting them click through to a failure.
+    return (
+      <section className="bee-bento bee-bento-pad-lg space-y-2">
+        <h2 className="text-base font-semibold">{t("title")}</h2>
+        <p className="bee-caption">{t("ownerBlocked")}</p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="bee-bento bee-bento-pad-lg space-y-3">
+      <h2 className="text-base font-semibold">{t("title")}</h2>
+      <p className="bee-caption">{t("body")}</p>
+
+      {confirming ? (
+        <div className="space-y-2 rounded-[var(--radius-md)] border border-dashed border-[var(--color-chart-2)] bg-[var(--color-chart-2)]/10 p-3">
+          <p className="text-sm font-semibold">{t("confirmTitle")}</p>
+          <p className="bee-caption">{t("confirmBody")}</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={deleteAccount.isPending}
+              className="bee-btn bee-btn--primary"
+              style={{ "--bee-fill": "var(--color-chart-2)", "--bee-fill-text": "#fff" } as React.CSSProperties}
+            >
+              {t("confirmButton")}
+            </button>
+            <button type="button" onClick={() => setConfirming(false)} className="bee-btn-ghost">
+              {t("cancel")}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setConfirming(true)} className="bee-btn-ghost">
+          {t("button")}
+        </button>
+      )}
+    </section>
+  );
+}
+
 /** Self-service password change — every role gets this, not just OWNER/ADMIN
  * (the backend endpoint requires no role at all, only being logged in — see
  * PATCH /auth/me/password). */
@@ -461,6 +662,8 @@ export function TeamAdminView() {
         <p className="bee-caption">{t("loadError")}</p>
       ) : (
         <div className="space-y-6">
+          <MyProfileSection />
+
           <ChangePasswordSection />
 
           <section className="bee-bento bee-bento-pad-lg space-y-4">
@@ -530,6 +733,8 @@ export function TeamAdminView() {
           <QuotasSection users={users ?? []} teams={teams ?? []} canManage={canManage} />
 
           <OutboundWebhooksSection canManage={canManage} />
+
+          <DeleteAccountSection />
         </div>
       )}
     </div>

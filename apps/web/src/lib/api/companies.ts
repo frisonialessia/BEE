@@ -2,7 +2,7 @@ import { apiFetch } from "@/lib/api/client";
 import { isDemoMode } from "@/lib/demo/mode";
 import { demoFetchCompanies, demoFetchCompany } from "@/lib/demo/store";
 import type { FetchResult } from "@/types/api";
-import type { Company } from "@/types/domain";
+import type { AccountActivityEvent, Company } from "@/types/domain";
 
 export interface CompanyCreateIn {
   name: string;
@@ -12,6 +12,48 @@ export interface CompanyCreateIn {
   country?: string;
   website?: string;
   description?: string;
+}
+
+export interface CompanyUpdateIn {
+  name?: string;
+  domain?: string | null;
+  industry?: string | null;
+  size?: string | null;
+  country?: string | null;
+  revenue_range?: string | null;
+  website?: string | null;
+  description?: string | null;
+  owner_user_id?: string | null;
+}
+
+export async function updateCompany(companyId: string, body: CompanyUpdateIn): Promise<Company> {
+  if (isDemoMode()) {
+    throw new Error("Empresas es de solo lectura en el sandbox.");
+  }
+  return apiFetch<Company>(`/api/v1/companies/${companyId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+/** The sandbox never had real per-rep ownership or an activity trail to
+ * begin with — an empty feed here reads as "nothing to show" (honest),
+ * same convention as fetchUsers() in demo mode. */
+export async function fetchCompanyActivity(
+  companyId: string,
+  limit = 20,
+): Promise<FetchResult<AccountActivityEvent[]>> {
+  if (isDemoMode()) return { data: [], live: false };
+  try {
+    const data = await apiFetch<AccountActivityEvent[]>(
+      `/api/v1/companies/${companyId}/activity?limit=${limit}`,
+      { cache: "no-store" },
+    );
+    return { data, live: true };
+  } catch {
+    return { data: [], live: false };
+  }
 }
 
 export async function createCompany(body: CompanyCreateIn): Promise<Company> {

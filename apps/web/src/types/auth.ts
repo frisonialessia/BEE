@@ -14,7 +14,17 @@ export interface UserOut {
   full_name: string;
   role: UserRole;
   is_active: boolean;
+  avatar_url: string | null;
+  phone: string | null;
+  bio: string | null;
   created_at: string;
+}
+
+export interface UserProfileUpdateIn {
+  full_name?: string;
+  avatar_url?: string | null;
+  phone?: string | null;
+  bio?: string | null;
 }
 
 export interface TokenResponse {

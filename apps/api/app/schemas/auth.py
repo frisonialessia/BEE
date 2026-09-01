@@ -59,6 +59,9 @@ class UserOut(BaseModel):
     full_name: str
     role: UserRole
     is_active: bool
+    avatar_url: str | None
+    phone: str | None
+    bio: str | None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -108,6 +111,22 @@ class UserUpdate(BaseModel):
     role: UserRole | None = None
     team_id: uuid.UUID | None = None
     is_active: bool | None = None
+
+
+class UserProfileUpdateIn(BaseModel):
+    """Self-service: the logged-in user editing their own profile.
+
+    Deliberately a separate schema from ``UserUpdate`` — that one changes
+    role/team/is_active, which only OWNER/ADMIN may touch and never about
+    themselves; this one is the opposite (only ever the caller's own row,
+    never role/team/is_active). Keeping them apart means neither endpoint
+    can be tricked into doing the other's job.
+    """
+
+    full_name: str | None = Field(default=None, min_length=1, max_length=200)
+    avatar_url: str | None = Field(default=None, max_length=1000)
+    phone: str | None = Field(default=None, max_length=32)
+    bio: str | None = Field(default=None, max_length=500)
 
 
 class ApiKeyCreate(BaseModel):

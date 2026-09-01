@@ -83,6 +83,19 @@
       "heading": "Señales ({count})",
       "empty": "Sin señales para esta empresa todavía.",
       "score": "Score {score}"
+    },
+    "owner": {
+      "label": "Asignado a",
+      "unassigned": "Sin asignar",
+      "reassignPlaceholder": "Reasignar a…",
+      "reassignError": "No se pudo reasignar esta cuenta."
+    },
+    "activity": {
+      "heading": "Actividad",
+      "empty": "Todavía no hay actividad registrada.",
+      "viewed": "{name} vio esta cuenta",
+      "edited": "{name} editó esta cuenta",
+      "assigned": "{name} reasignó esta cuenta"
     }
   },
   "leadsDirectory": {

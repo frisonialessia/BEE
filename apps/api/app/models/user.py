@@ -41,6 +41,14 @@ class User(TimestampMixin, table=True):
     role: UserRole = Field(default=UserRole.MEMBER, index=True)
     is_active: bool = Field(default=True, index=True)
 
+    # ----- Profile (self-service, see PATCH /users/me) -------------------------
+    # All optional — "not filled in yet" is the expected state for every one
+    # of these, same convention as Organization's own progressive-profile
+    # fields (industry/employee_range/website).
+    avatar_url: str | None = Field(default=None, max_length=1000)
+    phone: str | None = Field(default=None, max_length=32)
+    bio: str | None = Field(default=None, max_length=500)
+
     # ----- Relationships -------------------------------------------------------
     organization: "Organization" = Relationship(back_populates="users")
     team: "Team" = Relationship(back_populates="members")

@@ -38,6 +38,16 @@ class Company(TimestampMixin, table=True):
     organization_id: uuid.UUID | None = Field(
         default=None, foreign_key="organizations.id", index=True
     )
+    # The rep this account is assigned to — same role in the visibility
+    # engine (app.services.permissions) as Lead.assigned_to_user_id /
+    # Opportunity.assigned_to_user_id: a MEMBER only sees accounts owned by
+    # them, a MANAGER sees their team subtree's, OWNER/ADMIN see all. NULL
+    # (unowned) stays visible to everyone in the org, same "untagged =
+    # shared" convention as the rest of this model — most accounts predate
+    # per-rep ownership and nothing should suddenly vanish from anyone's view.
+    owner_user_id: uuid.UUID | None = Field(
+        default=None, foreign_key="users.id", index=True
+    )
 
     name: str = Field(index=True, nullable=False)
     # Canonical domain is the natural dedup key for enrichment integrations.

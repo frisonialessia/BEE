@@ -276,6 +276,24 @@
     "title": "Team",
     "subtitle": "Team hierarchy and role-based visibility — who sees what in the pipeline",
     "loadError": "Couldn't load the team — check your connection and try again in a moment.",
+    "profile": {
+      "eyebrow": "My account",
+      "title": "Profile",
+      "edit": "Edit profile",
+      "nameLabel": "Full name",
+      "avatarLabel": "Avatar URL",
+      "avatarPlaceholder": "https://…",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+1 555 0100",
+      "bioLabel": "Bio",
+      "bioPlaceholder": "A line about what you do.",
+      "empty": "Not set yet.",
+      "saving": "Saving…",
+      "save": "Save",
+      "cancel": "Cancel",
+      "updated": "Profile updated",
+      "updateError": "Couldn't update your profile."
+    },
     "password": {
       "eyebrow": "My account",
       "title": "Password",
@@ -287,6 +305,17 @@
       "cancel": "Cancel",
       "updated": "Password updated",
       "updateError": "Couldn't change the password."
+    },
+    "deleteAccount": {
+      "title": "Delete account",
+      "body": "Permanently deactivates your account — you'll be logged out and won't be able to sign back in. Nothing you're on record for (leads, opportunities, past activity) is deleted.",
+      "button": "Delete my account",
+      "confirmTitle": "Are you sure?",
+      "confirmBody": "This can't be undone from here.",
+      "confirmButton": "Yes, delete permanently",
+      "cancel": "Cancel",
+      "ownerBlocked": "The organization OWNER can't delete their own account yet — ownership transfer isn't supported. Contact support.",
+      "deleteError": "Couldn't delete your account."
     },
     "teams": {
       "eyebrow": "Teams",

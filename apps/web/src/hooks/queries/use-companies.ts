@@ -6,9 +6,12 @@ import {
   createCompany,
   fetchCompanies,
   fetchCompany,
+  fetchCompanyActivity,
   fetchCompanyDuplicates,
   mergeCompanies,
+  updateCompany,
   type CompanyCreateIn,
+  type CompanyUpdateIn,
 } from "@/lib/api/companies";
 import { queryKeys } from "@/lib/query-keys";
 
@@ -52,5 +55,24 @@ export function useCreateCompany() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
     },
+  });
+}
+
+export function useUpdateCompany() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ companyId, body }: { companyId: string; body: CompanyUpdateIn }) =>
+      updateCompany(companyId, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+    },
+  });
+}
+
+export function useCompanyActivity(companyId: string, limit = 20) {
+  return useQuery({
+    queryKey: queryKeys.companies.activity(companyId),
+    queryFn: async () => fetchCompanyActivity(companyId, limit),
+    enabled: Boolean(companyId),
   });
 }

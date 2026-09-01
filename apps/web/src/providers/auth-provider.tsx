@@ -25,6 +25,10 @@ interface AuthContextValue {
   login: (body: UserLoginIn) => Promise<void>;
   register: (body: OrganizationRegisterIn) => Promise<void>;
   logout: () => void;
+  /** Apply a fresh UserOut returned by a mutation (e.g. PATCH /users/me)
+   * without a round trip to /auth/me — the caller already has the current
+   * server state, no need to re-fetch it. */
+  setUser: (user: UserOut) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -96,7 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, isAuthenticated: user !== null, login, register, logout }}
+      value={{ user, isLoading, isAuthenticated: user !== null, login, register, logout, setUser }}
     >
       {children}
     </AuthContext.Provider>

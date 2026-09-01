@@ -276,6 +276,24 @@
     "title": "Equipo",
     "subtitle": "Jerarquía de equipos y visibilidad por rol — quién ve qué en el pipeline",
     "loadError": "No se pudo cargar el equipo — revisa tu conexión y vuelve a intentar en un momento.",
+    "profile": {
+      "eyebrow": "Mi cuenta",
+      "title": "Perfil",
+      "edit": "Editar perfil",
+      "nameLabel": "Nombre completo",
+      "avatarLabel": "URL del avatar",
+      "avatarPlaceholder": "https://…",
+      "phoneLabel": "Teléfono",
+      "phonePlaceholder": "+1 555 0100",
+      "bioLabel": "Bio",
+      "bioPlaceholder": "Una línea sobre lo que haces.",
+      "empty": "Todavía no está configurado.",
+      "saving": "Guardando…",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "updated": "Perfil actualizado",
+      "updateError": "No se pudo actualizar tu perfil."
+    },
     "password": {
       "eyebrow": "Mi cuenta",
       "title": "Contraseña",
@@ -287,6 +305,17 @@
       "cancel": "Cancelar",
       "updated": "Contraseña actualizada",
       "updateError": "No se pudo cambiar la contraseña."
+    },
+    "deleteAccount": {
+      "title": "Eliminar cuenta",
+      "body": "Desactiva tu cuenta de forma permanente — se cerrará tu sesión y no podrás volver a iniciar sesión. Nada de lo que quedaste registrado (leads, oportunidades, actividad pasada) se elimina.",
+      "button": "Eliminar mi cuenta",
+      "confirmTitle": "¿Estás seguro?",
+      "confirmBody": "Esto no se puede deshacer desde acá.",
+      "confirmButton": "Sí, eliminar permanentemente",
+      "cancel": "Cancelar",
+      "ownerBlocked": "El OWNER de la organización todavía no puede eliminar su propia cuenta — la transferencia de titularidad no está soportada. Contacta a soporte.",
+      "deleteError": "No se pudo eliminar tu cuenta."
     },
     "teams": {
       "eyebrow": "Equipos",

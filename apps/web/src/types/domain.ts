@@ -306,6 +306,8 @@ export interface OpportunityTaskUpdateIn {
 
 export interface Company {
   id: string;
+  organization_id: string | null;
+  owner_user_id: string | null;
   name: string;
   domain: string | null;
   industry: string | null;
@@ -315,6 +317,18 @@ export interface Company {
   website: string | null;
   description: string | null;
   attributes: Record<string, unknown>;
+  created_at: string;
+}
+
+export type AccountActivityEventType = "viewed" | "edited" | "assigned";
+
+export interface AccountActivityEvent {
+  id: string;
+  company_id: string;
+  user_id: string;
+  user_full_name: string;
+  user_avatar_url: string | null;
+  event_type: AccountActivityEventType;
   created_at: string;
 }
 
