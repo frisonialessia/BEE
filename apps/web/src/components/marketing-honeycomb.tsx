@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 /**
@@ -74,27 +75,26 @@ function hash01(a: number, b: number): number {
 // del cálculo de posición, que también alimenta el string `points`.
 const SQRT_3 = 1.7320508075688772;
 
-// Etiquetas de etapa — mismo diccionario que SignalHexMap/HiveTooltip, para
-// que quien ya vio esto acá reconozca el mismo vocabulario en el dashboard.
-const STAGE_LABELS: Record<string, string> = {
-  awareness: "Conocimiento",
-  consideration: "Consideración",
-  decision: "Decisión",
-  ready_to_buy: "Listo para comprar",
-};
+// Etiquetas de etapa: `stage` referencia una clave de landing.stages (mismo
+// diccionario compartido que usan marketing-demo-panel.tsx y
+// marketing-before-after.tsx) — no un diccionario propio, para que las 4
+// etiquetas de etapa tengan una sola fuente de traducción en toda la
+// landing, igual vocabulario que SignalHexMap/HiveTooltip en el dashboard.
 
 // Pool de empresas de ejemplo — mismas que aparecen en el resto del Demo en
 // vivo (Señales, Leads), para que la colmena no invente nombres nuevos que
-// no encajen con lo que el visitante ya vio en las otras pestañas.
+// no encajen con lo que el visitante ya vio en las otras pestañas. `id`
+// referencia landing.honeycomb.leads.<id>.keywords para las palabras clave
+// traducidas (company/domain no se traducen: son nombres propios).
 const HEX_LEADS = [
-  { company: "Northwind Robotics", domain: "northwindrobotics.com", stage: "ready_to_buy", keywords: ["ronda Serie C", "presupuesto Q3", "demo agendada"] },
-  { company: "Vantage Health", domain: "vantagehealth.io", stage: "decision", keywords: ["contratando 20 AEs", "comparando proveedores"] },
-  { company: "Solace Data", domain: "solacedata.ai", stage: "decision", keywords: ["nuevo CRO", "señal de stack tecnológico"] },
-  { company: "Fielder Logistics", domain: "fielderlogistics.com", stage: "consideration", keywords: ["visitó pricing", "descargó whitepaper"] },
-  { company: "Bright Path Analytics", domain: "brightpathanalytics.com", stage: "consideration", keywords: ["equipo de RevOps activo", "trial en curso"] },
-  { company: "Cursive Systems", domain: "cursivesystems.com", stage: "awareness", keywords: ["visitó blog", "se registró a webinar"] },
-  { company: "Anchor Freight", domain: "anchorfreight.com", stage: "ready_to_buy", keywords: ["ronda Serie B", "contratando VP Sales"] },
-  { company: "Loom & Co", domain: "loomandco.com", stage: "awareness", keywords: ["nueva oficina regional", "equipo en crecimiento"] },
+  { id: "northwind", company: "Northwind Robotics", domain: "northwindrobotics.com", stage: "ready_to_buy" },
+  { id: "vantage", company: "Vantage Health", domain: "vantagehealth.io", stage: "decision" },
+  { id: "solace", company: "Solace Data", domain: "solacedata.ai", stage: "decision" },
+  { id: "fielder", company: "Fielder Logistics", domain: "fielderlogistics.com", stage: "consideration" },
+  { id: "brightpath", company: "Bright Path Analytics", domain: "brightpathanalytics.com", stage: "consideration" },
+  { id: "cursive", company: "Cursive Systems", domain: "cursivesystems.com", stage: "awareness" },
+  { id: "anchor", company: "Anchor Freight", domain: "anchorfreight.com", stage: "ready_to_buy" },
+  { id: "loom", company: "Loom & Co", domain: "loomandco.com", stage: "awareness" },
 ] as const;
 
 function buildGrid(): HexCell[] {
@@ -159,7 +159,10 @@ function HexTooltip({
   cell: HexCell;
   pointer: { x: number; y: number };
 }) {
+  const t = useTranslations("landing.honeycomb");
+  const tStages = useTranslations("landing.stages");
   const lead = cell.populated ? HEX_LEADS[cell.leadIndex] : null;
+  const keywords = lead ? (t.raw(`leads.${lead.id}.keywords`) as string[]) : null;
 
   return (
     <div
@@ -171,7 +174,7 @@ function HexTooltip({
       }}
     >
       <p className="bee-eyebrow text-[var(--color-chart-5)]">
-        Temperatura · {Math.round(cell.heat * 100)}°
+        {t("temperature", { pct: Math.round(cell.heat * 100) })}
       </p>
       {lead ? (
         <>
@@ -179,18 +182,18 @@ function HexTooltip({
           <p className="bee-micro">{lead.domain}</p>
           <div className="mt-1.5 flex flex-wrap gap-1 text-[10px]">
             <span className="rounded-md bg-muted px-1.5 py-0.5">
-              {STAGE_LABELS[lead.stage]}
+              {tStages(lead.stage)}
             </span>
             {cell.heat > HOT_THRESHOLD && (
               <span className="rounded-md bg-[var(--color-primary)] px-1.5 py-0.5 text-[var(--color-chart-5)]">
-                CALIENTE
+                {t("hot")}
               </span>
             )}
           </div>
-          <p className="mt-1.5 line-clamp-2 bee-micro">{lead.keywords.slice(0, 2).join(" · ")}</p>
+          <p className="mt-1.5 line-clamp-2 bee-micro">{keywords?.slice(0, 2).join(" · ")}</p>
         </>
       ) : (
-        <p className="mt-1 bee-micro">Sin señales de intención activas todavía.</p>
+        <p className="mt-1 bee-micro">{t("empty")}</p>
       )}
     </div>
   );

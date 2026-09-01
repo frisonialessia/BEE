@@ -1,0 +1,282 @@
+{
+  "funcionalidades": {
+    "meta": {
+      "title": "Funcionalidades — BEE",
+      "description": "Los cuatro motores de BEE: señales en tiempo real, brief del día, simulador de ingresos y automatización multicanal."
+    },
+    "eyebrow": "Plataforma",
+    "heroTitle": "Cuatro motores, un solo flujo de trabajo.",
+    "heroSubtitle": "Cada capacidad de aquí corre hoy en producción — nada de lo que sigue es una promesa de roadmap.",
+    "modules": {
+      "senales": {
+        "eyebrow": "Motor de señales",
+        "title": "Señales en tiempo real, sin que nadie tenga que ir a buscarlas.",
+        "description": "BEE vigila rondas de financiamiento, contrataciones clave, cambios de stack tecnológico y menciones de intención de compra en la web abierta — apenas ocurren, no en un resumen semanal.",
+        "points": [
+          "Ingesta continua desde fuentes públicas y proveedores de datos B2B.",
+          "Cada señal se enriquece automáticamente con la empresa y el contacto correcto.",
+          "Priorización por score de intención, no por orden de llegada."
+        ]
+      },
+      "brief": {
+        "eyebrow": "Brief del día",
+        "title": "Un resumen ejecutivo antes de tu primera llamada.",
+        "description": "Cada mañana, BEE arma un brief con lo que de verdad cambió en tu pipeline desde ayer — leads nuevos, cuentas que se calentaron, tareas vencidas — para que no tengas que reconstruir el contexto tú mismo.",
+        "points": [
+          "Cero fricción cognitiva: lo importante arriba, lo rutinario abajo.",
+          "Generado desde datos reales de tu cuenta, nunca una plantilla genérica.",
+          "Disponible apenas inicias sesión, sin configuración adicional."
+        ]
+      },
+      "simulador": {
+        "eyebrow": "Simulador de ingresos",
+        "title": "Proyecta el impacto de prospectar más, antes de hacerlo.",
+        "description": "El simulador de ingresos corre escenarios de pipeline basados en intención de compra real de tu base de leads — no en promedios genéricos del sector — para que decidas cuánto subir la prospección con datos, no con intuición.",
+        "points": [
+          "Tres escenarios (conservador, realista, optimista) por corrida.",
+          "Curva de tendencia mensual, no solo un número final.",
+          "Mismo motor que usa BEE internamente para priorizar cuentas."
+        ]
+      },
+      "automatizacion": {
+        "eyebrow": "Automatización multicanal",
+        "title": "Secuencias que avanzan solas — nunca sin tu aprobación.",
+        "description": "Diseña secuencias de alcance por email, LinkedIn y más que se adaptan según cómo responde cada lead. BEE prepara el siguiente paso; tú das la luz verde antes de que salga cualquier mensaje.",
+        "points": [
+          "Plantillas reutilizables por playbook, canal y tipo de señal.",
+          "Pausa automática ante señales de riesgo (rebote, baja de interés).",
+          "Ninguna acción externa se ejecuta sin aprobación humana explícita."
+        ]
+      }
+    },
+    "closingTitle": "¿Listo para ver estos cuatro motores trabajando sobre tu propio pipeline?",
+    "ctaStart": "Comenzar ahora",
+    "ctaDemo": "Ver demo en vivo"
+  },
+  "soluciones": {
+    "meta": {
+      "title": "Soluciones — BEE",
+      "description": "Cómo BEE encaja según el tipo de equipo comercial que eres."
+    },
+    "eyebrow": "Soluciones",
+    "heroTitle": "Las mismas capacidades, según el problema que tengas.",
+    "heroSubtitle": "No hay una versión distinta de BEE por segmento — hay un mismo sistema que resuelve un problema distinto según el tamaño y la forma de tu equipo comercial.",
+    "problemLabel": "El problema",
+    "fitLabel": "Cómo encaja BEE",
+    "useCases": {
+      "sdr": {
+        "audience": "Equipos de SDR / BDR",
+        "pain": "Prospección manual que consume horas antes de la primera llamada.",
+        "fit": "El motor de señales prioriza qué cuenta atacar primero y el brief del día arma el contexto — menos tiempo investigando, más tiempo hablando con prospectos calientes."
+      },
+      "founders": {
+        "audience": "Founders sin equipo de RevOps",
+        "pain": "Nadie dedicado a vigilar el mercado ni a decidir a quién priorizar.",
+        "fit": "BEE hace ese trabajo de fondo — detecta la señal, la enriquece y sugiere la próxima acción, sin que haga falta contratar un analista para eso."
+      },
+      "agencies": {
+        "audience": "Agencias y equipos de growth",
+        "pain": "Gestionar el pipeline de varias cuentas a la vez, cada una con su propio ritmo.",
+        "fit": "El simulador de ingresos proyecta el impacto de subir la prospección por segmento, cuenta por cuenta, antes de comprometer horas del equipo."
+      },
+      "scaleup": {
+        "audience": "Revenue teams en scale-up",
+        "pain": "El volumen de leads ya superó lo que un humano puede priorizar a mano.",
+        "fit": "La automatización multicanal diseña secuencias que avanzan solas según cómo responde cada lead — siempre con aprobación humana antes de enviar nada."
+      }
+    },
+    "closingTitle": "¿No te ves reflejado en ninguno de estos? Cuéntanos tu caso.",
+    "ctaStart": "Comenzar ahora"
+  },
+  "quienesSomos": {
+    "meta": {
+      "title": "Quiénes somos — BEE",
+      "description": "Por qué existe BEE y qué principios sostienen cada decisión de producto."
+    },
+    "eyebrow": "Quiénes somos",
+    "heroTitle": "Un equipo comercial no debería perder tiempo buscando la señal.",
+    "heroSubtitle": "BEE nace de un problema simple: la información que anticipa una venta —una ronda de financiamiento, una contratación clave, un cambio de stack— ya existe en algún lado. El trabajo no debería ser encontrarla, sino decidir qué hacer con ella.",
+    "howWeThinkEyebrow": "Cómo pensamos",
+    "howWeThinkTitle": "Tres principios que no negociamos.",
+    "principles": {
+      "noInventedData": {
+        "title": "Si no hay dato, no lo inventamos",
+        "description": "Cada score y cada métrica que ves en BEE sale de un dato real. Cuando no hay suficiente información, el sistema muestra un espacio vacío — nunca un número relleno para que la pantalla se vea completa."
+      },
+      "finalDecision": {
+        "title": "La decisión final es siempre tuya",
+        "description": "BEE prepara la jugada — el mensaje, el canal, el momento — pero ninguna acción externa sale sin que tú la apruebes explícitamente."
+      },
+      "weBuildWhatWeDescribe": {
+        "title": "Construimos lo que describimos",
+        "description": "Esta misma página, la de Funcionalidades y el Demo en vivo describen capacidades que ya corren en producción — no un roadmap ni una promesa de venta."
+      }
+    },
+    "smallTeamTitle": "Un equipo chico, todavía",
+    "smallTeamBody": "BEE está en una etapa temprana — preferimos decir esto claramente en vez de simular una escala que todavía no tenemos. Si te interesa lo que estamos construyendo, la mejor forma de hablar con nosotros es directamente desde <link>Contacto</link>."
+  },
+  "seguridad": {
+    "meta": {
+      "title": "Seguridad — BEE",
+      "description": "Cómo BEE aísla tus datos, autentica cada llamada y registra cada decisión."
+    },
+    "eyebrow": "Seguridad",
+    "heroTitle": "Diseñado para que conectar tu CRM no sea un riesgo.",
+    "heroSubtitle": "No son promesas de una página de ventas — son mecanismos que existen hoy en el backend de BEE, los mismos que sostienen las garantías del resto del sitio.",
+    "sections": {
+      "multiTenant": {
+        "title": "Aislamiento multi-tenant real",
+        "body": "Cada tabla que guarda datos de una cuenta está scopeada por organización — no una bandera opcional que alguien puede olvidar activar, sino parte del modelo de datos desde el diseño. Un endpoint que no filtra por tu organización simplemente no puede devolverte datos de otra cuenta."
+      },
+      "layeredAuth": {
+        "title": "Autenticación en capas",
+        "body": "Las sesiones de usuario usan JWT firmado, con expiración de 7 días. El acceso de servicio a servicio (integraciones, el propio frontend) usa una clave de API independiente — dos límites de confianza separados, no un único secreto compartido para todo."
+      },
+      "hmacWebhooks": {
+        "title": "Webhooks firmados con HMAC",
+        "body": "Cada webhook entrante se valida contra una firma HMAC antes de procesarse. La verificación de firma está activada por defecto en producción — desactivarla es una decisión explícita, no el comportamiento por omisión."
+      },
+      "secrets": {
+        "title": "Secretos que nunca tocan el código ni la base",
+        "body": "Las credenciales de proveedores externos se leen únicamente desde variables de entorno. Nunca se persisten en la base de datos ni se escriben en un log — cuando algo necesita mostrarse en un mensaje de diagnóstico, el valor real queda enmascarado."
+      },
+      "auditTrail": {
+        "title": "Cada decisión de un agente queda registrada",
+        "body": "El sistema mantiene un registro de auditoría de las decisiones automáticas — qué señal disparó qué acción, y cuándo. No es una caja negra: hay una cadena de decisiones que se puede reconstruir."
+      },
+      "humanApproval": {
+        "title": "Ningún envío externo sin aprobación humana",
+        "body": "El motor prepara la próxima acción — el mensaje, el canal, el momento — pero un email, un mensaje de LinkedIn o una secuencia completa nunca salen sin que una persona dé luz verde explícita."
+      }
+    },
+    "questionsEyebrow": "¿Preguntas de seguridad específicas?",
+    "questionsTitle": "Un evaluador técnico también puede escribirnos.",
+    "questionsBody": "Si tu proceso de compra necesita un cuestionario de seguridad o una llamada con alguien técnico, cuéntanos desde <link>Contacto</link>."
+  },
+  "careers": {
+    "meta": {
+      "title": "Careers — BEE",
+      "description": "No hay posiciones abiertas en este momento — escríbenos si te interesa BEE."
+    },
+    "eyebrow": "Careers",
+    "heroTitle": "No tenemos posiciones abiertas en este momento.",
+    "heroBody": "Preferimos decir esto claramente en vez de publicar vacantes que no existen. Si te interesa lo que estamos construyendo y quieres que te tengamos en cuenta para más adelante, escríbenos — leemos cada mensaje.",
+    "ctaWriteUs": "Escríbenos",
+    "meanwhileEyebrow": "Mientras tanto",
+    "meanwhileTitle": "Así pensamos cuando construimos.",
+    "meanwhileBody": "Cero datos inventados, aprobación humana antes de cualquier acción externa, aislamiento estricto por cuenta desde el diseño — no reglas de marketing, es cómo está hecho el producto. Si eso te resuena, probablemente encajemos."
+  },
+  "contacto": {
+    "meta": {
+      "title": "Contacto — BEE",
+      "description": "Habla con el equipo de BEE. Te respondemos en menos de 24 horas hábiles."
+    },
+    "eyebrow": "Contacto",
+    "heroTitle": "Hablemos de tu pipeline.",
+    "heroSubtitle": "Cuéntanos un poco de tu equipo comercial y te respondemos en menos de 24 horas hábiles — sin bots de ventas, sin formularios que se pierden en el aire.",
+    "afterSubmitTitle": "¿Qué pasa después de enviar esto?",
+    "afterSubmitBody": "Un mensaje real llega directo a nuestro equipo — queda registrado, nunca se descarta en silencio. Te contactamos por el email que dejes aquí.",
+    "haveAccountTitle": "¿Ya tienes cuenta?",
+    "haveAccountBody": "Este formulario es para organizaciones nuevas. Si ya usas BEE, inicia sesión directamente en vez de escribirnos aquí."
+  },
+  "soporte": {
+    "meta": {
+      "title": "Soporte — BEE",
+      "description": "¿Ya usas BEE y tienes un problema? Estás en el lugar correcto."
+    },
+    "eyebrow": "Soporte",
+    "heroTitle": "¿Ya usas BEE y algo no funciona como esperabas?",
+    "heroBody": "Si todavía estás evaluando la plataforma, mejor escríbenos desde <link>Contacto</link>. Si ya tienes cuenta, cuéntanos qué pasó aquí abajo.",
+    "faqCardTitle": "¿Ya viste las preguntas frecuentes?",
+    "faqCardBody": "Las dudas más comunes sobre de dónde salen las señales, aprobación humana y aislamiento de datos están respondidas en la página principal.",
+    "apiDocsCardTitle": "Documentación de la API",
+    "apiDocsCardBody": "Si integraste BEE por API, la referencia completa de endpoints está aquí.",
+    "formTitle": "Cuéntanos qué pasó",
+    "formSubtitle": "Cuanto más detalle (qué esperabas ver, qué viste en cambio), más rápido podemos ayudarte."
+  },
+  "terminos": {
+    "meta": {
+      "title": "Términos de Servicio — BEE",
+      "description": "Condiciones de uso de la plataforma BEE."
+    },
+    "eyebrow": "Legal",
+    "title": "Términos de Servicio",
+    "draftNotice": "Borrador de referencia, no un documento legal definitivo — antes de operar comercialmente con estos términos, hazlos revisar por un asesor legal y completa los datos societarios y de jurisdicción que correspondan.",
+    "sections": [
+      {
+        "title": "1. Aceptación de estos términos",
+        "body": "Al crear una cuenta o usar BEE aceptas estos términos. Si no estás de acuerdo, no debes usar el servicio."
+      },
+      {
+        "title": "2. Qué es BEE",
+        "body": "BEE es una plataforma de inteligencia comercial: detecta señales de mercado, las prioriza y prepara acciones de alcance comercial. El servicio se presta \"tal cual\" (as-is), en mejora continua."
+      },
+      {
+        "title": "3. Tu cuenta",
+        "body": "Eres responsable de mantener la confidencialidad de tus credenciales y de la actividad que ocurre bajo tu cuenta. Cada organización tiene sus datos aislados de las demás — ver la página de Seguridad para el detalle técnico."
+      },
+      {
+        "title": "4. Aprobación humana en cualquier envío",
+        "body": "BEE puede sugerir o preparar mensajes, secuencias y acciones de alcance, pero ninguna acción externa (un email, un mensaje, una secuencia) se ejecuta sin que un usuario de tu cuenta la apruebe explícitamente. Eres responsable del contenido final que apruebas y envías a través de la plataforma."
+      },
+      {
+        "title": "5. Tus datos",
+        "body": "Los datos que cargas o que BEE recolecta para tu cuenta te pertenecen a ti. No los usamos para entrenar modelos de terceros ni los compartimos con otras organizaciones que usan la plataforma."
+      },
+      {
+        "title": "6. Limitación de responsabilidad",
+        "body": "BEE prioriza y sugiere en base a señales disponibles públicamente y a tus propios datos — no garantiza resultados comerciales específicos. En la medida permitida por la ley aplicable, no somos responsables por decisiones comerciales tomadas en base a estas sugerencias."
+      },
+      {
+        "title": "7. Cambios a estos términos",
+        "body": "Podemos actualizar estos términos. Si el cambio es material, te lo vamos a comunicar por email o dentro de la plataforma antes de que entre en vigencia."
+      },
+      {
+        "title": "8. Contacto",
+        "body": "Para cualquier consulta sobre estos términos, escríbenos desde la página de Contacto."
+      }
+    ],
+    "lastUpdated": "Última actualización: ver control de versiones del sitio."
+  },
+  "privacidad": {
+    "meta": {
+      "title": "Política de Privacidad — BEE",
+      "description": "Qué datos recolecta BEE y qué hacemos — y qué no hacemos — con ellos."
+    },
+    "eyebrow": "Legal",
+    "title": "Política de Privacidad",
+    "draftNotice": "Borrador de referencia que describe honestamente qué hace hoy el sistema — antes de operar comercialmente, hazlo revisar por un asesor legal para tu jurisdicción (GDPR, CCPA u otra normativa aplicable a tus usuarios).",
+    "sections": [
+      {
+        "title": "1. Qué datos recolectamos",
+        "body": "Del formulario de Contacto: nombre, email, empresa y teléfono (opcionales estos dos últimos) y el mensaje que escribes. También guardamos la IP de origen, únicamente para prevenir abuso del formulario (límite de envíos por hora). Si creas una cuenta: nombre, email y el nombre de tu organización. Mientras tienes sesión iniciada, guardamos un token de sesión en el almacenamiento local de tu navegador — no una cookie de terceros."
+      },
+      {
+        "title": "2. Qué NO hacemos",
+        "body": "No vendemos tus datos. No usamos cookies de publicidad ni scripts de tracking de terceros en este sitio. No compartimos los datos de tu organización con otras cuentas que usan BEE — el aislamiento es a nivel de base de datos, no una configuración que se pueda desactivar por error."
+      },
+      {
+        "title": "3. Para qué usamos lo que recolectamos",
+        "body": "Para responder tu consulta cuando escribes desde Contacto, para operar tu cuenta si te registras, y para prevenir spam y abuso en formularios públicos (por eso guardamos la IP en los envíos de contacto)."
+      },
+      {
+        "title": "4. Cuánto tiempo lo guardamos",
+        "body": "Los envíos del formulario de Contacto se conservan mientras sean relevantes para responderte o para nuestros registros comerciales. Puedes pedirnos que eliminemos tus datos en cualquier momento — ver el punto 6."
+      },
+      {
+        "title": "5. Seguridad",
+        "body": "Ver la página de Seguridad para el detalle técnico: aislamiento multi-tenant, autenticación en capas, secretos que nunca se persisten en la base ni se registran en logs."
+      },
+      {
+        "title": "6. Tus derechos",
+        "body": "Puedes pedirnos acceder, corregir o eliminar los datos que tenemos sobre ti escribiéndonos desde Contacto. Vamos a responder tu pedido en un plazo razonable."
+      },
+      {
+        "title": "7. Cambios a esta política",
+        "body": "Si cambiamos algo material sobre cómo recolectamos o usamos datos, lo vamos a reflejar en esta misma página."
+      }
+    ],
+    "securityBody": "Ver la página de <link>Seguridad</link> para el detalle técnico: aislamiento multi-tenant, autenticación en capas, secretos que nunca se persisten en la base ni se registran en logs.",
+    "lastUpdated": "Última actualización: ver control de versiones del sitio."
+  }
+}

@@ -1,0 +1,282 @@
+{
+  "funcionalidades": {
+    "meta": {
+      "title": "Features — BEE",
+      "description": "BEE's four engines: real-time signals, daily brief, revenue simulator, and multi-channel automation."
+    },
+    "eyebrow": "Platform",
+    "heroTitle": "Four engines, one workflow.",
+    "heroSubtitle": "Every capability here already runs in production — nothing below is a roadmap promise.",
+    "modules": {
+      "senales": {
+        "eyebrow": "Signal engine",
+        "title": "Real-time signals, without anyone having to go looking for them.",
+        "description": "BEE watches funding rounds, key hires, tech-stack changes, and buying-intent mentions across the open web — the moment they happen, not in a weekly digest.",
+        "points": [
+          "Continuous ingestion from public sources and B2B data providers.",
+          "Every signal is automatically enriched with the right company and contact.",
+          "Prioritized by intent score, not by order of arrival."
+        ]
+      },
+      "brief": {
+        "eyebrow": "Daily brief",
+        "title": "An executive summary before your first call.",
+        "description": "Every morning, BEE puts together a brief with what actually changed in your pipeline since yesterday — new leads, accounts that heated up, overdue tasks — so you don't have to rebuild the context yourself.",
+        "points": [
+          "Zero cognitive friction: what matters on top, routine stuff below.",
+          "Generated from your account's real data, never a generic template.",
+          "Ready the moment you sign in, no extra setup."
+        ]
+      },
+      "simulador": {
+        "eyebrow": "Revenue simulator",
+        "title": "Project the impact of prospecting more, before you do it.",
+        "description": "The revenue simulator runs pipeline scenarios based on real buying intent from your lead base — not generic industry averages — so you decide how much to ramp up prospecting with data, not gut feel.",
+        "points": [
+          "Three scenarios (conservative, realistic, optimistic) per run.",
+          "A monthly trend curve, not just a final number.",
+          "The same engine BEE uses internally to prioritize accounts."
+        ]
+      },
+      "automatizacion": {
+        "eyebrow": "Multi-channel automation",
+        "title": "Sequences that advance on their own — never without your approval.",
+        "description": "Design outreach sequences across email, LinkedIn, and more that adapt to how each lead responds. BEE prepares the next step; you give the go-ahead before anything sends.",
+        "points": [
+          "Reusable templates by playbook, channel, and signal type.",
+          "Auto-pause on risk signals (bounce, dropping interest).",
+          "No external action ever fires without explicit human approval."
+        ]
+      }
+    },
+    "closingTitle": "Ready to see these four engines working on your own pipeline?",
+    "ctaStart": "Get started",
+    "ctaDemo": "Watch the live demo"
+  },
+  "soluciones": {
+    "meta": {
+      "title": "Solutions — BEE",
+      "description": "How BEE fits depending on the kind of sales team you are."
+    },
+    "eyebrow": "Solutions",
+    "heroTitle": "The same capabilities, shaped by the problem you have.",
+    "heroSubtitle": "There isn't a different version of BEE per segment — there's one system that solves a different problem depending on the size and shape of your sales team.",
+    "problemLabel": "The problem",
+    "fitLabel": "How BEE fits",
+    "useCases": {
+      "sdr": {
+        "audience": "SDR / BDR teams",
+        "pain": "Manual prospecting that eats hours before the first call.",
+        "fit": "The signal engine prioritizes which account to go after first, and the daily brief builds the context — less time researching, more time talking to warm prospects."
+      },
+      "founders": {
+        "audience": "Founders without a RevOps team",
+        "pain": "No one dedicated to watching the market or deciding who to prioritize.",
+        "fit": "BEE does that background work — it detects the signal, enriches it, and suggests the next action, without needing to hire an analyst for it."
+      },
+      "agencies": {
+        "audience": "Agencies and growth teams",
+        "pain": "Managing the pipeline for several accounts at once, each at its own pace.",
+        "fit": "The revenue simulator projects the impact of ramping up prospecting per segment, account by account, before committing the team's hours."
+      },
+      "scaleup": {
+        "audience": "Revenue teams at scale-ups",
+        "pain": "Lead volume has already outgrown what a human can prioritize by hand.",
+        "fit": "Multi-channel automation designs sequences that advance on their own based on how each lead responds — always with human approval before anything sends."
+      }
+    },
+    "closingTitle": "Don't see yourself in any of these? Tell us about your case.",
+    "ctaStart": "Get started"
+  },
+  "quienesSomos": {
+    "meta": {
+      "title": "About us — BEE",
+      "description": "Why BEE exists and what principles hold up every product decision."
+    },
+    "eyebrow": "About us",
+    "heroTitle": "A sales team shouldn't waste time hunting for the signal.",
+    "heroSubtitle": "BEE comes from a simple problem: the information that anticipates a sale — a funding round, a key hire, a stack change — already exists somewhere. The work shouldn't be finding it, but deciding what to do with it.",
+    "howWeThinkEyebrow": "How we think",
+    "howWeThinkTitle": "Three principles we don't negotiate.",
+    "principles": {
+      "noInventedData": {
+        "title": "If there's no data, we don't invent it",
+        "description": "Every score and every metric you see in BEE comes from real data. When there isn't enough information, the system shows an empty space — never a padded number just to make the screen look complete."
+      },
+      "finalDecision": {
+        "title": "The final call is always yours",
+        "description": "BEE prepares the play — the message, the channel, the moment — but no external action goes out without your explicit approval."
+      },
+      "weBuildWhatWeDescribe": {
+        "title": "We build what we describe",
+        "description": "This page, the Features page, and the live demo describe capabilities that already run in production — not a roadmap or a sales promise."
+      }
+    },
+    "smallTeamTitle": "A small team, still",
+    "smallTeamBody": "BEE is at an early stage — we'd rather say that plainly than fake a scale we don't have yet. If you're interested in what we're building, the best way to reach us is straight from <link>Contact</link>."
+  },
+  "seguridad": {
+    "meta": {
+      "title": "Security — BEE",
+      "description": "How BEE isolates your data, authenticates every call, and logs every decision."
+    },
+    "eyebrow": "Security",
+    "heroTitle": "Built so connecting your CRM isn't a risk.",
+    "heroSubtitle": "These aren't sales-page promises — they're mechanisms that exist today in BEE's backend, the same ones behind the guarantees on the rest of the site.",
+    "sections": {
+      "multiTenant": {
+        "title": "Real multi-tenant isolation",
+        "body": "Every table that stores account data is scoped by organization — not an optional flag someone can forget to turn on, but part of the data model from the design stage. An endpoint that doesn't filter by your organization simply cannot return data from another account."
+      },
+      "layeredAuth": {
+        "title": "Layered authentication",
+        "body": "User sessions use a signed JWT with a 7-day expiration. Service-to-service access (integrations, the frontend itself) uses a separate API key — two distinct trust boundaries, not one shared secret for everything."
+      },
+      "hmacWebhooks": {
+        "title": "HMAC-signed webhooks",
+        "body": "Every incoming webhook is validated against an HMAC signature before processing. Signature verification is on by default in production — turning it off is an explicit decision, not the default behavior."
+      },
+      "secrets": {
+        "title": "Secrets that never touch the code or the database",
+        "body": "Credentials for external providers are read only from environment variables. They're never persisted in the database or written to a log — when something needs to show up in a diagnostic message, the real value is masked."
+      },
+      "auditTrail": {
+        "title": "Every agent decision is logged",
+        "body": "The system keeps an audit trail of automated decisions — which signal triggered which action, and when. It isn't a black box: there's a chain of decisions that can be reconstructed."
+      },
+      "humanApproval": {
+        "title": "No external send without human approval",
+        "body": "The engine prepares the next action — the message, the channel, the moment — but an email, a LinkedIn message, or a full sequence never goes out without a person giving explicit go-ahead."
+      }
+    },
+    "questionsEyebrow": "Specific security questions?",
+    "questionsTitle": "A technical evaluator can write to us too.",
+    "questionsBody": "If your purchasing process needs a security questionnaire or a call with someone technical, tell us from <link>Contact</link>."
+  },
+  "careers": {
+    "meta": {
+      "title": "Careers — BEE",
+      "description": "No open positions right now — write to us if you're interested in BEE."
+    },
+    "eyebrow": "Careers",
+    "heroTitle": "We don't have open positions right now.",
+    "heroBody": "We'd rather say this plainly than post openings that don't exist. If you're interested in what we're building and want us to keep you in mind down the road, write to us — we read every message.",
+    "ctaWriteUs": "Write to us",
+    "meanwhileEyebrow": "In the meantime",
+    "meanwhileTitle": "This is how we think when we build.",
+    "meanwhileBody": "Zero invented data, human approval before any external action, strict per-account isolation from the design stage — not marketing rules, it's how the product is made. If that resonates with you, we probably fit."
+  },
+  "contacto": {
+    "meta": {
+      "title": "Contact — BEE",
+      "description": "Talk to the BEE team. We reply within 24 business hours."
+    },
+    "eyebrow": "Contact",
+    "heroTitle": "Let's talk about your pipeline.",
+    "heroSubtitle": "Tell us a bit about your sales team and we'll reply within 24 business hours — no sales bots, no forms that vanish into the void.",
+    "afterSubmitTitle": "What happens after you send this?",
+    "afterSubmitBody": "A real message lands directly with our team — it gets logged, never silently dropped. We'll reach out at the email you leave here.",
+    "haveAccountTitle": "Already have an account?",
+    "haveAccountBody": "This form is for new organizations. If you already use BEE, sign in directly instead of writing to us here."
+  },
+  "soporte": {
+    "meta": {
+      "title": "Support — BEE",
+      "description": "Already using BEE and running into a problem? You're in the right place."
+    },
+    "eyebrow": "Support",
+    "heroTitle": "Already using BEE and something isn't working as expected?",
+    "heroBody": "If you're still evaluating the platform, it's better to write to us from <link>Contact</link>. If you already have an account, tell us what happened below.",
+    "faqCardTitle": "Already checked the FAQ?",
+    "faqCardBody": "The most common questions about where signals come from, human approval, and data isolation are answered on the main page.",
+    "apiDocsCardTitle": "API documentation",
+    "apiDocsCardBody": "If you integrated BEE via the API, the full endpoint reference is here.",
+    "formTitle": "Tell us what happened",
+    "formSubtitle": "The more detail (what you expected to see, what you saw instead), the faster we can help."
+  },
+  "terminos": {
+    "meta": {
+      "title": "Terms of Service — BEE",
+      "description": "Terms of use for the BEE platform."
+    },
+    "eyebrow": "Legal",
+    "title": "Terms of Service",
+    "draftNotice": "Reference draft, not a final legal document — before operating commercially under these terms, have them reviewed by legal counsel and fill in the corporate and jurisdiction details that apply.",
+    "sections": [
+      {
+        "title": "1. Acceptance of these terms",
+        "body": "By creating an account or using BEE you accept these terms. If you do not agree, you must not use the service."
+      },
+      {
+        "title": "2. What BEE is",
+        "body": "BEE is a sales-intelligence platform: it detects market signals, prioritizes them, and prepares sales outreach actions. The service is provided \"as is,\" under continuous improvement."
+      },
+      {
+        "title": "3. Your account",
+        "body": "You are responsible for keeping your credentials confidential and for the activity that occurs under your account. Each organization has its data isolated from all others — see the Security page for the technical detail."
+      },
+      {
+        "title": "4. Human approval on any send",
+        "body": "BEE may suggest or prepare messages, sequences, and outreach actions, but no external action (an email, a message, a sequence) executes without a user on your account explicitly approving it. You are responsible for the final content you approve and send through the platform."
+      },
+      {
+        "title": "5. Your data",
+        "body": "The data you upload or that BEE collects for your account belongs to you. We do not use it to train third-party models, nor do we share it with other organizations using the platform."
+      },
+      {
+        "title": "6. Limitation of liability",
+        "body": "BEE prioritizes and suggests based on publicly available signals and your own data — it does not guarantee specific business outcomes. To the extent permitted by applicable law, we are not liable for business decisions made based on these suggestions."
+      },
+      {
+        "title": "7. Changes to these terms",
+        "body": "We may update these terms. If the change is material, we will notify you by email or within the platform before it takes effect."
+      },
+      {
+        "title": "8. Contact",
+        "body": "For any question about these terms, write to us from the Contact page."
+      }
+    ],
+    "lastUpdated": "Last updated: see the site's version history."
+  },
+  "privacidad": {
+    "meta": {
+      "title": "Privacy Policy — BEE",
+      "description": "What data BEE collects and what we do — and don't do — with it."
+    },
+    "eyebrow": "Legal",
+    "title": "Privacy Policy",
+    "draftNotice": "Reference draft that honestly describes what the system does today — before operating commercially, have it reviewed by legal counsel for your jurisdiction (GDPR, CCPA, or other applicable regulation for your users).",
+    "sections": [
+      {
+        "title": "1. What data we collect",
+        "body": "From the Contact form: name, email, company, and phone (the latter two optional), and the message you write. We also store the originating IP, solely to prevent form abuse (a per-hour submission limit). If you create an account: name, email, and your organization's name. While you're signed in, we store a session token in your browser's local storage — not a third-party cookie."
+      },
+      {
+        "title": "2. What we do NOT do",
+        "body": "We do not sell your data. We do not use advertising cookies or third-party tracking scripts on this site. We do not share your organization's data with other accounts using BEE — the isolation happens at the database level, not a setting that can be disabled by mistake."
+      },
+      {
+        "title": "3. What we use it for",
+        "body": "To respond to your inquiry when you write from Contact, to operate your account if you register, and to prevent spam and abuse on public forms (which is why we store the IP on contact submissions)."
+      },
+      {
+        "title": "4. How long we keep it",
+        "body": "Contact form submissions are kept as long as they're relevant for responding to you or for our business records. You can ask us to delete your data at any time — see point 6."
+      },
+      {
+        "title": "5. Security",
+        "body": "See the Security page for the technical detail: multi-tenant isolation, layered authentication, secrets that are never persisted in the database or logged."
+      },
+      {
+        "title": "6. Your rights",
+        "body": "You can ask us to access, correct, or delete the data we hold about you by writing to us from Contact. We will respond to your request within a reasonable time."
+      },
+      {
+        "title": "7. Changes to this policy",
+        "body": "If we change anything material about how we collect or use data, we will reflect it on this same page."
+      }
+    ],
+    "securityBody": "See the <link>Security</link> page for the technical detail: multi-tenant isolation, layered authentication, secrets that are never persisted in the database or logged.",
+    "lastUpdated": "Last updated: see the site's version history."
+  }
+}

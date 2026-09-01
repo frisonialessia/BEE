@@ -1,0 +1,322 @@
+{
+  "stages": {
+    "awareness": "Awareness",
+    "consideration": "Consideration",
+    "decision": "Decision",
+    "ready_to_buy": "Ready to buy"
+  },
+  "orbit": {
+    "cards": {
+      "signals": {
+        "headline": "Catches every market signal the moment it happens",
+        "label": "Signal engine"
+      },
+      "brief": {
+        "headline": "Your executive brief, ready every morning",
+        "label": "Daily brief"
+      },
+      "simulator": {
+        "headline": "Project scenarios on real buying intent",
+        "label": "Revenue simulator"
+      },
+      "automation": {
+        "headline": "Sequences that move on their own, with your approval",
+        "label": "Automation"
+      }
+    }
+  },
+  "ticker": {
+    "ariaLabel": "Examples of market signals detected in real time — illustrative view",
+    "items": [
+      "Northwind Robotics raised a $40M Series C",
+      "Vantage Health is hiring 20 Account Executives",
+      "Solace Data named a new CRO",
+      "Anchor Freight reached a high closing temperature",
+      "Bright Path Analytics visited the pricing page",
+      "Fielder Logistics closed a Series B round",
+      "Cursive Systems posted 8 RevOps openings",
+      "Loom & Co opened a new regional office"
+    ]
+  },
+  "demo": {
+    "tabs": {
+      "signals": "Signals",
+      "leads": "Leads",
+      "forecast": "Simulator"
+    },
+    "illustrativeNote": "Illustrative view — sample data, not a real account.",
+    "signalsView": {
+      "actionZoneTitle": "Action zone",
+      "actionZone": {
+        "detected": "Detected",
+        "enriching": "Enriching",
+        "ready": "Ready",
+        "inProgress": "In progress",
+        "closed": "Closed"
+      },
+      "hotLeads": "{count} hot leads",
+      "timeToFirstAction": "Time to 1st action",
+      "zoneConversion": "Zone conversion",
+      "recentActivity": "Recent activity",
+      "activity": {
+        "qualified": {
+          "text": "Aisha Bello moved to Qualified",
+          "time": "3h ago"
+        },
+        "assigned": {
+          "text": "Tom Reyes was assigned to an AE",
+          "time": "6h ago"
+        }
+      },
+      "nextActionLabel": "Suggested next action",
+      "nextActionReason": "Raised a $40M Series C — the moment of highest buying propensity.",
+      "hiveTitle": "Intent hive",
+      "cold": "Cold",
+      "hot": "Hot",
+      "signalFlowTitle": "Signal flow",
+      "feed": {
+        "webhook": {
+          "label": "Webhook received",
+          "title": "Northwind Robotics raised a $40M Series C",
+          "time": "2h ago"
+        },
+        "enriched": {
+          "label": "Enriched",
+          "title": "Vantage Health is hiring 20 AEs",
+          "time": "5h ago"
+        },
+        "strategy": {
+          "label": "Strategy ready",
+          "title": "Solace Data named a new CRO",
+          "time": "1d ago"
+        }
+      },
+      "signalsToday": "Signals today",
+      "signalsTodayValue": "{detected} detected · +{new} new",
+      "kpis": {
+        "ingestion": "Ingestion",
+        "ingestionActive": "Active",
+        "queue": "Queue",
+        "facts": "Facts",
+        "errors": "Errors",
+        "latency": "Latency",
+        "activeSources": "Active sources"
+      },
+      "externalApis": "External APIs",
+      "simulatedMode": "Simulated mode",
+      "lastSync": "Last sync",
+      "lastSyncValue": "3 min ago",
+      "nextRun": "Next run",
+      "nextRunValue": "in 12 min",
+      "modelConfidence": "Model confidence"
+    },
+    "leadsView": {
+      "title": "Leads prioritized by score",
+      "statusTabs": {
+        "all": "All",
+        "new": "New",
+        "qualified": "Qualified",
+        "converted": "Converted"
+      },
+      "searchPlaceholder": "Search…",
+      "columns": {
+        "contact": "Contact",
+        "company": "Company",
+        "score": "Score",
+        "stage": "Stage"
+      },
+      "leads": {
+        "elena": {
+          "title": "VP Sales"
+        },
+        "marcus": {
+          "title": "Head of RevOps"
+        },
+        "priya": {
+          "title": "CRO"
+        },
+        "tom": {
+          "title": "Director of Ops"
+        },
+        "aisha": {
+          "title": "VP RevOps"
+        },
+        "diego": {
+          "title": "Head of Growth"
+        }
+      },
+      "emptyFiltered": "No lead matches that filter.",
+      "summary": "{count} of {total} leads · sorted by score",
+      "topScoreLabel": "Top score",
+      "topScoreDetail": "Score {score} · {stage} — priority to contact today.",
+      "statusDistribution": "Status distribution"
+    },
+    "forecastView": {
+      "title": "Revenue simulator",
+      "subtitle": "Project the impact of increasing prospecting in a segment",
+      "highConfidence": "High confidence",
+      "signalLabel": "Signal",
+      "fundingRound": "Funding round",
+      "industryLabel": "Industry",
+      "industryPlaceholder": "e.g. SaaS",
+      "multiplierLabel": "Multiplier ({factor}×)",
+      "running": "Simulating…",
+      "runButton": "Run simulation {factor}×",
+      "scenarios": {
+        "conservative": "Conservative",
+        "realistic": "Realistic",
+        "optimistic": "Optimistic"
+      },
+      "months": {
+        "1": "Aug",
+        "2": "Sep",
+        "3": "Oct",
+        "4": "Nov",
+        "5": "Dec",
+        "6": "Jan"
+      },
+      "projectionLabel": "Realistic projection",
+      "operationsUnit": "deals",
+      "dealsCount": "{count} deals",
+      "projectionNote": "Raising prospecting {factor}× in this segment sustains the current close rate without overloading the team.",
+      "successRate": "Success rate",
+      "pipeline": "Pipeline",
+      "dataPoints": "Data points",
+      "avgSalesCycle": "Avg. sales cycle",
+      "avgSalesCycleValue": "34 days",
+      "avgTicket": "Avg. ticket",
+      "avgTicketValue": "USD 18,400",
+      "nextUpdate": "Next update",
+      "nextUpdateValue": "in 24h",
+      "basedOn": "Based on 312 buying-intent data points from the last 90 days.",
+      "viewMore": "View more"
+    }
+  },
+  "howItWorks": {
+    "eyebrow": "How it works",
+    "heading": "From signal to action, in four steps.",
+    "steps": {
+      "detect": {
+        "title": "1. Detect the signal",
+        "description": "BEE watches funding rounds, hires, and stack changes the moment they happen."
+      },
+      "enrich": {
+        "title": "2. Enrich and prioritize",
+        "description": "Every signal is enriched with the right company and contact, and ranked by intent score."
+      },
+      "prepare": {
+        "title": "3. Prepare the play",
+        "description": "The system builds the suggested next action — the message, the channel, the moment."
+      },
+      "approve": {
+        "title": "4. You approve",
+        "description": "Nothing goes out without explicit sign-off. You approve, adjust, or discard — the final call is always human."
+      }
+    }
+  },
+  "beforeAfter": {
+    "eyebrow": "The same list, two outcomes",
+    "heading": "Same leads. The difference is what you do first.",
+    "withoutBee": "Without BEE",
+    "withBee": "With BEE",
+    "rawCaption": "Raw export — alphabetical order, no intent context.",
+    "noData": "— no data —",
+    "scoredCaption": "Prioritized by BEE — intent score, stage, and what to work first.",
+    "illustrativeNote": "Illustrative view — same scoring criteria as the rest of the live demo.",
+    "clickPromptBefore": "Click",
+    "clickPromptAfter": "to see the same list prioritized"
+  },
+  "integrations": {
+    "eyebrow": "Connected to what you already use",
+    "heading": "Signals come from real sources.",
+    "items": {
+      "linkedin": "Hiring signals and direct outreach",
+      "g2": "Buying-intent signals from reviews and comparisons",
+      "googleSearch": "Public mentions and tech-stack changes",
+      "email": "Sequences sent via SMTP, SendGrid, or Resend"
+    }
+  },
+  "faq": {
+    "eyebrow": "Frequently asked questions",
+    "heading": "Before you ask.",
+    "items": [
+      {
+        "question": "Where do the signals and scores come from?",
+        "answer": "From real public sources (LinkedIn, G2, Google Search) and your own pipeline data. If there isn't enough data for a score, the system shows it empty — it never invents a number to make the screen look complete."
+      },
+      {
+        "question": "Does BEE send messages on my behalf without me knowing?",
+        "answer": "No. No external action — an email, a LinkedIn message, a sequence — runs without explicit human approval. The system prepares the play; you decide if it goes out."
+      },
+      {
+        "question": "Does my data mix with other accounts?",
+        "answer": "No. Organization isolation runs end-to-end through the database and every endpoint — not a flag that can be switched off by mistake."
+      },
+      {
+        "question": "What happens if my market isn't generating signals yet?",
+        "answer": "The system shows the real state: empty spaces where there's no signal, instead of filling in with sample data. We'd rather show an honest panel than one that looks active without being active."
+      },
+      {
+        "question": "How do I get started?",
+        "answer": "Reach out through the Contact form — we respond within 24 business hours to coordinate the first step."
+      }
+    ]
+  },
+  "honeycomb": {
+    "ariaLabel": "Hexagonal heatmap of buying intent — illustrative view, hover a cell",
+    "temperature": "Temperature · {pct}°",
+    "hot": "HOT",
+    "empty": "No active intent signals yet.",
+    "leads": {
+      "northwind": {
+        "keywords": [
+          "Series C round",
+          "Q3 budget",
+          "demo scheduled"
+        ]
+      },
+      "vantage": {
+        "keywords": [
+          "hiring 20 AEs",
+          "comparing vendors"
+        ]
+      },
+      "solace": {
+        "keywords": [
+          "new CRO",
+          "tech-stack signal"
+        ]
+      },
+      "fielder": {
+        "keywords": [
+          "visited pricing",
+          "downloaded whitepaper"
+        ]
+      },
+      "brightpath": {
+        "keywords": [
+          "active RevOps team",
+          "trial in progress"
+        ]
+      },
+      "cursive": {
+        "keywords": [
+          "visited blog",
+          "signed up for webinar"
+        ]
+      },
+      "anchor": {
+        "keywords": [
+          "Series B round",
+          "hiring VP Sales"
+        ]
+      },
+      "loom": {
+        "keywords": [
+          "new regional office",
+          "growing team"
+        ]
+      }
+    }
+  }
+}

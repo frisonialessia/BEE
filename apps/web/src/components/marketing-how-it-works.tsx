@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2, Radio, Sparkles, Target } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { useInView } from "@/hooks/use-in-view";
 
@@ -14,30 +15,24 @@ import { useInView } from "@/hooks/use-in-view";
  * GUARANTEES y MODULES en app/page.tsx.
  */
 
-const STEPS = [
-  {
-    icon: Radio,
-    title: "1. Detecta la señal",
-    description: "BEE vigila rondas de financiamiento, contrataciones y cambios de stack apenas ocurren.",
-  },
-  {
-    icon: Sparkles,
-    title: "2. Enriquece y prioriza",
-    description: "Cada señal se enriquece con la empresa y el contacto correcto, y se ordena por score de intención.",
-  },
-  {
-    icon: Target,
-    title: "3. Prepara la jugada",
-    description: "El sistema arma la próxima acción sugerida — el mensaje, el canal, el momento.",
-  },
-  {
-    icon: CheckCircle2,
-    title: "4. Tú apruebas",
-    description: "Nada sale sin luz verde explícita. Apruebas, ajustas o descartas — la decisión final es siempre humana.",
-  },
+const STEP_META = [
+  { id: "detect", icon: Radio },
+  { id: "enrich", icon: Sparkles },
+  { id: "prepare", icon: Target },
+  { id: "approve", icon: CheckCircle2 },
 ] as const;
 
-function StepCard({ step, index }: { step: (typeof STEPS)[number]; index: number }) {
+function StepCard({
+  step,
+  index,
+  title,
+  description,
+}: {
+  step: (typeof STEP_META)[number];
+  index: number;
+  title: string;
+  description: string;
+}) {
   const { ref, inView } = useInView<HTMLDivElement>({ threshold: 0.3 });
 
   return (
@@ -51,10 +46,10 @@ function StepCard({ step, index }: { step: (typeof STEPS)[number]; index: number
       <div className="flex size-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
         <step.icon className="size-4.5 stroke-[1.5] text-[var(--color-chart-4)]" />
       </div>
-      <h3 className="mt-3 text-sm font-semibold tracking-tight">{step.title}</h3>
-      <p className="bee-caption mt-1.5">{step.description}</p>
+      <h3 className="mt-3 text-sm font-semibold tracking-tight">{title}</h3>
+      <p className="bee-caption mt-1.5">{description}</p>
       {/* Conector entre pasos — solo en desktop, oculto en el último. */}
-      {index < STEPS.length - 1 && (
+      {index < STEP_META.length - 1 && (
         <div
           className="absolute right-[-1.1rem] top-1/2 hidden h-px w-6 -translate-y-1/2 bg-[var(--color-divider)] lg:block"
           aria-hidden
@@ -65,17 +60,23 @@ function StepCard({ step, index }: { step: (typeof STEPS)[number]; index: number
 }
 
 export function MarketingHowItWorks() {
+  const t = useTranslations("landing.howItWorks");
+
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
       <div className="mx-auto max-w-2xl text-center">
-        <p className="bee-eyebrow">Cómo funciona</p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-          De la señal a la acción, en cuatro pasos.
-        </h2>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("heading")}</h2>
       </div>
       <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {STEPS.map((step, i) => (
-          <StepCard key={step.title} step={step} index={i} />
+        {STEP_META.map((step, i) => (
+          <StepCard
+            key={step.id}
+            step={step}
+            index={i}
+            title={t(`steps.${step.id}.title`)}
+            description={t(`steps.${step.id}.description`)}
+          />
         ))}
       </div>
     </section>

@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { ArrowRight, Briefcase } from "lucide-react";
 import Link from "next/link";
 
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
 
-export const metadata: Metadata = {
-  title: "Careers — BEE",
-  description: "No hay posiciones abiertas en este momento — escríbenos si te interesa BEE.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("legalMarketing.careers.meta");
+  return { title: t("title"), description: t("description") };
+}
 
 /**
  * Página honesta a propósito: no hay vacantes reales para publicar, así
@@ -17,7 +18,9 @@ export const metadata: Metadata = {
  * exactamente el tipo de contenido fabricado que este proyecto evita en
  * cada otra decisión.
  */
-export default function CareersPage() {
+export default async function CareersPage() {
+  const t = await getTranslations("legalMarketing.careers");
+
   return (
     <div className="flex min-h-full flex-col bg-background">
       <MarketingHeader />
@@ -27,33 +30,21 @@ export default function CareersPage() {
           <div className="mx-auto flex size-12 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-[var(--color-primary)]/40">
             <Briefcase className="size-5 stroke-[1.5] text-[var(--color-chart-4)]" />
           </div>
-          <p className="bee-eyebrow mt-4">Careers</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-            No tenemos posiciones abiertas en este momento.
-          </h1>
-          <p className="bee-caption mx-auto mt-4 max-w-md text-base">
-            Preferimos decir esto claramente en vez de publicar vacantes que no existen. Si te
-            interesa lo que estamos construyendo y quieres que te tengamos en cuenta para más
-            adelante, escríbenos — leemos cada mensaje.
-          </p>
+          <p className="bee-eyebrow mt-4">{t("eyebrow")}</p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{t("heroTitle")}</h1>
+          <p className="bee-caption mx-auto mt-4 max-w-md text-base">{t("heroBody")}</p>
           <div className="mt-8">
             <Link href="/contacto?source=careers" className="bee-btn bee-btn--primary">
-              Escríbenos <ArrowRight className="size-4" />
+              {t("ctaWriteUs")} <ArrowRight className="size-4" />
             </Link>
           </div>
         </section>
 
         <section className="border-t border-border bg-[var(--color-primary)]/10">
           <div className="mx-auto w-full max-w-2xl px-6 py-14 text-center sm:py-16">
-            <p className="bee-eyebrow">Mientras tanto</p>
-            <h2 className="mt-2 text-lg font-semibold tracking-tight">
-              Así pensamos cuando construimos.
-            </h2>
-            <p className="bee-caption mx-auto mt-3 max-w-md">
-              Cero datos inventados, aprobación humana antes de cualquier acción externa,
-              aislamiento estricto por cuenta desde el diseño — no reglas de marketing, es cómo
-              está hecho el producto. Si eso te resuena, probablemente encajemos.
-            </p>
+            <p className="bee-eyebrow">{t("meanwhileEyebrow")}</p>
+            <h2 className="mt-2 text-lg font-semibold tracking-tight">{t("meanwhileTitle")}</h2>
+            <p className="bee-caption mx-auto mt-3 max-w-md">{t("meanwhileBody")}</p>
           </div>
         </section>
       </main>

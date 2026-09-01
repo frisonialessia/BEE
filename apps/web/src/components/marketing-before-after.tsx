@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertCircle, ArrowRight, CheckCircle2, Flame } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -29,27 +30,29 @@ const COMPANIES = [
 // criterio de prioridad.
 const RAW_ROWS = [...COMPANIES].sort();
 
+// stage usa los mismos ids que landing.stages (ver marketing-demo-panel.tsx
+// y marketing-honeycomb.tsx) — una sola fuente de verdad para las 4
+// etiquetas de etapa en toda la landing.
 const SCORED_ROWS = [
-  { company: "Northwind Robotics", score: 92, stage: "Listo para comprar" },
-  { company: "Anchor Freight", score: 88, stage: "Listo para comprar" },
-  { company: "Vantage Health", score: 78, stage: "Decisión" },
-  { company: "Solace Data", score: 65, stage: "Consideración" },
-  { company: "Bright Path Analytics", score: 58, stage: "Consideración" },
-  { company: "Fielder Logistics", score: 41, stage: "Conocimiento" },
+  { company: "Northwind Robotics", score: 92, stage: "ready_to_buy" },
+  { company: "Anchor Freight", score: 88, stage: "ready_to_buy" },
+  { company: "Vantage Health", score: 78, stage: "decision" },
+  { company: "Solace Data", score: 65, stage: "consideration" },
+  { company: "Bright Path Analytics", score: 58, stage: "consideration" },
+  { company: "Fielder Logistics", score: 41, stage: "awareness" },
 ] as const;
-
 
 export function MarketingBeforeAfter() {
   const [withBee, setWithBee] = useState(false);
+  const t = useTranslations("landing.beforeAfter");
+  const tStages = useTranslations("landing.stages");
 
   return (
     <section className="border-t border-border bg-[var(--color-primary)]/10">
       <div className="mx-auto w-full max-w-4xl px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="bee-eyebrow">La misma lista, dos resultados</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Los mismos leads. La diferencia es qué haces primero.
-          </h2>
+          <p className="bee-eyebrow">{t("eyebrow")}</p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("heading")}</h2>
         </div>
 
         <div className="mt-8 flex justify-center">
@@ -58,13 +61,13 @@ export function MarketingBeforeAfter() {
               onClick={() => setWithBee(false)}
               className={`bee-filter-tab ${!withBee ? "bee-filter-tab--active" : ""}`}
             >
-              Sin BEE
+              {t("withoutBee")}
             </button>
             <button
               onClick={() => setWithBee(true)}
               className={`bee-filter-tab ${withBee ? "bee-filter-tab--active" : ""}`}
             >
-              Con BEE
+              {t("withBee")}
             </button>
           </div>
         </div>
@@ -74,13 +77,13 @@ export function MarketingBeforeAfter() {
             <div>
               <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
                 <AlertCircle className="size-3.5" />
-                <span>Export sin procesar — orden alfabético, sin contexto de intención.</span>
+                <span>{t("rawCaption")}</span>
               </div>
               <div className="divide-y divide-border">
                 {RAW_ROWS.map((company) => (
                   <div key={company} className="flex items-center justify-between py-2.5">
                     <span className="text-sm text-muted-foreground">{company}</span>
-                    <span className="bee-micro">— sin dato —</span>
+                    <span className="bee-micro">{t("noData")}</span>
                   </div>
                 ))}
               </div>
@@ -89,14 +92,14 @@ export function MarketingBeforeAfter() {
             <div>
               <div className="mb-3 flex items-center gap-2 text-xs text-[var(--color-chart-4)]">
                 <CheckCircle2 className="size-3.5" />
-                <span>Priorizado por BEE — score de intención, etapa y qué atacar primero.</span>
+                <span>{t("scoredCaption")}</span>
               </div>
               <div className="divide-y divide-border">
                 {SCORED_ROWS.map((row) => (
                   <div key={row.company} className="flex items-center justify-between py-2.5">
                     <span className="text-sm font-medium">{row.company}</span>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">{row.stage}</Badge>
+                      <Badge variant="outline">{tStages(row.stage)}</Badge>
                       <Badge variant={scoreVariant(row.score)} className="font-mono">
                         {row.score >= 80 && <Flame className="mr-0.5 size-2.5" />}
                         {row.score}
@@ -112,11 +115,12 @@ export function MarketingBeforeAfter() {
         <p className="bee-micro mt-4 flex items-center justify-center gap-1.5 text-center">
           {!withBee ? (
             <>
-              Haz clic en <span className="font-medium text-foreground">&quot;Con BEE&quot;</span> para ver la
-              misma lista priorizada <ArrowRight className="size-3" />
+              {t("clickPromptBefore")}{" "}
+              <span className="font-medium text-foreground">&quot;{t("withBee")}&quot;</span>{" "}
+              {t("clickPromptAfter")} <ArrowRight className="size-3" />
             </>
           ) : (
-            "Vista ilustrativa — mismo criterio de score que el resto del Demo en vivo."
+            t("illustrativeNote")
           )}
         </p>
       </div>

@@ -92,6 +92,8 @@ const NAMESPACES = [
   "sharedB",
   "shared",
   "workspace",
+  "legalMarketing",
+  "landing",
 ] as const;
 
 async function loadMessages(locale: Locale) {

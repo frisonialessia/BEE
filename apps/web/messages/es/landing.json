@@ -1,0 +1,322 @@
+{
+  "stages": {
+    "awareness": "Conocimiento",
+    "consideration": "Consideración",
+    "decision": "Decisión",
+    "ready_to_buy": "Listo para comprar"
+  },
+  "orbit": {
+    "cards": {
+      "signals": {
+        "headline": "Detecta cada señal de mercado apenas ocurre",
+        "label": "Motor de señales"
+      },
+      "brief": {
+        "headline": "Tu resumen ejecutivo, listo cada mañana",
+        "label": "Brief del día"
+      },
+      "simulator": {
+        "headline": "Proyecta escenarios sobre intención de compra real",
+        "label": "Simulador de ingresos"
+      },
+      "automation": {
+        "headline": "Secuencias que avanzan solas, con tu aprobación",
+        "label": "Automatización"
+      }
+    }
+  },
+  "ticker": {
+    "ariaLabel": "Ejemplos de señales de mercado detectadas en tiempo real — vista ilustrativa",
+    "items": [
+      "Northwind Robotics levantó una Serie C de USD 40M",
+      "Vantage Health está contratando 20 Account Executives",
+      "Solace Data nombró un nuevo CRO",
+      "Anchor Freight alcanzó temperatura de cierre alta",
+      "Bright Path Analytics visitó la página de pricing",
+      "Fielder Logistics cerró una ronda Serie B",
+      "Cursive Systems publicó 8 vacantes de RevOps",
+      "Loom & Co abrió una nueva oficina regional"
+    ]
+  },
+  "demo": {
+    "tabs": {
+      "signals": "Señales",
+      "leads": "Leads",
+      "forecast": "Simulador"
+    },
+    "illustrativeNote": "Vista ilustrativa — datos de ejemplo, no una cuenta real.",
+    "signalsView": {
+      "actionZoneTitle": "Zona de acción",
+      "actionZone": {
+        "detected": "Detectadas",
+        "enriching": "Enriqueciendo",
+        "ready": "Listas",
+        "inProgress": "En progreso",
+        "closed": "Cerradas"
+      },
+      "hotLeads": "{count} leads calientes",
+      "timeToFirstAction": "Tiempo a 1ª acción",
+      "zoneConversion": "Conversión de zona",
+      "recentActivity": "Actividad reciente",
+      "activity": {
+        "qualified": {
+          "text": "Aisha Bello pasó a Calificado",
+          "time": "hace 3h"
+        },
+        "assigned": {
+          "text": "Tom Reyes fue asignado a un AE",
+          "time": "hace 6h"
+        }
+      },
+      "nextActionLabel": "Próxima acción sugerida",
+      "nextActionReason": "Levantó una Serie C de USD 40M — el momento de mayor propensión a comprar.",
+      "hiveTitle": "Colmena de intención",
+      "cold": "Frío",
+      "hot": "Caliente",
+      "signalFlowTitle": "Flujo de señales",
+      "feed": {
+        "webhook": {
+          "label": "Webhook recibido",
+          "title": "Northwind Robotics levantó una Serie C de USD 40M",
+          "time": "hace 2h"
+        },
+        "enriched": {
+          "label": "Enriquecida",
+          "title": "Vantage Health está contratando 20 AEs",
+          "time": "hace 5h"
+        },
+        "strategy": {
+          "label": "Estrategia lista",
+          "title": "Solace Data nombró un nuevo CRO",
+          "time": "hace 1d"
+        }
+      },
+      "signalsToday": "Señales hoy",
+      "signalsTodayValue": "{detected} detectadas · +{new} nuevas",
+      "kpis": {
+        "ingestion": "Ingesta",
+        "ingestionActive": "Activo",
+        "queue": "Cola",
+        "facts": "Hechos",
+        "errors": "Errores",
+        "latency": "Latencia",
+        "activeSources": "Fuentes activas"
+      },
+      "externalApis": "APIs externas",
+      "simulatedMode": "Modo simulado",
+      "lastSync": "Última sincronización",
+      "lastSyncValue": "hace 3 min",
+      "nextRun": "Próxima corrida",
+      "nextRunValue": "en 12 min",
+      "modelConfidence": "Confianza del modelo"
+    },
+    "leadsView": {
+      "title": "Leads priorizados por score",
+      "statusTabs": {
+        "all": "Todos",
+        "new": "Nuevo",
+        "qualified": "Calificado",
+        "converted": "Convertido"
+      },
+      "searchPlaceholder": "Buscar…",
+      "columns": {
+        "contact": "Contacto",
+        "company": "Empresa",
+        "score": "Score",
+        "stage": "Etapa"
+      },
+      "leads": {
+        "elena": {
+          "title": "VP Sales"
+        },
+        "marcus": {
+          "title": "Head of RevOps"
+        },
+        "priya": {
+          "title": "CRO"
+        },
+        "tom": {
+          "title": "Director of Ops"
+        },
+        "aisha": {
+          "title": "VP RevOps"
+        },
+        "diego": {
+          "title": "Head of Growth"
+        }
+      },
+      "emptyFiltered": "Ningún lead coincide con ese filtro.",
+      "summary": "{count} de {total} leads · ordenado por score",
+      "topScoreLabel": "Score más alto",
+      "topScoreDetail": "Score {score} · {stage} — prioridad de contacto hoy.",
+      "statusDistribution": "Distribución por estado"
+    },
+    "forecastView": {
+      "title": "Simulador de ingresos",
+      "subtitle": "Proyecta el impacto de aumentar la prospección en un segmento",
+      "highConfidence": "Confianza alta",
+      "signalLabel": "Señal",
+      "fundingRound": "Ronda de financiación",
+      "industryLabel": "Industria",
+      "industryPlaceholder": "p. ej. SaaS",
+      "multiplierLabel": "Multiplicador ({factor}×)",
+      "running": "Simulando…",
+      "runButton": "Ejecutar simulación {factor}×",
+      "scenarios": {
+        "conservative": "Conservador",
+        "realistic": "Realista",
+        "optimistic": "Optimista"
+      },
+      "months": {
+        "1": "Ago",
+        "2": "Sep",
+        "3": "Oct",
+        "4": "Nov",
+        "5": "Dic",
+        "6": "Ene"
+      },
+      "projectionLabel": "Proyección realista",
+      "operationsUnit": "operaciones",
+      "dealsCount": "{count} operaciones",
+      "projectionNote": "Subir la prospección {factor}× en este segmento sostiene el ritmo actual de cierre sin saturar al equipo.",
+      "successRate": "Tasa de éxito",
+      "pipeline": "Pipeline",
+      "dataPoints": "Puntos de datos",
+      "avgSalesCycle": "Ciclo de venta promedio",
+      "avgSalesCycleValue": "34 días",
+      "avgTicket": "Ticket promedio",
+      "avgTicketValue": "USD 18.400",
+      "nextUpdate": "Próxima actualización",
+      "nextUpdateValue": "en 24h",
+      "basedOn": "Basado en 312 puntos de intención de compra de los últimos 90 días.",
+      "viewMore": "Ver más"
+    }
+  },
+  "howItWorks": {
+    "eyebrow": "Cómo funciona",
+    "heading": "De la señal a la acción, en cuatro pasos.",
+    "steps": {
+      "detect": {
+        "title": "1. Detecta la señal",
+        "description": "BEE vigila rondas de financiamiento, contrataciones y cambios de stack apenas ocurren."
+      },
+      "enrich": {
+        "title": "2. Enriquece y prioriza",
+        "description": "Cada señal se enriquece con la empresa y el contacto correcto, y se ordena por score de intención."
+      },
+      "prepare": {
+        "title": "3. Prepara la jugada",
+        "description": "El sistema arma la próxima acción sugerida — el mensaje, el canal, el momento."
+      },
+      "approve": {
+        "title": "4. Tú apruebas",
+        "description": "Nada sale sin luz verde explícita. Apruebas, ajustas o descartas — la decisión final es siempre humana."
+      }
+    }
+  },
+  "beforeAfter": {
+    "eyebrow": "La misma lista, dos resultados",
+    "heading": "Los mismos leads. La diferencia es qué haces primero.",
+    "withoutBee": "Sin BEE",
+    "withBee": "Con BEE",
+    "rawCaption": "Export sin procesar — orden alfabético, sin contexto de intención.",
+    "noData": "— sin dato —",
+    "scoredCaption": "Priorizado por BEE — score de intención, etapa y qué atacar primero.",
+    "illustrativeNote": "Vista ilustrativa — mismo criterio de score que el resto del Demo en vivo.",
+    "clickPromptBefore": "Haz clic en",
+    "clickPromptAfter": "para ver la misma lista priorizada"
+  },
+  "integrations": {
+    "eyebrow": "Conectado con lo que ya usas",
+    "heading": "Las señales vienen de fuentes reales.",
+    "items": {
+      "linkedin": "Señales de contratación y alcance directo",
+      "g2": "Señales de intención de compra por reseñas y comparaciones",
+      "googleSearch": "Menciones públicas y cambios de stack tecnológico",
+      "email": "Envío de secuencias vía SMTP, SendGrid o Resend"
+    }
+  },
+  "faq": {
+    "eyebrow": "Preguntas frecuentes",
+    "heading": "Antes de que preguntes.",
+    "items": [
+      {
+        "question": "¿De dónde salen las señales y los scores?",
+        "answer": "De fuentes públicas reales (LinkedIn, G2, Google Search) y de tus propios datos de pipeline. Si no hay dato suficiente para un score, el sistema lo muestra vacío — nunca inventa un número para que la pantalla se vea completa."
+      },
+      {
+        "question": "¿BEE envía mensajes por mi cuenta sin que yo lo sepa?",
+        "answer": "No. Ninguna acción externa — un email, un mensaje de LinkedIn, una secuencia — se ejecuta sin aprobación humana explícita. El sistema prepara la jugada; tú decides si sale."
+      },
+      {
+        "question": "¿Mis datos se mezclan con los de otras cuentas?",
+        "answer": "No. El aislamiento por organización es de punta a punta en la base de datos y en cada endpoint — no una bandera que se puede desactivar por error."
+      },
+      {
+        "question": "¿Qué pasa si mi mercado no genera señales todavía?",
+        "answer": "El sistema muestra el estado real: espacios vacíos donde no hay señal, en vez de rellenar con datos de ejemplo. Preferimos un panel honesto a uno que parezca activo sin estarlo."
+      },
+      {
+        "question": "¿Cómo empiezo?",
+        "answer": "Escríbenos desde el formulario de Contacto — te respondemos en menos de 24 horas hábiles para coordinar el primer paso."
+      }
+    ]
+  },
+  "honeycomb": {
+    "ariaLabel": "Mapa de calor hexagonal de intención de compra — vista ilustrativa, pasa el mouse por una celda",
+    "temperature": "Temperatura · {pct}°",
+    "hot": "CALIENTE",
+    "empty": "Sin señales de intención activas todavía.",
+    "leads": {
+      "northwind": {
+        "keywords": [
+          "ronda Serie C",
+          "presupuesto Q3",
+          "demo agendada"
+        ]
+      },
+      "vantage": {
+        "keywords": [
+          "contratando 20 AEs",
+          "comparando proveedores"
+        ]
+      },
+      "solace": {
+        "keywords": [
+          "nuevo CRO",
+          "señal de stack tecnológico"
+        ]
+      },
+      "fielder": {
+        "keywords": [
+          "visitó pricing",
+          "descargó whitepaper"
+        ]
+      },
+      "brightpath": {
+        "keywords": [
+          "equipo de RevOps activo",
+          "trial en curso"
+        ]
+      },
+      "cursive": {
+        "keywords": [
+          "visitó blog",
+          "se registró a webinar"
+        ]
+      },
+      "anchor": {
+        "keywords": [
+          "ronda Serie B",
+          "contratando VP Sales"
+        ]
+      },
+      "loom": {
+        "keywords": [
+          "nueva oficina regional",
+          "equipo en crecimiento"
+        ]
+      }
+    }
+  }
+}

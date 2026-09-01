@@ -1,4 +1,5 @@
 import { Mail, Search, Star, Users } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 /**
  * MarketingIntegrations — de dónde salen las señales y por dónde sale el
@@ -9,23 +10,27 @@ import { Mail, Search, Star, Users } from "lucide-react";
  * los logos oficiales de cada marca — ni el repo los tiene como asset ni
  * corresponde reclamar afiliación con ellos — así que cada tarjeta es un
  * ícono + nombre + qué hace, no un logotipo de terceros.
+ *
+ * `name` no está traducido — son nombres propios/marcas (LinkedIn, G2,
+ * Google Search, Email), no texto en español que necesite versión en
+ * inglés.
  */
 
 const INTEGRATIONS = [
-  { icon: Users, name: "LinkedIn", role: "Señales de contratación y alcance directo" },
-  { icon: Star, name: "G2", role: "Señales de intención de compra por reseñas y comparaciones" },
-  { icon: Search, name: "Google Search", role: "Menciones públicas y cambios de stack tecnológico" },
-  { icon: Mail, name: "Email", role: "Envío de secuencias vía SMTP, SendGrid o Resend" },
+  { icon: Users, name: "LinkedIn", id: "linkedin" },
+  { icon: Star, name: "G2", id: "g2" },
+  { icon: Search, name: "Google Search", id: "googleSearch" },
+  { icon: Mail, name: "Email", id: "email" },
 ] as const;
 
-export function MarketingIntegrations() {
+export async function MarketingIntegrations() {
+  const t = await getTranslations("landing.integrations");
+
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
       <div className="mx-auto max-w-2xl text-center">
-        <p className="bee-eyebrow">Conectado con lo que ya usas</p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-          Las señales vienen de fuentes reales.
-        </h2>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("heading")}</h2>
       </div>
       <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {INTEGRATIONS.map((i) => (
@@ -35,7 +40,7 @@ export function MarketingIntegrations() {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold">{i.name}</p>
-              <p className="bee-caption mt-1">{i.role}</p>
+              <p className="bee-caption mt-1">{t(`items.${i.id}`)}</p>
             </div>
           </div>
         ))}
