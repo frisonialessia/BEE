@@ -6,6 +6,8 @@ import {
   countReadyEvents,
   type SignalStreamSnapshot,
 } from "@/lib/control/pipeline-builder";
+import { isDemoMode } from "@/lib/demo/mode";
+import { demoFetchOpportunities, demoFetchSignals } from "@/lib/demo/store";
 import { sampleOpportunities, sampleSignals } from "@/lib/sample-data";
 import type { FetchResult } from "@/types/api";
 import type {
@@ -26,6 +28,34 @@ interface HealthResponse {
 interface ReadyResponse {
   status: string;
 }
+
+/** Full simulation, per the BEE team's explicit call to show Control "como
+ * si fuera real" in the sandbox — a healthy, operating pipeline rather than
+ * an honest-but-confusing "no API configured" state that would only ever
+ * make sense on a real, unconfigured deployment. Static and deterministic:
+ * no visitor sees a different worker load than the last one did. */
+const DEMO_SYSTEM_HEALTH: SystemHealthSnapshot = {
+  connectivity: {
+    live: true,
+    environment: "demo",
+    db_ready: true,
+    service: "bee-api",
+  },
+  worker: {
+    running: true,
+    queue_depth: 2,
+    processed_count: 184,
+    error_count: 0,
+    load_pct: 20,
+    state: "busy",
+  },
+  providers: [
+    { name: "linkedin", configured: true, webhook_configured: true, rate_limit_per_hour: 100, tokens_remaining: 82, tokens_capacity: 100, health: "online" },
+    { name: "g2", configured: true, webhook_configured: false, rate_limit_per_hour: 50, tokens_remaining: 6, tokens_capacity: 50, health: "degraded" },
+    { name: "google_search", configured: true, webhook_configured: false, rate_limit_per_hour: 200, tokens_remaining: 168, tokens_capacity: 200, health: "online" },
+  ],
+  fetched_at: new Date().toISOString(),
+};
 
 const OFFLINE_SNAPSHOT: SystemHealthSnapshot = {
   connectivity: {
@@ -96,6 +126,10 @@ function normalizeProviders(status: IngestionWorkerStatus): ProviderStatus[] {
 
 /** Fetch aggregated system health for the control dashboard. */
 export async function fetchSystemHealth(): Promise<FetchResult<SystemHealthSnapshot>> {
+  if (isDemoMode()) {
+    return { live: true, data: { ...DEMO_SYSTEM_HEALTH, fetched_at: new Date().toISOString() } };
+  }
+
   const fetched_at = new Date().toISOString();
 
   try {
@@ -156,6 +190,21 @@ export async function fetchIngestionStatus(): Promise<
 /** Pipeline feed: signals × opportunities × worker queue → stream events. */
 export async function fetchSignalStream(limit = 40): Promise<FetchResult<SignalStreamSnapshot>> {
   const fetched_at = new Date().toISOString();
+
+  if (isDemoMode()) {
+    const events = buildSignalPipelineEvents(demoFetchSignals(limit), demoFetchOpportunities(), {
+      running: true,
+      queue_depth: 2,
+      processed_count: 184,
+      error_count: 0,
+      providers: [],
+      rate_limits: {},
+    });
+    return {
+      live: true,
+      data: { events, live: true, ready_count: countReadyEvents(events), fetched_at },
+    };
+  }
 
   try {
     const [signalsRes, oppsRes, workerRes] = await Promise.all([

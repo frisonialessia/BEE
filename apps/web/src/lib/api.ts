@@ -37,6 +37,29 @@ import { buildApiHeaders, getApiBaseUrl } from "@/lib/api/client";
 import { fetchBattlecards, fetchOpportunities } from "@/lib/api/opportunities";
 import { fetchSignals } from "@/lib/api/signals";
 import { isDemoMode } from "@/lib/demo/mode";
+import {
+  demoAcknowledgeAnomaly,
+  demoAddBrandFragment,
+  demoAddNetworkConnection,
+  demoApproveAction,
+  demoAuditSummary,
+  demoCheckAnomalies,
+  demoCreateBrandProfile,
+  demoDLQSummary,
+  demoFetchAnomalyAlerts,
+  demoFetchAuditDecisions,
+  demoFetchBrandProfile,
+  demoFetchDLQEvents,
+  demoFetchNetworkConnections,
+  demoFetchPendingActions,
+  demoFetchStyleProfile,
+  demoFindIntroPaths,
+  demoNetworkStats,
+  demoRecordCorrection,
+  demoRejectAction,
+  demoResolveDLQEvent,
+  demoRetryDLQEvent,
+} from "@/lib/demo/store";
 import type { FetchResult } from "@/types/api";
 import type { Opportunity, OpportunityStatus } from "@/types/domain";
 import { sampleArtifacts, sampleHotLeads } from "@/lib/sample-data";
@@ -118,6 +141,7 @@ export async function recordOutcome(
 
 /** Fetch all actions pending human approval. */
 export async function getPendingActions(limit = 50): Promise<FetchResult<PendingAction[]>> {
+  if (isDemoMode()) return { data: demoFetchPendingActions(limit), live: true };
   try {
     const res = await beeFetch(`${API_URL}/api/v1/orchestrator/pending-actions?limit=${limit}`, {
       next: { revalidate: 10 },
@@ -147,6 +171,7 @@ export async function getOrchestratorStatus(): Promise<FetchResult<OrchestratorS
 
 /** Approve a pending action. */
 export async function approveAction(actionId: string, approvedBy: string): Promise<PendingAction> {
+  if (isDemoMode()) return demoApproveAction(actionId, approvedBy);
   const res = await beeFetch(`${API_URL}/api/v1/orchestrator/${actionId}/approve`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -158,6 +183,7 @@ export async function approveAction(actionId: string, approvedBy: string): Promi
 
 /** Reject a pending action. */
 export async function rejectAction(actionId: string, reason?: string): Promise<PendingAction> {
+  if (isDemoMode()) return demoRejectAction(actionId, reason);
   const res = await beeFetch(`${API_URL}/api/v1/orchestrator/${actionId}/reject`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -248,6 +274,7 @@ export async function getMarketInsights(
 // ── PersonalBrandService ────────────────────────────────────────────────────
 
 export async function getBrandProfile(): Promise<FetchResult<VoiceProfile | null>> {
+  if (isDemoMode()) return { data: demoFetchBrandProfile(), live: true };
   try {
     const res = await beeFetch(`${API_URL}/api/v1/brand/profile`, { cache: "no-store" });
     if (res.status === 404) return { data: null, live: true };
@@ -268,6 +295,7 @@ export async function createBrandProfile(data: {
   preferred_cta?: string;
   bio_summary?: string;
 }): Promise<FetchResult<VoiceProfile>> {
+  if (isDemoMode()) return { data: demoCreateBrandProfile(data), live: true };
   const res = await beeFetch(`${API_URL}/api/v1/brand/profile`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -281,6 +309,7 @@ export async function addBrandFragment(
   profileId: string,
   data: { content: string; category: string; tags?: string[]; source?: string }
 ): Promise<FetchResult<BrandFragment>> {
+  if (isDemoMode()) return { data: demoAddBrandFragment(profileId, data), live: true };
   const res = await beeFetch(`${API_URL}/api/v1/brand/profile/${profileId}/fragments`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -523,6 +552,7 @@ export async function ingestDarkFunnelSignal(payload: {
 // ─── NetworkNavigator ─────────────────────────────────────────────────────────
 
 export async function getNetworkConnections(): Promise<FetchResult<NetworkConnection[]>> {
+  if (isDemoMode()) return { data: demoFetchNetworkConnections(), live: true };
   try {
     const res = await beeFetch(`${API_URL}/api/v1/network/connections`, { cache: "no-store" });
     if (!res.ok) throw new Error(`API responded ${res.status}`);
@@ -541,6 +571,7 @@ export async function addNetworkConnection(payload: {
   connection_type?: string;
   notes?: string;
 }): Promise<FetchResult<NetworkConnection>> {
+  if (isDemoMode()) return { data: demoAddNetworkConnection(payload), live: true };
   const res = await beeFetch(`${API_URL}/api/v1/network/connections`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -555,6 +586,9 @@ export async function findIntroPaths(params: {
   target_company?: string;
   target_name?: string;
 }): Promise<FetchResult<NetworkQueryResult>> {
+  if (isDemoMode()) {
+    return { data: demoFindIntroPaths({ target_domain: params.target_domain, target_company: params.target_company }), live: true };
+  }
   try {
     const query = new URLSearchParams({ target_domain: params.target_domain });
     if (params.target_company) query.set("target_company", params.target_company);
@@ -568,6 +602,7 @@ export async function findIntroPaths(params: {
 }
 
 export async function getNetworkStats(): Promise<FetchResult<NetworkStats | null>> {
+  if (isDemoMode()) return { data: demoNetworkStats(), live: true };
   try {
     const res = await beeFetch(`${API_URL}/api/v1/network/stats`, { cache: "no-store" });
     if (!res.ok) throw new Error(`API responded ${res.status}`);
@@ -580,6 +615,7 @@ export async function getNetworkStats(): Promise<FetchResult<NetworkStats | null
 // ─── Dead Letter Queue ────────────────────────────────────────────────────────
 
 export async function getDLQSummary(): Promise<FetchResult<DLQSummary | null>> {
+  if (isDemoMode()) return { data: demoDLQSummary(), live: true };
   try {
     const res = await beeFetch(`${API_URL}/api/v1/workflow/dlq/summary`, { cache: "no-store" });
     if (!res.ok) throw new Error(`API responded ${res.status}`);
@@ -590,6 +626,7 @@ export async function getDLQSummary(): Promise<FetchResult<DLQSummary | null>> {
 }
 
 export async function getDLQEvents(params?: { status?: string; limit?: number }): Promise<FetchResult<FailedEvent[]>> {
+  if (isDemoMode()) return { data: demoFetchDLQEvents(params), live: true };
   try {
     const query = new URLSearchParams();
     if (params?.status) query.set("status", params.status);
@@ -603,12 +640,14 @@ export async function getDLQEvents(params?: { status?: string; limit?: number })
 }
 
 export async function retryDLQEvent(eventId: string): Promise<FetchResult<DLQRetryResult>> {
+  if (isDemoMode()) return { data: demoRetryDLQEvent(eventId), live: true };
   const res = await beeFetch(`${API_URL}/api/v1/workflow/dlq/${eventId}/retry`, { method: "POST" });
   if (!res.ok) throw new Error(`API responded ${res.status}`);
   return { data: (await res.json()) as DLQRetryResult, live: true };
 }
 
 export async function resolveDLQEvent(eventId: string, notes?: string): Promise<FetchResult<FailedEvent>> {
+  if (isDemoMode()) return { data: demoResolveDLQEvent(eventId, notes), live: true };
   const res = await beeFetch(`${API_URL}/api/v1/workflow/dlq/${eventId}/resolve`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -621,6 +660,7 @@ export async function resolveDLQEvent(eventId: string, notes?: string): Promise<
 // ─── Audit Trail ─────────────────────────────────────────────────────────────
 
 export async function getAuditSummary(): Promise<FetchResult<AuditSummary | null>> {
+  if (isDemoMode()) return { data: demoAuditSummary(), live: true };
   try {
     const res = await beeFetch(`${API_URL}/api/v1/audit/summary`, { cache: "no-store" });
     if (!res.ok) throw new Error(`API responded ${res.status}`);
@@ -639,6 +679,7 @@ export async function recordCorrection(data: {
   opportunity_id?: string;
   psychographic_style?: string;
 }): Promise<FetchResult<import("@/lib/types").CorrectionOut>> {
+  if (isDemoMode()) return { data: demoRecordCorrection(data), live: true };
   const res = await beeFetch(`${API_URL}/api/v1/learning/corrections`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -649,6 +690,7 @@ export async function recordCorrection(data: {
 }
 
 export async function getStyleProfile(): Promise<FetchResult<import("@/lib/types").StyleProfileOut | null>> {
+  if (isDemoMode()) return { data: demoFetchStyleProfile(), live: true };
   try {
     const res = await beeFetch(`${API_URL}/api/v1/learning/style-profile`, { cache: "no-store" });
     if (!res.ok) throw new Error(`API responded ${res.status}`);
@@ -684,6 +726,7 @@ export async function runScenario(params: {
 // ─── Anomaly Detector ─────────────────────────────────────────────────────────
 
 export async function getAnomalyAlerts(params?: { status?: string; severity?: string }): Promise<FetchResult<import("@/lib/types").AnomalyAlert[]>> {
+  if (isDemoMode()) return { data: demoFetchAnomalyAlerts(params), live: true };
   try {
     const query = new URLSearchParams();
     if (params?.status) query.set("status", params.status);
@@ -697,12 +740,14 @@ export async function getAnomalyAlerts(params?: { status?: string; severity?: st
 }
 
 export async function checkAnomalies(): Promise<FetchResult<import("@/lib/types").AnomalyCheckResult>> {
+  if (isDemoMode()) return { data: demoCheckAnomalies(), live: true };
   const res = await beeFetch(`${API_URL}/api/v1/analytics/anomalies/check`, { method: "POST" });
   if (!res.ok) throw new Error(`API responded ${res.status}`);
   return { data: await res.json(), live: true };
 }
 
 export async function acknowledgeAnomaly(alertId: string, notes?: string): Promise<FetchResult<import("@/lib/types").AnomalyAlert>> {
+  if (isDemoMode()) return { data: demoAcknowledgeAnomaly(alertId, notes), live: true };
   const res = await beeFetch(`${API_URL}/api/v1/analytics/anomalies/${alertId}/acknowledge`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -718,6 +763,7 @@ export async function getAuditDecisions(params?: {
   opportunity_id?: string;
   limit?: number;
 }): Promise<FetchResult<AuditEntry[]>> {
+  if (isDemoMode()) return { data: demoFetchAuditDecisions(params), live: true };
   try {
     const query = new URLSearchParams();
     if (params?.agent_type) query.set("agent_type", params.agent_type);

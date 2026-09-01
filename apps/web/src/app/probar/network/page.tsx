@@ -1,7 +1,5 @@
-import { Zap } from "lucide-react";
-
-import { ProbarComingSoon } from "@/features/probar/probar-coming-soon";
+import { NetworkView } from "@/features/network/network-view";
 
 export default function ProbarNetworkPage() {
-  return <ProbarComingSoon label="Red" icon={Zap} />;
+  return <NetworkView />;
 }
