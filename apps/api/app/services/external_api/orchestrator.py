@@ -38,6 +38,7 @@ from app.services.external_api.providers.g2 import G2Provider
 from app.services.external_api.providers.google_search import GoogleSearchProvider
 from app.services.external_api.providers.hiring import HiringProvider
 from app.services.external_api.providers.linkedin import LinkedInProvider
+from app.services.external_api.providers.website import WebsiteEnrichmentProvider
 from app.services.external_api.rate_limiter import get_rate_limiter
 
 logger = get_logger(__name__)
@@ -53,7 +54,13 @@ class ExternalAPIOrchestrator:
         self._register_defaults()
 
     def _register_defaults(self) -> None:
-        for provider in (LinkedInProvider(), G2Provider(), GoogleSearchProvider(), HiringProvider()):
+        for provider in (
+            LinkedInProvider(),
+            G2Provider(),
+            GoogleSearchProvider(),
+            HiringProvider(),
+            WebsiteEnrichmentProvider(),
+        ):
             self.register_provider(provider)
 
     def register_provider(self, provider: IExternalProvider) -> None:
@@ -256,6 +263,28 @@ class ExternalAPIOrchestrator:
         enrichment["lead"] = lead
         enrichment["company"] = company
         return enrichment
+
+    def enrich_company_from_domain(self, *, company_domain: str) -> ExternalProfileResult:
+        """"One domain, full account" — see WebsiteEnrichmentProvider. Same
+        rate-limit-then-delegate shape as scan_market_news/scan_hiring_signals,
+        routed to the "website" provider instead of a search call.
+        """
+        if not self._acquire_rate_limit("website"):
+            return ExternalProfileResult(
+                provider="website",
+                success=False,
+                company_domain=company_domain,
+                error="Website enrichment rate limit exceeded",
+            )
+        provider = self._providers.get("website")
+        if not provider:
+            return ExternalProfileResult(
+                provider="website",
+                success=False,
+                company_domain=company_domain,
+                error="Website provider not registered",
+            )
+        return provider.enrich_company(company_domain=company_domain)
 
     def rate_limit_status(self) -> dict[str, dict[str, int | float]]:
         return self._rate_limiter.status()

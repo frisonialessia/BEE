@@ -31,6 +31,27 @@ Flow
         → SignalEngine (market signals)
         → ExternalAPIOrchestrator.enrich_lead_from_signal()
         → StrategyGeneratorService.enrich() → EnrichmentContext updated
+
+Email engagement events (sendgrid / resend)
+--------------------------------------------
+The same envelope also accepts email delivery events — ``event_type`` one
+of ``email.opened`` / ``email.clicked`` / ``email.replied``, provider
+``sendgrid`` or ``resend`` — which the worker turns into a
+``DarkFunnelSignal`` (see ``_ingest_dark_funnel`` /
+``_map_dark_funnel_type`` in ``app.services.external_api.worker``), scored
+by ``DarkSignalType.EMAIL_OPEN/EMAIL_CLICK/EMAIL_REPLY``. Company domain is
+resolved from ``company.domain`` when present, else guessed from the
+recipient's own email domain (refusing free/consumer providers — see
+``_domain_from_email``).
+
+Honesty note: ``SENDGRID_WEBHOOK_SECRET``/``RESEND_WEBHOOK_SECRET`` sign
+this endpoint's own HMAC scheme, not SendGrid's native ECDSA event
+signing or Resend's native Svix headers. Wiring a real SendGrid/Resend
+account to this endpoint needs a small adapter in front of it that
+verifies the provider's own signature and re-signs with this scheme
+before forwarding — the same "one real capability at a time" scoping as
+HiringProvider limiting itself to Greenhouse instead of guessing at three
+ATS integrations at once.
 """
 
 from __future__ import annotations

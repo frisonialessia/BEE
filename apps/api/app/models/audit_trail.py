@@ -75,6 +75,9 @@ class DecisionType(str):
     MARKET_INSIGHT_APPLIED = "market_insight_applied"
     VARIANT_ASSIGNED = "variant_assigned"        # A/B test arm assignment
     REVIEW_FLAGGED = "review_flagged"            # confidence_score < 0.8
+    GENERATOR_DEMOTED = "generator_demoted"      # skipped in favor of the next generator — see
+                                                  # StrategyGeneratorService._run_generators and
+                                                  # AuditTrailService.generator_approval_rate
 
 
 class AuditEntry(TimestampMixin, table=True):

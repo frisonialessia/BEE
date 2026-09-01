@@ -239,6 +239,51 @@ class AuditTrailService:
         stmt = _scope(stmt, AuditEntry.organization_id, organization_id)
         return list(self.session.exec(stmt).all())
 
+    def generator_approval_rate(
+        self,
+        generator_name: str,
+        *,
+        organization_id: uuid.UUID | None = None,
+        window: int = 20,
+    ) -> tuple[float, int] | None:
+        """Rolling approval rate for one generator, from its last *window*
+        ACTION_APPROVED/ACTION_REJECTED entries for this organization — the
+        read side of the feedback loop AgentOrchestrator.approve()/reject()
+        write (see that module's ``_record_decision_feedback``).
+
+        Returns ``(approval_rate, sample_size)``, or ``None`` when there's
+        no decision history yet for this generator — callers (see
+        StrategyGeneratorService's generator selection) must treat ``None``
+        as "not enough signal to judge," never as a 0% rate.
+
+        ``output_snapshot["generated_by"]`` isn't a native column (it's
+        inside a JSON blob), so this pulls a bounded recent window per
+        agent_type + decision_type and filters in Python rather than
+        pushing a JSON-path filter into SQL — deliberately simple at this
+        scale, not a design that needs to survive millions of rows.
+        """
+        stmt = (
+            select(AuditEntry)
+            .where(
+                AuditEntry.agent_type == AgentType.AGENT_ORCHESTRATOR,
+                AuditEntry.decision_type.in_([DecisionType.ACTION_APPROVED, DecisionType.ACTION_REJECTED]),  # type: ignore[attr-defined]
+            )
+            .order_by(AuditEntry.created_at.desc())
+            .limit(200)  # generous scan window across all generators, filtered below
+        )
+        stmt = _scope(stmt, AuditEntry.organization_id, organization_id)
+        entries = self.session.exec(stmt).all()
+
+        matches = [
+            e for e in entries
+            if (e.output_snapshot or {}).get("generated_by") == generator_name
+        ][:window]
+        if not matches:
+            return None
+
+        approved = sum(1 for e in matches if e.decision_type == DecisionType.ACTION_APPROVED)
+        return (approved / len(matches), len(matches))
+
     def count_manual_review_needed(self, organization_id: uuid.UUID | None = None) -> int:
         stmt = _scope(
             select(AuditEntry).where(AuditEntry.manual_review_required),

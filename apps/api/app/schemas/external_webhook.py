@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
-ExternalProvider = Literal["linkedin", "g2", "google_search", "capterra", "unknown"]
+ExternalProvider = Literal["linkedin", "g2", "google_search", "capterra", "sendgrid", "resend", "unknown"]
 
 
 class ExternalWebhookIn(BaseModel):

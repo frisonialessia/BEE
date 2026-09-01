@@ -235,6 +235,50 @@ def extract_rules_from_ops(
     return list(dict.fromkeys(rules))  # deduplicate, preserve order
 
 
+# ── Rejection reason → style rule keywords ─────────────────────────────────
+# A PendingAction rejection has no "edited version" to diff against — just a
+# free-text reason a human typed ("too pushy", "no CTA", "too generic"). This
+# is a different classification problem from the diff-ops above (which
+# detect a *change between two versions* of the same text) — a rejection
+# reason talks *about* the artifact, in the reviewer's own words, not in the
+# artifact's own vocabulary. Deliberately its own small keyword table rather
+# than routing rejection text through compute_diff_ops/extract_rules_from_ops,
+# which would silently misfire (e.g. a reason mentioning "regards" would
+# register as a formatting change, not the complaint it actually is). Same
+# "pure string heuristics, no NLP dependency" discipline as the rest of this
+# module, and the same StyleRuleType vocabulary UserStyleProfile already uses
+# — see CorrectionLearningService.record_rejection.
+_REJECTION_KEYWORDS: dict[str, list[str]] = {
+    StyleRuleType.PREFER_CONCISE: ["too long", "shorten", "verbose", "wordy", "too much text"],
+    StyleRuleType.PREFER_DETAILED: ["too short", "more detail", "not enough info", "too thin"],
+    StyleRuleType.PREFER_SOFT_CTA: ["too pushy", "aggressive", "too salesy", "hard sell", "salesy"],
+    StyleRuleType.AVOID_GENERIC_CLAIMS: ["generic", "template", "boilerplate", "cliche", "cliché", "cookie cutter"],
+    StyleRuleType.PREFER_COMPANY_SPECIFICS: [
+        "not personalized", "no context", "doesn't mention", "generic to the company", "irrelevant to them",
+    ],
+    StyleRuleType.PREFER_CASUAL_CLOSING: ["too formal", "stiff", "too corporate", "robotic"],
+    StyleRuleType.PREFER_DIRECT_CTA: ["no cta", "weak cta", "no ask", "unclear ask", "no clear next step"],
+    StyleRuleType.AVOID_SOCIAL_OPENER: ["weak opener", "bad opening", "hope you're well"],
+}
+
+
+def classify_rejection_reason(reason: str) -> list[str]:
+    """Map a free-text PendingAction rejection reason to StyleRuleType
+    candidates via keyword matching — deliberately conservative (an empty
+    list is a completely valid, common result): a reason that matches
+    nothing here is still recorded verbatim on the ArtifactCorrection row
+    for a human to read later, it just doesn't move the style profile.
+    """
+    if not reason:
+        return []
+    text = reason.lower()
+    rules: list[str] = []
+    for rule, keywords in _REJECTION_KEYWORDS.items():
+        if any(kw in text for kw in keywords):
+            rules.append(rule)
+    return rules
+
+
 def compute_change_ratio(original: str, edited: str) -> float:
     """Compute what fraction of the original was materially changed.
 

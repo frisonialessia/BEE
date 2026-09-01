@@ -34,6 +34,7 @@ from app.api.v1.endpoints import (
     orchestrator,
     organizations,
     outbound_webhooks,
+    priority,
     psychographic,
     quotas,
     saved_views,
@@ -62,6 +63,7 @@ api_router.include_router(opportunities.router)
 api_router.include_router(opportunity_tasks.router)
 api_router.include_router(outbound_webhooks.router)
 api_router.include_router(orchestrator.router)
+api_router.include_router(priority.router)
 api_router.include_router(insights.router)
 api_router.include_router(feedback.router)
 api_router.include_router(analytics.router)

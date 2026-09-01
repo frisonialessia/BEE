@@ -15,15 +15,27 @@ from sqlmodel import Session
 
 from app.api.deps import get_current_user, get_current_user_optional
 from app.core.database import get_session
+from app.core.logging import get_logger
 from app.models.account_activity import AccountActivityEventType
 from app.models.company import Company
 from app.models.user import User
 from app.repositories.company import CompanyRepository
 from app.schemas.account_activity import AccountActivityEventOut
-from app.schemas.company import CompanyCreateIn, CompanyOut, CompanyUpdateIn
+from app.schemas.account_brief import AccountBriefOut, AccountResearchResult
+from app.schemas.company import (
+    CompanyCreateFromDomainIn,
+    CompanyCreateIn,
+    CompanyOut,
+    CompanyUpdateIn,
+)
 from app.schemas.dedup import CompanyDuplicateGroup, MergeIn
 from app.services.account_activity import list_events_for_company, record_event
+from app.services.account_research import AccountResearchAgent
+from app.services.external_api.orchestrator import ExternalAPIOrchestrator
+from app.services.market_scan.orchestrator import MarketScanOrchestrator
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/companies", tags=["Companies"])
 
@@ -67,6 +79,54 @@ def create_company(
     )
     session.add(company)
     session.commit()
+    session.refresh(company)
+    return CompanyOut.model_validate(company)
+
+
+@router.post(
+    "/from-domain",
+    response_model=CompanyOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a company from just a domain — auto-enriched, Data-Entry Zero",
+)
+def create_company_from_domain(
+    data: CompanyCreateFromDomainIn,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> CompanyOut:
+    """"Una cuenta, un dominio": the only manual input is the domain — name
+    and description are filled in by :class:`WebsiteEnrichmentProvider`
+    (one homepage GET, no credentials) before the row is saved, and a first
+    market scan runs synchronously right after, not on the next cron tick.
+
+    Both enrichment calls are best-effort: a failed website fetch or a scan
+    that finds nothing still leaves the company created with the domain as
+    its name — the account exists and is trackable either way, same
+    "never block the primary action on a decorative step" principle as
+    ``MarketScanOrchestrator.run_tick``'s cursor advancing even on error.
+    Registered before ``/{company_id}`` for the same static-before-dynamic
+    routing reason as ``/duplicates`` below.
+    """
+    domain = data.domain.strip().lower().removeprefix("https://").removeprefix("http://").rstrip("/")
+
+    api = ExternalAPIOrchestrator(session)
+    enrichment = api.enrich_company_from_domain(company_domain=domain)
+
+    company = Company(
+        organization_id=current_user.organization_id,
+        name=(enrichment.company_name if enrichment.success else None) or domain,
+        domain=domain,
+        description=enrichment.company_description if enrichment.success else None,
+    )
+    session.add(company)
+    session.commit()
+    session.refresh(company)
+
+    try:
+        MarketScanOrchestrator(session).scan_company_now(company)
+    except Exception:  # noqa: BLE001 — the account is already created; a scan failure must not fail this request
+        logger.exception("create_company_from_domain: immediate scan failed for company_id=%s", company.id)
+
     session.refresh(company)
     return CompanyOut.model_validate(company)
 
@@ -259,4 +319,74 @@ def update_company(
             AccountActivityEventType.ASSIGNED if reassigned else AccountActivityEventType.EDITED
         ),
     )
+
+    if reassigned and company.owner_user_id is not None:
+        # A company crossing from "org-wide visible, nobody's specifically
+        # on it" to "someone owns this account" is a real intent signal —
+        # exactly the on-demand trigger AccountResearchAgent's cache/budget
+        # discipline is designed for (see its module docstring). Best-effort:
+        # a research failure or an exhausted daily budget must never fail
+        # the reassignment itself.
+        try:
+            AccountResearchAgent(session).research(company, organization_id=current_user.organization_id)
+        except Exception:  # noqa: BLE001
+            logger.exception(
+                "update_company: AccountResearchAgent trigger failed for company_id=%s", company.id
+            )
+
     return CompanyOut.model_validate(company)
+
+
+@router.post(
+    "/{company_id}/research",
+    response_model=AccountResearchResult,
+    summary="Trigger (or fetch cached) deep account research — on-demand only",
+)
+def research_company(
+    company_id: uuid.UUID,
+    force: bool = False,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> AccountResearchResult:
+    """The explicit "Investigate this account" action — see
+    AccountResearchAgent's module docstring for the cache/budget discipline
+    that makes this safe to call freely: a fresh cached brief is returned
+    without calling any provider, and an organization that has hit its
+    daily research budget gets back its most recent brief (possibly stale,
+    possibly ``None``) rather than a failure. ``force=true`` skips the TTL
+    cache (still subject to the daily budget) — for "no, research this
+    again right now."
+    """
+    repo = CompanyRepository(session)
+    company = repo.get(company_id)
+    if company is None or _hidden_from(session, current_user, company):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
+
+    outcome = AccountResearchAgent(session).research(
+        company, organization_id=current_user.organization_id, force=force
+    )
+    return AccountResearchResult(
+        brief=AccountBriefOut.model_validate(outcome.brief) if outcome.brief else None,
+        from_cache=outcome.from_cache,
+        budget_exceeded=outcome.budget_exceeded,
+        disabled=outcome.disabled,
+    )
+
+
+@router.get(
+    "/{company_id}/brief",
+    response_model=AccountBriefOut | None,
+    summary="Fetch the most recent account research brief, if any",
+)
+def get_company_brief(
+    company_id: uuid.UUID,
+    session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
+) -> AccountBriefOut | None:
+    repo = CompanyRepository(session)
+    company = repo.get(company_id)
+    if company is None or _hidden_from(session, current_user, company):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
+
+    brief = AccountResearchAgent(session).get_latest_brief(company_id)
+    return AccountBriefOut.model_validate(brief) if brief else None
