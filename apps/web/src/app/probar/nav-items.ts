@@ -16,12 +16,19 @@ export const PROBAR_NAV_GROUPS: NavGroup[] = NAV_GROUPS.map((group) => ({
 
 /** The sections actually simulated in the sandbox today, read-only except
  * the pipeline itself (drag a card, mark won/lost) — see lib/demo/store.ts
- * and the isDemoMode() guards across lib/api/*.ts. Control, Resiliencia,
- * Red, and Voz de marca are deliberately NOT here and never will be by
- * faking their data: those show real backend/infrastructure state (worker
- * health, audit logs, relationship graphs), and inventing that would be
- * lying about the system itself, not illustrating a product feature — the
- * same honesty policy the rest of BEE holds to.
+ * and the isDemoMode() guards across lib/api/*.ts and lib/api.ts.
+ *
+ * Control, Resiliencia, Red, and Voz de marca were deliberately excluded
+ * from this set for a long time: those sections show real backend/
+ * infrastructure state (worker health, audit logs, relationship graphs),
+ * and a fabricated version of that reads as lying about the system itself
+ * rather than illustrating a product feature. The BEE team later asked for
+ * a fully realistic simulation of all four anyway, explicitly overriding
+ * that default — see the local demo stores in lib/demo/store.ts (network
+ * connections, brand voice profile, DLQ events, audit trail…) for what
+ * backs them now. They still carry the same "Datos demo" labeling as every
+ * other simulated section here; nothing under `/probar` claims to be a real
+ * account's actual infrastructure state.
  *
  * Integraciones IS here even though nothing is ever actually connected in
  * the sandbox: unlike the sections above, "nothing connected yet" is the
@@ -53,4 +60,8 @@ export const PROBAR_LIVE_SECTIONS = new Set([
   "/probar/win-loss",
   "/probar/integrations",
   "/probar/sequences",
+  "/probar/control",
+  "/probar/network",
+  "/probar/brand",
+  "/probar/resilience",
 ]);

@@ -1,7 +1,5 @@
-import { Fingerprint } from "lucide-react";
-
-import { ProbarComingSoon } from "@/features/probar/probar-coming-soon";
+import { BrandView } from "@/features/brand/brand-view";
 
 export default function ProbarBrandPage() {
-  return <ProbarComingSoon label="Voz de marca" icon={Fingerprint} />;
+  return <BrandView />;
 }

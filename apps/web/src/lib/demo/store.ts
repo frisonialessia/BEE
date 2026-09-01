@@ -27,7 +27,25 @@ import type {
   OutcomeIn,
   Signal,
 } from "@/types/domain";
-import type { OutcomeWithPrediction } from "@/types/extended";
+import type {
+  AnomalyAlert as ExtendedAnomalyAlert,
+  AnomalyCheckResult,
+  AuditEntry,
+  AuditSummary,
+  BrandFragment,
+  CorrectionOut,
+  DLQRetryResult,
+  DLQSummary,
+  FailedEvent,
+  IntroPath,
+  NetworkConnection,
+  NetworkQueryResult,
+  NetworkStats,
+  OutcomeWithPrediction,
+  PendingAction,
+  StyleProfileOut,
+  VoiceProfile,
+} from "@/types/extended";
 
 const OPPORTUNITIES_KEY = "bee_demo_opportunities_v1";
 const SIGNALS_KEY = "bee_demo_signals_v1";
@@ -48,8 +66,12 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * counts as "1"); `"2"` is the enriched 18-account history added later;
  * `"3"` staggers the 6 open seeds' `expected_close_date` across the
  * 6-month Pronóstico window and adds ambient signals so the 14-day
- * Volumen de señales chart isn't mostly empty bars. */
-const SEED_VERSION = "3";
+ * Volumen de señales chart isn't mostly empty bars; `"4"` adds the local
+ * stores backing Control/Red/Voz de marca/Resiliencia (see the sections
+ * below) — a returning visitor on an older snapshot never had those keys
+ * seeded at all, so without this bump those 4 sections would load empty
+ * instead of the intended full simulation. */
+const SEED_VERSION = "4";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Reseeds the base opportunities/signals when the visitor's stored
@@ -246,6 +268,14 @@ export function resetDemoData(): void {
   saveJSON(SIGNALS_KEY, structuredClone(sampleSignals));
   saveJSON(BATTLECARDS_KEY, []);
   saveJSON(ARTIFACTS_KEY, []);
+  saveJSON(NETWORK_KEY, structuredClone(SEED_NETWORK_CONNECTIONS));
+  saveJSON(BRAND_PROFILE_KEY, structuredClone(SEED_VOICE_PROFILE));
+  saveJSON(BRAND_FRAGMENTS_KEY, structuredClone(SEED_BRAND_FRAGMENTS));
+  saveJSON(STYLE_PROFILE_KEY, structuredClone(SEED_STYLE_PROFILE));
+  saveJSON(DEEP_ANOMALIES_KEY, structuredClone(SEED_DEEP_ANOMALIES));
+  saveJSON(DLQ_KEY, structuredClone(SEED_DLQ_EVENTS));
+  saveJSON(AUDIT_KEY, structuredClone(SEED_AUDIT_ENTRIES));
+  saveJSON(PENDING_ACTIONS_KEY, structuredClone(SEED_PENDING_ACTIONS));
 }
 
 // ── Companies / Leads (derived, not their own store) ────────────────────────
@@ -524,4 +554,986 @@ export function demoCreateSequence(body: SequenceCreateIn): DynamicSequenceOut {
 export function demoStartSequenceExecution(sequenceId: string): { id: string; status: string } {
   demoFetchSequence(sequenceId); // throws if the sequence isn't real
   return { id: `demo-execution-${Date.now()}`, status: "active" };
+}
+
+// ── Red / Network Navigator ─────────────────────────────────────────────────
+//
+// Control, Red, Voz de marca and Resiliencia were originally left out of the
+// sandbox on purpose — they surface real backend/infrastructure state
+// (worker health, audit logs, relationship graphs), and inventing that felt
+// like lying about the system rather than illustrating a product feature.
+// The BEE team explicitly asked for these 4 to be simulated fully anyway —
+// "como si fuera real", same standard as the rest of `/probar` — so this
+// section (and the 3 below it) is that: a local dataset shaped exactly like
+// what the real NetworkNavigator/PersonalBrandService/DLQ/AuditTrail return,
+// clearly still labeled "Datos demo" wherever the real UI shows that badge.
+
+const NETWORK_KEY = "bee_demo_network_v1";
+
+const SEED_NETWORK_CONNECTIONS: NetworkConnection[] = [
+  {
+    id: "demo-network-1",
+    contact_name: "Marina Solís",
+    contact_company: "Cumbre Salud",
+    contact_domain: "cumbresalud.co",
+    contact_title: "COO",
+    connection_type: "first_degree",
+    relationship_strength: 9,
+    notes: "Ex-colega de una ronda de inversión anterior.",
+    tags: ["salud digital"],
+    industries: ["Salud digital"],
+    interaction_count: 14,
+    active: true,
+    created_at: new Date(Date.now() - 400 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-network-2",
+    contact_name: "Diego Farías",
+    contact_company: "Nimbus Cloud Systems",
+    contact_domain: "nimbuscloud.io",
+    contact_title: "VP Engineering",
+    connection_type: "second_degree",
+    relationship_strength: 6,
+    notes: "Conocido a través de un excompañero de Silo Data Works.",
+    tags: ["cloud"],
+    industries: ["Infraestructura cloud"],
+    interaction_count: 3,
+    active: true,
+    created_at: new Date(Date.now() - 220 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-network-3",
+    contact_name: "Renata Cabrera",
+    contact_company: "Onda Media Group",
+    contact_domain: "ondamedia.mx",
+    contact_title: "Directora Comercial",
+    connection_type: "alumni",
+    relationship_strength: 7,
+    notes: "Misma generación de la universidad.",
+    tags: ["medios", "alumni"],
+    industries: ["Medios"],
+    interaction_count: 5,
+    active: true,
+    created_at: new Date(Date.now() - 310 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-network-4",
+    contact_name: "Pablo Undurraga",
+    contact_company: "Horizonte Legal",
+    contact_domain: "horizontelegal.cl",
+    contact_title: "Socio Director",
+    connection_type: "referral",
+    relationship_strength: 8,
+    notes: "Referido directo por un cliente actual.",
+    tags: ["legal"],
+    industries: ["LegalTech"],
+    interaction_count: 9,
+    active: true,
+    created_at: new Date(Date.now() - 150 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-network-5",
+    contact_name: "Laura Kim",
+    contact_company: "Bright Retail Co",
+    contact_domain: "brightretail.com",
+    contact_title: "Head of Sales",
+    connection_type: "community",
+    relationship_strength: 4,
+    notes: "Coincidimos en un evento de la industria retail.",
+    tags: ["retail"],
+    industries: ["Retail"],
+    interaction_count: 1,
+    active: true,
+    created_at: new Date(Date.now() - 60 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-network-6",
+    contact_name: "Andrés Molina",
+    contact_company: "Cobre Insurtech",
+    contact_domain: "cobreinsurtech.co",
+    contact_title: "VP Growth",
+    connection_type: "first_degree",
+    relationship_strength: 8,
+    notes: "Trabajamos juntos hace 3 años, sigue siendo un aliado cercano.",
+    tags: ["insurtech"],
+    industries: ["Seguros"],
+    interaction_count: 11,
+    active: true,
+    created_at: new Date(Date.now() - 500 * 86400000).toISOString(),
+  },
+];
+
+const loadNetwork = () => loadJSON<NetworkConnection[]>(NETWORK_KEY, SEED_NETWORK_CONNECTIONS);
+const saveNetwork = (list: NetworkConnection[]) => saveJSON(NETWORK_KEY, list);
+
+export function demoFetchNetworkConnections(): NetworkConnection[] {
+  return loadNetwork();
+}
+
+export function demoAddNetworkConnection(payload: {
+  contact_name: string;
+  contact_company: string;
+  contact_domain: string;
+  contact_title?: string;
+  relationship_strength: number;
+  connection_type?: string;
+  notes?: string;
+}): NetworkConnection {
+  const created: NetworkConnection = {
+    id: `demo-network-${Date.now()}`,
+    contact_name: payload.contact_name,
+    contact_company: payload.contact_company,
+    contact_domain: payload.contact_domain,
+    contact_title: payload.contact_title ?? null,
+    connection_type: payload.connection_type ?? "first_degree",
+    relationship_strength: payload.relationship_strength,
+    notes: payload.notes ?? null,
+    tags: [],
+    industries: [],
+    interaction_count: 0,
+    active: true,
+    created_at: new Date().toISOString(),
+  };
+  const list = loadNetwork();
+  list.unshift(created);
+  saveNetwork(list);
+  return created;
+}
+
+export function demoNetworkStats(): NetworkStats {
+  const all = loadNetwork().filter((c) => c.active);
+  if (all.length === 0) {
+    return {
+      total_connections: 0,
+      first_degree_count: 0,
+      second_degree_count: 0,
+      top_industries: [],
+      avg_relationship_strength: 0,
+      companies_covered: 0,
+    };
+  }
+  const industryCounts = new Map<string, number>();
+  for (const conn of all) {
+    for (const industry of conn.industries) {
+      industryCounts.set(industry, (industryCounts.get(industry) ?? 0) + 1);
+    }
+  }
+  const topIndustries = [...industryCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name]) => name);
+  return {
+    total_connections: all.length,
+    first_degree_count: all.filter((c) => c.connection_type === "first_degree").length,
+    second_degree_count: all.filter((c) => c.connection_type === "second_degree").length,
+    top_industries: topIndustries,
+    avg_relationship_strength:
+      Math.round((all.reduce((sum, c) => sum + c.relationship_strength, 0) / all.length) * 10) / 10,
+    companies_covered: new Set(all.map((c) => c.contact_domain)).size,
+  };
+}
+
+/** Local port of NetworkNavigator's path search (direct connections only —
+ * no synthetic 2nd-degree graph traversal, that would mean fabricating
+ * people who don't appear anywhere else in the demo data). Honest either
+ * way: a real target domain not in the seed list gets the same
+ * `cold_outreach_fallback: true` a real, unconnected prospect would. */
+export function demoFindIntroPaths(params: {
+  target_domain: string;
+  target_company?: string;
+}): NetworkQueryResult {
+  const domain = params.target_domain.toLowerCase().trim();
+  const companyLabel = params.target_company || domain;
+  const matches = loadNetwork().filter((c) => c.active && c.contact_domain.toLowerCase() === domain);
+
+  const paths: IntroPath[] = matches
+    .sort((a, b) => b.relationship_strength - a.relationship_strength)
+    .map((conn) => {
+      const introType = conn.connection_type === "referral" ? "referral" : conn.connection_type === "alumni" ? "alumni" : "warm_intro";
+      return {
+        target_name: null,
+        target_company: companyLabel,
+        target_domain: domain,
+        path_length: 1,
+        intro_type: introType,
+        strength_score: conn.relationship_strength,
+        connector_name: conn.contact_name,
+        connector_id: conn.id,
+        steps: [
+          {
+            person: conn.contact_name,
+            company: conn.contact_company,
+            relationship_to_next: `Conexión directa (${conn.connection_type.replace(/_/g, " ")})`,
+            strength: conn.relationship_strength,
+          },
+        ],
+        action_recommendation: `Pídele a ${conn.contact_name} una presentación cálida en ${companyLabel} — la relación es fuerte (${conn.relationship_strength}/10).`,
+        draft_ask: `Hola ${conn.contact_name.split(" ")[0]},\n\n¿Me harías el favor de presentarme con alguien de ${companyLabel}? Estamos viendo cómo encajaría BEE en su operación comercial y tu opinión pesaría mucho.\n\nGracias,`,
+      };
+    });
+
+  const best = paths[0] ?? null;
+  const coverage: NetworkQueryResult["network_coverage"] =
+    paths.length === 0 ? "none" : (best?.strength_score ?? 0) >= 7 ? "strong" : (best?.strength_score ?? 0) >= 4 ? "moderate" : "weak";
+
+  return {
+    target_company: companyLabel,
+    target_domain: domain,
+    paths_found: paths,
+    best_path: best,
+    cold_outreach_fallback: paths.length === 0,
+    network_coverage: coverage,
+  };
+}
+
+// ── Voz de marca — PersonalBrandService ─────────────────────────────────────
+
+const BRAND_PROFILE_KEY = "bee_demo_brand_profile_v1";
+const BRAND_FRAGMENTS_KEY = "bee_demo_brand_fragments_v1";
+
+const SEED_VOICE_PROFILE: VoiceProfile = {
+  id: "demo-voice-profile",
+  display_name: "Alejandro Rivas",
+  title: "CEO",
+  language: "es",
+  tone_descriptors: ["analítico", "directo", "cercano"],
+  authority_topics: ["Inteligencia de ventas B2B", "IA aplicada a revenue", "Go-to-market en LatAm"],
+  forbidden_phrases: ["Espero que estés bien", "Solo quería contactarte"],
+  max_sentence_words: 22,
+  use_emojis: false,
+  preferred_cta: "¿Vale la pena una llamada de 15 minutos?",
+  bio_summary:
+    "Fundador y CEO — construyo BEE para que los equipos comerciales prioricen con datos, no con corazonadas.",
+  is_active: true,
+  created_at: new Date(Date.now() - 260 * 86400000).toISOString(),
+  updated_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+};
+
+const SEED_BRAND_FRAGMENTS: BrandFragment[] = [
+  {
+    id: "demo-fragment-1",
+    profile_id: "demo-voice-profile",
+    content:
+      "Dejamos de perseguir cada señal y empezamos a priorizar las que de verdad predicen ingresos — el pipeline no creció en volumen, creció en calidad.",
+    category: "key_insight",
+    tags: ["priorización", "pipeline"],
+    source: null,
+    performance_score: 0.82,
+    used_count: 6,
+    last_used_at: new Date(Date.now() - 9 * 86400000).toISOString(),
+    created_at: new Date(Date.now() - 180 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-fragment-2",
+    profile_id: "demo-voice-profile",
+    content: "Hablemos de números, no de promesas.",
+    category: "signature_phrase",
+    tags: ["cierre"],
+    source: null,
+    performance_score: 0.76,
+    used_count: 11,
+    last_used_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+    created_at: new Date(Date.now() - 200 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-fragment-3",
+    profile_id: "demo-voice-profile",
+    content: "3 señales que de verdad predicen una compra — ninguna es 'visitó la página de precios'. (hilo)",
+    category: "example_post",
+    tags: ["contenido", "linkedin"],
+    source: "linkedin",
+    performance_score: 0.69,
+    used_count: 2,
+    last_used_at: new Date(Date.now() - 40 * 86400000).toISOString(),
+    created_at: new Date(Date.now() - 90 * 86400000).toISOString(),
+  },
+];
+
+const loadBrandProfile = () => loadJSON<VoiceProfile | null>(BRAND_PROFILE_KEY, SEED_VOICE_PROFILE);
+const loadBrandFragments = () => loadJSON<BrandFragment[]>(BRAND_FRAGMENTS_KEY, SEED_BRAND_FRAGMENTS);
+
+export function demoFetchBrandProfile(): VoiceProfile | null {
+  return loadBrandProfile();
+}
+
+export function demoCreateBrandProfile(data: {
+  display_name: string;
+  title?: string;
+  language?: string;
+  tone_descriptors?: string[];
+  authority_topics?: string[];
+  forbidden_phrases?: string[];
+  preferred_cta?: string;
+  bio_summary?: string;
+}): VoiceProfile {
+  const now = new Date().toISOString();
+  const created: VoiceProfile = {
+    id: "demo-voice-profile",
+    display_name: data.display_name,
+    title: data.title ?? null,
+    language: data.language ?? "es",
+    tone_descriptors: data.tone_descriptors ?? [],
+    authority_topics: data.authority_topics ?? [],
+    forbidden_phrases: data.forbidden_phrases ?? [],
+    max_sentence_words: 22,
+    use_emojis: false,
+    preferred_cta: data.preferred_cta ?? null,
+    bio_summary: data.bio_summary ?? null,
+    is_active: true,
+    created_at: now,
+    updated_at: now,
+  };
+  saveJSON(BRAND_PROFILE_KEY, created);
+  return created;
+}
+
+export function demoAddBrandFragment(
+  profileId: string,
+  data: { content: string; category: string; tags?: string[]; source?: string },
+): BrandFragment {
+  const created: BrandFragment = {
+    id: `demo-fragment-${Date.now()}`,
+    profile_id: profileId,
+    content: data.content,
+    category: data.category,
+    tags: data.tags ?? [],
+    source: data.source ?? null,
+    performance_score: null,
+    used_count: 0,
+    last_used_at: null,
+    created_at: new Date().toISOString(),
+  };
+  const list = loadBrandFragments();
+  list.unshift(created);
+  saveJSON(BRAND_FRAGMENTS_KEY, list);
+  return created;
+}
+
+// ── Voz de marca — Correction Learning / Deep Learning panel ────────────────
+
+const STYLE_PROFILE_KEY = "bee_demo_style_profile_v1";
+
+const SEED_STYLE_PROFILE: StyleProfileOut = {
+  total_corrections: 4,
+  authoritative_rules_count: 2,
+  style_summary:
+    "Prefiere frases cortas (menos de 20 palabras), evita saludos genéricos como 'espero que estés bien', y cierra siempre con una pregunta directa de agenda.",
+  profile_version: 3,
+  last_correction_at: new Date(Date.now() - 6 * 86400000).toISOString(),
+  rules_by_type: {
+    tone: { directo_sin_relleno: { weight: 0.9, count: 4, authoritative: true } },
+    structure: {
+      cierre_con_pregunta: { weight: 0.85, count: 3, authoritative: true },
+      parrafos_cortos: { weight: 0.6, count: 2, authoritative: false },
+    },
+  },
+};
+
+const loadStyleProfile = () => loadJSON<StyleProfileOut>(STYLE_PROFILE_KEY, SEED_STYLE_PROFILE);
+
+export function demoFetchStyleProfile(): StyleProfileOut {
+  return loadStyleProfile();
+}
+
+export function demoRecordCorrection(data: {
+  original_content: string;
+  edited_content: string;
+  artifact_type: string;
+}): CorrectionOut {
+  const profile = loadStyleProfile();
+  const rules: string[] = [];
+  if (data.edited_content.length < data.original_content.length) rules.push("frases_mas_cortas");
+  if (data.edited_content.includes("?") && !data.original_content.includes("?")) rules.push("cierre_con_pregunta");
+  if (rules.length === 0) rules.push("tono_mas_directo");
+
+  const changeRatio = Math.min(
+    0.9,
+    Math.max(0.05, Math.abs(data.edited_content.length - data.original_content.length) / Math.max(data.original_content.length, 1)),
+  );
+
+  const updatedProfile: StyleProfileOut = {
+    ...profile,
+    total_corrections: profile.total_corrections + 1,
+    profile_version: profile.profile_version + 1,
+    last_correction_at: new Date().toISOString(),
+  };
+  saveJSON(STYLE_PROFILE_KEY, updatedProfile);
+
+  return {
+    correction_id: `demo-correction-${Date.now()}`,
+    artifact_type: data.artifact_type,
+    diff_ops: [
+      {
+        type: "replace",
+        content: data.edited_content.slice(0, 120),
+        detail: "Reescritura aplicada a partir de tu edición",
+        ratio: changeRatio,
+      },
+    ],
+    extracted_rules: rules,
+    change_ratio: Math.round(changeRatio * 100) / 100,
+    style_summary: updatedProfile.style_summary,
+    authoritative_rules_count: updatedProfile.authoritative_rules_count,
+    total_corrections: updatedProfile.total_corrections,
+    profile_version: updatedProfile.profile_version,
+  };
+}
+
+const DEEP_ANOMALIES_KEY = "bee_demo_deep_anomalies_v1";
+
+const SEED_DEEP_ANOMALIES: ExtendedAnomalyAlert[] = [
+  {
+    id: "demo-deep-anomaly-1",
+    alert_type: "conversion_drop",
+    severity: "high",
+    status: "open",
+    segment_type: "channel",
+    segment_value: "email",
+    rolling_rate: 0.09,
+    baseline_rate: 0.17,
+    deviation_pct: -47.1,
+    sample_size: 48,
+    title: "Caída de conversión en email — Retail",
+    description:
+      "La tasa de respuesta en la secuencia de email para el sector Retail cayó 47% respecto a su línea base de las últimas 6 semanas.",
+    recommendation: "Pausa la variante actual y prueba el asunto alternativo validado en Manufactura antes de escalar el volumen.",
+    suggested_actions: [
+      "Pausar la secuencia activa en Retail",
+      "Correr un test A/B de asunto",
+      "Revisar el CTA contra Fintech, que sigue estable",
+    ],
+    pending_action_id: null,
+    acknowledged_at: null,
+    resolution_notes: null,
+    auto_resolved: false,
+    created_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+  },
+  {
+    id: "demo-deep-anomaly-2",
+    alert_type: "conversion_drop",
+    severity: "medium",
+    status: "open",
+    segment_type: "sector",
+    segment_value: "LegalTech",
+    rolling_rate: 0.21,
+    baseline_rate: 0.28,
+    deviation_pct: -25.0,
+    sample_size: 22,
+    title: "Conversión por debajo de línea base — LegalTech",
+    description: "El sector LegalTech muestra una tasa de conversión 25% por debajo de su promedio histórico en las últimas 2 semanas.",
+    recommendation: "Sigue observando — la muestra todavía es pequeña (22 oportunidades) para actuar con confianza alta.",
+    suggested_actions: ["Esperar a que la muestra crezca antes de cambiar de playbook"],
+    pending_action_id: null,
+    acknowledged_at: null,
+    resolution_notes: null,
+    auto_resolved: false,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+];
+
+const loadDeepAnomalies = () => loadJSON<ExtendedAnomalyAlert[]>(DEEP_ANOMALIES_KEY, SEED_DEEP_ANOMALIES);
+const saveDeepAnomalies = (list: ExtendedAnomalyAlert[]) => saveJSON(DEEP_ANOMALIES_KEY, list);
+
+export function demoFetchAnomalyAlerts(params?: { status?: string; severity?: string }): ExtendedAnomalyAlert[] {
+  let list = loadDeepAnomalies();
+  if (params?.status) list = list.filter((a) => a.status === params.status);
+  if (params?.severity) list = list.filter((a) => a.severity === params.severity);
+  return list;
+}
+
+/** No new anomalies fabricated on demand — an honest "nothing new" scan,
+ * same restraint as demoCheckAnomalies' sibling functions across the demo. */
+export function demoCheckAnomalies(): AnomalyCheckResult {
+  const open = loadDeepAnomalies().filter((a) => a.status === "open");
+  return {
+    checked_at: new Date().toISOString(),
+    new_alerts: [],
+    resolved_alerts: [],
+    open_alerts: open,
+    summary: `Sin nuevas anomalías — ${open.length} alerta${open.length === 1 ? "" : "s"} abierta${open.length === 1 ? "" : "s"} bajo monitoreo.`,
+    checked_segments: 12,
+  };
+}
+
+/** Control's AnomaliesPanel uses a smaller subset of AnomalyAlert's fields
+ * (lib/api/anomalies.ts) than Voz de marca's DeepLearningPanel does — same
+ * underlying AnomalyDetector service, two different views of it. Derived
+ * from the same seed data rather than a second, separately-maintained
+ * dataset, so the two panels can never show contradictory anomalies. */
+export function demoFetchOpenAnomalies(): Array<{
+  id: string;
+  alert_type: string;
+  severity: "low" | "medium" | "high" | "critical";
+  status: string;
+  segment_type: string;
+  segment_value: string | null;
+  rolling_rate: number;
+  baseline_rate: number;
+  deviation_pct: number;
+  title: string;
+  description: string;
+  recommendation: string;
+}> {
+  return loadDeepAnomalies()
+    .filter((a) => a.status === "open")
+    .map((a) => ({
+      id: a.id,
+      alert_type: a.alert_type,
+      severity: a.severity,
+      status: a.status,
+      segment_type: a.segment_type,
+      segment_value: a.segment_value,
+      rolling_rate: a.rolling_rate,
+      baseline_rate: a.baseline_rate,
+      deviation_pct: a.deviation_pct,
+      title: a.title,
+      description: a.description,
+      recommendation: a.recommendation,
+    }));
+}
+
+export function demoAcknowledgeAnomaly(alertId: string, notes?: string): ExtendedAnomalyAlert {
+  const list = loadDeepAnomalies();
+  const idx = list.findIndex((a) => a.id === alertId);
+  if (idx === -1) {
+    throw new Error(`Demo anomaly ${alertId} not found — it only exists in this browser's local demo data.`);
+  }
+  list[idx] = {
+    ...list[idx],
+    status: "acknowledged",
+    acknowledged_at: new Date().toISOString(),
+    resolution_notes: notes ?? list[idx].resolution_notes,
+  };
+  saveDeepAnomalies(list);
+  return list[idx];
+}
+
+// ── Resiliencia — Dead Letter Queue ──────────────────────────────────────────
+
+const DLQ_KEY = "bee_demo_dlq_v1";
+
+const SEED_DLQ_EVENTS: FailedEvent[] = [
+  {
+    id: "demo-dlq-1",
+    event_type: "webhook_delivery",
+    event_name: "Envío de secuencia — Nimbus Cloud Systems",
+    opportunity_id: "demo-opp-s07",
+    lead_id: null,
+    pending_action_id: null,
+    attempt_count: 2,
+    last_error: "Timeout conectando con el proveedor de email (10s)",
+    error_history: [
+      { attempt: 1, error: "Timeout conectando con el proveedor de email (10s)", timestamp: new Date(Date.now() - 3 * 3600000).toISOString() },
+      { attempt: 2, error: "Timeout conectando con el proveedor de email (10s)", timestamp: new Date(Date.now() - 1 * 3600000).toISOString() },
+    ],
+    status: "pending",
+    next_retry_at: new Date(Date.now() + 15 * 60000).toISOString(),
+    last_attempted_at: new Date(Date.now() - 1 * 3600000).toISOString(),
+    resolved_at: null,
+    resolution_notes: null,
+    ceo_alerted: false,
+    created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+  },
+  {
+    id: "demo-dlq-2",
+    event_type: "webhook_call",
+    event_name: "Webhook saliente — CRM externo",
+    opportunity_id: null,
+    lead_id: null,
+    pending_action_id: null,
+    attempt_count: 5,
+    last_error: "El endpoint del CRM devolvió 410 Gone",
+    error_history: [
+      { attempt: 1, error: "Connection refused", timestamp: new Date(Date.now() - 2 * 86400000).toISOString() },
+      { attempt: 5, error: "El endpoint del CRM devolvió 410 Gone", timestamp: new Date(Date.now() - 1 * 86400000).toISOString() },
+    ],
+    status: "permanently_failed",
+    next_retry_at: null,
+    last_attempted_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+    resolved_at: null,
+    resolution_notes: null,
+    ceo_alerted: true,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-dlq-3",
+    event_type: "slack_notify",
+    event_name: "Notificación Slack — alerta de anomalía",
+    opportunity_id: null,
+    lead_id: null,
+    pending_action_id: null,
+    attempt_count: 2,
+    last_error: null,
+    error_history: [
+      { attempt: 1, error: "El token del canal de Slack había expirado", timestamp: new Date(Date.now() - 5 * 86400000).toISOString() },
+    ],
+    status: "resolved",
+    next_retry_at: null,
+    last_attempted_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+    resolved_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+    resolution_notes: "Reintentado manualmente tras reconectar el canal de Slack.",
+    ceo_alerted: false,
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-dlq-4",
+    event_type: "webhook_delivery",
+    event_name: "Envío de secuencia — Cobre Insurtech",
+    opportunity_id: "demo-opp-s16",
+    lead_id: null,
+    pending_action_id: null,
+    attempt_count: 1,
+    last_error: "Rate limit del proveedor de LinkedIn alcanzado",
+    error_history: [
+      { attempt: 1, error: "Rate limit del proveedor de LinkedIn alcanzado", timestamp: new Date(Date.now() - 20 * 60000).toISOString() },
+    ],
+    status: "retrying",
+    next_retry_at: new Date(Date.now() + 40 * 60000).toISOString(),
+    last_attempted_at: new Date(Date.now() - 20 * 60000).toISOString(),
+    resolved_at: null,
+    resolution_notes: null,
+    ceo_alerted: false,
+    created_at: new Date(Date.now() - 20 * 60000).toISOString(),
+  },
+];
+
+const loadDLQ = () => loadJSON<FailedEvent[]>(DLQ_KEY, SEED_DLQ_EVENTS);
+const saveDLQ = (list: FailedEvent[]) => saveJSON(DLQ_KEY, list);
+
+export function demoFetchDLQEvents(params?: { status?: string; limit?: number }): FailedEvent[] {
+  let list = loadDLQ();
+  if (params?.status) list = list.filter((e) => e.status === params.status);
+  return params?.limit ? list.slice(0, params.limit) : list;
+}
+
+export function demoDLQSummary(): DLQSummary {
+  const all = loadDLQ();
+  const now = Date.now();
+  return {
+    total_events: all.length,
+    pending_count: all.filter((e) => e.status === "pending").length,
+    retrying_count: all.filter((e) => e.status === "retrying").length,
+    resolved_count: all.filter((e) => e.status === "resolved").length,
+    permanently_failed_count: all.filter((e) => e.status === "permanently_failed").length,
+    due_for_retry_count: all.filter(
+      (e) => (e.status === "pending" || e.status === "retrying") && e.next_retry_at && new Date(e.next_retry_at).getTime() <= now,
+    ).length,
+    ceo_alerted_count: all.filter((e) => e.ceo_alerted).length,
+  };
+}
+
+function findDLQOrThrow(list: FailedEvent[], id: string): number {
+  const idx = list.findIndex((e) => e.id === id);
+  if (idx === -1) {
+    throw new Error(`Demo DLQ event ${id} not found — it only exists in this browser's local demo data.`);
+  }
+  return idx;
+}
+
+/** Simulated retry always succeeds — same honesty tradeoff as
+ * demoRecordOutcome: this is a local record of "this got retried," not a
+ * dice roll standing in for real infrastructure. */
+export function demoRetryDLQEvent(eventId: string): DLQRetryResult {
+  const list = loadDLQ();
+  const idx = findDLQOrThrow(list, eventId);
+  const now = new Date().toISOString();
+  list[idx] = {
+    ...list[idx],
+    attempt_count: list[idx].attempt_count + 1,
+    status: "resolved",
+    resolved_at: now,
+    last_attempted_at: now,
+    next_retry_at: null,
+  };
+  saveDLQ(list);
+  return {
+    event_id: eventId,
+    success: true,
+    status: "resolved",
+    message: "Reintento exitoso — el evento se resolvió.",
+    attempt_count: list[idx].attempt_count,
+    next_retry_at: null,
+  };
+}
+
+export function demoResolveDLQEvent(eventId: string, notes?: string): FailedEvent {
+  const list = loadDLQ();
+  const idx = findDLQOrThrow(list, eventId);
+  list[idx] = {
+    ...list[idx],
+    status: "resolved",
+    resolved_at: new Date().toISOString(),
+    resolution_notes: notes ?? "Resuelto manualmente desde el panel.",
+  };
+  saveDLQ(list);
+  return list[idx];
+}
+
+// ── Resiliencia — Audit Trail ────────────────────────────────────────────────
+
+const AUDIT_KEY = "bee_demo_audit_v1";
+
+const SEED_AUDIT_ENTRIES: AuditEntry[] = [
+  {
+    id: "demo-audit-1",
+    agent_type: "strategy_generator",
+    decision_type: "strategy_generation",
+    session_id: null,
+    opportunity_id: "demo-opp-s07",
+    lead_id: null,
+    signal_id: "demo-signal-s07",
+    pending_action_id: null,
+    context_snapshot: { signal_type: "product_launch", industry: "Infraestructura cloud" },
+    market_data_used: { top_playbook: "product_launch_technical", historical_win_rate: 0.42 },
+    strategy_reasoning: "Señal de lanzamiento de producto con alto encaje técnico — se prioriza el playbook de evaluación técnica.",
+    output_snapshot: { pain_point: "Escalar sin visibilidad de infraestructura", generator: "rule_based" },
+    confidence_score: 0.88,
+    manual_review_required: false,
+    processing_ms: 420,
+    generator_name: "HiringStrategyGenerator",
+    generator_version: "2.3",
+    created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-audit-2",
+    agent_type: "psychographic_analyzer",
+    decision_type: "disc_classification",
+    session_id: null,
+    opportunity_id: "demo-opp-s04",
+    lead_id: null,
+    signal_id: null,
+    pending_action_id: null,
+    context_snapshot: { title: "Head of Sales", seniority: "director" },
+    market_data_used: {},
+    strategy_reasoning: "Lenguaje directo y orientado a resultados en las últimas interacciones — clasificado como perfil D dominante.",
+    output_snapshot: { dominant_style: "D", confidence: 0.61 },
+    confidence_score: 0.61,
+    manual_review_required: true,
+    processing_ms: 180,
+    generator_name: "PsychographicAnalyzer",
+    generator_version: "1.4",
+    created_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-audit-3",
+    agent_type: "dark_funnel",
+    decision_type: "hot_lead_scoring",
+    session_id: null,
+    opportunity_id: null,
+    lead_id: null,
+    signal_id: null,
+    pending_action_id: null,
+    context_snapshot: { company_domain: "nimbuscloud.io", signal_count: 4 },
+    market_data_used: { research_intensity_score: 0.83 },
+    strategy_reasoning: "Actividad de investigación sostenida en páginas de precios y comparativas — etapa de compra: listo para comprar.",
+    output_snapshot: { buying_stage: "ready_to_buy", is_hot: true },
+    confidence_score: 0.91,
+    manual_review_required: false,
+    processing_ms: 95,
+    generator_name: "DarkFunnelService",
+    generator_version: "1.1",
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-audit-4",
+    agent_type: "agent_orchestrator",
+    decision_type: "action_approval_gate",
+    session_id: null,
+    opportunity_id: "demo-opp-s16",
+    lead_id: null,
+    signal_id: null,
+    pending_action_id: null,
+    context_snapshot: { action_type: "send_email" },
+    market_data_used: {},
+    strategy_reasoning: "Correo de apertura generado — enviado a la cola de aprobación del CEO antes de despachar.",
+    output_snapshot: { queued: true },
+    confidence_score: 0.74,
+    manual_review_required: false,
+    processing_ms: 60,
+    generator_name: "AgentOrchestrator",
+    generator_version: "1.0",
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-audit-5",
+    agent_type: "executive_agent",
+    decision_type: "battlecard_creation",
+    session_id: null,
+    opportunity_id: "demo-opp-s10",
+    lead_id: null,
+    signal_id: null,
+    pending_action_id: null,
+    context_snapshot: { signal_type: "expansion", industry: "Comercio exterior" },
+    market_data_used: { top_channel: "linkedin" },
+    strategy_reasoning: "Batalla generada a partir de la señal de expansión — argumento de cierre basado en el ciclo de venta promedio del sector.",
+    output_snapshot: { closing_argument: "Reduce tu ciclo de decisión 30%", generator: "rule_based" },
+    confidence_score: 0.7,
+    manual_review_required: false,
+    processing_ms: 510,
+    generator_name: "ExecutiveAgent",
+    generator_version: "2.0",
+    created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-audit-6",
+    agent_type: "trend_analyst",
+    decision_type: "market_insight_generation",
+    session_id: null,
+    opportunity_id: null,
+    lead_id: null,
+    signal_id: null,
+    pending_action_id: null,
+    context_snapshot: { signal_type: "funding_round" },
+    market_data_used: { evidence_count: 9 },
+    strategy_reasoning: "Aumento sostenido de señales de financiamiento en Fintech durante las últimas 3 semanas.",
+    output_snapshot: { insight_type: "sector_momentum" },
+    confidence_score: 0.48,
+    manual_review_required: true,
+    processing_ms: 340,
+    generator_name: "TrendAnalyst",
+    generator_version: "1.2",
+    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+];
+
+const loadAudit = () => loadJSON<AuditEntry[]>(AUDIT_KEY, SEED_AUDIT_ENTRIES);
+
+export function demoFetchAuditDecisions(params?: {
+  agent_type?: string;
+  manual_review_required?: boolean;
+  opportunity_id?: string;
+  limit?: number;
+}): AuditEntry[] {
+  let list = loadAudit();
+  if (params?.agent_type) list = list.filter((e) => e.agent_type === params.agent_type);
+  if (params?.manual_review_required !== undefined) {
+    list = list.filter((e) => e.manual_review_required === params.manual_review_required);
+  }
+  if (params?.opportunity_id) list = list.filter((e) => e.opportunity_id === params.opportunity_id);
+  return params?.limit ? list.slice(0, params.limit) : list;
+}
+
+export function demoAuditSummary(): AuditSummary {
+  const all = loadAudit();
+  const byAgent: Record<string, number> = {};
+  const byDecision: Record<string, number> = {};
+  for (const entry of all) {
+    byAgent[entry.agent_type] = (byAgent[entry.agent_type] ?? 0) + 1;
+    byDecision[entry.decision_type] = (byDecision[entry.decision_type] ?? 0) + 1;
+  }
+  return {
+    total_entries: all.length,
+    manual_review_count: all.filter((e) => e.manual_review_required).length,
+    avg_confidence_score:
+      all.length === 0 ? 0 : Math.round((all.reduce((sum, e) => sum + e.confidence_score, 0) / all.length) * 100) / 100,
+    entries_by_agent: byAgent,
+    entries_by_decision: byDecision,
+  };
+}
+
+// ── Resiliencia — AgentOrchestrator approval queue ──────────────────────────
+
+const PENDING_ACTIONS_KEY = "bee_demo_pending_actions_v1";
+
+const SEED_PENDING_ACTIONS: PendingAction[] = [
+  {
+    id: "demo-pending-1",
+    opportunity_id: "demo-opp-s07",
+    action_type: "send_email",
+    status: "pending_approval",
+    title: "Enviar apertura — Nimbus Cloud Systems",
+    description: "Correo de primer contacto generado a partir de la señal de lanzamiento de producto.",
+    preview:
+      "Asunto: Escalar infraestructura sin perder visibilidad\n\nHola Ashley,\n\nVi el lanzamiento de la nueva plataforma de Nimbus — felicidades. Muchos equipos en etapas similares terminan sacrificando visibilidad operativa al escalar tan rápido...",
+    payload: { channel: "email" },
+    priority: 1,
+    retry_count: 0,
+    approved_by: null,
+    approved_at: null,
+    completed_at: null,
+    failure_reason: null,
+    expires_at: new Date(Date.now() + 2 * 86400000).toISOString(),
+    created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+    updated_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+  },
+  {
+    id: "demo-pending-2",
+    opportunity_id: "demo-opp-s16",
+    action_type: "linkedin_message",
+    status: "pending_approval",
+    title: "Solicitud de conexión — Cobre Insurtech",
+    description: "Segundo paso de la secuencia de financiamiento: solicitud de conexión en LinkedIn.",
+    preview: "Hola Andrés, felicidades por la ronda reciente de Cobre Insurtech — me encantaría conectar y compartir cómo...",
+    payload: { channel: "linkedin" },
+    priority: 2,
+    retry_count: 0,
+    approved_by: null,
+    approved_at: null,
+    completed_at: null,
+    failure_reason: null,
+    expires_at: new Date(Date.now() + 4 * 86400000).toISOString(),
+    created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
+    updated_at: new Date(Date.now() - 26 * 3600000).toISOString(),
+  },
+  {
+    id: "demo-pending-3",
+    opportunity_id: "demo-opp-s10",
+    action_type: "crm_update",
+    status: "completed",
+    title: "Registrar avance de etapa — Puerto Digital",
+    description: "Actualización automática de etapa tras respuesta positiva.",
+    preview: null,
+    payload: { field: "status", value: "in_progress" },
+    priority: 3,
+    retry_count: 0,
+    approved_by: "CEO",
+    approved_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    completed_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    failure_reason: null,
+    expires_at: null,
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+];
+
+const loadPendingActions = () => loadJSON<PendingAction[]>(PENDING_ACTIONS_KEY, SEED_PENDING_ACTIONS);
+const savePendingActions = (list: PendingAction[]) => saveJSON(PENDING_ACTIONS_KEY, list);
+
+export function demoFetchPendingActions(limit = 50): PendingAction[] {
+  return loadPendingActions().slice(0, limit);
+}
+
+function findPendingActionOrThrow(list: PendingAction[], id: string): number {
+  const idx = list.findIndex((a) => a.id === id);
+  if (idx === -1) {
+    throw new Error(`Demo pending action ${id} not found — it only exists in this browser's local demo data.`);
+  }
+  return idx;
+}
+
+export function demoApproveAction(actionId: string, approvedBy: string): PendingAction {
+  const list = loadPendingActions();
+  const idx = findPendingActionOrThrow(list, actionId);
+  list[idx] = {
+    ...list[idx],
+    status: "approved",
+    approved_by: approvedBy,
+    approved_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  savePendingActions(list);
+  return list[idx];
+}
+
+export function demoRejectAction(actionId: string, reason?: string): PendingAction {
+  const list = loadPendingActions();
+  const idx = findPendingActionOrThrow(list, actionId);
+  list[idx] = {
+    ...list[idx],
+    status: "rejected",
+    failure_reason: reason ?? null,
+    updated_at: new Date().toISOString(),
+  };
+  savePendingActions(list);
+  return list[idx];
 }

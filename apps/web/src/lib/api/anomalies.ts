@@ -1,4 +1,6 @@
 import { apiFetch } from "@/lib/api/client";
+import { demoFetchOpenAnomalies } from "@/lib/demo/store";
+import { isDemoMode } from "@/lib/demo/mode";
 import type { FetchResult } from "@/types/api";
 
 export interface AnomalyAlert {
@@ -17,6 +19,7 @@ export interface AnomalyAlert {
 }
 
 export async function fetchOpenAnomalies(): Promise<FetchResult<AnomalyAlert[]>> {
+  if (isDemoMode()) return { data: demoFetchOpenAnomalies(), live: true };
   try {
     const data = await apiFetch<AnomalyAlert[]>("/api/v1/analytics/anomalies?status=open", {
       cache: "no-store",

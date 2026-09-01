@@ -1,7 +1,5 @@
-import { ShieldCheck } from "lucide-react";
-
-import { ProbarComingSoon } from "@/features/probar/probar-coming-soon";
+import { ResilienceView } from "@/features/resilience/resilience-view";
 
 export default function ProbarResiliencePage() {
-  return <ProbarComingSoon label="Resiliencia" icon={ShieldCheck} />;
+  return <ResilienceView />;
 }
