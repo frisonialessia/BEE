@@ -26,6 +26,9 @@ import type {
   Lead,
   Opportunity,
   OpportunityStatus,
+  OpportunityTask,
+  OpportunityTaskCreateIn,
+  OpportunityTaskUpdateIn,
   OutcomeIn,
   Signal,
 } from "@/types/domain";
@@ -302,6 +305,7 @@ export function resetDemoData(): void {
   saveJSON(PENDING_ACTIONS_KEY, structuredClone(getSeedPendingActions(locale)));
   saveJSON(TEMPLATES_KEY, structuredClone(getSeedTemplates(locale)));
   saveJSON(SEQUENCES_KEY, structuredClone(getSeedSequences(locale)));
+  saveJSON(TASKS_KEY, []);
 }
 
 // ── Companies / Leads (derived, not their own store) ────────────────────────
@@ -318,6 +322,33 @@ export function resetDemoData(): void {
 
 function slugify(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-+|-+$)/g, "") || "demo";
+}
+
+// Battlecard company/lead refs don't carry headcount or revenue (same as
+// the real backend's BattlecardCompany schema — see types/domain.ts), so
+// demo companies have no real source for these two ICP fit dimensions.
+// Rather than leave them permanently null (which would make sizes/
+// revenue_ranges the one ICP dimension that can never demonstrate a match
+// in the sandbox), each fictional demo company gets a stable pseudo-random
+// band derived from its own name — same name always gets the same band
+// across reloads, never actually random. This is fabricated the same way
+// every other illustrative detail in this dataset already is (deal
+// amounts, DISC scores, cycle days) — never applied to a real account.
+const DEMO_SIZE_BANDS = ["11-50", "51-200", "201-500", "501-1000"] as const;
+const DEMO_REVENUE_BANDS = ["$1M-$10M", "$10M-$50M", "$50M-$100M", "$100M-$500M"] as const;
+
+function stableHash(value: string): number {
+  let h = 0;
+  for (let i = 0; i < value.length; i++) h = (h * 31 + value.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+function demoCompanySize(companyName: string): string {
+  return DEMO_SIZE_BANDS[stableHash(companyName) % DEMO_SIZE_BANDS.length];
+}
+
+function demoCompanyRevenueRange(companyName: string): string {
+  return DEMO_REVENUE_BANDS[stableHash(`${companyName}-revenue`) % DEMO_REVENUE_BANDS.length];
 }
 
 function allBattlecards(): Battlecard[] {
@@ -342,8 +373,9 @@ export function demoFetchCompanies(): Company[] {
       name,
       domain: card.company.domain,
       industry: card.company.industry,
-      size: null,
+      size: demoCompanySize(name),
       country: card.company.country,
+      revenue_range: demoCompanyRevenueRange(name),
       website: card.company.domain ? `https://${card.company.domain}` : null,
       description: null,
       attributes: {},
@@ -388,6 +420,168 @@ export function demoFetchLeads(): Lead[] {
     });
   }
   return [...seen.values()];
+}
+
+const SUCCESS_PATTERN_MIN_SAMPLES = 3;
+const SUCCESS_PATTERN_CONFIDENCE_THRESHOLDS = [5, 20] as const;
+
+function successPatternConfidence(n: number): "low" | "medium" | "high" {
+  if (n < SUCCESS_PATTERN_CONFIDENCE_THRESHOLDS[0]) return "low";
+  if (n < SUCCESS_PATTERN_CONFIDENCE_THRESHOLDS[1]) return "medium";
+  return "high";
+}
+
+/** JS port of FeedbackLoopService.get_patterns / StrategyOutcomeRepository.
+ * get_win_rates — same grouping (signal_type × playbook × channel), same
+ * min-sample floor (3) and confidence thresholds (<5 low, <20 medium, else
+ * high), same "closed deals only" scope. Reads the live opportunity/signal
+ * store (not just the static seed), so a deal this visitor closed
+ * themselves in the sandbox counts too — same "learn" step the real
+ * FeedbackLoopService performs, just computed client-side. */
+export function demoSuccessPatterns(signalType?: string): {
+  signal_type: string;
+  playbook: string;
+  channel: string;
+  generator: string;
+  win_rate: number;
+  sample_size: number;
+  avg_days_to_close: number | null;
+  confidence: "low" | "medium" | "high";
+}[] {
+  const locale = getDemoLocale();
+  const opportunities = load();
+  const signalTypeById = new Map(
+    loadJSON<Signal[]>(SIGNALS_KEY, getSampleSignals(locale)).map((s) => [s.id, s.signal_type]),
+  );
+
+  const closed = opportunities.filter(
+    (o): o is typeof o & { closed_at: string } =>
+      (o.status === "won" || o.status === "lost") && Boolean(o.closed_at) && Boolean(o.strategy.playbook),
+  );
+
+  type Group = { total: number; wins: number; cycleDaysSum: number; cycleDaysCount: number };
+  const groups = new Map<string, Group>();
+  const groupMeta = new Map<string, { signal_type: string; playbook: string; channel: string }>();
+
+  for (const opp of closed) {
+    const oppSignalType = (opp.signal_id ? signalTypeById.get(opp.signal_id) : undefined) ?? "other";
+    if (signalType && oppSignalType !== signalType) continue;
+    const playbook = opp.strategy.playbook ?? "generic_outreach";
+    const channel = opp.strategy.channel ?? "email";
+    const key = `${oppSignalType}::${playbook}::${channel}`;
+    if (!groups.has(key)) {
+      groups.set(key, { total: 0, wins: 0, cycleDaysSum: 0, cycleDaysCount: 0 });
+      groupMeta.set(key, { signal_type: oppSignalType, playbook, channel });
+    }
+    const g = groups.get(key)!;
+    g.total += 1;
+    if (opp.status === "won") g.wins += 1;
+    const cycleDays = daysBetween(opp.created_at, opp.closed_at);
+    if (cycleDays !== null) {
+      g.cycleDaysSum += cycleDays;
+      g.cycleDaysCount += 1;
+    }
+  }
+
+  return [...groups.entries()]
+    .filter(([, g]) => g.total >= SUCCESS_PATTERN_MIN_SAMPLES)
+    .map(([key, g]) => {
+      const meta = groupMeta.get(key)!;
+      return {
+        signal_type: meta.signal_type,
+        playbook: meta.playbook,
+        channel: meta.channel,
+        generator: `${meta.signal_type}_generator`,
+        win_rate: g.wins / g.total,
+        sample_size: g.total,
+        avg_days_to_close: g.cycleDaysCount > 0 ? g.cycleDaysSum / g.cycleDaysCount : null,
+        confidence: successPatternConfidence(g.total),
+      };
+    })
+    .sort((a, b) => b.sample_size - a.sample_size)
+    .slice(0, 10);
+}
+
+function daysBetween(startIso: string, endIso: string): number | null {
+  const start = new Date(startIso).getTime();
+  const end = new Date(endIso).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return null;
+  return (end - start) / 86400000;
+}
+
+// ── Tasks (opportunity drawer's Tasks panel) ────────────────────────────────
+//
+// No seed data — a rep's to-dos are theirs to create, never something BEE
+// invents on their behalf (same "nothing fabricated for a human decision"
+// line the rest of the sandbox draws). What matters here is that the panel
+// actually works: create/complete/delete persist locally, same as every
+// other mutable corner of the sandbox.
+
+const TASKS_KEY = "bee_demo_tasks_v1";
+
+const loadTasks = () => loadJSON<OpportunityTask[]>(TASKS_KEY, []);
+const saveTasks = (list: OpportunityTask[]) => saveJSON(TASKS_KEY, list);
+
+export function demoFetchTasks(params: {
+  opportunityId?: string;
+  includeCompleted?: boolean;
+  overdueOnly?: boolean;
+}): OpportunityTask[] {
+  let list = loadTasks();
+  if (params.opportunityId) list = list.filter((t) => t.opportunity_id === params.opportunityId);
+  if (!params.includeCompleted) list = list.filter((t) => !t.completed_at);
+  if (params.overdueOnly) {
+    const now = Date.now();
+    list = list.filter((t) => !t.completed_at && t.due_at && new Date(t.due_at).getTime() < now);
+  }
+  return list;
+}
+
+export function demoCreateTask(body: OpportunityTaskCreateIn): OpportunityTask {
+  const list = loadTasks();
+  const task: OpportunityTask = {
+    id: `demo-task-${Date.now()}`,
+    opportunity_id: body.opportunity_id,
+    assigned_to_user_id: body.assigned_to_user_id ?? null,
+    title: body.title,
+    due_at: body.due_at ?? null,
+    completed_at: null,
+    created_at: new Date().toISOString(),
+  };
+  list.push(task);
+  saveTasks(list);
+  return task;
+}
+
+function findTaskOrThrow(list: OpportunityTask[], taskId: string): number {
+  const idx = list.findIndex((t) => t.id === taskId);
+  if (idx === -1) {
+    throw new Error(`Demo task ${taskId} not found — it only exists in this browser's local demo data.`);
+  }
+  return idx;
+}
+
+export function demoUpdateTask(taskId: string, body: OpportunityTaskUpdateIn): OpportunityTask {
+  const list = loadTasks();
+  const idx = findTaskOrThrow(list, taskId);
+  const current = list[idx];
+  list[idx] = {
+    ...current,
+    ...(body.title !== undefined ? { title: body.title } : {}),
+    ...(body.due_at !== undefined ? { due_at: body.due_at } : {}),
+    ...(body.assigned_to_user_id !== undefined ? { assigned_to_user_id: body.assigned_to_user_id } : {}),
+    ...(body.completed !== undefined
+      ? { completed_at: body.completed ? new Date().toISOString() : null }
+      : {}),
+  };
+  saveTasks(list);
+  return list[idx];
+}
+
+export function demoDeleteTask(taskId: string): void {
+  const list = loadTasks();
+  findTaskOrThrow(list, taskId);
+  saveTasks(list.filter((t) => t.id !== taskId));
 }
 
 // ── Message templates (Biblioteca de mensajes) ──────────────────────────────

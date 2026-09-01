@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCompanies, useCompanyDuplicates } from "@/hooks/queries/use-companies";
 import { useLeadDuplicates, useLeads } from "@/hooks/queries/use-leads";
 import { useIcpCriteria } from "@/hooks/queries/use-icp";
+import { EMPTY_ICP_CRITERIA } from "@/lib/api/organizations";
 import { useOpenAnomalies } from "@/hooks/queries/use-anomalies";
 import { useSuccessPatterns } from "@/hooks/queries/use-feedback";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -70,7 +71,7 @@ export function DailyBrief() {
     companies: companiesResult?.data ?? [],
     opportunities: oppsResult?.data ?? [],
     leads: leadsResult?.data ?? [],
-    icpCriteria: icpResult?.data ?? { industries: [], sizes: [], countries: [] },
+    icpCriteria: icpResult?.data ?? EMPTY_ICP_CRITERIA,
     quotas: quotasResult?.data ?? [],
     users: users ?? [],
     companyDuplicates: companyDupResult?.data ?? [],

@@ -46,6 +46,7 @@ def create_company(
         industry=data.industry,
         size=data.size,
         country=data.country,
+        revenue_range=data.revenue_range,
         website=data.website,
         description=data.description,
     )

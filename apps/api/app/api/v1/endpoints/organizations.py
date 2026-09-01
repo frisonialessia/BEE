@@ -43,6 +43,10 @@ def get_icp_criteria(
         industries=criteria.get("industries", []),
         sizes=criteria.get("sizes", []),
         countries=criteria.get("countries", []),
+        revenue_ranges=criteria.get("revenue_ranges", []),
+        job_titles=criteria.get("job_titles", []),
+        seniorities=criteria.get("seniorities", []),
+        tech_keywords=criteria.get("tech_keywords", []),
     )
 
 

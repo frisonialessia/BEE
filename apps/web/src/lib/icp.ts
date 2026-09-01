@@ -18,15 +18,38 @@ export const QUADRANT_HINTS: Record<PriorityQuadrant, string> = {
 };
 
 export function isIcpConfigured(criteria: IcpCriteria): boolean {
-  return criteria.industries.length > 0 || criteria.sizes.length > 0 || criteria.countries.length > 0;
+  return (
+    criteria.industries.length > 0 ||
+    criteria.sizes.length > 0 ||
+    criteria.countries.length > 0 ||
+    criteria.revenue_ranges.length > 0 ||
+    criteria.job_titles.length > 0 ||
+    criteria.seniorities.length > 0 ||
+    criteria.tech_keywords.length > 0
+  );
 }
 
-/** Fit 0–100: fracción de las dimensiones que SÍ configuraste (industria,
- *  tamaño, país) que esta empresa cumple. Una dimensión que dejaste vacía no
- *  cuenta ni a favor ni en contra — "no me importa el país" no debería
- *  penalizar a nadie. `null` cuando el ICP todavía no está configurado en
- *  absoluto: nunca inventamos un fit score sin una definición real. */
-export function computeFitScore(company: Company, criteria: IcpCriteria): number | null {
+function includesCaseInsensitive(haystack: string, needle: string): boolean {
+  return haystack.toLowerCase().includes(needle.toLowerCase());
+}
+
+/** Fit 0–100: fracción de las dimensiones que SÍ configuraste que esta
+ *  cuenta cumple. Una dimensión que dejaste vacía no cuenta ni a favor ni
+ *  en contra — "no me importa el país" no debería penalizar a nadie. `null`
+ *  cuando el ICP todavía no está configurado en absoluto: nunca inventamos
+ *  un fit score sin una definición real.
+ *
+ *  Cubre dos niveles: firmográficos de la cuenta (industria/tamaño/país/
+ *  ingresos, contra la Company misma) y buyer persona real dentro de esa
+ *  cuenta (cargo/seniority contra sus Leads, stack tecnológico contra sus
+ *  señales de tipo tech_adoption) — encajar con la cuenta correcta no basta
+ *  si en esa cuenta nadie con la autoridad para comprar aparece en el
+ *  radar. */
+export function computeFitScore(
+  company: Company,
+  criteria: IcpCriteria,
+  context: { leads: Lead[]; signals: Signal[] },
+): number | null {
   if (!isIcpConfigured(criteria)) return null;
 
   let dimensions = 0;
@@ -43,6 +66,39 @@ export function computeFitScore(company: Company, criteria: IcpCriteria): number
   if (criteria.countries.length > 0) {
     dimensions += 1;
     if (company.country && criteria.countries.includes(company.country)) matches += 1;
+  }
+  if (criteria.revenue_ranges.length > 0) {
+    dimensions += 1;
+    if (company.revenue_range && criteria.revenue_ranges.includes(company.revenue_range)) matches += 1;
+  }
+
+  const companyLeads = context.leads.filter((l) => l.company_id === company.id);
+  if (criteria.job_titles.length > 0) {
+    dimensions += 1;
+    const hit = companyLeads.some(
+      (l) => l.title && criteria.job_titles.some((target) => includesCaseInsensitive(l.title!, target)),
+    );
+    if (hit) matches += 1;
+  }
+  if (criteria.seniorities.length > 0) {
+    dimensions += 1;
+    const hit = companyLeads.some((l) => l.seniority && criteria.seniorities.includes(l.seniority));
+    if (hit) matches += 1;
+  }
+
+  if (criteria.tech_keywords.length > 0) {
+    dimensions += 1;
+    const companyTechSignals = context.signals.filter(
+      (s) => s.company_id === company.id && s.signal_type === "tech_adoption",
+    );
+    const hit = companyTechSignals.some((s) =>
+      criteria.tech_keywords.some(
+        (target) =>
+          includesCaseInsensitive(s.title, target) ||
+          (s.description && includesCaseInsensitive(s.description, target)),
+      ),
+    );
+    if (hit) matches += 1;
   }
 
   if (dimensions === 0) return null;
@@ -88,7 +144,7 @@ export function computePriorities(
 ): CompanyPriority[] {
   return companies
     .map((company) => {
-      const fit = computeFitScore(company, criteria);
+      const fit = computeFitScore(company, criteria, { leads: data.leads, signals: data.signals });
       if (fit === null) return null;
       const intent = computeIntentScore(company.id, data);
       return { company, fit, intent, quadrant: classifyQuadrant(fit, intent) };

@@ -94,12 +94,39 @@
   "icpForm": {
     "title": "Perfil de Cliente Ideal (ICP)",
     "subtitle": "Separa cada valor con comas. Deja una lista vacía si esa dimensión no te importa — no penaliza a nadie.",
-    "industries": { "label": "Industrias", "placeholder": "SaaS, Fintech, Logística…" },
-    "sizes": { "label": "Tamaños de empresa", "placeholder": "11-50, 51-200…" },
-    "countries": { "label": "Países", "placeholder": "México, Colombia…" },
+    "industries": {
+      "label": "Industrias",
+      "placeholder": "SaaS, Fintech, Logística…"
+    },
+    "sizes": {
+      "label": "Tamaños de empresa",
+      "placeholder": "11-50, 51-200…"
+    },
+    "countries": {
+      "label": "Países",
+      "placeholder": "México, Colombia…"
+    },
+    "revenueRanges": {
+      "label": "Rango de ingresos anuales",
+      "placeholder": "$1M-$10M, $10M-$50M…"
+    },
+    "buyerPersonaLabel": "Buyer persona (a quién buscar dentro de la cuenta)",
+    "jobTitles": {
+      "label": "Cargos objetivo",
+      "placeholder": "VP Ventas, Head of Revenue, Director…"
+    },
+    "seniorities": {
+      "label": "Seniority objetivo",
+      "placeholder": "c_level, vp, director, manager, ic"
+    },
+    "techKeywords": {
+      "label": "Stack tecnológico",
+      "placeholder": "Salesforce, Snowflake, HubSpot…"
+    },
     "alreadyUsing": "Ya usas: {values}",
     "save": "Guardar",
     "saving": "Guardando…",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "saveError": "No se pudo guardar el ICP."
   }
 }

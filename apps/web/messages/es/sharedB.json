@@ -45,7 +45,8 @@
     "completedCount": "{count, plural, one {# completada} other {# completadas}}",
     "deleteTask": "Eliminar tarea",
     "newTaskPlaceholder": "Nueva tarea…",
-    "addTask": "Agregar tarea"
+    "addTask": "Agregar tarea",
+    "error": "No se pudo guardar la tarea."
   },
   "priorityMatrix": {
     "ariaLabel": "Matriz de priorización: fit vs. intención por empresa",

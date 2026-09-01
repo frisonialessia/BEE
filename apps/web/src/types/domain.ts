@@ -311,6 +311,7 @@ export interface Company {
   industry: string | null;
   size: string | null;
   country: string | null;
+  revenue_range: string | null;
   website: string | null;
   description: string | null;
   attributes: Record<string, unknown>;

@@ -49,7 +49,9 @@ import {
   demoFetchAnomalyAlerts,
   demoFetchAuditDecisions,
   demoFetchBrandProfile,
+  demoFetchCompanies,
   demoFetchDLQEvents,
+  demoFetchLeads,
   demoFetchNetworkConnections,
   demoFetchPendingActions,
   demoFetchStyleProfile,
@@ -60,6 +62,7 @@ import {
   demoResolveDLQEvent,
   demoRetryDLQEvent,
 } from "@/lib/demo/store";
+import { demoClassifyLead } from "@/lib/demo/disc";
 import type { FetchResult } from "@/types/api";
 import type { Opportunity, OpportunityStatus } from "@/types/domain";
 import { getSampleArtifacts, getSampleHotLeads } from "@/lib/sample-data";
@@ -447,6 +450,17 @@ export async function advanceSequenceExecution(
 // ─── PsychographicAnalyzer ────────────────────────────────────────────────────
 
 export async function getLeadDISCProfile(leadId: string): Promise<FetchResult<LeadPsychographic>> {
+  if (isDemoMode()) {
+    // Same title→DISC heuristic the real PsychographicAnalyzer runs — see
+    // lib/demo/disc.ts's docstring for why this is a faithful JS port
+    // rather than a fabricated score with no relationship to the lead.
+    const lead = demoFetchLeads().find((l) => l.id === leadId);
+    if (!lead) return { data: null as unknown as LeadPsychographic, live: false };
+    const company = lead.company_id
+      ? demoFetchCompanies().find((c) => c.id === lead.company_id)
+      : undefined;
+    return { data: demoClassifyLead(leadId, lead.title, company?.industry ?? null), live: false };
+  }
   try {
     const res = await beeFetch(`${API_URL}/api/v1/psychographic/leads/${leadId}`, { cache: "no-store" });
     if (!res.ok) throw new Error(`API responded ${res.status}`);
@@ -488,6 +502,26 @@ export async function getDarkFunnelHotLeads(params?: {
   hot_only?: boolean;
   limit?: number;
 }): Promise<FetchResult<HotLeadScore[]>> {
+  if (isDemoMode()) {
+    // Same sample hot leads getDarkFunnelSummary already aggregates from —
+    // the hive (SignalHexMap) and the Dark Funnel dashboard's lead list
+    // must show the same accounts the summary tiles above them count,
+    // filtered the same way the real endpoint would.
+    let leads = getSampleHotLeads(getDemoLocale());
+    if (params?.min_score !== undefined) {
+      leads = leads.filter((l) => l.research_intensity_score >= params.min_score!);
+    }
+    if (params?.buying_stage) {
+      leads = leads.filter((l) => l.buying_stage === params.buying_stage);
+    }
+    if (params?.hot_only) {
+      leads = leads.filter((l) => l.is_hot);
+    }
+    if (params?.limit) {
+      leads = leads.slice(0, params.limit);
+    }
+    return { data: leads, live: false };
+  }
   try {
     const query = new URLSearchParams();
     if (params?.min_score !== undefined) query.set("min_score", String(params.min_score));
@@ -499,10 +533,10 @@ export async function getDarkFunnelHotLeads(params?: {
     return { data: (await res.json()) as HotLeadScore[], live: true };
   } catch {
     // Honest empty, not fabricated demo data — same convention as
-    // fetchSignals/getDarkFunnelSummary (see fetchSignals' docstring in
-    // lib/api/signals.ts for the full rationale). A real account hitting a
-    // transient failure must never see illustrative companies ("Northwind
-    // Labs") rendered as if they were real hot leads.
+    // fetchSignals (see its docstring in lib/api/signals.ts for the full
+    // rationale). A real account hitting a transient failure must never
+    // see illustrative companies ("Northwind Labs") rendered as if they
+    // were real hot leads.
     return { data: [], live: false };
   }
 }

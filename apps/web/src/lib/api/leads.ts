@@ -107,6 +107,10 @@ export interface LeadDuplicateGroup {
 }
 
 export async function fetchLeadDuplicates(): Promise<FetchResult<LeadDuplicateGroup[]>> {
+  // Honest empty, not fabricated duplicates — same rationale as
+  // fetchCompanyDuplicates (companies.ts), documented explicitly here
+  // instead of falling through the catch block below.
+  if (isDemoMode()) return { data: [], live: false };
   try {
     const data = await apiFetch<LeadDuplicateGroup[]>("/api/v1/leads/duplicates", {
       cache: "no-store",

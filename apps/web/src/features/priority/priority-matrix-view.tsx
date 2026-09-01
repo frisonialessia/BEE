@@ -14,6 +14,7 @@ import { useIcpCriteria } from "@/hooks/queries/use-icp";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
+import { EMPTY_ICP_CRITERIA } from "@/lib/api/organizations";
 import { computePriorities, isIcpConfigured, type PriorityQuadrant } from "@/lib/icp";
 
 const QUADRANT_ORDER: PriorityQuadrant[] = ["priority", "nurture", "opportunistic", "deprioritize"];
@@ -34,7 +35,7 @@ export function PriorityMatrixView() {
   const { data: signalsResult, isLoading: signalsLoading } = useSignals(300);
   const [editingIcp, setEditingIcp] = useState(false);
 
-  const criteria = icpResult?.data ?? { industries: [], sizes: [], countries: [] };
+  const criteria = icpResult?.data ?? EMPTY_ICP_CRITERIA;
   const companies = companiesResult?.data ?? [];
   const opportunities = oppsResult?.data ?? [];
   const leads = leadsResult?.data ?? [];
@@ -59,6 +60,8 @@ export function PriorityMatrixView() {
     industries: uniqueSorted(companies.map((c) => c.industry)),
     sizes: uniqueSorted(companies.map((c) => c.size)),
     countries: uniqueSorted(companies.map((c) => c.country)),
+    revenueRanges: uniqueSorted(companies.map((c) => c.revenue_range)),
+    seniorities: uniqueSorted(leads.map((l) => l.seniority)),
   };
 
   return (

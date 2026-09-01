@@ -45,7 +45,8 @@
     "completedCount": "{count, plural, one {# completed} other {# completed}}",
     "deleteTask": "Delete task",
     "newTaskPlaceholder": "New task…",
-    "addTask": "Add task"
+    "addTask": "Add task",
+    "error": "Couldn't save the task."
   },
   "priorityMatrix": {
     "ariaLabel": "Priority matrix: fit vs. intent by company",

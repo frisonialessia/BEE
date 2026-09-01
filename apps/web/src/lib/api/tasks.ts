@@ -1,4 +1,6 @@
 import { apiFetch } from "@/lib/api/client";
+import { demoCreateTask, demoDeleteTask, demoFetchTasks, demoUpdateTask } from "@/lib/demo/store";
+import { isDemoMode } from "@/lib/demo/mode";
 import type { FetchResult } from "@/types/api";
 import type { OpportunityTask, OpportunityTaskCreateIn, OpportunityTaskUpdateIn } from "@/types/domain";
 
@@ -7,6 +9,9 @@ export async function fetchTasks(params: {
   includeCompleted?: boolean;
   overdueOnly?: boolean;
 }): Promise<FetchResult<OpportunityTask[]>> {
+  if (isDemoMode()) {
+    return { data: demoFetchTasks(params), live: false };
+  }
   try {
     const search = new URLSearchParams();
     if (params.opportunityId) search.set("opportunity_id", params.opportunityId);
@@ -22,6 +27,7 @@ export async function fetchTasks(params: {
 }
 
 export async function createTask(body: OpportunityTaskCreateIn): Promise<OpportunityTask> {
+  if (isDemoMode()) return demoCreateTask(body);
   return apiFetch<OpportunityTask>("/api/v1/tasks", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -33,6 +39,7 @@ export async function updateTask(
   taskId: string,
   body: OpportunityTaskUpdateIn,
 ): Promise<OpportunityTask> {
+  if (isDemoMode()) return demoUpdateTask(taskId, body);
   return apiFetch<OpportunityTask>(`/api/v1/tasks/${taskId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -41,5 +48,9 @@ export async function updateTask(
 }
 
 export async function deleteTask(taskId: string): Promise<void> {
+  if (isDemoMode()) {
+    demoDeleteTask(taskId);
+    return;
+  }
   await apiFetch<void>(`/api/v1/tasks/${taskId}`, { method: "DELETE" });
 }
