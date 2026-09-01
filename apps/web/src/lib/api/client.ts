@@ -58,6 +58,31 @@ export async function apiFetch<T>(
   path: string,
   options: ApiFetchOptions = {},
 ): Promise<T> {
+  // NEXT_PUBLIC_API_URL falling back to localhost:8000 is a real
+  // convenience in development — `pnpm dev` needs zero .env.local setup
+  // against a locally running API. Silently keeping that same fallback for
+  // a real visitor's browser in production would mean this specific call
+  // targets localhost:8000 — which can't reach the real API, and (worse)
+  // would happily talk to anything the *visitor's own machine* happens to
+  // have listening on that port. Checked here — immediately before the one
+  // place a live network call actually happens — rather than in
+  // getPublicEnv()/getApiBaseUrl() themselves: those are also called from
+  // module-level code and display-only URL builders that run on every page
+  // load regardless of whether a real request is ever made, including the
+  // sandbox (`/probar`), which by design never calls the real API at all
+  // (see `lib/demo/mode.ts`) and must never be taken down by this check.
+  if (
+    typeof window !== "undefined" &&
+    process.env.NODE_ENV === "production" &&
+    !process.env.NEXT_PUBLIC_API_URL
+  ) {
+    throw new Error(
+      "NEXT_PUBLIC_API_URL is not set. Configure it in the production environment " +
+        "(e.g. Vercel project settings) — it cannot silently default to localhost:8000 " +
+        "outside of local development.",
+    );
+  }
+
   const { next, headers, ...rest } = options;
   const url = `${getApiBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 
