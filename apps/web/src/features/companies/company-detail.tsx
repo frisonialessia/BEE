@@ -1,23 +1,108 @@
 "use client";
 
-import { AlertTriangle, ArrowUpRight, Building2, Globe, Mail, Radio, Target, Upload, Users } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Building2, Clock, Globe, Mail, Radio, Target, Upload, Users } from "lucide-react";
 import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 import { RelationshipMap } from "@/components/companies/relationship-map";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
-import { useCompany } from "@/hooks/queries/use-companies";
+import { useCompany, useCompanyActivity, useUpdateCompany } from "@/hooks/queries/use-companies";
 import { useBulkCreateLeads, useCreateLead, useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
+import { useUsers } from "@/hooks/queries/use-users";
+import { useAuth } from "@/providers/auth-provider";
+import { ApiError } from "@/types/api";
 import { getOpportunityStatusLabels, getValidationFlagLabels } from "@/lib/format";
-import { formatDate } from "@/lib/i18n/format";
+import { formatDate, formatRelativeTime } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
 import { parseCsv, pickColumn as pick } from "@/lib/csv";
 import { computeRelationshipMap } from "@/lib/relationship-map";
+
+/** Owner display + reassign — visible to everyone, editable only by
+ * OWNER/ADMIN/MANAGER (the roles that can already reassign a teammate's
+ * team in TeamAdminView). A MEMBER seeing "unassigned" or a teammate's
+ * name here with no way to change it isn't a bug — reassignment is a
+ * management action, same posture as team/role changes elsewhere. */
+function CompanyOwner({ companyId, ownerUserId }: { companyId: string; ownerUserId: string | null }) {
+  const t = useTranslations("companiesLeads.companyDetail.owner");
+  const { user: currentUser } = useAuth();
+  const { data: users } = useUsers();
+  const updateCompany = useUpdateCompany();
+  const canManage =
+    currentUser?.role === "owner" || currentUser?.role === "admin" || currentUser?.role === "manager";
+
+  const owner = (users ?? []).find((u) => u.id === ownerUserId);
+
+  async function handleChange(userId: string) {
+    try {
+      await updateCompany.mutateAsync({ companyId, body: { owner_user_id: userId || null } });
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : t("reassignError"));
+    }
+  }
+
+  if (!canManage) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        {t("label")}: {owner?.full_name ?? t("unassigned")}
+      </p>
+    );
+  }
+
+  return (
+    <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      {t("label")}:
+      <select
+        value={ownerUserId ?? ""}
+        onChange={(e) => handleChange(e.target.value)}
+        disabled={updateCompany.isPending}
+        className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-1.5 py-0.5 text-xs outline-none"
+      >
+        <option value="">{t("unassigned")}</option>
+        {(users ?? []).map((u) => (
+          <option key={u.id} value={u.id}>
+            {u.full_name}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function CompanyActivityFeed({ companyId }: { companyId: string }) {
+  const t = useTranslations("companiesLeads.companyDetail.activity");
+  const locale = useLocale() as Locale;
+  const { data: activityResult } = useCompanyActivity(companyId);
+  const events = activityResult?.data ?? [];
+
+  return (
+    <section>
+      <h2 className="flex items-center gap-2 bee-card-title">
+        <Clock className="size-4 text-muted-foreground" />
+        {t("heading")}
+      </h2>
+      {events.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{t("empty")}</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {events.map((event) => (
+            <li key={event.id} className="bee-caption flex items-center justify-between gap-3">
+              <span>{t(event.event_type, { name: event.user_full_name })}</span>
+              <span className="shrink-0 text-muted-foreground">
+                {formatRelativeTime(event.created_at, locale)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 function CsvImportButton({ companyId }: { companyId: string }) {
   const t = useTranslations("companiesLeads.companyDetail.contacts.csvImport");
@@ -204,6 +289,9 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
               {company.country && <span>{company.country}</span>}
               {company.size && <span>{company.size} {t("employeesSuffix")}</span>}
             </div>
+            <div className="mt-1.5">
+              <CompanyOwner companyId={companyId} ownerUserId={company.owner_user_id} />
+            </div>
           </div>
         </div>
         {company.website && (
@@ -370,6 +458,8 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
           </div>
         )}
       </section>
+
+      <CompanyActivityFeed companyId={companyId} />
     </div>
   );
 }

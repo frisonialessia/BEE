@@ -370,6 +370,8 @@ export function demoFetchCompanies(): Company[] {
     if (!name || seen.has(name)) continue;
     seen.set(name, {
       id: `demo-company-${slugify(name)}`,
+      organization_id: null,
+      owner_user_id: null,
       name,
       domain: card.company.domain,
       industry: card.company.industry,

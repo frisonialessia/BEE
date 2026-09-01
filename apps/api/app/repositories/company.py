@@ -26,13 +26,20 @@ class CompanyRepository(BaseRepository[Company]):
         *,
         limit: int = 100,
         offset: int = 0,
+        visible_user_ids: set[uuid.UUID] | None = None,
         organization_id: uuid.UUID | None = None,
     ) -> list[Company]:
-        """Same tenant-scoping convention as ``LeadRepository.list_scoped`` —
-        companies have no per-user assignment, so this only applies the
-        organization boundary, not a visibility filter.
+        """Same paging/visibility contract as ``LeadRepository.list_scoped``,
+        now that companies carry ``owner_user_id`` too. ``organization_id``
+        still applies the tenant boundary itself — see
+        ``OpportunityRepository.list_ready_to_action``'s docstring for why
+        that's needed in addition to the assignment filter (an OWNER/ADMIN's
+        ``visible_user_ids`` is ``None``, so without it every organization's
+        companies would be visible, not just their own).
         """
         statement = select(Company).order_by(Company.created_at.desc())  # type: ignore[union-attr]
+        if visible_user_ids is not None:
+            statement = statement.where(Company.owner_user_id.in_(visible_user_ids))
         statement = scope_by_organization_id(statement, Company.organization_id, organization_id)
         statement = statement.limit(limit).offset(offset)
         return list(self.session.exec(statement).all())

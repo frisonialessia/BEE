@@ -18,7 +18,7 @@ from app.core.security import hash_password
 from app.models.base import UserRole
 from app.models.team import Team
 from app.models.user import User
-from app.schemas.auth import UserCreate, UserOut, UserUpdate
+from app.schemas.auth import UserCreate, UserOut, UserProfileUpdateIn, UserUpdate
 from app.services.permissions import get_visible_user_ids
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -73,6 +73,67 @@ def list_users(
     if visible_ids is not None:
         statement = statement.where(User.id.in_(visible_ids))
     return list(session.exec(statement).all())
+
+
+@router.patch(
+    "/me",
+    response_model=UserOut,
+    summary="Edit your own profile (name, avatar, phone, bio)",
+)
+def update_my_profile(
+    data: UserProfileUpdateIn,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> User:
+    """Registered before ``/{user_id}`` on purpose — a static path segment
+    must come before a dynamic one, or Starlette matches "me" as a user_id
+    and fails UUID validation before this handler ever runs (same note as
+    ``GET /companies/duplicates``).
+
+    Deliberately cannot touch role/team_id/is_active — see
+    ``UserProfileUpdateIn``'s docstring for why that's a separate schema
+    from the OWNER/ADMIN-only ``PATCH /{user_id}`` below.
+    """
+    for field, value in data.model_dump(exclude_unset=True).items():
+        setattr(current_user, field, value)
+    session.add(current_user)
+    session.commit()
+    session.refresh(current_user)
+    return current_user
+
+
+@router.delete(
+    "/me",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete your own account",
+)
+def delete_my_account(
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> None:
+    """Self-service account deletion — deactivates, same as ``DELETE
+    /{user_id}`` and for the same reason (the FK/audit-trail integrity
+    ``delete_user``'s docstring explains; nothing here changes that).
+
+    The organization OWNER cannot self-delete: ownership transfer isn't
+    implemented yet (see ``update_user``'s docstring), so letting the OWNER
+    delete themselves would strand the organization with no one able to
+    manage billing or add/remove teammates. An OWNER who wants to leave
+    needs to promote another member first — not yet possible via the API,
+    so today this means contacting support.
+    """
+    if current_user.role == UserRole.OWNER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "The organization OWNER cannot delete their own account — "
+                "ownership transfer isn't supported yet. Contact support."
+            ),
+        )
+
+    current_user.is_active = False
+    session.add(current_user)
+    session.commit()
 
 
 @router.patch(
