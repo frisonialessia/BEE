@@ -5,7 +5,9 @@ import { useTranslations } from "next-intl";
 
 import type { CompanyPriority } from "@/lib/icp";
 
-const QUADRANT_COLOR: Record<CompanyPriority["quadrant"], string> = {
+/** Exported so the legend next to the chart (priority-matrix-view.tsx)
+ *  never drifts out of sync with the dots' actual colors. */
+export const QUADRANT_COLOR: Record<CompanyPriority["quadrant"], string> = {
   priority: "var(--color-chart-4)",
   nurture: "var(--color-chart-6)",
   opportunistic: "var(--color-chart-1)",

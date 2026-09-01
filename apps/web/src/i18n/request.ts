@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
 
+import { detectLocaleFromAcceptLanguage } from "@/i18n/detect-locale";
 import { defaultLocale, isLocale, localeTags, locales, type Locale } from "@/i18n/locales";
 import { LOCALE_COOKIE } from "@/i18n/cookie";
 
@@ -17,10 +18,15 @@ import { LOCALE_COOKIE } from "@/i18n/cookie";
  * URLs. A cookie carries the preference instead; every route works
  * identically in both languages.
  *
- * Resolution order: cookie (an explicit choice from the language switcher)
- * → `Accept-Language` header (a first-time visitor's browser preference) →
- * `defaultLocale` (Spanish). The cookie is set by the server action in
- * `i18n/actions.ts`.
+ * Resolution order: cookie (an explicit choice from the language switcher,
+ * or the header-derived choice `proxy.ts` already wrote on this visitor's
+ * first request) → `Accept-Language` header (belt-and-suspenders for the
+ * rare request `proxy.ts`'s matcher doesn't cover) → `defaultLocale`
+ * (Spanish). The cookie is set by the server action in `i18n/actions.ts`,
+ * or by `proxy.ts` for a first-time visitor who hasn't touched the
+ * switcher yet — see that file's docstring for why setting it there
+ * (not here) is what makes the demo/sandbox seed data agree with the
+ * language this function resolves.
  */
 export default getRequestConfig(async () => {
   const cookieStore = await cookies();
@@ -31,11 +37,8 @@ export default getRequestConfig(async () => {
     locale = cookieLocale;
   } else {
     const acceptLanguage = (await headers()).get("accept-language");
-    const preferred = acceptLanguage
-      ?.split(",")
-      .map((part) => part.split(";")[0]?.trim().slice(0, 2).toLowerCase());
-    const matched = preferred?.find((tag) => tag && isLocale(tag));
-    if (matched) locale = matched as Locale;
+    const matched = detectLocaleFromAcceptLanguage(acceptLanguage);
+    if (matched) locale = matched;
   }
 
   return {
