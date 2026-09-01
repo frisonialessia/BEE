@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import type { IntroPath, NetworkConnection, NetworkQueryResult, NetworkStats } from "@/lib/types";
 import { addNetworkConnection, findIntroPaths, getNetworkConnections, getNetworkStats } from "@/lib/api";
@@ -10,18 +11,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 // var(--success) (chart-5, magenta), caution to var(--warning) (chart-1,
 // amber), and "informational" states reuse chart-4 (the palette's blue) and
 // chart-6 (violet) directly, since those already exist as brand accents.
-const COVERAGE_CONFIG: Record<string, { label: string; varColor: string }> = {
-  none: { label: "Sin cobertura", varColor: "var(--color-text-muted)" },
-  weak: { label: "Débil", varColor: "var(--warning)" },
-  moderate: { label: "Moderada", varColor: "var(--color-chart-4)" },
-  strong: { label: "Fuerte", varColor: "var(--success)" },
+const COVERAGE_VAR: Record<string, string> = {
+  none: "var(--color-text-muted)",
+  weak: "var(--warning)",
+  moderate: "var(--color-chart-4)",
+  strong: "var(--success)",
 };
 
-const INTRO_TYPE_CONFIG: Record<string, { label: string; varColor: string | null }> = {
-  warm_intro: { label: "Presentación cálida", varColor: "var(--success)" },
-  referral: { label: "Referido", varColor: "var(--color-chart-4)" },
-  alumni: { label: "Exalumno", varColor: "var(--color-chart-6)" },
-  cold: { label: "Frío", varColor: null },
+const INTRO_TYPE_VAR: Record<string, string | null> = {
+  warm_intro: "var(--success)",
+  referral: "var(--color-chart-4)",
+  alumni: "var(--color-chart-6)",
+  cold: null,
 };
 
 function StrengthDots({ strength }: { strength: number }) {
@@ -39,8 +40,10 @@ function StrengthDots({ strength }: { strength: number }) {
 }
 
 function PathCard({ path }: { path: IntroPath }) {
+  const t = useTranslations("probarNetworkBrandControl.network.panel");
   const [showDraft, setShowDraft] = useState(false);
-  const introType = INTRO_TYPE_CONFIG[path.intro_type] ?? INTRO_TYPE_CONFIG.cold;
+  const introType = path.intro_type in INTRO_TYPE_VAR ? path.intro_type : "cold";
+  const introVarColor = INTRO_TYPE_VAR[introType];
 
   return (
     <div className="bee-bento bee-bento-pad space-y-3">
@@ -48,19 +51,19 @@ function PathCard({ path }: { path: IntroPath }) {
         <span
           className="text-xs px-2 py-0.5 rounded-sm border font-medium"
           style={
-            introType.varColor
+            introVarColor
               ? {
-                  color: introType.varColor,
-                  borderColor: introType.varColor,
-                  background: `color-mix(in srgb, ${introType.varColor} 15%, var(--color-background))`,
+                  color: introVarColor,
+                  borderColor: introVarColor,
+                  background: `color-mix(in srgb, ${introVarColor} 15%, var(--color-background))`,
                 }
               : { color: "var(--color-text-muted)", borderColor: "var(--color-divider)", background: "var(--color-primary)" }
           }
         >
-          {introType.label}
+          {t(`introType.${introType}` as "introType.cold")}
         </span>
         <span className="text-xs text-muted-foreground">
-          {path.path_length === 1 ? "Directo" : `${path.path_length} saltos`} · {path.strength_score.toFixed(1)}/10
+          {path.path_length === 1 ? t("direct") : t("hops", { count: path.path_length })} · {path.strength_score.toFixed(1)}/10
         </span>
       </div>
 
@@ -82,7 +85,7 @@ function PathCard({ path }: { path: IntroPath }) {
             onClick={() => setShowDraft((v) => !v)}
             className="text-xs font-medium text-[var(--color-chart-4)] hover:underline underline-offset-2"
           >
-            {showDraft ? "Ocultar" : "Ver"} borrador de solicitud de presentación
+            {showDraft ? t("hideDraft") : t("showDraft")}
           </button>
           {showDraft && (
             <div className="mt-2 p-3 rounded-sm border border-[var(--color-chart-4)]/25 bg-[color-mix(in_srgb,var(--color-chart-4)_10%,var(--color-background))]">
@@ -91,7 +94,7 @@ function PathCard({ path }: { path: IntroPath }) {
                 onClick={() => navigator.clipboard.writeText(path.draft_ask ?? "")}
                 className="mt-2 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
               >
-                Copiar al portapapeles
+                {t("copyToClipboard")}
               </button>
             </div>
           )}
@@ -102,6 +105,8 @@ function PathCard({ path }: { path: IntroPath }) {
 }
 
 export function NetworkNavigatorPanel() {
+  const t = useTranslations("probarNetworkBrandControl.network.panel");
+  const tLive = useTranslations("crm.board");
   const [connections, setConnections] = useState<NetworkConnection[]>([]);
   const [stats, setStats] = useState<NetworkStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -183,10 +188,10 @@ export function NetworkNavigatorPanel() {
       {stats && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Conexiones totales", value: stats.total_connections },
-            { label: "1er grado", value: stats.first_degree_count },
-            { label: "Empresas cubiertas", value: stats.companies_covered },
-            { label: "Fuerza promedio", value: `${stats.avg_relationship_strength}/10` },
+            { label: t("stats.totalConnections"), value: stats.total_connections },
+            { label: t("stats.firstDegree"), value: stats.first_degree_count },
+            { label: t("stats.companiesCovered"), value: stats.companies_covered },
+            { label: t("stats.avgStrength"), value: `${stats.avg_relationship_strength}/10` },
           ].map(({ label, value }) => (
             <div key={label} className="bee-bento p-3 text-center">
               <p className="bee-stat__val">{value}</p>
@@ -198,23 +203,23 @@ export function NetworkNavigatorPanel() {
 
       {/* Path finder */}
       <div className="bee-bento bee-bento-pad space-y-3">
-        <h3 className="bee-card-title">Buscar ruta de presentación</h3>
+        <h3 className="bee-card-title">{t("pathFinderTitle")}</h3>
         <form onSubmit={handleFindPaths} className="flex flex-wrap gap-2">
           <input
             value={targetDomain}
             onChange={(e) => setTargetDomain(e.target.value)}
-            placeholder="empresa-objetivo.com"
+            placeholder={t("targetDomainPlaceholder")}
             className="flex-1 min-w-40 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
             required
           />
           <input
             value={targetCompany}
             onChange={(e) => setTargetCompany(e.target.value)}
-            placeholder="Nombre de la empresa (opcional)"
+            placeholder={t("targetCompanyPlaceholder")}
             className="flex-1 min-w-40 rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
           <button type="submit" disabled={pathLoading} className="bee-btn bee-btn--primary">
-            {pathLoading ? "Buscando…" : "Buscar rutas"}
+            {pathLoading ? t("searching") : t("findPaths")}
           </button>
         </form>
 
@@ -224,19 +229,19 @@ export function NetworkNavigatorPanel() {
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-foreground">
                 {pathResult.paths_found.length > 0
-                  ? `${pathResult.paths_found.length} ruta(s) encontrada(s) hacia ${pathResult.target_company}`
-                  : `No se encontraron rutas de red hacia ${pathResult.target_company}`}
+                  ? t("pathsFound", { count: pathResult.paths_found.length, company: pathResult.target_company })
+                  : t("noPathsFound", { company: pathResult.target_company })}
               </p>
               {pathResult.network_coverage && (
-                <span className="text-xs font-medium" style={{ color: COVERAGE_CONFIG[pathResult.network_coverage]?.varColor }}>
-                  Cobertura: {COVERAGE_CONFIG[pathResult.network_coverage]?.label}
+                <span className="text-xs font-medium" style={{ color: COVERAGE_VAR[pathResult.network_coverage] }}>
+                  {t("coverageLabel", { coverage: t(`coverage.${pathResult.network_coverage}` as "coverage.none") })}
                 </span>
               )}
             </div>
 
             {pathResult.cold_outreach_fallback && (
               <div className="rounded-sm border p-3 text-xs" style={{ borderColor: "var(--color-chart-1)", background: "color-mix(in srgb, var(--color-chart-1) 15%, var(--color-background))", color: "var(--color-text)" }}>
-                No se encontraron presentaciones cálidas. Usa las señales del Dark Funnel para personalizar el contacto en frío.
+                {t("coldOutreachFallback")}
               </div>
             )}
 
@@ -251,14 +256,14 @@ export function NetworkNavigatorPanel() {
 
       {/* Add connection */}
       <div className="flex items-center justify-between gap-2">
-        <h3 className="bee-card-title">Conexiones de red ({connections.length})</h3>
+        <h3 className="bee-card-title">{t("connectionsTitle", { count: connections.length })}</h3>
         <div className="flex items-center gap-2">
-          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          <Badge variant={live ? "success" : "warning"}>{live ? tLive("live") : tLive("demo")}</Badge>
           <button
             onClick={() => setShowAdd((v) => !v)}
             className="bee-btn-ghost bee-btn-ghost--dashed"
           >
-            + Agregar conexión
+            {t("addConnection")}
           </button>
         </div>
       </div>
@@ -266,17 +271,17 @@ export function NetworkNavigatorPanel() {
       {showAdd && (
         <form onSubmit={handleAddConnection} className="rounded-lg border border-dashed border-border bg-[var(--color-primary)] p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder="Nombre del contacto" required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
-            <input value={addCompany} onChange={(e) => setAddCompany(e.target.value)} placeholder="Nombre de la empresa" required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
-            <input value={addDomain} onChange={(e) => setAddDomain(e.target.value)} placeholder="empresa.com" required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
-            <input value={addTitle} onChange={(e) => setAddTitle(e.target.value)} placeholder="Cargo (opcional)" className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
+            <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder={t("form.contactNamePlaceholder")} required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
+            <input value={addCompany} onChange={(e) => setAddCompany(e.target.value)} placeholder={t("form.companyNamePlaceholder")} required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
+            <input value={addDomain} onChange={(e) => setAddDomain(e.target.value)} placeholder={t("form.domainPlaceholder")} required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
+            <input value={addTitle} onChange={(e) => setAddTitle(e.target.value)} placeholder={t("form.titlePlaceholder")} className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
           </div>
           <div className="flex items-center gap-3">
-            <label className="text-xs text-muted-foreground shrink-0">Fuerza de la relación: <span className="font-bold text-foreground">{addStrength}/10</span></label>
+            <label className="text-xs text-muted-foreground shrink-0">{t("form.relationshipStrength")} <span className="font-bold text-foreground">{addStrength}/10</span></label>
             <input type="range" min={1} max={10} value={addStrength} onChange={(e) => setAddStrength(Number(e.target.value))} className="flex-1 accent-[var(--color-chart-4)]" />
           </div>
           <button type="submit" disabled={addLoading} className="bee-btn bee-btn--primary">
-            {addLoading ? "Agregando…" : "Agregar conexión"}
+            {addLoading ? t("form.adding") : t("form.submit")}
           </button>
         </form>
       )}
@@ -288,8 +293,8 @@ export function NetworkNavigatorPanel() {
         </div>
       ) : connections.length === 0 ? (
         <div className="bee-bento bee-bento-pad py-12 text-center">
-          <p className="text-sm text-muted-foreground">Todavía no hay conexiones de red.</p>
-          <p className="bee-caption mt-1">Agrega conexiones para habilitar la búsqueda de rutas de presentación cálida.</p>
+          <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
+          <p className="bee-caption mt-1">{t("empty.hint")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -311,7 +316,7 @@ export function NetworkNavigatorPanel() {
             </div>
           ))}
           {connections.length > 15 && (
-            <p className="text-xs text-muted-foreground text-center py-2">Mostrando 15 de {connections.length} conexiones</p>
+            <p className="text-xs text-muted-foreground text-center py-2">{t("showingOf", { count: connections.length })}</p>
           )}
         </div>
       )}

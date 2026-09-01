@@ -1,0 +1,229 @@
+{
+  "network": {
+    "eyebrow": "Navegador de red",
+    "caption": "Rutas de introducción cálida — quién conoce a quién antes de tocar en frío",
+    "panel": {
+      "coverage": {
+        "none": "Sin cobertura",
+        "weak": "Débil",
+        "moderate": "Moderada",
+        "strong": "Fuerte"
+      },
+      "introType": {
+        "warm_intro": "Presentación cálida",
+        "referral": "Referido",
+        "alumni": "Exalumno",
+        "cold": "Frío"
+      },
+      "direct": "Directo",
+      "hops": "{count, plural, one {# salto} other {# saltos}}",
+      "showDraft": "Ver borrador de solicitud de presentación",
+      "hideDraft": "Ocultar borrador de solicitud de presentación",
+      "copyToClipboard": "Copiar al portapapeles",
+      "stats": {
+        "totalConnections": "Conexiones totales",
+        "firstDegree": "1er grado",
+        "companiesCovered": "Empresas cubiertas",
+        "avgStrength": "Fuerza promedio"
+      },
+      "pathFinderTitle": "Buscar ruta de presentación",
+      "targetDomainPlaceholder": "empresa-objetivo.com",
+      "targetCompanyPlaceholder": "Nombre de la empresa (opcional)",
+      "searching": "Buscando…",
+      "findPaths": "Buscar rutas",
+      "pathsFound": "{count, plural, one {# ruta} other {# rutas}} encontrada(s) hacia {company}",
+      "noPathsFound": "No se encontraron rutas de red hacia {company}",
+      "coverageLabel": "Cobertura: {coverage}",
+      "coldOutreachFallback": "No se encontraron presentaciones cálidas. Usa las señales del Dark Funnel para personalizar el contacto en frío.",
+      "connectionsTitle": "Conexiones de red ({count})",
+      "addConnection": "+ Agregar conexión",
+      "form": {
+        "contactNamePlaceholder": "Nombre del contacto",
+        "companyNamePlaceholder": "Nombre de la empresa",
+        "domainPlaceholder": "empresa.com",
+        "titlePlaceholder": "Cargo (opcional)",
+        "relationshipStrength": "Fuerza de la relación:",
+        "adding": "Agregando…",
+        "submit": "Agregar conexión"
+      },
+      "empty": {
+        "title": "Todavía no hay conexiones de red.",
+        "hint": "Agrega conexiones para habilitar la búsqueda de rutas de presentación cálida."
+      },
+      "showingOf": "Mostrando 15 de {count} conexiones"
+    }
+  },
+  "brand": {
+    "eyebrow": "Marca personal · Psicográfico",
+    "caption": "Perfil de voz y fragmentos de estilo, más el análisis DISC que adapta cada mensaje",
+    "panel": {
+      "channelLabels": {
+        "email": "Email",
+        "linkedin": "LinkedIn",
+        "twitter": "Twitter"
+      },
+      "fragmentCategories": {
+        "example_post": "Post de ejemplo",
+        "key_insight": "Insight clave",
+        "signature_phrase": "Frase distintiva",
+        "authority_content": "Contenido de autoridad",
+        "response_template": "Plantilla de respuesta"
+      },
+      "title": "Cerebro de voz",
+      "subtitle": "Perfil de marca personal del CEO — fundamenta todo el contenido generado por IA",
+      "setUpVoice": "Configurar voz",
+      "addFragment": "+ Agregar fragmento",
+      "createForm": {
+        "title": "Configurar perfil de voz",
+        "namePlaceholder": "Tu nombre completo",
+        "tonePlaceholder": "Descriptores de tono (separados por coma)",
+        "topicsPlaceholder": "Temas de autoridad (separados por coma)",
+        "ctaPlaceholder": "CTA preferido (ej. Hablemos.)",
+        "defaultTone": "analítico, directo",
+        "defaultTopics": "B2B SaaS, IA en ventas",
+        "defaultCTA": "Hablemos.",
+        "saving": "Guardando...",
+        "submit": "Crear perfil",
+        "cancel": "Cancelar"
+      },
+      "authorityTopics": "Temas de autoridad",
+      "addFragmentForm": {
+        "title": "Agregar fragmento de marca",
+        "contentPlaceholder": "Pega un post de ejemplo, insight clave o frase distintiva...",
+        "tagsPlaceholder": "Tags (separados por coma): financiación, SaaS, liderazgo",
+        "adding": "Agregando...",
+        "submit": "Agregar fragmento",
+        "cancel": "Cancelar"
+      },
+      "channelConnections": "Conexiones de canal",
+      "notConnected": "sin conectar",
+      "active": "activo",
+      "tokensRemaining": "{count} tokens restantes",
+      "allChannelsSimulated": "Todos los canales están en modo simulado — conéctalos en <integrations>Integraciones</integrations> para activarlos.",
+      "noProfile": "No hay un perfil de voz configurado. Configura uno para habilitar la generación de contenido con IA fundamentada en tu marca."
+    }
+  },
+  "deepLearning": {
+    "tabs": {
+      "correction": "Aprendizaje de estilo",
+      "anomaly": "Monitor de anomalías"
+    },
+    "correction": {
+      "description": "Envía un artefacto corregido y BEE extraerá tus preferencias de estilo de escritura automáticamente. La IA aplicará estas reglas en cada generación futura — sin necesidad de configuración.",
+      "artifactTypeLabel": "Tipo de artefacto",
+      "artifactTypes": {
+        "email_draft": "Borrador de email",
+        "meeting_agenda": "Agenda de reunión",
+        "linkedin_message": "Mensaje de LinkedIn",
+        "next_steps": "Próximos pasos"
+      },
+      "originalLabel": "Original (salida de BEE)",
+      "editedLabel": "Editado (tu versión)",
+      "defaultOriginal": "¡Espero que estés bien! Somos líderes de la industria en inteligencia de ventas y queríamos contactarte.",
+      "defaultEdited": "Tu CAC está 40% por encima del promedio de tu sector. Así cerramos esa brecha en 60 días.",
+      "learning": "Aprendiendo...",
+      "submit": "Enviar corrección",
+      "resultTitle": "Resultado del aprendizaje",
+      "versionBadge": "v{version} — {count, plural, one {# corrección} other {# correcciones}}",
+      "rulesLearnedTitle": "Reglas aprendidas de esta edición:",
+      "changeRatio": "Ratio de cambio: {pct}% · {count, plural, one {# regla autoritativa} other {# reglas autoritativas}}",
+      "viewFullProfile": "Ver perfil de estilo completo",
+      "currentProfileTitle": "Perfil de estilo actual",
+      "profileStats": "{authoritative, plural, one {# autoritativa} other {# autoritativas}} · {total, plural, one {# corrección} other {# correcciones}}",
+      "needMoreCorrections": "Se necesitan más correcciones para construir reglas autoritativas."
+    },
+    "anomaly": {
+      "description": "Monitorea la tasa de conversión reciente contra el histórico por canal y sector. Las caídas anómalas disparan alertas de estrategia que requieren revisión del CEO antes de cualquier cambio.",
+      "runScan": "Ejecutar escaneo de anomalías",
+      "scanning": "Escaneando…",
+      "severity": {
+        "critical": "crítica",
+        "high": "alta",
+        "medium": "media",
+        "low": "baja"
+      },
+      "currentVsBase": "Actual: {rolling}% vs. base {baseline}% ({deviation}%)",
+      "acknowledge": "Confirmar",
+      "acknowledgeNote": "Revisado desde el panel",
+      "hideDetails": "Ocultar",
+      "showDetails": "Detalles y acciones",
+      "empty": {
+        "title": "No hay alertas de anomalías abiertas.",
+        "hint": "Ejecuta un escaneo para revisar la salud actual de conversión."
+      }
+    }
+  },
+  "control": {
+    "caption": "Kanban de acción · inteligencia hexagonal · métricas del sistema",
+    "leadWorkspace": {
+      "ariaLabel": "Espacio de leads",
+      "eyebrow": "Zona de acción",
+      "title": "Espacio de leads",
+      "demoOffline": "Demo / offline",
+      "empty": "Sin señales activas en el pipeline todavía.",
+      "hotLeads": "{count, plural, one {# lead caliente} other {# leads calientes}}",
+      "openCrm": "Abrir CRM",
+      "stages": {
+        "detected": "Detectadas",
+        "enriching": "Enriqueciendo",
+        "ready_to_action": "Listas",
+        "in_progress": "En progreso",
+        "closed": "Cerradas"
+      }
+    },
+    "systemHealth": {
+      "ariaLabel": "Salud del sistema",
+      "eyebrow": "Inteligencia",
+      "connected": "Conectado",
+      "disconnected": "Sin conexión",
+      "unknownEnvironment": "entorno desconocido",
+      "dbReady": "BD lista",
+      "dbNotReady": "BD no disponible",
+      "updated": "Actualizado {time}",
+      "connectionError": "No se pudo conectar con la API de BEE — revisa NEXT_PUBLIC_API_URL",
+      "fallbackNoticePrefix": "Mostrando estado de respaldo — inicia la API o configura",
+      "fallbackNoticeMiddle": "en",
+      "worker": {
+        "ingestLabel": "Ingesta",
+        "queueLabel": "Cola",
+        "processedLabel": "Hechos",
+        "errorsLabel": "Errores",
+        "offValue": "Apagado",
+        "state": {
+          "idle": "Inactivo",
+          "busy": "Procesando",
+          "stopped": "Detenido",
+          "error": "Con errores"
+        }
+      }
+    },
+    "apiStatus": {
+      "ariaLabel": "APIs externas",
+      "eyebrow": "APIs externas",
+      "unavailable": "APIs externas no disponible.",
+      "configured": "API configurada",
+      "mockMode": "Modo simulado",
+      "webhookConfigured": "Webhook ✓",
+      "webhookMissing": "Sin secreto"
+    },
+    "anomalies": {
+      "ariaLabel": "Anomalías de conversión",
+      "eyebrow": "Anomalías",
+      "empty": "Sin caídas de conversión fuera de lo normal",
+      "severity": {
+        "low": "Baja",
+        "medium": "Media",
+        "high": "Alta",
+        "critical": "Crítica"
+      }
+    },
+    "signalStream": {
+      "ariaLabel": "Flujo de señales",
+      "title": "Flujo de señales",
+      "caption": "Webhook → Estrategia",
+      "readyCount": "{count, plural, one {# lista — clic para abrir} other {# listas — clic para abrir}}",
+      "unavailable": "Flujo no disponible.",
+      "waiting": "Esperando webhooks entrantes."
+    }
+  }
+}

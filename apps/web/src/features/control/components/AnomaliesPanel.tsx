@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpenAnomalies } from "@/hooks/queries/use-anomalies";
@@ -14,14 +15,9 @@ const SEVERITY_DOT: Record<AnomalyAlert["severity"], string> = {
   critical: "bg-[var(--color-chart-2)]",
 };
 
-const SEVERITY_LABEL: Record<AnomalyAlert["severity"], string> = {
-  low: "Baja",
-  medium: "Media",
-  high: "Alta",
-  critical: "Crítica",
-};
-
 function AlertRow({ alert }: { alert: AnomalyAlert }) {
+  const t = useTranslations("probarNetworkBrandControl.control.anomalies");
+
   return (
     <div className="flex items-start gap-3 py-3">
       <span
@@ -32,7 +28,7 @@ function AlertRow({ alert }: { alert: AnomalyAlert }) {
         <div className="flex items-center justify-between gap-2">
           <p className="truncate text-sm font-medium tracking-tight">{alert.title}</p>
           <span className="shrink-0 bee-micro">
-            {SEVERITY_LABEL[alert.severity]}
+            {t(`severity.${alert.severity}`)}
           </span>
         </div>
         <p className="mt-0.5 text-xs text-muted-foreground">{alert.description}</p>
@@ -50,6 +46,7 @@ function AlertRow({ alert }: { alert: AnomalyAlert }) {
  * cambió en el pipeline", no a infraestructura.
  */
 export function AnomaliesPanel() {
+  const t = useTranslations("probarNetworkBrandControl.control.anomalies");
   const { data: result, isLoading } = useOpenAnomalies();
   const alerts = result?.data ?? [];
 
@@ -63,15 +60,15 @@ export function AnomaliesPanel() {
     // remaining viewport height, and this card stretches to match its
     // Flujo de señales / APIs externas siblings rather than sizing to its
     // own (often much shorter) content.
-    <section className="bee-surface flex h-full flex-col bee-bento-pad" aria-label="Anomalías de conversión">
+    <section className="bee-surface flex h-full flex-col bee-bento-pad" aria-label={t("ariaLabel")}>
       <div className="mb-1 flex shrink-0 items-center gap-2">
         <AlertTriangle className="size-3.5 text-[var(--color-text-muted)]" />
-        <p className="bee-eyebrow">Anomalías</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
       </div>
       {alerts.length === 0 ? (
         <p className="flex items-center gap-1.5 py-2 text-xs text-muted-foreground">
           <ShieldCheck className="size-3.5" />
-          Sin caídas de conversión fuera de lo normal
+          {t("empty")}
         </p>
       ) : (
         // overscroll-contain: this card sits inside the independently

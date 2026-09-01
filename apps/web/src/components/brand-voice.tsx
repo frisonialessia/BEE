@@ -10,6 +10,7 @@
  * configures it once and the PersonalBrandService consults it automatically.
  */
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import {
   addBrandFragment,
@@ -27,24 +28,22 @@ const CHANNEL_ICONS: Record<string, string> = {
   twitter: "𝕏",
 };
 
-// CSS `capitalize` only uppercases the first letter of each word — fine
-// for "email", wrong for "linkedin" (brand name is camelCase: LinkedIn).
-// Explicit labels instead of leaning on text-transform for a proper noun.
-const CHANNEL_LABELS: Record<string, string> = {
-  email: "Email",
-  linkedin: "LinkedIn",
-  twitter: "Twitter",
-};
-
-const FRAGMENT_CATEGORIES = [
-  { value: "example_post", label: "Post de ejemplo" },
-  { value: "key_insight", label: "Insight clave" },
-  { value: "signature_phrase", label: "Frase distintiva" },
-  { value: "authority_content", label: "Contenido de autoridad" },
-  { value: "response_template", label: "Plantilla de respuesta" },
-];
-
 export function BrandVoicePanel() {
+  const t = useTranslations("probarNetworkBrandControl.brand.panel");
+  const tLive = useTranslations("crm.board");
+  const CHANNEL_LABELS: Record<string, string> = {
+    email: t("channelLabels.email"),
+    linkedin: t("channelLabels.linkedin"),
+    twitter: t("channelLabels.twitter"),
+  };
+  const FRAGMENT_CATEGORIES = [
+    { value: "example_post", label: t("fragmentCategories.example_post") },
+    { value: "key_insight", label: t("fragmentCategories.key_insight") },
+    { value: "signature_phrase", label: t("fragmentCategories.signature_phrase") },
+    { value: "authority_content", label: t("fragmentCategories.authority_content") },
+    { value: "response_template", label: t("fragmentCategories.response_template") },
+  ];
+
   const [profile, setProfile] = useState<VoiceProfile | null>(null);
   const [channels, setChannels] = useState<ChannelStatus[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,9 +55,13 @@ export function BrandVoicePanel() {
   const [fragmentTags, setFragmentTags] = useState("");
   const [saving, setSaving] = useState(false);
   const [createName, setCreateName] = useState("");
-  const [createTone, setCreateTone] = useState("analítico, directo");
-  const [createTopics, setCreateTopics] = useState("B2B SaaS, IA en ventas");
-  const [createCTA, setCreateCTA] = useState("Hablemos.");
+  // Seeded example values, not just placeholders — a CEO starting from
+  // scratch gets a plausible starting point to edit rather than a blank
+  // field. Kept in the interface's own language, same as any other
+  // editable default value in this form.
+  const [createTone, setCreateTone] = useState(t("createForm.defaultTone"));
+  const [createTopics, setCreateTopics] = useState(t("createForm.defaultTopics"));
+  const [createCTA, setCreateCTA] = useState(t("createForm.defaultCTA"));
 
   useEffect(() => {
     async function load() {
@@ -120,21 +123,19 @@ export function BrandVoicePanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="bee-panel__title">Cerebro de voz</h3>
-          <p className="bee-panel__subtitle">
-            Perfil de marca personal del CEO — fundamenta todo el contenido generado por IA
-          </p>
+          <h3 className="bee-panel__title">{t("title")}</h3>
+          <p className="bee-panel__subtitle">{t("subtitle")}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          <Badge variant={live ? "success" : "warning"}>{live ? tLive("live") : tLive("demo")}</Badge>
           {!profile && (
             <button onClick={() => setShowCreate(true)} className="bee-btn bee-btn--primary">
-              Configurar voz
+              {t("setUpVoice")}
             </button>
           )}
           {profile && (
             <button onClick={() => setShowAddFragment(true)} className="bee-btn-ghost">
-              + Agregar fragmento
+              {t("addFragment")}
             </button>
           )}
         </div>
@@ -143,29 +144,29 @@ export function BrandVoicePanel() {
       {/* Create profile form */}
       {showCreate && (
         <div className="bee-inset space-y-3 p-4">
-          <p className="bee-eyebrow">Configurar perfil de voz</p>
+          <p className="bee-eyebrow">{t("createForm.title")}</p>
           <input
             value={createName}
             onChange={(e) => setCreateName(e.target.value)}
-            placeholder="Tu nombre completo"
+            placeholder={t("createForm.namePlaceholder")}
             className="bee-input"
           />
           <input
             value={createTone}
             onChange={(e) => setCreateTone(e.target.value)}
-            placeholder="Descriptores de tono (separados por coma)"
+            placeholder={t("createForm.tonePlaceholder")}
             className="bee-input"
           />
           <input
             value={createTopics}
             onChange={(e) => setCreateTopics(e.target.value)}
-            placeholder="Temas de autoridad (separados por coma)"
+            placeholder={t("createForm.topicsPlaceholder")}
             className="bee-input"
           />
           <input
             value={createCTA}
             onChange={(e) => setCreateCTA(e.target.value)}
-            placeholder="CTA preferido (ej. Hablemos.)"
+            placeholder={t("createForm.ctaPlaceholder")}
             className="bee-input"
           />
           <div className="flex gap-2">
@@ -174,10 +175,10 @@ export function BrandVoicePanel() {
               disabled={saving || !createName}
               className="bee-btn bee-btn--primary"
             >
-              {saving ? "Guardando..." : "Crear perfil"}
+              {saving ? t("createForm.saving") : t("createForm.submit")}
             </button>
             <button onClick={() => setShowCreate(false)} className="bee-btn">
-              Cancelar
+              {t("createForm.cancel")}
             </button>
           </div>
         </div>
@@ -210,11 +211,11 @@ export function BrandVoicePanel() {
           {/* Authority topics */}
           {profile.authority_topics.length > 0 && (
             <div>
-              <p className="bee-caption mb-1.5">Temas de autoridad</p>
+              <p className="bee-caption mb-1.5">{t("authorityTopics")}</p>
               <div className="flex flex-wrap gap-1.5">
-                {profile.authority_topics.map((t) => (
-                  <Badge key={t} variant="warning">
-                    {t}
+                {profile.authority_topics.map((topic) => (
+                  <Badge key={topic} variant="warning">
+                    {topic}
                   </Badge>
                 ))}
               </div>
@@ -231,7 +232,7 @@ export function BrandVoicePanel() {
       {/* Add fragment form */}
       {showAddFragment && profile && (
         <div className="bee-inset space-y-3 p-4">
-          <p className="bee-eyebrow">Agregar fragmento de marca</p>
+          <p className="bee-eyebrow">{t("addFragmentForm.title")}</p>
           <select
             value={fragmentCategory}
             onChange={(e) => setFragmentCategory(e.target.value)}
@@ -244,14 +245,14 @@ export function BrandVoicePanel() {
           <textarea
             value={fragmentContent}
             onChange={(e) => setFragmentContent(e.target.value)}
-            placeholder="Pega un post de ejemplo, insight clave o frase distintiva..."
+            placeholder={t("addFragmentForm.contentPlaceholder")}
             rows={4}
             className="bee-input resize-none"
           />
           <input
             value={fragmentTags}
             onChange={(e) => setFragmentTags(e.target.value)}
-            placeholder="Tags (separados por coma): financiación, SaaS, liderazgo"
+            placeholder={t("addFragmentForm.tagsPlaceholder")}
             className="bee-input"
           />
           <div className="flex gap-2">
@@ -260,10 +261,10 @@ export function BrandVoicePanel() {
               disabled={saving || !fragmentContent}
               className="bee-btn bee-btn--primary"
             >
-              {saving ? "Agregando..." : "Agregar fragmento"}
+              {saving ? t("addFragmentForm.adding") : t("addFragmentForm.submit")}
             </button>
             <button onClick={() => setShowAddFragment(false)} className="bee-btn">
-              Cancelar
+              {t("addFragmentForm.cancel")}
             </button>
           </div>
         </div>
@@ -272,7 +273,7 @@ export function BrandVoicePanel() {
       {/* Channel status */}
       {channels.length > 0 && (
         <div>
-          <p className="bee-caption mb-2">Conexiones de canal</p>
+          <p className="bee-caption mb-2">{t("channelConnections")}</p>
           <div className="grid grid-cols-3 gap-2">
             {channels.map((ch) => (
               <div
@@ -282,28 +283,25 @@ export function BrandVoicePanel() {
                 <p className="text-sm font-bold">{CHANNEL_ICONS[ch.channel] ?? ch.channel}</p>
                 <p className="bee-caption mt-0.5">{CHANNEL_LABELS[ch.channel] ?? ch.channel}</p>
                 <p className="bee-caption mt-1">
-                  {ch.mock ? "sin conectar" : "activo"}
+                  {ch.mock ? t("notConnected") : t("active")}
                 </p>
                 {ch.tokens_remaining != null && (
-                  <p className="bee-caption mt-0.5">{ch.tokens_remaining} tokens restantes</p>
+                  <p className="bee-caption mt-0.5">{t("tokensRemaining", { count: ch.tokens_remaining })}</p>
                 )}
               </div>
             ))}
           </div>
           {channels.every((c) => c.mock) && (
             <p className="bee-caption mt-2">
-              Todos los canales están en modo simulado — conéctalos en{" "}
-              <span className="font-medium text-foreground">Integraciones</span> para activarlos.
+              {t.rich("allChannelsSimulated", {
+                integrations: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+              })}
             </p>
           )}
         </div>
       )}
 
-      {!profile && !showCreate && (
-        <p className="bee-caption">
-          No hay un perfil de voz configurado. Configura uno para habilitar la generación de contenido con IA fundamentada en tu marca.
-        </p>
-      )}
+      {!profile && !showCreate && <p className="bee-caption">{t("noProfile")}</p>}
     </div>
   );
 }

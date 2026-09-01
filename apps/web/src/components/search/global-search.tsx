@@ -1,6 +1,7 @@
 "use client";
 
 import { Building2, Search, Target, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -16,14 +17,17 @@ const KIND_ICON: Record<SearchResult["kind"], typeof Building2> = {
   contact: User,
 };
 
-const KIND_LABEL: Record<SearchResult["kind"], string> = {
-  company: "Empresa",
-  opportunity: "Oportunidad",
-  contact: "Contacto",
-};
-
 /** Búsqueda global — empresas, oportunidades y contactos, todo desde un solo campo. */
 export function GlobalSearch({ className }: { className?: string }) {
+  // KIND_LABEL lives inside the component (not a module-level const, unlike
+  // KIND_ICON above) because it needs useTranslations(), which only works
+  // inside a component/hook.
+  const t = useTranslations("common.commandPalette.kinds");
+  const KIND_LABEL: Record<SearchResult["kind"], string> = {
+    company: t("company"),
+    opportunity: t("opportunity"),
+    contact: t("contact"),
+  };
   const { data: companiesResult, isLoading: companiesLoading } = useCompanies(200);
   const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 200);
   const { data: leadsResult, isLoading: leadsLoading } = useLeads(200);

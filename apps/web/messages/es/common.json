@@ -13,8 +13,15 @@
     "sandboxLabel": "Sandbox de prueba"
   },
   "commandPalette": {
+    "openAria": "Abrir paleta de comandos",
+    "hintTitle": "Paleta de comandos",
     "closeAria": "Cerrar paleta de comandos",
     "dialogAria": "Paleta de comandos",
+    "kinds": {
+      "company": "Empresa",
+      "opportunity": "Oportunidad",
+      "contact": "Contacto"
+    },
     "placeholder": "Ir a una sección, buscar una empresa, oportunidad o contacto…",
     "noResults": "Sin resultados.",
     "groupResults": "Resultados",

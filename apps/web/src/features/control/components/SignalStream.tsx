@@ -8,7 +8,7 @@ import {
   Target,
   WifiOff,
 } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -79,6 +79,7 @@ function StreamItem({
 
 /** SignalStream — pipeline feed; ready items open CRM drawer. */
 export function SignalStream() {
+  const t = useTranslations("probarNetworkBrandControl.control.signalStream");
   const { data: result, isLoading, isError } = useSignalStream();
   const { openOpportunity } = useOpportunityDrawer();
   const events = result?.data.events ?? [];
@@ -94,11 +95,11 @@ export function SignalStream() {
     // (see ControlLayout/globals.css) — the row claims the remaining
     // viewport height and this card stretches to match its APIs
     // externas/Anomalías siblings.
-    <aside className="bee-surface flex h-full min-h-[200px] flex-col overflow-hidden bee-bento-pad" aria-label="Flujo de señales">
+    <aside className="bee-surface flex h-full min-h-[200px] flex-col overflow-hidden bee-bento-pad" aria-label={t("ariaLabel")}>
       <div className="mb-3 flex shrink-0 items-start justify-between gap-2">
         <div>
-          <h2 className="bee-eyebrow">Flujo de señales</h2>
-          <p className="bee-caption mt-0.5">Webhook → Estrategia</p>
+          <h2 className="bee-eyebrow">{t("title")}</h2>
+          <p className="bee-caption mt-0.5">{t("caption")}</p>
         </div>
         {live ? (
           <span className="relative flex size-2">
@@ -112,7 +113,7 @@ export function SignalStream() {
 
       {readyCount > 0 && (
         <p className="mb-2 shrink-0 text-xs text-[var(--color-chart-5)]">
-          {readyCount} lista{readyCount === 1 ? "" : "s"} — clic para abrir
+          {t("readyCount", { count: readyCount })}
         </p>
       )}
 
@@ -124,9 +125,9 @@ export function SignalStream() {
             ))}
           </div>
         ) : isError ? (
-          <p className="text-sm text-[var(--color-chart-2)]">Flujo no disponible.</p>
+          <p className="text-sm text-[var(--color-chart-2)]">{t("unavailable")}</p>
         ) : events.length === 0 ? (
-          <p className="text-sm text-[var(--color-text-muted)]">Esperando webhooks entrantes.</p>
+          <p className="text-sm text-[var(--color-text-muted)]">{t("waiting")}</p>
         ) : (
           // h-full (not a fixed h-[220px]): this card sits in a flex column
           // (min-h-0 flex-1 above), so it now takes whatever room the

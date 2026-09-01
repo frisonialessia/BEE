@@ -1,0 +1,229 @@
+{
+  "network": {
+    "eyebrow": "Network navigator",
+    "caption": "Warm-introduction paths — who knows whom before you go in cold",
+    "panel": {
+      "coverage": {
+        "none": "No coverage",
+        "weak": "Weak",
+        "moderate": "Moderate",
+        "strong": "Strong"
+      },
+      "introType": {
+        "warm_intro": "Warm introduction",
+        "referral": "Referral",
+        "alumni": "Alumni",
+        "cold": "Cold"
+      },
+      "direct": "Direct",
+      "hops": "{count, plural, one {# hop} other {# hops}}",
+      "showDraft": "View draft introduction request",
+      "hideDraft": "Hide draft introduction request",
+      "copyToClipboard": "Copy to clipboard",
+      "stats": {
+        "totalConnections": "Total connections",
+        "firstDegree": "1st degree",
+        "companiesCovered": "Companies covered",
+        "avgStrength": "Average strength"
+      },
+      "pathFinderTitle": "Find introduction path",
+      "targetDomainPlaceholder": "target-company.com",
+      "targetCompanyPlaceholder": "Company name (optional)",
+      "searching": "Searching…",
+      "findPaths": "Find paths",
+      "pathsFound": "{count, plural, one {# path} other {# paths}} found to {company}",
+      "noPathsFound": "No network paths found to {company}",
+      "coverageLabel": "Coverage: {coverage}",
+      "coldOutreachFallback": "No warm introductions found. Use Dark Funnel signals to personalize the cold outreach.",
+      "connectionsTitle": "Network connections ({count})",
+      "addConnection": "+ Add connection",
+      "form": {
+        "contactNamePlaceholder": "Contact name",
+        "companyNamePlaceholder": "Company name",
+        "domainPlaceholder": "company.com",
+        "titlePlaceholder": "Title (optional)",
+        "relationshipStrength": "Relationship strength:",
+        "adding": "Adding…",
+        "submit": "Add connection"
+      },
+      "empty": {
+        "title": "No network connections yet.",
+        "hint": "Add connections to enable warm-introduction path search."
+      },
+      "showingOf": "Showing 15 of {count} connections"
+    }
+  },
+  "brand": {
+    "eyebrow": "Personal brand · Psychographic",
+    "caption": "Voice profile and style snippets, plus the DISC analysis that adapts every message",
+    "panel": {
+      "channelLabels": {
+        "email": "Email",
+        "linkedin": "LinkedIn",
+        "twitter": "Twitter"
+      },
+      "fragmentCategories": {
+        "example_post": "Example post",
+        "key_insight": "Key insight",
+        "signature_phrase": "Signature phrase",
+        "authority_content": "Authority content",
+        "response_template": "Response template"
+      },
+      "title": "Voice brain",
+      "subtitle": "The CEO's personal brand profile — grounds every AI-generated piece of content",
+      "setUpVoice": "Set up voice",
+      "addFragment": "+ Add fragment",
+      "createForm": {
+        "title": "Set up voice profile",
+        "namePlaceholder": "Your full name",
+        "tonePlaceholder": "Tone descriptors (comma-separated)",
+        "topicsPlaceholder": "Authority topics (comma-separated)",
+        "ctaPlaceholder": "Preferred CTA (e.g. Let's talk.)",
+        "defaultTone": "analytical, direct",
+        "defaultTopics": "B2B SaaS, AI in sales",
+        "defaultCTA": "Let's talk.",
+        "saving": "Saving...",
+        "submit": "Create profile",
+        "cancel": "Cancel"
+      },
+      "authorityTopics": "Authority topics",
+      "addFragmentForm": {
+        "title": "Add brand fragment",
+        "contentPlaceholder": "Paste an example post, key insight, or signature phrase...",
+        "tagsPlaceholder": "Tags (comma-separated): funding, SaaS, leadership",
+        "adding": "Adding...",
+        "submit": "Add fragment",
+        "cancel": "Cancel"
+      },
+      "channelConnections": "Channel connections",
+      "notConnected": "not connected",
+      "active": "active",
+      "tokensRemaining": "{count} tokens remaining",
+      "allChannelsSimulated": "Every channel is in simulated mode — connect them in <integrations>Integrations</integrations> to activate.",
+      "noProfile": "No voice profile set up yet. Set one up to enable AI content generation grounded in your brand."
+    }
+  },
+  "deepLearning": {
+    "tabs": {
+      "correction": "Style learning",
+      "anomaly": "Anomaly monitor"
+    },
+    "correction": {
+      "description": "Submit a corrected artifact and BEE will automatically extract your writing style preferences. The AI applies these rules to every future generation — no configuration needed.",
+      "artifactTypeLabel": "Artifact type",
+      "artifactTypes": {
+        "email_draft": "Email draft",
+        "meeting_agenda": "Meeting agenda",
+        "linkedin_message": "LinkedIn message",
+        "next_steps": "Next steps"
+      },
+      "originalLabel": "Original (BEE output)",
+      "editedLabel": "Edited (your version)",
+      "defaultOriginal": "Hope you're doing well! We're industry leaders in sales intelligence and wanted to reach out.",
+      "defaultEdited": "Your CAC is 40% above your sector average. Here's how we close that gap in 60 days.",
+      "learning": "Learning...",
+      "submit": "Submit correction",
+      "resultTitle": "Learning result",
+      "versionBadge": "v{version} — {count, plural, one {# correction} other {# corrections}}",
+      "rulesLearnedTitle": "Rules learned from this edit:",
+      "changeRatio": "Change ratio: {pct}% · {count, plural, one {# authoritative rule} other {# authoritative rules}}",
+      "viewFullProfile": "View full style profile",
+      "currentProfileTitle": "Current style profile",
+      "profileStats": "{authoritative, plural, one {# authoritative} other {# authoritative}} · {total, plural, one {# correction} other {# corrections}}",
+      "needMoreCorrections": "More corrections are needed to build authoritative rules."
+    },
+    "anomaly": {
+      "description": "Monitors recent conversion rate against the historical baseline by channel and sector. Anomalous drops trigger strategy alerts that require CEO review before any change.",
+      "runScan": "Run anomaly scan",
+      "scanning": "Scanning…",
+      "severity": {
+        "critical": "critical",
+        "high": "high",
+        "medium": "medium",
+        "low": "low"
+      },
+      "currentVsBase": "Current: {rolling}% vs. baseline {baseline}% ({deviation}%)",
+      "acknowledge": "Acknowledge",
+      "acknowledgeNote": "Reviewed from the panel",
+      "hideDetails": "Hide",
+      "showDetails": "Details and actions",
+      "empty": {
+        "title": "No open anomaly alerts.",
+        "hint": "Run a scan to review current conversion health."
+      }
+    }
+  },
+  "control": {
+    "caption": "Action kanban · hex intelligence · system metrics",
+    "leadWorkspace": {
+      "ariaLabel": "Lead workspace",
+      "eyebrow": "Action zone",
+      "title": "Lead workspace",
+      "demoOffline": "Demo / offline",
+      "empty": "No active signals in the pipeline yet.",
+      "hotLeads": "{count, plural, one {# hot lead} other {# hot leads}}",
+      "openCrm": "Open CRM",
+      "stages": {
+        "detected": "Detected",
+        "enriching": "Enriching",
+        "ready_to_action": "Ready",
+        "in_progress": "In Progress",
+        "closed": "Closed"
+      }
+    },
+    "systemHealth": {
+      "ariaLabel": "System health",
+      "eyebrow": "Intelligence",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "unknownEnvironment": "unknown environment",
+      "dbReady": "DB ready",
+      "dbNotReady": "DB unavailable",
+      "updated": "Updated {time}",
+      "connectionError": "Couldn't connect to the BEE API — check NEXT_PUBLIC_API_URL",
+      "fallbackNoticePrefix": "Showing fallback status — start the API or set",
+      "fallbackNoticeMiddle": "in",
+      "worker": {
+        "ingestLabel": "Ingestion",
+        "queueLabel": "Queue",
+        "processedLabel": "Processed",
+        "errorsLabel": "Errors",
+        "offValue": "Off",
+        "state": {
+          "idle": "Idle",
+          "busy": "Processing",
+          "stopped": "Stopped",
+          "error": "Errors"
+        }
+      }
+    },
+    "apiStatus": {
+      "ariaLabel": "External APIs",
+      "eyebrow": "External APIs",
+      "unavailable": "External APIs unavailable.",
+      "configured": "API configured",
+      "mockMode": "Simulated mode",
+      "webhookConfigured": "Webhook ✓",
+      "webhookMissing": "No secret"
+    },
+    "anomalies": {
+      "ariaLabel": "Conversion anomalies",
+      "eyebrow": "Anomalies",
+      "empty": "No conversion drops outside the normal range",
+      "severity": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical"
+      }
+    },
+    "signalStream": {
+      "ariaLabel": "Signal stream",
+      "title": "Signal stream",
+      "caption": "Webhook → Strategy",
+      "readyCount": "{count, plural, one {# ready — click to open} other {# ready — click to open}}",
+      "unavailable": "Stream unavailable.",
+      "waiting": "Waiting for incoming webhooks."
+    }
+  }
+}
