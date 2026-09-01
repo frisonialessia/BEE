@@ -34,3 +34,6 @@ build/
 .idea/
 .vscode/
 *.log
+
+# ----- Claude Code local tooling state (subagent worktrees, etc.) -----------
+.claude/
