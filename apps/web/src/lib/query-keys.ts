@@ -26,6 +26,10 @@ export const queryKeys = {
     pending: (limit?: number) => ["orchestrator", "pending", limit] as const,
     status: () => ["orchestrator", "status"] as const,
   },
+  priorityFeed: {
+    all: ["priority-feed"] as const,
+    today: () => [...queryKeys.priorityFeed.all, "today"] as const,
+  },
   workflow: {
     tasks: (entityId?: string) => ["workflow", "tasks", entityId] as const,
     status: () => ["workflow", "status"] as const,

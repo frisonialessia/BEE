@@ -107,5 +107,22 @@
     "triggering": "Starting…",
     "triggerSequence": "Trigger \"{name}\"",
     "viewBattlecard": "View battlecard"
+  },
+  "decisionFeed": {
+    "eyebrow": "DECISION FEED",
+    "title": "Today's play",
+    "subtitle": "Fuses buying intent, decision-window urgency, and active alerts into the highest-leverage actions — not a board waiting for you to check it.",
+    "empty": "No urgent plays right now. All quiet.",
+    "approve": "Approve",
+    "approving": "Approving…",
+    "execute": "Execute",
+    "dismiss": "Dismiss",
+    "dismissing": "Dismissing…",
+    "viewAlerts": "View alerts",
+    "urgency": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
+    }
   }
 }

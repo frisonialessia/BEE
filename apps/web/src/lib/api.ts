@@ -29,6 +29,7 @@ import type {
   RevenueSimulation,
   SequenceExecution,
   Signal,
+  TodayFeedOut,
   VoiceProfile,
   WorkflowStatus,
   WorkflowTask,
@@ -195,6 +196,31 @@ export async function rejectAction(actionId: string, reason?: string): Promise<P
   });
   if (!res.ok) throw new Error(`API error ${res.status}`);
   return res.json() as Promise<PendingAction>;
+}
+
+// ── PriorityFeedService (Bandeja de Decisiones) ──────────────────────────────
+
+/** Today's ranked decisions — fuses DarkFunnel/CyclePredictor/AnomalyDetector
+ *  into a small "what to act on today" feed. No demo-mode fallback: this
+ *  endpoint only exists on the real dashboard (see DashboardOverview), not
+ *  the /probar sandbox — same scope as PendingAction's other read-only
+ *  siblings that live only in the authenticated app. */
+export async function getTodayFeed(): Promise<FetchResult<TodayFeedOut>> {
+  try {
+    const res = await beeFetch(`${API_URL}/api/v1/priority/today`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as TodayFeedOut, live: true };
+  } catch {
+    return { data: { cards: [], generated_at: new Date().toISOString() }, live: false };
+  }
+}
+
+/** "Descartar" — hide one opportunity from today's feed for a few days. */
+export async function dismissFromTodayFeed(opportunityId: string): Promise<void> {
+  const res = await beeFetch(`${API_URL}/api/v1/priority/today/${opportunityId}/dismiss`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error(`API error ${res.status}`);
 }
 
 // ── WorkflowOrchestrator (event bus) ─────────────────────────────────────────
