@@ -1,0 +1,16 @@
+{
+  "overview": {
+    "title": "This is how BEE sees your market",
+    "subtitle": "Signals detected → prioritized pipeline → strategy ready to execute.",
+    "funnelEyebrow": "All stages · Closing funnel"
+  },
+  "addCompanyForm": {
+    "trigger": "Simulate your company",
+    "companyNameLabel": "Your company's name",
+    "companyNamePlaceholder": "E.g.: Acme Inc",
+    "employeesLabel": "Employees",
+    "employeesPlaceholder": "Choose a range",
+    "submit": "Generate signal",
+    "cancel": "Cancel"
+  }
+}

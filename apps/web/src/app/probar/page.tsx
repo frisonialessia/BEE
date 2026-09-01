@@ -2,6 +2,7 @@
 
 import { Building2, KanbanSquare, Radio, Users } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-heatmap";
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
@@ -17,10 +18,10 @@ import { useSignals } from "@/hooks/queries/use-signals";
 // visualmente casado con el link al que apunta, no con un ícono elegido
 // aparte.
 const KPI_TILES = [
-  { key: "signals", label: "Señales", href: "/probar/signals", icon: Radio },
-  { key: "crm", label: "CRM", href: "/probar/crm", icon: KanbanSquare },
-  { key: "leads", label: "Leads", href: "/probar/leads", icon: Users },
-  { key: "companies", label: "Empresas", href: "/probar/companies", icon: Building2 },
+  { key: "signals", navKey: "signals", href: "/probar/signals", icon: Radio },
+  { key: "crm", navKey: "crm", href: "/probar/crm", icon: KanbanSquare },
+  { key: "leads", navKey: "leads", href: "/probar/leads", icon: Users },
+  { key: "companies", navKey: "companies", href: "/probar/companies", icon: Building2 },
 ] as const;
 
 /** Landing page of the sandbox — nav calls it "Resumen" too, so a visitor
@@ -44,6 +45,9 @@ const KPI_TILES = [
  * into. Leads and Empresas are genuinely distinct entities with nothing
  * else counting them on this page. */
 export default function ProbarOverviewPage() {
+  const t = useTranslations("probar.overview");
+  const tNav = useTranslations("nav.items");
+  const tDash = useTranslations("dashboardOverview.overview.sections");
   const { data: opportunitiesResult } = useOpportunities();
   const { data: signalsResult } = useSignals();
   const { data: companiesResult } = useCompanies(200);
@@ -63,10 +67,8 @@ export default function ProbarOverviewPage() {
       <header className="mb-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="bee-display">Así ve BEE tu mercado</h1>
-            <p className="bee-caption mt-1 max-w-xl">
-              Señales detectadas → pipeline priorizado → estrategia lista para ejecutar.
-            </p>
+            <h1 className="bee-display">{t("title")}</h1>
+            <p className="bee-caption mt-1 max-w-xl">{t("subtitle")}</p>
           </div>
           <AddCompanyForm />
         </div>
@@ -80,7 +82,7 @@ export default function ProbarOverviewPage() {
         {KPI_TILES.map((tile) => (
           <Link key={tile.key} href={tile.href} className="bee-kpi-tile bee-glass--hover block">
             <div className="flex items-center justify-between gap-2">
-              <p className="bee-kpi-tile__label">{tile.label}</p>
+              <p className="bee-kpi-tile__label">{tNav(tile.navKey)}</p>
               <tile.icon className="size-3.5 shrink-0 text-muted-foreground stroke-[1.25]" />
             </div>
             <p className="bee-kpi-tile__value">{counts[tile.key]}</p>
@@ -98,7 +100,7 @@ export default function ProbarOverviewPage() {
       <SignalHexMap className="mt-2" height={240} />
 
       <section className="mt-2 space-y-2">
-        <p className="bee-eyebrow">Todas las etapas · Embudo de cierre</p>
+        <p className="bee-eyebrow">{t("funnelEyebrow")}</p>
         <PipelineFunnel opportunities={opportunities} />
       </section>
 
@@ -111,8 +113,8 @@ export default function ProbarOverviewPage() {
       <div className="mt-2 grid items-start gap-3 lg:grid-cols-2">
         <section className="bee-surface bee-bento-pad space-y-3">
           <div>
-            <h3 className="bee-card-title">Dónde eres más fuerte</h3>
-            <p className="bee-caption">Tasa de cierre cruzando industria de la cuenta y tipo de señal</p>
+            <h3 className="bee-card-title">{tDash("industryHeatmap.title")}</h3>
+            <p className="bee-caption">{tDash("industryHeatmap.caption")}</p>
           </div>
           <IndustrySignalHeatmap
             opportunities={opportunities}
@@ -123,8 +125,8 @@ export default function ProbarOverviewPage() {
 
         <section className="bee-surface bee-bento-pad space-y-3">
           <div>
-            <h3 className="bee-card-title">Cuándo llega el mercado</h3>
-            <p className="bee-caption">Actividad de señales detectadas, por día y horario</p>
+            <h3 className="bee-card-title">{tDash("activityHeatmap.title")}</h3>
+            <p className="bee-caption">{tDash("activityHeatmap.caption")}</p>
           </div>
           <SignalActivityHeatmap signals={signals} />
         </section>

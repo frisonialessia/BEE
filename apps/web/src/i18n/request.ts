@@ -97,6 +97,7 @@ const NAMESPACES = [
   "workspace",
   "legalMarketing",
   "landing",
+  "probar",
 ] as const;
 
 async function loadMessages(locale: Locale) {

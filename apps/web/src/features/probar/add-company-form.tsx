@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, type FormEvent } from "react";
 
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
@@ -16,6 +17,7 @@ import { queryKeys } from "@/lib/query-keys";
  * its "+ Agregar empresa" prospect form). Lands on /probar/crm afterward so
  * the new card is immediately visible where it landed — "Detectada". */
 export function AddCompanyForm() {
+  const t = useTranslations("probar.addCompanyForm");
   const router = useRouter();
   const queryClient = useQueryClient();
   const { openOpportunity } = useOpportunityDrawer();
@@ -41,7 +43,7 @@ export function AddCompanyForm() {
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className="bee-btn bee-btn--primary">
-        <Sparkles className="size-4" /> Simula tu empresa
+        <Sparkles className="size-4" /> {t("trigger")}
       </button>
     );
   }
@@ -50,7 +52,7 @@ export function AddCompanyForm() {
     <form onSubmit={handleSubmit} className="bee-bento bee-bento-pad flex flex-wrap items-end gap-3">
       <div className="min-w-[10rem] flex-1 space-y-1.5">
         <label htmlFor="demoCompanyName" className="bee-caption block">
-          Nombre de tu empresa
+          {t("companyNameLabel")}
         </label>
         <input
           id="demoCompanyName"
@@ -59,12 +61,12 @@ export function AddCompanyForm() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="bee-input"
-          placeholder="Ej: Acme Inc"
+          placeholder={t("companyNamePlaceholder")}
         />
       </div>
       <div className="min-w-[10rem] space-y-1.5">
         <label htmlFor="demoEmployeeRange" className="bee-caption block">
-          Empleados
+          {t("employeesLabel")}
         </label>
         <select
           id="demoEmployeeRange"
@@ -74,7 +76,7 @@ export function AddCompanyForm() {
           className="bee-input"
         >
           <option value="" disabled>
-            Elige un rango
+            {t("employeesPlaceholder")}
           </option>
           {EMPLOYEE_RANGES.map((range) => (
             <option key={range} value={range}>
@@ -84,10 +86,10 @@ export function AddCompanyForm() {
         </select>
       </div>
       <button type="submit" className="bee-btn bee-btn--primary">
-        Generar señal
+        {t("submit")}
       </button>
       <button type="button" onClick={() => setOpen(false)} className="bee-btn-ghost">
-        Cancelar
+        {t("cancel")}
       </button>
     </form>
   );

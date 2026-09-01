@@ -889,6 +889,16 @@
   overflow-y: auto;
 }
 
+/* Acción's own content (5 stage rows + a button) is far shorter than
+ * Flujo de señales/APIs externas/Anomalías, which still need the full row
+ * height (stretch, the grid default) plus their own overflow-y-auto to
+ * scroll internally within the fixed-height cockpit. Without this
+ * align-self, the grid forces Acción to that same full height too, which
+ * shows up as a large dead white area below its card. */
+.bee-crm-control__action {
+  align-self: start;
+}
+
 @media (max-width: 1100px) {
   .bee-crm-control__body { grid-template-columns: 1fr; }
   .bee-crm-control { height: auto; min-height: 0; }

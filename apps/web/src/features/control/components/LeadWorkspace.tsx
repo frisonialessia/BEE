@@ -28,7 +28,7 @@ export function LeadWorkspace() {
   const hotCount = cards.filter((c) => c.hot_lead).length;
 
   return (
-    <section className="bee-surface flex h-full min-h-0 flex-col bee-bento-pad" aria-label="Espacio de leads">
+    <section className="bee-surface flex min-h-0 flex-col bee-bento-pad" aria-label="Espacio de leads">
       <div className="mb-4 flex shrink-0 items-start justify-between gap-3">
         <div>
           <p className="bee-eyebrow">Zona de acción</p>

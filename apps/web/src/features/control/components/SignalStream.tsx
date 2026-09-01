@@ -124,7 +124,12 @@ export function SignalStream() {
         ) : events.length === 0 ? (
           <p className="text-sm text-[var(--color-text-muted)]">Esperando webhooks entrantes.</p>
         ) : (
-          <ScrollArea className="h-[220px] pr-2">
+          // h-full (not a fixed h-[220px]): this card sits in a flex column
+          // (min-h-0 flex-1 above), so it now takes whatever room the
+          // column actually has instead of hard-capping at 220px — the
+          // column's own overflow-y-auto (.bee-crm-control__viz) is still
+          // the backstop if the event list is genuinely longer than that.
+          <ScrollArea className="h-full pr-2">
             <div>
               {events.map((event) => (
                 <StreamItem key={event.id} event={event} onOpen={openOpportunity} />

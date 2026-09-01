@@ -68,16 +68,18 @@ export function AnomaliesPanel() {
         <AlertTriangle className="size-3.5 text-[var(--color-text-muted)]" />
         <p className="bee-eyebrow">Anomalías</p>
       </div>
-      {/* overscroll-contain below: same nested-scroll fix as SystemHealth's
-       * APIs externas list — this card also sits inside the independently
-       * scrollable .bee-crm-control__metrics column. */}
+      {/* max-h-56 only fit ~2 alerts before clipping the 3rd mid-row, which
+       * is what made this panel read as cut off. max-h-[32rem] gives it real
+       * room; overscroll-contain below is the same nested-scroll fix as
+       * SystemHealth's APIs externas list — this card also sits inside the
+       * independently scrollable .bee-crm-control__metrics column. */}
       {alerts.length === 0 ? (
         <p className="flex items-center gap-1.5 py-2 text-xs text-muted-foreground">
           <ShieldCheck className="size-3.5" />
           Sin caídas de conversión fuera de lo normal
         </p>
       ) : (
-        <div className="max-h-56 divide-y divide-border overflow-y-auto overscroll-contain">
+        <div className="max-h-[32rem] divide-y divide-border overflow-y-auto overscroll-contain">
           {alerts.map((alert) => (
             <AlertRow key={alert.id} alert={alert} />
           ))}

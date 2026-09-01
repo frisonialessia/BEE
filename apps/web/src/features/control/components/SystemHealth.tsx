@@ -224,11 +224,16 @@ export function SystemHealth() {
             <Radio className="size-3.5 text-[var(--color-text-muted)]" />
             <p className="bee-eyebrow">APIs externas</p>
           </div>
-          {/* overscroll-contain: this column (.bee-crm-control__metrics) is
-           * itself scrollable — without it, scrolling this list to its edge
-           * hands the leftover wheel delta to the column and the whole card
-           * jumps. */}
-          <div className="max-h-24 overflow-y-auto overscroll-contain">
+          {/* max-h-24 used to cap this at under one full row (only 4
+           * providers ever exist — linkedin/g2/google_search/capterra — so
+           * there was never a real overflow case to guard against), which
+           * is what made "APIs externas" read as clipped. max-h-80 comfortably
+           * fits all 4 without scrolling on any real viewport; overscroll-contain
+           * stays for the rare narrow-viewport case where it still scrolls —
+           * this column (.bee-crm-control__metrics) is itself scrollable,
+           * and without it the leftover wheel delta hands off to the column
+           * and the whole card jumps. */}
+          <div className="max-h-80 overflow-y-auto overscroll-contain">
             {snapshot.providers.map((p) => (
               <ProviderRow key={p.name} provider={p} />
             ))}
