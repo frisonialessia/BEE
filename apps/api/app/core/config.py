@@ -57,6 +57,23 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "bee"
     POSTGRES_PASSWORD: str = "bee"
     POSTGRES_DB: str = "bee"
+    # SQLAlchemy's own defaults (pool_size=5, max_overflow=10 — up to 15
+    # connections) assume one long-lived process holding one pool for the
+    # app's whole lifetime. That's wrong here: `engine` (app.core.database)
+    # is a module-level object, so on a serverless platform (Vercel) it's
+    # actually "up to 15 connections *per warm function instance*", and
+    # concurrent traffic can spin up many instances at once — a handful of
+    # them is already enough to exhaust a typical managed Postgres'
+    # connection cap, surfacing as intermittent "too many connections"
+    # errors that never reproduce with one person testing at a time. Kept
+    # small and configurable (not hardcoded) because the right number
+    # depends on how many instances the deployment can run concurrently —
+    # see DEPLOY_CHECKLIST.md for the pooled-connection-string
+    # recommendation this pairs with (PgBouncer/Neon's "-pooler" host/
+    # Supabase's transaction-mode port), which matters more than either of
+    # these two numbers on its own.
+    DB_POOL_SIZE: int = 2
+    DB_MAX_OVERFLOW: int = 3
 
     # ----- Security ------------------------------------------------------------
     # Shared secret used to verify HMAC signatures on incoming webhooks so that

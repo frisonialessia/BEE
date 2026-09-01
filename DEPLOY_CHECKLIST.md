@@ -33,6 +33,10 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 > Use `init_db()` for local dev only. In production, **always Alembic**.
 
+> On Vercel specifically, use your Postgres provider's **pooled**
+> connection string for `DATABASE_URL` — see gotcha §3.7 below before
+> opening traffic to more than one person at a time.
+
 ---
 
 ## 2. Recommended variables (competitive edge)
@@ -109,6 +113,30 @@ Local mode (no server required):
 python scripts/simulate_signal.py
 python scripts/simulate_signal.py --failure   # validates safe logging when LinkedIn is down
 ```
+
+### 7. Postgres connection pooling on serverless (Vercel)
+
+`engine` (`app.core.database`) is a module-level object shared across the
+app's own lifetime — but on Vercel that's one *function instance*, not one
+long-lived server process. Real concurrent traffic can spin up several
+instances at once, and `DB_POOL_SIZE`/`DB_MAX_OVERFLOW` (defaults: 2 + 3 —
+see `Settings` in `app.core.config`) apply **per instance**, not globally.
+Two things, both matter:
+
+- **Point `DATABASE_URL` at your provider's pooled connection string**, not
+  the direct one — Neon's host with `-pooler` in it, Supabase's
+  transaction-mode port (`6543` instead of `5432`), or your own PgBouncer.
+  This is what actually keeps many concurrent instances from exhausting
+  Postgres' own connection cap; the small pool defaults help, but aren't a
+  substitute for it.
+- If you deliberately raise `DB_POOL_SIZE`/`DB_MAX_OVERFLOW` for a
+  higher-throughput deployment, multiply by however many concurrent
+  instances your Vercel plan/config can actually run to sanity-check
+  against your Postgres provider's connection limit — not just the number
+  itself.
+
+Symptom if this is wrong: intermittent `"too many connections"` errors
+under real concurrent load that never reproduce testing alone.
 
 ---
 
