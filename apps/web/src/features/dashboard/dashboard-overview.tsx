@@ -18,6 +18,7 @@ import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context"
 import { SignalHexMap } from "@/features/control/components/SignalHexMap";
 import { CriticalAccountsDigest } from "@/features/dashboard/critical-accounts-digest";
 import { DailyBrief } from "@/features/dashboard/daily-brief";
+import { DecisionFeed } from "@/features/dashboard/decision-feed";
 import { Leaderboard } from "@/features/dashboard/leaderboard";
 import { usePagination } from "@/hooks/use-pagination";
 import { useCompanies } from "@/hooks/queries/use-companies";
@@ -141,6 +142,7 @@ export function DashboardOverview() {
         </div>
       </header>
 
+      <DecisionFeed />
       <TodayImpactCard impact={todayImpact} />
       <CriticalAccountsDigest battlecards={battlecards} today={new Date()} />
       <DailyBrief />

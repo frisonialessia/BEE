@@ -1,3 +1,27 @@
+// ── PriorityFeedService (Bandeja de Decisiones) ──────────────────────────────
+
+export type DecisionKind = "opportunity" | "anomaly";
+export type DecisionUrgency = "low" | "medium" | "high";
+export type RecommendedAction = "call" | "email" | "review" | "wait" | "pause";
+
+export interface DecisionCard {
+  id: string;
+  kind: DecisionKind;
+  company_name: string | null;
+  headline: string;
+  reasoning: string;
+  urgency: DecisionUrgency;
+  recommended_action: RecommendedAction;
+  opportunity_id: string | null;
+  pending_action_id: string | null;
+  score: number;
+}
+
+export interface TodayFeedOut {
+  cards: DecisionCard[];
+  generated_at: string;
+}
+
 // ── AgentOrchestrator ─────────────────────────────────────────────────────────
 
 export type ActionStatus =

@@ -107,5 +107,22 @@
     "triggering": "Iniciando…",
     "triggerSequence": "Disparar \"{name}\"",
     "viewBattlecard": "Ver battlecard"
+  },
+  "decisionFeed": {
+    "eyebrow": "BANDEJA DE DECISIONES",
+    "title": "La jugada de hoy",
+    "subtitle": "Fusiona intención de compra, ventana de cierre y alertas activas en las acciones de mayor impacto — no un tablero que espera a que lo revises.",
+    "empty": "Sin jugadas urgentes ahora mismo. Todo tranquilo.",
+    "approve": "Aprobar",
+    "approving": "Aprobando…",
+    "execute": "Ejecutar",
+    "dismiss": "Descartar",
+    "dismissing": "Descartando…",
+    "viewAlerts": "Ver alertas",
+    "urgency": {
+      "low": "Baja",
+      "medium": "Media",
+      "high": "Alta"
+    }
   }
 }
