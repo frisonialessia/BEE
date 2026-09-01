@@ -2,6 +2,7 @@
 
 import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,12 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { HotLeadScore } from "@/types/extended";
 
-const STAGE_LABELS: Record<string, string> = {
-  awareness: "Conocimiento",
-  consideration: "Consideración",
-  decision: "Decisión",
-  ready_to_buy: "Listo para comprar",
-};
+const STAGE_KEYS = ["awareness", "consideration", "decision", "ready_to_buy"] as const;
 
 const HOVER_LERP_MS = 180;
 
@@ -45,6 +41,7 @@ function HiveTooltip({
   y: number;
   containerWidth: number;
 }) {
+  const t = useTranslations("shared.signalHexMap");
   const lead = cell.leads[0];
   const extra = cell.count - 1;
 
@@ -58,7 +55,7 @@ function HiveTooltip({
       }}
     >
       <p className="bee-eyebrow text-[var(--color-chart-5)]">
-        Temperatura de cierre · {Math.round(cell.temperature)}°
+        {t("tooltip.closingTemperature", { temp: Math.round(cell.temperature) })}
       </p>
       <p className="mt-1.5 text-sm font-light leading-snug">
         {lead.company_name ?? lead.company_domain}
@@ -66,11 +63,11 @@ function HiveTooltip({
       <p className="bee-micro">{lead.company_domain}</p>
       <div className="mt-2 flex flex-wrap gap-1.5 bee-micro">
         <span className="rounded-lg bg-muted px-2 py-0.5">
-          {STAGE_LABELS[lead.buying_stage] ?? lead.buying_stage}
+          {stageLabel(t, lead.buying_stage)}
         </span>
         {lead.is_hot && (
           <span className="rounded-lg bg-[var(--color-primary)] px-2 py-0.5 text-[var(--color-chart-5)]">
-            CALIENTE
+            {t("tooltip.hot")}
           </span>
         )}
       </div>
@@ -80,10 +77,20 @@ function HiveTooltip({
         </p>
       )}
       {extra > 0 && (
-        <p className="mt-1.5 bee-micro">+{extra} más en esta celda</p>
+        <p className="mt-1.5 bee-micro">{t("tooltip.more", { count: extra })}</p>
       )}
     </div>
   );
+}
+
+/** `buying_stage` off a lead is a free-form string from the backend — only
+ *  the four known stages have a translated label, anything else (an
+ *  unrecognized value) falls back to showing the raw string, same as the
+ *  old `STAGE_LABELS[stage] ?? stage` lookup this replaces. */
+function stageLabel(t: ReturnType<typeof useTranslations>, stage: string): string {
+  return (STAGE_KEYS as readonly string[]).includes(stage)
+    ? t(`stages.${stage}`)
+    : stage;
 }
 
 /**
@@ -97,6 +104,7 @@ export function SignalHexMap({
   height = 360,
   maxLeads = 200,
 }: SignalHexMapProps) {
+  const t = useTranslations("shared.signalHexMap");
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hoverStrengthRef = useRef(0);
@@ -167,10 +175,10 @@ export function SignalHexMap({
     return order.map(({ stage, color }) => ({
       stage,
       color,
-      label: STAGE_LABELS[stage] ?? stage,
+      label: stageLabel(t, stage),
       pct: Math.round(((counts[stage] ?? 0) / leads.length) * 100),
     }));
-  }, [leads]);
+  }, [leads, t]);
 
   const cells = useMemo(() => {
     if (leads.length === 0 || size.width <= 0) return [];
@@ -200,14 +208,14 @@ export function SignalHexMap({
     const from = hoverStrengthRef.current;
 
     const tick = (now: number) => {
-      const t = Math.min((now - start) / HOVER_LERP_MS, 1);
-      const eased = t * (2 - t);
+      const progress = Math.min((now - start) / HOVER_LERP_MS, 1);
+      const eased = progress * (2 - progress);
       const next = from + (target - from) * eased;
       hoverStrengthRef.current = next;
       setHoverStrength(next);
       setRenderHover(hovered);
 
-      if (t < 1) {
+      if (progress < 1) {
         rafRef.current = requestAnimationFrame(tick);
       }
     };
@@ -292,7 +300,7 @@ export function SignalHexMap({
   return (
     <section
       className={cn("bee-glass relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] bee-bento-pad", className)}
-      aria-label="Mapa hexagonal de señales — mapa de calor de la colmena"
+      aria-label={t("sectionAriaLabel")}
     >
       {/* Hexágonos flotantes decorativos — puro CSS, no interactúan. */}
       <span className="bee-hex-float" style={{ width: 90, height: 104, top: -30, right: -20, animationDelay: "0s" }} aria-hidden />
@@ -304,9 +312,9 @@ export function SignalHexMap({
               section header (Embudo de cierre, Dónde eres más fuerte, …) —
               this used to run a 3rd bee-caption line above the title,
               heavier than any sibling section on the page. */}
-          <h2 className="bee-card-title">Colmena de intención</h2>
+          <h2 className="bee-card-title">{t("heading")}</h2>
           <p className="bee-caption mt-0.5">
-            Dark Funnel · {leads.length} leads · haz clic en una celda para ver detalles
+            {t("caption", { count: leads.length })}
           </p>
         </div>
         <div className="flex flex-col items-end gap-2">
@@ -314,18 +322,18 @@ export function SignalHexMap({
             href="/dashboard/dark-funnel"
             className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
           >
-            Ver más
+            {t("viewMore")}
             <ArrowUpRight className="size-3" />
           </Link>
           <div className="flex items-center gap-2 bee-micro">
-            <span>Frío</span>
+            <span>{t("legend.cold")}</span>
             <div
               className="h-2 w-24 rounded-full"
               style={{
                 background: `linear-gradient(90deg, ${TEMPERATURE_COLORS.cool}, ${TEMPERATURE_COLORS.mild}, ${TEMPERATURE_COLORS.warm}, ${TEMPERATURE_COLORS.hot}, ${TEMPERATURE_COLORS.peak})`,
               }}
             />
-            <span>Caliente</span>
+            <span>{t("legend.hot")}</span>
           </div>
         </div>
       </div>
@@ -341,7 +349,7 @@ export function SignalHexMap({
           <Skeleton className="h-full w-full rounded-2xl" />
         ) : leads.length === 0 ? (
           <div className="flex h-full items-center justify-center rounded-2xl border-2 border-dashed border-border text-sm font-light text-[var(--color-text-muted)]">
-            Todavía no hay leads del Dark Funnel — las señales de intención van a poblar la colmena.
+            {t("empty")}
           </div>
         ) : (
           <div
@@ -359,7 +367,7 @@ export function SignalHexMap({
               onMouseLeave={onMouseLeave}
               onClick={onClick}
               role="img"
-              aria-label={`Mapa de calor hexagonal de ${leads.length} leads por temperatura de cierre`}
+              aria-label={t("canvasAriaLabel", { count: leads.length })}
             />
             {hovered && (
               <HiveTooltip

@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock, Radar } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,11 +12,17 @@ import { signalTypeLabels } from "@/lib/format";
 import type { SignalType } from "@/types/domain";
 import type { CycleSignalRecalibration } from "@/types/extended";
 
-const CONFIDENCE_LABEL: Record<string, string> = {
-  low: "Confianza baja",
-  medium: "Confianza media",
-  high: "Confianza alta",
-};
+const CONFIDENCE_KEYS = ["low", "medium", "high"] as const;
+
+/** `confidence` off the prediction is a free-form string from the backend
+ *  — only the three known levels have a translated label, anything else
+ *  falls back to the raw value, same as the old `CONFIDENCE_LABEL[x] ?? x`
+ *  lookup this replaces. */
+function confidenceLabel(t: ReturnType<typeof useTranslations>, confidence: string): string {
+  return (CONFIDENCE_KEYS as readonly string[]).includes(confidence)
+    ? t(`confidence.${confidence}`)
+    : confidence;
+}
 
 function formatCloseDate(iso: string, locale: Locale): string {
   return formatLongDate(`${iso}T00:00:00`, locale);

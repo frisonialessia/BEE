@@ -34,11 +34,11 @@ export default function OpportunityDetailPage() {
         <Button asChild variant="ghost" size="sm">
           <Link href="/dashboard/strategies">
             <ArrowLeft className="mr-1 size-4" />
-            Back to strategies
+            {t("backToStrategies")}
           </Link>
         </Button>
         {battlecardResult?.live === false && (
-          <Badge variant="warning">Demo data</Badge>
+          <Badge variant="warning">{t("demoData")}</Badge>
         )}
       </div>
 
@@ -54,19 +54,19 @@ export default function OpportunityDetailPage() {
         </Card>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Battlecard not available — opportunity may still be enriching.
+          {t("battlecardUnavailable")}
         </p>
       )}
 
       <section>
-        <h2 className="mb-4 text-lg font-semibold">Execution Artifacts</h2>
+        <h2 className="mb-4 text-lg font-semibold">{t("executionArtifacts")}</h2>
         {loadingArtifacts ? (
           <Skeleton className="h-64 rounded-xl" />
         ) : artifacts ? (
           <ExecutionArtifacts bundle={artifacts} opportunityId={id} />
         ) : (
           <p className="text-sm text-muted-foreground">
-            Artifacts will generate on first request via the Executive Agent.
+            {t("artifactsUnavailable")}
           </p>
         )}
       </section>

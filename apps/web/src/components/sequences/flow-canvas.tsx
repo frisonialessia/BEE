@@ -1,22 +1,17 @@
+"use client";
+
 import { Flag, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { ACTION_BY_VALUE, CHANNEL_COLOR, CHANNEL_ICON } from "@/components/sequences/action-palette";
 import type { StepDefinition } from "@/lib/api/sequences";
 
-const CONDITION_LABEL: Record<string, string> = {
-  opened: "cuando abren",
-  clicked: "cuando hacen clic",
-  replied: "cuando responden",
-  accepted: "cuando aceptan",
-  no_response: "sin respuesta",
-};
-
-function describeCondition(condition: string): string {
-  if (CONDITION_LABEL[condition]) return CONDITION_LABEL[condition];
+function describeCondition(t: ReturnType<typeof useTranslations>, condition: string): string {
+  if (t.has(`conditions.${condition}`)) return t(`conditions.${condition}`);
   const timeout = /^not_(.+)_(\d+)d$/.exec(condition);
   if (timeout) {
     const [, event, days] = timeout;
-    return `si no hay "${event}" en ${days} día${days === "1" ? "" : "s"}`;
+    return t("timeout", { event, days: Number(days) });
   }
   return condition;
 }
@@ -35,11 +30,14 @@ export function FlowCanvas({
   steps: StepDefinition[];
   onRemoveStep?: (stepId: string) => void;
 }) {
+  const t = useTranslations("workspace.sequences.flowCanvas");
+  const tActions = useTranslations("workspace.sequences.actions");
+
   if (steps.length === 0) {
     return (
       <div className="bee-bento bee-bento-pad py-12 text-center">
-        <p className="text-sm text-muted-foreground">Todavía no hay pasos en este flujo.</p>
-        <p className="bee-caption mt-1">Agrega el primero desde la paleta de acciones.</p>
+        <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
+        <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
       </div>
     );
   }
@@ -87,7 +85,9 @@ export function FlowCanvas({
                       {ChannelIcon && <ChannelIcon className="size-3 shrink-0 text-muted-foreground" />}
                       <p className="truncate text-xs font-semibold">{step.name}</p>
                     </div>
-                    <p className="bee-caption mt-0.5">{def?.description ?? step.action}</p>
+                    <p className="bee-caption mt-0.5">
+                      {def ? tActions(`${step.action}.description`) : step.action}
+                    </p>
                     {step.notes && <p className="mt-1 bee-micro">{step.notes}</p>}
                   </div>
                   {onRemoveStep && (
@@ -95,7 +95,7 @@ export function FlowCanvas({
                       type="button"
                       onClick={() => onRemoveStep(step.id)}
                       className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-[var(--color-primary)]"
-                      aria-label="Quitar paso"
+                      aria-label={t("removeStepAria")}
                     >
                       <X className="size-3.5" />
                     </button>
@@ -104,7 +104,7 @@ export function FlowCanvas({
 
                 {!isLast && primaryTransition && (
                   <p className="mt-1.5 pl-1 bee-micro">
-                    → avanza {describeCondition(primaryTransition.condition)}
+                    → {t("advance", { condition: describeCondition(t, primaryTransition.condition) })}
                   </p>
                 )}
               </div>
@@ -117,7 +117,7 @@ export function FlowCanvas({
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-dashed border-border">
           <Flag className="size-4 text-muted-foreground" />
         </span>
-        <p className="bee-caption">Fin de la secuencia</p>
+        <p className="bee-caption">{t("end")}</p>
       </div>
     </div>
   );
