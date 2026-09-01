@@ -27,24 +27,35 @@ auth → tick → cursor advance → audit log) could be deployed and verified
 safely behind ``MARKET_SCAN_ENABLED=false`` before any provider call
 existed.
 
-Phase 2 (this revision) wires the first real provider: Google Search's
-market-news query (``ExternalAPIOrchestrator.scan_market_news`` →
+Phase 2 wired the first real provider: Google Search's market-news query
+(``ExternalAPIOrchestrator.scan_market_news`` →
 ``GoogleSearchProvider.search_market_news``, mock-safe when
 ``GOOGLE_SEARCH_API_KEY``/``GOOGLE_SEARCH_CX`` aren't configured — see
-that provider's docstring for why mock mode returns zero items here
-rather than a plausible fake headline). Results are normalized into
-``Signal`` rows through :class:`~app.services.signal_engine.engine.SignalEngine`
-— the *same* entry point ``POST /api/v1/signals/webhook`` uses — not a
-parallel ingestion path, so every downstream consumer (opportunity
-creation, strategy generation, the Control/Overview bento-grid) picks
-these up with zero changes.
+that provider's docstring for why mock mode returns zero items rather
+than a plausible fake headline).
 
-Not in this module yet (Phase 3)
------------------------------------
-* A ``HiringProvider`` (same ``IExternalProvider`` contract).
-* A pgvector semantic fallback (``app.services.vector_store``) for signals
-  that don't literally name the tracked company — today's exact-match-only
-  query (the company's own name, quoted) misses indirect mentions.
+Phase 3 (this revision) adds a second, independent provider: the Hiring
+provider's Greenhouse-public-boards check
+(``ExternalAPIOrchestrator.scan_hiring_signals`` →
+``HiringProvider.search_market_news``, no credentials needed — see that
+provider's docstring on the domain-to-board-slug guess and why a 404 is a
+clean zero, not an error). Both providers' results are normalized into
+``Signal`` rows through the same
+:class:`~app.services.signal_engine.engine.SignalEngine` — the *same*
+entry point ``POST /api/v1/signals/webhook`` uses — not a parallel
+ingestion path, so every downstream consumer (opportunity creation,
+strategy generation, the Control/Overview bento-grid) picks these up
+with zero changes.
+
+Deliberately not in this module: a pgvector semantic-correlation layer.
+That was scoped for a *global* scan-then-match design (crawl broadly,
+figure out afterward which tracked company a result is about) — the
+design that actually shipped is a *per-company pull* instead (ask Google/
+Greenhouse specifically about company X), where the correlation problem
+doesn't exist in the first place: the provider's own query already scopes
+the result to one company. Adding a semantic layer on top of a design
+that doesn't need it would be solving a problem this pipeline doesn't
+have — see the PR description for the fuller reasoning.
 """
 
 from __future__ import annotations
@@ -63,6 +74,7 @@ from app.models.base import SignalSource, SignalType, utcnow
 from app.models.company import Company
 from app.models.market_scan_log import MarketScanLog
 from app.schemas.signal import CompanyRef, SignalWebhookIn
+from app.services.external_api.interface import ExternalSearchResult
 from app.services.external_api.orchestrator import ExternalAPIOrchestrator
 from app.services.signal_engine.engine import SignalEngine
 
@@ -161,52 +173,90 @@ class MarketScanOrchestrator:
     def _scan_company(self, company: Company) -> int:
         """Scan one company across every configured market-scan provider.
 
-        Today: Google Search's market-news query only (Phase 2). Returns
-        the number of Signal rows actually created — a scan that finds
-        news already ingested on a prior tick reports 0 here even though
-        the provider call succeeded, since SignalEngine's own
-        external_id-based idempotency (see below) deduplicates it.
+        Today: Google Search's market-news query (Phase 2) and the Hiring
+        provider's Greenhouse-board check (Phase 3). Returns the number of
+        Signal rows actually created — a scan that finds something already
+        ingested on a prior tick reports 0 here even though the provider
+        call succeeded, since SignalEngine's own external_id-based
+        idempotency (see _ingest_items below) deduplicates it. One
+        provider failing doesn't skip the other — each is independent.
         """
         if not company.name:
             return 0  # nothing to search on
 
-        news = ExternalAPIOrchestrator(self.session).scan_market_news(
-            company_domain=company.domain or company.name,
-            company_name=company.name,
+        api = ExternalAPIOrchestrator(self.session)
+        domain = company.domain or company.name
+        created = 0
+
+        news = api.scan_market_news(company_domain=domain, company_name=company.name)
+        created += self._ingest_items(
+            company,
+            news,
+            provider_key="google_search",
+            event="market_scan.google_news",
+            default_signal_type=SignalType.NEWS_MENTION,
         )
-        if not news.success or not news.items:
+
+        hiring = api.scan_hiring_signals(company_domain=domain, company_name=company.name)
+        created += self._ingest_items(
+            company,
+            hiring,
+            provider_key="hiring",
+            event="market_scan.hiring_surge",
+            default_signal_type=SignalType.HIRING,
+        )
+
+        return created
+
+    def _ingest_items(
+        self,
+        company: Company,
+        result: ExternalSearchResult,
+        *,
+        provider_key: str,
+        event: str,
+        default_signal_type: SignalType,
+    ) -> int:
+        """Normalize one provider's ExternalSearchResult into Signal rows
+        via SignalEngine — the shared step every market-scan provider goes
+        through, factored out so adding a provider to _scan_company above
+        is "call it, pass its result here," not a new copy of this loop.
+        """
+        if not result.success or not result.items:
             return 0
 
         engine = SignalEngine(self.session)
         company_ref = CompanyRef(name=company.name, domain=company.domain)
         created = 0
 
-        for item in news.items[:_MAX_SIGNALS_PER_COMPANY]:
+        for item in result.items[:_MAX_SIGNALS_PER_COMPANY]:
             title = item.get("title")
             if not title:
                 continue
-            # Deterministic idempotency key from the article URL (falls
-            # back to the title when a provider omits a link) — the same
-            # article turning up on a later tick must not create a second
-            # Signal for it. Scoped to this company: two tracked companies
-            # legitimately mentioned in the same article each get their own.
+            # Deterministic idempotency key from the item's URL (falls back
+            # to the title when a provider omits one) — the same article/
+            # board turning up on a later tick must not create a second
+            # Signal for it. Scoped to company + provider: two tracked
+            # companies legitimately mentioned in the same article, or the
+            # same company surfaced by two different providers, each get
+            # their own Signal.
             dedup_source = item.get("link") or title
             external_id = (
-                f"market_scan:google_search:{company.id}:"
+                f"market_scan:{provider_key}:{company.id}:"
                 f"{hashlib.sha256(dedup_source.encode()).hexdigest()[:16]}"
             )
             payload = SignalWebhookIn(
                 title=title,
-                event="market_scan.google_news",
+                event=event,
                 description=item.get("snippet"),
-                # Pre-classified as NEWS_MENTION — SignalEngine's analyzers
-                # still run and may refine score/confidence, same as any
-                # other pre-typed webhook payload.
-                signal_type=SignalType.NEWS_MENTION,
+                # Pre-classified — SignalEngine's analyzers still run and
+                # may refine score/confidence/type, same as any other
+                # pre-typed webhook payload.
+                signal_type=default_signal_type,
                 source=SignalSource.MARKET_SCAN,
                 external_id=external_id,
                 company=company_ref,
-                data={"provider": "google_search", "link": item.get("link"), "mock": news.mock},
+                data={"provider": provider_key, "link": item.get("link"), "mock": result.mock},
             )
             outcome = engine.ingest(payload, commit=False, organization_id=company.organization_id)
             if not outcome.deduplicated:

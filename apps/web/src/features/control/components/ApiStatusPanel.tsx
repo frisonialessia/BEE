@@ -12,6 +12,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   g2: "G2",
   google_search: "Google Search",
   capterra: "Capterra",
+  hiring: "Hiring Signals",
 };
 
 const HEALTH_DOT: Record<ProviderHealthState, string> = {

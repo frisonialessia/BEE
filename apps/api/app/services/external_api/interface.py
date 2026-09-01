@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-ProviderName = Literal["linkedin", "g2", "google_search", "capterra"]
+ProviderName = Literal["linkedin", "g2", "google_search", "capterra", "hiring"]
 
 
 @dataclass(frozen=True, slots=True)
