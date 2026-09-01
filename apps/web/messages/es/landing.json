@@ -108,7 +108,8 @@
       "lastSyncValue": "hace 3 min",
       "nextRun": "Próxima corrida",
       "nextRunValue": "en 12 min",
-      "modelConfidence": "Confianza del modelo"
+      "modelConfidence": "Confianza del modelo",
+      "intelligenceTitle": "Inteligencia"
     },
     "leadsView": {
       "title": "Leads priorizados por score",
@@ -167,14 +168,14 @@
         "realistic": "Realista",
         "optimistic": "Optimista"
       },
-      "months": {
-        "1": "Ago",
-        "2": "Sep",
-        "3": "Oct",
-        "4": "Nov",
-        "5": "Dic",
-        "6": "Ene"
-      },
+      "months": [
+        "Ago",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dic",
+        "Ene"
+      ],
       "projectionLabel": "Proyección realista",
       "operationsUnit": "operaciones",
       "dealsCount": "{count} operaciones",

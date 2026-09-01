@@ -108,7 +108,8 @@
       "lastSyncValue": "3 min ago",
       "nextRun": "Next run",
       "nextRunValue": "in 12 min",
-      "modelConfidence": "Model confidence"
+      "modelConfidence": "Model confidence",
+      "intelligenceTitle": "Intelligence"
     },
     "leadsView": {
       "title": "Leads prioritized by score",
@@ -167,14 +168,14 @@
         "realistic": "Realistic",
         "optimistic": "Optimistic"
       },
-      "months": {
-        "1": "Aug",
-        "2": "Sep",
-        "3": "Oct",
-        "4": "Nov",
-        "5": "Dec",
-        "6": "Jan"
-      },
+      "months": [
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+        "Jan"
+      ],
       "projectionLabel": "Realistic projection",
       "operationsUnit": "deals",
       "dealsCount": "{count} deals",

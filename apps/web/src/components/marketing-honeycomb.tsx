@@ -200,6 +200,7 @@ function HexTooltip({
 }
 
 export function MarketingHoneycomb() {
+  const t = useTranslations("landing.honeycomb");
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
 
@@ -218,7 +219,7 @@ export function MarketingHoneycomb() {
         viewBox={`${-VIEW} ${-VIEW} ${VIEW * 2} ${VIEW * 2}`}
         className="mx-auto block h-full w-full max-w-[220px]"
         role="img"
-        aria-label="Mapa de calor hexagonal de intención de compra — vista ilustrativa, pasa el mouse por una celda"
+        aria-label={t("ariaLabel")}
         onMouseLeave={() => setHoveredIdx(null)}
       >
         {CELLS.map((cell, i) => (
