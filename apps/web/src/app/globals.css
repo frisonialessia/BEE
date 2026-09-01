@@ -858,12 +858,23 @@
  * grouping widgets by natural content weight per row, instead of one row
  * of 3 columns each stacking widgets of very different lengths, is what
  * actually fixes "one card empty, another clipped" rather than endlessly
- * retuning heights within the old shape). */
+ * retuning heights within the old shape).
+ *
+ * Deliberately NOT height: calc(100vh - ...) — Control renders inside
+ * .bee-scroll (app/dashboard/layout.tsx), which is already shorter than
+ * 100vh (it sits below DashboardHeader/the demo banner) and already
+ * scrolls with its own padding-bottom: 1.5rem, same as every other page.
+ * A 100vh-based height here measured against the *browser* viewport, not
+ * the actually-available space inside .bee-scroll — it overestimated by
+ * exactly however tall that header chrome is, which is what was clipping
+ * the bottom row's content flush against the browser edge with no visible
+ * margin. Sizing to natural/explicit content height and letting
+ * .bee-scroll do what it already does for every other page fixes both:
+ * nothing gets clipped, and the page's normal bottom padding is what
+ * "leaves the margin" — no special-casing needed here for that. */
 .bee-crm-control {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 2rem);
-  min-height: 600px;
   gap: 0.75rem;
   font-family: var(--bee-font);
 }
@@ -882,21 +893,23 @@
 
 /* Zona de acción / Colmena de intención / Inteligencia: all three are
  * naturally compact (a stage count, a fixed-height hex grid, a KPI strip),
- * so this row sizes to its own content (flex-shrink: 0, no flex: 1) rather
- * than being stretched to fill leftover space no sibling here needs. */
+ * so this row sizes to its own content rather than being stretched. */
 .bee-crm-control__row--top {
   flex-shrink: 0;
 }
 
 /* Flujo de señales / APIs externas / Anomalías: the three genuinely
- * scrollable, variable-length widgets — grouped together they stretch to
- * match *each other* (this row claims the remaining viewport height) and
- * each scrolls independently within its own equal-height card when its
- * own content runs long, instead of any one of them dictating the whole
- * page's height like in the old single-row layout. */
+ * scrollable, variable-length widgets carrying the page's actual
+ * intelligence — an explicit shared height (not a flex:1 share of
+ * whatever's left, which is what silently varied per viewport and per how
+ * tall the top row happened to be) is what makes "all three measure the
+ * same" hold on every screen, not just the one it was eyeballed against.
+ * Each card scrolls independently within it when its own content runs
+ * long; the row itself never grows past this, so it can never push into
+ * .bee-scroll's own bottom padding. */
 .bee-crm-control__row--bottom {
-  flex: 1;
-  min-height: 0;
+  height: 28rem;
+  flex-shrink: 0;
 }
 
 .bee-crm-control__cell {
@@ -908,8 +921,12 @@
 
 @media (max-width: 1100px) {
   .bee-crm-control__row { grid-template-columns: 1fr; }
-  .bee-crm-control__row--bottom { flex: none; }
-  .bee-crm-control { height: auto; min-height: 0; }
+  /* The 3 bottom-row cards stack in one column here — the row's own fixed
+   * 28rem (sized for 3 cards side by side) would squash all three into a
+   * third of that each. Let the row grow to fit its stacked cards, and
+   * give each card that same 28rem as its own height instead. */
+  .bee-crm-control__row--bottom { height: auto; }
+  .bee-crm-control__row--bottom .bee-crm-control__cell { height: 28rem; }
 }
 
 /* Drawer — flat, left border only */
