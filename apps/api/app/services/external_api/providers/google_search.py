@@ -110,6 +110,85 @@ class GoogleSearchProvider(IExternalProvider):
                 error=str(exc),
             )
 
+    def search_market_news(
+        self, *, company_domain: str, company_name: str | None = None
+    ) -> ExternalSearchResult:
+        """Market-moving news for MarketScanOrchestrator — funding,
+        acquisitions, leadership changes, expansion — as opposed to
+        search_intent's buying-intent-research query above. Same
+        real/mock split as search_intent, deliberately not reusing that
+        method: a shared "sales software buying" query would miss most of
+        what this needs to find, and conflating the two makes neither
+        query good.
+        """
+        if not self.is_configured():
+            return self._mock_market_news(company_domain, company_name)
+
+        creds = get_secret_manager().get("google_search")
+        api_key = creds.api_key
+        cx = (creds.extra or {}).get("cx")
+        name = company_name or company_domain
+        query = f'"{name}" (funding OR raises OR acquisition OR expansion OR partnership OR "new CEO" OR "new CFO")'
+
+        try:
+            with httpx.Client(timeout=10.0) as client:
+                resp = client.get(
+                    _GOOGLE_SEARCH_API,
+                    # dateRestrict=d7: only the last 7 days — a scan tick runs
+                    # every MARKET_SCAN_INTERVAL_HOURS anyway, so anything
+                    # older was either already seen on a prior tick or isn't
+                    # "just happened" news worth a signal.
+                    params={"key": api_key, "cx": cx, "q": query, "num": 5, "dateRestrict": "d7"},
+                )
+                resp.raise_for_status()
+                data = resp.json()
+
+            items = [
+                {
+                    "title": item.get("title"),
+                    "link": item.get("link"),
+                    "snippet": item.get("snippet"),
+                }
+                for item in data.get("items", [])
+            ]
+            return ExternalSearchResult(
+                provider="google_search",
+                success=True,
+                query=query,
+                items=items,
+                raw=data,
+                mock=False,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("GoogleSearchProvider market-news search failed: %s", exc)
+            return ExternalSearchResult(
+                provider="google_search",
+                success=False,
+                query=company_domain,
+                error=str(exc),
+            )
+
+    def _mock_market_news(
+        self, company_domain: str, company_name: str | None
+    ) -> ExternalSearchResult:
+        # Deterministic — no items, not a fabricated headline. Unlike
+        # _mock_search below (enrichment context, where a plausible example
+        # is harmless filler), a fake funding/expansion headline here would
+        # be indistinguishable from a real signal once it reaches a rep's
+        # pipeline — see DEPLOY_CHECKLIST.md's "fabricated demo data"
+        # hardening. Mock mode proves the pipeline wiring; it does not
+        # invent news.
+        name = company_name or company_domain
+        logger.debug("GoogleSearchProvider: mock market-news search for %s (no real items)", name)
+        return ExternalSearchResult(
+            provider="google_search",
+            success=True,
+            query=f'"{name}" market news',
+            items=[],
+            raw={"mock": True},
+            mock=True,
+        )
+
     def _mock_search(
         self,
         company_domain: str,

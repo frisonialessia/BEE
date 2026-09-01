@@ -151,6 +151,33 @@ class ExternalAPIOrchestrator:
             keywords=keywords,
         )
 
+    def scan_market_news(
+        self, *, company_domain: str, company_name: str | None = None
+    ) -> ExternalSearchResult:
+        """Market-moving news for MarketScanOrchestrator (see
+        app.services.market_scan) — same rate-limit-then-delegate shape as
+        search_google_intent above, routed to search_market_news instead of
+        search_intent. Only google_search implements this today; a provider
+        that doesn't returns the base class's "not implemented" result,
+        same graceful-skip behavior as any unconfigured provider.
+        """
+        if not self._acquire_rate_limit("google_search"):
+            return ExternalSearchResult(
+                provider="google_search",
+                success=False,
+                query=company_domain,
+                error="Google Search rate limit exceeded",
+            )
+        provider = self._providers.get("google_search")
+        if not provider:
+            return ExternalSearchResult(
+                provider="google_search",
+                success=False,
+                query=company_domain,
+                error="Google Search not registered",
+            )
+        return provider.search_market_news(company_domain=company_domain, company_name=company_name)
+
     def enrich_lead_from_signal(self, signal_payload: dict[str, Any]) -> dict[str, Any]:
         """Run full external enrichment for an inbound signal payload.
 
