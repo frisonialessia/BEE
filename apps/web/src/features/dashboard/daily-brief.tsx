@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, Flame, Info, Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
@@ -33,6 +34,7 @@ const TONE_COLOR: Record<BriefTone, string> = {
  *  necesita tu atención hoy", arriba del todo en Resumen. Si no hay nada
  *  real que decir, lo dice — nunca inventa urgencia para llenar el espacio. */
 export function DailyBrief() {
+  const t = useTranslations("dashboardOverview.dailyBrief");
   const { data: companiesResult, isLoading: companiesLoading } = useCompanies(300);
   const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 300);
   const { data: leadsResult, isLoading: leadsLoading } = useLeads(300);
@@ -82,7 +84,7 @@ export function DailyBrief() {
     <section className="mb-4">
       <div className="mb-2 flex items-center gap-1.5">
         <Sparkles className="size-3.5 text-[var(--color-chart-4)]" />
-        <p className="bee-eyebrow">Brief del día</p>
+        <p className="bee-eyebrow">{t("title")}</p>
       </div>
       {loading ? (
         <div className="flex gap-2.5 overflow-x-auto pb-1">
@@ -92,9 +94,7 @@ export function DailyBrief() {
         </div>
       ) : items.length === 0 ? (
         <div className="bee-glass rounded-[var(--radius-lg)] px-4 py-3">
-          <p className="text-xs text-muted-foreground">
-            Nada urgente por ahora — pipeline, cuotas y datos se ven en orden.
-          </p>
+          <p className="text-xs text-muted-foreground">{t("empty")}</p>
         </div>
       ) : (
         <div className="flex gap-2.5 overflow-x-auto pb-1">

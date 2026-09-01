@@ -1,3 +1,5 @@
+"use client";
+
 import {
   AlertCircle,
   AlertTriangle,
@@ -13,6 +15,7 @@ import {
   User,
   Zap,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -26,6 +29,7 @@ import { cn } from "@/lib/utils";
 
 /** CEO Battlecard — full synthesized brief in Bento editorial layout. */
 export function BattlecardView({ card }: { card: Battlecard }) {
+  const t = useTranslations("shared.battlecard");
   const { strategy, company, lead, signal } = card;
   const urgency = strategy.timing_window.urgency;
 
@@ -38,14 +42,14 @@ export function BattlecardView({ card }: { card: Battlecard }) {
             {card.ready_to_action && (
               <Badge variant="success" className="gap-1">
                 <ShieldCheck className="size-3" />
-                Lista para acción
+                {t("badges.readyToAction")}
               </Badge>
             )}
-            {card.hot_lead && <Badge variant="warning">Lead caliente</Badge>}
+            {card.hot_lead && <Badge variant="warning">{t("badges.hotLead")}</Badge>}
             {card.manual_review_required && (
               <Badge variant="destructive" className="gap-1">
                 <AlertTriangle className="size-3" />
-                Requiere revisión
+                {t("badges.reviewRequired")}
               </Badge>
             )}
             <Badge variant="outline">
@@ -57,21 +61,18 @@ export function BattlecardView({ card }: { card: Battlecard }) {
             {card.title.replace(/^Opportunity:\s*/, "")}
           </h2>
           <p className="text-xs text-muted-foreground">
-            Señal detectada {timeAgo(signal.detected_at)} · vía{" "}
+            {t("signalDetected", { time: timeAgo(signal.detected_at) })}{" "}
             <span className="font-medium">{strategy.generator}</span>
             {strategy.confidence_score !== undefined && (
               <span className="ml-2">
-                · {Math.round(strategy.confidence_score * 100)}% de confianza
+                · {t("confidencePct", { pct: Math.round(strategy.confidence_score * 100) })}
               </span>
             )}
           </p>
           {card.manual_review_required && (
             <div className="mt-1.5 flex items-start gap-1.5 border border-border bg-background px-2.5 py-1.5 text-xs">
               <AlertTriangle className="mt-0.5 size-3 shrink-0" />
-              <span>
-                La confianza de la estrategia está por debajo del umbral. Requiere
-                revisión del CEO antes de ejecutarse.
-              </span>
+              <span>{t("manualReviewNotice")}</span>
             </div>
           )}
         </div>
@@ -81,7 +82,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
         <div className="border border-dashed border-border bg-background p-3">
           <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <Building2 className="size-3 stroke-[1.25]" />
-            Empresa
+            {t("sections.company")}
           </div>
           <p className="font-semibold">{company.name ?? "—"}</p>
           <p className="text-sm text-muted-foreground">{company.domain}</p>
@@ -92,7 +93,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
         <div className="border border-dashed border-border bg-background p-3">
           <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <User className="size-3 stroke-[1.25]" />
-            Lead
+            {t("sections.lead")}
           </div>
           <p className="font-semibold">{lead.full_name ?? "—"}</p>
           <p className="text-sm text-muted-foreground">{lead.title}</p>
@@ -124,7 +125,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
       <div className="border border-border bg-background p-4">
         <h3 className="flex items-center gap-2 bee-card-title">
           <AlertCircle className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-1)" }} />
-          Punto de dolor
+          {t("sections.painPoint")}
         </h3>
         <p className="mt-2 text-sm leading-relaxed">{strategy.pain_point}</p>
       </div>
@@ -132,9 +133,9 @@ export function BattlecardView({ card }: { card: Battlecard }) {
       <div className="border border-border bg-primary/40 p-4">
         <h3 className="flex items-center gap-2 bee-card-title">
           <Zap className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-4)" }} />
-          Argumento de cierre
+          {t("sections.closingArgument")}
           <span className="ml-auto text-xs font-normal text-muted-foreground">
-            vía {strategy.channel}
+            {t("via", { value: strategy.channel })}
           </span>
         </h3>
         <blockquote className="mt-2 border-l-2 border-[var(--color-chart-4)] pl-3 text-sm italic leading-relaxed">
@@ -145,7 +146,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
       <div className="border border-border bg-background p-4">
         <h3 className="flex items-center gap-2 bee-card-title">
           <Clock className="size-4 stroke-[1.25]" />
-          Ventana de timing
+          {t("sections.timingWindow")}
           <span
             className={cn(
               "ml-auto text-xs font-medium",
@@ -161,7 +162,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
         {strategy.timing_window.expires_at && (
           <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
             <Calendar className="size-3 stroke-[1.25]" />
-            Vence: {strategy.timing_window.expires_at}
+            {t("expires", { date: strategy.timing_window.expires_at })}
           </div>
         )}
       </div>

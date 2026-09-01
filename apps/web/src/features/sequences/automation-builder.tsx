@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, Plus, Zap } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { FlowCanvas } from "@/components/sequences/flow-canvas";
@@ -49,6 +50,7 @@ function assembleSteps(local: LocalStep[]): StepDefinition[] {
 }
 
 function ChannelStatusBadges() {
+  const t = useTranslations("workspace.sequences.automation.channelStatus");
   const { data: statusResult } = useChannelStatus();
   const statuses = statusResult?.data ?? [];
   if (statuses.length === 0) return null;
@@ -57,7 +59,7 @@ function ChannelStatusBadges() {
     <div className="flex flex-wrap items-center gap-1.5">
       {statuses.map((s) => (
         <Badge key={s.channel} variant={s.mock ? "outline" : "success"} className="text-[11px]">
-          {s.channel}: {s.mock ? "modo simulado" : "conectado"}
+          {s.channel}: {s.mock ? t("mock") : t("connected")}
         </Badge>
       ))}
     </div>
@@ -65,6 +67,7 @@ function ChannelStatusBadges() {
 }
 
 function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
+  const t = useTranslations("workspace.sequences.automation");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [signalType, setSignalType] = useState<SignalType | "">("");

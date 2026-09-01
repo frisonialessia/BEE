@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { useUpdateOpportunity } from "@/hooks/queries/use-opportunities";
@@ -14,6 +15,7 @@ import type { Opportunity } from "@/types/domain";
  *  oportunidad crea una instancia nueva (con su propio estado inicial) en
  *  vez de sincronizar props → estado en un efecto. */
 export function QualificationPanel({ opportunity }: { opportunity: Opportunity }) {
+  const t = useTranslations("forecastWinLoss.qualification");
   const updateOpportunity = useUpdateOpportunity();
 
   const [amount, setAmount] = useState(opportunity.amount?.toString() ?? "");
@@ -57,7 +59,7 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
   return (
     <section className="bee-surface bee-bento-pad">
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="bee-card-title">Calificación (MEDDIC)</h3>
+        <h3 className="bee-card-title">{t("title")}</h3>
         <span className="font-mono bee-micro">
           {confirmedCount}/{MEDDIC_CRITERIA.length}
         </span>
@@ -93,18 +95,18 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
 
       <div className="grid grid-cols-1 gap-2 border-t border-border pt-3 sm:grid-cols-2">
         <label className="text-xs text-muted-foreground">
-          Monto estimado
+          {t("amountLabel")}
           <input
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             onBlur={commitAmount}
             inputMode="decimal"
-            placeholder="USD"
+            placeholder={t("amountPlaceholder")}
             className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
         </label>
         <label className="text-xs text-muted-foreground">
-          Cierre esperado
+          {t("closeDateLabel")}
           <input
             type="date"
             value={closeDate}

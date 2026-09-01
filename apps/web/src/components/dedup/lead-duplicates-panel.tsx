@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { useLeadDuplicates, useMergeLeads } from "@/hooks/queries/use-leads";
@@ -12,6 +12,7 @@ import type { Lead } from "@/types/domain";
 function GroupRow({ groupKey, leads }: { groupKey: string; leads: Lead[] }) {
   const mergeLeads = useMergeLeads();
   const locale = useLocale() as Locale;
+  const t = useTranslations("sharedB.leadDuplicates");
   const sorted = [...leads].sort((a, b) => a.created_at.localeCompare(b.created_at));
   const [keepId, setKeepId] = useState(sorted[0].id);
 
@@ -25,7 +26,7 @@ function GroupRow({ groupKey, leads }: { groupKey: string; leads: Lead[] }) {
   return (
     <div className="rounded-[var(--radius-md)] border border-dashed border-border p-3">
       <p className="mb-2 text-xs font-medium text-muted-foreground">
-        Mismo email: <span className="font-mono">{groupKey}</span>
+        {t("sameEmail")} <span className="font-mono">{groupKey}</span>
       </p>
       <div className="space-y-1.5">
         {leads.map((l) => (
@@ -39,7 +40,7 @@ function GroupRow({ groupKey, leads }: { groupKey: string; leads: Lead[] }) {
             />
             <span className="font-medium">{l.full_name}</span>
             <span className="text-muted-foreground">
-              · creado el {formatDate(l.created_at, locale)}
+              · {t("createdOn", { date: formatDate(l.created_at, locale) })}
             </span>
           </label>
         ))}
@@ -50,7 +51,7 @@ function GroupRow({ groupKey, leads }: { groupKey: string; leads: Lead[] }) {
         disabled={mergeLeads.isPending}
         className="bee-btn bee-btn--primary mt-3 text-xs"
       >
-        {mergeLeads.isPending ? "Fusionando…" : "Fusionar en el seleccionado"}
+        {mergeLeads.isPending ? t("merging") : t("mergeButton")}
       </button>
     </div>
   );
@@ -59,6 +60,7 @@ function GroupRow({ groupKey, leads }: { groupKey: string; leads: Lead[] }) {
 /** Contactos que probablemente son la misma persona duplicada — mismo email
  *  en más de un registro, sin importar la empresa. */
 export function LeadDuplicatesPanel() {
+  const t = useTranslations("sharedB.leadDuplicates");
   const { data: result } = useLeadDuplicates();
   const groups = result?.data ?? [];
 
@@ -69,7 +71,7 @@ export function LeadDuplicatesPanel() {
       <div className="mb-3 flex items-center gap-2">
         <AlertTriangle className="size-4 text-[var(--color-chart-1)]" />
         <p className="text-sm font-semibold">
-          {groups.length} posible{groups.length === 1 ? "" : "s"} duplicado{groups.length === 1 ? "" : "s"} de contacto
+          {t("heading", { count: groups.length })}
         </p>
       </div>
       <div className="space-y-2">

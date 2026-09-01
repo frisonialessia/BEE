@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { BattlecardView } from "@/components/battlecard";
 import { ExecutionArtifacts } from "@/components/execution-artifacts";
@@ -15,6 +16,7 @@ import { useArtifacts, useBattlecard } from "@/hooks/queries/use-artifacts";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 
 export default function OpportunityDetailPage() {
+  const t = useTranslations("sharedB.opportunityDetail");
   const params = useParams<{ id: string }>();
   const id = params.id;
 

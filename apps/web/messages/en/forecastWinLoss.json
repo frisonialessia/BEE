@@ -1,0 +1,172 @@
+{
+  "eyebrow": "Revenue intelligence",
+  "liveBadge": "Live",
+  "demoBadge": "Demo data",
+  "forecast": {
+    "title": "Forecast",
+    "subtitle": "Pipeline weighted by close probability, month over month, and which deals are at risk",
+    "tabs": {
+      "forecast": "Forecast",
+      "simulator": "Scenario simulator"
+    },
+    "emptyState": {
+      "title": "No opportunity has an estimated amount yet.",
+      "subtitle": "Add the amount and expected close date from each opportunity's qualification panel to see the forecast."
+    },
+    "kpis": {
+      "pipeline": {
+        "label": "Open pipeline",
+        "hint": "{count, plural, one {# open opportunity} other {# open opportunities}}"
+      },
+      "weighted": {
+        "label": "Weighted forecast",
+        "hintHistorical": "Amount × real close probability (historical) or by stage",
+        "hintDefault": "Amount × close probability by stage"
+      },
+      "won": {
+        "label": "Won",
+        "hint": "Opportunities closed as won"
+      },
+      "atRisk": {
+        "label": "At risk",
+        "hint": "No date, overdue, or poorly qualified"
+      }
+    },
+    "byMonth": {
+      "title": "Forecast by month",
+      "caption": "Weighted and total pipeline, month over month"
+    },
+    "trend": {
+      "title": "Closing trend",
+      "caption": "Opportunities created per month (bar) and close rate of what was resolved that month (number above)"
+    },
+    "accuracy": {
+      "title": "Forecast accuracy",
+      "caption": "There's now enough history to compute the real close probability by score range, instead of the fixed one by stage — this is what's being used right now:",
+      "scoreLabel": "Score {start}-{end}",
+      "sampleSize": "{count, plural, one {# closed deal} other {# closed deals}}"
+    },
+    "atRiskSection": {
+      "title": "Deals at risk",
+      "caption": "No close date, overdue, or with little information",
+      "empty": "No open opportunity is at risk right now.",
+      "noCompany": "No company",
+      "qualifiedPercent": "{percent}% qualified",
+      "riskLabels": {
+        "sin_fecha_de_cierre": "No close date",
+        "fecha_vencida": "Close date overdue",
+        "poco_calificada": "Poorly qualified for its stage"
+      }
+    }
+  },
+  "trendsChart": {
+    "tooltip": "{label}: {created} created, {won} won, {lost} lost"
+  },
+  "qualification": {
+    "title": "Qualification (MEDDIC)",
+    "amountLabel": "Estimated amount",
+    "amountPlaceholder": "USD",
+    "closeDateLabel": "Expected close"
+  },
+  "barChart": {
+    "tooltip": "{label}: {weighted} weighted out of {total} in pipeline ({count, plural, one {# opportunity} other {# opportunities}})",
+    "legendWeighted": "Weighted",
+    "legendTotal": "Total pipeline"
+  },
+  "simulator": {
+    "signalTypes": {
+      "funding_round": "Funding round",
+      "hiring_surge": "Hiring surge",
+      "executive_change": "Executive change",
+      "expansion": "Expansion",
+      "product_launch": "Product launch"
+    },
+    "channels": {
+      "email": "Email",
+      "linkedin": "LinkedIn",
+      "warm_intro": "Warm intro",
+      "twitter": "Twitter/X"
+    },
+    "variants": {
+      "conservative": "Conservative",
+      "realistic": "Realistic",
+      "optimistic": "Optimistic"
+    },
+    "perMonth": "{value}/mo",
+    "winRateSuffix": "{percent}% close rate",
+    "paramsTitle": "Scenario parameters",
+    "sectorPlaceholder": "Industry (e.g. fintech)",
+    "anyDiscStyle": "Any DISC style",
+    "discStyle": "Style {letter}",
+    "monthlySignalsLabel": "Target monthly signals: {value}",
+    "heatLabel": "Dark Funnel heat: {value}",
+    "repsLabel": "Additional reps: {value}",
+    "runButton": "Run scenario",
+    "runningButton": "Simulating…",
+    "errorMessage": "Couldn't run the simulation — try again.",
+    "emptyState": "Set up a scenario and run the simulation.",
+    "noHistoricalData": "No outcome history in your organization yet — these projections are generic industry estimates, not your real performance. Log your first outcomes (Win/Loss) to unlock projections based on your own data.",
+    "lowConfidence": "Low data confidence — only {count, plural, one {# historical outcome} other {# historical outcomes}} for this segment. Projections carry a wide margin of error.",
+    "defaultDealValue": "The deal value ({value}) is an industry estimate — there aren't enough closed deals with a real amount in this segment yet. Add the amount when qualifying each opportunity so this figure becomes yours.",
+    "effectiveWinRate": "Effective close rate: {percent}%",
+    "baseWinRate": "(base {percent}%)",
+    "keyDrivers": "Key drivers:",
+    "recommendedActions": "Recommended:",
+    "riskFactors": "Risks:"
+  },
+  "winLoss": {
+    "title": "Win/Loss",
+    "subtitle": "Why deals are won and lost — reasons, competitors, and whether qualifying more actually translates into more closed deals",
+    "emptyState": {
+      "title": "No opportunity has been closed yet.",
+      "subtitle": "Mark an opportunity as won or lost from its detail panel to start seeing the analysis here."
+    },
+    "kpis": {
+      "winRate": {
+        "label": "Close rate",
+        "hint": "{won} won out of {total} closed"
+      },
+      "wonValue": {
+        "label": "Won value",
+        "hint": "Sum of amount on won deals"
+      },
+      "lostValue": {
+        "label": "Lost value",
+        "hint": "Sum of amount on lost deals"
+      },
+      "daysToClose": {
+        "label": "Days to close (won)",
+        "hintNoWonHasLost": "No won deals yet · {days}d lost on average",
+        "hintNoWonNoLost": "No closed deals with a recorded date",
+        "hintHasWonHasLost": "{days}d lost on average",
+        "hintHasWonNoLost": "Average on won deals"
+      }
+    },
+    "reasons": {
+      "title": "Loss reasons",
+      "caption": "What comes up most among lost deals"
+    },
+    "competitors": {
+      "title": "Competitors",
+      "caption": "Who we're really competing against at close"
+    },
+    "meddic": {
+      "title": "MEDDIC qualification vs. outcome",
+      "caption": "Real close rate by how qualified the deal was — whether qualifying more actually translates into more won deals, or it's just a checklist with no impact"
+    }
+  },
+  "lossReasonChart": {
+    "empty": "No lost deals with a recorded reason yet.",
+    "unspecified": "No reason recorded",
+    "tooltip": "{label}: {count, plural, one {# deal} other {# deals}} · {percent}% of what was lost"
+  },
+  "competitorBreakdown": {
+    "empty": "No competitor has been recorded on a close yet.",
+    "record": "{wins} won · {losses} lost",
+    "tooltip": "{competitor}: {percent}% close rate over {count, plural, one {# deal} other {# deals}} faced"
+  },
+  "meddicChart": {
+    "empty": "Not enough closed deals with MEDDIC qualification yet.",
+    "tooltip": "{label}: {won} won, {lost} lost"
+  }
+}

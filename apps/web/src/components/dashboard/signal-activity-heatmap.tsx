@@ -1,6 +1,7 @@
 "use client";
 
 import { Tooltip as TooltipPrimitive } from "radix-ui";
+import { useTranslations } from "next-intl";
 
 import { TooltipContent } from "@/components/ui/tooltip";
 import { computeActivityGrid, DAY_LABELS, mostActiveCell } from "@/lib/signal-activity-grid";
@@ -22,8 +23,10 @@ const HOUR_MARKS = [0, 6, 12, 18];
  * importar cuánto más ancha sea que su vecina, en lugar de quedar
  * flotando chico con espacio en blanco alrededor. */
 export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
+  const t = useTranslations("dashboardOverview.activityHeatmap");
+
   if (signals.length === 0) {
-    return <p className="text-sm text-muted-foreground">Todavía no hay señales para mapear por horario.</p>;
+    return <p className="text-sm text-muted-foreground">{t("empty")}</p>;
   }
 
   const cells = computeActivityGrid(signals);
@@ -40,7 +43,7 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
           width="100%"
           style={{ aspectRatio: `${width} / ${height}` }}
           role="img"
-          aria-label="Actividad de señales por día y hora"
+          aria-label={t("ariaLabel")}
         >
           {HOUR_MARKS.map((h) => (
             <text key={h} x={LABEL_W + h * STEP + CELL / 2} y={HEADER_H - 7} textAnchor="middle" fontSize={11} fill="var(--color-muted-foreground)">
@@ -61,20 +64,20 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
           <span>
             {peak ? (
               <>
-                Pico de actividad: <span className="font-medium text-foreground">{DAY_LABELS[peak.day]} ~{peak.hour}h</span>
+                {t("peakActivity")} <span className="font-medium text-foreground">{DAY_LABELS[peak.day]} ~{peak.hour}h</span>
               </>
             ) : (
-              "Sin actividad registrada todavía."
+              t("noActivity")
             )}
           </span>
           <span className="flex items-center gap-1.5">
-            Menos
+            {t("less")}
             <span className="flex gap-0.5">
               {[0.1, 0.35, 0.6, 0.85, 1].map((o) => (
                 <span key={o} className="size-2.5 rounded-[2px]" style={{ background: "var(--color-chart-4)", opacity: o }} />
               ))}
             </span>
-            Más
+            {t("more")}
           </span>
         </div>
       </div>
@@ -93,6 +96,7 @@ function ActivitySquare({
   x: number;
   y: number;
 }) {
+  const t = useTranslations("dashboardOverview.activityHeatmap");
   const opacity = cell.count === 0 ? 0.08 : 0.18 + 0.82 * (cell.count / maxCount);
   return (
     <TooltipPrimitive.Root>
@@ -111,9 +115,7 @@ function ActivitySquare({
         <p className="font-medium">
           {DAY_LABELS[cell.day]} · {cell.hour}:00–{cell.hour}:59
         </p>
-        <p className="text-muted-foreground">
-          {cell.count} {cell.count === 1 ? "señal detectada" : "señales detectadas"}
-        </p>
+        <p className="text-muted-foreground">{t("signalsDetected", { count: cell.count })}</p>
       </TooltipContent>
     </TooltipPrimitive.Root>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { Bot } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { BattlecardView } from "@/components/battlecard";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
@@ -15,19 +16,9 @@ import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useUsers } from "@/hooks/queries/use-users";
 
-/** Etiquetas en español para el estado de la oportunidad, para el CSV exportado. */
-const STATUS_LABELS: Record<string, string> = {
-  detected: "Detectada",
-  ready_to_action: "Lista para actuar",
-  prioritized: "Priorizada",
-  in_progress: "En progreso",
-  won: "Ganada",
-  lost: "Perdida",
-  dismissed: "Descartada",
-};
-
 /** Oportunidades y battlecards — plays listos para el CEO. */
 export function OpportunitiesDashboard() {
+  const t = useTranslations("opportunitiesPriority.opportunities");
   const { data: battlecardsResult, isLoading: loadingBattlecards } = useBattlecards();
   const { data: allOppsResult, isLoading: loadingOpps } = useOpportunities(undefined, 200);
   const { data: companiesResult } = useCompanies(200);
@@ -46,7 +37,7 @@ export function OpportunitiesDashboard() {
 
   const exportRows = opportunities.map((o) => ({
     titulo: o.title.replace(/^Opportunity:\s*/, ""),
-    estado: STATUS_LABELS[o.status] ?? o.status,
+    estado: t(`status.${o.status}`),
     puntaje: Math.round(o.score),
     empresa: o.company_id ? (companyById.get(o.company_id)?.name ?? "") : "",
     responsable: o.assigned_to_user_id ? (userById.get(o.assigned_to_user_id)?.full_name ?? "") : "",
@@ -55,28 +46,23 @@ export function OpportunitiesDashboard() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Battlecards y análisis</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="bee-display">Oportunidades</h1>
-            <p className="bee-caption mt-1">
-              Battlecards enriquecidos con pain point, argumento de cierre y ventana de timing — el
-              pipeline arrastrable vive en CRM
-            </p>
+            <h1 className="bee-display">{t("title")}</h1>
+            <p className="bee-caption mt-1">{t("subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={live ? "success" : "warning"}>
-              {live ? "En vivo" : "Datos demo"}
-            </Badge>
+            <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
             <ExportCsvButton
               rows={exportRows}
-              filename="bee-oportunidades.csv"
+              filename={t("exportFilename")}
               columns={[
-                { key: "titulo", header: "Título" },
-                { key: "estado", header: "Estado" },
-                { key: "puntaje", header: "Puntaje" },
-                { key: "empresa", header: "Empresa" },
-                { key: "responsable", header: "Responsable" },
+                { key: "titulo", header: t("csv.title") },
+                { key: "estado", header: t("csv.status") },
+                { key: "puntaje", header: t("csv.score") },
+                { key: "empresa", header: t("csv.company") },
+                { key: "responsable", header: t("csv.owner") },
               ]}
             />
           </div>
@@ -92,26 +78,24 @@ export function OpportunitiesDashboard() {
         <Tabs defaultValue="battlecards">
           <TabsList className="border border-border bg-background">
             <TabsTrigger value="battlecards" className="rounded-sm">
-              Battlecards ({battlecards.length})
+              {t("tabs.battlecards", { count: battlecards.length })}
             </TabsTrigger>
             <TabsTrigger value="flujo" className="rounded-sm">
-              Flujo
+              {t("tabs.flow")}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="battlecards" className="mt-6 space-y-4">
             {battlecards.length === 0 ? (
               <div className="bee-bento bee-bento-pad py-12 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Aún no hay battlecards listas para acción.
-                </p>
-                <p className="bee-caption mt-1">Las señales deben enriquecerse primero.</p>
+                <p className="text-sm text-muted-foreground">{t("emptyBattlecards.title")}</p>
+                <p className="bee-caption mt-1">{t("emptyBattlecards.subtitle")}</p>
               </div>
             ) : (
               <>
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Bot className="size-3.5" />
-                  Clic en una tarjeta para abrir el drawer de oportunidad
+                  {t("battlecardsHint")}
                 </div>
                 <div className="grid gap-3 lg:grid-cols-2">
                   {battlecardPagination.pageItems.map((card, i) => (

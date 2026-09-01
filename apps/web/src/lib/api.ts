@@ -62,7 +62,8 @@ import {
 } from "@/lib/demo/store";
 import type { FetchResult } from "@/types/api";
 import type { Opportunity, OpportunityStatus } from "@/types/domain";
-import { sampleArtifacts, sampleHotLeads } from "@/lib/sample-data";
+import { getSampleArtifacts, getSampleHotLeads } from "@/lib/sample-data";
+import { getDemoLocale } from "@/lib/demo/locale";
 
 /**
  * Thin client for the BEE API.
@@ -111,7 +112,7 @@ export async function getArtifacts(
     const data = (await res.json()) as ArtifactBundle;
     return { data, live: true };
   } catch {
-    const sample = sampleArtifacts.find((a) => a.opportunity_id === opportunityId);
+    const sample = getSampleArtifacts(getDemoLocale()).find((a) => a.opportunity_id === opportunityId);
     if (sample) return { data: sample, live: false };
     throw new Error(`No artifacts found for opportunity ${opportunityId}`);
   }
@@ -508,9 +509,10 @@ export async function getDarkFunnelHotLeads(params?: {
 
 export async function getDarkFunnelSummary(): Promise<FetchResult<DarkFunnelSummary | null>> {
   if (isDemoMode()) {
-    // Computed from the same sampleHotLeads getDarkFunnelHotLeads already
+    // Computed from the same sample hot leads getDarkFunnelHotLeads already
     // falls back to — an honest aggregate of the data actually on screen,
     // not a separately invented number.
+    const sampleHotLeads = getSampleHotLeads(getDemoLocale());
     const hot = sampleHotLeads.filter((l) => l.is_hot);
     const summary: DarkFunnelSummary = {
       total_signals_today: sampleHotLeads.reduce((sum, l) => sum + l.signal_count, 0),

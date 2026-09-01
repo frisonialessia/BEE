@@ -2,7 +2,7 @@
 
 import { AlertTriangle, ArrowUpRight, Building2, Globe, Mail, Radio, Target, Upload, Users } from "lucide-react";
 import { useRef, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { RelationshipMap } from "@/components/companies/relationship-map";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ import { parseCsv, pickColumn as pick } from "@/lib/csv";
 import { computeRelationshipMap } from "@/lib/relationship-map";
 
 function CsvImportButton({ companyId }: { companyId: string }) {
+  const t = useTranslations("companiesLeads.companyDetail.contacts.csvImport");
   const bulkCreate = useBulkCreateLeads();
   const inputRef = useRef<HTMLInputElement>(null);
   const [result, setResult] = useState<{ created: number; skipped: number; errors: number } | null>(null);
@@ -67,14 +68,14 @@ function CsvImportButton({ companyId }: { companyId: string }) {
         className="bee-btn-ghost text-xs"
       >
         <Upload className="size-3.5" />
-        {bulkCreate.isPending ? "Importando…" : "Importar CSV"}
+        {bulkCreate.isPending ? t("importing") : t("importCsv")}
       </button>
       <input ref={inputRef} type="file" accept=".csv,text/csv" onChange={handleFile} className="hidden" />
       {result && (
         <p className="bee-micro">
-          {result.created} contactos importados
-          {result.skipped > 0 && ` · ${result.skipped} sin nombre (omitidos)`}
-          {result.errors > 0 && ` · ${result.errors} con error`}
+          {t("resultImported", { count: result.created })}
+          {result.skipped > 0 && ` · ${t("resultSkipped", { count: result.skipped })}`}
+          {result.errors > 0 && ` · ${t("resultErrors", { count: result.errors })}`}
         </p>
       )}
     </div>
@@ -82,6 +83,7 @@ function CsvImportButton({ companyId }: { companyId: string }) {
 }
 
 function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () => void }) {
+  const t = useTranslations("companiesLeads.companyDetail.contacts.newContactForm");
   const createLead = useCreateLead();
   const [fullName, setFullName] = useState("");
   const [title, setTitle] = useState("");
@@ -111,20 +113,20 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
         <input
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          placeholder="Nombre completo *"
+          placeholder={t("namePlaceholder")}
           required
           className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         />
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Cargo"
+          placeholder={t("titlePlaceholder")}
           className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         />
         <input
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Correo"
+          placeholder={t("emailPlaceholder")}
           type="email"
           className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         />
@@ -135,10 +137,10 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
           disabled={!fullName.trim() || createLead.isPending}
           className="bee-btn bee-btn--primary"
         >
-          {createLead.isPending ? "Guardando…" : "Guardar"}
+          {createLead.isPending ? t("saving") : t("save")}
         </button>
         <button type="button" onClick={onDone} className="bee-btn-ghost">
-          Cancelar
+          {t("cancel")}
         </button>
       </div>
     </form>
@@ -147,6 +149,7 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
 
 /** Ficha de empresa — contactos, oportunidades y señales, todo junto. */
 export function CompanyDetail({ companyId }: { companyId: string }) {
+  const t = useTranslations("companiesLeads.companyDetail");
   const locale = useLocale() as Locale;
   const { data: companyResult, isLoading } = useCompany(companyId);
   const { data: leadsResult } = useLeads(200);
@@ -174,7 +177,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
   if (!company) {
     return (
       <div className="bee-bento bee-bento-pad py-12 text-center">
-        <p className="text-sm text-muted-foreground">No se encontró esta empresa.</p>
+        <p className="text-sm text-muted-foreground">{t("notFound")}</p>
       </div>
     );
   }
@@ -197,7 +200,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
               )}
               {company.industry && <span>{company.industry}</span>}
               {company.country && <span>{company.country}</span>}
-              {company.size && <span>{company.size} empleados</span>}
+              {company.size && <span>{company.size} {t("employeesSuffix")}</span>}
             </div>
           </div>
         </div>
@@ -208,7 +211,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
           >
-            Sitio web
+            {t("website")}
             <ArrowUpRight className="size-3" />
           </a>
         )}
@@ -218,15 +221,15 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
 
       <div className="bee-kpi-strip !mt-0">
         <div className="bee-kpi-tile">
-          <p className="bee-kpi-tile__label">Contactos</p>
+          <p className="bee-kpi-tile__label">{t("kpi.contacts")}</p>
           <p className="bee-kpi-tile__value">{leads.length}</p>
         </div>
         <div className="bee-kpi-tile">
-          <p className="bee-kpi-tile__label">Oportunidades</p>
+          <p className="bee-kpi-tile__label">{t("kpi.opportunities")}</p>
           <p className="bee-kpi-tile__value">{opportunities.length}</p>
         </div>
         <div className="bee-kpi-tile">
-          <p className="bee-kpi-tile__label">Señales</p>
+          <p className="bee-kpi-tile__label">{t("kpi.signals")}</p>
           <p className="bee-kpi-tile__value">{signals.length}</p>
         </div>
       </div>
@@ -235,7 +238,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 bee-card-title">
             <Mail className="size-4 text-muted-foreground" />
-            Contactos ({leads.length})
+            {t("contacts.heading", { count: leads.length })}
           </h2>
           <div className="flex items-center gap-2">
             <CsvImportButton companyId={companyId} />
@@ -244,7 +247,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
               onClick={() => setShowNewContact((v) => !v)}
               className="bee-btn-ghost text-xs"
             >
-              + Agregar contacto
+              {t("contacts.addContact")}
             </button>
           </div>
         </div>
@@ -252,7 +255,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
           <NewContactForm companyId={companyId} onDone={() => setShowNewContact(false)} />
         )}
         {leads.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin contactos registrados todavía.</p>
+          <p className="text-sm text-muted-foreground">{t("contacts.empty")}</p>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
             {leads.map((lead) => {
@@ -265,18 +268,18 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
                       <span
                         title={[
                           ...lead.validation_flags.map((f) => validationFlagLabels[f] ?? f),
-                          ...(lead.stale_risk ? ["Sin validar en más de 90 días"] : []),
+                          ...(lead.stale_risk ? [t("contacts.staleWarning")] : []),
                         ].join(" · ")}
                       >
                         <AlertTriangle
                           className="mt-0.5 size-3.5 shrink-0 text-[var(--color-chart-1)]"
-                          aria-label="Datos incompletos o desactualizados"
+                          aria-label={t("contacts.incompleteAria")}
                         />
                       </span>
                     )}
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {[lead.title, lead.seniority].filter(Boolean).join(" · ") || "Sin cargo registrado"}
+                    {[lead.title, lead.seniority].filter(Boolean).join(" · ") || t("contacts.noTitle")}
                   </p>
                   {lead.email && <p className="mt-1 text-xs text-muted-foreground">{lead.email}</p>}
                 </div>
@@ -290,11 +293,10 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
         <section>
           <h2 className="flex items-center gap-2 bee-card-title">
             <Users className="size-4 text-muted-foreground" />
-            Mapa de relaciones
+            {t("relationshipMap.heading")}
           </h2>
           <p className="bee-caption mb-3">
-            Contactos agrupados por nivel real, coloreados por si ya hay una oportunidad ligada — para ver
-            si el comité de compra está cubierto o todo el peso está en una sola persona
+            {t("relationshipMap.description")}
           </p>
           <RelationshipMap
             groups={computeRelationshipMap(leads, opportunities)}
@@ -307,14 +309,14 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
         <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="flex items-center gap-2 bee-card-title">
             <Target className="size-4 text-muted-foreground" />
-            Oportunidades ({opportunities.length})
+            {t("opportunities.heading", { count: opportunities.length })}
           </h2>
           <button
             type="button"
             onClick={() => setShowNewOpportunity((v) => !v)}
             className="bee-btn-ghost text-xs"
           >
-            + Nueva oportunidad
+            {t("opportunities.addOpportunity")}
           </button>
         </div>
         {showNewOpportunity && (
@@ -324,7 +326,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
           />
         )}
         {opportunities.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin oportunidades para esta empresa todavía.</p>
+          <p className="text-sm text-muted-foreground">{t("opportunities.empty")}</p>
         ) : (
           <div className="space-y-2">
             {opportunities.map((opp) => (
@@ -349,17 +351,17 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
       <section>
         <h2 className="flex items-center gap-2 bee-card-title">
           <Radio className="size-4 text-muted-foreground" />
-          Señales ({signals.length})
+          {t("signals.heading", { count: signals.length })}
         </h2>
         {signals.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin señales para esta empresa todavía.</p>
+          <p className="text-sm text-muted-foreground">{t("signals.empty")}</p>
         ) : (
           <div className="space-y-2">
             {signals.map((signal) => (
               <div key={signal.id} className="bee-bento bee-bento-pad">
                 <p className="text-sm font-medium">{signal.title}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Score {Math.round(signal.score)} · {formatDate(signal.detected_at, locale)}
+                  {t("signals.score", { score: Math.round(signal.score) })} · {formatDate(signal.detected_at, locale)}
                 </p>
               </div>
             ))}

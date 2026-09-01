@@ -1,7 +1,7 @@
 "use client";
 
 import { Sparkles, TrendingUp } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 
 import type { Locale } from "@/i18n/locales";
@@ -14,15 +14,14 @@ import type { TodayImpact } from "@/lib/today-impact";
  *  estimado disfrazado de medición. Ver `computeTodayImpact`. */
 export function TodayImpactCard({ impact }: { impact: TodayImpact }) {
   const locale = useLocale() as Locale;
+  const t = useTranslations("dashboardOverview.todayImpact");
   const { hotSignalsToday, projectedUplift, winRate, avgDealValue, winRateSampleSize } = impact;
 
   if (hotSignalsToday.length === 0) {
     return (
       <section className="bee-glass rounded-[var(--radius-lg)] bee-bento-pad-lg mb-4 flex items-center gap-3">
         <Sparkles className="size-5 shrink-0 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">
-          Ninguna señal de alta intención detectada en las últimas 24h — nada urgente que proyectar hoy.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("emptyState")}</p>
       </section>
     );
   }
@@ -35,34 +34,37 @@ export function TodayImpactCard({ impact }: { impact: TodayImpact }) {
             <TrendingUp className="size-4.5" style={{ color: "var(--color-chart-5)" }} />
           </span>
           <div>
-            <p className="bee-eyebrow">Si actúas hoy</p>
+            <p className="bee-eyebrow">{t("eyebrow")}</p>
             {projectedUplift !== null ? (
               <>
                 <p className="mt-1 text-2xl font-bold tracking-tight">
-                  +{formatCurrencyUSDCompact(projectedUplift, locale)} de pipeline proyectado
+                  {t("upliftHeadline", { amount: formatCurrencyUSDCompact(projectedUplift, locale) })}
                 </p>
                 <p className="bee-caption mt-1">
-                  {hotSignalsToday.length} señal{hotSignalsToday.length === 1 ? "" : "es"} de alta intención
-                  hoy × {Math.round((winRate ?? 0) * 100)}% de cierre histórico ({winRateSampleSize} deals) ×{" "}
-                  {formatCurrencyUSDCompact(avgDealValue ?? 0, locale)} de valor promedio por deal
+                  {t("upliftDetail", {
+                    count: hotSignalsToday.length,
+                    winRate: Math.round((winRate ?? 0) * 100),
+                    sampleSize: winRateSampleSize,
+                    avgDealValue: formatCurrencyUSDCompact(avgDealValue ?? 0, locale),
+                  })}
                 </p>
               </>
             ) : (
               <>
                 <p className="mt-1 text-2xl font-bold tracking-tight">
-                  {hotSignalsToday.length} señal{hotSignalsToday.length === 1 ? "" : "es"} de alta intención hoy
+                  {t("signalsHeadline", { count: hotSignalsToday.length })}
                 </p>
                 <p className="bee-caption mt-1">
                   {winRateSampleSize < 5
-                    ? `Faltan deals cerrados para calcular un impacto en $ real (${winRateSampleSize}/5 mínimo)`
-                    : "Agrega el monto estimado a tus oportunidades para ver el impacto en $"}
+                    ? t("needMoreDeals", { sampleSize: winRateSampleSize })
+                    : t("addDealValue")}
                 </p>
               </>
             )}
           </div>
         </div>
         <Link href="/dashboard/priority" className="bee-btn-ghost shrink-0 text-xs">
-          Ver estas cuentas
+          {t("cta")}
         </Link>
       </div>
     </section>

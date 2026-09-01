@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { lossReasonLabels } from "@/lib/format";
 import type { LossReasonStat } from "@/lib/win-loss";
@@ -8,12 +12,10 @@ import type { LossReasonStat } from "@/lib/win-loss";
  *  el valor exacto se pueda leer al pasar el mouse sin depender del ancho
  *  fijo de la etiqueta truncada. */
 export function LossReasonChart({ stats }: { stats: LossReasonStat[] }) {
+  const t = useTranslations("forecastWinLoss.lossReasonChart");
+
   if (stats.length === 0) {
-    return (
-      <p className="py-6 text-center text-xs text-muted-foreground">
-        Todavía no hay deals perdidos con razón registrada.
-      </p>
-    );
+    return <p className="py-6 text-center text-xs text-muted-foreground">{t("empty")}</p>;
   }
 
   const maxCount = Math.max(1, ...stats.map((s) => s.count));
@@ -21,7 +23,7 @@ export function LossReasonChart({ stats }: { stats: LossReasonStat[] }) {
   return (
     <div className="space-y-2.5">
       {stats.map((s) => {
-        const label = s.reason === "unspecified" ? "Sin razón registrada" : lossReasonLabels[s.reason];
+        const label = s.reason === "unspecified" ? t("unspecified") : lossReasonLabels[s.reason];
         return (
           <div key={s.reason} className="flex items-center gap-3">
             <p className="w-40 shrink-0 truncate text-xs text-muted-foreground">{label}</p>
@@ -35,7 +37,7 @@ export function LossReasonChart({ stats }: { stats: LossReasonStat[] }) {
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                {label}: {s.count} deal{s.count === 1 ? "" : "s"} · {Math.round(s.fraction * 100)}% de lo perdido
+                {t("tooltip", { label, count: s.count, percent: Math.round(s.fraction * 100) })}
               </TooltipContent>
             </Tooltip>
             <p className="w-16 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">

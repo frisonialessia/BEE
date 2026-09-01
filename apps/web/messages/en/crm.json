@@ -1,0 +1,88 @@
+{
+  "view": {
+    "eyebrow": "Sales pipeline",
+    "title": "CRM",
+    "description": "The real pipeline, stage by stage — drag a card to move it"
+  },
+  "board": {
+    "toolbarHint": "Drag a card to move it to another stage, or use each card's selector",
+    "live": "Live",
+    "demo": "Demo data",
+    "newOpportunity": "+ New opportunity",
+    "moveToStage": "Move to another stage",
+    "moveToOption": "Move to: {stage}",
+    "hot": "Hot",
+    "reviewRequired": "Needs review",
+    "viaChannel": "via {channel}",
+    "stages": {
+      "detected": "Detected",
+      "ready_to_action": "Ready to action",
+      "prioritized": "Prioritized",
+      "in_progress": "In progress",
+      "closed": "Closed"
+    },
+    "emptyColumn": {
+      "title": "No opportunities here",
+      "hint": "Drag a card to move it"
+    },
+    "emptyClosed": "Nothing closed yet",
+    "closedStatus": {
+      "won": "Won",
+      "lost": "Lost",
+      "dismissed": "Dismissed"
+    },
+    "emptyState": {
+      "title": "No opportunities in the pipeline yet.",
+      "hint": "As soon as a signal becomes an opportunity, it shows up here — or add the first one by hand."
+    },
+    "moveError": "Couldn't move the opportunity — try again."
+  },
+  "drawer": {
+    "closeOverlay": "Close detail panel",
+    "dialogLabel": "Opportunity detail",
+    "eyebrow": "Opportunity",
+    "loading": "Loading…",
+    "moveToStage": "Move to another stage",
+    "close": "Close",
+    "demo": "Demo data",
+    "battlecardUnavailable": "Battlecard not available — the opportunity may still be enriching.",
+    "disc": {
+      "title": "Communication profile (DISC)",
+      "dominantStyle": "Dominant style:",
+      "preferredTone": "Preferred tone:",
+      "messages": "Messages:",
+      "confidence": "Confidence:",
+      "unavailable": "DISC profile not available yet for this lead.",
+      "labels": {
+        "D": "Dominant — direct and results-driven",
+        "I": "Influential — enthusiastic and sociable",
+        "S": "Steady — patient and reliable",
+        "C": "Analytical — precise and data-driven",
+        "UNKNOWN": "Unclassified"
+      }
+    },
+    "history": "History",
+    "artifacts": {
+      "title": "Execution artifacts",
+      "unavailable": "Artifacts will be generated on the first request via the Executive Agent."
+    },
+    "moveError": "Couldn't move the opportunity — try again."
+  },
+  "form": {
+    "title": "New opportunity",
+    "companyName": "Company *",
+    "companyDomain": "domain.com",
+    "companyIndustry": "Industry",
+    "contactName": "Contact (optional)",
+    "contactTitle": "Title",
+    "contactEmail": "Email",
+    "signalType": "Signal type",
+    "priority": "Priority",
+    "descriptionPlaceholder": "Why is this an opportunity? This context feeds the AI-generated strategy. *",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "successToast": "Opportunity added — strategy generated.",
+    "errorToast": "Couldn't create the opportunity — try again."
+  }
+}

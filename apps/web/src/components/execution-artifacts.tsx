@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   Zap,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
+
 import type { ArtifactBundle, ActionItem } from "@/lib/types";
 
 interface ExecutionArtifactsProps {
@@ -26,19 +28,8 @@ const priorityColors: Record<ActionItem["priority"], string> = {
   low: "border-border",
 };
 
-const ownerLabels: Record<ActionItem["owner"], string> = {
-  rep: "Tú",
-  lead: "Lead",
-  both: "Ambos",
-};
-
-const priorityLabels: Record<ActionItem["priority"], string> = {
-  high: "Alta",
-  medium: "Media",
-  low: "Baja",
-};
-
 function CopyButton({ text }: { text: string }) {
+  const t = useTranslations("shared.executionArtifacts.copyButton");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -53,7 +44,7 @@ function CopyButton({ text }: { text: string }) {
       className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
     >
       {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-[var(--success)]" /> : <Copy className="w-3.5 h-3.5" />}
-      {copied ? "Copiado" : "Copiar"}
+      {copied ? t("copied") : t("copy")}
     </button>
   );
 }
@@ -100,6 +91,7 @@ function CollapsibleSection({
 }
 
 export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
+  const t = useTranslations("shared.executionArtifacts");
   const { email_draft, meeting_structure, next_steps } = bundle;
 
   return (
@@ -108,24 +100,24 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
       <div className="flex items-center gap-2 mb-4">
         <Zap className="w-4 h-4 text-[var(--color-chart-6)]" />
         <h3 className="bee-card-title">
-          Artefactos de ejecución
+          {t("heading")}
         </h3>
         <span className="text-xs text-muted-foreground">
-          Generado por {bundle.generator}
+          {t("generatedBy", { generator: bundle.generator })}
         </span>
       </div>
 
       {/* Email Draft */}
       <CollapsibleSection
-        title="Borrador de email"
+        title={t("emailDraft.title")}
         icon={Mail}
         defaultOpen={true}
-        badge="Envío con un clic"
+        badge={t("emailDraft.badge")}
       >
         <div className="space-y-3">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-xs text-muted-foreground mb-1">Asunto</p>
+              <p className="text-xs text-muted-foreground mb-1">{t("emailDraft.subject")}</p>
               <p className="text-sm font-medium text-foreground">{email_draft.subject}</p>
             </div>
             <CopyButton text={email_draft.subject} />
@@ -133,7 +125,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs text-muted-foreground">Cuerpo</p>
+              <p className="text-xs text-muted-foreground">{t("emailDraft.body")}</p>
               <CopyButton
                 text={
                   email_draft.body +
@@ -154,7 +146,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
           {email_draft.recommended_send_time && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="w-3.5 h-3.5" />
-              Mejor momento para enviar: {email_draft.recommended_send_time}
+              {t("emailDraft.bestSendTime", { time: email_draft.recommended_send_time })}
             </div>
           )}
         </div>
@@ -162,18 +154,18 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
 
       {/* Meeting Structure */}
       <CollapsibleSection
-        title="Agenda de reunión"
+        title={t("meeting.title")}
         icon={Calendar}
         badge={`${meeting_structure.total_duration_minutes} min`}
       >
         <div className="space-y-4">
           <div>
-            <p className="text-xs text-muted-foreground mb-1">Objetivo</p>
+            <p className="text-xs text-muted-foreground mb-1">{t("meeting.objective")}</p>
             <p className="text-sm text-foreground">{meeting_structure.objective}</p>
           </div>
 
           <div>
-            <p className="text-xs text-muted-foreground mb-2">Agenda</p>
+            <p className="text-xs text-muted-foreground mb-2">{t("meeting.agenda")}</p>
             <div className="space-y-2">
               {meeting_structure.agenda_items.map((item, i) => (
                 <div key={i} className="flex items-start gap-3 text-sm">
@@ -193,7 +185,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
 
           {meeting_structure.pre_meeting_prep.length > 0 && (
             <div>
-              <p className="text-xs text-muted-foreground mb-2">Preparación previa</p>
+              <p className="text-xs text-muted-foreground mb-2">{t("meeting.prep")}</p>
               <ul className="space-y-1">
                 {meeting_structure.pre_meeting_prep.map((item, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
@@ -206,7 +198,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
           )}
 
           <div className="text-xs text-muted-foreground rounded-sm p-2.5 border border-[var(--success)] bg-[color-mix(in_srgb,var(--success)_10%,var(--color-background))]">
-            <span className="font-medium text-[var(--success)]">Criterio de éxito: </span>
+            <span className="font-medium text-[var(--success)]">{t("meeting.successCriteria")} </span>
             {meeting_structure.success_criteria}
           </div>
         </div>
@@ -214,7 +206,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
 
       {/* Next Steps */}
       <CollapsibleSection
-        title="Plan de acción"
+        title={t("nextSteps.title")}
         icon={ListChecks}
         badge={next_steps.horizon}
       >
@@ -228,13 +220,13 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
                 <div className="flex-1">
                   <p className="font-medium">{action.action}</p>
                   <div className="flex items-center gap-2 mt-0.5 opacity-75">
-                    <span>{ownerLabels[action.owner]}</span>
+                    <span>{t(`owner.${action.owner}`)}</span>
                     <span>·</span>
                     <Clock className="w-3 h-3" />
                     <span>{action.timing}</span>
                   </div>
                 </div>
-                <span className="font-medium shrink-0">{priorityLabels[action.priority]}</span>
+                <span className="font-medium shrink-0">{t(`priority.${action.priority}`)}</span>
               </div>
             ))}
           </div>
@@ -243,7 +235,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
             <div className="flex items-start gap-2 text-xs text-[var(--color-text)] bg-[color-mix(in_srgb,var(--warning)_15%,var(--color-background))] border border-[var(--warning)] rounded-sm p-2.5">
               <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
               <div>
-                <span className="font-medium">Riesgo clave: </span>
+                <span className="font-medium">{t("nextSteps.keyRisk")} </span>
                 {next_steps.key_risk}
               </div>
             </div>
@@ -253,7 +245,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
             <div className="flex items-start gap-2 text-xs text-[var(--color-text)] bg-[color-mix(in_srgb,var(--success)_15%,var(--color-background))] border border-[var(--success)] rounded-sm p-2.5">
               <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
               <div>
-                <span className="font-medium">Hito de éxito: </span>
+                <span className="font-medium">{t("nextSteps.successMilestone")} </span>
                 {next_steps.success_milestone}
               </div>
             </div>

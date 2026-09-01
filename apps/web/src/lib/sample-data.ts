@@ -1,13 +1,25 @@
+import { defaultLocale, type Locale } from "@/i18n/locales";
 import type { ArtifactBundle, Battlecard, Opportunity, Signal } from "@/lib/types";
-import type { HotLeadScore } from "@/types/extended";
 import { historicalBattlecards, historicalOpportunities, historicalSignals } from "@/lib/demo/seed-history";
+import type { HotLeadScore } from "@/types/extended";
 
 /**
  * Illustrative data used when the backend API is not reachable (e.g. static
- * previews / first run before `docker compose up`). It keeps the dashboard fully
- * renderable and demonstrates the shape of real Signal Engine + Battlecard output.
+ * previews / first run before `docker compose up`), and the whole `/probar`
+ * sandbox dataset. Keeps the dashboard fully renderable and demonstrates
+ * the shape of real Signal Engine + Battlecard output.
+ *
+ * Localization: every exported constant below is now a `get*(locale)`
+ * function instead of a plain array — the base examples (Northwind Labs /
+ * Acme Corp) have hand-written Spanish and English versions selected by
+ * `locale`; `historicalSignals`/`historicalOpportunities`/
+ * `historicalBattlecards` (from `lib/demo/seed-history.ts`) build their own
+ * language on demand the same way. See `lib/demo/store.ts` for where the
+ * locale comes from (the `NEXT_LOCALE` cookie via `getDemoLocale()`) and
+ * why it isn't threaded in as a React value: this module has no component
+ * tree to read it from.
  */
-const baseSampleSignals: Signal[] = [
+const baseSampleSignalsEs: Signal[] = [
   {
     id: "11111111-1111-1111-1111-111111111111",
     signal_type: "funding_round",
@@ -78,12 +90,85 @@ const baseSampleSignals: Signal[] = [
   },
 ];
 
+const baseSampleSignalsEn: Signal[] = [
+  {
+    id: "11111111-1111-1111-1111-111111111111",
+    signal_type: "funding_round",
+    source: "webhook",
+    title: "Northwind Labs closed a $32M Series B",
+    description: "Led by Sequoia to accelerate EMEA go-to-market.",
+    score: 92,
+    confidence: 0.86,
+    detected_at: new Date(Date.now() - 1000 * 60 * 42).toISOString(),
+    company_id: "demo-company-northwind-labs",
+    lead_id: "demo-lead-alice-mercer",
+    analysis: {
+      tags: ["funding", "series b"],
+      analyzers: ["funding", "generic_fallback"],
+      primary_analyzer: "funding",
+    },
+  },
+  {
+    id: "22222222-2222-2222-2222-222222222222",
+    signal_type: "leadership_change",
+    source: "webhook",
+    title: "Acme Corp hired a new VP of Revenue Operations",
+    description: "Ex-Datadog leader joins to build out the RevOps function.",
+    score: 74,
+    confidence: 0.71,
+    detected_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+    company_id: "demo-company-acme-corp",
+    lead_id: "demo-lead-robert-chen",
+    analysis: {
+      tags: ["hiring", "vp of"],
+      analyzers: ["hiring"],
+      primary_analyzer: "hiring",
+    },
+  },
+  {
+    id: "33333333-3333-3333-3333-333333333333",
+    signal_type: "tech_adoption",
+    source: "crawler",
+    title: "Globex migrated its data stack to Snowflake",
+    description: "New integration references detected on their engineering blog.",
+    score: 58,
+    confidence: 0.62,
+    detected_at: new Date(Date.now() - 1000 * 60 * 60 * 9).toISOString(),
+    company_id: "c3",
+    lead_id: null,
+    analysis: {
+      tags: ["tech", "migrated to"],
+      analyzers: ["tech_adoption"],
+      primary_analyzer: "tech_adoption",
+    },
+  },
+  {
+    id: "44444444-4444-4444-4444-444444444444",
+    signal_type: "expansion",
+    source: "enrichment",
+    title: "Initech announced a new office in Berlin",
+    description: "European expansion signaling new regional budgets.",
+    score: 44,
+    confidence: 0.55,
+    detected_at: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
+    company_id: "c4",
+    lead_id: null,
+    analysis: {
+      tags: ["expansion"],
+      analyzers: ["generic_fallback"],
+      primary_analyzer: "generic_fallback",
+    },
+  },
+];
+
 /** Los 4 ejemplos originales + el historial ampliado en lib/demo/seed-history
  * (ver ese archivo para por qué existe: dar profundidad real a Ganado/
  * Perdido, Pronóstico y la predicción de ciclo de venta en /probar). */
-export const sampleSignals: Signal[] = [...baseSampleSignals, ...historicalSignals];
+export function getSampleSignals(locale: Locale = defaultLocale): Signal[] {
+  return [...(locale === "en" ? baseSampleSignalsEn : baseSampleSignalsEs), ...historicalSignals(locale)];
+}
 
-const baseSampleOpportunities: Opportunity[] = [
+const baseSampleOpportunitiesEs: Opportunity[] = [
   {
     id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
     title: "Oportunidad: Northwind Labs cerró una Serie B de $32M",
@@ -158,10 +243,90 @@ const baseSampleOpportunities: Opportunity[] = [
   },
 ];
 
-export const sampleOpportunities: Opportunity[] = [...baseSampleOpportunities, ...historicalOpportunities];
+const baseSampleOpportunitiesEn: Opportunity[] = [
+  {
+    id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    title: "Opportunity: Northwind Labs closed a $32M Series B",
+    status: "ready_to_action",
+    score: 92,
+    strategy: {
+      pain_point: "Post-funding teams need to scale outbound before their 90-day hiring plan stalls.",
+      closing_argument:
+        "Congrats on the Series B — we help newly funded teams accelerate their pipeline 2x faster in the first quarter.",
+      timing_window: { urgency: "immediate" as const, reason: "Budget allocation window", expires_at: "90 days" },
+      playbook: "post_funding_outreach",
+      next_best_action: "reach_out",
+      channel: "email",
+      generator: "rule_based",
+      generated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+      rationale:
+        "Northwind Labs recently secured funding — an ideal window to reach out while budgets are being allocated.",
+    },
+    signal_id: "11111111-1111-1111-1111-111111111111",
+    lead_id: "demo-lead-alice-mercer",
+    company_id: "demo-company-northwind-labs",
+    assigned_to_user_id: null,
+    amount: 48000,
+    expected_close_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 21)
+      .toISOString()
+      .slice(0, 10),
+    qualification: {
+      metric: true,
+      economic_buyer: true,
+      identify_pain: true,
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    loss_reason: null,
+    competitor: null,
+    closed_at: null,
+  },
+  {
+    id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    title: "Opportunity: Acme Corp hired a new VP of Revenue Operations",
+    status: "ready_to_action",
+    score: 74,
+    strategy: {
+      pain_point: "The new RevOps leader is evaluating the whole sales stack in their first 90 days.",
+      closing_argument:
+        "Saw you joined as VP of RevOps — teams at your stage often rebuild their pipeline infrastructure in the first quarter.",
+      timing_window: { urgency: "this_week" as const, reason: "New-hire evaluation window", expires_at: null },
+      playbook: "leadership_change_outreach",
+      next_best_action: "reach_out",
+      channel: "linkedin",
+      generator: "rule_based",
+      generated_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+      rationale:
+        "A new RevOps leader is actively making tooling decisions in their first 90 days.",
+    },
+    signal_id: "22222222-2222-2222-2222-222222222222",
+    lead_id: "demo-lead-robert-chen",
+    company_id: "demo-company-acme-corp",
+    assigned_to_user_id: null,
+    amount: 21500,
+    expected_close_date: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3)
+      .toISOString()
+      .slice(0, 10),
+    qualification: {
+      identify_pain: true,
+    },
+    created_at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+    updated_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+    loss_reason: null,
+    competitor: null,
+    closed_at: null,
+  },
+];
+
+export function getSampleOpportunities(locale: Locale = defaultLocale): Opportunity[] {
+  return [
+    ...(locale === "en" ? baseSampleOpportunitiesEn : baseSampleOpportunitiesEs),
+    ...historicalOpportunities(locale),
+  ];
+}
 
 // Sample battlecards (one per opportunity) demonstrating the full CEO brief format.
-const baseSampleBattlecards: Battlecard[] = [
+const baseSampleBattlecardsEs: Battlecard[] = [
   {
     opportunity_id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
     title: "Northwind Labs cerró una Serie B de $32M",
@@ -276,9 +441,129 @@ const baseSampleBattlecards: Battlecard[] = [
   },
 ];
 
-export const sampleBattlecards: Battlecard[] = [...baseSampleBattlecards, ...historicalBattlecards];
+const baseSampleBattlecardsEn: Battlecard[] = [
+  {
+    opportunity_id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    title: "Northwind Labs closed a $32M Series B",
+    status: "ready_to_action",
+    score: 92,
+    ready_to_action: true,
+    hot_lead: true,
+    manual_review_required: false,
+    company: {
+      name: "Northwind Labs",
+      domain: "northwindlabs.com",
+      industry: "B2B SaaS",
+      country: "United States",
+    },
+    lead: {
+      full_name: "Alice Mercer",
+      title: "VP of Sales",
+      email: "alice@northwindlabs.com",
+      seniority: "vp",
+      linkedin_url: "https://linkedin.com/in/alicemercer",
+    },
+    signal: {
+      id: "11111111-1111-1111-1111-111111111111",
+      signal_type: "funding_round",
+      title: "Northwind Labs closed a $32M Series B",
+      description: "Led by Sequoia to accelerate EMEA go-to-market.",
+      score: 92,
+      detected_at: new Date(Date.now() - 1000 * 60 * 42).toISOString(),
+      tags: ["funding", "series b"],
+    },
+    strategy: {
+      pain_point:
+        "Northwind Labs just closed a $32M Series B and now faces the classic scale-up paradox: they have capital to invest but their current processes, tools, and team aren't ready for the next growth phase. Every week of delay is a competitive disadvantage.",
+      closing_argument:
+        "Congrats on the Series B — companies at this stage typically need 2-3x their go-to-market capacity over the next 90 days. We help teams Northwind's size do exactly that without the usual ramp-up time penalty. Would a 20-minute call this week make sense?",
+      timing_window: {
+        urgency: "immediate",
+        reason:
+          "Budget allocation decisions get made in the first 60 days after the Series B closes. Vendors who reach out early are 3x more likely to be chosen.",
+        expires_at: "60 days from the funding close",
+      },
+      playbook: "post_funding_outreach",
+      next_best_action: "reach_out",
+      channel: "email",
+      rationale: "Signal score 92/100 — Northwind Labs closed a Series B ($32M). Lead: Alice Mercer.",
+      generator: "rule_based",
+      generator_version: "1.0.0",
+      generated_at: new Date().toISOString(),
+      confidence_score: 0.88,
+      manual_review_required: false,
+      variant_id: null,
+      variant_arm: null,
+    },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    opportunity_id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    title: "Acme Corp hired a new VP of Revenue Operations",
+    status: "ready_to_action",
+    score: 74,
+    ready_to_action: true,
+    hot_lead: false,
+    manual_review_required: false,
+    company: {
+      name: "Acme Corp",
+      domain: "acme.com",
+      industry: "Enterprise software",
+      country: "United States",
+    },
+    lead: {
+      full_name: "Robert Chen",
+      title: "VP of Revenue Operations",
+      email: "rchen@acme.com",
+      seniority: "vp",
+      linkedin_url: null,
+    },
+    signal: {
+      id: "22222222-2222-2222-2222-222222222222",
+      signal_type: "leadership_change",
+      title: "Acme Corp hired a new VP of Revenue Operations",
+      description: "Ex-Datadog leader joins to build out the RevOps function.",
+      score: 74,
+      detected_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+      tags: ["hiring", "vp of"],
+    },
+    strategy: {
+      pain_point:
+        "Acme Corp just brought on a new VP of Revenue Operations. New executives typically spend their first 90 days auditing current vendors, processes, and tools — and making replacement decisions. Whoever they meet with early shapes their idea of 'what good looks like'.",
+      closing_argument:
+        "Noticed Acme Corp recently brought on a new VP of Revenue Operations. Most RevOps leaders in that position run a full tech audit in their first quarter — we've helped several of them build a modern intelligence stack from scratch. Worth a call to share what's working for others in your space?",
+      timing_window: {
+        urgency: "this_week",
+        reason:
+          "The first 30-60 days of a new leadership role are the 'blank slate' phase — no vendor loyalty, high receptiveness, and active tool evaluation.",
+        expires_at: "90 days from the hire",
+      },
+      playbook: "leadership_change_outreach",
+      next_best_action: "reach_out",
+      channel: "linkedin",
+      rationale: "Signal score 74/100 — Acme Corp / VP of Revenue Operations.",
+      generator: "rule_based",
+      generator_version: "1.0.0",
+      generated_at: new Date().toISOString(),
+      confidence_score: 0.82,
+      manual_review_required: false,
+      variant_id: null,
+      variant_arm: null,
+    },
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
 
-export const sampleArtifacts: ArtifactBundle[] = [
+export function getSampleBattlecards(locale: Locale = defaultLocale): Battlecard[] {
+  return [
+    ...(locale === "en" ? baseSampleBattlecardsEn : baseSampleBattlecardsEs),
+    ...historicalBattlecards(locale),
+  ];
+}
+
+const sampleArtifactsEs: ArtifactBundle[] = [
   {
     opportunity_id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
     generated_at: new Date().toISOString(),
@@ -340,7 +625,73 @@ Saludos,
   },
 ];
 
-export const sampleHotLeads: HotLeadScore[] = [
+const sampleArtifactsEn: ArtifactBundle[] = [
+  {
+    opportunity_id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    generated_at: new Date().toISOString(),
+    generator: "rule_based_artifacts",
+    email_draft: {
+      artifact_type: "email_draft",
+      subject: "Quick question — congrats on the funding",
+      body: `Hi Alice,
+
+Congrats on the Series B — companies at this stage typically need 2-3x their go-to-market capacity over the next 90 days. We help teams Northwind's size do exactly that without the usual ramp-up time penalty. Would a 20-minute call this week make sense?
+
+Best,
+[Your name]`,
+      ps_line: "P.S. The timing window here is 60 days from the funding close — worth a quick chat before then.",
+      recommended_send_time: "Tuesday–Thursday, 8–10 AM recipient local time",
+      estimated_read_time_seconds: 30,
+    },
+    meeting_structure: {
+      artifact_type: "meeting_structure",
+      meeting_title: "BEE × Northwind Labs — Discovery call",
+      total_duration_minutes: 20,
+      objective: "Qualify Northwind Labs as a good fit and establish a clear next step before the 60-day post-funding window closes.",
+      agenda_items: [
+        { duration_minutes: 3, title: "Rapport and context", notes: "Reference their recent Series B news." },
+        { duration_minutes: 5, title: "Discovery: understand their current pain", notes: "Probe on: scale-up paradox and capital-deployment challenges." },
+        { duration_minutes: 7, title: "Our value proposition (signal-specific)", notes: "Connect it directly to what came up in discovery." },
+        { duration_minutes: 3, title: "Next steps and timeline", notes: "Aim for a clear commitment before day 60." },
+        { duration_minutes: 2, title: "Questions and close", notes: null },
+      ],
+      pre_meeting_prep: [
+        "Review Northwind Labs' recent Series B announcement.",
+        "Research the VP of Sales' profile and LinkedIn activity.",
+        "Prepare 2-3 success stories from companies at a similar post-funding stage.",
+        "Have a clear answer for BEE's 'Why now, specifically for Northwind Labs?'",
+      ],
+      success_criteria: "The VP of Sales shares their top challenge and agrees to a follow-up meeting or trial within the week.",
+    },
+    next_steps: {
+      artifact_type: "next_steps",
+      horizon: "Next 7 days",
+      actions: [
+        { action: "Send the email draft to Northwind Labs", owner: "rep", timing: "within 24h", priority: "high" },
+        { action: "Connect on LinkedIn and engage with their recent post (warm up the lead)", owner: "rep", timing: "same day as the email", priority: "medium" },
+        { action: "Research Northwind Labs thoroughly — recent news, tech stack, team size", owner: "rep", timing: "before sending the email", priority: "high" },
+        { action: "If no response in 3 days: follow up with a relevant success story", owner: "rep", timing: "3 days after first contact", priority: "medium" },
+        { action: "Log every touchpoint in the CRM with outcome tags for BEE's learning loop", owner: "rep", timing: "after each interaction", priority: "medium" },
+        { action: "Deadline: conversation must be started before 60 days post-funding", owner: "rep", timing: "60 days from the funding close", priority: "high" },
+      ],
+      key_risk: "A competitor reaching out first. Timing window: budget allocation decisions get made in the first 60 days after the Series B closes.",
+      success_milestone: "First meeting booked with a decision-maker at Northwind Labs.",
+    },
+    context_snapshot: {
+      company: "Northwind Labs",
+      lead: "Alice Mercer",
+      signal_type: "funding_round",
+      playbook: "post_funding_outreach",
+      channel: "email",
+    },
+  },
+];
+
+export function getSampleArtifacts(locale: Locale = defaultLocale): ArtifactBundle[] {
+  return locale === "en" ? sampleArtifactsEn : sampleArtifactsEs;
+}
+
+const namedHotLeadsEs: HotLeadScore[] = [
   {
     id: "h1",
     company_domain: "northwindlabs.com",
@@ -373,7 +724,17 @@ export const sampleHotLeads: HotLeadScore[] = [
     alerted: false,
     created_at: new Date().toISOString(),
   },
-  ...Array.from({ length: 38 }, (_, i) => ({
+];
+
+// English variant is byte-identical to the Spanish one — every field here
+// is already language-neutral (proper nouns, buying-stage enum values,
+// intent keywords in English by convention). Kept as its own export rather
+// than reusing namedHotLeadsEs directly so a future change to one language
+// doesn't silently also change the other.
+const namedHotLeadsEn: HotLeadScore[] = namedHotLeadsEs.map((lead) => ({ ...lead }));
+
+function genericHotLeads(): HotLeadScore[] {
+  return Array.from({ length: 38 }, (_, i) => ({
     id: `h-gen-${i}`,
     company_domain: `company-${i}.io`,
     company_name: `Company ${i}`,
@@ -388,5 +749,23 @@ export const sampleHotLeads: HotLeadScore[] = [
     hot_since: i % 5 === 0 ? new Date().toISOString() : null,
     alerted: false,
     created_at: new Date().toISOString(),
-  })),
-];
+  }));
+}
+
+export function getSampleHotLeads(locale: Locale = defaultLocale): HotLeadScore[] {
+  return [...(locale === "en" ? namedHotLeadsEn : namedHotLeadsEs), ...genericHotLeads()];
+}
+
+/** @deprecated Use `getSampleSignals(locale)` — kept as the Spanish-default
+ * static export only for any straggling import not yet migrated; every
+ * in-repo caller has been (see lib/api.ts, lib/api/opportunities.ts,
+ * lib/demo/store.ts). */
+export const sampleSignals: Signal[] = getSampleSignals("es");
+/** @deprecated Use `getSampleOpportunities(locale)`. */
+export const sampleOpportunities: Opportunity[] = getSampleOpportunities("es");
+/** @deprecated Use `getSampleBattlecards(locale)`. */
+export const sampleBattlecards: Battlecard[] = getSampleBattlecards("es");
+/** @deprecated Use `getSampleArtifacts(locale)`. */
+export const sampleArtifacts: ArtifactBundle[] = getSampleArtifacts("es");
+/** @deprecated Use `getSampleHotLeads(locale)`. */
+export const sampleHotLeads: HotLeadScore[] = getSampleHotLeads("es");

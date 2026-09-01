@@ -4,6 +4,7 @@
  * (`localStorage`) and is seeded from `lib/sample-data`'s existing,
  * realistic example dataset. Nothing here ever calls the real API.
  */
+import type { Locale } from "@/i18n/locales";
 import type { EmployeeRange } from "@/lib/api/organizations";
 import type { CrmStage, OpportunityUpdateIn } from "@/lib/api/opportunities";
 import type {
@@ -15,8 +16,9 @@ import type {
   MessageTemplateCreateIn,
   MessageTemplateUpdateIn,
 } from "@/lib/api/templates";
+import { getDemoLocale } from "@/lib/demo/locale";
 import { buildDemoCompanySet, buildManualOpportunitySet, type ManualOpportunityInput } from "@/lib/demo/templates";
-import { sampleBattlecards, sampleOpportunities, sampleSignals } from "@/lib/sample-data";
+import { getSampleBattlecards, getSampleOpportunities, getSampleSignals } from "@/lib/sample-data";
 import type {
   ArtifactBundle,
   Battlecard,
@@ -74,19 +76,38 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
 const SEED_VERSION = "4";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
+/** Which language the currently-stored seed was written in — separate from
+ * `SEED_VERSION_KEY` because the two invalidate for different reasons: a
+ * version bump means the seed *content* changed; a locale change means the
+ * visitor switched languages (via the switcher in the header) and the base
+ * seed sitting in `localStorage` from before that switch is now in the
+ * wrong language. Only the base seed reseeds on a locale change — anything
+ * the visitor added themselves via "Simula tu empresa"/"+ Nueva
+ * oportunidad" is discarded exactly like any other reseed (see
+ * `ensureCurrentSeed`'s docstring), which is the right call: there's no
+ * way to translate a rep's own typed-in company name/description after
+ * the fact, and the sandbox has never promised to preserve local edits
+ * across a reseed anyway. */
+const SEED_LOCALE_KEY = "bee_demo_seed_locale_v1";
+
 /** Reseeds the base opportunities/signals when the visitor's stored
- * snapshot predates the current `SEED_VERSION` — including a first-ever
- * visit, which has no stored version at all. Discards anything added
- * locally via "Simula tu empresa" under the old version, same as an
- * explicit `resetDemoData()`; acceptable for a sandbox that's explicitly
- * "nunca se guarda en nuestra base de datos". Safe to call on every read:
- * one string comparison when already current. */
+ * snapshot predates the current `SEED_VERSION`, or was seeded in a
+ * different language than the visitor's current choice — including a
+ * first-ever visit, which has no stored version or locale at all. Discards
+ * anything added locally via "Simula tu empresa" under the old version,
+ * same as an explicit `resetDemoData()`; acceptable for a sandbox that's
+ * explicitly "nunca se guarda en nuestra base de datos". Safe to call on
+ * every read: two string comparisons when already current. */
 function ensureCurrentSeed(): void {
   if (typeof window === "undefined") return;
   try {
-    if (window.localStorage.getItem(SEED_VERSION_KEY) === SEED_VERSION) return;
+    const locale = getDemoLocale();
+    const currentVersion = window.localStorage.getItem(SEED_VERSION_KEY);
+    const currentLocale = window.localStorage.getItem(SEED_LOCALE_KEY);
+    if (currentVersion === SEED_VERSION && currentLocale === locale) return;
     resetDemoData();
     window.localStorage.setItem(SEED_VERSION_KEY, SEED_VERSION);
+    window.localStorage.setItem(SEED_LOCALE_KEY, locale);
   } catch {
     // Storage unavailable — nothing to migrate, demo just won't persist.
   }
@@ -117,7 +138,7 @@ function saveJSON<T>(key: string, value: T): void {
   }
 }
 
-const load = () => loadJSON<Opportunity[]>(OPPORTUNITIES_KEY, sampleOpportunities);
+const load = () => loadJSON<Opportunity[]>(OPPORTUNITIES_KEY, getSampleOpportunities(getDemoLocale()));
 const save = (list: Opportunity[]) => saveJSON(OPPORTUNITIES_KEY, list);
 
 export function demoFetchOpportunities(status?: OpportunityStatus): Opportunity[] {
@@ -194,7 +215,7 @@ export function demoRecordOutcome(id: string, body: OutcomeIn): OutcomeWithPredi
 // ── Signals ──────────────────────────────────────────────────────────────
 
 export function demoFetchSignals(limit = 50): Signal[] {
-  const list = loadJSON<Signal[]>(SIGNALS_KEY, sampleSignals);
+  const list = loadJSON<Signal[]>(SIGNALS_KEY, getSampleSignals(getDemoLocale()));
   return list.slice(0, limit);
 }
 
@@ -213,13 +234,14 @@ export function demoFindArtifacts(opportunityId: string): ArtifactBundle | undef
  * lib/demo/templates.ts for why it's an honest self-referential signal, not
  * a fabricated event) and appends it to every relevant local list. */
 export function demoAddCompany(companyName: string, employeeRange: EmployeeRange): Opportunity {
-  const set = buildDemoCompanySet(companyName, employeeRange);
+  const locale = getDemoLocale();
+  const set = buildDemoCompanySet(companyName, employeeRange, locale);
 
   const opportunities = load();
   opportunities.unshift(set.opportunity);
   save(opportunities);
 
-  const signals = loadJSON<Signal[]>(SIGNALS_KEY, sampleSignals);
+  const signals = loadJSON<Signal[]>(SIGNALS_KEY, getSampleSignals(locale));
   signals.unshift(set.signal);
   saveJSON(SIGNALS_KEY, signals);
 
@@ -241,13 +263,14 @@ export function demoAddCompany(companyName: string, employeeRange: EmployeeRange
  * signal) — see that function's docstring for why this is still within the
  * sandbox's honesty policy. */
 export function demoCreateOpportunity(input: ManualOpportunityInput): Opportunity {
-  const set = buildManualOpportunitySet(input);
+  const locale = getDemoLocale();
+  const set = buildManualOpportunitySet(input, locale);
 
   const opportunities = load();
   opportunities.unshift(set.opportunity);
   save(opportunities);
 
-  const signals = loadJSON<Signal[]>(SIGNALS_KEY, sampleSignals);
+  const signals = loadJSON<Signal[]>(SIGNALS_KEY, getSampleSignals(locale));
   signals.unshift(set.signal);
   saveJSON(SIGNALS_KEY, signals);
 
@@ -264,18 +287,21 @@ export function demoCreateOpportunity(input: ManualOpportunityInput): Opportunit
 
 /** Wipes this visitor's local edits and restores the original seed data. */
 export function resetDemoData(): void {
-  save(structuredClone(sampleOpportunities));
-  saveJSON(SIGNALS_KEY, structuredClone(sampleSignals));
+  const locale = getDemoLocale();
+  save(structuredClone(getSampleOpportunities(locale)));
+  saveJSON(SIGNALS_KEY, structuredClone(getSampleSignals(locale)));
   saveJSON(BATTLECARDS_KEY, []);
   saveJSON(ARTIFACTS_KEY, []);
-  saveJSON(NETWORK_KEY, structuredClone(SEED_NETWORK_CONNECTIONS));
-  saveJSON(BRAND_PROFILE_KEY, structuredClone(SEED_VOICE_PROFILE));
-  saveJSON(BRAND_FRAGMENTS_KEY, structuredClone(SEED_BRAND_FRAGMENTS));
-  saveJSON(STYLE_PROFILE_KEY, structuredClone(SEED_STYLE_PROFILE));
-  saveJSON(DEEP_ANOMALIES_KEY, structuredClone(SEED_DEEP_ANOMALIES));
-  saveJSON(DLQ_KEY, structuredClone(SEED_DLQ_EVENTS));
-  saveJSON(AUDIT_KEY, structuredClone(SEED_AUDIT_ENTRIES));
-  saveJSON(PENDING_ACTIONS_KEY, structuredClone(SEED_PENDING_ACTIONS));
+  saveJSON(NETWORK_KEY, structuredClone(getSeedNetworkConnections(locale)));
+  saveJSON(BRAND_PROFILE_KEY, structuredClone(getSeedVoiceProfile(locale)));
+  saveJSON(BRAND_FRAGMENTS_KEY, structuredClone(getSeedBrandFragments(locale)));
+  saveJSON(STYLE_PROFILE_KEY, structuredClone(getSeedStyleProfile(locale)));
+  saveJSON(DEEP_ANOMALIES_KEY, structuredClone(getSeedDeepAnomalies(locale)));
+  saveJSON(DLQ_KEY, structuredClone(getSeedDLQEvents(locale)));
+  saveJSON(AUDIT_KEY, structuredClone(getSeedAuditEntries(locale)));
+  saveJSON(PENDING_ACTIONS_KEY, structuredClone(getSeedPendingActions(locale)));
+  saveJSON(TEMPLATES_KEY, structuredClone(getSeedTemplates(locale)));
+  saveJSON(SEQUENCES_KEY, structuredClone(getSeedSequences(locale)));
 }
 
 // ── Companies / Leads (derived, not their own store) ────────────────────────
@@ -295,7 +321,7 @@ function slugify(value: string): string {
 }
 
 function allBattlecards(): Battlecard[] {
-  return [...sampleBattlecards, ...loadJSON<Battlecard[]>(BATTLECARDS_KEY, [])];
+  return [...getSampleBattlecards(getDemoLocale()), ...loadJSON<Battlecard[]>(BATTLECARDS_KEY, [])];
 }
 
 /** Every battlecard this visitor's demo knows about — the 2+historical seeded
@@ -368,7 +394,7 @@ export function demoFetchLeads(): Lead[] {
 
 const TEMPLATES_KEY = "bee_demo_templates_v1";
 
-const SEED_TEMPLATES: MessageTemplate[] = [
+const SEED_TEMPLATES_ES: MessageTemplate[] = [
   {
     id: "demo-template-funding",
     name: "Apertura post-financiamiento",
@@ -402,7 +428,45 @@ const SEED_TEMPLATES: MessageTemplate[] = [
   },
 ];
 
-const loadTemplates = () => loadJSON<MessageTemplate[]>(TEMPLATES_KEY, SEED_TEMPLATES);
+const SEED_TEMPLATES_EN: MessageTemplate[] = [
+  {
+    id: "demo-template-funding",
+    name: "Post-funding opener",
+    channel: "email",
+    subject: "Congrats on the round — quick question",
+    body:
+      "Hi {{first_name}},\n\nSaw that {{company_name}} just closed a round — congrats. " +
+      "Worth a 15-minute call to talk through how you're thinking about scaling the sales team?\n\nBest,",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "demo-template-hiring-linkedin",
+    name: "LinkedIn follow-up — new hire",
+    channel: "linkedin",
+    subject: null,
+    body:
+      "Hi {{first_name}}, saw you joined {{company_name}} — congrats on the new role. " +
+      "I'd love to share how we help teams at a similar stage shorten their sales cycle. " +
+      "Got 15 minutes this week?",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "demo-template-reactivation",
+    name: "Re-engagement — no response",
+    channel: "email",
+    subject: "Still worth talking?",
+    body:
+      "Hi {{first_name}},\n\nDon't want to be a bother — is this still a good time to talk " +
+      "about {{company_name}}? If not, just say the word and I won't follow up again.\n\nBest,",
+    created_at: new Date().toISOString(),
+  },
+];
+
+function getSeedTemplates(locale: Locale): MessageTemplate[] {
+  return locale === "en" ? SEED_TEMPLATES_EN : SEED_TEMPLATES_ES;
+}
+
+const loadTemplates = () => loadJSON<MessageTemplate[]>(TEMPLATES_KEY, getSeedTemplates(getDemoLocale()));
 const saveTemplates = (list: MessageTemplate[]) => saveJSON(TEMPLATES_KEY, list);
 
 export function demoFetchTemplates(limit = 100): MessageTemplate[] {
@@ -464,7 +528,7 @@ export function demoDeleteTemplate(id: string): void {
 
 const SEQUENCES_KEY = "bee_demo_sequences_v1";
 
-const SEED_SEQUENCES: DynamicSequenceOut[] = [
+const SEED_SEQUENCES_ES: DynamicSequenceOut[] = [
   {
     id: "demo-sequence-funding",
     name: "Financiamiento → primer contacto",
@@ -510,7 +574,57 @@ const SEED_SEQUENCES: DynamicSequenceOut[] = [
   },
 ];
 
-const loadSequences = () => loadJSON<DynamicSequenceOut[]>(SEQUENCES_KEY, SEED_SEQUENCES);
+const SEED_SEQUENCES_EN: DynamicSequenceOut[] = [
+  {
+    id: "demo-sequence-funding",
+    name: "Funding → first contact",
+    description: "3-step cadence for a newly detected funding-round signal.",
+    signal_type: "funding_round",
+    industry: null,
+    seniority: null,
+    entry_step_id: "s1",
+    steps: [
+      {
+        id: "s1",
+        name: "Send email",
+        action: "send_email",
+        channel: "email",
+        transitions: [{ condition: "no_response", next_step_id: "s2", delay_days: 3 }],
+        max_wait_days: 7,
+        notes: null,
+      },
+      {
+        id: "s2",
+        name: "Connection request",
+        action: "linkedin_connect",
+        channel: "linkedin",
+        transitions: [{ condition: "no_response", next_step_id: "s3", delay_days: 4 }],
+        max_wait_days: 7,
+        notes: null,
+      },
+      {
+        id: "s3",
+        name: "Follow-up",
+        action: "follow_up",
+        channel: "email",
+        transitions: [{ condition: "no_response", next_step_id: null, delay_days: 5 }],
+        max_wait_days: 7,
+        notes: null,
+      },
+    ],
+    max_days: 30,
+    status: "active",
+    version: 1,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
+
+function getSeedSequences(locale: Locale): DynamicSequenceOut[] {
+  return locale === "en" ? SEED_SEQUENCES_EN : SEED_SEQUENCES_ES;
+}
+
+const loadSequences = () => loadJSON<DynamicSequenceOut[]>(SEQUENCES_KEY, getSeedSequences(getDemoLocale()));
 const saveSequences = (list: DynamicSequenceOut[]) => saveJSON(SEQUENCES_KEY, list);
 
 export function demoFetchSequences(limit = 50): DynamicSequenceOut[] {
@@ -570,7 +684,7 @@ export function demoStartSequenceExecution(sequenceId: string): { id: string; st
 
 const NETWORK_KEY = "bee_demo_network_v1";
 
-const SEED_NETWORK_CONNECTIONS: NetworkConnection[] = [
+const SEED_NETWORK_CONNECTIONS_ES: NetworkConnection[] = [
   {
     id: "demo-network-1",
     contact_name: "Marina Solís",
@@ -663,7 +777,104 @@ const SEED_NETWORK_CONNECTIONS: NetworkConnection[] = [
   },
 ];
 
-const loadNetwork = () => loadJSON<NetworkConnection[]>(NETWORK_KEY, SEED_NETWORK_CONNECTIONS);
+const SEED_NETWORK_CONNECTIONS_EN: NetworkConnection[] = [
+  {
+    id: "demo-network-1",
+    contact_name: "Marina Solís",
+    contact_company: "Cumbre Salud",
+    contact_domain: "cumbresalud.co",
+    contact_title: "COO",
+    connection_type: "first_degree",
+    relationship_strength: 9,
+    notes: "Former colleague from an earlier funding round.",
+    tags: ["digital health"],
+    industries: ["Digital health"],
+    interaction_count: 14,
+    active: true,
+    created_at: new Date(Date.now() - 400 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-network-2",
+    contact_name: "Diego Farías",
+    contact_company: "Nimbus Cloud Systems",
+    contact_domain: "nimbuscloud.io",
+    contact_title: "VP Engineering",
+    connection_type: "second_degree",
+    relationship_strength: 6,
+    notes: "Met through a former colleague at Silo Data Works.",
+    tags: ["cloud"],
+    industries: ["Cloud infrastructure"],
+    interaction_count: 3,
+    active: true,
+    created_at: new Date(Date.now() - 220 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-network-3",
+    contact_name: "Renata Cabrera",
+    contact_company: "Onda Media Group",
+    contact_domain: "ondamedia.mx",
+    contact_title: "Commercial Director",
+    connection_type: "alumni",
+    relationship_strength: 7,
+    notes: "Same university class.",
+    tags: ["media", "alumni"],
+    industries: ["Media"],
+    interaction_count: 5,
+    active: true,
+    created_at: new Date(Date.now() - 310 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-network-4",
+    contact_name: "Pablo Undurraga",
+    contact_company: "Horizonte Legal",
+    contact_domain: "horizontelegal.cl",
+    contact_title: "Managing Partner",
+    connection_type: "referral",
+    relationship_strength: 8,
+    notes: "Direct referral from a current client.",
+    tags: ["legal"],
+    industries: ["LegalTech"],
+    interaction_count: 9,
+    active: true,
+    created_at: new Date(Date.now() - 150 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-network-5",
+    contact_name: "Laura Kim",
+    contact_company: "Bright Retail Co",
+    contact_domain: "brightretail.com",
+    contact_title: "Head of Sales",
+    connection_type: "community",
+    relationship_strength: 4,
+    notes: "Met at a retail industry event.",
+    tags: ["retail"],
+    industries: ["Retail"],
+    interaction_count: 1,
+    active: true,
+    created_at: new Date(Date.now() - 60 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-network-6",
+    contact_name: "Andrés Molina",
+    contact_company: "Cobre Insurtech",
+    contact_domain: "cobreinsurtech.co",
+    contact_title: "VP Growth",
+    connection_type: "first_degree",
+    relationship_strength: 8,
+    notes: "Worked together 3 years ago — still a close ally.",
+    tags: ["insurtech"],
+    industries: ["Insurance"],
+    interaction_count: 11,
+    active: true,
+    created_at: new Date(Date.now() - 500 * 86400000).toISOString(),
+  },
+];
+
+function getSeedNetworkConnections(locale: Locale): NetworkConnection[] {
+  return locale === "en" ? SEED_NETWORK_CONNECTIONS_EN : SEED_NETWORK_CONNECTIONS_ES;
+}
+
+const loadNetwork = () => loadJSON<NetworkConnection[]>(NETWORK_KEY, getSeedNetworkConnections(getDemoLocale()));
 const saveNetwork = (list: NetworkConnection[]) => saveJSON(NETWORK_KEY, list);
 
 export function demoFetchNetworkConnections(): NetworkConnection[] {
@@ -791,7 +1002,7 @@ export function demoFindIntroPaths(params: {
 const BRAND_PROFILE_KEY = "bee_demo_brand_profile_v1";
 const BRAND_FRAGMENTS_KEY = "bee_demo_brand_fragments_v1";
 
-const SEED_VOICE_PROFILE: VoiceProfile = {
+const SEED_VOICE_PROFILE_ES: VoiceProfile = {
   id: "demo-voice-profile",
   display_name: "Alejandro Rivas",
   title: "CEO",
@@ -809,7 +1020,29 @@ const SEED_VOICE_PROFILE: VoiceProfile = {
   updated_at: new Date(Date.now() - 5 * 86400000).toISOString(),
 };
 
-const SEED_BRAND_FRAGMENTS: BrandFragment[] = [
+const SEED_VOICE_PROFILE_EN: VoiceProfile = {
+  id: "demo-voice-profile",
+  display_name: "Alejandro Rivas",
+  title: "CEO",
+  language: "en",
+  tone_descriptors: ["analytical", "direct", "approachable"],
+  authority_topics: ["B2B sales intelligence", "AI applied to revenue", "Go-to-market in Latin America"],
+  forbidden_phrases: ["Hope you're doing well", "Just wanted to reach out"],
+  max_sentence_words: 22,
+  use_emojis: false,
+  preferred_cta: "Worth a 15-minute call?",
+  bio_summary:
+    "Founder and CEO — building BEE so sales teams prioritize with data, not gut feel.",
+  is_active: true,
+  created_at: new Date(Date.now() - 260 * 86400000).toISOString(),
+  updated_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+};
+
+function getSeedVoiceProfile(locale: Locale): VoiceProfile {
+  return locale === "en" ? SEED_VOICE_PROFILE_EN : SEED_VOICE_PROFILE_ES;
+}
+
+const SEED_BRAND_FRAGMENTS_ES: BrandFragment[] = [
   {
     id: "demo-fragment-1",
     profile_id: "demo-voice-profile",
@@ -849,8 +1082,52 @@ const SEED_BRAND_FRAGMENTS: BrandFragment[] = [
   },
 ];
 
-const loadBrandProfile = () => loadJSON<VoiceProfile | null>(BRAND_PROFILE_KEY, SEED_VOICE_PROFILE);
-const loadBrandFragments = () => loadJSON<BrandFragment[]>(BRAND_FRAGMENTS_KEY, SEED_BRAND_FRAGMENTS);
+const SEED_BRAND_FRAGMENTS_EN: BrandFragment[] = [
+  {
+    id: "demo-fragment-1",
+    profile_id: "demo-voice-profile",
+    content:
+      "We stopped chasing every signal and started prioritizing the ones that actually predict revenue — pipeline didn't grow in volume, it grew in quality.",
+    category: "key_insight",
+    tags: ["prioritization", "pipeline"],
+    source: null,
+    performance_score: 0.82,
+    used_count: 6,
+    last_used_at: new Date(Date.now() - 9 * 86400000).toISOString(),
+    created_at: new Date(Date.now() - 180 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-fragment-2",
+    profile_id: "demo-voice-profile",
+    content: "Let's talk numbers, not promises.",
+    category: "signature_phrase",
+    tags: ["closing"],
+    source: null,
+    performance_score: 0.76,
+    used_count: 11,
+    last_used_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+    created_at: new Date(Date.now() - 200 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-fragment-3",
+    profile_id: "demo-voice-profile",
+    content: "3 signals that actually predict a purchase — none of them is 'visited the pricing page'. (thread)",
+    category: "example_post",
+    tags: ["content", "linkedin"],
+    source: "linkedin",
+    performance_score: 0.69,
+    used_count: 2,
+    last_used_at: new Date(Date.now() - 40 * 86400000).toISOString(),
+    created_at: new Date(Date.now() - 90 * 86400000).toISOString(),
+  },
+];
+
+function getSeedBrandFragments(locale: Locale): BrandFragment[] {
+  return locale === "en" ? SEED_BRAND_FRAGMENTS_EN : SEED_BRAND_FRAGMENTS_ES;
+}
+
+const loadBrandProfile = () => loadJSON<VoiceProfile | null>(BRAND_PROFILE_KEY, getSeedVoiceProfile(getDemoLocale()));
+const loadBrandFragments = () => loadJSON<BrandFragment[]>(BRAND_FRAGMENTS_KEY, getSeedBrandFragments(getDemoLocale()));
 
 export function demoFetchBrandProfile(): VoiceProfile | null {
   return loadBrandProfile();
@@ -913,7 +1190,7 @@ export function demoAddBrandFragment(
 
 const STYLE_PROFILE_KEY = "bee_demo_style_profile_v1";
 
-const SEED_STYLE_PROFILE: StyleProfileOut = {
+const SEED_STYLE_PROFILE_ES: StyleProfileOut = {
   total_corrections: 4,
   authoritative_rules_count: 2,
   style_summary:
@@ -929,7 +1206,32 @@ const SEED_STYLE_PROFILE: StyleProfileOut = {
   },
 };
 
-const loadStyleProfile = () => loadJSON<StyleProfileOut>(STYLE_PROFILE_KEY, SEED_STYLE_PROFILE);
+// `rules_by_type`'s keys (directo_sin_relleno, cierre_con_pregunta,
+// parrafos_cortos) are machine-ish rule identifiers, not prose — they're
+// checked against literal string matches in demoRecordCorrection below, so
+// they stay as-is in both locales, same as agent_type/decision_type
+// elsewhere in this file.
+const SEED_STYLE_PROFILE_EN: StyleProfileOut = {
+  total_corrections: 4,
+  authoritative_rules_count: 2,
+  style_summary:
+    "Prefers short sentences (under 20 words), avoids generic greetings like 'hope you're doing well', and always closes with a direct scheduling question.",
+  profile_version: 3,
+  last_correction_at: new Date(Date.now() - 6 * 86400000).toISOString(),
+  rules_by_type: {
+    tone: { directo_sin_relleno: { weight: 0.9, count: 4, authoritative: true } },
+    structure: {
+      cierre_con_pregunta: { weight: 0.85, count: 3, authoritative: true },
+      parrafos_cortos: { weight: 0.6, count: 2, authoritative: false },
+    },
+  },
+};
+
+function getSeedStyleProfile(locale: Locale): StyleProfileOut {
+  return locale === "en" ? SEED_STYLE_PROFILE_EN : SEED_STYLE_PROFILE_ES;
+}
+
+const loadStyleProfile = () => loadJSON<StyleProfileOut>(STYLE_PROFILE_KEY, getSeedStyleProfile(getDemoLocale()));
 
 export function demoFetchStyleProfile(): StyleProfileOut {
   return loadStyleProfile();
@@ -981,7 +1283,7 @@ export function demoRecordCorrection(data: {
 
 const DEEP_ANOMALIES_KEY = "bee_demo_deep_anomalies_v1";
 
-const SEED_DEEP_ANOMALIES: ExtendedAnomalyAlert[] = [
+const SEED_DEEP_ANOMALIES_ES: ExtendedAnomalyAlert[] = [
   {
     id: "demo-deep-anomaly-1",
     alert_type: "conversion_drop",
@@ -1031,7 +1333,61 @@ const SEED_DEEP_ANOMALIES: ExtendedAnomalyAlert[] = [
   },
 ];
 
-const loadDeepAnomalies = () => loadJSON<ExtendedAnomalyAlert[]>(DEEP_ANOMALIES_KEY, SEED_DEEP_ANOMALIES);
+const SEED_DEEP_ANOMALIES_EN: ExtendedAnomalyAlert[] = [
+  {
+    id: "demo-deep-anomaly-1",
+    alert_type: "conversion_drop",
+    severity: "high",
+    status: "open",
+    segment_type: "channel",
+    segment_value: "email",
+    rolling_rate: 0.09,
+    baseline_rate: 0.17,
+    deviation_pct: -47.1,
+    sample_size: 48,
+    title: "Conversion drop in email — Retail",
+    description:
+      "The response rate for the Retail email sequence dropped 47% against its 6-week baseline.",
+    recommendation: "Pause the current variant and test the alternate subject line validated in Manufacturing before scaling volume.",
+    suggested_actions: [
+      "Pause the active sequence in Retail",
+      "Run an A/B test on the subject line",
+      "Review the CTA against Fintech, which remains stable",
+    ],
+    pending_action_id: null,
+    acknowledged_at: null,
+    resolution_notes: null,
+    auto_resolved: false,
+    created_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+  },
+  {
+    id: "demo-deep-anomaly-2",
+    alert_type: "conversion_drop",
+    severity: "medium",
+    status: "open",
+    segment_type: "sector",
+    segment_value: "LegalTech",
+    rolling_rate: 0.21,
+    baseline_rate: 0.28,
+    deviation_pct: -25.0,
+    sample_size: 22,
+    title: "Conversion below baseline — LegalTech",
+    description: "The LegalTech sector is showing a conversion rate 25% below its historical average over the past 2 weeks.",
+    recommendation: "Keep monitoring — the sample is still too small (22 opportunities) to act on with high confidence.",
+    suggested_actions: ["Wait for the sample to grow before changing playbooks"],
+    pending_action_id: null,
+    acknowledged_at: null,
+    resolution_notes: null,
+    auto_resolved: false,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+];
+
+function getSeedDeepAnomalies(locale: Locale): ExtendedAnomalyAlert[] {
+  return locale === "en" ? SEED_DEEP_ANOMALIES_EN : SEED_DEEP_ANOMALIES_ES;
+}
+
+const loadDeepAnomalies = () => loadJSON<ExtendedAnomalyAlert[]>(DEEP_ANOMALIES_KEY, getSeedDeepAnomalies(getDemoLocale()));
 const saveDeepAnomalies = (list: ExtendedAnomalyAlert[]) => saveJSON(DEEP_ANOMALIES_KEY, list);
 
 export function demoFetchAnomalyAlerts(params?: { status?: string; severity?: string }): ExtendedAnomalyAlert[] {
@@ -1112,7 +1468,7 @@ export function demoAcknowledgeAnomaly(alertId: string, notes?: string): Extende
 
 const DLQ_KEY = "bee_demo_dlq_v1";
 
-const SEED_DLQ_EVENTS: FailedEvent[] = [
+const SEED_DLQ_EVENTS_ES: FailedEvent[] = [
   {
     id: "demo-dlq-1",
     event_type: "webhook_delivery",
@@ -1197,7 +1553,96 @@ const SEED_DLQ_EVENTS: FailedEvent[] = [
   },
 ];
 
-const loadDLQ = () => loadJSON<FailedEvent[]>(DLQ_KEY, SEED_DLQ_EVENTS);
+const SEED_DLQ_EVENTS_EN: FailedEvent[] = [
+  {
+    id: "demo-dlq-1",
+    event_type: "webhook_delivery",
+    event_name: "Sequence send — Nimbus Cloud Systems",
+    opportunity_id: "demo-opp-s07",
+    lead_id: null,
+    pending_action_id: null,
+    attempt_count: 2,
+    last_error: "Timed out connecting to the email provider (10s)",
+    error_history: [
+      { attempt: 1, error: "Timed out connecting to the email provider (10s)", timestamp: new Date(Date.now() - 3 * 3600000).toISOString() },
+      { attempt: 2, error: "Timed out connecting to the email provider (10s)", timestamp: new Date(Date.now() - 1 * 3600000).toISOString() },
+    ],
+    status: "pending",
+    next_retry_at: new Date(Date.now() + 15 * 60000).toISOString(),
+    last_attempted_at: new Date(Date.now() - 1 * 3600000).toISOString(),
+    resolved_at: null,
+    resolution_notes: null,
+    ceo_alerted: false,
+    created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+  },
+  {
+    id: "demo-dlq-2",
+    event_type: "webhook_call",
+    event_name: "Outbound webhook — external CRM",
+    opportunity_id: null,
+    lead_id: null,
+    pending_action_id: null,
+    attempt_count: 5,
+    last_error: "The CRM endpoint returned 410 Gone",
+    error_history: [
+      { attempt: 1, error: "Connection refused", timestamp: new Date(Date.now() - 2 * 86400000).toISOString() },
+      { attempt: 5, error: "The CRM endpoint returned 410 Gone", timestamp: new Date(Date.now() - 1 * 86400000).toISOString() },
+    ],
+    status: "permanently_failed",
+    next_retry_at: null,
+    last_attempted_at: new Date(Date.now() - 1 * 86400000).toISOString(),
+    resolved_at: null,
+    resolution_notes: null,
+    ceo_alerted: true,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-dlq-3",
+    event_type: "slack_notify",
+    event_name: "Slack notification — anomaly alert",
+    opportunity_id: null,
+    lead_id: null,
+    pending_action_id: null,
+    attempt_count: 2,
+    last_error: null,
+    error_history: [
+      { attempt: 1, error: "The Slack channel token had expired", timestamp: new Date(Date.now() - 5 * 86400000).toISOString() },
+    ],
+    status: "resolved",
+    next_retry_at: null,
+    last_attempted_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+    resolved_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+    resolution_notes: "Manually retried after reconnecting the Slack channel.",
+    ceo_alerted: false,
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-dlq-4",
+    event_type: "webhook_delivery",
+    event_name: "Sequence send — Cobre Insurtech",
+    opportunity_id: "demo-opp-s16",
+    lead_id: null,
+    pending_action_id: null,
+    attempt_count: 1,
+    last_error: "LinkedIn provider rate limit reached",
+    error_history: [
+      { attempt: 1, error: "LinkedIn provider rate limit reached", timestamp: new Date(Date.now() - 20 * 60000).toISOString() },
+    ],
+    status: "retrying",
+    next_retry_at: new Date(Date.now() + 40 * 60000).toISOString(),
+    last_attempted_at: new Date(Date.now() - 20 * 60000).toISOString(),
+    resolved_at: null,
+    resolution_notes: null,
+    ceo_alerted: false,
+    created_at: new Date(Date.now() - 20 * 60000).toISOString(),
+  },
+];
+
+function getSeedDLQEvents(locale: Locale): FailedEvent[] {
+  return locale === "en" ? SEED_DLQ_EVENTS_EN : SEED_DLQ_EVENTS_ES;
+}
+
+const loadDLQ = () => loadJSON<FailedEvent[]>(DLQ_KEY, getSeedDLQEvents(getDemoLocale()));
 const saveDLQ = (list: FailedEvent[]) => saveJSON(DLQ_KEY, list);
 
 export function demoFetchDLQEvents(params?: { status?: string; limit?: number }): FailedEvent[] {
@@ -1273,7 +1718,11 @@ export function demoResolveDLQEvent(eventId: string, notes?: string): FailedEven
 
 const AUDIT_KEY = "bee_demo_audit_v1";
 
-const SEED_AUDIT_ENTRIES: AuditEntry[] = [
+// Only `strategy_reasoning` is narrative text — context_snapshot/
+// market_data_used/output_snapshot carry structured, machine-shaped data
+// (mirroring what the real AuditTrail stores) and stay identical across
+// locales, same as agent_type/decision_type/generator_name.
+const SEED_AUDIT_ENTRIES_ES: AuditEntry[] = [
   {
     id: "demo-audit-1",
     agent_type: "strategy_generator",
@@ -1396,7 +1845,134 @@ const SEED_AUDIT_ENTRIES: AuditEntry[] = [
   },
 ];
 
-const loadAudit = () => loadJSON<AuditEntry[]>(AUDIT_KEY, SEED_AUDIT_ENTRIES);
+const SEED_AUDIT_ENTRIES_EN: AuditEntry[] = [
+  {
+    id: "demo-audit-1",
+    agent_type: "strategy_generator",
+    decision_type: "strategy_generation",
+    session_id: null,
+    opportunity_id: "demo-opp-s07",
+    lead_id: null,
+    signal_id: "demo-signal-s07",
+    pending_action_id: null,
+    context_snapshot: { signal_type: "product_launch", industry: "Infraestructura cloud" },
+    market_data_used: { top_playbook: "product_launch_technical", historical_win_rate: 0.42 },
+    strategy_reasoning: "Product-launch signal with strong technical fit — prioritizing the technical-evaluation playbook.",
+    output_snapshot: { pain_point: "Escalar sin visibilidad de infraestructura", generator: "rule_based" },
+    confidence_score: 0.88,
+    manual_review_required: false,
+    processing_ms: 420,
+    generator_name: "HiringStrategyGenerator",
+    generator_version: "2.3",
+    created_at: new Date(Date.now() - 6 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-audit-2",
+    agent_type: "psychographic_analyzer",
+    decision_type: "disc_classification",
+    session_id: null,
+    opportunity_id: "demo-opp-s04",
+    lead_id: null,
+    signal_id: null,
+    pending_action_id: null,
+    context_snapshot: { title: "Head of Sales", seniority: "director" },
+    market_data_used: {},
+    strategy_reasoning: "Direct, results-oriented language in recent interactions — classified as a dominant D profile.",
+    output_snapshot: { dominant_style: "D", confidence: 0.61 },
+    confidence_score: 0.61,
+    manual_review_required: true,
+    processing_ms: 180,
+    generator_name: "PsychographicAnalyzer",
+    generator_version: "1.4",
+    created_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-audit-3",
+    agent_type: "dark_funnel",
+    decision_type: "hot_lead_scoring",
+    session_id: null,
+    opportunity_id: null,
+    lead_id: null,
+    signal_id: null,
+    pending_action_id: null,
+    context_snapshot: { company_domain: "nimbuscloud.io", signal_count: 4 },
+    market_data_used: { research_intensity_score: 0.83 },
+    strategy_reasoning: "Sustained research activity on pricing and comparison pages — buying stage: ready to buy.",
+    output_snapshot: { buying_stage: "ready_to_buy", is_hot: true },
+    confidence_score: 0.91,
+    manual_review_required: false,
+    processing_ms: 95,
+    generator_name: "DarkFunnelService",
+    generator_version: "1.1",
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-audit-4",
+    agent_type: "agent_orchestrator",
+    decision_type: "action_approval_gate",
+    session_id: null,
+    opportunity_id: "demo-opp-s16",
+    lead_id: null,
+    signal_id: null,
+    pending_action_id: null,
+    context_snapshot: { action_type: "send_email" },
+    market_data_used: {},
+    strategy_reasoning: "Opening email generated — sent to the CEO's approval queue before dispatch.",
+    output_snapshot: { queued: true },
+    confidence_score: 0.74,
+    manual_review_required: false,
+    processing_ms: 60,
+    generator_name: "AgentOrchestrator",
+    generator_version: "1.0",
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-audit-5",
+    agent_type: "executive_agent",
+    decision_type: "battlecard_creation",
+    session_id: null,
+    opportunity_id: "demo-opp-s10",
+    lead_id: null,
+    signal_id: null,
+    pending_action_id: null,
+    context_snapshot: { signal_type: "expansion", industry: "Comercio exterior" },
+    market_data_used: { top_channel: "linkedin" },
+    strategy_reasoning: "Battlecard generated from the expansion signal — closing argument based on the sector's average sales cycle.",
+    output_snapshot: { closing_argument: "Reduce tu ciclo de decisión 30%", generator: "rule_based" },
+    confidence_score: 0.7,
+    manual_review_required: false,
+    processing_ms: 510,
+    generator_name: "ExecutiveAgent",
+    generator_version: "2.0",
+    created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-audit-6",
+    agent_type: "trend_analyst",
+    decision_type: "market_insight_generation",
+    session_id: null,
+    opportunity_id: null,
+    lead_id: null,
+    signal_id: null,
+    pending_action_id: null,
+    context_snapshot: { signal_type: "funding_round" },
+    market_data_used: { evidence_count: 9 },
+    strategy_reasoning: "Sustained increase in funding-round signals in Fintech over the past 3 weeks.",
+    output_snapshot: { insight_type: "sector_momentum" },
+    confidence_score: 0.48,
+    manual_review_required: true,
+    processing_ms: 340,
+    generator_name: "TrendAnalyst",
+    generator_version: "1.2",
+    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+  },
+];
+
+function getSeedAuditEntries(locale: Locale): AuditEntry[] {
+  return locale === "en" ? SEED_AUDIT_ENTRIES_EN : SEED_AUDIT_ENTRIES_ES;
+}
+
+const loadAudit = () => loadJSON<AuditEntry[]>(AUDIT_KEY, getSeedAuditEntries(getDemoLocale()));
 
 export function demoFetchAuditDecisions(params?: {
   agent_type?: string;
@@ -1435,7 +2011,7 @@ export function demoAuditSummary(): AuditSummary {
 
 const PENDING_ACTIONS_KEY = "bee_demo_pending_actions_v1";
 
-const SEED_PENDING_ACTIONS: PendingAction[] = [
+const SEED_PENDING_ACTIONS_ES: PendingAction[] = [
   {
     id: "demo-pending-1",
     opportunity_id: "demo-opp-s07",
@@ -1496,7 +2072,72 @@ const SEED_PENDING_ACTIONS: PendingAction[] = [
   },
 ];
 
-const loadPendingActions = () => loadJSON<PendingAction[]>(PENDING_ACTIONS_KEY, SEED_PENDING_ACTIONS);
+const SEED_PENDING_ACTIONS_EN: PendingAction[] = [
+  {
+    id: "demo-pending-1",
+    opportunity_id: "demo-opp-s07",
+    action_type: "send_email",
+    status: "pending_approval",
+    title: "Send opening — Nimbus Cloud Systems",
+    description: "First-contact email generated from the product-launch signal.",
+    preview:
+      "Subject: Scale infrastructure without losing visibility\n\nHi Ashley,\n\nSaw the launch of Nimbus's new platform — congrats. Many teams at a similar stage end up sacrificing operational visibility when scaling this fast...",
+    payload: { channel: "email" },
+    priority: 1,
+    retry_count: 0,
+    approved_by: null,
+    approved_at: null,
+    completed_at: null,
+    failure_reason: null,
+    expires_at: new Date(Date.now() + 2 * 86400000).toISOString(),
+    created_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+    updated_at: new Date(Date.now() - 3 * 3600000).toISOString(),
+  },
+  {
+    id: "demo-pending-2",
+    opportunity_id: "demo-opp-s16",
+    action_type: "linkedin_message",
+    status: "pending_approval",
+    title: "Connection request — Cobre Insurtech",
+    description: "Second step of the funding sequence: LinkedIn connection request.",
+    preview: "Hi Andrés, congrats on Cobre Insurtech's recent round — I'd love to connect and share how...",
+    payload: { channel: "linkedin" },
+    priority: 2,
+    retry_count: 0,
+    approved_by: null,
+    approved_at: null,
+    completed_at: null,
+    failure_reason: null,
+    expires_at: new Date(Date.now() + 4 * 86400000).toISOString(),
+    created_at: new Date(Date.now() - 26 * 3600000).toISOString(),
+    updated_at: new Date(Date.now() - 26 * 3600000).toISOString(),
+  },
+  {
+    id: "demo-pending-3",
+    opportunity_id: "demo-opp-s10",
+    action_type: "crm_update",
+    status: "completed",
+    title: "Log stage progress — Puerto Digital",
+    description: "Automatic stage update after a positive response.",
+    preview: null,
+    payload: { field: "status", value: "in_progress" },
+    priority: 3,
+    retry_count: 0,
+    approved_by: "CEO",
+    approved_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    completed_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    failure_reason: null,
+    expires_at: null,
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+];
+
+function getSeedPendingActions(locale: Locale): PendingAction[] {
+  return locale === "en" ? SEED_PENDING_ACTIONS_EN : SEED_PENDING_ACTIONS_ES;
+}
+
+const loadPendingActions = () => loadJSON<PendingAction[]>(PENDING_ACTIONS_KEY, getSeedPendingActions(getDemoLocale()));
 const savePendingActions = (list: PendingAction[]) => saveJSON(PENDING_ACTIONS_KEY, list);
 
 export function demoFetchPendingActions(limit = 50): PendingAction[] {

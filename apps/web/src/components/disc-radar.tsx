@@ -1,9 +1,8 @@
-const AXES = [
-  { key: "d", label: "Dominancia" },
-  { key: "i", label: "Influencia" },
-  { key: "s", label: "Estabilidad" },
-  { key: "c", label: "Análisis" },
-] as const;
+"use client";
+
+import { useTranslations } from "next-intl";
+
+const AXIS_KEYS = ["d", "i", "s", "c"] as const;
 
 const SIZE = 220;
 const CENTER = SIZE / 2;
@@ -38,25 +37,26 @@ export function DiscRadar({
   c: number;
   className?: string;
 }) {
+  const t = useTranslations("shared.discRadar");
   const values = [d, i, s, c];
   const points = values.map((v, idx) => axisPoint(idx, Math.max(0, Math.min(1, v))));
   const areaPath = `M${points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" L")} Z`;
 
   return (
-    <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className={className} role="img" aria-label="Perfil DISC del lead">
+    <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className={className} role="img" aria-label={t("ariaLabel")}>
       {/* Anillos de referencia */}
       {RINGS.map((r) => {
-        const ringPoints = AXES.map((_, idx) => axisPoint(idx, r));
+        const ringPoints = AXIS_KEYS.map((_, idx) => axisPoint(idx, r));
         const path = `M${ringPoints.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" L")} Z`;
         return <path key={r} d={path} fill="none" stroke="var(--color-divider)" strokeWidth={1} />;
       })}
 
       {/* Ejes */}
-      {AXES.map((axis, idx) => {
+      {AXIS_KEYS.map((key, idx) => {
         const outer = axisPoint(idx, 1);
         return (
           <line
-            key={axis.key}
+            key={key}
             x1={CENTER}
             y1={CENTER}
             x2={outer.x}
@@ -74,12 +74,12 @@ export function DiscRadar({
       ))}
 
       {/* Etiquetas de eje + valor */}
-      {AXES.map((axis, idx) => {
+      {AXIS_KEYS.map((key, idx) => {
         const labelPos = axisPoint(idx, 1.32);
         const anchor = idx === 1 ? "start" : idx === 3 ? "end" : "middle";
         return (
           <text
-            key={axis.key}
+            key={key}
             x={labelPos.x}
             y={labelPos.y}
             textAnchor={anchor}
@@ -87,7 +87,7 @@ export function DiscRadar({
             className="fill-muted-foreground"
             style={{ fontSize: 11, fontWeight: 500 }}
           >
-            {axis.label} · {Math.round(values[idx] * 100)}%
+            {t(`axes.${key}`)} · {Math.round(values[idx] * 100)}%
           </text>
         );
       })}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 import type { CompanyPriority } from "@/lib/icp";
 
@@ -20,6 +21,7 @@ const PAD = 24;
  *  prioridad de forma natural — arriba a la derecha es donde hay que mirar. */
 export function PriorityMatrixChart({ priorities }: { priorities: CompanyPriority[] }) {
   const router = useRouter();
+  const t = useTranslations("sharedB.priorityMatrix");
   const plot = SIZE - PAD * 2;
 
   function toX(fit: number) {
@@ -35,7 +37,7 @@ export function PriorityMatrixChart({ priorities }: { priorities: CompanyPriorit
       width="100%"
       className="max-w-[360px]"
       role="img"
-      aria-label="Matriz de priorización: fit vs. intención por empresa"
+      aria-label={t("ariaLabel")}
     >
       {/* Cuadrantes de fondo */}
       <rect x={PAD} y={PAD} width={plot / 2} height={plot / 2} fill="var(--color-chart-1)" opacity={0.06} />
@@ -56,7 +58,7 @@ export function PriorityMatrixChart({ priorities }: { priorities: CompanyPriorit
 
       {/* Ejes */}
       <text x={SIZE / 2} y={SIZE - 6} textAnchor="middle" className="fill-muted-foreground" fontSize={11}>
-        Fit con tu ICP →
+        {t("fitAxis")}
       </text>
       <text
         x={10}
@@ -66,7 +68,7 @@ export function PriorityMatrixChart({ priorities }: { priorities: CompanyPriorit
         fontSize={11}
         transform={`rotate(-90 10 ${SIZE / 2})`}
       >
-        Intención →
+        {t("intentAxis")}
       </text>
 
       {priorities.map((p) => (
@@ -82,7 +84,7 @@ export function PriorityMatrixChart({ priorities }: { priorities: CompanyPriorit
           onClick={() => router.push(`/dashboard/companies/${p.company.id}`)}
         >
           <title>
-            {p.company.name} — fit {p.fit}, intención {Math.round(p.intent)}
+            {t("tooltip", { name: p.company.name, fit: p.fit, intent: Math.round(p.intent) })}
           </title>
         </circle>
       ))}

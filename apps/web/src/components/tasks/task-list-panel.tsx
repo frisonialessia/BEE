@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Plus, Trash2 } from "lucide-react";
 
 import { useCreateTask, useDeleteTask, useOpportunityTasks, useUpdateTask } from "@/hooks/queries/use-tasks";
@@ -26,6 +26,7 @@ function TaskRow({
   onDelete: () => void;
 }) {
   const locale = useLocale() as Locale;
+  const t = useTranslations("sharedB.tasks");
   const overdue = isOverdue(task);
   return (
     <div className="group flex items-start gap-2 rounded-[var(--radius-md)] px-2 py-1.5 hover:bg-[var(--color-primary)]/20">
@@ -42,7 +43,7 @@ function TaskRow({
         </p>
         {task.due_at && (
           <p className={cn("text-[11px]", overdue ? "text-destructive" : "text-muted-foreground")}>
-            {formatDate(task.due_at, locale)} {overdue && "· vencida"}
+            {formatDate(task.due_at, locale)} {overdue && `· ${t("overdue")}`}
           </p>
         )}
       </div>
@@ -50,7 +51,7 @@ function TaskRow({
         type="button"
         onClick={onDelete}
         className="shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
-        aria-label="Eliminar tarea"
+        aria-label={t("deleteTask")}
       >
         <Trash2 className="size-3.5" />
       </button>
@@ -63,6 +64,7 @@ function TaskRow({
  *  siguiente paso vía `strategy.next_best_action`, pero eso se regenera
  *  solo — esto es lo que el rep se recuerda a sí mismo y marca como hecho. */
 export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
+  const t = useTranslations("sharedB.tasks");
   const { data: result, isLoading } = useOpportunityTasks(opportunityId);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask(opportunityId);
@@ -94,14 +96,14 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
 
   return (
     <section className="bee-surface bee-bento-pad">
-      <h3 className="bee-card-title">Tareas de seguimiento</h3>
+      <h3 className="bee-card-title">{t("sectionTitle")}</h3>
 
       {isLoading ? (
-        <p className="text-xs text-muted-foreground">Cargando…</p>
+        <p className="text-xs text-muted-foreground">{t("loading")}</p>
       ) : (
         <div className="space-y-0.5">
           {open.length === 0 && completed.length === 0 && (
-            <p className="py-2 text-xs text-muted-foreground">Sin tareas todavía.</p>
+            <p className="py-2 text-xs text-muted-foreground">{t("empty")}</p>
           )}
           {open.map((task) => (
             <TaskRow
@@ -115,7 +117,7 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
           {completed.length > 0 && (
             <details className="mt-1">
               <summary className="cursor-pointer bee-micro">
-                {completed.length} completada{completed.length === 1 ? "" : "s"}
+                {t("completedCount", { count: completed.length })}
               </summary>
               <div className="mt-1 space-y-0.5">
                 {completed.map((task) => (
@@ -138,7 +140,7 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
-          placeholder="Nueva tarea…"
+          placeholder={t("newTaskPlaceholder")}
           className="min-w-0 flex-1 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         />
         <input
@@ -152,7 +154,7 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
           onClick={submit}
           disabled={title.trim() === "" || createTask.isPending}
           className="shrink-0 rounded-[var(--radius-md)] bg-[var(--color-chart-4)] p-1.5 text-background disabled:opacity-50"
-          aria-label="Agregar tarea"
+          aria-label={t("addTask")}
         >
           <Plus className="size-3.5" />
         </button>

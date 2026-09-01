@@ -1,0 +1,105 @@
+{
+  "opportunities": {
+    "eyebrow": "Battlecards and analysis",
+    "title": "Opportunities",
+    "subtitle": "Battlecards enriched with pain point, closing argument, and timing window — the drag-and-drop pipeline lives in CRM",
+    "live": "Live",
+    "demoData": "Demo data",
+    "exportFilename": "bee-opportunities.csv",
+    "csv": {
+      "title": "Title",
+      "status": "Status",
+      "score": "Score",
+      "company": "Company",
+      "owner": "Owner"
+    },
+    "tabs": {
+      "battlecards": "Battlecards ({count})",
+      "flow": "Flow"
+    },
+    "battlecardsHint": "Click a card to open the opportunity drawer",
+    "emptyBattlecards": {
+      "title": "No battlecards ready for action yet.",
+      "subtitle": "Signals need to be enriched first."
+    },
+    "status": {
+      "detected": "Detected",
+      "ready_to_action": "Ready to action",
+      "prioritized": "Prioritized",
+      "in_progress": "In progress",
+      "won": "Won",
+      "lost": "Lost",
+      "dismissed": "Dismissed"
+    }
+  },
+  "pipelineFlow": {
+    "empty": "No opportunities yet to show the flow.",
+    "eyebrow": "Pipeline flow",
+    "title": "{count} opportunities total",
+    "ariaLabel": "Opportunity flow by stage",
+    "columns": {
+      "detected": "Detected",
+      "enriching": "Enriching",
+      "ready_to_action": "Ready to action",
+      "in_progress": "In progress",
+      "closed": "Closed"
+    },
+    "closedBreakdown": {
+      "label": "Within Closed:",
+      "won": "{count} won",
+      "lost": "{count} lost",
+      "dismissed": "{count} dismissed"
+    }
+  },
+  "priority": {
+    "eyebrow": "Intelligence",
+    "title": "Prioritization",
+    "subtitle": "Which accounts fit your ideal customer and are showing real interest right now",
+    "live": "Live",
+    "demoData": "Demo data",
+    "editIcp": "Edit ICP",
+    "configureIcp": "Configure ICP",
+    "emptyIcp": {
+      "title": "You haven't configured your Ideal Customer Profile yet",
+      "subtitle": "Without it we can't calculate how good a fit each account is — we'd only have the intent score, which you already see in Leads and Opportunities. Define it to see the full matrix.",
+      "cta": "Configure now"
+    },
+    "emptyCompanies": "No companies to prioritize yet.",
+    "matrixSection": {
+      "title": "Priority matrix",
+      "subtitle": "Fit with your ICP × how hot the signal is",
+      "description": "Each dot is a company. Top right: fits your ICP and is hot right now — that's where your time should go first. Click a dot to open that company."
+    },
+    "quadrants": {
+      "priority": {
+        "label": "Top priority",
+        "hint": "Fits your ideal customer and is showing real intent now — focus here first."
+      },
+      "nurture": {
+        "label": "Nurture",
+        "hint": "Fits your ideal customer but isn't hot yet — worth tracking over time."
+      },
+      "opportunistic": {
+        "label": "Opportunistic",
+        "hint": "Hot but not your ideal customer — can close fast, but don't repeat the pattern."
+      },
+      "deprioritize": {
+        "label": "Low interest",
+        "hint": "Neither fits nor is hot — not where your time should go right now."
+      }
+    },
+    "emptyQuadrant": "No accounts in this zone yet",
+    "fitIntent": "Fit {fit} · Intent {intent}"
+  },
+  "icpForm": {
+    "title": "Ideal Customer Profile (ICP)",
+    "subtitle": "Separate each value with commas. Leave a list empty if that dimension doesn't matter to you — it won't penalize anyone.",
+    "industries": { "label": "Industries", "placeholder": "SaaS, Fintech, Logistics…" },
+    "sizes": { "label": "Company sizes", "placeholder": "11-50, 51-200…" },
+    "countries": { "label": "Countries", "placeholder": "Mexico, Colombia…" },
+    "alreadyUsing": "Already in use: {values}",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel"
+  }
+}

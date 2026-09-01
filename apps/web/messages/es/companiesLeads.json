@@ -1,0 +1,214 @@
+{
+  "backToCompanies": "Volver a Empresas",
+  "companiesList": {
+    "eyebrow": "Cuentas",
+    "title": "Empresas",
+    "subtitle": "Cada empresa con sus contactos, oportunidades y señales en un solo lugar",
+    "live": "En vivo",
+    "demoData": "Datos demo",
+    "newCompanyButton": "+ Nueva empresa",
+    "newCompanyForm": {
+      "heading": "Nueva empresa",
+      "namePlaceholder": "Nombre *",
+      "domainPlaceholder": "dominio.com",
+      "industryPlaceholder": "Industria",
+      "countryPlaceholder": "País",
+      "saving": "Guardando…",
+      "save": "Guardar",
+      "cancel": "Cancelar"
+    },
+    "empty": {
+      "title": "Todavía no hay empresas registradas.",
+      "subtitle": "Aparecen automáticamente al llegar señales o leads."
+    },
+    "card": {
+      "contacts": "contactos",
+      "opportunities": "oportunidades"
+    },
+    "export": {
+      "columns": {
+        "name": "Nombre",
+        "domain": "Dominio",
+        "industry": "Industria",
+        "size": "Tamaño",
+        "country": "País",
+        "website": "Sitio web",
+        "contacts": "Contactos",
+        "opportunities": "Oportunidades"
+      }
+    }
+  },
+  "companyDetail": {
+    "notFound": "No se encontró esta empresa.",
+    "employeesSuffix": "empleados",
+    "website": "Sitio web",
+    "kpi": {
+      "contacts": "Contactos",
+      "opportunities": "Oportunidades",
+      "signals": "Señales"
+    },
+    "contacts": {
+      "heading": "Contactos ({count})",
+      "addContact": "+ Agregar contacto",
+      "empty": "Sin contactos registrados todavía.",
+      "noTitle": "Sin cargo registrado",
+      "staleWarning": "Sin validar en más de 90 días",
+      "incompleteAria": "Datos incompletos o desactualizados",
+      "newContactForm": {
+        "namePlaceholder": "Nombre completo *",
+        "titlePlaceholder": "Cargo",
+        "emailPlaceholder": "Correo",
+        "saving": "Guardando…",
+        "save": "Guardar",
+        "cancel": "Cancelar"
+      },
+      "csvImport": {
+        "importing": "Importando…",
+        "importCsv": "Importar CSV",
+        "resultImported": "{count} contactos importados",
+        "resultSkipped": "{count} sin nombre (omitidos)",
+        "resultErrors": "{count} con error"
+      }
+    },
+    "relationshipMap": {
+      "heading": "Mapa de relaciones",
+      "description": "Contactos agrupados por nivel real, coloreados por si ya hay una oportunidad ligada — para ver si el comité de compra está cubierto o todo el peso está en una sola persona"
+    },
+    "opportunities": {
+      "heading": "Oportunidades ({count})",
+      "addOpportunity": "+ Nueva oportunidad",
+      "empty": "Sin oportunidades para esta empresa todavía."
+    },
+    "signals": {
+      "heading": "Señales ({count})",
+      "empty": "Sin señales para esta empresa todavía.",
+      "score": "Score {score}"
+    }
+  },
+  "leadsDirectory": {
+    "eyebrow": "CRM",
+    "title": "Leads",
+    "subtitle": "Todo el histórico de prospectos detectados, con puntaje de intención para saber a quién enfocar",
+    "live": "En vivo",
+    "demoData": "Datos demo",
+    "importButton": "Importar prospectos",
+    "export": {
+      "columns": {
+        "name": "Nombre",
+        "company": "Empresa",
+        "title": "Cargo",
+        "email": "Email",
+        "phone": "Teléfono",
+        "linkedin": "LinkedIn",
+        "status": "Estado",
+        "intentScore": "Puntaje de intención",
+        "dataFreshness": "Frescura de datos (%)",
+        "createdAt": "Creado"
+      }
+    },
+    "empty": {
+      "title": "Todavía no hay leads registrados.",
+      "subtitle": "Aparecen automáticamente al llegar señales, o agrégalos desde una empresa."
+    },
+    "metrics": {
+      "total": "Total de leads",
+      "avgScore": "Puntaje de intención promedio",
+      "hot": "Leads calientes (≥75)",
+      "staleIncomplete": "Con datos incompletos/vencidos"
+    },
+    "filters": {
+      "searchPlaceholder": "Buscar por nombre, email o empresa…",
+      "allStatuses": "Todos los estados",
+      "sortScoreDesc": "Mayor intent score",
+      "sortScoreAsc": "Menor intent score",
+      "sortRecent": "Más recientes",
+      "sortName": "Nombre (A-Z)",
+      "staleOnlyLabel": "Solo con datos incompletos/vencidos"
+    },
+    "bulk": {
+      "selected": "{count, plural, one {# seleccionado} other {# seleccionados}}",
+      "changeStatusTo": "Cambiar estado a…",
+      "apply": "Aplicar",
+      "reassignTo": "Reasignar a…",
+      "sendToSequence": "Enviar a secuencia…",
+      "sending": "Enviando…",
+      "cancelSelection": "Cancelar selección"
+    },
+    "table": {
+      "selectAllVisible": "Seleccionar todos los visibles",
+      "selectRow": "Seleccionar {name}",
+      "headers": {
+        "name": "Nombre",
+        "company": "Empresa",
+        "title": "Cargo",
+        "status": "Estado",
+        "intentScore": "Puntaje de intención",
+        "data": "Datos"
+      },
+      "noMatch": "Ningún lead coincide con estos filtros.",
+      "staleWarning": "Sin validar en más de 90 días",
+      "issues": "{count, plural, one {# problema} other {# problemas}}",
+      "outdated": "Desactualizado",
+      "validatedAgo": "Validado {timeAgo}",
+      "notValidated": "Sin validar",
+      "validateTitle": "Re-validar datos",
+      "validate": "Validar"
+    },
+    "tip": {
+      "prefix": "Consejo: los leads todavía no tienen ficha propia — abre la empresa desde",
+      "linkText": "Empresas",
+      "suffix": "para ver el contacto completo."
+    },
+    "toasts": {
+      "enrolledSuccess": "{count, plural, one {# lead enviado} other {# leads enviados}} a la secuencia.",
+      "enrolledPartial": "{created, plural, one {# inscrito} other {# inscritos}}, {failed, plural, one {# falló} other {# fallaron}}.",
+      "enrollError": "No se pudo enviar a la secuencia."
+    }
+  },
+  "leadImportPanel": {
+    "closeAria": "Cerrar importación de prospectos",
+    "panelAria": "Importar prospectos",
+    "eyebrow": "Carga inteligente",
+    "heading": "Importar prospectos",
+    "closeButtonAria": "Cerrar",
+    "step1": {
+      "title": "1. Descarga la plantilla",
+      "description": "Nombre, correo, cargo, seniority, LinkedIn, teléfono, empresa, dominio, industria y país — solo el nombre o el correo son obligatorios por fila.",
+      "downloadButton": "Descargar plantilla .csv"
+    },
+    "step2": {
+      "title": "2. Sube tu archivo (.csv o .xlsx)",
+      "description": "Arrastra el archivo aquí o elígelo manualmente.",
+      "dropReady": "Suelta para cargar",
+      "chooseFile": "Elegir archivo",
+      "rowsRead": "{count, plural, one {# fila leída} other {# filas leídas}}",
+      "rowsSkipped": "{count, plural, one {# sin nombre ni correo (no se importará)} other {# sin nombre ni correo (no se importarán)}}",
+      "unsupportedFormat": "Formato no admitido — sube un archivo .csv o .xlsx.",
+      "readError": "No se pudo leer el archivo — confirma que sea un .csv o .xlsx válido."
+    },
+    "step3": {
+      "title": "3. Vista previa",
+      "headers": {
+        "name": "Nombre",
+        "email": "Correo",
+        "company": "Empresa"
+      },
+      "moreRows": "{count, plural, one {+# fila más} other {+# filas más}}"
+    },
+    "result": {
+      "title": "Resultado",
+      "newLeads": "{count, plural, one {# lead nuevo} other {# leads nuevos}}",
+      "matchedLeads": "{count, plural, one {# ya existía (fusionado por correo)} other {# ya existían (fusionados por correo)}}",
+      "newCompanies": "{count, plural, one {# empresa nueva} other {# empresas nuevas}}",
+      "reusedCompanies": "{count, plural, one {# empresa reutilizada} other {# empresas reutilizadas}}",
+      "skippedRows": "{count, plural, one {# fila omitida sin nombre ni correo} other {# filas omitidas sin nombre ni correo}}",
+      "rowError": "Fila {row}: {message}"
+    },
+    "importError": "No se pudo importar — intenta de nuevo.",
+    "actions": {
+      "importing": "Importando…",
+      "importLeads": "{count, plural, one {Importar # lead} other {Importar # leads}}",
+      "startOver": "Empezar de nuevo"
+    }
+  }
+}

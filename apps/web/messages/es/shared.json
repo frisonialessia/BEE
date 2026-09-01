@@ -1,0 +1,158 @@
+{
+  "battlecard": {
+    "badges": {
+      "readyToAction": "Lista para acción",
+      "hotLead": "Lead caliente",
+      "reviewRequired": "Requiere revisión"
+    },
+    "manualReviewNotice": "La confianza de la estrategia está por debajo del umbral. Requiere revisión del CEO antes de ejecutarse.",
+    "sections": {
+      "company": "Empresa",
+      "lead": "Lead",
+      "painPoint": "Punto de dolor",
+      "closingArgument": "Argumento de cierre",
+      "timingWindow": "Ventana de timing"
+    },
+    "signalDetected": "Señal detectada {time} · vía",
+    "confidencePct": "{pct}% de confianza",
+    "via": "vía {value}",
+    "expires": "Vence: {date}"
+  },
+  "revenueSimulator": {
+    "heading": "Simulador de ingresos",
+    "caption": "Proyecta el impacto de aumentar la prospección en un segmento",
+    "confidence": {
+      "none": "Sin datos aún",
+      "low": "Confianza baja",
+      "medium": "Confianza media",
+      "high": "Confianza alta"
+    },
+    "signalTypes": {
+      "funding_round": "Ronda de financiación",
+      "hiring": "Aumento de contrataciones",
+      "leadership_change": "Cambio de liderazgo",
+      "tech_adoption": "Adopción tecnológica",
+      "product_launch": "Lanzamiento de producto",
+      "expansion": "Expansión"
+    },
+    "form": {
+      "signal": "Señal",
+      "industry": "Industria",
+      "industryPlaceholder": "p. ej. SaaS",
+      "multiplier": "Multiplicador ({factor}×)"
+    },
+    "errors": {
+      "offline": "No se pudo conectar con la API de BEE. Asegúrate de que el backend esté en ejecución.",
+      "failed": "La simulación falló. Inténtalo de nuevo."
+    },
+    "running": "Simulando…",
+    "runButton": "Simular prospección {factor}×",
+    "realisticProjection": "Proyección realista",
+    "deals": "operaciones",
+    "vsBaseline": "vs línea base",
+    "topPlaybook": "Táctica principal:",
+    "via": "vía",
+    "stats": {
+      "winRate": "Tasa de éxito",
+      "pipeline": "Pipeline",
+      "dataPoints": "Puntos de datos"
+    },
+    "methodology": {
+      "show": "Mostrar metodología",
+      "hide": "Ocultar metodología"
+    }
+  },
+  "signalHexMap": {
+    "sectionAriaLabel": "Mapa hexagonal de señales — mapa de calor de la colmena",
+    "canvasAriaLabel": "Mapa de calor hexagonal de {count} leads por temperatura de cierre",
+    "heading": "Colmena de intención",
+    "caption": "Dark Funnel · {count} leads · haz clic en una celda para ver detalles",
+    "viewMore": "Ver más",
+    "legend": {
+      "cold": "Frío",
+      "hot": "Caliente"
+    },
+    "empty": "Todavía no hay leads del Dark Funnel — las señales de intención van a poblar la colmena.",
+    "tooltip": {
+      "closingTemperature": "Temperatura de cierre · {temp}°",
+      "hot": "CALIENTE",
+      "more": "+{count} más en esta celda"
+    },
+    "stages": {
+      "awareness": "Conocimiento",
+      "consideration": "Consideración",
+      "decision": "Decisión",
+      "ready_to_buy": "Listo para comprar"
+    }
+  },
+  "discRadar": {
+    "ariaLabel": "Perfil DISC del lead",
+    "axes": {
+      "d": "Dominancia",
+      "i": "Influencia",
+      "s": "Estabilidad",
+      "c": "Análisis"
+    }
+  },
+  "executionArtifacts": {
+    "heading": "Artefactos de ejecución",
+    "generatedBy": "Generado por {generator}",
+    "emailDraft": {
+      "title": "Borrador de email",
+      "badge": "Envío con un clic",
+      "subject": "Asunto",
+      "body": "Cuerpo",
+      "bestSendTime": "Mejor momento para enviar: {time}"
+    },
+    "meeting": {
+      "title": "Agenda de reunión",
+      "objective": "Objetivo",
+      "agenda": "Agenda",
+      "prep": "Preparación previa",
+      "successCriteria": "Criterio de éxito:"
+    },
+    "nextSteps": {
+      "title": "Plan de acción",
+      "keyRisk": "Riesgo clave:",
+      "successMilestone": "Hito de éxito:"
+    },
+    "owner": {
+      "rep": "Tú",
+      "lead": "Lead",
+      "both": "Ambos"
+    },
+    "priority": {
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja"
+    },
+    "copyButton": {
+      "copy": "Copiar",
+      "copied": "Copiado"
+    }
+  },
+  "cyclePrediction": {
+    "heading": "Predicción de ciclo de venta",
+    "demoData": "Datos demo",
+    "confidence": {
+      "low": "Confianza baja",
+      "medium": "Confianza media",
+      "high": "Confianza alta"
+    },
+    "days": "{count} días",
+    "estimatedCycle": "de ciclo estimado",
+    "estimatedClose": "Cierre estimado",
+    "daysOverdue": "Días de retraso",
+    "daysRemaining": "Días restantes",
+    "overdueWarning": "Va más lento de lo esperado para deals así",
+    "basedOn": "Basado en {count} {count, plural, one {deal cerrado} other {deals cerrados}}",
+    "recalibration": {
+      "title": "Recalibración por señales de mercado",
+      "summary": "Deals con una señal nueva de mercado durante el ciclo cerraron en {direction} tiempo: {withDays} días de mediana (n={withCount}) vs. {withoutDays} días sin ella (n={withoutCount}).",
+      "faster": "menos",
+      "slower": "más",
+      "newSignal": "Esta cuenta ya tuvo una señal nueva",
+      "newSignalWithTypes": "Esta cuenta ya tuvo una señal nueva: {types}"
+    }
+  }
+}

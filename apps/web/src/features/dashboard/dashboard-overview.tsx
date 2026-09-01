@@ -1,6 +1,7 @@
 "use client";
 
 import { Activity, Bot, Flame, ShieldCheck, TrendingUp } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { BattlecardView } from "@/components/battlecard";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
@@ -34,6 +35,7 @@ import { bucketAverageByDay, bucketByDay } from "@/lib/trend";
  * kitchen-sink dashboard.
  */
 export function DashboardOverview() {
+  const t = useTranslations("dashboardOverview.overview");
   const { data: signalsResult, isLoading: signalsLoading } = useSignals();
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
   const { data: allOppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 200);
@@ -103,35 +105,39 @@ export function DashboardOverview() {
       <header className="bee-topbar -mx-5 -mt-4 mb-4 px-5 pt-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="bee-eyebrow">Inteligencia de señales</p>
-            <h1 className="bee-display mt-1">Resumen</h1>
-            <p className="bee-caption mt-1">
-              Señales de mercado en tiempo real → battlecards CEO → cierre de deals
-            </p>
+            <p className="bee-eyebrow">{t("eyebrow")}</p>
+            <h1 className="bee-display mt-1">{t("title")}</h1>
+            <p className="bee-caption mt-1">{t("subtitle")}</p>
           </div>
           <Badge variant={live ? "success" : "warning"}>
-            {live ? "En vivo · API conectada" : "Demo · API desconectada"}
+            {live ? t("statusLive") : t("statusDemo")}
           </Badge>
         </div>
 
         <div className="bee-kpi-strip">
-          <MetricCard label="Señales" value={signals.length} icon={Activity} trend={signalsTrend} />
-          <MetricCard label="Alta intención" value={hotSignals} hint="score ≥ 75" icon={TrendingUp} trend={hotSignalsTrend} />
+          <MetricCard label={t("kpis.signals")} value={signals.length} icon={Activity} trend={signalsTrend} />
           <MetricCard
-            label="Listas para acción"
+            label={t("kpis.hotSignals")}
+            value={hotSignals}
+            hint={t("kpis.hotSignalsHint")}
+            icon={TrendingUp}
+            trend={hotSignalsTrend}
+          />
+          <MetricCard
+            label={t("kpis.ready")}
             value={readyCount}
-            hint="battlecard completo"
+            hint={t("kpis.readyHint")}
             icon={ShieldCheck}
             trend={readyTrend}
           />
           <MetricCard
-            label="Leads calientes"
+            label={t("kpis.hotLeads")}
             value={hotLeads}
-            hint="intención de compra"
+            hint={t("kpis.hotLeadsHint")}
             icon={Flame}
             trend={hotLeadsTrend}
           />
-          <MetricCard label="Score medio" value={avgScore} icon={Activity} trend={avgScoreTrend} />
+          <MetricCard label={t("kpis.avgScore")} value={avgScore} icon={Activity} trend={avgScoreTrend} />
         </div>
       </header>
 
@@ -147,8 +153,8 @@ export function DashboardOverview() {
 
       <section className="mb-4 space-y-3">
         <div>
-          <h3 className="bee-card-title">Embudo de cierre</h3>
-          <p className="bee-caption">Cuántas oportunidades hay hoy en cada etapa, camino a ganar</p>
+          <h3 className="bee-card-title">{t("sections.funnel.title")}</h3>
+          <p className="bee-caption">{t("sections.funnel.caption")}</p>
         </div>
         <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
       </section>
@@ -156,8 +162,8 @@ export function DashboardOverview() {
       <div className="mb-4 grid items-start gap-3 lg:grid-cols-2">
         <section className="bee-surface bee-bento-pad space-y-3">
           <div>
-            <h3 className="bee-card-title">Dónde eres más fuerte</h3>
-            <p className="bee-caption">Tasa de cierre cruzando industria de la cuenta y tipo de señal</p>
+            <h3 className="bee-card-title">{t("sections.industryHeatmap.title")}</h3>
+            <p className="bee-caption">{t("sections.industryHeatmap.caption")}</p>
           </div>
           <IndustrySignalHeatmap
             opportunities={allOppsResult?.data ?? []}
@@ -168,8 +174,8 @@ export function DashboardOverview() {
 
         <section className="bee-surface bee-bento-pad space-y-3">
           <div>
-            <h3 className="bee-card-title">Cuándo llega el mercado</h3>
-            <p className="bee-caption">Actividad de señales detectadas, por día y horario</p>
+            <h3 className="bee-card-title">{t("sections.activityHeatmap.title")}</h3>
+            <p className="bee-caption">{t("sections.activityHeatmap.caption")}</p>
           </div>
           <SignalActivityHeatmap signals={signals} />
         </section>
@@ -180,12 +186,12 @@ export function DashboardOverview() {
           <section className="bee-span-8 space-y-3">
             <div className="flex items-end justify-between gap-3">
               <div>
-                <h3 className="bee-card-title">Briefs enriquecidos</h3>
-                <p className="bee-caption">Pain point · argumento de cierre · ventana de timing</p>
+                <h3 className="bee-card-title">{t("sections.battlecards.title")}</h3>
+                <p className="bee-caption">{t("sections.battlecards.caption")}</p>
               </div>
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Bot className="size-3.5" />
-                Estrategia · rule_based
+                {t("sections.battlecards.strategyBadge")}
               </span>
             </div>
 
@@ -211,15 +217,15 @@ export function DashboardOverview() {
               totalItems={battlecardPagination.totalItems}
               onPageChange={battlecardPagination.goToPage}
               onPageSizeChange={battlecardPagination.changePageSize}
-              itemLabel="battlecards"
+              itemLabel={t("itemLabels.battlecards")}
             />
           </section>
         )}
 
         <section className={`${battlecards.length > 0 ? "bee-span-4" : "bee-span-12"} space-y-3`}>
           <div>
-            <h3 className="bee-card-title">Proyección de ingresos</h3>
-            <p className="bee-caption">Qué pasaría si invertimos más en prospección</p>
+            <h3 className="bee-card-title">{t("sections.revenueSimulator.title")}</h3>
+            <p className="bee-caption">{t("sections.revenueSimulator.caption")}</p>
           </div>
           <RevenueSimulatorWidget />
 
@@ -228,14 +234,12 @@ export function DashboardOverview() {
 
         <section className="bee-span-12 space-y-3">
           <div className="flex items-end justify-between gap-3">
-            <h3 className="bee-card-title">Todas las señales</h3>
-            <span className="bee-caption">{signals.length} total</span>
+            <h3 className="bee-card-title">{t("sections.allSignals.title")}</h3>
+            <span className="bee-caption">{t("sections.allSignals.total", { count: signals.length })}</span>
           </div>
 
           {signals.length === 0 ? (
-            <p className="bee-caption py-6 text-center">
-              Aún no hay señales. Aparecen automáticamente al conectar tus fuentes de mercado.
-            </p>
+            <p className="bee-caption py-6 text-center">{t("sections.allSignals.empty")}</p>
           ) : (
             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {signalPagination.pageItems.map((signal, i) => (
@@ -251,7 +255,7 @@ export function DashboardOverview() {
             totalItems={signalPagination.totalItems}
             onPageChange={signalPagination.goToPage}
             onPageSizeChange={signalPagination.changePageSize}
-            itemLabel="señales"
+            itemLabel={t("itemLabels.signals")}
           />
         </section>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { Tooltip as TooltipPrimitive } from "radix-ui";
+import { useTranslations } from "next-intl";
 
 import { TooltipContent } from "@/components/ui/tooltip";
 import { createTemperatureColorScale } from "@/lib/visualization/honeycomb-hexbin";
@@ -48,14 +49,11 @@ export function IndustrySignalHeatmap({
   signals: Signal[];
   companies: Company[];
 }) {
+  const t = useTranslations("dashboardOverview.industryHeatmap");
   const cells = computeIndustrySignalGrid(opportunities, signals, companies);
 
   if (cells.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Todavía no hay suficientes deals cerrados con industria y tipo de señal identificados para este mapa.
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground">{t("empty")}</p>;
   }
 
   const totalByIndustry = new Map<string, number>();
@@ -99,7 +97,7 @@ export function IndustrySignalHeatmap({
             display: "block",
           }}
           role="img"
-          aria-label="Tasa de cierre por industria y tipo de señal"
+          aria-label={t("ariaLabel")}
         >
           {signalTypes.map((t, ci) => {
             const x = LABEL_W + PAD + ci * HEX_W + HEX_W / 2;
@@ -162,7 +160,7 @@ export function IndustrySignalHeatmap({
         </svg>
 
         <div className="flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
-          <span>Tasa de cierre:</span>
+          <span>{t("legendLabel")}</span>
           <span className="h-2.5 w-24 rounded-full" style={{ background: `linear-gradient(to right, ${color(0)}, ${color(50)}, ${color(100)})` }} />
           <span>0%</span>
           <span className="ml-auto">100%</span>
@@ -173,6 +171,8 @@ export function IndustrySignalHeatmap({
 }
 
 function HexCell({ x, y, cell, fill }: { x: number; y: number; cell: IndustrySignalCell; fill: string }) {
+  const t = useTranslations("dashboardOverview.industryHeatmap");
+
   return (
     <TooltipPrimitive.Root>
       <TooltipPrimitive.Trigger asChild>
@@ -188,7 +188,7 @@ function HexCell({ x, y, cell, fill }: { x: number; y: number; cell: IndustrySig
           {cell.industry} · {signalTypeLabels[cell.signalType]}
         </p>
         <p className="text-muted-foreground">
-          {cell.wonCount} de {cell.closedCount} deals cerrados ganados ({Math.round(cell.winRate * 100)}%)
+          {t("tooltipDeals", { won: cell.wonCount, closed: cell.closedCount, pct: Math.round(cell.winRate * 100) })}
         </p>
       </TooltipContent>
     </TooltipPrimitive.Root>

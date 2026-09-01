@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { MeddicBucketStat } from "@/lib/win-loss";
 
@@ -6,13 +10,10 @@ import type { MeddicBucketStat } from "@/lib/win-loss";
  *  mismo patrón visual que TrendsChart (barra + tasa arriba), con un
  *  tooltip real (Radix) en vez del title nativo del navegador. */
 export function MeddicCorrelationChart({ stats }: { stats: MeddicBucketStat[] }) {
+  const t = useTranslations("forecastWinLoss.meddicChart");
   const anyData = stats.some((s) => s.won + s.lost > 0);
   if (!anyData) {
-    return (
-      <p className="py-6 text-center text-xs text-muted-foreground">
-        Todavía no hay suficientes deals cerrados con calificación MEDDIC.
-      </p>
-    );
+    return <p className="py-6 text-center text-xs text-muted-foreground">{t("empty")}</p>;
   }
 
   const maxTotal = Math.max(1, ...stats.map((s) => s.won + s.lost));
@@ -37,7 +38,7 @@ export function MeddicCorrelationChart({ stats }: { stats: MeddicBucketStat[] })
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                {s.bucketLabel}: {s.won} ganadas, {s.lost} perdidas
+                {t("tooltip", { label: s.bucketLabel, won: s.won, lost: s.lost })}
               </TooltipContent>
             </Tooltip>
             <p className="bee-micro font-medium">{s.bucketLabel}</p>

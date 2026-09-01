@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertTriangle, DollarSign, TrendingUp, Trophy } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { ForecastBarChart } from "@/components/forecast/forecast-bar-chart";
 import { ScenarioSimulatorPanel } from "@/components/forecast/scenario-simulator-panel";
@@ -15,20 +15,15 @@ import { useCompanies } from "@/hooks/queries/use-companies";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import type { Locale } from "@/i18n/locales";
 import { formatCurrencyUSD } from "@/lib/i18n/format";
-import { computeForecast, qualificationScore, type AtRiskOpportunity } from "@/lib/forecast";
+import { computeForecast, qualificationScore } from "@/lib/forecast";
 import { computeMonthlyTrends } from "@/lib/trends";
-
-const RISK_LABEL: Record<AtRiskOpportunity["reason"], string> = {
-  sin_fecha_de_cierre: "Sin fecha de cierre",
-  fecha_vencida: "Fecha de cierre vencida",
-  poco_calificada: "Poco calificada para su etapa",
-};
 
 /** Pronóstico de ingresos — pipeline ponderado por probabilidad de cierre,
  *  deals en riesgo, y el simulador de escenarios "qué pasaría si" — el
  *  mismo motor financiero que le pregunta un director, todo en un lugar. */
 export function ForecastView() {
   const locale = useLocale() as Locale;
+  const t = useTranslations("forecastWinLoss");
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 200);
   const { data: companiesResult } = useCompanies(200);
   const { openOpportunity } = useOpportunityDrawer();
@@ -46,25 +41,23 @@ export function ForecastView() {
   return (
     <div>
       <header className="mb-6">
-        <p className="bee-eyebrow">Inteligencia de ingresos</p>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="bee-display">Pronóstico</h1>
-            <p className="bee-caption mt-1">
-              Pipeline ponderado por probabilidad de cierre, mes a mes, y qué deals están en riesgo
-            </p>
+            <h1 className="bee-display">{t("forecast.title")}</h1>
+            <p className="bee-caption mt-1">{t("forecast.subtitle")}</p>
           </div>
-          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          <Badge variant={live ? "success" : "warning"}>{live ? t("liveBadge") : t("demoBadge")}</Badge>
         </div>
       </header>
 
       <Tabs defaultValue="pronostico">
         <TabsList className="border border-border bg-background">
           <TabsTrigger value="pronostico" className="rounded-sm">
-            Pronóstico
+            {t("forecast.tabs.forecast")}
           </TabsTrigger>
           <TabsTrigger value="simulador" className="rounded-sm">
-            Simulador de escenarios
+            {t("forecast.tabs.simulator")}
           </TabsTrigger>
         </TabsList>
 
@@ -80,80 +73,74 @@ export function ForecastView() {
             </div>
           ) : !withAmount ? (
             <div className="bee-bento bee-bento-pad py-12 text-center">
-              <p className="text-sm text-muted-foreground">
-                Todavía no hay monto estimado en ninguna oportunidad.
-              </p>
-              <p className="bee-caption mt-1">
-                Agrega el monto y la fecha esperada de cierre desde el panel de calificación de cada
-                oportunidad para ver el pronóstico.
-              </p>
+              <p className="text-sm text-muted-foreground">{t("forecast.emptyState.title")}</p>
+              <p className="bee-caption mt-1">{t("forecast.emptyState.subtitle")}</p>
             </div>
           ) : (
             <div className="space-y-6">
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
-                  label="Pipeline abierto"
+                  label={t("forecast.kpis.pipeline.label")}
                   value={formatCurrencyUSD(forecast.pipelineValue, locale)}
-                  hint={`${forecast.openCount} oportunidades sin cerrar`}
+                  hint={t("forecast.kpis.pipeline.hint", { count: forecast.openCount })}
                   icon={DollarSign}
                 />
                 <MetricCard
-                  label="Pronóstico ponderado"
+                  label={t("forecast.kpis.weighted.label")}
                   value={formatCurrencyUSD(forecast.weightedForecast, locale)}
                   hint={
                     forecast.scoreBucketStats.length > 0
-                      ? "Monto × probabilidad real de cierre (histórico) o por etapa"
-                      : "Monto × probabilidad de cierre por etapa"
+                      ? t("forecast.kpis.weighted.hintHistorical")
+                      : t("forecast.kpis.weighted.hintDefault")
                   }
                   icon={TrendingUp}
                 />
                 <MetricCard
-                  label="Ganado"
+                  label={t("forecast.kpis.won.label")}
                   value={formatCurrencyUSD(forecast.wonValue, locale)}
-                  hint="Oportunidades cerradas como ganadas"
+                  hint={t("forecast.kpis.won.hint")}
                   icon={Trophy}
                 />
                 <MetricCard
-                  label="En riesgo"
+                  label={t("forecast.kpis.atRisk.label")}
                   value={forecast.atRisk.length}
-                  hint="Sin fecha, vencidas o poco calificadas"
+                  hint={t("forecast.kpis.atRisk.hint")}
                   icon={AlertTriangle}
                   tone={forecast.atRisk.length > 0 ? "warm" : "default"}
                 />
               </div>
 
               <section className="bee-surface bee-bento-pad">
-                <h3 className="bee-card-title">Pronóstico por mes</h3>
-                <p className="bee-caption mb-4">Pipeline ponderado y total, mes a mes</p>
+                <h3 className="bee-card-title">{t("forecast.byMonth.title")}</h3>
+                <p className="bee-caption mb-4">{t("forecast.byMonth.caption")}</p>
                 <ForecastBarChart buckets={forecast.byMonth} />
               </section>
 
               {hasClosedHistory && (
                 <section className="bee-surface bee-bento-pad">
-                  <h3 className="bee-card-title">Tendencia de cierre</h3>
-                  <p className="bee-caption mb-4">
-                    Oportunidades creadas por mes (barra) y tasa de cierre de lo que se resolvió ese mes
-                    (número arriba)
-                  </p>
+                  <h3 className="bee-card-title">{t("forecast.trend.title")}</h3>
+                  <p className="bee-caption mb-4">{t("forecast.trend.caption")}</p>
                   <TrendsChart points={trends} />
                 </section>
               )}
 
               {forecast.scoreBucketStats.length > 0 && (
                 <section className="bee-surface bee-bento-pad">
-                  <h3 className="bee-card-title">Precisión del pronóstico</h3>
-                  <p className="bee-caption mb-4">
-                    Ya hay suficiente histórico para calcular la probabilidad de cierre real por rango de
-                    score, en vez de la fija por etapa — esto es lo que se está usando ahora mismo:
-                  </p>
+                  <h3 className="bee-card-title">{t("forecast.accuracy.title")}</h3>
+                  <p className="bee-caption mb-4">{t("forecast.accuracy.caption")}</p>
                   <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
                     {forecast.scoreBucketStats.map((s) => (
                       <div key={s.bucketStart} className="bee-bento p-3 text-center">
                         <p className="bee-kpi-tile__label">
-                          Score {s.bucketStart}-{s.bucketStart + 19}
+                          {t("forecast.accuracy.scoreLabel", {
+                            start: s.bucketStart,
+                            end: s.bucketStart + 19,
+                          })}
                         </p>
                         <p className="bee-kpi-sm mt-1">{Math.round(s.winRate * 100)}%</p>
-                        <p className="bee-micro">{s.sampleSize} deals cerrados</p>
+                        <p className="bee-micro">
+                          {t("forecast.accuracy.sampleSize", { count: s.sampleSize })}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -161,12 +148,10 @@ export function ForecastView() {
               )}
 
               <section className="bee-surface bee-bento-pad">
-                <h3 className="bee-card-title">Deals en riesgo</h3>
-                <p className="bee-caption mb-3">Sin fecha de cierre, vencidas o con poca información</p>
+                <h3 className="bee-card-title">{t("forecast.atRiskSection.title")}</h3>
+                <p className="bee-caption mb-3">{t("forecast.atRiskSection.caption")}</p>
                 {forecast.atRisk.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Ninguna oportunidad abierta está en riesgo por ahora.
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t("forecast.atRiskSection.empty")}</p>
                 ) : (
                   <ul className="space-y-1.5">
                     {forecast.atRisk.map(({ opportunity, reason }) => {
@@ -185,13 +170,14 @@ export function ForecastView() {
                                 {opportunity.title.replace(/^Opportunity:\s*/, "")}
                               </p>
                               <p className="truncate bee-micro">
-                                {company?.name ?? "Sin empresa"} ·{" "}
-                                {Math.round(qualificationScore(opportunity.qualification) * 100)}%
-                                calificada
+                                {company?.name ?? t("forecast.atRiskSection.noCompany")} ·{" "}
+                                {t("forecast.atRiskSection.qualifiedPercent", {
+                                  percent: Math.round(qualificationScore(opportunity.qualification) * 100),
+                                })}
                               </p>
                             </div>
                             <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-1)]/20 px-2 py-0.5 text-[11px] font-medium text-[var(--color-chart-1)]">
-                              {RISK_LABEL[reason]}
+                              {t(`forecast.atRiskSection.riskLabels.${reason}`)}
                             </span>
                           </button>
                         </li>

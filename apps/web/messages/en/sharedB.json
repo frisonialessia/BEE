@@ -1,0 +1,120 @@
+{
+  "outcome": {
+    "statusLabel": {
+      "won": "Won",
+      "lost": "Lost",
+      "dismissed": "Dismissed"
+    },
+    "reasonPrefix": "Reason:",
+    "competitorPrefix": "Competitor:",
+    "competitorBeatenPrefix": "Competitor beaten:",
+    "sectionTitle": "Record outcome",
+    "markWon": "Mark won",
+    "markLost": "Mark lost",
+    "reasonRequiredLabel": "Reason (required)",
+    "reasonPlaceholder": "Select a reason…",
+    "competitorWonLabel": "Competitor beaten (optional)",
+    "competitorLostLabel": "Competitor who won (optional)",
+    "competitorPlaceholder": "Competitor name",
+    "notesLabel": "Notes (optional)",
+    "notesPlaceholder": "Additional context on the close…",
+    "error": "Couldn't record it — try again.",
+    "saving": "Saving…",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "timeline": {
+    "agentLabels": {
+      "strategy_generator": "Strategy generator",
+      "executive_agent": "Executive agent",
+      "psychographic_analyzer": "Psychographic analyzer",
+      "dark_funnel": "Dark Funnel",
+      "smart_engagement": "Smart engagement",
+      "agent_orchestrator": "Orchestrator",
+      "workflow_orchestrator": "Workflow",
+      "trend_analyst": "Trend analyst"
+    },
+    "empty": "No activity recorded yet for this opportunity.",
+    "manualReviewRequired": "Manual review required — confidence {confidence}%"
+  },
+  "tasks": {
+    "sectionTitle": "Follow-up tasks",
+    "loading": "Loading…",
+    "empty": "No tasks yet.",
+    "overdue": "overdue",
+    "completedCount": "{count, plural, one {# completed} other {# completed}}",
+    "deleteTask": "Delete task",
+    "newTaskPlaceholder": "New task…",
+    "addTask": "Add task"
+  },
+  "priorityMatrix": {
+    "ariaLabel": "Priority matrix: fit vs. intent by company",
+    "fitAxis": "Fit with your ICP →",
+    "intentAxis": "Intent →",
+    "tooltip": "{name} — fit {fit}, intent {intent}"
+  },
+  "successPatterns": {
+    "confidenceLabel": {
+      "low": "Low confidence",
+      "medium": "Medium confidence",
+      "high": "High confidence"
+    },
+    "emptyTitle": "Not enough closed deals yet to learn a pattern.",
+    "emptySubtitle": "Once more opportunities close with the same playbook and channel, it shows up here.",
+    "viaChannel": "{playbook} via {channel}",
+    "dealsClosed": "{count, plural, one {# deal closed} other {# deals closed}}",
+    "avgDaysToClose": "{days} days average to close"
+  },
+  "signalVolume": {
+    "empty": "No signals yet in this time window.",
+    "tooltip": "{label}: {count, plural, one {# signal} other {# signals}}",
+    "tooltipHot": "{label}: {count, plural, one {# signal} other {# signals}}, {hotCount} high intent"
+  },
+  "companyDuplicates": {
+    "sameDomain": "Same domain:",
+    "sameName": "Same name:",
+    "createdOn": "created on {date}",
+    "merging": "Merging…",
+    "mergeButton": "Merge into selected",
+    "heading": "{count, plural, one {# possible company duplicate} other {# possible company duplicates}}"
+  },
+  "leadDuplicates": {
+    "sameEmail": "Same email:",
+    "createdOn": "created on {date}",
+    "merging": "Merging…",
+    "mergeButton": "Merge into selected",
+    "heading": "{count, plural, one {# possible contact duplicate} other {# possible contact duplicates}}"
+  },
+  "exportCsv": {
+    "button": "Export CSV"
+  },
+  "savedViews": {
+    "trigger": "Saved views",
+    "empty": "No saved views yet.",
+    "teamBadge": "team",
+    "deleteView": "Delete view",
+    "namePlaceholder": "View name…",
+    "shareWithTeam": "Share with team",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saveCurrent": "+ Save current view"
+  },
+  "relationshipMap": {
+    "empty": "No contacts recorded yet to map.",
+    "multipleOpportunities": "{count} linked opportunities",
+    "statusHint": {
+      "won": "Linked to a won opportunity",
+      "open": "Linked to an open opportunity",
+      "lost": "Only linked to lost opportunities",
+      "dismissed": "Only linked to dismissed opportunities — never competed for",
+      "none": "No opportunity linked yet"
+    }
+  },
+  "opportunityDetail": {
+    "backToStrategies": "Back to strategies",
+    "demoData": "Demo data",
+    "battlecardUnavailable": "Battlecard not available — opportunity may still be enriching.",
+    "executionArtifacts": "Execution Artifacts",
+    "artifactsUnavailable": "Artifacts will generate on first request via the Executive Agent."
+  }
+}
