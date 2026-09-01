@@ -170,6 +170,27 @@ class MarketScanOrchestrator:
         )
         return summary
 
+    def scan_company_now(self, company: Company) -> int:
+        """Public entry point for an immediate, out-of-cycle scan of one
+        company — used by ``POST /companies/from-domain`` (see
+        ``app.api.v1.endpoints.companies``) so "one domain, full account"
+        doesn't wait for the next cron tick to run its first market scan.
+        Same per-company work as one iteration of ``run_tick``'s loop body
+        (scan + cursor advance), just for a single company outside the
+        batch. Still gated by ``MARKET_SCAN_ENABLED`` like everything else
+        in this module — a no-op returning 0 when the feature is off,
+        never an error.
+        """
+        if not self.settings.MARKET_SCAN_ENABLED:
+            return 0
+        created = self._scan_company(company)
+        interval = timedelta(hours=self.settings.MARKET_SCAN_INTERVAL_HOURS)
+        company.last_scanned_at = utcnow()
+        company.next_scan_due_at = utcnow() + interval
+        self.session.add(company)
+        self.session.commit()
+        return created
+
     def _scan_company(self, company: Company) -> int:
         """Scan one company across every configured market-scan provider.
 

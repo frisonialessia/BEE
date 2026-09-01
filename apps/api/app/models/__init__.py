@@ -6,6 +6,7 @@ relies on to create the schema.
 """
 
 from app.models.account_activity import AccountActivityEvent, AccountActivityEventType
+from app.models.account_brief import AccountBrief
 from app.models.anomaly import AnomalyAlert
 from app.models.audit_trail import AuditEntry
 from app.models.base import (
@@ -53,6 +54,7 @@ from app.models.workflow_task import WorkflowTask
 __all__ = [
     "AccountActivityEvent",
     "AccountActivityEventType",
+    "AccountBrief",
     "Company",
     "ContactSubmission",
     "Lead",

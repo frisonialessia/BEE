@@ -23,6 +23,7 @@ from app.core.logging import get_logger
 from app.models.correction import ArtifactCorrection, UserStyleProfile
 from app.schemas.correction import CorrectionOut, StyleProfileOut
 from app.services.correction_learning.diff_engine import (
+    classify_rejection_reason,
     compute_change_ratio,
     compute_diff_ops,
     extract_rules_from_ops,
@@ -140,6 +141,53 @@ class CorrectionLearningService:
             total_corrections=profile.total_corrections,
             profile_version=profile.profile_version,
         )
+
+    def record_rejection(
+        self,
+        reason: str,
+        artifact_type: str,
+        *,
+        opportunity_id: uuid.UUID | None = None,
+        generator_name: str | None = None,
+        organization_id: uuid.UUID | None = None,
+    ) -> list[str]:
+        """Feed a PendingAction rejection's free-text reason into the same
+        UserStyleProfile a CEO edit updates — see
+        ``diff_engine.classify_rejection_reason`` for why this uses its own
+        keyword classifier rather than ``record_correction``'s diff-based
+        one: a rejection has no "edited version" to diff against, just a
+        reason typed in the reviewer's own words.
+
+        Deliberately does not create an ``ArtifactCorrection`` row — that
+        model's ``original_content``/``edited_content`` pair describes an
+        edit that happened, and a rejection is the opposite (nothing was
+        sent, nothing was rewritten). The rejection itself is already
+        durably recorded on ``PendingAction.rejected_reason`` and, via the
+        caller, in ``AuditTrailService`` — this method's only job is
+        updating the learned style profile when the reason maps to a known
+        pattern.
+
+        Returns the ``StyleRuleType`` candidates matched — an empty list is
+        a common, valid outcome (the reason didn't match any known
+        pattern), not a failure.
+        """
+        extracted_rules = classify_rejection_reason(reason)
+        if extracted_rules:
+            profile = self._get_or_create_profile(organization_id)
+            updated_rules = merge_rules_into_profile(profile.rules, artifact_type, extracted_rules)
+            profile.rules = updated_rules
+            profile.style_summary = generate_style_summary(updated_rules)
+            profile.authoritative_rules_count = count_authoritative_rules(updated_rules)
+            profile.total_corrections += 1
+            profile.last_correction_at = datetime.now(UTC).isoformat()
+            profile.profile_version += 1
+            self.session.add(profile)
+            self.session.flush()
+            logger.info(
+                "Rejection feedback: opportunity_id=%s artifact_type=%s generator=%s rules=%s",
+                opportunity_id, artifact_type, generator_name, extracted_rules,
+            )
+        return extracted_rules
 
     # ── Style profile access ─────────────────────────────────────────────────
 

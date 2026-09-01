@@ -51,6 +51,9 @@ class DarkSignalType(str):
     LINKEDIN_ENGAGEMENT = "linkedin_engagement"  # Liked/shared relevant content
     PRODUCT_TRIAL = "product_trial"             # Started a trial or freemium
     REPEAT_VISIT = "repeat_visit"               # Multiple visits to key pages
+    EMAIL_OPEN = "email_open"                   # Opened a BEE-sent outreach email
+    EMAIL_CLICK = "email_click"                 # Clicked a link inside one
+    EMAIL_REPLY = "email_reply"                 # Replied to one — the strongest signal here
     OTHER = "other"
 
 
@@ -77,6 +80,17 @@ SIGNAL_WEIGHTS: dict[str, float] = {
     DarkSignalType.JOB_POSTING: 12.0,
     DarkSignalType.LINKEDIN_ENGAGEMENT: 7.0,
     DarkSignalType.REPEAT_VISIT: 10.0,
+    # An open is the weakest of the three — pixel-tracking opens are
+    # unreliable (Apple Mail Privacy Protection pre-fetches images for
+    # every message, inflating "opens" that never happened) so it's
+    # weighted closer to a passive page visit than real engagement.
+    DarkSignalType.EMAIL_OPEN: 6.0,
+    # Clicking a link a rep actually wrote is real, deliberate engagement —
+    # weighted with PRICING_VIEW, a comparably strong intent tell.
+    DarkSignalType.EMAIL_CLICK: 18.0,
+    # A reply is the strongest signal this model has, stronger even than
+    # starting a trial: a human read the message and chose to respond.
+    DarkSignalType.EMAIL_REPLY: 35.0,
     DarkSignalType.OTHER: 5.0,
 }
 

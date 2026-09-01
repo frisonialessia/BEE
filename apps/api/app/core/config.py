@@ -264,6 +264,28 @@ class Settings(BaseSettings):
     # Minimum time between two scans of the same company.
     MARKET_SCAN_INTERVAL_HOURS: int = 24
 
+    # ----- AccountResearchAgent (deep per-account research, opt-in) -------------
+    # See app.services.account_research. Distinct from MarketScanOrchestrator
+    # above: that pipeline is cheap, per-tick, and eager (runs on every due
+    # company on a schedule); this one is expensive (up to 4 provider calls
+    # + an LLM synthesis) and explicitly on-demand only — never fired by a
+    # bulk import, never fired by MarketScanOrchestrator's own tick. See
+    # that service's module docstring for the trigger points.
+    ACCOUNT_RESEARCH_ENABLED: bool = False
+    # A cached AccountBrief younger than this is returned as-is — the
+    # research pass itself does not re-run. This is the "strict cache" the
+    # cost-protection design calls for: at most one real research pass per
+    # company per this many days, full stop, regardless of how many times
+    # a trigger condition fires in between.
+    ACCOUNT_RESEARCH_TTL_DAYS: int = 30
+    # Hard ceiling on new AccountBrief rows one organization can produce in
+    # a rolling 24h window. Protects the shared provider rate limits (see
+    # rate_limiter.py) and API cost from a burst of trigger events — e.g. a
+    # CSV import that assigns owners to 100 companies at once. Hitting the
+    # cap postpones the research (never fails the action that triggered
+    # it) and is visible in the response, never a silent drop.
+    ACCOUNT_RESEARCH_DAILY_BUDGET_PER_ORG: int = 20
+
     # ----- WorkflowOrchestrator webhooks (all opt-in) ---------------------------
     # Set any of these to activate the corresponding workflow handler.
     # Leave unset (None) to run in mock mode (full audit trail, no real calls).
@@ -331,6 +353,23 @@ class Settings(BaseSettings):
     # Capterra (future)
     CAPTERRA_API_KEY: str | None = None
     CAPTERRA_WEBHOOK_SECRET: str | None = None
+
+    # Outbound email delivery providers — BEE never calls these APIs, only
+    # verifies their inbound event webhooks (open/click/reply/bounce),
+    # which POST /api/v1/webhooks/receive turns into DarkFunnelSignal rows.
+    # No API key here: sending itself still goes through Gmail OAuth
+    # (gmail.send) or the configured ExecutiveAgent webhook, not these.
+    #
+    # These secrets sign BEE's own HMAC scheme (same X-BEE-Signature /
+    # X-Provider-Signature header as every other provider in this file),
+    # NOT SendGrid's native ECDSA event-webhook signing or Resend's native
+    # Svix headers — a real production wire-up needs a small adapter in
+    # front of this endpoint that verifies the provider's own signature and
+    # re-signs with this secret before forwarding, same shape as
+    # HiringProvider limiting itself to one real ATS integration instead of
+    # three partial ones. See POST /webhooks/receive's docstring.
+    SENDGRID_WEBHOOK_SECRET: str | None = None
+    RESEND_WEBHOOK_SECRET: str | None = None
 
     @property
     def sqlalchemy_database_uri(self) -> str:

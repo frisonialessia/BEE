@@ -22,6 +22,15 @@ class CompanyCreateIn(BaseModel):
     description: str | None = Field(default=None, max_length=2000)
 
 
+class CompanyCreateFromDomainIn(BaseModel):
+    """"Una cuenta, un dominio" — the Data-Entry Zero fast path. Everything
+    besides the domain (name, description) is filled in by
+    WebsiteEnrichmentProvider; see ``POST /companies/from-domain``.
+    """
+
+    domain: str = Field(min_length=3, max_length=255)
+
+
 class CompanyUpdateIn(BaseModel):
     """Edit an existing company, including reassigning its owner.
 

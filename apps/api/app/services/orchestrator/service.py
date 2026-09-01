@@ -155,6 +155,7 @@ class AgentOrchestrator:
         self.session.commit()
         self.session.refresh(action)
         logger.info("Action %s approved by %s", action_id, body.approved_by)
+        self._record_decision_feedback(action, approved=True, reason=None)
 
         if action.payload.get("channel"):
             self._dispatch_via_gateway(action)
@@ -208,7 +209,87 @@ class AgentOrchestrator:
         self.session.commit()
         self.session.refresh(action)
         logger.info("Action %s rejected (reason=%s)", action_id, body.reason)
+        self._record_decision_feedback(action, approved=False, reason=body.reason)
         return action
+
+    def _record_decision_feedback(
+        self, action: PendingAction, *, approved: bool, reason: str | None
+    ) -> None:
+        """Close the loop the ``ACTION_APPROVED``/``ACTION_REJECTED``
+        ``DecisionType`` values were defined for but never wired to: every
+        approve/reject becomes an immutable, queryable ``AuditEntry``
+        (``generator_approval_rate`` below reads these back), and a
+        rejection's free-text reason feeds ``UserStyleProfile`` the same
+        way a CEO's edit would. Best-effort — a feedback-recording failure
+        must never turn a successful approve/reject into a 500; the
+        approval/rejection itself already committed before this runs.
+        """
+        try:
+            from app.models.audit_trail import AgentType, DecisionType
+            from app.services.audit_trail import AuditTrailService
+            from app.services.correction_learning import CorrectionLearningService
+
+            generator_name = self._lookup_generator_name(action.opportunity_id)
+            audit = AuditTrailService(self.session)
+            audit.record_decision(
+                agent_type=AgentType.AGENT_ORCHESTRATOR,
+                decision_type=DecisionType.ACTION_APPROVED if approved else DecisionType.ACTION_REJECTED,
+                organization_id=action.organization_id,
+                opportunity_id=action.opportunity_id,
+                pending_action_id=action.id,
+                output_snapshot={
+                    "action_type": action.action_type,
+                    "generated_by": generator_name,
+                    "reason": reason,
+                },
+                strategy_reasoning=(
+                    f"Human {'approved' if approved else f'rejected ({reason})' if reason else 'rejected'} "
+                    f"a {action.action_type} action produced by {generator_name or 'an unknown generator'}."
+                ),
+                generator_name=generator_name,
+            )
+
+            if not approved and reason:
+                CorrectionLearningService(self.session).record_rejection(
+                    reason,
+                    action.action_type,
+                    opportunity_id=action.opportunity_id,
+                    generator_name=generator_name,
+                    organization_id=action.organization_id,
+                )
+            self.session.commit()
+        except Exception:  # noqa: BLE001 — feedback recording must never break approve/reject itself
+            logger.exception("Failed to record decision feedback for action %s", action.id)
+
+    def _lookup_generator_name(self, opportunity_id: uuid.UUID | None) -> str | None:
+        """Trace an action back to the generator that produced its
+        underlying content — the most recent STRATEGY_GENERATED or
+        ARTIFACT_CREATED AuditEntry for the same opportunity already
+        records ``generator_name`` (see StrategyGeneratorService and
+        ExecutiveAgent's own audit calls); reusing that instead of
+        stamping the generator onto PendingAction.payload at creation
+        time avoids touching either of those call sites.
+        """
+        if opportunity_id is None:
+            return None
+        from sqlmodel import select
+
+        from app.models.audit_trail import AuditEntry, DecisionType
+
+        stmt = (
+            select(AuditEntry)
+            .where(
+                AuditEntry.opportunity_id == opportunity_id,
+                AuditEntry.decision_type.in_(  # type: ignore[attr-defined]
+                    [DecisionType.STRATEGY_GENERATED, DecisionType.ARTIFACT_CREATED]
+                ),
+                AuditEntry.generator_name.is_not(None),  # type: ignore[attr-defined]
+            )
+            .order_by(AuditEntry.created_at.desc())
+            .limit(1)
+        )
+        entry = self.session.exec(stmt).first()
+        return entry.generator_name if entry else None
 
     def start_execution(
         self, action_id: uuid.UUID, body: ExecutionStartIn, organization_id: uuid.UUID | None = None

@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-ProviderName = Literal["linkedin", "g2", "google_search", "capterra", "hiring"]
+ProviderName = Literal["linkedin", "g2", "google_search", "capterra", "hiring", "website"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,6 +35,8 @@ class ExternalProfileResult:
     company_name: str | None = None
     company_domain: str | None = None
     company_industry: str | None = None
+    company_size: str | None = None
+    company_description: str | None = None
     linkedin_url: str | None = None
     headline: str | None = None
     location: str | None = None
@@ -114,4 +116,18 @@ class IExternalProvider(ABC):
             success=False,
             query=company_domain,
             error="search_market_news not implemented for this provider",
+        )
+
+    def enrich_company(self, *, company_domain: str) -> ExternalProfileResult:
+        """Optional: fill in a company's basic profile (name, description)
+        from a single-domain lookup — for "create an account from just a
+        domain" (see app.services.external_api.providers.website), not a
+        lead-level or intent-level lookup. Same default-unimplemented
+        fallback pattern as search_intent/search_market_news above.
+        """
+        return ExternalProfileResult(
+            provider=self.name,
+            success=False,
+            company_domain=company_domain,
+            error="enrich_company not implemented for this provider",
         )

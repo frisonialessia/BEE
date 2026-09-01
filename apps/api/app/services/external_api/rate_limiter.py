@@ -25,6 +25,10 @@ DEFAULT_LIMITS: dict[ProviderName, RateLimitConfig] = {
     # No official rate limit published for Greenhouse's public boards-api —
     # conservative by convention, same shape as every other provider here.
     "hiring": RateLimitConfig(requests_per_hour=100, min_interval_seconds=1.0),
+    # A plain homepage GET, not a third-party API — generous but still
+    # bounded so a burst of "create by domain" calls can't hammer arbitrary
+    # sites back-to-back.
+    "website": RateLimitConfig(requests_per_hour=200, min_interval_seconds=0.5),
 }
 
 

@@ -48,6 +48,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 | `LINKEDIN_ACCESS_TOKEN` | Real LinkedIn profile enrichment (mock fallback without it) |
 | `EXTERNAL_INGESTION_ENABLED=true` | Starts `IngestionWorker` on app boot |
 | `CRON_SECRET` + `MARKET_SCAN_ENABLED=true` | Proactive market scan (Vercel Cron) — see §3.8 below |
+| `ACCOUNT_RESEARCH_ENABLED=true` | Deep per-account research (AccountResearchAgent) — see §3.9 below |
+| `SENDGRID_WEBHOOK_SECRET` / `RESEND_WEBHOOK_SECRET` | Email open/click/reply → DarkFunnel signals — see §3.9 below |
 
 Full reference: `apps/api/.env.example`
 
@@ -164,6 +166,27 @@ expect to see it until you configure the secret).
    `alembic upgrade head` before setting either variable above.
 4. Check `market_scan_logs` after a few ticks to confirm it's actually
    running (`companies_scanned`, `duration_ms` per tick) before trusting it.
+
+### 9. Data-Entry Zero — AccountResearchAgent + email engagement events
+
+1. Requires migration `027_account_briefs` (`account_briefs` table) — run
+   `alembic upgrade head` before setting `ACCOUNT_RESEARCH_ENABLED=true`.
+2. `ACCOUNT_RESEARCH_ENABLED=false` is the default — `POST
+   /companies/{id}/research` and the owner-assignment auto-trigger both
+   work and return a real (empty) response either way, but no provider is
+   ever called until this is true. See
+   `app.services.account_research.agent`'s module docstring for the full
+   cache/budget discipline (`ACCOUNT_RESEARCH_TTL_DAYS`,
+   `ACCOUNT_RESEARCH_DAILY_BUDGET_PER_ORG`) before turning it on for a
+   real account with real provider credentials configured.
+3. `SENDGRID_WEBHOOK_SECRET`/`RESEND_WEBHOOK_SECRET` sign **BEE's own**
+   HMAC scheme on `POST /api/v1/webhooks/receive` (`X-BEE-Signature` /
+   `X-Provider-Signature`), not SendGrid's native ECDSA event signing or
+   Resend's native Svix headers — wiring a real account needs a small
+   adapter in front of this endpoint that verifies the provider's own
+   signature and re-signs with this scheme before forwarding. See that
+   endpoint's docstring ("Email engagement events") for the exact event
+   shape it expects.
 
 ---
 

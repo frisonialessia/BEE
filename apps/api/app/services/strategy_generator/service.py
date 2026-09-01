@@ -84,7 +84,7 @@ class StrategyGeneratorService:
         ``False`` when enrichment fails or produces an incomplete strategy.
         """
         ctx = self._build_context(signal)
-        strategy = self._run_generators(ctx)
+        strategy = self._run_generators(ctx, organization_id=signal.organization_id)
         if strategy is None:
             logger.warning("No strategy for opportunity %s; stays DETECTED.", opportunity.id)
             return False
@@ -466,11 +466,30 @@ class StrategyGeneratorService:
             )
             return []
 
-    def _run_generators(self, ctx: EnrichmentContext) -> StrategySchema | None:
-        """Execute generators in priority order; return the first successful result."""
+    # Minimum recent approve/reject decisions before a generator's approval
+    # rate is trusted enough to demote it — a single early rejection must
+    # not permanently sideline a generator that has barely been used yet.
+    _DEMOTION_MIN_SAMPLE = 5
+    # More rejections than approvals over that sample is the demotion bar —
+    # deliberately not a stricter threshold: this is a soft "try the next
+    # generator instead," not a punishment, and errs toward giving a
+    # struggling generator the benefit of the doubt above 50%.
+    _DEMOTION_MAX_APPROVAL_RATE = 0.5
+
+    def _run_generators(
+        self, ctx: EnrichmentContext, organization_id: uuid.UUID | None = None
+    ) -> StrategySchema | None:
+        """Execute generators in priority order; return the first successful
+        result. A generator with a poor recent human-approval record for
+        this organization (see AuditTrailService.generator_approval_rate,
+        fed by AgentOrchestrator.approve()/reject()) is skipped in favor of
+        the next one — the read side of the approve/reject feedback loop.
+        """
         for generator in get_strategy_generators():
             try:
                 if not generator.supports(ctx):
+                    continue
+                if self._is_demoted(generator.name, organization_id):
                     continue
                 strategy = generator.generate(ctx)
 
@@ -492,3 +511,46 @@ class StrategyGeneratorService:
             except Exception:  # noqa: BLE001
                 logger.exception("Generator '%s' failed; trying next.", generator.name)
         return None
+
+    def _is_demoted(self, generator_name: str, organization_id: uuid.UUID | None) -> bool:
+        """True when this generator's recent approval rate for this
+        organization is bad enough to skip it in favor of the next one.
+        Never raises and never blocks generation on an audit-trail hiccup —
+        the demotion signal is a soft optimization, not load-bearing.
+        """
+        try:
+            from app.models.audit_trail import AgentType, DecisionType
+            from app.services.audit_trail import AuditTrailService
+
+            result = AuditTrailService(self.session).generator_approval_rate(
+                generator_name, organization_id=organization_id, window=20
+            )
+            if result is None:
+                return False
+            approval_rate, sample_size = result
+            if sample_size < self._DEMOTION_MIN_SAMPLE:
+                return False
+            if approval_rate >= self._DEMOTION_MAX_APPROVAL_RATE:
+                return False
+
+            AuditTrailService(self.session).record_decision(
+                agent_type=AgentType.STRATEGY_GENERATOR,
+                decision_type=DecisionType.GENERATOR_DEMOTED,
+                organization_id=organization_id,
+                generator_name=generator_name,
+                strategy_reasoning=(
+                    f"Generator '{generator_name}' demoted for this organization — "
+                    f"{approval_rate:.0%} approval rate over its last {sample_size} decisions "
+                    f"(below the {self._DEMOTION_MAX_APPROVAL_RATE:.0%} threshold)."
+                ),
+                confidence_score=1.0,
+            )
+            self.session.commit()
+            logger.info(
+                "StrategyGeneratorService: demoting generator=%s org=%s approval_rate=%.0f%% sample=%d",
+                generator_name, organization_id, approval_rate * 100, sample_size,
+            )
+            return True
+        except Exception:  # noqa: BLE001
+            logger.exception("Demotion check failed for generator=%s — not demoting.", generator_name)
+            return False

@@ -25,7 +25,7 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-ProviderName = Literal["linkedin", "g2", "google_search", "capterra"]
+ProviderName = Literal["linkedin", "g2", "google_search", "capterra", "sendgrid", "resend"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -94,6 +94,13 @@ class SecretManager:
                 api_key=self._settings.CAPTERRA_API_KEY,
                 webhook_secret=self._settings.CAPTERRA_WEBHOOK_SECRET,
             )
+        if provider == "sendgrid":
+            # No api_key/access_token — BEE never calls SendGrid's API, only
+            # verifies the signature on its inbound event webhook. is_configured()
+            # is still meaningful: it reports whether that webhook secret is set.
+            return ProviderCredentials(provider="sendgrid", webhook_secret=self._settings.SENDGRID_WEBHOOK_SECRET)
+        if provider == "resend":
+            return ProviderCredentials(provider="resend", webhook_secret=self._settings.RESEND_WEBHOOK_SECRET)
         raise ValueError(f"Unknown provider: {provider}")
 
     def is_configured(self, provider: ProviderName) -> bool:
