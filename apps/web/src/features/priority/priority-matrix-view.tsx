@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { PriorityMatrixChart } from "@/components/priority/priority-matrix-chart";
+import { PriorityMatrixChart, QUADRANT_COLOR } from "@/components/priority/priority-matrix-chart";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IcpSettingsForm } from "@/features/priority/icp-settings-form";
@@ -128,9 +128,36 @@ export function PriorityMatrixView() {
               <section className="bee-surface bee-bento-pad">
                 <h3 className="bee-card-title">{t("matrixSection.title")}</h3>
                 <p className="bee-caption mb-4">{t("matrixSection.subtitle")}</p>
-                <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-start">
+                {/* flex-1 on the legend (not the chart) — the chart keeps its
+                 * fixed aspect ratio (an SVG plot doesn't get more readable
+                 * by stretching), the legend is what grows to use whatever
+                 * width the card actually has, on a wide desktop and on
+                 * mobile alike. Doubles as the "what does each color mean"
+                 * key the dots' hover-only tooltips don't provide. */}
+                <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center">
                   <PriorityMatrixChart priorities={priorities} />
-                  <p className="bee-caption max-w-xs">{t("matrixSection.description")}</p>
+                  <div className="w-full flex-1 space-y-3">
+                    <p className="bee-caption">{t("matrixSection.description")}</p>
+                    <ul className="grid gap-2 sm:grid-cols-2">
+                      {QUADRANT_ORDER.map((q) => (
+                        <li
+                          key={q}
+                          className="flex items-start gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-primary)]/15 p-2.5"
+                        >
+                          <span
+                            className="mt-1 size-2.5 shrink-0 rounded-full"
+                            style={{ background: QUADRANT_COLOR[q] }}
+                          />
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium">
+                              {t(`quadrants.${q}.label`)} · {byQuadrant[q].length}
+                            </p>
+                            <p className="mt-0.5 bee-micro">{t(`quadrants.${q}.hint`)}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               </section>
 

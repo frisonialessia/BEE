@@ -20,7 +20,7 @@ export function TrendsChart({ points }: { points: MonthlyTrendPoint[] }) {
       {points.map((p) => {
         const pct = (p.created / maxCreated) * 100;
         return (
-          <div key={p.key} className="flex h-full w-16 shrink-0 flex-col items-center gap-1.5">
+          <div key={p.key} className="flex h-full min-w-12 flex-1 flex-col items-center gap-1.5">
             <p className="h-4 bee-micro font-medium">
               {p.winRate !== null ? `${Math.round(p.winRate * 100)}%` : "—"}
             </p>
