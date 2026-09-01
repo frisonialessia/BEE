@@ -18,32 +18,38 @@ surviving Vercel's per-instance lifecycle; the same reasoning is why this
 pipeline is designed around the database as the source of truth from the
 start rather than in-memory state, instead of inheriting that same gap.
 
-Phase 1 scope (this module, today)
-------------------------------------
-This orchestrator currently does the scheduling — pick due companies,
-advance their cursor, record a ``MarketScanLog`` row — but ``_scan_company``
-is a placeholder that produces zero signals. No external provider is wired
-yet. This lets the cron plumbing (Vercel Cron → auth → tick → cursor
-advance → audit log) be deployed and verified safely, behind
-``MARKET_SCAN_ENABLED=false``, before any real provider call is added.
+Phase 1 vs. Phase 2
+--------------------
+Phase 1 built the scheduling shell — pick due companies, advance their
+cursor, record a ``MarketScanLog`` row — with ``_scan_company`` as a
+placeholder producing zero signals, so the cron plumbing (Vercel Cron →
+auth → tick → cursor advance → audit log) could be deployed and verified
+safely behind ``MARKET_SCAN_ENABLED=false`` before any provider call
+existed.
 
-Next phases (not in this module yet)
---------------------------------------
-* A ``GoogleNewsProvider``/extended ``GoogleSearchProvider`` and a new
-  ``HiringProvider``, both implementing
-  ``app.services.external_api.interface.IExternalProvider`` — the same
-  contract ``LinkedInProvider``/``G2Provider`` already use — registered on
-  ``ExternalAPIOrchestrator`` and called from ``_scan_company`` below.
-* Raw results normalized into ``Signal`` rows via the existing
-  ``SignalEngine`` — reusing ``SignalType.HIRING``/``SignalType.NEWS_MENTION``
-  (already defined in ``app.models.base``) and the new
-  ``SignalSource.MARKET_SCAN`` — not a parallel ingestion path.
+Phase 2 (this revision) wires the first real provider: Google Search's
+market-news query (``ExternalAPIOrchestrator.scan_market_news`` →
+``GoogleSearchProvider.search_market_news``, mock-safe when
+``GOOGLE_SEARCH_API_KEY``/``GOOGLE_SEARCH_CX`` aren't configured — see
+that provider's docstring for why mock mode returns zero items here
+rather than a plausible fake headline). Results are normalized into
+``Signal`` rows through :class:`~app.services.signal_engine.engine.SignalEngine`
+— the *same* entry point ``POST /api/v1/signals/webhook`` uses — not a
+parallel ingestion path, so every downstream consumer (opportunity
+creation, strategy generation, the Control/Overview bento-grid) picks
+these up with zero changes.
+
+Not in this module yet (Phase 3)
+-----------------------------------
+* A ``HiringProvider`` (same ``IExternalProvider`` contract).
 * A pgvector semantic fallback (``app.services.vector_store``) for signals
-  that don't literally name the tracked company.
+  that don't literally name the tracked company — today's exact-match-only
+  query (the company's own name, quoted) misses indirect mentions.
 """
 
 from __future__ import annotations
 
+import hashlib
 import time
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -53,11 +59,20 @@ from sqlmodel import Session, select
 
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.models.base import utcnow
+from app.models.base import SignalSource, SignalType, utcnow
 from app.models.company import Company
 from app.models.market_scan_log import MarketScanLog
+from app.schemas.signal import CompanyRef, SignalWebhookIn
+from app.services.external_api.orchestrator import ExternalAPIOrchestrator
+from app.services.signal_engine.engine import SignalEngine
 
 logger = get_logger(__name__)
+
+# Cap on how many news items become Signal rows per company per tick — a
+# noisy week for one account (several qualifying headlines) shouldn't flood
+# its own pipeline; the top few (Google already ranks by relevance) are
+# what a rep actually needs to see.
+_MAX_SIGNALS_PER_COMPANY = 3
 
 
 @dataclass(slots=True)
@@ -143,14 +158,58 @@ class MarketScanOrchestrator:
         )
         return summary
 
-    def _scan_company(self, company: Company) -> int:  # noqa: ARG002 — Phase 1 placeholder, see docstring
+    def _scan_company(self, company: Company) -> int:
         """Scan one company across every configured market-scan provider.
 
-        Placeholder for Phase 1 — see this module's docstring. Returns the
-        number of Signal rows created (always 0 today). Deliberately takes
-        just the company, not the provider list: Phase 2/3 wire
-        ExternalAPIOrchestrator providers in here directly rather than
-        threading them through run_tick's signature, so this stays the one
-        place that changes when a provider is added.
+        Today: Google Search's market-news query only (Phase 2). Returns
+        the number of Signal rows actually created — a scan that finds
+        news already ingested on a prior tick reports 0 here even though
+        the provider call succeeded, since SignalEngine's own
+        external_id-based idempotency (see below) deduplicates it.
         """
-        return 0
+        if not company.name:
+            return 0  # nothing to search on
+
+        news = ExternalAPIOrchestrator(self.session).scan_market_news(
+            company_domain=company.domain or company.name,
+            company_name=company.name,
+        )
+        if not news.success or not news.items:
+            return 0
+
+        engine = SignalEngine(self.session)
+        company_ref = CompanyRef(name=company.name, domain=company.domain)
+        created = 0
+
+        for item in news.items[:_MAX_SIGNALS_PER_COMPANY]:
+            title = item.get("title")
+            if not title:
+                continue
+            # Deterministic idempotency key from the article URL (falls
+            # back to the title when a provider omits a link) — the same
+            # article turning up on a later tick must not create a second
+            # Signal for it. Scoped to this company: two tracked companies
+            # legitimately mentioned in the same article each get their own.
+            dedup_source = item.get("link") or title
+            external_id = (
+                f"market_scan:google_search:{company.id}:"
+                f"{hashlib.sha256(dedup_source.encode()).hexdigest()[:16]}"
+            )
+            payload = SignalWebhookIn(
+                title=title,
+                event="market_scan.google_news",
+                description=item.get("snippet"),
+                # Pre-classified as NEWS_MENTION — SignalEngine's analyzers
+                # still run and may refine score/confidence, same as any
+                # other pre-typed webhook payload.
+                signal_type=SignalType.NEWS_MENTION,
+                source=SignalSource.MARKET_SCAN,
+                external_id=external_id,
+                company=company_ref,
+                data={"provider": "google_search", "link": item.get("link"), "mock": news.mock},
+            )
+            outcome = engine.ingest(payload, commit=False, organization_id=company.organization_id)
+            if not outcome.deduplicated:
+                created += 1
+
+        return created

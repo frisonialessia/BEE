@@ -94,3 +94,24 @@ class IExternalProvider(ABC):
             query=company_domain,
             error="search_intent not implemented for this provider",
         )
+
+    def search_market_news(
+        self,
+        *,
+        company_domain: str,
+        company_name: str | None = None,  # noqa: ARG002
+    ) -> ExternalSearchResult:
+        """Optional: search for market-moving news about a company —
+        funding, leadership changes, expansion, acquisitions — for
+        MarketScanOrchestrator's proactive scan (see
+        app.services.market_scan). Distinct from search_intent above:
+        that's buying-intent research for a specific enrichment request,
+        this is "what's newsworthy about this account right now" for the
+        background scan. Same default-unimplemented fallback pattern.
+        """
+        return ExternalSearchResult(
+            provider=self.name,
+            success=False,
+            query=company_domain,
+            error="search_market_news not implemented for this provider",
+        )
