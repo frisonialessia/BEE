@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AuditEntry, AuditSummary, DLQSummary, FailedEvent } from "@/lib/types";
 import {
@@ -11,6 +12,8 @@ import {
   resolveDLQEvent,
   retryDLQEvent,
 } from "@/lib/api";
+import { formatDateTime } from "@/lib/i18n/format";
+import type { Locale } from "@/i18n/locales";
 
 // ── DLQ Panel ─────────────────────────────────────────────────────────────────
 
@@ -38,6 +41,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
   onRetry: (id: string) => void;
   onResolve: (id: string) => void;
 }) {
+  const locale = useLocale() as Locale;
   const cfg = DLQ_STATUS_CONFIG[event.status] ?? DLQ_STATUS_CONFIG.pending;
   const [expanded, setExpanded] = useState(false);
   const isFailed = event.status === "permanently_failed";
@@ -97,9 +101,9 @@ function DLQEventRow({ event, onRetry, onResolve }: {
       {expanded && (
         <div className="mt-2 rounded-sm border border-border bg-[var(--color-background)] p-2 text-xs space-y-1">
           <p><span className="font-medium">Tipo:</span> {event.event_type}</p>
-          <p><span className="font-medium">Creado:</span> {new Date(event.created_at).toLocaleString()}</p>
+          <p><span className="font-medium">Creado:</span> {formatDateTime(event.created_at, locale)}</p>
           {event.next_retry_at && (
-            <p><span className="font-medium">Próximo reintento:</span> {new Date(event.next_retry_at).toLocaleString()}</p>
+            <p><span className="font-medium">Próximo reintento:</span> {formatDateTime(event.next_retry_at, locale)}</p>
           )}
           {event.error_history.length > 0 && (
             <div>

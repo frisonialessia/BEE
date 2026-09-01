@@ -1,17 +1,18 @@
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { ForecastMonthBucket } from "@/lib/forecast";
+"use client";
 
-const currency = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
+import { useLocale } from "next-intl";
+
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import type { Locale } from "@/i18n/locales";
+import { formatCurrencyUSD } from "@/lib/i18n/format";
+import type { ForecastMonthBucket } from "@/lib/forecast";
 
 /** Barras de pronóstico ponderado por mes — sin librería de gráficas, como
  *  el resto de la BI de BEE. Cada barra muestra el total del pipeline en un
  *  tono tenue y, encima, la porción ponderada por probabilidad de cierre.
  *  El tooltip es real (Radix), no el title nativo del navegador. */
 export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }) {
+  const locale = useLocale() as Locale;
   const maxValue = Math.max(1, ...buckets.map((b) => b.total));
 
   return (
@@ -35,7 +36,7 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                {b.label}: {currency.format(b.weighted)} ponderado de {currency.format(b.total)} en pipeline (
+                {b.label}: {formatCurrencyUSD(b.weighted, locale)} ponderado de {formatCurrencyUSD(b.total, locale)} en pipeline (
                 {b.count} oportunidad{b.count === 1 ? "" : "es"})
               </TooltipContent>
             </Tooltip>

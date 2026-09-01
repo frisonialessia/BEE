@@ -2,6 +2,8 @@
 
 import { CalendarClock, DollarSign, Percent, Trophy } from "lucide-react";
 
+import { useLocale } from "next-intl";
+
 import { CompetitorBreakdown } from "@/components/win-loss/competitor-breakdown";
 import { LossReasonChart } from "@/components/win-loss/loss-reason-chart";
 import { MeddicCorrelationChart } from "@/components/win-loss/meddic-correlation-chart";
@@ -9,13 +11,9 @@ import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
+import type { Locale } from "@/i18n/locales";
+import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeWinLoss } from "@/lib/win-loss";
-
-const currency = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
 
 /** Ganado/Perdido — por qué se ganan y se pierden los deals, no solo cuántos.
  *  Todo calculado en el cliente a partir de las oportunidades ya cargadas
@@ -23,6 +21,7 @@ const currency = new Intl.NumberFormat("es-MX", {
  *  backend salvo los dos campos que el rep llena al cerrar un deal
  *  (razón de pérdida, competidor) desde el panel del drawer. */
 export function WinLossView() {
+  const locale = useLocale() as Locale;
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 300);
 
   const opportunities = oppsResult?.data ?? [];
@@ -73,13 +72,13 @@ export function WinLossView() {
             />
             <MetricCard
               label="Valor ganado"
-              value={currency.format(summary.wonValue)}
+              value={formatCurrencyUSD(summary.wonValue, locale)}
               hint="Suma de monto en deals ganados"
               icon={Trophy}
             />
             <MetricCard
               label="Valor perdido"
-              value={currency.format(summary.lostValue)}
+              value={formatCurrencyUSD(summary.lostValue, locale)}
               hint="Suma de monto en deals perdidos"
               icon={DollarSign}
             />

@@ -6,11 +6,14 @@
  */
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { CheckCircle, Clock, Mail, ShieldCheck, XCircle } from "lucide-react";
 
 import { approveAction, getPendingActions, rejectAction } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDate } from "@/lib/i18n/format";
+import type { Locale } from "@/i18n/locales";
 import type { PendingAction } from "@/lib/types";
 
 const ACTION_TYPE_ICONS: Record<string, React.ReactNode> = {
@@ -42,6 +45,7 @@ interface PendingActionCardProps {
 }
 
 function PendingActionCard({ action, onApprove, onReject }: PendingActionCardProps) {
+  const locale = useLocale() as Locale;
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
 
   async function handleApprove() {
@@ -129,7 +133,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
         <p className="bee-micro">
           Aprobado por {action.approved_by}
           {action.approved_at &&
-            ` · ${new Date(action.approved_at).toLocaleDateString()}`}
+            ` · ${formatDate(action.approved_at, locale)}`}
         </p>
       )}
     </div>

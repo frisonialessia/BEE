@@ -1,0 +1,25 @@
+{
+  "languageSwitcher": {
+    "label": "Language",
+    "es": "Español",
+    "en": "English"
+  },
+  "probarBanner": {
+    "title": "You're trying BEE with sample data",
+    "subtitle": " — saved only in this browser, never in our database.",
+    "createAccount": "Create a free account",
+    "contactUs": "Contact us",
+    "homeAria": "BEE — home",
+    "sandboxLabel": "Test sandbox"
+  },
+  "commandPalette": {
+    "closeAria": "Close command palette",
+    "dialogAria": "Command palette",
+    "placeholder": "Go to a section, search a company, opportunity, or contact…",
+    "noResults": "No results.",
+    "groupResults": "Results",
+    "groupGoTo": "Go to",
+    "groupActions": "Actions",
+    "logout": "Sign out"
+  }
+}

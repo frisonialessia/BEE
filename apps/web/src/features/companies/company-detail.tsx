@@ -2,6 +2,7 @@
 
 import { AlertTriangle, ArrowUpRight, Building2, Globe, Mail, Radio, Target, Upload, Users } from "lucide-react";
 import { useRef, useState } from "react";
+import { useLocale } from "next-intl";
 
 import { RelationshipMap } from "@/components/companies/relationship-map";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,8 @@ import { useBulkCreateLeads, useCreateLead, useLeads } from "@/hooks/queries/use
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { opportunityStatusLabels, validationFlagLabels } from "@/lib/format";
+import { formatDate } from "@/lib/i18n/format";
+import type { Locale } from "@/i18n/locales";
 import { parseCsv, pickColumn as pick } from "@/lib/csv";
 import { computeRelationshipMap } from "@/lib/relationship-map";
 
@@ -144,6 +147,7 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
 
 /** Ficha de empresa — contactos, oportunidades y señales, todo junto. */
 export function CompanyDetail({ companyId }: { companyId: string }) {
+  const locale = useLocale() as Locale;
   const { data: companyResult, isLoading } = useCompany(companyId);
   const { data: leadsResult } = useLeads(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);
@@ -355,7 +359,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
               <div key={signal.id} className="bee-bento bee-bento-pad">
                 <p className="text-sm font-medium">{signal.title}</p>
                 <p className="mt-0.5 text-xs text-muted-foreground">
-                  Score {Math.round(signal.score)} · {new Date(signal.detected_at).toLocaleDateString()}
+                  Score {Math.round(signal.score)} · {formatDate(signal.detected_at, locale)}
                 </p>
               </div>
             ))}

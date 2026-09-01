@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "next-intl";
 import { CheckCircle2, XCircle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { useRecordOutcome } from "@/hooks/mutations/use-record-outcome";
 import { lossReasonLabels } from "@/lib/format";
+import { formatDate } from "@/lib/i18n/format";
+import type { Locale } from "@/i18n/locales";
 import { CLOSED_OPPORTUNITY_STATUSES, type LossReason, type Opportunity } from "@/types/domain";
 
 const LOSS_REASONS = Object.keys(lossReasonLabels) as LossReason[];
@@ -21,6 +24,7 @@ const LOSS_REASONS = Object.keys(lossReasonLabels) as LossReason[];
  * es idempotente) — el panel pasa a solo mostrar lo que quedó registrado.
  */
 export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }) {
+  const locale = useLocale() as Locale;
   const recordOutcome = useRecordOutcome(opportunity.id);
   const [mode, setMode] = useState<"won" | "lost" | null>(null);
   const [lossReason, setLossReason] = useState<LossReason | "">("");
@@ -42,7 +46,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
           </h3>
           {opportunity.closed_at && (
             <span className="ml-auto bee-micro">
-              {new Date(opportunity.closed_at).toLocaleDateString()}
+              {formatDate(opportunity.closed_at, locale)}
             </span>
           )}
         </div>

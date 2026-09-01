@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import type { DarkFunnelSummary, HotLeadScore } from "@/lib/types";
 import { getDarkFunnelHotLeads, getDarkFunnelSummary, ingestDarkFunnelSignal } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDate } from "@/lib/i18n/format";
+import type { Locale } from "@/i18n/locales";
 
 // BEE's palette has no red — the heat gradient (hottest → coolest) maps onto
 // the chart accents instead: magenta (5, "hot"/success everywhere else in
@@ -54,6 +57,7 @@ function ScoreBar({ score }: { score: number }) {
 }
 
 function HotLeadCard({ lead }: { lead: HotLeadScore }) {
+  const locale = useLocale() as Locale;
   const stage = STAGE_CONFIG[lead.buying_stage] ?? STAGE_CONFIG.awareness;
 
   return (
@@ -125,7 +129,7 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>{lead.signal_count} señal{lead.signal_count !== 1 ? "es" : ""}</span>
         {lead.last_signal_at && (
-          <span>Última: {new Date(lead.last_signal_at).toLocaleDateString()}</span>
+          <span>Última: {formatDate(lead.last_signal_at, locale)}</span>
         )}
       </div>
     </div>

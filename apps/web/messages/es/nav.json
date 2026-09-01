@@ -1,0 +1,28 @@
+{
+  "closeMenu": "Cerrar menú de navegación",
+  "mainNavigation": "Navegación principal",
+  "groups": {
+    "accounts": "Cuentas",
+    "intelligence": "Inteligencia",
+    "operations": "Operaciones"
+  },
+  "items": {
+    "overview": "Resumen",
+    "crm": "CRM",
+    "companies": "Empresas",
+    "leads": "Leads",
+    "opportunities": "Oportunidades",
+    "priority": "Priorización",
+    "signals": "Señales",
+    "strategies": "Estrategias",
+    "darkFunnel": "Dark Funnel",
+    "forecast": "Pronóstico",
+    "winLoss": "Ganado/Perdido",
+    "control": "Control",
+    "network": "Red",
+    "brand": "Voz de marca",
+    "sequences": "Secuencias",
+    "integrations": "Integraciones",
+    "resilience": "Resiliencia"
+  }
+}

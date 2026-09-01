@@ -1,18 +1,14 @@
 "use client";
 
 import { AlertTriangle, Sparkles, TrendingUp } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import type { Locale } from "@/i18n/locales";
 import { runScenario } from "@/lib/api";
+import { formatCurrencyUSD, formatCurrencyUSDCompact } from "@/lib/i18n/format";
 import type { ScenarioResult, ScenarioVariant } from "@/lib/types";
-
-const currency = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-  notation: "compact",
-});
 
 const SIGNAL_TYPES = [
   { value: "funding_round", label: "Ronda de financiación" },
@@ -42,6 +38,7 @@ const VARIANT_COLOR: Record<string, string> = {
 };
 
 function VariantCard({ variant }: { variant: ScenarioVariant }) {
+  const locale = useLocale() as Locale;
   const color = VARIANT_COLOR[variant.label] ?? "var(--color-chart-4)";
   return (
     <div
@@ -50,9 +47,9 @@ function VariantCard({ variant }: { variant: ScenarioVariant }) {
     >
       <p className="bee-eyebrow" style={{ color }}>{VARIANT_LABEL[variant.label] ?? variant.label}</p>
       <p className="bee-kpi-sm mt-1" style={{ color }}>
-        {currency.format(variant.annual_revenue)}
+        {formatCurrencyUSDCompact(variant.annual_revenue, locale)}
       </p>
-      <p className="bee-caption">{currency.format(variant.monthly_revenue)}/mes</p>
+      <p className="bee-caption">{formatCurrencyUSDCompact(variant.monthly_revenue, locale)}/mes</p>
       <p className="bee-caption">{(variant.win_rate * 100).toFixed(1)}% de cierre</p>
     </div>
   );
@@ -65,6 +62,7 @@ function VariantCard({ variant }: { variant: ScenarioVariant }) {
  *  para el sistema de diseño actual — el original era inglés/€ con estilos
  *  sueltos, de antes de que BEE tuviera una convención visual consistente. */
 export function ScenarioSimulatorPanel() {
+  const locale = useLocale() as Locale;
   const [sector, setSector] = useState("");
   const [signalType, setSignalType] = useState("funding_round");
   const [channel, setChannel] = useState("email");
@@ -222,7 +220,7 @@ export function ScenarioSimulatorPanel() {
             {usedDefaultDealValue && (
               <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-primary)]/25 p-2.5 bee-micro">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-                El valor de deal ({currency.format(result.avg_deal_value)}) es un estimado de industria — todavía
+                El valor de deal ({formatCurrencyUSD(result.avg_deal_value, locale)}) es un estimado de industria — todavía
                 no hay suficientes deals cerrados con monto real en este segmento. Agrega el monto al calificar
                 cada oportunidad para que esta cifra sea la tuya.
               </div>

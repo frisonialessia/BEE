@@ -1,36 +1,42 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { Logo } from "@/components/logo";
 import { getApiBaseUrl } from "@/lib/api/client";
 
-const PRODUCT_LINKS = [
-  { label: "Funcionalidades", href: "/funcionalidades" },
-  { label: "Soluciones", href: "/soluciones" },
-  { label: "Vista previa", href: "#producto" },
-  { label: "Documentación de la API", href: `${getApiBaseUrl()}/docs`, external: true },
-] as const;
-
-const COMPANY_LINKS = [
-  { label: "Quiénes somos", href: "/quienes-somos" },
-  { label: "Careers", href: "/careers" },
-  { label: "Seguridad", href: "/seguridad" },
-] as const;
-
-const ACCOUNT_LINKS = [
-  { label: "Iniciar sesión", href: "/login" },
-  { label: "Crear cuenta", href: "/register" },
-  { label: "Contacto", href: "/contacto?source=footer" },
-  { label: "Soporte", href: "/soporte" },
-] as const;
-
-const LEGAL_LINKS = [
-  { label: "Términos de Servicio", href: "/terminos" },
-  { label: "Privacidad", href: "/privacidad" },
-] as const;
-
-/** Pie ejecutivo — marca, navegación real (sin enlaces inventados) y copyright. */
-export function MarketingFooter() {
+/** Pie ejecutivo — marca, navegación real (sin enlaces inventados) y copyright.
+ *  Server component (async, `getTranslations` — not the `useTranslations`
+ *  hook) since it needs nothing client-side; keeping it a server component
+ *  means the footer's translated markup ships as static HTML instead of
+ *  extra client JS. */
+export async function MarketingFooter() {
+  const t = await getTranslations("marketing.footer");
   const year = new Date().getUTCFullYear();
+
+  const productLinks = [
+    { label: t("productLinks.features"), href: "/funcionalidades" },
+    { label: t("productLinks.solutions"), href: "/soluciones" },
+    { label: t("productLinks.preview"), href: "#producto" },
+    { label: t("productLinks.apiDocs"), href: `${getApiBaseUrl()}/docs`, external: true },
+  ] as const;
+
+  const companyLinks = [
+    { label: t("companyLinks.about"), href: "/quienes-somos" },
+    { label: t("companyLinks.careers"), href: "/careers" },
+    { label: t("companyLinks.security"), href: "/seguridad" },
+  ] as const;
+
+  const accountLinks = [
+    { label: t("accountLinks.login"), href: "/login" },
+    { label: t("accountLinks.register"), href: "/register" },
+    { label: t("accountLinks.contact"), href: "/contacto?source=footer" },
+    { label: t("accountLinks.support"), href: "/soporte" },
+  ] as const;
+
+  const legalLinks = [
+    { label: t("legalLinks.terms"), href: "/terminos" },
+    { label: t("legalLinks.privacy"), href: "/privacidad" },
+  ] as const;
 
   return (
     <footer className="border-t border-border bg-background">
@@ -38,16 +44,13 @@ export function MarketingFooter() {
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
           <div className="col-span-2 sm:col-span-3 lg:col-span-1">
             <Logo />
-            <p className="bee-caption mt-3 max-w-xs">
-              Inteligencia comercial autónoma para equipos de revenue que no tienen tiempo de buscar la señal —
-              solo de actuar sobre ella.
-            </p>
+            <p className="bee-caption mt-3 max-w-xs">{t("tagline")}</p>
           </div>
 
-          <nav aria-label="Producto">
-            <p className="bee-eyebrow">Producto</p>
+          <nav aria-label={t("product")}>
+            <p className="bee-eyebrow">{t("product")}</p>
             <ul className="mt-3 space-y-2">
-              {PRODUCT_LINKS.map((link) => (
+              {productLinks.map((link) => (
                 <li key={link.label}>
                   {"external" in link && link.external ? (
                     <a
@@ -68,10 +71,10 @@ export function MarketingFooter() {
             </ul>
           </nav>
 
-          <nav aria-label="Empresa">
-            <p className="bee-eyebrow">Empresa</p>
+          <nav aria-label={t("company")}>
+            <p className="bee-eyebrow">{t("company")}</p>
             <ul className="mt-3 space-y-2">
-              {COMPANY_LINKS.map((link) => (
+              {companyLinks.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground">
                     {link.label}
@@ -81,10 +84,10 @@ export function MarketingFooter() {
             </ul>
           </nav>
 
-          <nav aria-label="Cuenta">
-            <p className="bee-eyebrow">Cuenta</p>
+          <nav aria-label={t("account")}>
+            <p className="bee-eyebrow">{t("account")}</p>
             <ul className="mt-3 space-y-2">
-              {ACCOUNT_LINKS.map((link) => (
+              {accountLinks.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground">
                     {link.label}
@@ -94,10 +97,10 @@ export function MarketingFooter() {
             </ul>
           </nav>
 
-          <nav aria-label="Legal">
-            <p className="bee-eyebrow">Legal</p>
+          <nav aria-label={t("legal")}>
+            <p className="bee-eyebrow">{t("legal")}</p>
             <ul className="mt-3 space-y-2">
-              {LEGAL_LINKS.map((link) => (
+              {legalLinks.map((link) => (
                 <li key={link.label}>
                   <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground">
                     {link.label}
@@ -109,8 +112,8 @@ export function MarketingFooter() {
         </div>
 
         <div className="mt-10 flex flex-col items-start justify-between gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center">
-          <span>© {year} BEE Intelligence — Sales Force Intelligence</span>
-          <span>Modular · Eficiente · Consciente del mercado</span>
+          <span>{t("copyright", { year })}</span>
+          <span>{t("tagline2")}</span>
         </div>
       </div>
     </footer>

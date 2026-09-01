@@ -1,0 +1,90 @@
+{
+  "header": {
+    "features": "Funcionalidades",
+    "login": "Iniciar sesión",
+    "tryFree": "Probar sin registrarte"
+  },
+  "footer": {
+    "tagline": "Inteligencia comercial autónoma para equipos de revenue que no tienen tiempo de buscar la señal — solo de actuar sobre ella.",
+    "product": "Producto",
+    "productLinks": {
+      "features": "Funcionalidades",
+      "solutions": "Soluciones",
+      "preview": "Vista previa",
+      "apiDocs": "Documentación de la API"
+    },
+    "company": "Empresa",
+    "companyLinks": {
+      "about": "Quiénes somos",
+      "careers": "Careers",
+      "security": "Seguridad"
+    },
+    "account": "Cuenta",
+    "accountLinks": {
+      "login": "Iniciar sesión",
+      "register": "Crear cuenta",
+      "contact": "Contacto",
+      "support": "Soporte"
+    },
+    "legal": "Legal",
+    "legalLinks": {
+      "terms": "Términos de Servicio",
+      "privacy": "Privacidad"
+    },
+    "copyright": "© {year} BEE Intelligence — Sales Force Intelligence",
+    "tagline2": "Modular · Eficiente · Consciente del mercado"
+  },
+  "landing": {
+    "eyebrow": "Sales Force Intelligence",
+    "heroTitle": "Inteligencia comercial autónoma que decide en tiempo real.",
+    "heroSubtitle": "BEE vigila el mercado, prioriza tu pipeline y prepara la próxima jugada mientras tú cierras — sin fricción, sin datos inventados, sin perder el control de cada decisión.",
+    "ctaStart": "Comenzar ahora",
+    "ctaTry": "Probar sin registrarte",
+    "demoEyebrow": "Demo en vivo",
+    "demoTitle": "De la señal a la oportunidad — explora el panel tú mismo.",
+    "modulesEyebrow": "Plataforma",
+    "modulesTitle": "Cuatro motores, un solo flujo de trabajo.",
+    "modulesExplore": "Explorar",
+    "modules": {
+      "signals": {
+        "title": "Motor de señales en tiempo real",
+        "description": "Detecta rondas de financiamiento, contrataciones clave y cambios de stack tecnológico apenas ocurren — sin que nadie tenga que ir a buscarlos."
+      },
+      "brief": {
+        "title": "Brief del día",
+        "description": "Un resumen ejecutivo cada mañana con lo que de verdad importa en tu pipeline — cero fricción cognitiva antes de la primera llamada."
+      },
+      "simulator": {
+        "title": "Simulador de ingresos",
+        "description": "Proyecta escenarios de pipeline basados en intención de compra real — no en promedios genéricos del sector."
+      },
+      "automation": {
+        "title": "Automatización multicanal",
+        "description": "Diseña secuencias de alcance por email, LinkedIn y más que avanzan solas según cómo responde cada lead — siempre con tu aprobación antes de enviar nada."
+      }
+    },
+    "guaranteesEyebrow": "Por qué confiar en BEE",
+    "guaranteesTitle": "Diseñado para equipos comerciales de alto rendimiento.",
+    "guaranteesSubtitle": "No promesas — garantías de arquitectura que sostienen cada decisión que BEE toma por ti.",
+    "guarantees": {
+      "noHallucinations": {
+        "title": "Cero alucinaciones",
+        "description": "Cada score y cada métrica sale de datos reales. Si no hay dato, el sistema muestra vacío — nunca lo inventa."
+      },
+      "humanApproval": {
+        "title": "Aprobación humana siempre",
+        "description": "Ninguna acción externa — un email, un mensaje, una secuencia — se ejecuta sin luz verde explícita."
+      },
+      "multiTenant": {
+        "title": "Multi-tenant real",
+        "description": "Aislamiento estricto de datos por organización, de punta a punta, no una bandera opcional."
+      },
+      "secureByDesign": {
+        "title": "Seguro desde el diseño",
+        "description": "Webhooks firmados con HMAC y secretos por entorno — las credenciales nunca tocan el código."
+      }
+    },
+    "closingTitle": "Tu próximo cliente ya está mandando señales. La pregunta es si las estás viendo.",
+    "closingCta": "Comenzar ahora"
+  }
+}

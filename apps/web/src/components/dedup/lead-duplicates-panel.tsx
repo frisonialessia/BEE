@@ -1,15 +1,17 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useState } from "react";
 
 import { useLeadDuplicates, useMergeLeads } from "@/hooks/queries/use-leads";
+import type { Locale } from "@/i18n/locales";
+import { formatDate } from "@/lib/i18n/format";
 import type { Lead } from "@/types/domain";
-
-const dateFmt = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short", year: "numeric" });
 
 function GroupRow({ groupKey, leads }: { groupKey: string; leads: Lead[] }) {
   const mergeLeads = useMergeLeads();
+  const locale = useLocale() as Locale;
   const sorted = [...leads].sort((a, b) => a.created_at.localeCompare(b.created_at));
   const [keepId, setKeepId] = useState(sorted[0].id);
 
@@ -37,7 +39,7 @@ function GroupRow({ groupKey, leads }: { groupKey: string; leads: Lead[] }) {
             />
             <span className="font-medium">{l.full_name}</span>
             <span className="text-muted-foreground">
-              · creado el {dateFmt.format(new Date(l.created_at))}
+              · creado el {formatDate(l.created_at, locale)}
             </span>
           </label>
         ))}

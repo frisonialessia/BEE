@@ -125,6 +125,13 @@ export function scoreColorVar(score: number): string {
   return "var(--color-text-muted)";
 }
 
+/** @deprecated Use `formatRelativeTime` from `lib/i18n/format.ts` instead
+ *  — that one takes the visitor's actual locale (from `useLocale()`)
+ *  instead of always rendering Spanish. Kept here, unchanged, only so
+ *  callers not yet migrated (see that file's docstring for the full list)
+ *  keep compiling and rendering exactly what they did before i18n
+ *  existed — never silently flips to a different format underneath a
+ *  caller nobody's touched yet. */
 export function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diffMs / 60000);

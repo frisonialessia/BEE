@@ -1,19 +1,16 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useState } from "react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCreateQuota, useDeleteQuota, useQuotas } from "@/hooks/queries/use-quotas";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
+import type { Locale } from "@/i18n/locales";
+import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeQuotaActual } from "@/lib/quotas";
 import type { TeamOut, UserOut } from "@/types/auth";
-
-const currency = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
 
 function QuotaForm({
   users,
@@ -127,6 +124,7 @@ export function QuotasSection({
   teams: TeamOut[];
   canManage: boolean;
 }) {
+  const locale = useLocale() as Locale;
   const { data: quotasResult, isLoading: quotasLoading } = useQuotas();
   const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 300);
   const deleteQuota = useDeleteQuota();
@@ -181,7 +179,7 @@ export function QuotasSection({
                   </div>
                   <div className="flex items-center gap-2">
                     <p className="text-xs font-mono text-muted-foreground">
-                      {currency.format(actual)} / {currency.format(q.target_amount)} · {pct}%
+                      {formatCurrencyUSD(actual, locale)} / {formatCurrencyUSD(q.target_amount, locale)} · {pct}%
                     </p>
                     {canManage && (
                       <button
@@ -206,7 +204,7 @@ export function QuotasSection({
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    {currency.format(actual)} de {currency.format(q.target_amount)} ({pct}%)
+                    {formatCurrencyUSD(actual, locale)} de {formatCurrencyUSD(q.target_amount, locale)} ({pct}%)
                   </TooltipContent>
                 </Tooltip>
               </div>
