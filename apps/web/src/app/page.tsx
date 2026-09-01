@@ -48,7 +48,7 @@ const MODULE_HREFS = {
 const MODULE_TONES = {
   signals: "bee-bento--primary",
   brief: "bee-bento--warm",
-  simulator: "",
+  simulator: "bee-bento--violet",
   automation: "bee-bento--muted",
 } as const;
 const MODULE_SPANS = {

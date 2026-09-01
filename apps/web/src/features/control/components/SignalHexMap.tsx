@@ -182,7 +182,7 @@ export function SignalHexMap({
 
   const cells = useMemo(() => {
     if (leads.length === 0 || size.width <= 0) return [];
-    const points = leadsToPoints(leads, size.width, size.height);
+    const points = leadsToPoints(leads, size.width, size.height, hexRadius);
     return binLeadPoints(points, hexRadius);
   }, [leads, size.width, size.height, hexRadius]);
 

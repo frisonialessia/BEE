@@ -53,9 +53,22 @@ export function leadsToPoints(
   leads: HotLeadScore[],
   width: number,
   height: number,
+  radius: number,
 ): LeadPoint[] {
-  const padX = width * 0.06;
-  const padY = height * 0.08;
+  // Padding must never be smaller than a hexagon's own radius — otherwise a
+  // cell whose centroid lands near the plotted edge (a real, if unlikely,
+  // outcome of jitter + the STAGE_X columns closest to 0/1, "awareness" at
+  // 0.12 and "ready_to_buy" at 0.88) draws partly outside the canvas, which
+  // clips it: a real signal rendered half-invisible at the card's edge,
+  // reading as a hexagon quietly disappearing. The percentage-based padding
+  // below is fine on a roomy card but was never large enough on its own —
+  // it doesn't know how big a hexagon it needs to leave room for, since
+  // radius grows precisely when leads are sparse (see hexRadius in
+  // SignalHexMap.tsx) and a sparse canvas is also often narrower. `* 1.15`
+  // is slack for the jitter above pushing a point a few px further out
+  // than its column's nominal position.
+  const padX = Math.max(width * 0.06, radius * 1.15);
+  const padY = Math.max(height * 0.08, radius * 1.15);
   const plotW = width - padX * 2;
   const plotH = height - padY * 2;
   // Jitter used to be a flat pixel amount (±12.5px x, ±8px y) no matter how
@@ -70,15 +83,30 @@ export function leadsToPoints(
   const jitterX = plotW * 0.09;
   const jitterY = plotH * 0.07;
 
+  // Belt-and-suspenders on top of the radius-aware padding above: the
+  // padding math keeps a stage column's *nominal* center comfortably clear
+  // of the edge, but jitter can still push an individual point outward from
+  // there — clamping every point's final position to [radius, dimension -
+  // radius] is a hard, unconditional guarantee that no hexagon can ever be
+  // centered close enough to the canvas edge to get clipped, independent of
+  // how the padding/jitter percentages above interact for any given canvas
+  // size or lead count.
+  const minX = radius;
+  const maxX = width - radius;
+  const minY = radius;
+  const maxY = height - radius;
+
   return leads.map((lead) => {
     const hash = hashDomain(lead.company_domain);
     const stageKey = lead.buying_stage as BuyingStage;
     const stageX = STAGE_X[stageKey] ?? 0.5;
-    const x = padX + stageX * plotW + ((hash % 100) - 50) * (jitterX / 50);
-    const y =
+    const rawX = padX + stageX * plotW + ((hash % 100) - 50) * (jitterX / 50);
+    const rawY =
       padY +
       (1 - lead.research_intensity_score / 100) * plotH +
       (((hash >> 7) % 80) - 40) * (jitterY / 40);
+    const x = Math.min(Math.max(rawX, minX), maxX);
+    const y = Math.min(Math.max(rawY, minY), maxY);
 
     return {
       x,
