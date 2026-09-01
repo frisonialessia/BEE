@@ -39,6 +39,7 @@ function formatCloseDate(iso: string, locale: Locale): string {
  *  un número. */
 export function CyclePredictionPanel({ opportunityId }: { opportunityId: string }) {
   const locale = useLocale() as Locale;
+  const t = useTranslations("shared.cyclePrediction");
   const { data: result, isLoading } = useCyclePrediction(opportunityId);
 
   if (isLoading) return <Skeleton className="h-32" />;
@@ -51,9 +52,9 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-1.5 bee-card-title">
           <Clock className="size-4 stroke-[1.5] text-muted-foreground" />
-          Predicción de ciclo de venta
+          {t("heading")}
         </h3>
-        {result?.live === false && <Badge variant="warning">Datos demo</Badge>}
+        {result?.live === false && <Badge variant="warning">{t("demoData")}</Badge>}
       </div>
 
       {!prediction.available ? (
@@ -62,41 +63,41 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
         <div className="space-y-3">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <span className="text-2xl font-semibold tabular-nums">
-              {prediction.predicted_cycle_days} días
+              {t("days", { count: prediction.predicted_cycle_days ?? 0 })}
             </span>
-            <span className="text-sm text-muted-foreground">de ciclo estimado</span>
+            <span className="text-sm text-muted-foreground">{t("estimatedCycle")}</span>
             {prediction.confidence && (
               <Badge variant="outline" className="ml-1">
-                {CONFIDENCE_LABEL[prediction.confidence] ?? prediction.confidence}
+                {confidenceLabel(t, prediction.confidence)}
               </Badge>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-xs text-muted-foreground">Cierre estimado</p>
+              <p className="text-xs text-muted-foreground">{t("estimatedClose")}</p>
               <p className="font-medium">
                 {prediction.predicted_close_date ? formatCloseDate(prediction.predicted_close_date, locale) : "—"}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">
-                {prediction.is_overdue ? "Días de retraso" : "Días restantes"}
+                {prediction.is_overdue ? t("daysOverdue") : t("daysRemaining")}
               </p>
               <p className={`font-medium tabular-nums ${prediction.is_overdue ? "text-[var(--color-chart-2)]" : ""}`}>
                 {prediction.is_overdue
-                  ? `${Math.abs(prediction.days_remaining ?? 0)} días`
-                  : `${prediction.days_remaining} días`}
+                  ? t("days", { count: Math.abs(prediction.days_remaining ?? 0) })
+                  : t("days", { count: prediction.days_remaining ?? 0 })}
               </p>
             </div>
           </div>
 
           {prediction.is_overdue && (
-            <Badge variant="destructive">Va más lento de lo esperado para deals así</Badge>
+            <Badge variant="destructive">{t("overdueWarning")}</Badge>
           )}
 
           <p className="text-xs text-muted-foreground">
-            Basado en {prediction.cohort_size} {prediction.cohort_size === 1 ? "deal cerrado" : "deals cerrados"}
+            {t("basedOn", { count: prediction.cohort_size })}
             {prediction.cohort_basis ? ` — ${prediction.cohort_basis}` : ""}.
           </p>
 
@@ -115,6 +116,7 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
  *  número principal — nunca se mezcla con `predicted_cycle_days`, solo se
  *  muestra junto a él. Ver el docstring de CyclePredictorService. */
 function SignalRecalibrationNote({ recal }: { recal: CycleSignalRecalibration }) {
+  const t = useTranslations("shared.cyclePrediction.recalibration");
   if (!recal.available) return null;
   const faster = (recal.delta_days ?? 0) < 0;
 
@@ -122,22 +124,28 @@ function SignalRecalibrationNote({ recal }: { recal: CycleSignalRecalibration })
     <div className="rounded-md border border-border bg-muted/40 p-3 text-xs">
       <p className="flex items-center gap-1.5 font-medium text-foreground">
         <Radar className="size-3.5 stroke-[1.5]" />
-        Recalibración por señales de mercado
+        {t("title")}
       </p>
       <p className="mt-1.5 text-muted-foreground">
-        Deals con una señal nueva de mercado durante el ciclo cerraron en {faster ? "menos" : "más"} tiempo:{" "}
-        <span className="font-medium text-foreground">{recal.with_signal_median_days} días</span> de mediana
-        (n={recal.with_signal_count}) vs.{" "}
-        <span className="font-medium text-foreground">{recal.without_signal_median_days} días</span> sin ella
-        (n={recal.without_signal_count}).
+        {t.rich("summary", {
+          direction: faster ? t("faster") : t("slower"),
+          withDays: recal.with_signal_median_days ?? 0,
+          withCount: recal.with_signal_count,
+          withoutDays: recal.without_signal_median_days ?? 0,
+          withoutCount: recal.without_signal_count,
+          strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+        })}
       </p>
       {recal.target_has_new_signal && (
         <p className="mt-1.5">
           <Badge variant="outline">
-            Esta cuenta ya tuvo una señal nueva
             {recal.target_new_signal_types.length > 0
-              ? `: ${recal.target_new_signal_types.map((t) => signalTypeLabels[t as SignalType] ?? t).join(", ")}`
-              : ""}
+              ? t("newSignalWithTypes", {
+                  types: recal.target_new_signal_types
+                    .map((type) => signalTypeLabels[type as SignalType] ?? type)
+                    .join(", "),
+                })
+              : t("newSignal")}
           </Badge>
         </p>
       )}

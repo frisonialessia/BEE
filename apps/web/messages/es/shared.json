@@ -148,7 +148,7 @@
     "basedOn": "Basado en {count} {count, plural, one {deal cerrado} other {deals cerrados}}",
     "recalibration": {
       "title": "Recalibración por señales de mercado",
-      "summary": "Deals con una señal nueva de mercado durante el ciclo cerraron en {direction} tiempo: {withDays} días de mediana (n={withCount}) vs. {withoutDays} días sin ella (n={withoutCount}).",
+      "summary": "Deals con una señal nueva de mercado durante el ciclo cerraron en {direction} tiempo: <strong>{withDays} días</strong> de mediana (n={withCount}) vs. <strong>{withoutDays} días</strong> sin ella (n={withoutCount}).",
       "faster": "menos",
       "slower": "más",
       "newSignal": "Esta cuenta ya tuvo una señal nueva",

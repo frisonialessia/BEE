@@ -148,7 +148,7 @@
     "basedOn": "Based on {count} closed {count, plural, one {deal} other {deals}}",
     "recalibration": {
       "title": "Market signal recalibration",
-      "summary": "Deals with a new market signal during the cycle closed {direction} time: {withDays} days median (n={withCount}) vs. {withoutDays} days without it (n={withoutCount}).",
+      "summary": "Deals with a new market signal during the cycle closed {direction} time: <strong>{withDays} days</strong> median (n={withCount}) vs. <strong>{withoutDays} days</strong> without it (n={withoutCount}).",
       "faster": "in less",
       "slower": "in more",
       "newSignal": "This account already had a new signal",
