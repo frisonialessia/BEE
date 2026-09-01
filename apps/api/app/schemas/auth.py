@@ -124,7 +124,8 @@ class UserProfileUpdateIn(BaseModel):
     """
 
     full_name: str | None = Field(default=None, min_length=1, max_length=200)
-    avatar_url: str | None = Field(default=None, max_length=1000)
+    # A client-resized data: URI, not a link — see User.avatar_url's docstring.
+    avatar_url: str | None = Field(default=None, max_length=300_000)
     phone: str | None = Field(default=None, max_length=32)
     bio: str | None = Field(default=None, max_length=500)
 
