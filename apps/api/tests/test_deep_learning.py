@@ -15,8 +15,12 @@ import uuid
 
 from sqlmodel import Session
 
+from app.core.security import create_access_token, hash_password
 from app.models.anomaly import AlertSeverity, AlertStatus, AnomalyAlert
+from app.models.base import UserRole
 from app.models.correction import StyleRuleType
+from app.models.organization import Organization
+from app.models.user import User
 from app.schemas.scenario import ScenarioRequest
 from app.services.anomaly_detector import AnomalyDetector
 from app.services.correction_learning import CorrectionLearningService
@@ -662,8 +666,31 @@ class TestAnomalyDetector:
 # ══════════════════════════════════════════════════════════════════
 
 
+def _auth_headers(session: Session) -> dict:
+    """A valid bearer token for a fresh, persisted OWNER — these endpoints
+    write org-scoped data and require a resolvable tenant identity."""
+    org = Organization(name="Test Org", slug=f"test-org-{uuid.uuid4().hex[:8]}")
+    session.add(org)
+    session.commit()
+    session.refresh(org)
+
+    user = User(
+        organization_id=org.id,
+        email=f"owner-{uuid.uuid4().hex[:8]}@bee.ai",
+        hashed_password=hash_password("password123"),
+        full_name="Owner",
+        role=UserRole.OWNER,
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    token = create_access_token(user.id, organization_id=org.id, role=user.role.value)
+    return {"Authorization": f"Bearer {token}"}
+
+
 class TestCorrectionEndpoints:
-    def test_record_correction(self, client) -> None:
+    def test_record_correction(self, client, session: Session) -> None:
         resp = client.post(
             "/api/v1/learning/corrections",
             json={
@@ -671,12 +698,24 @@ class TestCorrectionEndpoints:
                 "edited_content": "Your CAC is 40% above median. Let's fix it.",
                 "artifact_type": "email_draft",
             },
+            headers=_auth_headers(session),
         )
         assert resp.status_code == 200
         data = resp.json()
         assert "correction_id" in data
         assert "extracted_rules" in data
         assert data["total_corrections"] >= 1
+
+    def test_record_correction_requires_auth(self, client) -> None:
+        resp = client.post(
+            "/api/v1/learning/corrections",
+            json={
+                "original_content": "Hope you're well!",
+                "edited_content": "Anonymous submission.",
+                "artifact_type": "email_draft",
+            },
+        )
+        assert resp.status_code == 401
 
     def test_get_style_profile(self, client) -> None:
         resp = client.get("/api/v1/learning/style-profile")
@@ -690,7 +729,8 @@ class TestCorrectionEndpoints:
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
 
-    def test_style_profile_updates_after_correction(self, client) -> None:
+    def test_style_profile_updates_after_correction(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
         client.post(
             "/api/v1/learning/corrections",
             json={
@@ -698,14 +738,19 @@ class TestCorrectionEndpoints:
                 "edited_content": "40% of your pipeline is stalled. Here's why.",
                 "artifact_type": "email_draft",
             },
+            headers=headers,
         )
-        resp = client.get("/api/v1/learning/style-profile")
+        # Same headers on the read: the correction was recorded under this
+        # specific org, and an unscoped GET now legitimately reads a
+        # different (empty) profile — that's the org-scoping working
+        # correctly, not a bug this test is about.
+        resp = client.get("/api/v1/learning/style-profile", headers=headers)
         data = resp.json()
         assert data["total_corrections"] >= 1
 
 
 class TestScenarioEndpoints:
-    def test_run_scenario_basic(self, client) -> None:
+    def test_run_scenario_basic(self, client, session: Session) -> None:
         resp = client.post(
             "/api/v1/analytics/scenarios",
             json={
@@ -714,6 +759,7 @@ class TestScenarioEndpoints:
                 "channel": "email",
                 "target_monthly_signals": 15,
             },
+            headers=_auth_headers(session),
         )
         assert resp.status_code == 200
         data = resp.json()
@@ -723,57 +769,72 @@ class TestScenarioEndpoints:
         assert "key_drivers" in data
         assert "risk_factors" in data
 
-    def test_scenario_with_warm_intro(self, client) -> None:
+    def test_run_scenario_requires_auth(self, client) -> None:
+        resp = client.post("/api/v1/analytics/scenarios", json={"target_monthly_signals": 10})
+        assert resp.status_code == 401
+
+    def test_scenario_with_warm_intro(self, client, session: Session) -> None:
         resp = client.post(
             "/api/v1/analytics/scenarios",
             json={
                 "channel": "warm_intro",
                 "target_monthly_signals": 10,
             },
+            headers=_auth_headers(session),
         )
         assert resp.status_code == 200
         data = resp.json()
         assert data["channel_modifier"] == 1.45
 
-    def test_scenario_projections_ordered(self, client) -> None:
+    def test_scenario_projections_ordered(self, client, session: Session) -> None:
         resp = client.post(
             "/api/v1/analytics/scenarios",
             json={
                 "target_monthly_signals": 10,
             },
+            headers=_auth_headers(session),
         )
         data = resp.json()
         assert data["conservative"]["annual_revenue"] < data["realistic"]["annual_revenue"]
         assert data["realistic"]["annual_revenue"] < data["optimistic"]["annual_revenue"]
 
-    def test_scenario_low_data_confidence_flagged(self, client) -> None:
+    def test_scenario_low_data_confidence_flagged(self, client, session: Session) -> None:
         resp = client.post(
             "/api/v1/analytics/scenarios",
             json={
                 "sector": "nonexistent_sector_9999",
                 "target_monthly_signals": 5,
             },
+            headers=_auth_headers(session),
         )
         assert resp.status_code == 200
         assert resp.json()["low_data_confidence"] is True
 
 
 class TestAnomalyEndpoints:
-    def test_check_anomalies_empty_db(self, client) -> None:
-        resp = client.post("/api/v1/analytics/anomalies/check")
+    def test_check_anomalies_empty_db(self, client, session: Session) -> None:
+        resp = client.post("/api/v1/analytics/anomalies/check", headers=_auth_headers(session))
         assert resp.status_code == 200
         data = resp.json()
         assert "checked_at" in data
         assert "summary" in data
         assert isinstance(data["new_alerts"], list)
 
+    def test_check_anomalies_requires_auth(self, client) -> None:
+        resp = client.post("/api/v1/analytics/anomalies/check")
+        assert resp.status_code == 401
+
     def test_list_anomalies(self, client) -> None:
         resp = client.get("/api/v1/analytics/anomalies")
         assert resp.status_code == 200
         assert isinstance(resp.json(), list)
 
-    def test_acknowledge_nonexistent_alert(self, client) -> None:
-        resp = client.post(f"/api/v1/analytics/anomalies/{uuid.uuid4()}/acknowledge", json={})
+    def test_acknowledge_nonexistent_alert(self, client, session: Session) -> None:
+        resp = client.post(
+            f"/api/v1/analytics/anomalies/{uuid.uuid4()}/acknowledge",
+            json={},
+            headers=_auth_headers(session),
+        )
         assert resp.status_code == 404
 
     def test_anomaly_check_and_acknowledge_flow(self, client, session: Session) -> None:
@@ -802,6 +863,7 @@ class TestAnomalyEndpoints:
         resp = client.post(
             f"/api/v1/analytics/anomalies/{alert.id}/acknowledge",
             json={"notes": "Expected seasonal dip"},
+            headers=_auth_headers(session),
         )
         assert resp.status_code == 200
         data = resp.json()

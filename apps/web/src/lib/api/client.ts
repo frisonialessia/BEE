@@ -76,6 +76,23 @@ export async function apiFetch<T>(
       typeof (detail as { detail: unknown }).detail === "string"
         ? (detail as { detail: string }).detail
         : `API error ${res.status}`;
+
+    // A 401 while a session token was actually being sent means that
+    // specific token is dead (expired, or the user got deactivated
+    // server-side) — not "this call happens to be anonymous". Every
+    // fetch* caller in this codebase individually catches ApiError and
+    // quietly degrades (empty list, cached demo data) — nothing ever told
+    // the person their session died, so the dashboard just silently
+    // stopped updating. Broadcast it once here so a single top-level
+    // listener (AuthProvider) can react uniformly instead of every caller
+    // reinventing that check. Guarded on `getStoredToken()` at the moment
+    // of the response (not just "status is 401") so this never fires for
+    // an intentionally-anonymous call (e.g. a login attempt with the wrong
+    // password, which 401s too but has no stored token to invalidate).
+    if (res.status === 401 && typeof window !== "undefined" && getStoredToken()) {
+      window.dispatchEvent(new CustomEvent("bee:session-expired"));
+    }
+
     throw new ApiError(message, res.status, detail);
   }
 

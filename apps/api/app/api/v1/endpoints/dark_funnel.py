@@ -7,7 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query, status
 from sqlmodel import Session
 
-from app.api.deps import get_organization_id
+from app.api.deps import get_organization_id, require_organization_id
 from app.core.database import get_session
 from app.schemas.dark_funnel import (
     DarkFunnelSignalIn,
@@ -34,7 +34,7 @@ def ingest_signal(
     data: DarkFunnelSignalIn,
     svc: DarkFunnelService = Depends(_get_service),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> DarkFunnelSignalOut:
     """Submit an external intent signal from any source.
 
@@ -67,7 +67,7 @@ def ingest_batch(
     signals: list[DarkFunnelSignalIn],
     svc: DarkFunnelService = Depends(_get_service),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> list[DarkFunnelSignalOut]:
     results = svc.ingest_batch(signals, organization_id)
     session.commit()

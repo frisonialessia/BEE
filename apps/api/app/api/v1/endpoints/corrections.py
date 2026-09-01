@@ -7,7 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
-from app.api.deps import get_organization_id
+from app.api.deps import get_organization_id, require_organization_id
 from app.core.database import get_session
 from app.schemas.correction import CorrectionIn, CorrectionOut, StyleProfileOut
 from app.services.correction_learning import CorrectionLearningService
@@ -28,7 +28,7 @@ def record_correction(
     body: CorrectionIn,
     service: CorrectionLearningService = Depends(_get_service),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> CorrectionOut:
     """Submit a corrected artifact for learning.
 

@@ -5,7 +5,7 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
-from app.api.deps import get_organization_id
+from app.api.deps import require_organization_id
 from app.core.database import get_session
 from app.schemas.scenario import ScenarioRequest, ScenarioResult
 from app.services.scenario_simulator import ScenarioSimulator
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/analytics", tags=["Scenario Simulator (What-If)"])
 def run_scenario(
     request: ScenarioRequest,
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> ScenarioResult:
     """Execute a predictive revenue simulation.
 

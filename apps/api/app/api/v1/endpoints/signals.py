@@ -15,7 +15,7 @@ import json
 import uuid
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
-from sqlmodel import Session, or_, select
+from sqlmodel import Session, select
 
 from app.api.deps import get_current_user_optional, get_organization_from_api_key, get_signal_engine
 from app.core.database import get_session
@@ -35,7 +35,7 @@ from app.schemas.signal import (
     SignalOut,
     SignalWebhookIn,
 )
-from app.services.permissions import scope_to_organization
+from app.services.permissions import scope_by_organization_id, scope_to_organization
 from app.services.signal_engine import SignalEngine
 
 logger = get_logger(__name__)
@@ -292,10 +292,13 @@ def ingest_intent_event(
             .order_by(Opportunity.created_at.desc())
             .limit(1)
         )
-        if organization_id is not None:
-            stmt = stmt.where(
-                or_(Opportunity.organization_id == organization_id, Opportunity.organization_id.is_(None))
-            )
+        # Always applied (not conditional on organization_id being present) —
+        # scope_by_organization_id is itself already a no-op for an unscoped
+        # caller, so this is the same behavior as the equivalent hand-rolled
+        # `if organization_id is not None: ...` used to be, just expressed
+        # with the same helper every other org-scoped query in this codebase
+        # uses, instead of a bespoke inline conditional.
+        stmt = scope_by_organization_id(stmt, Opportunity.organization_id, organization_id)
         if outcome.opportunity and outcome.opportunity.company_id:
             stmt = stmt.where(Opportunity.company_id == outcome.opportunity.company_id)
         elif outcome.opportunity and outcome.opportunity.lead_id:

@@ -7,7 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session
 
-from app.api.deps import get_organization_id
+from app.api.deps import get_organization_id, require_organization_id
 from app.core.database import get_session
 from app.schemas.anomaly import AnomalyAcknowledgeRequest, AnomalyAlertOut, AnomalyCheckResult
 from app.services.anomaly_detector import AnomalyDetector
@@ -27,7 +27,7 @@ def _get_detector(session: Session = Depends(get_session)) -> AnomalyDetector:
 def check_anomalies(
     detector: AnomalyDetector = Depends(_get_detector),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> AnomalyCheckResult:
     """Trigger a full anomaly detection run.
 
@@ -86,7 +86,7 @@ def acknowledge_alert(
     body: AnomalyAcknowledgeRequest,
     detector: AnomalyDetector = Depends(_get_detector),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> AnomalyAlertOut:
     """CEO acknowledges an alert — marks it as reviewed without taking action.
 

@@ -24,6 +24,8 @@ def _base_kwargs(**overrides: object) -> dict[str, object]:
         "WEBHOOK_SIGNING_SECRET": "a-real-signing-secret",
         "JWT_SECRET_KEY": "a-real-jwt-secret",
         "DATABASE_URL": "postgresql://user:pass@prod-host:5432/bee_prod",
+        "BACKEND_CORS_ORIGINS": "https://app.example.com",
+        "VECTOR_STORE_BACKEND": "pgvector",
     }
     kwargs.update(overrides)
     return kwargs
@@ -85,6 +87,18 @@ def test_does_not_flag_database_when_postgres_vars_are_customized(caplog) -> Non
     with caplog.at_level(logging.CRITICAL):
         Settings(**kwargs)
     assert "INSECURE PRODUCTION CONFIG" not in caplog.text
+
+
+def test_flags_localhost_cors_origin(caplog) -> None:
+    with caplog.at_level(logging.CRITICAL):
+        Settings(**_base_kwargs(BACKEND_CORS_ORIGINS="http://localhost:3000"))
+    assert "BACKEND_CORS_ORIGINS is still the localhost-only dev default" in caplog.text
+
+
+def test_flags_mock_vector_store_backend(caplog) -> None:
+    with caplog.at_level(logging.CRITICAL):
+        Settings(**_base_kwargs(VECTOR_STORE_BACKEND="mock"))
+    assert 'VECTOR_STORE_BACKEND is still "mock"' in caplog.text
 
 
 def test_sqlalchemy_database_uri_falls_back_silently_without_the_check() -> None:

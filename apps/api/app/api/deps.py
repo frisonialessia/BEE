@@ -169,6 +169,33 @@ def get_organization_id(
     return api_key_org_id
 
 
+def require_organization_id(
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
+) -> uuid.UUID:
+    """Require a resolvable tenant identity (Bearer JWT or X-BEE-Org-Key) for
+    this request — 401s instead of the bare :func:`get_organization_id`'s
+    backward-compatible ``None``.
+
+    ``get_organization_id`` returning ``None`` is the right default for a
+    *read*: an unscoped/legacy caller still sees whatever is untagged/shared
+    (see :func:`app.services.permissions.scope_by_organization_id`). It is
+    the wrong default for anything that writes, mutates, or triggers an
+    action — an anonymous caller must never reach that handler at all, or
+    every organization's data becomes a shared write surface for anyone on
+    the internet. Use this dependency (not the bare one) on every such
+    endpoint. Mirrors the guard ``orchestrator.py``/``sequences.py`` already
+    define locally for the same reason, centralized here so new endpoints
+    don't have to reinvent it — or, as happened before this was added,
+    forget it.
+    """
+    if organization_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required (Bearer token or X-BEE-Org-Key).",
+        )
+    return organization_id
+
+
 def require_roles(*roles: UserRole):
     """Dependency factory: 403s unless the current user has one of ``roles``."""
 

@@ -7,7 +7,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
-from app.api.deps import get_organization_id
+from app.api.deps import get_organization_id, require_organization_id
 from app.core.database import get_session
 from app.schemas.network import (
     NetworkConnectionCreate,
@@ -34,7 +34,7 @@ def add_connection(
     data: NetworkConnectionCreate,
     nav: NetworkNavigator = Depends(_get_navigator),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> NetworkConnectionOut:
     """Add a professional contact to the CEO's network.
 
@@ -84,7 +84,7 @@ def delete_connection(
     connection_id: uuid.UUID,
     nav: NetworkNavigator = Depends(_get_navigator),
     session: Session = Depends(get_session),
-    organization_id: uuid.UUID | None = Depends(get_organization_id),
+    organization_id: uuid.UUID = Depends(require_organization_id),
 ) -> None:
     ok = nav.delete_connection(connection_id, organization_id)
     if not ok:
