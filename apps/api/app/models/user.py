@@ -45,7 +45,16 @@ class User(TimestampMixin, table=True):
     # All optional — "not filled in yet" is the expected state for every one
     # of these, same convention as Organization's own progressive-profile
     # fields (industry/employee_range/website).
-    avatar_url: str | None = Field(default=None, max_length=1000)
+    #
+    # avatar_url holds a client-resized `data:image/...;base64,...` URI, not
+    # a link to somewhere else — there's no file/blob storage wired up yet,
+    # so the frontend crops/downscales the picked file to a small square
+    # (see lib/image.ts) before it ever reaches this field. max_length is
+    # sized for that (a few hundred KB, generous headroom over the ~10-20KB
+    # a compressed 128x128 thumbnail actually needs) — the underlying
+    # column itself is unbounded VARCHAR (see migration 024), this is only
+    # the application-level sanity cap.
+    avatar_url: str | None = Field(default=None, max_length=300_000)
     phone: str | None = Field(default=None, max_length=32)
     bio: str | None = Field(default=None, max_length=500)
 

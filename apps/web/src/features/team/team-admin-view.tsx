@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -20,6 +20,8 @@ import {
 } from "@/hooks/queries/use-users";
 import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
 import { QuotasSection } from "@/features/team/quotas-section";
+import { resizeImageToDataUrl } from "@/lib/image";
+import { cn } from "@/lib/utils";
 import { ROLE_LABELS, type TeamOut, type UserOut, type UserRole } from "@/types/auth";
 import { ApiError } from "@/types/api";
 
@@ -343,18 +345,55 @@ function UserRow({
   );
 }
 
+/** Circular avatar — the picture if one's set, /icon.svg (BEE's own mark,
+ * same asset Logo/Ask BEE use) as the default otherwise. Never a broken-
+ * image icon: there's always something to show. */
+function AvatarCircle({
+  src,
+  size = 64,
+  className,
+}: {
+  src: string | null | undefined;
+  size?: number;
+  className?: string;
+}) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- user-picked data: URI or the static brand mark, neither benefits from next/image
+    <img
+      src={src || "/icon.svg"}
+      alt=""
+      aria-hidden="true"
+      style={{ width: size, height: size }}
+      className={cn(
+        "shrink-0 rounded-full border border-border object-cover",
+        !src && "bg-[var(--color-primary)] p-2",
+        className,
+      )}
+    />
+  );
+}
+
 /** Self-service profile — name, avatar, phone, bio. Every role gets this,
  * same "no role required, just logged in" posture as ChangePasswordSection
- * below (PATCH /users/me has no role dependency either). */
+ * below (PATCH /users/me has no role dependency either).
+ *
+ * The avatar is pick-a-file-from-your-computer, not a URL field — there's
+ * no image hosting wired up in this project, so `resizeImageToDataUrl`
+ * (lib/image.ts) downscales whatever's picked into a small square
+ * thumbnail client-side and that becomes the whole "upload": a data: URI
+ * saved directly on the User row. See avatar_url's docstring on the
+ * backend for the reasoning and the size cap this relies on. */
 function MyProfileSection() {
   const t = useTranslations("workspace.team.profile");
   const { user: currentUser, setUser } = useAuth();
   const updateProfile = useUpdateMyProfile();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [open, setOpen] = useState(false);
   const [fullName, setFullName] = useState(currentUser?.full_name ?? "");
   const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatar_url ?? "");
   const [phone, setPhone] = useState(currentUser?.phone ?? "");
   const [bio, setBio] = useState(currentUser?.bio ?? "");
+  const [processingImage, setProcessingImage] = useState(false);
 
   function openForm() {
     setFullName(currentUser?.full_name ?? "");
@@ -364,12 +403,26 @@ function MyProfileSection() {
     setOpen(true);
   }
 
+  async function handlePickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allows picking the exact same file again later
+    if (!file) return;
+    setProcessingImage(true);
+    try {
+      setAvatarUrl(await resizeImageToDataUrl(file));
+    } catch {
+      toast.error(t("avatarError"));
+    } finally {
+      setProcessingImage(false);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
       const updated = await updateProfile.mutateAsync({
         full_name: fullName.trim() || undefined,
-        avatar_url: avatarUrl.trim() || null,
+        avatar_url: avatarUrl || null,
         phone: phone.trim() || null,
         bio: bio.trim() || null,
       });
@@ -397,6 +450,44 @@ function MyProfileSection() {
 
       {open ? (
         <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={processingImage}
+              className="relative rounded-full transition-opacity hover:opacity-80 disabled:opacity-50"
+              aria-label={t("avatarPickAria")}
+            >
+              <AvatarCircle src={avatarUrl} size={64} />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handlePickFile}
+              className="hidden"
+            />
+            <div className="flex flex-col items-start gap-1">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={processingImage}
+                className="bee-btn-ghost text-xs"
+              >
+                {processingImage ? t("avatarProcessing") : t("avatarPick")}
+              </button>
+              {avatarUrl && (
+                <button
+                  type="button"
+                  onClick={() => setAvatarUrl("")}
+                  className="bee-micro text-muted-foreground hover:text-foreground"
+                >
+                  {t("avatarRemove")}
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1 text-xs">
               <span className="bee-caption">{t("nameLabel")}</span>
@@ -415,16 +506,7 @@ function MyProfileSection() {
                 placeholder={t("phonePlaceholder")}
               />
             </label>
-            <label className="space-y-1 text-xs">
-              <span className="bee-caption">{t("avatarLabel")}</span>
-              <input
-                value={avatarUrl}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-                className="bee-input"
-                placeholder={t("avatarPlaceholder")}
-              />
-            </label>
-            <label className="space-y-1 text-xs">
+            <label className="space-y-1 text-xs sm:col-span-2">
               <span className="bee-caption">{t("bioLabel")}</span>
               <input
                 value={bio}
@@ -437,7 +519,7 @@ function MyProfileSection() {
           <div className="flex gap-2">
             <button
               type="submit"
-              disabled={updateProfile.isPending}
+              disabled={updateProfile.isPending || processingImage}
               className="bee-btn bee-btn--primary"
             >
               {updateProfile.isPending ? t("saving") : t("save")}
@@ -448,16 +530,19 @@ function MyProfileSection() {
           </div>
         </form>
       ) : (
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="bee-caption">{t("phoneLabel")}</dt>
-            <dd>{currentUser?.phone || t("empty")}</dd>
-          </div>
-          <div>
-            <dt className="bee-caption">{t("bioLabel")}</dt>
-            <dd>{currentUser?.bio || t("empty")}</dd>
-          </div>
-        </dl>
+        <div className="flex items-center gap-3">
+          <AvatarCircle src={currentUser?.avatar_url} size={48} />
+          <dl className="grid flex-1 gap-2 text-sm sm:grid-cols-2">
+            <div>
+              <dt className="bee-caption">{t("phoneLabel")}</dt>
+              <dd>{currentUser?.phone || t("empty")}</dd>
+            </div>
+            <div>
+              <dt className="bee-caption">{t("bioLabel")}</dt>
+              <dd>{currentUser?.bio || t("empty")}</dd>
+            </div>
+          </dl>
+        </div>
       )}
     </section>
   );
