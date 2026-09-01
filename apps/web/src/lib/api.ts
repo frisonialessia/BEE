@@ -497,8 +497,12 @@ export async function getDarkFunnelHotLeads(params?: {
     if (!res.ok) throw new Error(`API responded ${res.status}`);
     return { data: (await res.json()) as HotLeadScore[], live: true };
   } catch {
-    const { sampleHotLeads } = await import("@/lib/sample-data");
-    return { data: sampleHotLeads.slice(0, params?.limit ?? 50), live: false };
+    // Honest empty, not fabricated demo data — same convention as
+    // fetchSignals/getDarkFunnelSummary (see fetchSignals' docstring in
+    // lib/api/signals.ts for the full rationale). A real account hitting a
+    // transient failure must never see illustrative companies ("Northwind
+    // Labs") rendered as if they were real hot leads.
+    return { data: [], live: false };
   }
 }
 
