@@ -33,6 +33,7 @@ from sqlmodel import Session
 import app.services.signal_engine.analyzers  # noqa: F401  (registration side effect)
 from app.core.logging import get_logger
 from app.models.base import EXPANSION, RENEWAL_RISK
+from app.models.company import Company
 from app.models.opportunity import Opportunity
 from app.models.signal import Signal
 from app.repositories.company import CompanyRepository
@@ -40,6 +41,7 @@ from app.repositories.lead import LeadRepository
 from app.repositories.opportunity import OpportunityRepository
 from app.repositories.signal import SignalRepository
 from app.schemas.signal import SignalWebhookIn
+from app.services.federated_intelligence import FederatedSignalIntelligenceService
 from app.services.revenue_continuity import RevenueContinuityService
 from app.services.signal_engine.analyzers import get_analyzers
 from app.services.signal_engine.analyzers.base import AnalysisResult
@@ -127,6 +129,13 @@ class SignalEngine:
 
         # 3. Signal classification via analyzers.
         applied, aggregate = self._run_analyzers(payload)
+
+        # 3b. Federated Signal Intelligence — calibrate confidence against
+        # every OTHER opted-in organization's anonymized, aggregate win-rate
+        # for this (signal_type, industry) bucket. A no-op (confidence
+        # unchanged, prior=None) unless this organization has itself opted
+        # in — see FederatedSignalIntelligenceService's module docstring.
+        self._apply_federated_calibration(aggregate, company, organization_id)
 
         # 4. Persist the signal.
         signal = Signal(
@@ -281,6 +290,39 @@ class SignalEngine:
             metadata={"primary_analyzer": best_name},
         )
         return applied, aggregate
+
+    def _apply_federated_calibration(
+        self,
+        aggregate: AnalysisResult,
+        company: Company | None,
+        organization_id: uuid.UUID | None,
+    ) -> None:
+        """Mutates ``aggregate.confidence`` in place using the cross-tenant
+        prior, and records what happened on ``aggregate.metadata`` so it
+        ends up on ``Signal.analysis`` for auditability — a rep or CEO
+        looking at why a signal scored the way it did can see the prior
+        that influenced it, not just the final number.
+
+        Best-effort: never raises (calibrate_confidence itself already
+        never raises — see its own docstring — this is defense in depth,
+        matching every other best-effort step in this method).
+        """
+        try:
+            calibrated, prior = FederatedSignalIntelligenceService(self.session).calibrate_confidence(
+                organization_id=organization_id,
+                signal_type=aggregate.signal_type.value,
+                industry=company.industry if company else None,
+                base_confidence=aggregate.confidence,
+            )
+            if prior is not None:
+                aggregate.confidence = calibrated
+                aggregate.metadata["federated_prior"] = {
+                    "win_rate": prior.win_rate,
+                    "sample_size": prior.sample_size,
+                    "contributing_orgs": prior.contributing_orgs,
+                }
+        except Exception:  # noqa: BLE001
+            logger.exception("Federated calibration failed — confidence left unmodified")
 
     # Revenue Continuity Radar — see RevenueContinuityService's module
     # docstring. Purely cosmetic labeling on top of the classification;

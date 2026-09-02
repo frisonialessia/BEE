@@ -54,6 +54,18 @@ class Organization(TimestampMixin, table=True):
     employee_range: EmployeeRange | None = Field(default=None)
     website: str | None = Field(default=None)
 
+    # Federated Signal Intelligence — opt-in, OFF by default (same "ships
+    # complete, starts off" convention as AutopilotConfig.enabled). When
+    # true, this organization's own closed-deal history (StrategyOutcome
+    # rows — never raw signal/company/lead data) becomes eligible to be
+    # counted, in anonymized aggregate only, toward the cross-tenant priors
+    # FederatedSignalIntelligenceService computes for every OTHER opted-in
+    # organization — and, symmetrically, this org's own signal confidence
+    # becomes eligible to be calibrated by everyone else's aggregate. See
+    # app.services.federated_intelligence's module docstring for the full
+    # privacy model (k-anonymity floor, what is and isn't ever exposed).
+    federated_intelligence_opt_in: bool = Field(default=False, nullable=False)
+
     # ----- Relationships -------------------------------------------------------
     teams: list["Team"] = Relationship(back_populates="organization")
     users: list["User"] = Relationship(back_populates="organization")
