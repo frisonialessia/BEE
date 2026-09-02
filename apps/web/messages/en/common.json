@@ -12,6 +12,22 @@
     "homeAria": "BEE — home",
     "sandboxLabel": "Test sandbox"
   },
+  "errorPages": {
+    "notFound": {
+      "eyebrow": "404",
+      "title": "This page doesn't exist.",
+      "subtitle": "The link might be broken, or the page may have moved.",
+      "backHome": "Back to home",
+      "goToDashboard": "Go to dashboard"
+    },
+    "error": {
+      "eyebrow": "Something went wrong",
+      "title": "An unexpected error occurred.",
+      "subtitle": "Try again, or head back to the home page.",
+      "retry": "Try again",
+      "backHome": "Back to home"
+    }
+  },
   "commandPalette": {
     "openAria": "Open command palette",
     "hintTitle": "Command palette",
