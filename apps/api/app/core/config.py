@@ -150,6 +150,18 @@ class Settings(BaseSettings):
     # disables the check entirely.
     SIGNUP_RATE_LIMIT_PER_HOUR: int = 5
 
+    # ----- Forgot-password abuse protection (see app.core.password_reset_guard) --
+    # POST /auth/forgot-password sends an email on every call for an address
+    # that exists — same SignupGuard shape as registration above, reused
+    # against a separate per-IP bucket so a burst of reset requests can't be
+    # used to spam a real customer's inbox. 0 disables the check entirely.
+    PASSWORD_RESET_RATE_LIMIT_PER_HOUR: int = 5
+    # How long a reset link stays valid after POST /auth/forgot-password.
+    # Short window: this token grants a full account takeover if intercepted
+    # (email is rarely end-to-end encrypted), so it trades convenience for a
+    # narrower exposure window than a session token would need.
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 60
+
     # ----- Internal support tooling (see app.api.v1.endpoints.internal_support) --
     # A single narrow emergency action — reset any user's password by email —
     # gated by its own secret, entirely separate from API_SECRET_KEY (service

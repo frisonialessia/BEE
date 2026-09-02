@@ -11,13 +11,21 @@ there is no self-serve "join an existing organization" flow yet.
 from __future__ import annotations
 
 import re
+from datetime import timedelta
 
 from sqlmodel import Session, select
 
+from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.core.security import hash_password, verify_password
-from app.models.base import UserRole
+from app.core.security import (
+    generate_password_reset_token,
+    hash_api_key,
+    hash_password,
+    verify_password,
+)
+from app.models.base import UserRole, utcnow
 from app.models.organization import Organization
+from app.models.password_reset_token import PasswordResetToken
 from app.models.user import User
 from app.schemas.auth import OrganizationRegister
 
@@ -87,6 +95,74 @@ class AuthService:
         if not verify_password(password, user.hashed_password):
             return None
         return user
+
+    def create_password_reset_token(self, email: str) -> tuple[User, str] | None:
+        """Issue a reset token for the user with this email, if one exists.
+
+        Returns ``(user, plaintext_token)``, or ``None`` when no active user
+        matches — callers MUST treat both outcomes identically from the
+        caller's point of view (send the same generic response either way).
+        Distinguishing them in the HTTP response is exactly the email-
+        enumeration leak :meth:`authenticate` already avoids for login.
+        """
+        user = self.session.exec(
+            select(User).where(User.email == email.strip().lower())
+        ).first()
+        if user is None or not user.is_active:
+            return None
+
+        plaintext, token_hash = generate_password_reset_token()
+        settings = get_settings()
+        reset_token = PasswordResetToken(
+            user_id=user.id,
+            token_hash=token_hash,
+            expires_at=utcnow() + timedelta(minutes=settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES),
+        )
+        self.session.add(reset_token)
+        self.session.commit()
+
+        logger.info("Password reset token issued: user_id=%s", user.id)
+        return user, plaintext
+
+    def reset_password(self, token: str, new_password: str) -> bool:
+        """Redeem a reset token and set a new password.
+
+        Returns ``False`` (never raises) for any invalid, expired, or
+        already-used token, so the endpoint can return one generic 400
+        without distinguishing which case it was — same anti-enumeration
+        posture as the rest of this service.
+
+        The expiry cutoff is pushed into the WHERE clause rather than
+        fetched-then-compared in Python (``record.expires_at < utcnow()``) —
+        that's exactly the offset-naive-vs-aware trap SQLite's plain
+        DateTime columns round-trip into (a datetime written tz-aware comes
+        back naive), same fix already applied in
+        ``AccountResearchAgent``'s cache reads and
+        ``MarketScanOrchestrator``'s due-company query.
+        """
+        token_hash = hash_api_key(token)
+        record = self.session.exec(
+            select(PasswordResetToken).where(
+                PasswordResetToken.token_hash == token_hash,
+                PasswordResetToken.used_at.is_(None),  # type: ignore[union-attr]
+                PasswordResetToken.expires_at > utcnow(),
+            )
+        ).first()
+        if record is None:
+            return False
+
+        user = self.session.get(User, record.user_id)
+        if user is None or not user.is_active:
+            return False
+
+        user.hashed_password = hash_password(new_password)
+        record.used_at = utcnow()
+        self.session.add(user)
+        self.session.add(record)
+        self.session.commit()
+
+        logger.info("Password reset completed: user_id=%s", user.id)
+        return True
 
     def _unique_slug(self, organization_name: str) -> str:
         base = _slugify(organization_name)

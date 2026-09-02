@@ -32,12 +32,31 @@ class UserLogin(BaseModel):
 class PasswordChangeIn(BaseModel):
     """Self-service password change for the logged-in user.
 
-    Distinct from a future admin-reset or forgot-password flow (neither
-    exists yet) — this always requires the caller's *current* password, so
-    a stolen session token alone can't be used to lock the real owner out.
+    Distinct from the forgot-password flow below — this always requires the
+    caller's *current* password, so a stolen session token alone can't be
+    used to lock the real owner out.
     """
 
     current_password: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class ForgotPasswordIn(BaseModel):
+    """Request a password-reset email. See ``POST /auth/forgot-password``.
+
+    No password/token here by design — this only ever triggers an email
+    send. The response is identical whether or not the address exists (see
+    the endpoint), so the request body needs nothing an attacker could use
+    to distinguish outcomes.
+    """
+
+    email: EmailStr
+
+
+class ResetPasswordIn(BaseModel):
+    """Redeem a password-reset token. See ``POST /auth/reset-password``."""
+
+    token: str
     new_password: str = Field(min_length=8, max_length=128)
 
 
