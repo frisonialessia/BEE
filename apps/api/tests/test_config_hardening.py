@@ -98,7 +98,7 @@ def test_flags_localhost_cors_origin(caplog) -> None:
 def test_flags_mock_vector_store_backend(caplog) -> None:
     with caplog.at_level(logging.CRITICAL):
         Settings(**_base_kwargs(VECTOR_STORE_BACKEND="mock"))
-    assert 'VECTOR_STORE_BACKEND is still "mock"' in caplog.text
+    assert 'VECTOR_STORE_BACKEND is set to "mock"' in caplog.text
 
 
 def test_sqlalchemy_database_uri_falls_back_silently_without_the_check() -> None:

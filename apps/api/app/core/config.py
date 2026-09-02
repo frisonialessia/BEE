@@ -127,16 +127,18 @@ class Settings(BaseSettings):
     # neither X-API-Key nor our Authorization bearer — they authenticate via
     # their own signed ``state`` param instead (see
     # app.core.security.decode_oauth_state_token).
-    # /api/v1/internal/market-scan/tick is exempt too: Vercel Cron issues a
-    # plain GET with only the Authorization: Bearer $CRON_SECRET header it
-    # auto-injects (see CRON_SECRET below) — it cannot also be configured to
-    # send X-API-Key. That Bearer check is this path's real authentication;
-    # if you override this value, keep the path listed or the cron tick will
-    # start requiring an API key Vercel will never send.
+    # /api/v1/internal/market-scan/tick and /api/v1/internal/jobs/tick are
+    # exempt too: Vercel Cron issues a plain GET with only the
+    # Authorization: Bearer $CRON_SECRET header it auto-injects (see
+    # CRON_SECRET below) — it cannot also be configured to send X-API-Key.
+    # That Bearer check is each path's real authentication; if you override
+    # this value, keep both paths listed or their cron ticks will start
+    # requiring an API key Vercel will never send.
     API_KEY_EXEMPT_PATHS: str = (
         "/api/v1/health,/api/v1/ready,/api/v1/webhooks/receive,/api/v1/contact,"
         "/api/v1/integrations/gmail/callback,/api/v1/integrations/linkedin/callback,"
-        "/api/v1/integrations/salesforce/callback,/api/v1/internal/market-scan/tick"
+        "/api/v1/integrations/salesforce/callback,/api/v1/internal/market-scan/tick,"
+        "/api/v1/internal/jobs/tick"
     )
 
     # ----- Multi-tenant user auth (Organization / Team / User) ------------------
@@ -398,9 +400,24 @@ class Settings(BaseSettings):
 
     # ----- VectorKnowledgeBase (Sales DNA) ------------------------------------
     # VECTOR_STORE_BACKEND controls persistence of the Sales DNA memory:
-    #   mock    — in-memory TF-IDF (default; resets on restart; zero deps)
-    #   pgvector — persistent, semantic, production-grade (requires pgvector ext)
-    VECTOR_STORE_BACKEND: Literal["mock", "pgvector"] = "mock"
+    #   pgvector — persistent, semantic, production-grade (default — requires
+    #              the pgvector extension; see DEPLOY_CHECKLIST.md §3).
+    #   mock     — in-memory TF-IDF; resets on restart, zero deps. Set this
+    #              explicitly for local dev without a pgvector-enabled
+    #              Postgres, or CI. Every service that reads from the store
+    #              already treats a query failure as "no results" rather
+    #              than propagating (see e.g.
+    #              StrategyGeneratorService._query_similar_wins's own
+    #              docstring: "Non-blocking: returns [] when the store is
+    #              empty or unavailable") — so if pgvector construction or a
+    #              query fails for any reason (missing extension,
+    #              unreachable DB), the *application* degrades gracefully.
+    #              What it does NOT do on its own is tell you it happened —
+    #              see get_vector_store_status()/GET /api/v1/status, which
+    #              exists specifically because that silent-degradation gap
+    #              was flagged as a real production risk: this setting can
+    #              say "pgvector" while the store actually in use is Mock.
+    VECTOR_STORE_BACKEND: Literal["mock", "pgvector"] = "pgvector"
 
     # Embedding model for pgvector (used when VECTOR_STORE_BACKEND=pgvector).
     # text-embedding-3-small: 1536 dims, ~$0.02/1M tokens (recommended)
@@ -568,15 +585,18 @@ class Settings(BaseSettings):
                 "slash in the Origin header, so this is auto-corrected at runtime, "
                 "but fix the stored value so it isn't relying on that"
             )
-        # VECTOR_STORE_BACKEND defaulting to "mock" means Sales DNA / brand
-        # voice semantic search silently runs on a non-persistent, in-memory
-        # TF-IDF store that resets on every restart — a real feature quietly
-        # degrading, not fake data returned to a request, but still worth
-        # catching at boot rather than discovering it after every deploy
-        # resets the store.
+        # VECTOR_STORE_BACKEND=mock means Sales DNA / brand voice semantic
+        # search runs on a non-persistent, in-memory TF-IDF store that
+        # resets on every restart — a real feature quietly degrading, not
+        # fake data returned to a request, but still worth catching at boot
+        # rather than discovering it after every deploy resets the store.
+        # This only catches the *configured* value being wrong — it can't
+        # see a "pgvector" that silently fell back to Mock at runtime (a
+        # missing extension, an unreachable DB); GET /api/v1/status reports
+        # the backend actually in use for that, see get_vector_store_status().
         if self.VECTOR_STORE_BACKEND == "mock":
             problems.append(
-                "VECTOR_STORE_BACKEND is still \"mock\" — Sales DNA/brand-voice "
+                "VECTOR_STORE_BACKEND is set to \"mock\" — Sales DNA/brand-voice "
                 "search will silently reset on every restart instead of persisting"
             )
 

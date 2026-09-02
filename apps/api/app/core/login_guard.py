@@ -22,7 +22,8 @@ connection, several teammates) can hit routinely through a workday.
 
 Same :class:`~app.core.signup_guard.SignupGuard` sliding-window
 implementation reused as-is, separate bucket/singleton from the other two
-guards. Per-process only, same limitation noted on the class itself.
+guards — including the Redis upgrade path when one is configured; see
+that class's own docstring.
 """
 
 from __future__ import annotations
@@ -41,7 +42,7 @@ def get_login_guard() -> SignupGuard:
 
     max_per_hour = settings.LOGIN_RATE_LIMIT_PER_HOUR
     if _guard is None or _guard_max != max_per_hour:
-        _guard = SignupGuard(max_per_hour)
+        _guard = SignupGuard(max_per_hour, redis_namespace="login_guard")
         _guard_max = max_per_hour
     return _guard
 

@@ -81,22 +81,35 @@ def deep_status(session: Session = Depends(get_session)) -> dict:
     # ── 2. VectorKnowledgeBase (Sales DNA) ───────────────────────────────────
     t0 = time.monotonic()
     try:
-        from app.services.vector_store import get_vector_store
+        from app.services.vector_store import get_vector_store, get_vector_store_status
 
         store = get_vector_store()
         doc_count = store.count()
         latency_ms = int((time.monotonic() - t0) * 1000)
+        backend_status = get_vector_store_status()
+        fell_back = backend_status["fallback_reason"] is not None
         checks["vector_store"] = {
-            "status": "ok",
+            # A silent pgvector→mock fallback is a real production problem
+            # (Sales DNA quietly stops persisting), not a mere warning like
+            # a deliberately-configured mock — see get_vector_store_status's
+            # own docstring for why these two cases are distinguished here.
+            "status": "error" if fell_back else "ok",
             "backend": type(store).__name__,
+            "requested_backend": backend_status["requested"],
             "documents": doc_count,
             "latency_ms": latency_ms,
             "note": (
-                "Using MockVectorStore (in-memory). Configure VECTOR_STORE_BACKEND "
-                "for persistent production storage."
-            )
-            if type(store).__name__ == "MockVectorStore"
-            else None,
+                f"VECTOR_STORE_BACKEND={backend_status['requested']} but PgVectorStore "
+                f"init failed — silently running on MockVectorStore instead "
+                f"(reason: {backend_status['fallback_reason']})"
+                if fell_back
+                else (
+                    "Using MockVectorStore (in-memory). Configure VECTOR_STORE_BACKEND "
+                    "for persistent production storage."
+                )
+                if type(store).__name__ == "MockVectorStore"
+                else None
+            ),
         }
     except Exception as exc:  # noqa: BLE001
         checks["vector_store"] = {

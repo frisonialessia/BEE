@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
@@ -565,6 +566,42 @@ class TestDeepStatusEndpoint:
         response = client.get("/api/v1/status")
         body = response.json()
         assert body["checks"]["vector_store"]["documents"] >= 1
+
+    def test_status_vector_store_ok_when_backend_matches_request(self):
+        """Explicitly-configured mock (this suite's hermetic default, see
+        conftest.py) is status=ok — deliberately configured, not a
+        surprise degradation."""
+        from app.services.vector_store import reset_vector_store
+
+        reset_vector_store()
+        client = TestClient(app)
+        response = client.get("/api/v1/status")
+        vs = response.json()["checks"]["vector_store"]
+        assert vs["status"] == "ok"
+        assert vs["requested_backend"] == "mock"
+
+    def test_status_vector_store_reports_silent_fallback(self, monkeypatch: pytest.MonkeyPatch):
+        """A requested pgvector backend that actually fell back to Mock at
+        runtime must surface as status=error with the reason — this is the
+        exact silent-degradation gap GET /api/v1/status was extended to
+        close, see app.services.vector_store.get_vector_store_status."""
+        from app.core.config import settings as app_settings
+        from app.services.vector_store import reset_vector_store
+
+        monkeypatch.setattr(app_settings, "VECTOR_STORE_BACKEND", "pgvector")
+        reset_vector_store()
+        with patch(
+            "app.services.vector_store.pg_store.PgVectorStore",
+            side_effect=RuntimeError("no pgvector extension"),
+        ):
+            client = TestClient(app)
+            response = client.get("/api/v1/status")
+
+        vs = response.json()["checks"]["vector_store"]
+        assert vs["status"] == "error"
+        assert vs["requested_backend"] == "pgvector"
+        assert vs["backend"] == "MockVectorStore"
+        assert "no pgvector extension" in vs["note"]
 
 
 # ---------------------------------------------------------------------------

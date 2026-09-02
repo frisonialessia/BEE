@@ -101,6 +101,40 @@ def _create_full_opportunity(session: Session) -> tuple[Company, Lead, Signal, O
     return company, lead, signal, opp
 
 
+@pytest.fixture(autouse=True)
+def _hermetic_vector_store_backend():
+    """VECTOR_STORE_BACKEND now defaults to "pgvector" in production (see
+    Settings' own docstring on that field) — but PgVectorStore.__init__
+    never touches the database eagerly, only its query/upsert methods do,
+    so simply constructing it would silently "succeed" against this
+    suite's in-memory SQLite and only fail later, mid-test, the first time
+    a query tries to open a real psycopg connection nothing in this test
+    environment provides (every call site treats that failure as "no
+    results" rather than raising, per app.services.vector_store's own
+    non-blocking contract — so it wouldn't even fail loudly).
+
+    Several tests exercise Sales DNA end-to-end (real upsert/query
+    round-trips against the store, not just "does this not crash") and
+    need a backend that actually works to assert against — that's
+    MockVectorStore, same "hermetic, no external services" contract this
+    suite's in-memory SQLite already follows for the database itself.
+    Autouse and session-independent (unlike the client fixture's
+    WEBHOOK_SIGNATURE_REQUIRED override below) because several of those
+    tests reach the vector store directly through the ``session`` fixture,
+    never through ``client``.
+    """
+    from app.services.vector_store import reset_vector_store
+
+    original = app_settings.VECTOR_STORE_BACKEND
+    app_settings.VECTOR_STORE_BACKEND = "mock"
+    reset_vector_store()
+    try:
+        yield
+    finally:
+        app_settings.VECTOR_STORE_BACKEND = original
+        reset_vector_store()
+
+
 @pytest.fixture(name="engine")
 def engine_fixture():
     """A shared in-memory SQLite engine for the test session."""

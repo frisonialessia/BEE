@@ -265,6 +265,55 @@ class TestVectorStoreBackendSelection:
             assert isinstance(store, MockVectorStore)
 
 
+class TestVectorStoreStatus:
+    """get_vector_store_status() — the requested-vs-active mismatch surface
+    GET /api/v1/status reads (see app.api.v1.endpoints.health)."""
+
+    def test_explicitly_configured_mock_has_no_fallback_reason(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from app.core.config import settings as app_settings
+        from app.services.vector_store import get_vector_store_status, reset_vector_store
+
+        monkeypatch.setattr(app_settings, "VECTOR_STORE_BACKEND", "mock")
+        reset_vector_store()
+
+        status = get_vector_store_status()
+        assert status == {"requested": "mock", "active": "mock", "fallback_reason": None}
+
+    def test_successful_pgvector_init_has_no_fallback_reason(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from app.core.config import settings as app_settings
+        from app.services.vector_store import get_vector_store_status, reset_vector_store
+
+        monkeypatch.setattr(app_settings, "VECTOR_STORE_BACKEND", "pgvector")
+        reset_vector_store()
+        with patch("app.services.vector_store.pg_store.PgVectorStore") as mock_cls:
+            mock_cls.return_value = MagicMock()
+            status = get_vector_store_status()
+
+        assert status["requested"] == "pgvector"
+        assert status["active"] == "pgvector"
+        assert status["fallback_reason"] is None
+
+    def test_failed_pgvector_init_reports_fallback_reason(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from app.core.config import settings as app_settings
+        from app.services.vector_store import get_vector_store_status, reset_vector_store
+
+        monkeypatch.setattr(app_settings, "VECTOR_STORE_BACKEND", "pgvector")
+        reset_vector_store()
+        with patch("app.services.vector_store.pg_store.PgVectorStore") as mock_cls:
+            mock_cls.side_effect = RuntimeError("no pgvector extension")
+            status = get_vector_store_status()
+
+        assert status["requested"] == "pgvector"
+        assert status["active"] == "mock"  # silently fell back
+        assert "no pgvector extension" in status["fallback_reason"]
+
+
 # ---------------------------------------------------------------------------
 # 3. LLM prompt builder
 # ---------------------------------------------------------------------------

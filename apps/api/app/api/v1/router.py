@@ -31,6 +31,7 @@ from app.api.v1.endpoints import (
     internal_market_scan,
     internal_support,
     leads,
+    ml_training,
     network,
     opportunities,
     opportunity_tasks,
@@ -55,6 +56,7 @@ api_router.include_router(health.router)
 api_router.include_router(auth.router)
 api_router.include_router(autopilot.router)
 api_router.include_router(federated_intelligence.router)
+api_router.include_router(ml_training.router)
 api_router.include_router(internal_support.router)
 api_router.include_router(internal_market_scan.router)
 api_router.include_router(internal_job_queue.router)
