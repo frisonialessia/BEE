@@ -100,7 +100,22 @@
       "active": "activo",
       "tokensRemaining": "{count} tokens restantes",
       "allChannelsSimulated": "Todos los canales están en modo simulado — conéctalos en <integrations>Integraciones</integrations> para activarlos.",
-      "noProfile": "No hay un perfil de voz configurado. Configura uno para habilitar la generación de contenido con IA fundamentada en tu marca."
+      "noProfile": "No hay un perfil de voz configurado. Configura uno para habilitar la generación de contenido con IA fundamentada en tu marca.",
+      "library": {
+        "title": "Fragmentos guardados ({count})",
+        "empty": "Todavía no hay fragmentos — agregá uno arriba para empezar a fundamentar el contenido generado en tu voz.",
+        "usedCount": "{count, plural, one {usado # vez} other {usado # veces}}",
+        "neverUsed": "sin usar todavía",
+        "scoreLabel": "{score}% de desempeño",
+        "noScore": "sin datos de desempeño todavía",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "confirmDelete": "¿Eliminar este fragmento? No se puede deshacer.",
+        "deleting": "Eliminando…",
+        "editingBadge": "Editando",
+        "editFormTitle": "Editar fragmento de marca",
+        "saveEdit": "Guardar cambios"
+      }
     }
   },
   "deepLearning": {
