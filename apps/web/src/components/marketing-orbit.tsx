@@ -1,10 +1,13 @@
 import { Radio, Share2, Sparkles, TrendingUp } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { OrbitScroller } from "@/components/marketing-orbit-scroller";
+
 /**
  * MarketingOrbit — galería de tarjetas en arco (estilo coverflow) para el
  * hero público. Puramente CSS (rotate/translate por tarjeta, hover para
- * enderezar y elevar) — sin JS, sin librería de carrusel.
+ * enderezar y elevar) — sin JS, sin librería de carrusel — salvo el
+ * centrado inicial del scroll en móvil, ver OrbitScroller.
  *
  * Cada tarjeta es una propuesta de valor del módulo — no una cifra de la
  * app en vivo. Antes decían "247 señales esta semana" / "+18% vs.
@@ -14,8 +17,8 @@ import { getTranslations } from "next-intl/server";
  * confianza apenas la pisa. Esto describe lo que el módulo HACE, no lo
  * que una cuenta activa acumuló.
  *
- * Server component (async, `getTranslations`) — no hay estado de cliente,
- * solo texto traducido, igual que MarketingFooter.
+ * Server component (async, `getTranslations`) — el único estado de
+ * cliente (centrar el scroll inicial) vive en OrbitScroller, no acá.
  */
 
 const CARD_META = [
@@ -29,20 +32,16 @@ export async function MarketingOrbit() {
   const t = await getTranslations("landing.orbit.cards");
 
   return (
-    // overflow-x-auto scoped here (not on the hero section, which still
+    // Scroll container scoped here (not on the hero section, which still
     // needs its own overflow-hidden to contain the blurred gradient blobs)
     // — below the sm breakpoint the fanned cards are wider than the
     // viewport, so without this they'd get silently clipped by the
-    // section's own overflow-hidden instead of staying reachable.
-    //
-    // py-8 here isn't decorative spacing — per the CSS overflow spec, once
-    // overflow-x is anything but visible, overflow-y computes to auto too
-    // (never plain visible), even though only -x was set. The outer/tilted
-    // cards' rotated+translated bounding box genuinely extends past their
-    // own layout box, so without this padding that forced auto-y silently
-    // clipped their bottom edge — this gives that overshoot room to live
-    // inside the scrollable box instead of past its edge.
-    <div className="overflow-x-auto px-4 py-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    // section's own overflow-hidden instead of staying reachable. See
+    // OrbitScroller for why this is a client component (centers the
+    // initial scroll position) and its own py-8 rationale (the CSS
+    // overflow spec forcing overflow-y: auto once -x is set, which would
+    // otherwise clip the tilted cards' overshoot).
+    <OrbitScroller>
       <div
         className="mx-auto flex w-fit min-w-full items-end justify-center gap-3 sm:gap-4"
         style={{ perspective: "1400px" }}
@@ -70,6 +69,6 @@ export async function MarketingOrbit() {
           </div>
         ))}
       </div>
-    </div>
+    </OrbitScroller>
   );
 }
