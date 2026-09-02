@@ -8,6 +8,7 @@ from collections import defaultdict
 from sqlmodel import or_, select
 
 from app.models.lead import Lead
+from app.models.meeting import Meeting
 from app.models.opportunity import Opportunity
 from app.models.signal import Signal
 from app.repositories.base import BaseRepository
@@ -111,8 +112,15 @@ class LeadRepository(BaseRepository[Lead]):
         return [(key, items) for key, items in by_email.items() if len(items) > 1]
 
     def merge(self, keep_id: uuid.UUID, merge_id: uuid.UUID) -> Lead:
-        """Fold ``merge_id`` into ``keep_id``: repoint every signal and
-        opportunity, then delete the now-empty duplicate. Caller commits."""
+        """Fold ``merge_id`` into ``keep_id``: repoint every signal,
+        opportunity, and meeting, then delete the now-empty duplicate.
+        Caller commits.
+
+        Meeting.lead_id used to be left pointing at the deleted row —
+        harmless on SQLite (no FK enforcement in the test DB, so the row
+        just went silently orphaned, invisible to every query that joins
+        through lead_id) but a real FK-violation risk on Postgres. Repoint
+        it the same way Opportunity/Signal already were."""
         keep = self.get(keep_id)
         merge_target = self.get(merge_id)
         if keep is None or merge_target is None:
@@ -126,6 +134,9 @@ class LeadRepository(BaseRepository[Lead]):
         for sig in self.session.exec(select(Signal).where(Signal.lead_id == merge_id)).all():
             sig.lead_id = keep_id
             self.session.add(sig)
+        for meeting in self.session.exec(select(Meeting).where(Meeting.lead_id == merge_id)).all():
+            meeting.lead_id = keep_id
+            self.session.add(meeting)
 
         self.session.delete(merge_target)
         self.session.flush()
