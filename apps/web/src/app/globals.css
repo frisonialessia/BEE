@@ -170,6 +170,22 @@
   color: var(--color-text-muted);
 }
 
+/* Color modifiers for .bee-eyebrow — landing page only today, but kept
+   generic (not landing-*-named) since any long scrolling page built from
+   distinct sections has the same "which section am I in" problem. Every
+   hue reuses one of the four bento tones already established elsewhere
+   (Modules grid, guarantee cards) instead of introducing new colors — one
+   small colored cue per section header is enough to read as "new section"
+   without repainting the whole section. Each is mixed toward --color-text
+   rather than used at its raw pastel bento value: those tones are chosen
+   to sit *behind* dark text as a background wash, not to work *as* small
+   uppercase text on white, where the unmixed pastel reads too washed out
+   to serve as a legible label. */
+.bee-eyebrow--blue { color: color-mix(in srgb, var(--color-chart-4) 75%, var(--color-text) 25%); }
+.bee-eyebrow--warm { color: color-mix(in srgb, var(--color-accent-warm) 70%, var(--color-text) 30%); }
+.bee-eyebrow--violet { color: color-mix(in srgb, var(--color-chart-6) 65%, var(--color-text) 35%); }
+.bee-eyebrow--muted { color: color-mix(in srgb, var(--color-chart-5) 70%, var(--color-text) 30%); }
+
 .bee-display {
   font-size: var(--bee-text-display);
   font-weight: 700;

@@ -54,7 +54,7 @@ export function MarketingFAQ() {
   return (
     <section className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-20">
       <div className="mx-auto max-w-2xl text-center">
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
+        <p className="bee-eyebrow bee-eyebrow--violet">{t("eyebrow")}</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("heading")}</h2>
       </div>
       <div className="mt-8">
