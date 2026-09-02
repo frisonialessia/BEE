@@ -1,6 +1,6 @@
 "use client";
 
-import { Send, Sparkles } from "lucide-react";
+import { Send } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
@@ -46,8 +46,9 @@ export function AssistantPage() {
     <div className="flex h-full flex-col">
       {!hasMessages ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 text-center">
-          <span className="flex size-14 items-center justify-center rounded-full bg-[var(--color-cta)] text-white">
-            <Sparkles className="size-6" />
+          <span className="flex size-14 items-center justify-center rounded-full bg-[#d567ff]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, mismo asset que el FAB (ask-bee-fab.tsx) */}
+            <img src="/assistant-bee.svg" alt="" className="size-8" aria-hidden="true" />
           </span>
           <div>
             <p className="text-2xl font-semibold tracking-tight">
@@ -97,8 +98,9 @@ export function AssistantPage() {
             ))}
             {pending && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="flex size-7 items-center justify-center rounded-full bg-[var(--color-cta)] text-white">
-                  <Sparkles className="size-3.5" />
+                <span className="flex size-7 items-center justify-center rounded-full bg-[#d567ff]">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca */}
+                  <img src="/assistant-bee.svg" alt="" className="size-4" aria-hidden="true" />
                 </span>
                 {tAssistant("thinking")}
               </div>
