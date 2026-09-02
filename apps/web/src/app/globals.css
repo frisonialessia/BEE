@@ -682,6 +682,23 @@
   border-color: var(--color-chart-4);
 }
 
+/* The fixed-height rule above is deliberate for single-line controls, but
+ * a <textarea className="bee-input"> was inheriting that same 2rem height
+ * regardless of its own `rows` — every multi-line field in the app (brand
+ * fragments, bio, research focus, excluded-IDs list…) was rendering as a
+ * ~32px slit with its real content scrolling inside, invisible until you
+ * scrolled. This restores `rows` as the source of truth for a textarea's
+ * height, gives it room to breathe vertically, and lets people drag it
+ * taller for a long paste instead of being stuck at whatever `rows` says
+ * — same relief as scrollable, un-clamped text elsewhere in the app. */
+.bee-input:is(textarea) {
+  height: auto;
+  min-height: calc(var(--bee-control-h-compact) * 2);
+  padding: 0.5rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
 .bee-btn {
   display: inline-flex;
   align-items: center;

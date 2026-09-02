@@ -147,8 +147,8 @@ function TeamProfileEditor({ team }: { team: TeamOut }) {
               value={researchFocus}
               onChange={(e) => setResearchFocus(e.target.value)}
               placeholder={t("researchFocusPlaceholder")}
-              rows={2}
-              className="bee-input resize-none"
+              rows={3}
+              className="bee-input"
             />
           </div>
 

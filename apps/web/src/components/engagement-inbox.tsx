@@ -190,7 +190,7 @@ export function EngagementInboxPanel() {
             onChange={(e) => setContent(e.target.value)}
             placeholder={t("form.contentPlaceholder")}
             rows={3}
-            className="bee-input resize-none"
+            className="bee-input"
           />
           <div className="flex gap-2">
             <button

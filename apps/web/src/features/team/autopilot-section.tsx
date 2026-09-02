@@ -200,7 +200,7 @@ export function AutopilotSection() {
               onChange={(e) => setExcludedIdsText(e.target.value)}
               placeholder={t("excludedPlaceholder")}
               rows={3}
-              className="bee-input resize-none font-mono text-xs"
+              className="bee-input font-mono text-xs"
             />
           </div>
 

@@ -267,7 +267,7 @@ export function BrandVoicePanel() {
                 onChange={(e) => setPasteText(e.target.value)}
                 placeholder={t("createForm.pastePlaceholder")}
                 rows={6}
-                className="bee-input resize-none"
+                className="bee-input"
               />
               <div className="flex flex-wrap items-center gap-2">
                 <button
@@ -331,8 +331,8 @@ export function BrandVoicePanel() {
                 value={createBio}
                 onChange={(e) => setCreateBio(e.target.value)}
                 placeholder={t("createForm.bioPlaceholder")}
-                rows={2}
-                className="bee-input resize-none"
+                rows={4}
+                className="bee-input"
               />
             </div>
             <div className="sm:col-span-2">
@@ -472,8 +472,8 @@ export function BrandVoicePanel() {
               value={fragmentContent}
               onChange={(e) => setFragmentContent(e.target.value)}
               placeholder={t("addFragmentForm.contentPlaceholder")}
-              rows={4}
-              className="bee-input resize-none"
+              rows={6}
+              className="bee-input"
             />
           </div>
           <div>
@@ -527,7 +527,7 @@ export function BrandVoicePanel() {
                         </Badge>
                       ))}
                     </div>
-                    <p className="mt-1.5 text-sm break-words">{fragment.content}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed break-words">{fragment.content}</p>
                     <p className="bee-caption mt-1">
                       {fragment.performance_score != null
                         ? t("library.scoreLabel", { score: Math.round(fragment.performance_score * 100) })
