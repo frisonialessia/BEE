@@ -21,7 +21,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Literal
 
-from app.models.base import SignalType
+from app.models.base import EXPANSION, RENEWAL_RISK, SignalType
 from app.schemas.strategy import StrategySchema, TimingWindow
 from app.services.strategy_generator.base import EnrichmentContext, StrategyGenerator
 from app.services.strategy_generator.registry import register_strategy_generator
@@ -117,6 +117,134 @@ def _apply_hints(
     ctx: EnrichmentContext, default_channel: str, default_playbook: str
 ) -> tuple[str, str]:
     return _apply_hints_and_variant(ctx, default_channel, default_playbook)
+
+
+@register_strategy_generator
+class ExpansionStrategyGenerator(StrategyGenerator):
+    """Battlecard generator for the Revenue Continuity Radar's EXPANSION
+    bucket — a signal about a company BEE already closed as a customer
+    (see RevenueContinuityService).
+
+    Priority 150: deliberately above every signal-type-specific rule-based
+    generator below (max 100) so an existing customer always gets the
+    upsell framing regardless of which signal triggered it — never the
+    "why should you buy from us at all" framing FundingStrategyGenerator/
+    HiringStrategyGenerator write for a net-new prospect. Still below the
+    LLM generator (priority=1000): when AI is configured, its own
+    lifecycle-aware ACCOUNT LIFECYCLE prompt section (see llm_prompt.py)
+    takes over instead.
+    """
+
+    name = "expansion_strategy"
+    priority = 150
+
+    def supports(self, ctx: EnrichmentContext) -> bool:
+        return ctx.opportunity_type == EXPANSION
+
+    def generate(self, ctx: EnrichmentContext) -> StrategySchema:
+        company = _company(ctx)
+        lead = _lead(ctx)
+        channel, playbook = _apply_hints(ctx, "email", "expansion_upsell_outreach")
+
+        return StrategySchema(
+            pain_point=(
+                f"{company} ya es cliente — y esta señal (score {ctx.signal_score:.0f}/100) "
+                "indica que está creciendo activamente. Un cliente en expansión suele topar "
+                "con los límites de su plan actual, de su alcance de uso, o de la capacidad "
+                "que contrató originalmente, antes de haber pensado siquiera en pedir más."
+            ),
+            closing_argument=(
+                f"Vimos esta señal sobre {company} y queríamos adelantarnos: la mayoría de "
+                "nuestros clientes en un momento de crecimiento similar terminan necesitando "
+                "más de lo que tienen contratado hoy. ¿Tendría sentido una llamada corta para "
+                "revisar si el plan actual sigue siendo el adecuado?"
+            ),
+            timing_window=TimingWindow(
+                urgency="this_week",
+                reason=(
+                    "Un cliente activo que muestra señales de crecimiento es la ventana de "
+                    "upsell más barata que existe — el costo de adquisición ya está pagado, "
+                    "y esperar a que ellos mismos pidan más significa perder la iniciativa "
+                    "frente a un competidor que se adelante primero."
+                ),
+                expires_at=None,
+            ),
+            playbook=playbook,
+            next_best_action="reach_out",
+            channel=channel,
+            rationale=(
+                f"Cuenta existente ({company} / {lead}) — señal de expansión "
+                f"({ctx.signal_type.value}, score {ctx.signal_score:.0f}/100). "
+                "Clasificado como EXPANSION por RevenueContinuityService."
+            ),
+            generator=self.name,
+            generator_version="1.0.0",
+            generated_at=datetime.now(UTC),
+        )
+
+
+@register_strategy_generator
+class RenewalRiskStrategyGenerator(StrategyGenerator):
+    """Battlecard generator for the Revenue Continuity Radar's
+    RENEWAL_RISK bucket — a signal (today: a champion's departure) at a
+    company BEE already closed as a customer.
+
+    Priority 150 for the same reason as ExpansionStrategyGenerator: this
+    must preempt HiringStrategyGenerator's LEADERSHIP_CHANGE handling
+    (priority 80), which is written entirely as a net-new "audit the
+    incoming exec's vendor stack" pitch — the opposite of what a retention
+    play at an existing customer needs.
+    """
+
+    name = "renewal_risk_strategy"
+    priority = 150
+
+    def supports(self, ctx: EnrichmentContext) -> bool:
+        return ctx.opportunity_type == RENEWAL_RISK
+
+    def generate(self, ctx: EnrichmentContext) -> StrategySchema:
+        company = _company(ctx)
+        lead = _lead(ctx)
+        channel, playbook = _apply_hints(ctx, "phone", "renewal_risk_retention")
+
+        return StrategySchema(
+            pain_point=(
+                f"{company} es cliente activo y acaba de tener un cambio de liderazgo "
+                f"({lead}) en una posición relevante para esta cuenta. Un cambio de "
+                "champion es la causa individual más común de una renovación perdida: "
+                "el nuevo responsable no tiene contexto de por qué se contrató, ni "
+                "relación con el equipo, y puede cuestionar el gasto sin más información."
+            ),
+            closing_argument=(
+                f"Notamos el cambio reciente en {company}. Antes de que se acerque la "
+                "fecha de renovación, tiene sentido una charla proactiva — no una venta, "
+                "una puesta al día — para que quien decide ahora entienda el valor "
+                "generado hasta hoy y no llegue a la renovación con dudas sin resolver."
+            ),
+            timing_window=TimingWindow(
+                urgency="immediate",
+                reason=(
+                    "Cada semana sin contacto después de un cambio de champion es una "
+                    "semana en la que el nuevo responsable arma su propia opinión sobre "
+                    "la cuenta sin nuestro contexto. Actuar antes de que la renovación "
+                    "esté en la mesa cambia la conversación de 'defender el gasto' a "
+                    "'construir la relación'."
+                ),
+                expires_at=None,
+            ),
+            playbook=playbook,
+            next_best_action="reach_out",
+            channel=channel,
+            rationale=(
+                f"Cuenta existente ({company} / {lead}) — riesgo de renovación "
+                f"({ctx.signal_type.value}, score {ctx.signal_score:.0f}/100). "
+                "Clasificado como RENEWAL_RISK por RevenueContinuityService: "
+                "cambio de champion detectado."
+            ),
+            generator=self.name,
+            generator_version="1.0.0",
+            generated_at=datetime.now(UTC),
+        )
 
 
 @register_strategy_generator

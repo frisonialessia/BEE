@@ -54,6 +54,7 @@ from __future__ import annotations
 
 import json
 
+from app.models.base import EXPANSION, RENEWAL_RISK
 from app.services.strategy_generator.base import EnrichmentContext
 
 # ---------------------------------------------------------------------------
@@ -131,6 +132,31 @@ Type: {ctx.signal_type.value}
 Title: {ctx.signal_title}
 Score: {ctx.signal_score:.2f}/1.0
 Description: {ctx.signal_description or "None provided"}""")
+
+    # ── 1b. Account lifecycle (Revenue Continuity Radar) ───────────────────────
+    # Only rendered for an EXISTING customer (see RevenueContinuityService) —
+    # a net-new prospect (opportunity_type=NEW_LOGO, the default) gets no
+    # section here at all, so this never changes the prompt for the
+    # acquisition motion that predates this field.
+    if ctx.opportunity_type == EXPANSION:
+        sections.append("""=== ACCOUNT LIFECYCLE: EXISTING CUSTOMER — EXPANSION SIGNAL ===
+This account is already a customer, not a net-new prospect. Do NOT write a
+"why you should buy from us" pitch — write an upsell play: this signal shows
+growth (funding, hiring, new locations, ...) at an account we already serve.
+Frame pain_point around the account outgrowing its current plan/scope/capacity.
+Frame closing_argument as a proactive account-growth conversation, not a cold
+pitch. playbook should reflect an expansion/upsell motion, not net-new outreach.""")
+    elif ctx.opportunity_type == RENEWAL_RISK:
+        sections.append("""=== ACCOUNT LIFECYCLE: EXISTING CUSTOMER — RENEWAL RISK ===
+This account is already a customer, not a net-new prospect. This signal
+(today: a champion/leadership change) is a churn-risk indicator, not a
+vendor-audit opportunity — do NOT write the "new exec is evaluating vendors"
+pitch a net-new HIRING/LEADERSHIP_CHANGE signal would get. Frame pain_point
+around losing institutional context/relationship when a champion leaves.
+Frame closing_argument as a proactive, non-salesy check-in aimed at protecting
+the relationship before the next renewal, not a pitch. Prefer higher urgency
+than a comparable net-new signal — champion turnover left unaddressed is the
+single most common cause of a lost renewal.""")
 
     # ── 2. Company ────────────────────────────────────────────────────────────
     sections.append(f"""=== COMPANY ===
@@ -277,6 +303,7 @@ playbook: {cfg.get("playbook", "not set")}
     # ── Final instruction ─────────────────────────────────────────────────────
     sections.append("""=== YOUR TASK ===
 Generate a complete battlecard strategy for this opportunity.
+If an ACCOUNT LIFECYCLE section is present above, its framing overrides the default net-new pitch — this account is already a customer, and the strategy must read that way.
 If a CEO BRAND VOICE section is present above, write pain_point and closing_argument in that exact voice — tone, vocabulary, sentence length, forbidden phrases all apply. Otherwise use a direct, professional tone.
 Synthesise all context above. Prioritise: A/B variant > warm intro > Sales DNA > adaptive hints > your judgment.
 Before finalising, check your chosen (playbook, channel) against CAUTIONARY PATTERNS above — if it

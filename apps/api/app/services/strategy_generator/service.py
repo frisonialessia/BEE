@@ -38,7 +38,7 @@ from sqlmodel import Session
 import app.services.strategy_generator.llm_generator  # noqa: F401  (registers LLM generator at priority=1000)
 import app.services.strategy_generator.rule_based  # noqa: F401  (registers rule-based generator)
 from app.core.logging import get_logger
-from app.models.base import OpportunityStatus, SignalType
+from app.models.base import NEW_LOGO, OpportunityStatus, SignalType
 from app.models.opportunity import Opportunity
 from app.models.signal import Signal
 from app.schemas.strategy import StrategySchema
@@ -83,7 +83,7 @@ class StrategyGeneratorService:
         Returns ``True`` when the opportunity is promoted to ``READY_TO_ACTION``,
         ``False`` when enrichment fails or produces an incomplete strategy.
         """
-        ctx = self._build_context(signal)
+        ctx = self._build_context(signal, opportunity_type=opportunity.opportunity_type)
         strategy = self._run_generators(ctx, organization_id=signal.organization_id)
         if strategy is None:
             logger.warning("No strategy for opportunity %s; stays DETECTED.", opportunity.id)
@@ -146,7 +146,7 @@ class StrategyGeneratorService:
         except Exception:  # noqa: BLE001
             logger.warning("WorkflowOrchestrator publish failed for ready_to_action event.")
 
-    def _build_context(self, signal: Signal) -> EnrichmentContext:
+    def _build_context(self, signal: Signal, *, opportunity_type: str = NEW_LOGO) -> EnrichmentContext:
         """Assemble an EnrichmentContext from all intelligence sources."""
         raw = signal.raw_payload or {}
         company_ref = raw.get("company") or {}
@@ -224,6 +224,7 @@ class StrategyGeneratorService:
             signal_title=signal.title,
             signal_score=signal.score,
             signal_description=signal.description,
+            opportunity_type=opportunity_type,
             company_name=enriched_company.get("name"),
             company_domain=enriched_company.get("domain"),
             company_industry=enriched_company.get("industry") or industry,

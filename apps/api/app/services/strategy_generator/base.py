@@ -43,7 +43,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from app.models.base import SignalType
+from app.models.base import NEW_LOGO, SignalType
 
 if TYPE_CHECKING:
     from app.schemas.feedback import SuccessHint
@@ -76,6 +76,18 @@ class EnrichmentContext:
     signal_title: str
     signal_score: float
     signal_description: str | None = None
+
+    # ── Revenue Continuity Radar: lifecycle bucket ────────────────────────────
+    # "new_logo" | "expansion" | "renewal_risk" — set by RevenueContinuityService
+    # at opportunity-creation time (see SignalEngine._create_opportunity) and
+    # threaded through here so generators can tell a net-new prospect from an
+    # existing customer showing growth or churn-risk signals. See
+    # app.services.strategy_generator.rule_based's ExpansionStrategyGenerator/
+    # RenewalRiskStrategyGenerator for the rule-based playbooks this drives,
+    # and llm_prompt.build_user_prompt's ACCOUNT LIFECYCLE section for the LLM
+    # path. Defaults to NEW_LOGO — every existing caller that doesn't pass this
+    # explicitly gets the exact same behavior as before this field existed.
+    opportunity_type: str = NEW_LOGO
 
     # ── Entity context (resolved by the engine) ──────────────────────────────
     company_name: str | None = None
