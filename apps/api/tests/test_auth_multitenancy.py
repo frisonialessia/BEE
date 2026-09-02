@@ -367,6 +367,34 @@ class TestAuthEndpoints:
         resp = client.get("/api/v1/auth/me")
         assert resp.status_code == 401
 
+    def test_login_is_rate_limited(self, client: TestClient):
+        """Previously /auth/login had no rate limiting at all — unlimited
+        password guesses against any account. See app.core.login_guard."""
+        _register(client, org_name="Acme Corp", email="ratelimited@acme.io", password="mypassword1")
+
+        from app.core.config import settings as app_settings
+        from app.core.login_guard import reset_login_guard
+
+        original = app_settings.LOGIN_RATE_LIMIT_PER_HOUR
+        app_settings.LOGIN_RATE_LIMIT_PER_HOUR = 2
+        reset_login_guard()
+        try:
+            for _ in range(2):
+                resp = client.post(
+                    "/api/v1/auth/login",
+                    json={"email": "ratelimited@acme.io", "password": "wrong-on-purpose"},
+                )
+                assert resp.status_code == 401  # consumes the quota either way
+
+            limited = client.post(
+                "/api/v1/auth/login",
+                json={"email": "ratelimited@acme.io", "password": "mypassword1"},  # even the *right* password
+            )
+            assert limited.status_code == 429
+        finally:
+            app_settings.LOGIN_RATE_LIMIT_PER_HOUR = original
+            reset_login_guard()
+
     def test_me_returns_current_user(self, client: TestClient):
         body = _register(client, org_name="Acme Corp", email="me@acme.io")
         resp = client.get("/api/v1/auth/me", headers=_auth_headers(body["access_token"]))

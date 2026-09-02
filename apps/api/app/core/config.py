@@ -150,6 +150,15 @@ class Settings(BaseSettings):
     # disables the check entirely.
     SIGNUP_RATE_LIMIT_PER_HOUR: int = 5
 
+    # ----- Login abuse protection (see app.core.login_guard) --------------------
+    # POST /auth/login had no rate limiting at all until this existed — see
+    # login_guard's module docstring for why this is per-IP, not per-email
+    # (a per-email lock is itself a denial-of-service vector), and why the
+    # default is higher than registration's: login is routine traffic a
+    # shared office IP can legitimately generate many times an hour, signup
+    # is a one-time action. 0 disables the check entirely.
+    LOGIN_RATE_LIMIT_PER_HOUR: int = 20
+
     # ----- Forgot-password abuse protection (see app.core.password_reset_guard) --
     # POST /auth/forgot-password sends an email on every call for an address
     # that exists — same SignupGuard shape as registration above, reused
