@@ -289,6 +289,20 @@ export interface VoiceProfile {
   updated_at: string;
 }
 
+/** A proposed VoiceProfile draft from pasted writing samples — never
+ * persisted by itself. The caller reviews/edits the fields and still
+ * submits them through the normal create-profile call to save one. */
+export interface VoiceProfileExtractResult {
+  title: string | null;
+  tone_descriptors: string[];
+  authority_topics: string[];
+  forbidden_phrases: string[];
+  preferred_cta: string | null;
+  bio_summary: string | null;
+  generated_by: "llm" | "heuristic" | "demo";
+  model_used: string | null;
+}
+
 export interface BrandFragment {
   id: string;
   profile_id: string;

@@ -743,6 +743,18 @@
 
 .bee-btn-ghost--dashed:hover { color: var(--color-text); border-color: var(--color-text-muted); }
 
+/* Selected state for a .bee-btn-ghost used as a tab/mode toggle (e.g. Brand
+ * Voice's "Fill manually" vs "Paste & extract") — same fixed height/padding,
+ * filled with the CTA color instead of transparent so the current choice
+ * reads at a glance. */
+.bee-btn-ghost--active {
+  background: var(--color-cta);
+  border-color: var(--color-cta);
+  color: #ffffff;
+}
+
+.bee-btn-ghost--active:hover { background: var(--color-cta-hover); }
+
 /* Colored-fill inline action (Reintentar ahora, Marcar ganada/perdida) — same
  * fixed height/padding/type as .bee-btn-ghost, but the color is per-instance
  * (retry=blue, resolve=success, won=success, lost=neutral) so it's driven by

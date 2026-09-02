@@ -11,7 +11,9 @@ Covers:
 
 from __future__ import annotations
 
+import json
 import uuid
+from unittest.mock import patch
 
 import pytest
 from sqlmodel import Session
@@ -300,6 +302,84 @@ class TestPersonalBrandService:
         assert len(insights) == 2
         posts = brand_svc.list_fragments(profile.id, category="example_post")
         assert len(posts) == 1
+
+
+# ══════════════════════════════════════════════════════════════════
+# PersonalBrandService — AI-assisted voice extraction
+# ══════════════════════════════════════════════════════════════════
+
+_SAMPLE_TEXT = """We just closed a $12M Series B to double down on B2B SaaS \
+go-to-market automation. The next 90 days are about hiring, not features.
+Most GTM teams drown in manual busywork instead of selling. That's the \
+problem we exist to fix. Data beats opinions every time — we ship what the \
+numbers say, not what feels right. Would love to grab 15 minutes this week \
+to compare notes on scaling a GTM org post-Series-B?"""
+
+
+class TestVoiceProfileExtraction:
+    """AI_PROVIDER defaults to 'none' in the test settings, so extract_profile_draft
+    exercises the heuristic path unless AI_PROVIDER/AI_API_KEY are patched."""
+
+    def test_heuristic_extraction_grounds_topics_in_the_text(self, brand_svc: PersonalBrandService) -> None:
+        result = brand_svc.extract_profile_draft(_SAMPLE_TEXT)
+        assert result.generated_by == "heuristic"
+        assert result.model_used is None
+        assert len(result.tone_descriptors) > 0
+        assert len(result.authority_topics) > 0
+        # Every proposed topic must actually appear in the source text — the
+        # heuristic extractor should never invent content.
+        lowered = _SAMPLE_TEXT.lower()
+        for topic in result.authority_topics:
+            assert topic.lower() in lowered
+
+    def test_heuristic_extraction_finds_the_cta_sentence(self, brand_svc: PersonalBrandService) -> None:
+        result = brand_svc.extract_profile_draft(_SAMPLE_TEXT)
+        assert result.preferred_cta is not None
+        assert "15 minutes" in result.preferred_cta
+
+    def test_heuristic_extraction_bio_summary_is_the_first_sentence(self, brand_svc: PersonalBrandService) -> None:
+        result = brand_svc.extract_profile_draft(_SAMPLE_TEXT)
+        assert result.bio_summary is not None
+        assert result.bio_summary.startswith("We just closed a $12M Series B")
+
+    def test_heuristic_extraction_detects_data_driven_tone(self, brand_svc: PersonalBrandService) -> None:
+        result = brand_svc.extract_profile_draft(_SAMPLE_TEXT)
+        assert "data-driven" in result.tone_descriptors  # text contains "$12M", "90 days", "15 minutes"
+
+    def test_extraction_never_raises_on_minimal_text(self, brand_svc: PersonalBrandService) -> None:
+        result = brand_svc.extract_profile_draft("Short but valid input text here.")
+        assert result.generated_by == "heuristic"
+
+    def test_llm_extraction_used_when_configured(self, brand_svc: PersonalBrandService) -> None:
+        mock_response = json.dumps({
+            "title": "CEO",
+            "tone_descriptors": ["direct", "data-driven"],
+            "authority_topics": ["B2B SaaS", "go-to-market"],
+            "preferred_cta": "Let's grab 15 minutes this week.",
+            "bio_summary": "A GTM-obsessed founder who ships on data, not opinions.",
+        })
+        original_provider, original_key = brand_svc.settings.AI_PROVIDER, brand_svc.settings.AI_API_KEY
+        try:
+            brand_svc.settings.AI_PROVIDER = "openai"
+            brand_svc.settings.AI_API_KEY = "sk-test"
+            with patch.object(brand_svc, "_call_llm_extraction", return_value=json.loads(mock_response)):
+                result = brand_svc.extract_profile_draft(_SAMPLE_TEXT)
+        finally:
+            brand_svc.settings.AI_PROVIDER, brand_svc.settings.AI_API_KEY = original_provider, original_key
+        assert result.generated_by == "llm"
+        assert result.model_used == brand_svc.settings.AI_MODEL
+        assert result.authority_topics == ["B2B SaaS", "go-to-market"]
+
+    def test_llm_extraction_falls_back_to_heuristic_on_failure(self, brand_svc: PersonalBrandService) -> None:
+        original_provider, original_key = brand_svc.settings.AI_PROVIDER, brand_svc.settings.AI_API_KEY
+        try:
+            brand_svc.settings.AI_PROVIDER = "openai"
+            brand_svc.settings.AI_API_KEY = "sk-test"
+            with patch.object(brand_svc, "_call_llm_extraction", side_effect=RuntimeError("timeout")):
+                result = brand_svc.extract_profile_draft(_SAMPLE_TEXT)
+        finally:
+            brand_svc.settings.AI_PROVIDER, brand_svc.settings.AI_API_KEY = original_provider, original_key
+        assert result.generated_by == "heuristic"
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -801,6 +881,30 @@ class TestBrandEndpoints:
         data = resp.json()
         assert data["category"] == "key_insight"
         assert "funding" in data["tags"]
+
+    def test_extract_profile_draft(self, client, session: Session) -> None:
+        resp = client.post(
+            "/api/v1/brand/profile/extract",
+            json={"raw_text": _SAMPLE_TEXT},
+            headers=_auth_headers(session),
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["generated_by"] == "heuristic"
+        assert len(data["tone_descriptors"]) > 0
+        assert len(data["authority_topics"]) > 0
+
+    def test_extract_profile_draft_requires_auth(self, client) -> None:
+        resp = client.post("/api/v1/brand/profile/extract", json={"raw_text": _SAMPLE_TEXT})
+        assert resp.status_code == 401
+
+    def test_extract_profile_draft_rejects_too_short_text(self, client, session: Session) -> None:
+        resp = client.post(
+            "/api/v1/brand/profile/extract",
+            json={"raw_text": "too short"},
+            headers=_auth_headers(session),
+        )
+        assert resp.status_code == 422
 
     def test_brand_context_endpoint(self, client) -> None:
         resp = client.post("/api/v1/brand/context", json={"query": "funding round", "top_k": 3})

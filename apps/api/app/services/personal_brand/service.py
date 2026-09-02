@@ -30,11 +30,14 @@ changes needed — just upgrade this method.
 
 from __future__ import annotations
 
+import re
 import uuid
+from collections import Counter
 from typing import Any
 
 from sqlmodel import Session, select
 
+from app.core.config import get_settings
 from app.core.logging import get_logger
 from app.models.brand_profile import BrandFragment, VoiceProfile
 from app.schemas.brand import (
@@ -42,12 +45,47 @@ from app.schemas.brand import (
     BrandFragmentCreate,
     BrandFragmentOut,
     VoiceProfileCreate,
+    VoiceProfileExtractResult,
     VoiceProfileOut,
 )
 from app.services.permissions import scope_by_organization_id as _scope
+from app.services.strategy_generator.llm_prompt import parse_llm_response
 from app.services.vector_store import IVectorStore, ScoredDocument
 
 logger = get_logger(__name__)
+
+_EXTRACTION_SYSTEM_PROMPT = """You analyze writing samples (emails, LinkedIn \
+posts, past sales outreach) and propose a brand voice profile for the person \
+who wrote them. Respond with ONLY a JSON object, no prose, no markdown fences:
+
+{
+  "title": "their likely professional title, or null if not inferable",
+  "tone_descriptors": ["3-5 short adjectives describing HOW they write, e.g. \
+'direct', 'data-driven', 'warm'"],
+  "authority_topics": ["3-6 topics/domains they clearly write with authority \
+about, drawn from the actual samples"],
+  "preferred_cta": "their most natural closing call-to-action, or null",
+  "bio_summary": "a 1-2 sentence third-person bio synthesized from the \
+samples, or null"
+}
+
+Ground every field in what the samples actually contain. Never invent \
+credentials, companies, or achievements the samples don't mention."""
+
+_STOPWORDS = {
+    "the", "a", "an", "and", "or", "but", "is", "are", "was", "were", "be",
+    "been", "to", "of", "in", "on", "for", "with", "that", "this", "it", "as",
+    "at", "by", "from", "we", "our", "you", "your", "i", "they", "their",
+    "he", "she", "his", "her", "its", "not", "have", "has", "had", "will",
+    "would", "can", "could", "should", "about", "into", "up", "out", "if",
+    "so", "than", "then", "just", "also", "more", "most", "very", "get",
+    "got", "us", "them", "what", "when", "how", "all", "there", "some",
+}
+_CTA_KEYWORDS = (
+    "schedule", "book a", "let's talk", "let's chat", "reach out", "reply",
+    "call this week", "worth a chat", "grab time", "grab 15", "happy to",
+    "would you", "would love", "make sense",
+)
 
 _BRIEF_HEADER = """
 ## CEO Voice Profile
@@ -75,6 +113,7 @@ class PersonalBrandService:
     def __init__(self, session: Session, vector_store: IVectorStore) -> None:
         self.session = session
         self._store = vector_store
+        self.settings = get_settings()
 
     # ── VoiceProfile management ───────────────────────────────────────────────
 
@@ -120,6 +159,138 @@ class PersonalBrandService:
             select(VoiceProfile).where(VoiceProfile.is_active), VoiceProfile.organization_id, organization_id
         )
         return self.session.exec(stmt).first()
+
+    # ── AI-assisted extraction ──────────────────────────────────────────────
+
+    def extract_profile_draft(self, raw_text: str) -> VoiceProfileExtractResult:
+        """Propose a VoiceProfile draft from pasted writing samples.
+
+        Same "never lose the request" contract as AccountResearchAgent's
+        _synthesize: try the LLM when one is configured, and on ANY failure
+        (timeout, bad response, no API key, AI_PROVIDER=none) fall back to a
+        deterministic heuristic extractor instead of raising. The result is
+        never persisted here — it's a draft the caller reviews/edits before
+        calling create_or_update_profile.
+        """
+        if self.settings.AI_PROVIDER in ("openai", "anthropic") and self.settings.AI_API_KEY:
+            try:
+                fields = self._call_llm_extraction(raw_text)
+                model = (
+                    self.settings.AI_MODEL
+                    if self.settings.AI_PROVIDER == "openai"
+                    else self.settings.ANTHROPIC_MODEL
+                )
+                return VoiceProfileExtractResult(
+                    title=fields.get("title"),
+                    tone_descriptors=list(fields.get("tone_descriptors") or []),
+                    authority_topics=list(fields.get("authority_topics") or []),
+                    preferred_cta=fields.get("preferred_cta"),
+                    bio_summary=fields.get("bio_summary"),
+                    generated_by="llm",
+                    model_used=model,
+                )
+            except Exception:  # noqa: BLE001 — never lose the request, fall back instead
+                logger.exception("PersonalBrandService: LLM extraction failed, falling back to heuristic")
+
+        return self._heuristic_extract(raw_text)
+
+    def _call_llm_extraction(self, raw_text: str) -> dict[str, Any]:
+        provider = self.settings.AI_PROVIDER
+        user_prompt = f"Writing samples:\n\n{raw_text}"
+
+        if provider == "openai":
+            from openai import OpenAI
+
+            client = OpenAI(api_key=self.settings.AI_API_KEY, timeout=self.settings.AI_TIMEOUT_SECONDS)
+            resp = client.chat.completions.create(
+                model=self.settings.AI_MODEL,
+                messages=[
+                    {"role": "system", "content": _EXTRACTION_SYSTEM_PROMPT},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.3,
+                max_tokens=500,
+                response_format={"type": "json_object"},
+            )
+            raw = resp.choices[0].message.content or ""
+        elif provider == "anthropic":
+            import anthropic
+
+            client = anthropic.Anthropic(api_key=self.settings.AI_API_KEY)
+            resp = client.messages.create(
+                model=self.settings.ANTHROPIC_MODEL,
+                max_tokens=500,
+                temperature=0.3,
+                system=_EXTRACTION_SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+            raw = resp.content[0].text if resp.content else ""
+        else:
+            raise ValueError(f"Unsupported AI_PROVIDER: {provider}")
+
+        return parse_llm_response(raw)
+
+    def _heuristic_extract(self, raw_text: str) -> VoiceProfileExtractResult:
+        """Offline fallback — always available, zero cost, no external call.
+
+        Deterministic, defensible signals only: tone descriptors come from
+        measurable text statistics (punctuation, sentence length), authority
+        topics from words the samples actually repeat, bio_summary and
+        preferred_cta from sentences the samples actually contain. Never
+        invents anything not present in raw_text — same honesty rule the
+        sandbox's demo synthesis already follows (see demoResearchCompany).
+        """
+        text = raw_text.strip()
+        sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
+        words = re.findall(r"[A-Za-z][A-Za-z'-]+", text)
+
+        tone: list[str] = []
+        exclaim_ratio = text.count("!") / max(len(sentences), 1)
+        if exclaim_ratio > 0.15:
+            tone.append("energetic")
+        if "?" in text:
+            tone.append("conversational")
+        avg_sentence_words = len(words) / max(len(sentences), 1)
+        if avg_sentence_words <= 12:
+            tone.append("concise")
+        elif avg_sentence_words >= 22:
+            tone.append("detailed")
+        if re.search(r"\d", text):
+            tone.append("data-driven")
+        if not tone:
+            tone.append("professional")
+
+        # Authority topics: capitalized multi-letter words that recur (likely
+        # proper nouns — product/company/domain names) beat generic frequent
+        # words, since they're the strongest signal of what this person
+        # actually writes about with authority.
+        capitalized = [w for w in words if w[0].isupper() and w.lower() not in _STOPWORDS and len(w) > 2]
+        cap_counts = Counter(w for w in capitalized)
+        topics = [w for w, count in cap_counts.most_common(6) if count >= 2]
+        if len(topics) < 3:
+            lower_counts = Counter(w.lower() for w in words if w.lower() not in _STOPWORDS and len(w) > 3)
+            for word, _count in lower_counts.most_common(10):
+                if word not in (t.lower() for t in topics):
+                    topics.append(word)
+                if len(topics) >= 5:
+                    break
+
+        cta = next(
+            (s for s in reversed(sentences) if any(k in s.lower() for k in _CTA_KEYWORDS)),
+            None,
+        )
+
+        bio_summary = sentences[0][:280] if sentences else None
+
+        return VoiceProfileExtractResult(
+            title=None,
+            tone_descriptors=tone[:5],
+            authority_topics=topics[:5],
+            preferred_cta=cta,
+            bio_summary=bio_summary,
+            generated_by="heuristic",
+            model_used=None,
+        )
 
     # ── BrandFragment management ───────────────────────────────────────────────
 

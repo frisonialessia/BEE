@@ -53,6 +53,7 @@ import type {
   PendingAction,
   StyleProfileOut,
   VoiceProfile,
+  VoiceProfileExtractResult,
 } from "@/types/extended";
 
 const OPPORTUNITIES_KEY = "bee_demo_opportunities_v1";
@@ -1375,6 +1376,78 @@ export function demoCreateBrandProfile(data: {
   };
   saveJSON(BRAND_PROFILE_KEY, created);
   return created;
+}
+
+const EXTRACT_STOPWORDS = new Set([
+  "the", "a", "an", "and", "or", "but", "is", "are", "was", "were", "be",
+  "been", "to", "of", "in", "on", "for", "with", "that", "this", "it", "as",
+  "at", "by", "from", "we", "our", "you", "your", "i", "they", "their",
+  "he", "she", "his", "her", "its", "not", "have", "has", "had", "will",
+  "would", "can", "could", "should", "about", "into", "up", "out", "if",
+  "so", "than", "then", "just", "also", "more", "most", "very", "get",
+  "got", "us", "them", "what", "when", "how", "all", "there", "some",
+  "el", "la", "los", "las", "un", "una", "y", "o", "pero", "es", "son",
+  "de", "en", "para", "con", "que", "este", "esta", "nuestro", "nuestra",
+]);
+const EXTRACT_CTA_KEYWORDS = [
+  "schedule", "book a", "let's talk", "let's chat", "reach out", "reply",
+  "call this week", "worth a chat", "grab time", "grab 15", "happy to",
+  "would you", "would love", "make sense", "agendar", "hablemos",
+  "conversar", "escríbeme", "contáctame",
+];
+
+/**
+ * demoExtractVoiceProfile — client-side stand-in for the real LLM/heuristic
+ * extraction endpoint. Mirrors the backend's heuristic fallback: every
+ * proposed field is derived deterministically from the pasted text itself —
+ * word frequency, punctuation, sentence structure — never invented content,
+ * same honesty rule demoResearchCompany already follows for account briefs.
+ */
+export function demoExtractVoiceProfile(rawText: string): VoiceProfileExtractResult {
+  const text = rawText.trim();
+  const sentences = text.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
+  const words = text.match(/[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ'-]+/g) ?? [];
+
+  const tone: string[] = [];
+  const exclaimRatio = (text.match(/!/g)?.length ?? 0) / Math.max(sentences.length, 1);
+  if (exclaimRatio > 0.15) tone.push("energetic");
+  if (text.includes("?")) tone.push("conversational");
+  const avgSentenceWords = words.length / Math.max(sentences.length, 1);
+  if (avgSentenceWords <= 12) tone.push("concise");
+  else if (avgSentenceWords >= 22) tone.push("detailed");
+  if (/\d/.test(text)) tone.push("data-driven");
+  if (tone.length === 0) tone.push("professional");
+
+  const capitalized = words.filter((w) => /^[A-ZÀ-Þ]/.test(w) && w.length > 2 && !EXTRACT_STOPWORDS.has(w.toLowerCase()));
+  const capCounts = new Map<string, number>();
+  for (const w of capitalized) capCounts.set(w, (capCounts.get(w) ?? 0) + 1);
+  const topics = [...capCounts.entries()].filter(([, count]) => count >= 2).sort((a, b) => b[1] - a[1]).map(([w]) => w);
+  if (topics.length < 3) {
+    const lowerCounts = new Map<string, number>();
+    for (const w of words) {
+      const lw = w.toLowerCase();
+      if (lw.length > 3 && !EXTRACT_STOPWORDS.has(lw)) lowerCounts.set(lw, (lowerCounts.get(lw) ?? 0) + 1);
+    }
+    const ranked = [...lowerCounts.entries()].sort((a, b) => b[1] - a[1]).map(([w]) => w);
+    for (const w of ranked) {
+      if (topics.length >= 5) break;
+      if (!topics.some((t) => t.toLowerCase() === w)) topics.push(w);
+    }
+  }
+
+  const cta = [...sentences].reverse().find((s) => EXTRACT_CTA_KEYWORDS.some((k) => s.toLowerCase().includes(k))) ?? null;
+  const bioSummary = sentences.length > 0 ? sentences[0].slice(0, 280) : null;
+
+  return {
+    title: null,
+    tone_descriptors: tone.slice(0, 5),
+    authority_topics: topics.slice(0, 5),
+    forbidden_phrases: [],
+    preferred_cta: cta,
+    bio_summary: bioSummary,
+    generated_by: "demo",
+    model_used: null,
+  };
 }
 
 export function demoAddBrandFragment(

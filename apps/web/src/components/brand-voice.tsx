@@ -16,6 +16,7 @@ import {
   addBrandFragment,
   createBrandProfile,
   deleteBrandFragment,
+  extractVoiceProfile,
   getBrandProfile,
   getChannelStatus,
   listBrandFragments,
@@ -67,6 +68,11 @@ export function BrandVoicePanel() {
   const [createTone, setCreateTone] = useState(t("createForm.defaultTone"));
   const [createTopics, setCreateTopics] = useState(t("createForm.defaultTopics"));
   const [createCTA, setCreateCTA] = useState(t("createForm.defaultCTA"));
+  const [createBio, setCreateBio] = useState("");
+  const [createMode, setCreateMode] = useState<"manual" | "extract">("manual");
+  const [pasteText, setPasteText] = useState("");
+  const [extracting, setExtracting] = useState(false);
+  const [extractedBy, setExtractedBy] = useState<"llm" | "heuristic" | "demo" | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -122,14 +128,31 @@ export function BrandVoicePanel() {
     try {
       const result = await createBrandProfile({
         display_name: createName,
-        tone_descriptors: createTone.split(",").map((t) => t.trim()),
-        authority_topics: createTopics.split(",").map((t) => t.trim()),
-        preferred_cta: createCTA,
+        tone_descriptors: createTone.split(",").map((t) => t.trim()).filter(Boolean),
+        authority_topics: createTopics.split(",").map((t) => t.trim()).filter(Boolean),
+        preferred_cta: createCTA || undefined,
+        bio_summary: createBio || undefined,
       });
       setProfile(result.data);
       setShowCreate(false);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleExtract() {
+    if (pasteText.trim().length < 40) return;
+    setExtracting(true);
+    try {
+      const result = await extractVoiceProfile(pasteText);
+      const draft = result.data;
+      if (draft.tone_descriptors.length > 0) setCreateTone(draft.tone_descriptors.join(", "));
+      if (draft.authority_topics.length > 0) setCreateTopics(draft.authority_topics.join(", "));
+      if (draft.preferred_cta) setCreateCTA(draft.preferred_cta);
+      if (draft.bio_summary) setCreateBio(draft.bio_summary);
+      setExtractedBy(draft.generated_by);
+    } finally {
+      setExtracting(false);
     }
   }
 
@@ -201,7 +224,56 @@ export function BrandVoicePanel() {
       {/* Create profile form */}
       {showCreate && (
         <div className="bee-inset space-y-3 p-4">
-          <p className="bee-eyebrow">{t("createForm.title")}</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="bee-eyebrow">{t("createForm.title")}</p>
+            <div className="flex gap-1">
+              <button
+                type="button"
+                onClick={() => setCreateMode("manual")}
+                className={createMode === "manual" ? "bee-btn-ghost bee-btn-ghost--active text-xs" : "bee-btn-ghost text-xs"}
+              >
+                {t("createForm.modeManual")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreateMode("extract")}
+                className={createMode === "extract" ? "bee-btn-ghost bee-btn-ghost--active text-xs" : "bee-btn-ghost text-xs"}
+              >
+                {t("createForm.modeExtract")}
+              </button>
+            </div>
+          </div>
+
+          {createMode === "extract" && (
+            <div className="space-y-2 border-b border-dashed border-border pb-3">
+              <p className="bee-caption">{t("createForm.extractHint")}</p>
+              <textarea
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                placeholder={t("createForm.pastePlaceholder")}
+                rows={6}
+                className="bee-input resize-none"
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void handleExtract()}
+                  disabled={extracting || pasteText.trim().length < 40}
+                  className="bee-btn bee-btn--primary text-xs"
+                >
+                  {extracting ? t("createForm.extracting") : t("createForm.extractButton")}
+                </button>
+                {extractedBy && (
+                  <span className="bee-caption">
+                    {extractedBy === "heuristic" || extractedBy === "demo"
+                      ? t("createForm.extractedByHeuristic")
+                      : t("createForm.extractedByLlm")}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
           <input
             value={createName}
             onChange={(e) => setCreateName(e.target.value)}
@@ -219,6 +291,13 @@ export function BrandVoicePanel() {
             onChange={(e) => setCreateTopics(e.target.value)}
             placeholder={t("createForm.topicsPlaceholder")}
             className="bee-input"
+          />
+          <textarea
+            value={createBio}
+            onChange={(e) => setCreateBio(e.target.value)}
+            placeholder={t("createForm.bioPlaceholder")}
+            rows={2}
+            className="bee-input resize-none"
           />
           <input
             value={createCTA}
