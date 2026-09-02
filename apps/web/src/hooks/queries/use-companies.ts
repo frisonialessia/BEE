@@ -7,8 +7,10 @@ import {
   fetchCompanies,
   fetchCompany,
   fetchCompanyActivity,
+  fetchCompanyBrief,
   fetchCompanyDuplicates,
   mergeCompanies,
+  researchCompany,
   updateCompany,
   type CompanyCreateIn,
   type CompanyUpdateIn,
@@ -74,5 +76,26 @@ export function useCompanyActivity(companyId: string, limit = 20) {
     queryKey: queryKeys.companies.activity(companyId),
     queryFn: async () => fetchCompanyActivity(companyId, limit),
     enabled: Boolean(companyId),
+  });
+}
+
+/** Passive — just checks whether a brief already exists. Never triggers
+ * research on its own (see researchCompany's own "explicit action" note). */
+export function useCompanyBrief(companyId: string) {
+  return useQuery({
+    queryKey: queryKeys.companies.brief(companyId),
+    queryFn: async () => fetchCompanyBrief(companyId),
+    enabled: Boolean(companyId),
+  });
+}
+
+export function useResearchCompany() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ companyId, force }: { companyId: string; force?: boolean }) =>
+      researchCompany(companyId, force),
+    onSuccess: (_result, { companyId }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.brief(companyId) });
+    },
   });
 }

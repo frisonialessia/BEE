@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { AccountBriefPanel } from "@/components/companies/account-brief-panel";
 import { RelationshipMap } from "@/components/companies/relationship-map";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -323,6 +324,8 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
           <p className="bee-kpi-tile__value">{signals.length}</p>
         </div>
       </div>
+
+      <AccountBriefPanel companyId={companyId} />
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-2">

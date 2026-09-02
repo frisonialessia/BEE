@@ -45,6 +45,7 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.companies.all, "detail", id] as const,
     duplicates: () => [...queryKeys.companies.all, "duplicates"] as const,
     activity: (id: string) => [...queryKeys.companies.all, "activity", id] as const,
+    brief: (id: string) => [...queryKeys.companies.all, "brief", id] as const,
   },
   teams: {
     all: ["teams"] as const,
