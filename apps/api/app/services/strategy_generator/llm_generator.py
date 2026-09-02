@@ -185,7 +185,7 @@ class LLMStrategyGenerator(StrategyGenerator):
         """Call Anthropic Messages API and return the raw text response."""
         import anthropic
 
-        client = anthropic.Anthropic(api_key=_settings.AI_API_KEY)
+        client = anthropic.Anthropic(api_key=_settings.AI_API_KEY, timeout=_settings.AI_TIMEOUT_SECONDS)
         response = client.messages.create(
             model=_settings.ANTHROPIC_MODEL,
             max_tokens=800,

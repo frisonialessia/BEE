@@ -279,6 +279,46 @@ class TestPersonalBrandIntegration:
         assert "Jordan CEO" in brief
         assert "direct" in brief.lower()
 
+    def test_get_brand_brief_is_organization_scoped(self, session):
+        """Regression test for a cross-tenant leak: _get_brand_brief() must
+        pass the opportunity's organization_id through to PersonalBrandService,
+        or get_active_profile() falls back to its "no id = unscoped" path and
+        can return a DIFFERENT organization's active voice profile — leaking
+        one tenant's writing style/authority topics into another's artifacts.
+        """
+        import uuid as uuid_mod
+
+        from app.models.opportunity import Opportunity
+        from app.models.organization import Organization
+        from app.schemas.brand import VoiceProfileCreate
+        from app.services.executive_agent.service import ExecutiveAgent
+        from app.services.personal_brand import PersonalBrandService
+        from app.services.vector_store import get_vector_store
+
+        org_a = Organization(name="Org A", slug=f"org-a-{uuid_mod.uuid4().hex[:8]}")
+        org_b = Organization(name="Org B", slug=f"org-b-{uuid_mod.uuid4().hex[:8]}")
+        session.add_all([org_a, org_b])
+        session.commit()
+        session.refresh(org_a)
+        session.refresh(org_b)
+
+        brand_svc = PersonalBrandService(session, get_vector_store())
+        brand_svc.create_or_update_profile(
+            VoiceProfileCreate(display_name="Org B Voice", title="CEO", tone_descriptors=["playful"]),
+            organization_id=org_b.id,
+        )
+        session.commit()
+
+        # Org A has no voice profile of its own — the brief must fall back to
+        # the neutral message, never borrow Org B's.
+        opp_a = Opportunity(title="Org A deal", status="detected", score=0.5, organization_id=org_a.id)
+
+        agent = ExecutiveAgent(session)
+        brief = agent._get_brand_brief(opp_a)
+
+        assert "Org B Voice" not in brief
+        assert "no brand profile" in brief.lower()
+
     def test_artifact_context_has_brand_brief_field(self):
         """ArtifactContext now includes brand_brief."""
         ctx = _make_artifact_context(brand_brief="CEO writes concisely.")
