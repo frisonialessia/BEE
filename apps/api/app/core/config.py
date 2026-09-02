@@ -318,6 +318,20 @@ class Settings(BaseSettings):
     # it) and is visible in the response, never a silent drop.
     ACCOUNT_RESEARCH_DAILY_BUDGET_PER_ORG: int = 20
 
+    # ----- Federated Signal Intelligence ----------------------------------------
+    # See app.services.federated_intelligence. The k-anonymity floor: a
+    # cross-tenant prior is only ever returned once at least this many
+    # DISTINCT organizations have contributed to a (signal_type, industry)
+    # bucket — below it, get_prior() returns None rather than a statistic
+    # traceable to too few orgs. The module-level default (3) is deliberately
+    # low for an early pilot cohort so the feature is observable at all
+    # before dozens of organizations have opted in; raise this — e.g. to 15-20
+    # — once the fleet is large enough that a higher floor still clears
+    # routinely, trading a slower cold start for a stronger anonymity
+    # guarantee. Never lower it below 2: at 1 the "aggregate" is just one
+    # org's own history relabeled.
+    FEDERATED_INTELLIGENCE_MIN_CONTRIBUTING_ORGS: int = Field(default=3, ge=2)
+
     # ----- WorkflowOrchestrator webhooks (all opt-in) ---------------------------
     # Set any of these to activate the corresponding workflow handler.
     # Leave unset (None) to run in mock mode (full audit trail, no real calls).

@@ -47,6 +47,7 @@ from dataclasses import dataclass
 
 from sqlmodel import Session, select
 
+from app.core.config import settings as _settings
 from app.core.logging import get_logger
 from app.models.organization import Organization
 from app.models.strategy_outcome import StrategyOutcome
@@ -55,10 +56,14 @@ logger = get_logger(__name__)
 
 # A federated prior is only ever returned once at least this many DISTINCT
 # organizations have contributed to the (signal_type, industry) bucket.
-# Deliberately low for an early pilot cohort (see BEE's own >500-tester MVP
-# target) rather than the much higher bar (dozens of orgs) a mature,
-# high-volume fleet should raise this to — see the module docstring.
-MIN_CONTRIBUTING_ORGS = 3
+# Sourced from Settings.FEDERATED_INTELLIGENCE_MIN_CONTRIBUTING_ORGS
+# (env-configurable, ge=2 enforced there) rather than hardcoded here, so an
+# operator can raise the floor as the fleet grows without a code change —
+# see that setting's own comment for the early-pilot-vs-mature-fleet
+# tradeoff. Read once at import time, same "settle the value at process
+# start" convention as every other module-level constant derived from
+# Settings in this codebase.
+MIN_CONTRIBUTING_ORGS = _settings.FEDERATED_INTELLIGENCE_MIN_CONTRIBUTING_ORGS
 
 # Caps how far a cross-tenant prior can move an org's own analyzer
 # confidence — it augments a single org's judgment, it never overrides it.

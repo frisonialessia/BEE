@@ -189,6 +189,39 @@ expect to see it until you configure the secret).
    endpoint's docstring ("Email engagement events") for the exact event
    shape it expects.
 
+### 10. Guardrail Backtesting, Revenue Continuity Radar & Federated Signal Intelligence
+
+Three additive modules, all ship OFF by default — safe to deploy to an
+existing pilot with zero behavior change until each is individually
+enabled.
+
+1. Requires migrations `031_opportunity_type` (`Opportunity.opportunity_type`)
+   and `032_federated_intelligence_opt_in`
+   (`Organization.federated_intelligence_opt_in`) — run `alembic upgrade
+   head` before opening traffic. Both backfill every existing row to the
+   status-quo value (`new_logo` / `false`), so no existing opportunity's
+   classification or organization's participation changes on upgrade.
+2. **Guardrail Backtesting Sandbox** (`POST
+   /organizations/autopilot/simulate`) needs no flag — it is read-only and
+   requires only that Autopilot itself has been configured
+   (`PUT /organizations/autopilot`, OWNER-only) to have anything meaningful
+   to backtest against. Safe to leave as-is; there is nothing to turn on.
+3. **Revenue Continuity Radar** (`opportunity_type` classification +
+   lifecycle-aware playbooks) needs no flag either — it activates
+   automatically, per organization, the first time that organization has a
+   WON opportunity for a company a later signal targets again. Nothing to
+   configure; verify it by checking a re-triggered signal's
+   `Opportunity.opportunity_type` in the pipeline once a pilot org has its
+   first WON deal.
+4. **Federated Signal Intelligence** is opt-in per organization
+   (`PUT /organizations/federated-intelligence`, OWNER-only) — set
+   `FEDERATED_INTELLIGENCE_MIN_CONTRIBUTING_ORGS` (default `3`) based on
+   pilot size before any organization opts in: with a >500-account pilot
+   cohort, the default 3-org floor is appropriate at launch, but revisit it
+   upward (`15`-`20`) once enough organizations have opted in that a higher
+   floor still clears routinely — see that setting's own comment in
+   `.env.example` / `app.core.config`.
+
 ---
 
 ## 4. Health checks
