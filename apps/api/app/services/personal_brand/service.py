@@ -529,6 +529,18 @@ class PersonalBrandService:
             model_used=None,
         )
 
+    def build_voice_snippet(self, topic: str, organization_id: uuid.UUID | None = None) -> str | None:
+        """A short, on-brand one-liner for `topic` — deterministic, no LLM
+        call. For high-frequency call sites (e.g. DynamicSequenceEngine
+        building a PendingAction preview on every step advance) where an LLM
+        round-trip per call isn't worth the cost or latency. Returns None
+        when there's no active profile — callers keep their own fallback.
+        """
+        profile = self.get_active_profile(organization_id)
+        if profile is None:
+            return None
+        return self._template_branded_preview(topic, VoiceProfileOut.model_validate(profile))
+
     def _call_llm_text(self, system_prompt: str, topic: str) -> str:
         """Plain-text (not JSON-mode) LLM call — same provider branching as
         _call_llm_extraction, but the preview wants prose, not structured

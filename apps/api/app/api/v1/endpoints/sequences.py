@@ -29,12 +29,15 @@ from app.schemas.sequence import (
     SequenceOut,
 )
 from app.services.dynamic_sequence import DynamicSequenceEngine
+from app.services.personal_brand import PersonalBrandService
+from app.services.vector_store import get_vector_store
 
 router = APIRouter(prefix="/sequences", tags=["Dynamic Sequences (State-Machine Outreach)"])
 
 
 def _get_engine(session: Session = Depends(get_session)) -> DynamicSequenceEngine:
-    return DynamicSequenceEngine(session)
+    brand_svc = PersonalBrandService(session, get_vector_store())
+    return DynamicSequenceEngine(session, brand_svc)
 
 
 def _require_organization_id(

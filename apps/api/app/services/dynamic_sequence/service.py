@@ -51,7 +51,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlmodel import Session, select
 
@@ -66,6 +66,9 @@ from app.schemas.sequence import (
     SequenceCreate,
 )
 from app.services.permissions import scope_by_organization_id
+
+if TYPE_CHECKING:
+    from app.services.personal_brand import PersonalBrandService
 
 logger = get_logger(__name__)
 
@@ -125,8 +128,15 @@ class TransitionEvaluator:
 class DynamicSequenceEngine:
     """Manages DynamicSequence definitions and their running executions."""
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, brand_svc: PersonalBrandService | None = None) -> None:
         self.session = session
+        # Optional: when provided, _execute_step's PendingAction preview is a
+        # real on-brand snippet instead of a bare "Action: X via Y" stub —
+        # this engine previously never generated any content at all for its
+        # steps (unlike ExecutiveAgent/SmartEngagementEngine, which already
+        # consume brand_brief). None keeps existing call sites (tests, any
+        # caller not passing it) working exactly as before.
+        self._brand_svc = brand_svc
 
     # ── Sequence management ───────────────────────────────────────────────────
 
@@ -408,7 +418,7 @@ class DynamicSequenceEngine:
                 status=ActionStatus.PENDING_APPROVAL,
                 title=f"Sequence step: {step_name}",
                 description=f"Sequence '{seq.name}' → step '{execution.current_step_id}': {action}",
-                preview=f"Action: {action} via {channel}",
+                preview=self._build_step_preview(step_name, action, channel, execution.organization_id),
                 payload={
                     "sequence_id": str(seq.id),
                     "execution_id": str(execution.id),
@@ -436,6 +446,25 @@ class DynamicSequenceEngine:
         except Exception:  # noqa: BLE001
             logger.exception("Failed to create PendingAction for sequence step %s", execution.current_step_id)
             return None
+
+    def _build_step_preview(
+        self, step_name: str, action: str, channel: str, organization_id: uuid.UUID | None
+    ) -> str:
+        """A real, on-brand preview for the CEO's approval queue instead of
+        a bare "Action: X via Y" stub — the only content this engine ever
+        produced for a step until now. Falls back to the stub when there's
+        no brand_svc configured, no active profile, or the lookup fails;
+        never blocks sequence execution over a preview string.
+        """
+        fallback = f"Action: {action} via {channel}"
+        if self._brand_svc is None:
+            return fallback
+        try:
+            snippet = self._brand_svc.build_voice_snippet(step_name, organization_id)
+            return snippet or fallback
+        except Exception:  # noqa: BLE001
+            logger.debug("PersonalBrandService unavailable for sequence step preview", exc_info=True)
+            return fallback
 
     @staticmethod
     def _describe_result(condition: str | None, next_step: str | None, status: str) -> str:

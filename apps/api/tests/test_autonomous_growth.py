@@ -763,6 +763,46 @@ class TestDynamicSequenceEngine:
         assert execution.status == ExecutionStatus.RUNNING
         assert len(execution.pending_action_ids) >= 1
 
+    def test_step_preview_uses_brand_voice_when_configured(self, session: Session) -> None:
+        """Regression test: DynamicSequenceEngine previously never generated
+        any real content for a step — every PendingAction's preview was a
+        bare 'Action: X via Y' stub, unlike ExecutiveAgent/SmartEngagementEngine
+        which already applied brand_brief."""
+        from app.models.pending_action import PendingAction
+        from app.services.vector_store import get_vector_store
+
+        brand_svc = PersonalBrandService(session, get_vector_store())
+        brand_svc.create_or_update_profile(
+            VoiceProfileCreate(display_name="Alex Rivera", tone_descriptors=["direct"], preferred_cta="Let's talk.")
+        )
+        session.commit()
+
+        engine = DynamicSequenceEngine(session, brand_svc)
+        seq = engine.create_sequence(_sample_sequence("test_branded_preview"))
+        session.commit()
+
+        execution = engine.start_execution(ExecutionCreate(sequence_id=seq.id))
+        session.commit()
+
+        pending = session.get(PendingAction, uuid.UUID(execution.pending_action_ids[0]))
+        assert pending is not None
+        assert pending.preview != "Action: send_email via email"
+        assert "Let's talk." in pending.preview
+
+    def test_step_preview_falls_back_without_brand_svc(self, session: Session) -> None:
+        from app.models.pending_action import PendingAction
+
+        engine = DynamicSequenceEngine(session)  # no brand_svc — same as before this change
+        seq = engine.create_sequence(_sample_sequence("test_fallback_preview"))
+        session.commit()
+
+        execution = engine.start_execution(ExecutionCreate(sequence_id=seq.id))
+        session.commit()
+
+        pending = session.get(PendingAction, uuid.UUID(execution.pending_action_ids[0]))
+        assert pending is not None
+        assert pending.preview == "Action: send_email via email"
+
     def test_advance_on_email_opened(
         self, sequence_engine: DynamicSequenceEngine, session: Session
     ) -> None:

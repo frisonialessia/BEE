@@ -270,9 +270,14 @@ playbook: {cfg.get("playbook", "not set")}
 (Do not deviate from these — they are required for clean experiment data.)"""
         )
 
+    # ── 12. CEO brand voice ───────────────────────────────────────────────────
+    if ctx.brand_brief:
+        sections.append("=== CEO BRAND VOICE ===\n" + ctx.brand_brief)
+
     # ── Final instruction ─────────────────────────────────────────────────────
     sections.append("""=== YOUR TASK ===
 Generate a complete battlecard strategy for this opportunity.
+If a CEO BRAND VOICE section is present above, write pain_point and closing_argument in that exact voice — tone, vocabulary, sentence length, forbidden phrases all apply. Otherwise use a direct, professional tone.
 Synthesise all context above. Prioritise: A/B variant > warm intro > Sales DNA > adaptive hints > your judgment.
 Before finalising, check your chosen (playbook, channel) against CAUTIONARY PATTERNS above — if it
 matches a documented loss, reconsider unless you have a specific reason this context is different.
