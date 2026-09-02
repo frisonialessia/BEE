@@ -9,21 +9,26 @@ Covers:
 * SmartEngagementEngine / DynamicSequenceEngine — the audit-trail coverage
   gaps this phase closes
 * PUT/GET /organizations/autopilot — endpoint permissions and validation
+* POST /organizations/autopilot/simulate + AutopilotGuardrailService.run_simulation
+  — the Guardrail Backtesting Sandbox
 """
 
 from __future__ import annotations
 
 import uuid
+from datetime import UTC, datetime, timedelta
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
 from app.core.security import create_access_token, hash_password
 from app.models.audit_trail import AgentType, AuditEntry, DecisionType
-from app.models.base import UserRole
+from app.models.base import OpportunityStatus, UserRole
+from app.models.opportunity import Opportunity
 from app.models.organization import Organization
 from app.models.user import User
-from app.schemas.autopilot import AutopilotConfigIn
+from app.schemas.autopilot import AutopilotConfigIn, AutopilotSimulationRequest
 from app.services.autopilot import AutopilotGuardrailService
 from app.services.omnichannel import OmnichannelGateway
 
@@ -280,3 +285,217 @@ class TestAutopilotEndpoints:
     def test_unauthenticated_request_rejected(self, client: TestClient) -> None:
         resp = client.get("/api/v1/organizations/autopilot")
         assert resp.status_code == 401
+
+
+def _make_opportunity(
+    session: Session,
+    org: Organization,
+    *,
+    confidence_score: float | None,
+    status: OpportunityStatus = OpportunityStatus.DETECTED,
+    company_id: uuid.UUID | None = None,
+    execution_artifacts: dict | None = None,
+    created_at: datetime | None = None,
+) -> Opportunity:
+    opp = Opportunity(
+        organization_id=org.id,
+        title="Acme Corp — Series B outreach",
+        status=status,
+        company_id=company_id,
+        strategy={"confidence_score": confidence_score} if confidence_score is not None else {},
+        execution_artifacts=execution_artifacts,
+    )
+    session.add(opp)
+    session.commit()
+    session.refresh(opp)
+    if created_at is not None:
+        # Backdate for lookback-window tests — created_at has a default
+        # factory, so it must be overwritten post-insert.
+        opp.created_at = created_at
+        session.add(opp)
+        session.commit()
+        session.refresh(opp)
+    return opp
+
+
+class TestAutopilotSimulationService:
+    def test_no_history_reports_zero_without_dividing_by_zero(self, session: Session) -> None:
+        org = _make_org(session)
+        svc = AutopilotGuardrailService(session)
+
+        report = svc.run_simulation(
+            org.id, AutopilotSimulationRequest(confidence_threshold=0.9)
+        )
+
+        assert report.evaluated_count == 0
+        assert report.would_auto_approve_count == 0
+        assert report.would_auto_approve_rate == 0.0
+        assert report.auto_approved_win_rate is None
+        assert report.manual_review_win_rate is None
+
+    def test_opportunities_without_confidence_score_are_excluded(self, session: Session) -> None:
+        org = _make_org(session)
+        _make_opportunity(session, org, confidence_score=None)
+        svc = AutopilotGuardrailService(session)
+
+        report = svc.run_simulation(
+            org.id, AutopilotSimulationRequest(confidence_threshold=0.5)
+        )
+        assert report.evaluated_count == 0
+
+    def test_splits_auto_approved_vs_manual_review_by_threshold(self, session: Session) -> None:
+        org = _make_org(session)
+        _make_opportunity(session, org, confidence_score=0.95, status=OpportunityStatus.WON)
+        _make_opportunity(session, org, confidence_score=0.92, status=OpportunityStatus.LOST)
+        _make_opportunity(session, org, confidence_score=0.6, status=OpportunityStatus.WON)
+        svc = AutopilotGuardrailService(session)
+
+        report = svc.run_simulation(
+            org.id, AutopilotSimulationRequest(confidence_threshold=0.9)
+        )
+
+        assert report.evaluated_count == 3
+        assert report.would_auto_approve_count == 2
+        assert report.would_auto_approve_rate == pytest.approx(2 / 3)
+        assert report.auto_approved_won == 1
+        assert report.auto_approved_lost == 1
+        assert report.auto_approved_win_rate == pytest.approx(0.5)
+        assert report.manual_review_won == 1
+        assert report.manual_review_lost == 0
+        assert report.manual_review_win_rate == pytest.approx(1.0)
+
+    def test_still_open_opportunities_counted_but_not_in_win_rate(self, session: Session) -> None:
+        org = _make_org(session)
+        _make_opportunity(session, org, confidence_score=0.95, status=OpportunityStatus.IN_PROGRESS)
+        svc = AutopilotGuardrailService(session)
+
+        report = svc.run_simulation(
+            org.id, AutopilotSimulationRequest(confidence_threshold=0.9)
+        )
+        assert report.would_auto_approve_count == 1
+        assert report.auto_approved_still_open == 1
+        assert report.auto_approved_win_rate is None
+
+    def test_excluded_company_forces_manual_review_and_counts_as_near_miss(
+        self, session: Session
+    ) -> None:
+        org = _make_org(session)
+        company_id = uuid.uuid4()
+        _make_opportunity(
+            session, org, confidence_score=0.95, status=OpportunityStatus.WON, company_id=company_id
+        )
+        svc = AutopilotGuardrailService(session)
+
+        report = svc.run_simulation(
+            org.id,
+            AutopilotSimulationRequest(confidence_threshold=0.9, excluded_company_ids=[company_id]),
+        )
+        assert report.would_auto_approve_count == 0
+        assert report.near_miss_excluded_count == 1
+
+    def test_forbidden_word_checked_against_execution_artifacts(self, session: Session) -> None:
+        org = _make_org(session)
+        _make_opportunity(
+            session,
+            org,
+            confidence_score=0.95,
+            execution_artifacts={"body": "We GUARANTEE a 10x return."},
+        )
+        svc = AutopilotGuardrailService(session)
+
+        report = svc.run_simulation(
+            org.id,
+            AutopilotSimulationRequest(confidence_threshold=0.9, forbidden_words=["guarantee"]),
+        )
+        assert report.would_auto_approve_count == 0
+        assert "forbidden word" in report.samples[0].reason
+
+    def test_lookback_window_excludes_older_opportunities(self, session: Session) -> None:
+        org = _make_org(session)
+        _make_opportunity(
+            session,
+            org,
+            confidence_score=0.95,
+            created_at=datetime.now(UTC) - timedelta(days=200),
+        )
+        svc = AutopilotGuardrailService(session)
+
+        report = svc.run_simulation(
+            org.id, AutopilotSimulationRequest(confidence_threshold=0.9, lookback_days=30)
+        )
+        assert report.evaluated_count == 0
+
+        wider_report = svc.run_simulation(
+            org.id, AutopilotSimulationRequest(confidence_threshold=0.9, lookback_days=365)
+        )
+        assert wider_report.evaluated_count == 1
+
+    def test_simulation_never_persists_anything(self, session: Session) -> None:
+        """The one hard invariant of a sandbox: running it must leave the
+        org's live AutopilotConfig completely untouched."""
+        org = _make_org(session)
+        svc = AutopilotGuardrailService(session)
+        svc.create_or_update(org.id, AutopilotConfigIn(enabled=False, confidence_threshold=0.9))
+        session.commit()
+
+        svc.run_simulation(
+            org.id, AutopilotSimulationRequest(confidence_threshold=0.5, forbidden_words=["x"])
+        )
+
+        config = svc.get_config(org.id)
+        assert config is not None
+        assert config.enabled is False
+        assert config.confidence_threshold == 0.9
+
+
+class TestAutopilotSimulationEndpoint:
+    def test_owner_can_simulate(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session)
+        _make_opportunity(session, org, confidence_score=0.95, status=OpportunityStatus.WON)
+        headers = _auth_headers(session, org, UserRole.OWNER)
+
+        resp = client.post(
+            "/api/v1/organizations/autopilot/simulate",
+            json={"confidence_threshold": 0.9},
+            headers=headers,
+        )
+        assert resp.status_code == 200, resp.text
+        data = resp.json()
+        assert data["evaluated_count"] == 1
+        assert data["would_auto_approve_count"] == 1
+
+    def test_admin_can_simulate(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session)
+        headers = _auth_headers(session, org, UserRole.ADMIN)
+        resp = client.post(
+            "/api/v1/organizations/autopilot/simulate",
+            json={"confidence_threshold": 0.9},
+            headers=headers,
+        )
+        assert resp.status_code == 200, resp.text
+
+    def test_member_cannot_simulate(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session)
+        headers = _auth_headers(session, org, UserRole.MEMBER)
+        resp = client.post(
+            "/api/v1/organizations/autopilot/simulate",
+            json={"confidence_threshold": 0.9},
+            headers=headers,
+        )
+        assert resp.status_code == 403
+
+    def test_unauthenticated_simulate_rejected(self, client: TestClient) -> None:
+        resp = client.post(
+            "/api/v1/organizations/autopilot/simulate", json={"confidence_threshold": 0.9}
+        )
+        assert resp.status_code == 401
+
+    def test_rejects_threshold_below_floor(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session)
+        headers = _auth_headers(session, org, UserRole.OWNER)
+        resp = client.post(
+            "/api/v1/organizations/autopilot/simulate",
+            json={"confidence_threshold": 0.2},
+            headers=headers,
+        )
+        assert resp.status_code == 422

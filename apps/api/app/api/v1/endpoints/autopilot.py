@@ -17,7 +17,12 @@ from app.api.deps import get_current_user, require_roles
 from app.core.database import get_session
 from app.models.base import UserRole
 from app.models.user import User
-from app.schemas.autopilot import AutopilotConfigIn, AutopilotConfigOut
+from app.schemas.autopilot import (
+    AutopilotConfigIn,
+    AutopilotConfigOut,
+    AutopilotSimulationReport,
+    AutopilotSimulationRequest,
+)
 from app.services.autopilot import AutopilotGuardrailService
 
 router = APIRouter(prefix="/organizations/autopilot", tags=["Autopilot Guardrails"])
@@ -51,3 +56,23 @@ def set_autopilot_config(
     session.commit()
     session.refresh(config)
     return AutopilotConfigOut.model_validate(config)
+
+
+@router.post(
+    "/simulate",
+    response_model=AutopilotSimulationReport,
+    summary="Backtest a candidate autopilot config against this org's history (OWNER/ADMIN only)",
+)
+def simulate_autopilot_config(
+    data: AutopilotSimulationRequest,
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> AutopilotSimulationReport:
+    """Read-only — never persists ``data``, never touches a PendingAction.
+    Answer the question a org owner actually has before raising
+    ``confidence_threshold`` in production: "what would this have done to
+    my last N days of opportunities?" See
+    ``AutopilotGuardrailService.run_simulation`` for the full replay logic
+    and its two documented data limitations.
+    """
+    return AutopilotGuardrailService(session).run_simulation(current_user.organization_id, data)
