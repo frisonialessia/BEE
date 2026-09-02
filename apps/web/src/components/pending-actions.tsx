@@ -95,7 +95,13 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
       </div>
 
       {action.preview && isPending && (
-        <div className="whitespace-pre-wrap border border-border bg-background p-2.5 font-mono text-xs leading-relaxed text-muted-foreground line-clamp-4">
+        // Full content, never clipped mid-sentence: this is what a CEO
+        // reads before an irreversible approve/reject decision, so a
+        // scrollable box (not a hard line-clamp) is the floor here, not a
+        // nice-to-have. max-h caps how much vertical space one card can
+        // take in the queue; overflow-y-auto is what actually lets the
+        // rest of a long email be read instead of disappearing past it.
+        <div className="max-h-56 overflow-y-auto whitespace-pre-wrap rounded-sm border border-border bg-background p-3 font-mono text-xs leading-relaxed text-muted-foreground">
           {action.preview}
         </div>
       )}
