@@ -1,8 +1,11 @@
 import { apiFetch } from "@/lib/api/client";
+import { demoFetchTeams } from "@/lib/demo/store";
+import { isDemoMode } from "@/lib/demo/mode";
 import { ApiError } from "@/types/api";
 import type { TeamCreateIn, TeamOut, TeamProfileIn, TeamProfileOut } from "@/types/auth";
 
 export async function fetchTeams(): Promise<TeamOut[]> {
+  if (isDemoMode()) return demoFetchTeams();
   return apiFetch<TeamOut[]>("/api/v1/teams", { cache: "no-store" });
 }
 

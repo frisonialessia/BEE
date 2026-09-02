@@ -25,6 +25,36 @@ const CLIENT_CONTEXT_VARIANT: Record<MeetingClientContext, "success" | "warning"
   prospect: "outline",
   new_contact: "secondary",
 };
+// Same pastel-fill tokens the marketing page's module tiles use
+// (bee-bento--primary/--warm/--violet/--muted) — BEE's own palette, not a
+// calendar-specific color scheme invented on the side.
+const CLIENT_CONTEXT_TONE: Record<MeetingClientContext, string> = {
+  active_client: "bee-bento--primary",
+  hot_lead: "bee-bento--warm",
+  prospect: "bee-bento--violet",
+  new_contact: "bee-bento--muted",
+};
+
+// Hour-grid — business hours only (not a full 24h day) so a week's worth of
+// meetings reads at a glance without scrolling past mostly-empty rows.
+const GRID_START_HOUR = 7;
+const GRID_END_HOUR = 20;
+const GRID_HOURS = Array.from({ length: GRID_END_HOUR - GRID_START_HOUR + 1 }, (_, i) => GRID_START_HOUR + i);
+const HOUR_HEIGHT = 56; // px per hour row
+
+/** Pixel top/height for one meeting block within the hour grid — clamped
+ * to the visible window (a meeting outside business hours still shows,
+ * pinned to the nearest edge, rather than disappearing entirely). */
+function meetingPosition(meeting: Meeting): { top: number; height: number } {
+  const start = new Date(meeting.starts_at);
+  const startHour = start.getHours() + start.getMinutes() / 60;
+  const endHour = startHour + meeting.duration_minutes / 60;
+  const clampedStart = Math.max(GRID_START_HOUR, Math.min(startHour, GRID_END_HOUR));
+  const clampedEnd = Math.max(GRID_START_HOUR, Math.min(endHour, GRID_END_HOUR));
+  const top = (clampedStart - GRID_START_HOUR) * HOUR_HEIGHT;
+  const height = Math.max(20, (clampedEnd - clampedStart) * HOUR_HEIGHT - 2);
+  return { top, height };
+}
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/);
@@ -95,7 +125,8 @@ function formFromMeeting(meeting: Meeting): MeetingFormState {
  *  oportunidad o un lead: client_context (Cliente activo/Lead caliente/
  *  Prospecto/Primer contacto) lo calcula el backend a partir de datos que
  *  BEE ya tiene, no se pide a mano. Página propia en el sidebar — ver
- *  nav-items.ts (solo /dashboard, todavía sin soporte en /probar). */
+ *  nav-items.ts — real y simulado, mismo componente en ambos, ver
+ *  lib/api/meetings.ts's isDemoMode() split). */
 export function CalendarPage() {
   const t = useTranslations("calendar");
   const locale = useLocale() as Locale;
@@ -254,22 +285,20 @@ export function CalendarPage() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-7">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <Skeleton key={i} className="h-64 rounded-[var(--radius-lg)]" />
-          ))}
-        </div>
+        <Skeleton className="h-[600px] rounded-[var(--radius-lg)]" />
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-7">
-          {days.map((day) => {
-            const dayMeetings = byDay.get(day.toDateString()) ?? [];
-            const isToday = day.toDateString() === today;
-            return (
-              <div key={day.toISOString()} className="flex min-h-[240px] flex-col">
+        <div className="bee-surface overflow-x-auto rounded-[var(--radius-lg)]">
+          <div className="grid min-w-[720px] grid-cols-[3.5rem_repeat(7,1fr)]">
+            {/* Day headers */}
+            <div />
+            {days.map((day) => {
+              const isToday = day.toDateString() === today;
+              return (
                 <button
+                  key={day.toISOString()}
                   type="button"
                   onClick={() => openCreateFor(day)}
-                  className={`mb-2 rounded-[var(--radius-md)] px-2 py-1.5 text-left transition-colors hover:bg-[var(--color-primary)]/40 ${isToday ? "bg-[var(--color-chart-4)]/15" : ""}`}
+                  className={`border-b border-l border-border px-2 py-2 text-left transition-colors hover:bg-[var(--color-primary)]/30 ${isToday ? "bg-[var(--color-chart-4)]/10" : ""}`}
                 >
                   <p className="bee-eyebrow">
                     {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { weekday: "short" }).format(day)}
@@ -278,25 +307,49 @@ export function CalendarPage() {
                     {day.getDate()}
                   </p>
                 </button>
-                <div className="flex flex-1 flex-col gap-1.5">
-                  {dayMeetings.length === 0 ? (
-                    <p className="bee-micro px-1 text-muted-foreground">{t("page.emptyDay")}</p>
-                  ) : (
-                    dayMeetings.map((m) => (
+              );
+            })}
+
+            {/* Hour grid */}
+            <div className="relative" style={{ height: GRID_HOURS.length * HOUR_HEIGHT }}>
+              {GRID_HOURS.map((h) => (
+                <div
+                  key={h}
+                  className="absolute inset-x-0 border-t border-border/60 pr-1.5 text-right"
+                  style={{ top: (h - GRID_START_HOUR) * HOUR_HEIGHT }}
+                >
+                  <span className="bee-micro relative -top-2 text-muted-foreground">{String(h).padStart(2, "0")}:00</span>
+                </div>
+              ))}
+            </div>
+            {days.map((day) => {
+              const dayMeetings = byDay.get(day.toDateString()) ?? [];
+              return (
+                <div
+                  key={day.toISOString()}
+                  className="relative border-l border-border"
+                  style={{ height: GRID_HOURS.length * HOUR_HEIGHT }}
+                >
+                  {GRID_HOURS.map((h) => (
+                    <div
+                      key={h}
+                      className="absolute inset-x-0 border-t border-border/60"
+                      style={{ top: (h - GRID_START_HOUR) * HOUR_HEIGHT }}
+                    />
+                  ))}
+                  {dayMeetings.map((m) => {
+                    const pos = meetingPosition(m);
+                    return (
                       <button
                         key={m.id}
                         type="button"
                         onClick={() => setDetail(m)}
-                        className="bee-bento flex flex-col gap-1 p-2 text-left"
+                        className={`bee-bento absolute inset-x-1 flex flex-col gap-0.5 overflow-hidden p-1.5 text-left ${CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
+                        style={{ top: pos.top, height: pos.height }}
                       >
                         <p className="bee-micro font-mono">{timeLabel(m.starts_at, locale)}</p>
                         <p className="line-clamp-2 text-xs font-medium leading-snug">{m.title}</p>
-                        {m.client_context && (
-                          <Badge variant={CLIENT_CONTEXT_VARIANT[m.client_context]} className="w-fit text-[10px]">
-                            {t(`clientContext.${m.client_context}`)}
-                          </Badge>
-                        )}
-                        <div className="mt-0.5 flex items-center gap-2 text-muted-foreground">
+                        <div className="mt-auto flex items-center gap-1.5 text-muted-foreground">
                           {m.attendee_user_ids.length > 0 && (
                             <span className="flex items-center gap-0.5">
                               <Users className="size-3" />
@@ -306,12 +359,15 @@ export function CalendarPage() {
                           {m.meeting_url && <Video className="size-3" />}
                         </div>
                       </button>
-                    ))
+                    );
+                  })}
+                  {dayMeetings.length === 0 && (
+                    <p className="bee-micro px-2 py-2 text-muted-foreground">{t("page.emptyDay")}</p>
                   )}
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 

@@ -1,12 +1,15 @@
 import { apiFetch } from "@/lib/api/client";
+import { demoFetchUsers } from "@/lib/demo/store";
 import { isDemoMode } from "@/lib/demo/mode";
 import type { UserCreateIn, UserOut, UserProfileUpdateIn, UserUpdateIn } from "@/types/auth";
 
-/** No demo team to speak of — the sandbox has no login, so there's no
- * "assigned to" list. An empty array here reads as "no owners in this
- * sandbox" (honest), not as a failed fetch. */
+/** A small fixed demo team (see demoFetchUsers) — explicit override of the
+ * original "no demo team, sandbox has no login" default, same precedent as
+ * Control/Red/Voz de marca/Resiliencia's own local stores (see
+ * PROBAR_LIVE_SECTIONS' docstring). A Leaderboard or a shared Calendario
+ * with zero teammates isn't a smaller honest version of either feature. */
 export async function fetchUsers(): Promise<UserOut[]> {
-  if (isDemoMode()) return [];
+  if (isDemoMode()) return demoFetchUsers();
   return apiFetch<UserOut[]>("/api/v1/users", { cache: "no-store" });
 }
 

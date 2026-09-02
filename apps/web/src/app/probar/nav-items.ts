@@ -64,4 +64,5 @@ export const PROBAR_LIVE_SECTIONS = new Set([
   "/probar/network",
   "/probar/brand",
   "/probar/resilience",
+  "/probar/calendar",
 ]);

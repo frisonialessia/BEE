@@ -6,7 +6,10 @@
  */
 import type { Locale } from "@/i18n/locales";
 import type { EmployeeRange } from "@/lib/api/organizations";
+import type { MeetingCreateIn, MeetingUpdateIn } from "@/lib/api/meetings";
 import type { CrmStage, OpportunityUpdateIn } from "@/lib/api/opportunities";
+import type { TeamOut, UserOut } from "@/types/auth";
+import type { Meeting, MeetingClientContext } from "@/types/domain";
 import type {
   DynamicSequenceOut,
   SequenceCreateIn,
@@ -83,8 +86,13 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * instead of the intended full simulation; `"5"` adds 2 more lost seeds
  * (s19/s20) with distinct named competitors (Apollo.io, Clay) so Win/Loss's
  * `Competitors` box has as many rows as `Loss reasons` (both 5) instead of
- * visibly shorter, and reads as more than just competing CRMs. */
-const SEED_VERSION = "5";
+ * visibly shorter, and reads as more than just competing CRMs; `"6"` stamps
+ * `assigned_to_user_id` on every seeded opportunity with a demo rep (see
+ * DEMO_USERS below) so the Leaderboard and Calendario have someone to show —
+ * a returning visitor on an older snapshot has every opportunity's
+ * `assigned_to_user_id` still `null`, which reads as "no one on the team
+ * has ever won a deal" instead of the sandbox just never having stamped it. */
+const SEED_VERSION = "6";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Which language the currently-stored seed was written in — separate from
@@ -149,7 +157,58 @@ function saveJSON<T>(key: string, value: T): void {
   }
 }
 
-const load = () => loadJSON<Opportunity[]>(OPPORTUNITIES_KEY, getSampleOpportunities(getDemoLocale()));
+// ── Demo team (Leaderboard, Calendario attendees) ───────────────────────────
+//
+// fetchUsers()'s own long-standing comment says "no demo team to speak of —
+// the sandbox has no login, so there's no 'assigned to' list" and returns
+// an honest empty array. Explicitly overridden here — same precedent as
+// Control/Red/Voz de marca/Resiliencia's own local stores (see
+// PROBAR_LIVE_SECTIONS' docstring: "the BEE team later asked for a fully
+// realistic simulation... explicitly overriding that default"). A
+// leaderboard and a shared calendar are BOTH inherently multi-person
+// features — showing either with zero teammates isn't a smaller honest
+// version of the feature, it's not the feature at all. These ids are
+// `demo-user-*`, never mistakable for a real account.
+const DEMO_TEAMS: TeamOut[] = [
+  { id: "demo-team-north", organization_id: "demo-org", parent_team_id: null, name: "Equipo Norte", description: null },
+  { id: "demo-team-south", organization_id: "demo-org", parent_team_id: null, name: "Equipo Sur", description: null },
+];
+
+const DEMO_USERS_ES: UserOut[] = [
+  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@demo.bee", full_name: "Ana García", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@demo.bee", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@demo.bee", full_name: "Sofía Méndez", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@demo.bee", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
+];
+
+const DEMO_USERS_EN: UserOut[] = [
+  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@demo.bee", full_name: "Ana Garcia", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@demo.bee", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@demo.bee", full_name: "Sofia Mendez", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@demo.bee", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
+];
+
+export function demoFetchUsers(): UserOut[] {
+  return getDemoLocale() === "en" ? DEMO_USERS_EN : DEMO_USERS_ES;
+}
+
+export function demoFetchTeams(): TeamOut[] {
+  return DEMO_TEAMS;
+}
+
+/** Deterministic (index-rotated, not random) so the same opportunity is
+ * always "assigned to" the same demo rep across reloads until the next
+ * reseed — a leaderboard that reshuffles on every refresh wouldn't read
+ * as real. */
+function seedOpportunitiesWithReps(locale: Locale): Opportunity[] {
+  const reps = demoFetchUsers();
+  return getSampleOpportunities(locale).map((opp, i) => ({
+    ...opp,
+    assigned_to_user_id: opp.assigned_to_user_id ?? reps[i % reps.length].id,
+  }));
+}
+
+const load = () => loadJSON<Opportunity[]>(OPPORTUNITIES_KEY, seedOpportunitiesWithReps(getDemoLocale()));
 const save = (list: Opportunity[]) => saveJSON(OPPORTUNITIES_KEY, list);
 
 export function demoFetchOpportunities(status?: OpportunityStatus): Opportunity[] {
@@ -597,6 +656,231 @@ export function demoDeleteTask(taskId: string): void {
   const list = loadTasks();
   findTaskOrThrow(list, taskId);
   saveTasks(list.filter((t) => t.id !== taskId));
+}
+
+// ── Meetings (Calendario) ────────────────────────────────────────────────
+//
+// Unlike Tasks (deliberately seeded empty — "a rep's to-dos are theirs to
+// create"), a calendar with nothing on it doesn't illustrate the feature at
+// all — the whole point is showing meetings already tied to real pipeline
+// accounts. Seeded relative to "now" (offsets in hours, not fixed dates) so
+// it always looks like *this* week regardless of when the sandbox is
+// opened, same reasoning `demoFetchSequences`' own execution timestamps use
+// elsewhere in this file. User-added meetings persist locally same as
+// everything else here.
+
+const MEETINGS_KEY = "bee_demo_meetings_v1";
+const HOT_LEAD_SCORE_THRESHOLD = 75;
+
+/** Mirrors app.api.v1.endpoints.meetings._client_context on the backend —
+ * same rules, just computed here since /probar never calls that endpoint. */
+function demoClientContext(
+  opportunity: Opportunity | undefined,
+  lead: Lead | undefined,
+): MeetingClientContext {
+  if (opportunity) {
+    if (opportunity.status === "won" || opportunity.opportunity_type === "expansion" || opportunity.opportunity_type === "renewal_risk") {
+      return "active_client";
+    }
+    return "prospect";
+  }
+  if (lead) {
+    return lead.score >= HOT_LEAD_SCORE_THRESHOLD ? "hot_lead" : "prospect";
+  }
+  return "new_contact";
+}
+
+/** `dayOffset`/`hour`/`minute`, not a raw hours-from-now offset — a seed
+ * meeting always needs to land inside the calendar's visible business-hour
+ * grid (see CalendarPage's own GRID_START_HOUR/GRID_END_HOUR) regardless of
+ * what time of day it is when the sandbox happens to be opened. */
+function seedTime(dayOffset: number, hour: number, minute: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  d.setHours(hour, minute, 0, 0);
+  return d.toISOString();
+}
+
+function buildMeeting(partial: {
+  id: string;
+  title: string;
+  purpose: string;
+  dayOffset: number;
+  hour: number;
+  minute?: number;
+  durationMinutes: number;
+  meetingUrl?: string;
+  opportunity?: Opportunity;
+  lead?: Lead;
+  attendeeUserIds?: string[];
+}): Meeting {
+  const opportunity = partial.opportunity;
+  const lead = partial.lead ?? undefined;
+  return {
+    id: partial.id,
+    created_by_user_id: demoFetchUsers()[0].id,
+    opportunity_id: opportunity?.id ?? null,
+    lead_id: lead?.id ?? null,
+    title: partial.title,
+    purpose: partial.purpose,
+    starts_at: seedTime(partial.dayOffset, partial.hour, partial.minute ?? 0),
+    duration_minutes: partial.durationMinutes,
+    meeting_url: partial.meetingUrl ?? null,
+    attendee_user_ids: partial.attendeeUserIds ?? [],
+    created_at: new Date().toISOString(),
+    company_name: null,
+    contact_name: lead?.full_name ?? null,
+    client_context: demoClientContext(opportunity, lead),
+  };
+}
+
+function seedMeetings(locale: Locale): Meeting[] {
+  const opps = seedOpportunitiesWithReps(locale).filter((o) => !["won", "lost", "dismissed"].includes(o.status));
+  const leads = demoFetchLeads();
+  const users = demoFetchUsers();
+  const oppByType = (type: string) => opps.find((o) => o.opportunity_type === type);
+  const hotLead = leads.find((l) => l.score >= HOT_LEAD_SCORE_THRESHOLD) ?? leads[0];
+  const anyOpp = opps[0];
+  const secondOpp = opps[1] ?? anyOpp;
+
+  return [
+    buildMeeting({
+      id: "demo-meeting-1",
+      title: locale === "en" ? "Discovery call" : "Llamada de descubrimiento",
+      purpose:
+        locale === "en"
+          ? "First conversation — understand their current stack and pain points."
+          : "Primera conversación — entender su stack actual y sus dolores.",
+      dayOffset: 0,
+      hour: 14,
+      durationMinutes: 30,
+      meetingUrl: "https://meet.google.com/abc-defg-hij",
+      lead: hotLead,
+      attendeeUserIds: [users[0].id],
+    }),
+    buildMeeting({
+      id: "demo-meeting-2",
+      title: locale === "en" ? "Renewal check-in" : "Check-in de renovación",
+      purpose:
+        locale === "en"
+          ? "Review usage since last quarter, confirm renewal terms."
+          : "Revisar uso desde el trimestre pasado, confirmar términos de renovación.",
+      dayOffset: 1,
+      hour: 10,
+      durationMinutes: 45,
+      meetingUrl: "https://meet.google.com/klm-nopq-rst",
+      opportunity: oppByType("renewal_risk") ?? oppByType("expansion") ?? anyOpp,
+      attendeeUserIds: [users[0].id, users[1].id],
+    }),
+    buildMeeting({
+      id: "demo-meeting-3",
+      title: locale === "en" ? "Pricing follow-up" : "Seguimiento de precio",
+      purpose:
+        locale === "en"
+          ? "Address the objections raised last call, walk through the proposal."
+          : "Responder a las objeciones de la última llamada, repasar la propuesta.",
+      dayOffset: 2,
+      hour: 16,
+      minute: 30,
+      durationMinutes: 30,
+      opportunity: secondOpp,
+      attendeeUserIds: [users[2] ? users[2].id : users[0].id],
+    }),
+    buildMeeting({
+      id: "demo-meeting-4",
+      title: locale === "en" ? "Team sync — pipeline review" : "Sync de equipo — revisión de pipeline",
+      purpose:
+        locale === "en"
+          ? "Weekly walkthrough of what's moving and what's stuck."
+          : "Repaso semanal de qué avanza y qué está trabado.",
+      dayOffset: 0,
+      hour: 9,
+      durationMinutes: 30,
+      attendeeUserIds: users.map((u) => u.id),
+    }),
+    buildMeeting({
+      id: "demo-meeting-5",
+      title: locale === "en" ? "Demo — product walkthrough" : "Demo — recorrido del producto",
+      purpose:
+        locale === "en"
+          ? "Live walkthrough of the signal-to-strategy flow."
+          : "Recorrido en vivo del flujo de señal a estrategia.",
+      dayOffset: 3,
+      hour: 11,
+      durationMinutes: 45,
+      meetingUrl: "https://meet.google.com/uvw-xyzz-123",
+      opportunity: oppByType("new_logo") ?? anyOpp,
+      attendeeUserIds: [users[1].id],
+    }),
+  ];
+}
+
+const loadMeetings = () => loadJSON<Meeting[]>(MEETINGS_KEY, seedMeetings(getDemoLocale()));
+const saveMeetings = (list: Meeting[]) => saveJSON(MEETINGS_KEY, list);
+
+export function demoFetchMeetings(params?: { startsAfter?: string; startsBefore?: string }): Meeting[] {
+  let list = loadMeetings();
+  if (params?.startsAfter) list = list.filter((m) => m.starts_at >= params.startsAfter!);
+  if (params?.startsBefore) list = list.filter((m) => m.starts_at <= params.startsBefore!);
+  return [...list].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+}
+
+export function demoCreateMeeting(body: MeetingCreateIn): Meeting {
+  const list = loadMeetings();
+  const opportunity = body.opportunity_id ? demoFetchOpportunities().find((o) => o.id === body.opportunity_id) : undefined;
+  const lead = body.lead_id ? demoFetchLeads().find((l) => l.id === body.lead_id) : undefined;
+  const company_id = opportunity?.company_id ?? null;
+  const company = company_id ? demoFetchCompanies().find((c) => c.id === company_id) : undefined;
+  const meeting: Meeting = {
+    id: `demo-meeting-${Date.now()}`,
+    created_by_user_id: demoFetchUsers()[0].id,
+    opportunity_id: body.opportunity_id ?? null,
+    lead_id: body.lead_id ?? null,
+    title: body.title,
+    purpose: body.purpose ?? null,
+    starts_at: body.starts_at,
+    duration_minutes: body.duration_minutes ?? 30,
+    meeting_url: body.meeting_url ?? null,
+    attendee_user_ids: body.attendee_user_ids ?? [],
+    created_at: new Date().toISOString(),
+    company_name: company?.name ?? null,
+    contact_name: lead?.full_name ?? null,
+    client_context: demoClientContext(opportunity, lead),
+  };
+  list.push(meeting);
+  saveMeetings(list);
+  return meeting;
+}
+
+function findMeetingOrThrow(list: Meeting[], id: string): number {
+  const idx = list.findIndex((m) => m.id === id);
+  if (idx === -1) {
+    throw new Error(`Demo meeting ${id} not found — it only exists in this browser's local demo data.`);
+  }
+  return idx;
+}
+
+export function demoUpdateMeeting(meetingId: string, body: MeetingUpdateIn): Meeting {
+  const list = loadMeetings();
+  const idx = findMeetingOrThrow(list, meetingId);
+  const current = list[idx];
+  list[idx] = {
+    ...current,
+    ...(body.title !== undefined ? { title: body.title } : {}),
+    ...(body.purpose !== undefined ? { purpose: body.purpose } : {}),
+    ...(body.starts_at !== undefined ? { starts_at: body.starts_at } : {}),
+    ...(body.duration_minutes !== undefined ? { duration_minutes: body.duration_minutes } : {}),
+    ...(body.meeting_url !== undefined ? { meeting_url: body.meeting_url } : {}),
+    ...(body.attendee_user_ids !== undefined ? { attendee_user_ids: body.attendee_user_ids } : {}),
+  };
+  saveMeetings(list);
+  return list[idx];
+}
+
+export function demoDeleteMeeting(meetingId: string): void {
+  const list = loadMeetings();
+  findMeetingOrThrow(list, meetingId);
+  saveMeetings(list.filter((m) => m.id !== meetingId));
 }
 
 // ── Message templates (Biblioteca de mensajes) ──────────────────────────────

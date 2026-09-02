@@ -9,10 +9,13 @@ import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
 import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-heatmap";
 import { AddCompanyForm } from "@/features/probar/add-company-form";
 import { SignalHexMap } from "@/features/control/components/SignalHexMap";
+import { Leaderboard } from "@/features/dashboard/leaderboard";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
+import { useTeams } from "@/hooks/queries/use-teams";
+import { useUsers } from "@/hooks/queries/use-users";
 
 // Mismos íconos que nav-items.ts usa para estos 4 destinos — el tile queda
 // visualmente casado con el link al que apunta, no con un ícono elegido
@@ -52,6 +55,8 @@ export default function ProbarOverviewPage() {
   const { data: signalsResult } = useSignals();
   const { data: companiesResult } = useCompanies(200);
   const { data: leadsResult } = useLeads(200);
+  const { data: usersResult } = useUsers();
+  const { data: teamsResult } = useTeams();
   const opportunities = opportunitiesResult?.data ?? [];
   const signals = signalsResult?.data ?? [];
 
@@ -130,6 +135,10 @@ export default function ProbarOverviewPage() {
           </div>
           <SignalActivityHeatmap signals={signals} />
         </section>
+      </div>
+
+      <div className="mt-2">
+        <Leaderboard opportunities={opportunities} users={usersResult ?? []} teams={teamsResult ?? []} />
       </div>
     </div>
   );
