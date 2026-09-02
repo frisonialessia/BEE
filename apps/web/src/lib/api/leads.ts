@@ -2,7 +2,7 @@ import { apiFetch } from "@/lib/api/client";
 import { isDemoMode } from "@/lib/demo/mode";
 import { demoFetchLeads } from "@/lib/demo/store";
 import type { FetchResult } from "@/types/api";
-import type { Lead, LeadStatus } from "@/types/domain";
+import type { Lead, LeadPipelineStage, LeadStatus } from "@/types/domain";
 
 /** Leads (like Companies) is read-only in the sandbox — see
  * lib/demo/store.ts's "Companies / Leads" section for why there's no
@@ -32,6 +32,17 @@ export interface LeadCreateIn {
   seniority?: string;
   linkedin_url?: string;
   phone?: string;
+  estimated_value?: number;
+  source?: string;
+  next_meeting_at?: string;
+  photo_url?: string;
+  // Unset: saved as a plain contact, no Opportunity — today's behavior.
+  // Set: an Opportunity is created in this stage. Combined with
+  // ai_context: blank saves straight there with no AI call ("sin IA");
+  // filled in triggers StrategyGeneratorService, same as a manually
+  // created Opportunity's own description field ("con IA").
+  pipeline_stage?: LeadPipelineStage;
+  ai_context?: string;
 }
 
 export async function createLead(body: LeadCreateIn): Promise<Lead> {

@@ -18,6 +18,7 @@ import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/types/api";
+import type { LeadPipelineStage } from "@/types/domain";
 import {
   getOpportunityStatusLabels,
   getOpportunityTypeLabels,
@@ -28,6 +29,7 @@ import {
 import { formatDate, formatRelativeTime } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
 import { parseCsv, pickColumn as pick } from "@/lib/csv";
+import { resizeImageToDataUrl } from "@/lib/image";
 import { computeRelationshipMap } from "@/lib/relationship-map";
 
 /** Owner display + reassign — visible to everyone, editable only by
@@ -174,12 +176,35 @@ function CsvImportButton({ companyId }: { companyId: string }) {
   );
 }
 
+const CONTACT_SOURCES = ["referral", "inbound", "outbound", "event", "cold_call", "other"] as const;
+const PIPELINE_STAGES: LeadPipelineStage[] = ["detected", "prioritized", "in_progress"];
+const INPUT_CLASS =
+  "rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]";
+
 function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () => void }) {
   const t = useTranslations("companiesLeads.companyDetail.contacts.newContactForm");
   const createLead = useCreateLead();
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [fullName, setFullName] = useState("");
   const [title, setTitle] = useState("");
   const [email, setEmail] = useState("");
+  const [estimatedValue, setEstimatedValue] = useState("");
+  const [source, setSource] = useState("");
+  const [nextMeetingAt, setNextMeetingAt] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [pipelineStage, setPipelineStage] = useState<LeadPipelineStage | "">("");
+  const [aiContext, setAiContext] = useState("");
+
+  async function handlePhotoPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow picking the same file again after a change
+    if (!file) return;
+    try {
+      setPhotoUrl(await resizeImageToDataUrl(file));
+    } catch {
+      toast.error(t("createError"));
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -190,10 +215,24 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
         company_id: companyId,
         title: title.trim() || undefined,
         email: email.trim() || undefined,
+        estimated_value: estimatedValue ? Number(estimatedValue) : undefined,
+        source: source || undefined,
+        next_meeting_at: nextMeetingAt ? new Date(nextMeetingAt).toISOString() : undefined,
+        photo_url: photoUrl || undefined,
+        pipeline_stage: pipelineStage || undefined,
+        // Only meaningful when a stage is also picked — see LeadCreateIn's
+        // own docstring on the backend; harmless to send either way.
+        ai_context: pipelineStage && aiContext.trim() ? aiContext.trim() : undefined,
       });
       setFullName("");
       setTitle("");
       setEmail("");
+      setEstimatedValue("");
+      setSource("");
+      setNextMeetingAt("");
+      setPhotoUrl("");
+      setPipelineStage("");
+      setAiContext("");
       onDone();
     } catch (err) {
       // Was previously unhandled — a failed create left the form open with
@@ -206,31 +245,117 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
   return (
     <form
       onSubmit={handleSubmit}
-      className="mb-3 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-3"
+      className="mb-3 space-y-3 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-3"
     >
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <input
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          placeholder={t("namePlaceholder")}
-          required
-          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-        />
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder={t("titlePlaceholder")}
-          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-        />
-        <input
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder={t("emailPlaceholder")}
-          type="email"
-          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-        />
+      <div className="flex items-start gap-3">
+        <div className="flex shrink-0 flex-col items-center gap-1.5">
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- a client-resized data: URI, not an optimizable remote asset
+            <img src={photoUrl} alt="" className="size-14 rounded-full object-cover" />
+          ) : (
+            <span className="flex size-14 items-center justify-center rounded-full bg-[var(--color-card)] text-xs text-muted-foreground">
+              {t("photoLabel")}
+            </span>
+          )}
+          <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoPick} className="hidden" />
+          <button type="button" onClick={() => photoInputRef.current?.click()} className="bee-btn-ghost text-xs">
+            {photoUrl ? t("photoChange") : t("photoUpload")}
+          </button>
+        </div>
+
+        <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-3">
+          <input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder={t("namePlaceholder")}
+            required
+            className={INPUT_CLASS}
+          />
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder={t("titlePlaceholder")}
+            className={INPUT_CLASS}
+          />
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t("emailPlaceholder")}
+            type="email"
+            className={INPUT_CLASS}
+          />
+        </div>
       </div>
-      <div className="mt-2.5 flex items-center gap-2">
+
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+            {t("estimatedValueLabel")}
+          </label>
+          <input
+            value={estimatedValue}
+            onChange={(e) => setEstimatedValue(e.target.value)}
+            placeholder={t("estimatedValuePlaceholder")}
+            type="number"
+            min="0"
+            step="any"
+            className={INPUT_CLASS + " w-full"}
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("sourceLabel")}</label>
+          <select value={source} onChange={(e) => setSource(e.target.value)} className={INPUT_CLASS + " w-full"}>
+            <option value="">{t("sourcePlaceholder")}</option>
+            {CONTACT_SOURCES.map((s) => (
+              <option key={s} value={s}>
+                {t(`sourceOptions.${s}`)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("nextMeetingLabel")}</label>
+          <input
+            value={nextMeetingAt}
+            onChange={(e) => setNextMeetingAt(e.target.value)}
+            type="datetime-local"
+            className={INPUT_CLASS + " w-full"}
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("pipelineStageLabel")}</label>
+        <select
+          value={pipelineStage}
+          onChange={(e) => setPipelineStage(e.target.value as LeadPipelineStage | "")}
+          className={INPUT_CLASS + " w-full sm:w-64"}
+        >
+          <option value="">{t("pipelineStageNone")}</option>
+          {PIPELINE_STAGES.map((s) => (
+            <option key={s} value={s}>
+              {t(`pipelineStageOptions.${s}`)}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 bee-micro">{t("pipelineStageHint")}</p>
+      </div>
+
+      {pipelineStage && (
+        <div>
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("aiContextLabel")}</label>
+          <textarea
+            value={aiContext}
+            onChange={(e) => setAiContext(e.target.value)}
+            placeholder={t("aiContextPlaceholder")}
+            rows={3}
+            className="bee-input w-full"
+          />
+          <p className="mt-1 bee-micro">{t("aiContextHint")}</p>
+        </div>
+      )}
+
+      <div className="flex items-center gap-2">
         <button
           type="submit"
           disabled={!fullName.trim() || createLead.isPending}

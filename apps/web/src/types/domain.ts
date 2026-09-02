@@ -370,4 +370,16 @@ export interface Lead {
   validation_flags: string[];
   last_validated_at: string | null;
   stale_risk: boolean;
+
+  estimated_value: number | null;
+  source: string | null;
+  next_meeting_at: string | null;
+  meetings_held_count: number;
+  photo_url: string | null;
 }
+
+/** Where a new lead can land in the pipeline at creation time — mirrors
+ * LEAD_PIPELINE_STAGES on the backend (schemas/lead.py). Deliberately
+ * excludes ready_to_action (an earned state, never picked by hand — see
+ * that constant's own comment) and the closed statuses. */
+export type LeadPipelineStage = "detected" | "prioritized" | "in_progress";

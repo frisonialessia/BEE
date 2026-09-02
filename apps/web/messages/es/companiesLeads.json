@@ -71,7 +71,34 @@
         "saving": "Guardando…",
         "save": "Guardar",
         "cancel": "Cancelar",
-        "createError": "No se pudo guardar el contacto — intenta de nuevo."
+        "createError": "No se pudo guardar el contacto — intenta de nuevo.",
+        "photoLabel": "Foto",
+        "photoUpload": "Subir foto",
+        "photoChange": "Cambiar",
+        "estimatedValueLabel": "Monto estimado",
+        "estimatedValuePlaceholder": "USD",
+        "sourceLabel": "Origen",
+        "sourcePlaceholder": "¿De dónde salió?",
+        "sourceOptions": {
+          "referral": "Referido",
+          "inbound": "Entrante",
+          "outbound": "Saliente",
+          "event": "Evento",
+          "cold_call": "Llamada en frío",
+          "other": "Otro"
+        },
+        "nextMeetingLabel": "Próxima cita",
+        "pipelineStageLabel": "Etapa del pipeline",
+        "pipelineStageNone": "Ninguna — solo guardar el contacto",
+        "pipelineStageHint": "Si elegís una etapa, se crea también una oportunidad en el CRM.",
+        "pipelineStageOptions": {
+          "detected": "Nuevas",
+          "prioritized": "Tu prioridad",
+          "in_progress": "En conversación"
+        },
+        "aiContextLabel": "Contexto para la IA (opcional)",
+        "aiContextPlaceholder": "¿Por qué es una oportunidad? Completalo para que la IA arme una estrategia de venta. Dejalo vacío para guardar directo en el pipeline, sin generar nada.",
+        "aiContextHint": "Vacío = se guarda directo, sin llamar a la IA."
       },
       "csvImport": {
         "importing": "Importando…",

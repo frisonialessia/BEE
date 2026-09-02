@@ -53,6 +53,29 @@ class Lead(TimestampMixin, table=True):
     # Composite intent/fit score maintained by the intelligence layer (0-100).
     score: float = Field(default=0.0)
 
+    # ----- Deal context (set at manual creation, editable after) --------------
+    # Estimated value of what this lead could buy — same field name/shape as
+    # Opportunity.amount, kept separate rather than requiring an Opportunity
+    # to exist just to record a number a rep already knows on first contact.
+    # If an Opportunity IS created alongside this lead (see POST /leads'
+    # pipeline_stage), its own `amount` is seeded from this value.
+    estimated_value: float | None = Field(default=None)
+    # Where this lead came from — free text, not an enum: "referido",
+    # "evento", "outbound", whatever the org's own vocabulary is, without a
+    # migration every time a new source shows up.
+    source: str | None = Field(default=None, max_length=128)
+    next_meeting_at: datetime | None = Field(default=None)
+    # Incremented by hand from the lead's detail view each time a meeting
+    # happens — no calendar integration to derive this from yet (see
+    # OpportunityTask for the closest existing thing, a due-date checklist
+    # item, not a meeting log).
+    meetings_held_count: int = Field(default=0)
+    # Client-resized `data:image/...;base64,...` URI — same storage
+    # approach as User.avatar_url (see that field's own docstring): no blob
+    # storage wired up yet, so the picture lives in the row itself, already
+    # downscaled client-side before it ever reaches this API.
+    photo_url: str | None = Field(default=None, max_length=300_000)
+
     attributes: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
 
     # ----- DataValidator fields -----------------------------------------------

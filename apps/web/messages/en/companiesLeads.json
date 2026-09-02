@@ -71,7 +71,34 @@
         "saving": "Saving…",
         "save": "Save",
         "cancel": "Cancel",
-        "createError": "Couldn't save the contact — try again."
+        "createError": "Couldn't save the contact — try again.",
+        "photoLabel": "Photo",
+        "photoUpload": "Upload photo",
+        "photoChange": "Change",
+        "estimatedValueLabel": "Estimated value",
+        "estimatedValuePlaceholder": "USD",
+        "sourceLabel": "Source",
+        "sourcePlaceholder": "Where did they come from?",
+        "sourceOptions": {
+          "referral": "Referral",
+          "inbound": "Inbound",
+          "outbound": "Outbound",
+          "event": "Event",
+          "cold_call": "Cold call",
+          "other": "Other"
+        },
+        "nextMeetingLabel": "Next meeting",
+        "pipelineStageLabel": "Pipeline stage",
+        "pipelineStageNone": "None — just save the contact",
+        "pipelineStageHint": "Pick a stage and an Opportunity is created in the CRM too.",
+        "pipelineStageOptions": {
+          "detected": "New",
+          "prioritized": "Your priority",
+          "in_progress": "In conversation"
+        },
+        "aiContextLabel": "Context for the AI (optional)",
+        "aiContextPlaceholder": "Why is this an opportunity? Fill this in for the AI to build a sales strategy. Leave it blank to save straight to the pipeline, no AI call.",
+        "aiContextHint": "Blank = saved directly, no AI call."
       },
       "csvImport": {
         "importing": "Importing…",

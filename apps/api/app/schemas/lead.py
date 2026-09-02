@@ -4,11 +4,20 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.base import LeadStatus
+
+# The initial pipeline stage a rep can pick for the Opportunity created
+# alongside a lead (see LeadCreateIn.pipeline_stage / POST /leads). Deliberately
+# excludes ready_to_action, won, lost, and dismissed — ready_to_action is an
+# earned state (StrategyGeneratorService promotes an opportunity there once
+# its battlecard is complete, never picked by hand, same gate
+# PATCH /opportunities/{id}/stage already enforces), and the closed
+# statuses are only ever reached through a dedicated close action.
+LEAD_PIPELINE_STAGES: tuple[str, ...] = ("detected", "prioritized", "in_progress")
 
 
 class LeadCreateIn(BaseModel):
@@ -21,6 +30,28 @@ class LeadCreateIn(BaseModel):
     seniority: str | None = Field(default=None, max_length=64)
     linkedin_url: str | None = Field(default=None, max_length=500)
     phone: str | None = Field(default=None, max_length=64)
+
+    # ----- Deal context — all optional, none change today's behavior when
+    # left unset ------------------------------------------------------------
+    estimated_value: float | None = Field(default=None, ge=0)
+    source: str | None = Field(default=None, max_length=128)
+    next_meeting_at: datetime | None = None
+    photo_url: str | None = Field(default=None, max_length=300_000)
+
+    # ----- Pipeline placement + AI, both opt-in ----------------------------
+    # Unset (the default): the lead is saved as a plain contact, same as
+    # today — no Opportunity is created at all.
+    # Set: an Opportunity is created in this stage, seeded with
+    # estimated_value as its `amount`.
+    pipeline_stage: Literal["detected", "prioritized", "in_progress"] | None = None
+    # Optional context fed to StrategyGeneratorService the same way a
+    # manually-created Opportunity's own `description` already is (see
+    # POST /opportunities) — filling this in is what triggers the AI
+    # battlecard generation; leaving it blank saves straight to
+    # `pipeline_stage` with no AI call at all. Only meaningful when
+    # `pipeline_stage` is also set — ignored otherwise, since there's no
+    # Opportunity for a strategy to attach to.
+    ai_context: str | None = Field(default=None, max_length=4000)
 
 
 class LeadBulkCreateIn(BaseModel):
@@ -156,6 +187,12 @@ class LeadOut(BaseModel):
     validation_flags: list[str]
     last_validated_at: datetime | None
     stale_risk: bool
+
+    estimated_value: float | None
+    source: str | None
+    next_meeting_at: datetime | None
+    meetings_held_count: int
+    photo_url: str | None
 
 
 class LeadValidationOut(BaseModel):

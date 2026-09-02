@@ -427,6 +427,11 @@ export function demoFetchLeads(): Lead[] {
       validation_flags: [],
       last_validated_at: card.created_at,
       stale_risk: false,
+      estimated_value: null,
+      source: null,
+      next_meeting_at: null,
+      meetings_held_count: 0,
+      photo_url: null,
     });
   }
   return [...seen.values()];

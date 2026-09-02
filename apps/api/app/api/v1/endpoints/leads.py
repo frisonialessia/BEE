@@ -17,7 +17,10 @@ from sqlmodel import Session
 from app.api.deps import get_current_user, get_current_user_optional
 from app.core.database import get_session
 from app.core.logging import get_logger
+from app.models.base import OpportunityStatus, SignalSource, SignalType
 from app.models.lead import Lead
+from app.models.opportunity import Opportunity
+from app.models.signal import Signal
 from app.models.user import User
 from app.repositories.company import CompanyRepository
 from app.repositories.lead import LeadRepository
@@ -39,6 +42,7 @@ from app.schemas.lead import (
 from app.schemas.signal import CompanyRef, LeadRef
 from app.services.data_validator import DataValidator
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
+from app.services.strategy_generator import StrategyGeneratorService
 
 logger = get_logger(__name__)
 
@@ -65,13 +69,109 @@ def create_lead(
         seniority=data.seniority,
         linkedin_url=data.linkedin_url,
         phone=data.phone,
+        estimated_value=data.estimated_value,
+        source=data.source,
+        next_meeting_at=data.next_meeting_at,
+        photo_url=data.photo_url,
     )
     session.add(lead)
     session.commit()
     session.refresh(lead)
     _validate_new_lead(session, lead.id)
+
+    if data.pipeline_stage is not None:
+        _create_opportunity_for_lead(session, lead, current_user, data)
+
     session.refresh(lead)
     return LeadOut.model_validate(lead)
+
+
+def _create_opportunity_for_lead(
+    session: Session, lead: Lead, current_user: User, data: LeadCreateIn
+) -> None:
+    """Put a newly-created lead straight into the pipeline — the same
+    manual-entry path ``POST /opportunities`` already offers (see that
+    endpoint's own docstring), just triggered from the lead form instead of
+    a second trip through a separate "new opportunity" flow.
+
+    Two independent choices the lead form exposes, both honored here:
+    * ``pipeline_stage`` — where it lands. Never ``ready_to_action``: that
+      one is earned by ``StrategyGeneratorService`` completing a battlecard,
+      the same rule ``PATCH /opportunities/{id}/stage`` already enforces —
+      see ``LEAD_PIPELINE_STAGES``' own comment in schemas/lead.py.
+    * ``ai_context`` — "con o sin IA". Blank means save straight to
+      ``pipeline_stage`` with no AI call at all (no Signal-driven battlecard
+      generation, `strategy` stays `{}`) — the "just get it into the CRM"
+      path. Filled in, it feeds ``StrategyGeneratorService`` the same way a
+      manually-created Opportunity's own ``description`` does, and the
+      opportunity can graduate to ``ready_to_action`` immediately if the
+      battlecard comes back complete.
+    """
+    org_id = current_user.organization_id
+    company_name = None
+    if lead.company_id is not None:
+        company = CompanyRepository(session).get(lead.company_id)
+        company_name = company.name if company else None
+
+    opportunity = Opportunity(
+        organization_id=org_id,
+        lead_id=lead.id,
+        company_id=lead.company_id,
+        assigned_to_user_id=current_user.id,
+        title=f"{lead.full_name}" + (f" — {company_name}" if company_name else ""),
+        status=OpportunityStatus(data.pipeline_stage),
+        score=lead.score,
+        amount=lead.estimated_value,
+        strategy={},
+    )
+    session.add(opportunity)
+    session.commit()
+    session.refresh(opportunity)
+
+    if not data.ai_context:
+        return
+
+    signal = Signal(
+        organization_id=org_id,
+        company_id=lead.company_id,
+        lead_id=lead.id,
+        signal_type=SignalType.OTHER,
+        source=SignalSource.MANUAL,
+        title=f"{lead.full_name} — agregado manualmente",
+        description=data.ai_context,
+        score=lead.score,
+        confidence=1.0,
+        raw_payload={"lead_id": str(lead.id), "ai_context": data.ai_context},
+        analysis={"tags": ["manual_entry", "lead_form"], "analyzers": ["manual"]},
+    )
+    session.add(signal)
+    opportunity.signal_id = signal.id
+    session.add(opportunity)
+    session.commit()
+    session.refresh(signal)
+    session.refresh(opportunity)
+
+    # Best-effort, same as the manual opportunity endpoint and
+    # _validate_new_lead above — a generator failure must never fail the
+    # create request that triggered it. The opportunity simply stays at
+    # data.pipeline_stage, same outcome as a webhook signal none of the
+    # generators could enrich.
+    try:
+        StrategyGeneratorService(session).enrich(signal, opportunity)
+        # enrich() unconditionally sets status=READY_TO_ACTION on a complete
+        # battlecard — correct when starting from DETECTED (the only case
+        # every other caller of enrich() ever hits), but here the rep may
+        # have explicitly chosen a *later* stage ("prioritized"/
+        # "in_progress"). Never let a background AI call silently move an
+        # opportunity backward past what the rep already picked — keep the
+        # generated strategy content, restore the chosen stage.
+        if data.pipeline_stage != "detected":
+            opportunity.status = OpportunityStatus(data.pipeline_stage)
+            session.add(opportunity)
+        session.commit()
+    except Exception:  # noqa: BLE001
+        session.rollback()
+        logger.exception("StrategyGeneratorService failed for lead-created opportunity %s", opportunity.id)
 
 
 def _validate_new_lead(session: Session, lead_id: uuid.UUID) -> None:
