@@ -100,7 +100,22 @@
       "active": "active",
       "tokensRemaining": "{count} tokens remaining",
       "allChannelsSimulated": "Every channel is in simulated mode — connect them in <integrations>Integrations</integrations> to activate.",
-      "noProfile": "No voice profile set up yet. Set one up to enable AI content generation grounded in your brand."
+      "noProfile": "No voice profile set up yet. Set one up to enable AI content generation grounded in your brand.",
+      "library": {
+        "title": "Saved fragments ({count})",
+        "empty": "No fragments yet — add one above to start grounding generated content in your voice.",
+        "usedCount": "{count, plural, one {used # time} other {used # times}}",
+        "neverUsed": "never used yet",
+        "scoreLabel": "{score}% performance",
+        "noScore": "no performance data yet",
+        "edit": "Edit",
+        "delete": "Delete",
+        "confirmDelete": "Delete this fragment? This can't be undone.",
+        "deleting": "Deleting…",
+        "editingBadge": "Editing",
+        "editFormTitle": "Edit brand fragment",
+        "saveEdit": "Save changes"
+      }
     }
   },
   "deepLearning": {

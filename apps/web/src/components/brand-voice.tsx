@@ -15,12 +15,14 @@ import { useEffect, useState } from "react";
 import {
   addBrandFragment,
   createBrandProfile,
+  deleteBrandFragment,
   getBrandProfile,
   getChannelStatus,
+  listBrandFragments,
 } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ChannelStatus, VoiceProfile } from "@/lib/types";
+import type { BrandFragment, ChannelStatus, VoiceProfile } from "@/lib/types";
 
 const CHANNEL_ICONS: Record<string, string> = {
   email: "✉",
@@ -46,6 +48,7 @@ export function BrandVoicePanel() {
 
   const [profile, setProfile] = useState<VoiceProfile | null>(null);
   const [channels, setChannels] = useState<ChannelStatus[]>([]);
+  const [fragments, setFragments] = useState<BrandFragment[]>([]);
   const [loading, setLoading] = useState(true);
   const [live, setLive] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
@@ -53,6 +56,8 @@ export function BrandVoicePanel() {
   const [fragmentContent, setFragmentContent] = useState("");
   const [fragmentCategory, setFragmentCategory] = useState("key_insight");
   const [fragmentTags, setFragmentTags] = useState("");
+  const [editingFragmentId, setEditingFragmentId] = useState<string | null>(null);
+  const [deletingFragmentId, setDeletingFragmentId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createName, setCreateName] = useState("");
   // Seeded example values, not just placeholders — a CEO starting from
@@ -70,10 +75,46 @@ export function BrandVoicePanel() {
       setProfile(p.data);
       setChannels(ch.data);
       setLive(p.live || ch.live);
+      if (p.data) {
+        const fr = await listBrandFragments(p.data.id);
+        setFragments(fr.data);
+      }
       setLoading(false);
     }
     void load();
   }, []);
+
+  async function refreshFragments(profileId: string) {
+    const fr = await listBrandFragments(profileId);
+    setFragments(fr.data);
+  }
+
+  function startEditFragment(fragment: BrandFragment) {
+    setEditingFragmentId(fragment.id);
+    setFragmentCategory(fragment.category);
+    setFragmentContent(fragment.content);
+    setFragmentTags(fragment.tags.join(", "));
+    setShowAddFragment(true);
+  }
+
+  function cancelFragmentForm() {
+    setShowAddFragment(false);
+    setEditingFragmentId(null);
+    setFragmentContent("");
+    setFragmentTags("");
+  }
+
+  async function handleDeleteFragment(fragmentId: string) {
+    if (!profile || !window.confirm(t("library.confirmDelete"))) return;
+    setDeletingFragmentId(fragmentId);
+    try {
+      await deleteBrandFragment(fragmentId);
+      await refreshFragments(profile.id);
+      if (editingFragmentId === fragmentId) cancelFragmentForm();
+    } finally {
+      setDeletingFragmentId(null);
+    }
+  }
 
   async function handleCreateProfile() {
     if (!createName) return;
@@ -96,14 +137,21 @@ export function BrandVoicePanel() {
     if (!profile || !fragmentContent) return;
     setSaving(true);
     try {
+      // No PATCH endpoint for fragments (same "replace, don't patch"
+      // convention as the voice profile itself) — editing deletes the old
+      // fragment and creates a fresh one with the edited content. This
+      // does reset performance_score/used_count to zero, same tradeoff
+      // re-creating the profile itself already has for its own fields.
+      if (editingFragmentId) {
+        await deleteBrandFragment(editingFragmentId);
+      }
       await addBrandFragment(profile.id, {
         content: fragmentContent,
         category: fragmentCategory,
         tags: fragmentTags.split(",").map((t) => t.trim()).filter(Boolean),
       });
-      setFragmentContent("");
-      setFragmentTags("");
-      setShowAddFragment(false);
+      await refreshFragments(profile.id);
+      cancelFragmentForm();
     } finally {
       setSaving(false);
     }
@@ -121,12 +169,12 @@ export function BrandVoicePanel() {
   return (
     <div className="bee-panel space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="bee-panel__title">{t("title")}</h3>
           <p className="bee-panel__subtitle">{t("subtitle")}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Badge variant={live ? "success" : "warning"}>{live ? tLive("live") : tLive("demo")}</Badge>
           {!profile && (
             <button onClick={() => setShowCreate(true)} className="bee-btn bee-btn--primary">
@@ -134,7 +182,16 @@ export function BrandVoicePanel() {
             </button>
           )}
           {profile && (
-            <button onClick={() => setShowAddFragment(true)} className="bee-btn-ghost">
+            <button
+              onClick={() => {
+                setEditingFragmentId(null);
+                setFragmentCategory("key_insight");
+                setFragmentContent("");
+                setFragmentTags("");
+                setShowAddFragment(true);
+              }}
+              className="bee-btn-ghost"
+            >
               {t("addFragment")}
             </button>
           )}
@@ -229,10 +286,12 @@ export function BrandVoicePanel() {
         </div>
       )}
 
-      {/* Add fragment form */}
+      {/* Add/edit fragment form */}
       {showAddFragment && profile && (
         <div className="bee-inset space-y-3 p-4">
-          <p className="bee-eyebrow">{t("addFragmentForm.title")}</p>
+          <p className="bee-eyebrow">
+            {editingFragmentId ? t("library.editFormTitle") : t("addFragmentForm.title")}
+          </p>
           <select
             value={fragmentCategory}
             onChange={(e) => setFragmentCategory(e.target.value)}
@@ -255,18 +314,73 @@ export function BrandVoicePanel() {
             placeholder={t("addFragmentForm.tagsPlaceholder")}
             className="bee-input"
           />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => void handleAddFragment()}
               disabled={saving || !fragmentContent}
               className="bee-btn bee-btn--primary"
             >
-              {saving ? t("addFragmentForm.adding") : t("addFragmentForm.submit")}
+              {saving
+                ? t("addFragmentForm.adding")
+                : editingFragmentId
+                  ? t("library.saveEdit")
+                  : t("addFragmentForm.submit")}
             </button>
-            <button onClick={() => setShowAddFragment(false)} className="bee-btn">
+            <button onClick={cancelFragmentForm} className="bee-btn">
               {t("addFragmentForm.cancel")}
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Fragment library */}
+      {profile && (
+        <div>
+          <p className="bee-caption mb-2">{t("library.title", { count: fragments.length })}</p>
+          {fragments.length === 0 ? (
+            <p className="bee-caption">{t("library.empty")}</p>
+          ) : (
+            <div className="space-y-2">
+              {fragments.map((fragment) => (
+                <div key={fragment.id} className="bee-inset flex flex-col gap-2 p-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant="outline">
+                        {FRAGMENT_CATEGORIES.find((c) => c.value === fragment.category)?.label ?? fragment.category}
+                      </Badge>
+                      {fragment.tags.map((tag) => (
+                        <Badge key={tag} variant="warning">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                    <p className="mt-1.5 text-sm break-words">{fragment.content}</p>
+                    <p className="bee-caption mt-1">
+                      {fragment.performance_score != null
+                        ? t("library.scoreLabel", { score: Math.round(fragment.performance_score * 100) })
+                        : t("library.noScore")}
+                      {" · "}
+                      {fragment.used_count > 0
+                        ? t("library.usedCount", { count: fragment.used_count })
+                        : t("library.neverUsed")}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-2 sm:flex-col">
+                    <button onClick={() => startEditFragment(fragment)} className="bee-btn-ghost text-xs">
+                      {t("library.edit")}
+                    </button>
+                    <button
+                      onClick={() => void handleDeleteFragment(fragment.id)}
+                      disabled={deletingFragmentId === fragment.id}
+                      className="bee-btn-ghost text-xs text-destructive"
+                    >
+                      {deletingFragmentId === fragment.id ? t("library.deleting") : t("library.delete")}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

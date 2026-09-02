@@ -46,6 +46,7 @@ import {
   demoAuditSummary,
   demoCheckAnomalies,
   demoCreateBrandProfile,
+  demoDeleteBrandFragment,
   demoDLQSummary,
   demoFetchAnomalyAlerts,
   demoFetchAuditDecisions,
@@ -57,6 +58,7 @@ import {
   demoFetchPendingActions,
   demoFetchStyleProfile,
   demoFindIntroPaths,
+  demoListBrandFragments,
   demoNetworkStats,
   demoRecordCorrection,
   demoRejectAction,
@@ -347,6 +349,32 @@ export async function addBrandFragment(
   });
   if (!res.ok) throw new Error(`API responded ${res.status}`);
   return { data: (await res.json()) as BrandFragment, live: true };
+}
+
+export async function listBrandFragments(
+  profileId: string,
+  category?: string,
+): Promise<FetchResult<BrandFragment[]>> {
+  if (isDemoMode()) return { data: demoListBrandFragments(profileId), live: true };
+  try {
+    const params = category ? `?category=${encodeURIComponent(category)}` : "";
+    const res = await beeFetch(`${API_URL}/api/v1/brand/profile/${profileId}/fragments${params}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as BrandFragment[], live: true };
+  } catch {
+    return { data: [], live: false };
+  }
+}
+
+export async function deleteBrandFragment(fragmentId: string): Promise<void> {
+  if (isDemoMode()) {
+    demoDeleteBrandFragment(fragmentId);
+    return;
+  }
+  const res = await beeFetch(`${API_URL}/api/v1/brand/fragments/${fragmentId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
 }
 
 export async function getBrandContext(query: string, top_k = 5): Promise<FetchResult<BrandContextResult>> {

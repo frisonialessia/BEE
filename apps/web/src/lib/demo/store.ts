@@ -1396,6 +1396,15 @@ export function demoAddBrandFragment(
   return created;
 }
 
+export function demoListBrandFragments(profileId: string): BrandFragment[] {
+  return loadBrandFragments().filter((f) => f.profile_id === profileId);
+}
+
+export function demoDeleteBrandFragment(fragmentId: string): void {
+  const list = loadBrandFragments().filter((f) => f.id !== fragmentId);
+  saveJSON(BRAND_FRAGMENTS_KEY, list);
+}
+
 // ── Voz de marca — Correction Learning / Deep Learning panel ────────────────
 
 const STYLE_PROFILE_KEY = "bee_demo_style_profile_v1";
