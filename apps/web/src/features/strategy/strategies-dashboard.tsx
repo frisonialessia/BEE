@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { BattlecardView } from "@/components/battlecard";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
 import { OpportunityCard } from "@/components/opportunity-card";
+import { MarketInsightsList } from "@/components/strategy/market-insights-list";
 import { SuccessPatternsList } from "@/components/strategy/success-patterns-list";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSuccessPatterns } from "@/hooks/queries/use-feedback";
+import { useMarketInsights } from "@/hooks/queries/use-market-insights";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 
 /** Estrategias y battlecards — plays listos para el CEO. */
@@ -21,11 +23,13 @@ export function StrategiesDashboard() {
   const { data: battlecardsResult, isLoading: loadingBattlecards } = useBattlecards();
   const { data: allOppsResult, isLoading: loadingOpps } = useOpportunities(undefined, 200);
   const { data: patternsResult, isLoading: loadingPatterns } = useSuccessPatterns();
+  const { data: insightsResult, isLoading: loadingInsights } = useMarketInsights();
   const { openOpportunity } = useOpportunityDrawer();
 
   const battlecards = battlecardsResult?.data ?? [];
   const opportunities = allOppsResult?.data ?? [];
   const patterns = patternsResult?.data ?? [];
+  const insights = insightsResult?.data ?? [];
   const live = Boolean(battlecardsResult?.live || allOppsResult?.live);
   const loading = loadingBattlecards || loadingOpps;
 
@@ -65,6 +69,9 @@ export function StrategiesDashboard() {
             </TabsTrigger>
             <TabsTrigger value="learning" className="rounded-sm">
               {t("tabLearning", { count: patterns.length })}
+            </TabsTrigger>
+            <TabsTrigger value="marketInsights" className="rounded-sm">
+              {t("tabMarketInsights", { count: insights.length })}
             </TabsTrigger>
           </TabsList>
 
@@ -141,6 +148,15 @@ export function StrategiesDashboard() {
               <Skeleton className="h-40" />
             ) : (
               <SuccessPatternsList patterns={patterns} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="marketInsights" className="mt-6 space-y-4">
+            <p className="bee-caption">{t("marketInsightsCaption")}</p>
+            {loadingInsights ? (
+              <Skeleton className="h-40" />
+            ) : (
+              <MarketInsightsList insights={insights} />
             )}
           </TabsContent>
         </Tabs>

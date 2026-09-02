@@ -83,6 +83,11 @@ export const queryKeys = {
     patterns: (signalType?: string) =>
       [...queryKeys.feedback.all, "patterns", signalType ?? "all"] as const,
   },
+  marketInsights: {
+    all: ["marketInsights"] as const,
+    list: (signalType?: string, industry?: string) =>
+      [...queryKeys.marketInsights.all, signalType ?? "all", industry ?? "all"] as const,
+  },
   tasks: {
     all: ["tasks"] as const,
     list: (opportunityId?: string) => [...queryKeys.tasks.all, "list", opportunityId ?? "all"] as const,
