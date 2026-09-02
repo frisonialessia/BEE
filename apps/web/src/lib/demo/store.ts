@@ -43,6 +43,7 @@ import type {
   DLQSummary,
   FailedEvent,
   IntroPath,
+  MarketInsight,
   NetworkConnection,
   NetworkQueryResult,
   NetworkStats,
@@ -1403,6 +1404,115 @@ export function demoListBrandFragments(profileId: string): BrandFragment[] {
 export function demoDeleteBrandFragment(fragmentId: string): void {
   const list = loadBrandFragments().filter((f) => f.id !== fragmentId);
   saveJSON(BRAND_FRAGMENTS_KEY, list);
+}
+
+// ── TrendAnalyst — Market Insights ──────────────────────────────────────────
+// Read-only, not user-editable (real MarketInsight rows are written by a
+// throttled background TrendAnalyst.analyze() call during signal ingestion —
+// see that service's docstring), so no localStorage-backed store like the
+// sections above: just locale-aware static seed data, same shape a real
+// deployment would eventually accumulate on its own.
+
+const SEED_MARKET_INSIGHTS_ES: MarketInsight[] = [
+  {
+    id: "demo-insight-1",
+    insight_type: "volume_spike",
+    signal_type: "funding_round",
+    industry: "Fintech",
+    title: "Repunte de rondas de financiamiento en Fintech LatAm",
+    description:
+      "3.2x más señales de funding_round en Fintech esta semana vs. el promedio de las 4 anteriores — 9 empresas, no una sola.",
+    tactical_implication:
+      "Prioriza el alcance a cuentas Fintech con ronda reciente: la ventana de decisión post-funding es corta.",
+    confidence: 0.81,
+    evidence_count: 9,
+    is_active: true,
+    expires_at: null,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-insight-2",
+    insight_type: "sector_momentum",
+    signal_type: null,
+    industry: "Logística",
+    title: "Logística acelera contrataciones comerciales",
+    description:
+      "El sector Logística concentra el 24% de las señales de hiring de los últimos 14 días — el doble que hace un mes.",
+    tactical_implication: "Un equipo comercial que crece suele venir con presupuesto nuevo recién aprobado.",
+    confidence: 0.68,
+    evidence_count: 14,
+    is_active: true,
+    expires_at: null,
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-insight-3",
+    insight_type: "competitive_cluster",
+    signal_type: "tech_adoption",
+    industry: null,
+    title: "Adopción de stack de IA concentrada en 3 verticales",
+    description:
+      "Las señales de tech_adoption relacionadas con IA se concentran en Salud digital, EdTech y Fintech — no están distribuidas parejo.",
+    tactical_implication: "El mensaje de posicionamiento debería variar por vertical, no ser uno solo genérico.",
+    confidence: 0.59,
+    evidence_count: 11,
+    is_active: true,
+    expires_at: null,
+    created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
+  },
+];
+
+const SEED_MARKET_INSIGHTS_EN: MarketInsight[] = [
+  {
+    id: "demo-insight-1",
+    insight_type: "volume_spike",
+    signal_type: "funding_round",
+    industry: "Fintech",
+    title: "Funding-round spike in LatAm Fintech",
+    description:
+      "3.2x more funding_round signals in Fintech this week vs. the prior 4-week average — 9 companies, not just one.",
+    tactical_implication:
+      "Prioritize outreach to Fintech accounts with a recent round: the post-funding decision window is short.",
+    confidence: 0.81,
+    evidence_count: 9,
+    is_active: true,
+    expires_at: null,
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-insight-2",
+    insight_type: "sector_momentum",
+    signal_type: null,
+    industry: "Logistics",
+    title: "Logistics is ramping up sales hiring",
+    description:
+      "Logistics accounts for 24% of hiring signals in the last 14 days — double what it was a month ago.",
+    tactical_implication: "A growing sales team usually means newly approved budget behind it.",
+    confidence: 0.68,
+    evidence_count: 14,
+    is_active: true,
+    expires_at: null,
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-insight-3",
+    insight_type: "competitive_cluster",
+    signal_type: "tech_adoption",
+    industry: null,
+    title: "AI stack adoption clustered in 3 verticals",
+    description:
+      "AI-related tech_adoption signals cluster in Digital Health, EdTech, and Fintech — not evenly spread.",
+    tactical_implication: "Positioning should vary by vertical instead of using one generic message.",
+    confidence: 0.59,
+    evidence_count: 11,
+    is_active: true,
+    expires_at: null,
+    created_at: new Date(Date.now() - 8 * 86400000).toISOString(),
+  },
+];
+
+export function demoGetMarketInsights(): MarketInsight[] {
+  return getDemoLocale() === "en" ? SEED_MARKET_INSIGHTS_EN : SEED_MARKET_INSIGHTS_ES;
 }
 
 // ── Voz de marca — Correction Learning / Deep Learning panel ────────────────

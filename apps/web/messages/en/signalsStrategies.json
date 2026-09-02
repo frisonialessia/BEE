@@ -23,12 +23,14 @@
     "tabBattlecards": "Battlecards ({count})",
     "tabPipeline": "Pipeline ({count})",
     "tabLearning": "Learning ({count})",
+    "tabMarketInsights": "Market ({count})",
     "battlecardsEmptyTitle": "No battlecards ready for action yet.",
     "battlecardsEmptySubtitle": "Signals need to be enriched first.",
     "battlecardsHint": "Click a card to open the opportunity drawer",
     "battlecardsItemLabel": "battlecards",
     "pipelineItemLabel": "opportunities",
-    "learningCaption": "Real success patterns, learned from deals already closed — what currently biases the generation of new battlecards."
+    "learningCaption": "Real success patterns, learned from deals already closed — what currently biases the generation of new battlecards.",
+    "marketInsightsCaption": "What TrendAnalyst detects by aggregating every market signal — this already sharpens each new battlecard behind the scenes, even though it was never shown here before."
   },
   "darkFunnel": {
     "eyebrow": "Intent Signal Engine",

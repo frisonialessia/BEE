@@ -23,12 +23,14 @@
     "tabBattlecards": "Battlecards ({count})",
     "tabPipeline": "Pipeline ({count})",
     "tabLearning": "Aprendizaje ({count})",
+    "tabMarketInsights": "Mercado ({count})",
     "battlecardsEmptyTitle": "Aún no hay battlecards listas para acción.",
     "battlecardsEmptySubtitle": "Las señales deben enriquecerse primero.",
     "battlecardsHint": "Clic en una tarjeta para abrir el drawer de oportunidad",
     "battlecardsItemLabel": "battlecards",
     "pipelineItemLabel": "oportunidades",
-    "learningCaption": "Patrones de éxito reales, aprendidos de deals ya cerrados — lo que hoy sesga la generación de battlecards nuevas."
+    "learningCaption": "Patrones de éxito reales, aprendidos de deals ya cerrados — lo que hoy sesga la generación de battlecards nuevas.",
+    "marketInsightsCaption": "Lo que TrendAnalyst detecta agregando todas las señales del mercado — esto ya afina cada battlecard nueva por detrás, aunque nunca se había mostrado acá."
   },
   "darkFunnel": {
     "eyebrow": "Motor de señales de intención",

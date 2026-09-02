@@ -58,6 +58,7 @@ import {
   demoFetchPendingActions,
   demoFetchStyleProfile,
   demoFindIntroPaths,
+  demoGetMarketInsights,
   demoListBrandFragments,
   demoNetworkStats,
   demoRecordCorrection,
@@ -289,6 +290,12 @@ export async function getMarketInsights(
   industry?: string,
   limit = 10,
 ): Promise<FetchResult<MarketInsight[]>> {
+  if (isDemoMode()) {
+    let insights = demoGetMarketInsights();
+    if (signal_type) insights = insights.filter((i) => i.signal_type === signal_type);
+    if (industry) insights = insights.filter((i) => i.industry === industry);
+    return { data: insights.slice(0, limit), live: false };
+  }
   try {
     const params = new URLSearchParams({ limit: String(limit) });
     if (signal_type) params.set("signal_type", signal_type);
