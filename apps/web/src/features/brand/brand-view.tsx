@@ -20,7 +20,13 @@ export function BrandView() {
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* Stacked, not side-by-side: BrandVoicePanel now carries a full
+         fragment library plus the paste-and-extract flow (Phase 1 and 5 of
+         this build-out) — a 50/50 grid squeezed its forms into half the
+         viewport and read as cramped. Full width lets each section breathe
+         and stays naturally responsive (no breakpoint math to keep in sync
+         as either panel grows). */}
+      <div className="space-y-6">
         <BrandVoicePanel />
         <DeepLearningPanel />
       </div>

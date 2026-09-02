@@ -15,6 +15,8 @@ from app.schemas.brand import (
     BrandFragmentCreate,
     BrandFragmentOut,
     VoiceProfileCreate,
+    VoiceProfileExtractRequest,
+    VoiceProfileExtractResult,
     VoiceProfileOut,
 )
 from app.services.personal_brand import PersonalBrandService
@@ -49,6 +51,28 @@ def create_or_update_profile(
     session.commit()
     session.refresh(profile)
     return VoiceProfileOut.model_validate(profile)
+
+
+@router.post(
+    "/profile/extract",
+    response_model=VoiceProfileExtractResult,
+    summary="Propose a voice profile draft from pasted writing samples",
+)
+def extract_profile(
+    data: VoiceProfileExtractRequest,
+    svc: PersonalBrandService = Depends(_get_service),
+    _organization_id: uuid.UUID = Depends(require_organization_id),
+) -> VoiceProfileExtractResult:
+    """Analyze pasted samples (emails, LinkedIn posts, past outreach) and
+    propose tone, authority topics, and CTA — instead of the CEO filling out
+    every VoiceProfile field by hand.
+
+    This is a draft only: nothing is persisted. The caller reviews/edits the
+    result and still submits it through ``POST /brand/profile`` to save it.
+    Uses the configured LLM when available (AI_PROVIDER); falls back to a
+    deterministic heuristic extractor otherwise — never fails outright.
+    """
+    return svc.extract_profile_draft(data.raw_text)
 
 
 @router.get(

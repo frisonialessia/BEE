@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -38,6 +39,28 @@ class VoiceProfileOut(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class VoiceProfileExtractRequest(BaseModel):
+    """Raw writing samples (emails, LinkedIn posts, past outreach) to derive a
+    VoiceProfile draft from, instead of filling every field by hand."""
+
+    raw_text: str = Field(min_length=40, max_length=20000)
+
+
+class VoiceProfileExtractResult(BaseModel):
+    """A proposed VoiceProfile draft — never persisted by itself. The caller
+    reviews/edits the fields and still submits them through the normal
+    ``POST /brand/profile`` to actually save a profile."""
+
+    title: str | None = None
+    tone_descriptors: list[str] = Field(default_factory=list)
+    authority_topics: list[str] = Field(default_factory=list)
+    forbidden_phrases: list[str] = Field(default_factory=list)
+    preferred_cta: str | None = None
+    bio_summary: str | None = None
+    generated_by: Literal["llm", "heuristic"]
+    model_used: str | None = None
 
 
 class BrandFragmentCreate(BaseModel):

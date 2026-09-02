@@ -31,6 +31,7 @@ import type {
   Signal,
   TodayFeedOut,
   VoiceProfile,
+  VoiceProfileExtractResult,
   WorkflowStatus,
   WorkflowTask,
 } from "@/lib/types";
@@ -48,6 +49,7 @@ import {
   demoCreateBrandProfile,
   demoDeleteBrandFragment,
   demoDLQSummary,
+  demoExtractVoiceProfile,
   demoFetchAnomalyAlerts,
   demoFetchAuditDecisions,
   demoFetchBrandProfile,
@@ -342,6 +344,20 @@ export async function createBrandProfile(data: {
   });
   if (!res.ok) throw new Error(`API responded ${res.status}`);
   return { data: (await res.json()) as VoiceProfile, live: true };
+}
+
+/** Proposes a VoiceProfile draft from pasted writing samples — never
+ * persisted by itself. The caller reviews/edits the result and still calls
+ * createBrandProfile() to actually save it. */
+export async function extractVoiceProfile(rawText: string): Promise<FetchResult<VoiceProfileExtractResult>> {
+  if (isDemoMode()) return { data: demoExtractVoiceProfile(rawText), live: true };
+  const res = await beeFetch(`${API_URL}/api/v1/brand/profile/extract`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ raw_text: rawText }),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: (await res.json()) as VoiceProfileExtractResult, live: true };
 }
 
 export async function addBrandFragment(
