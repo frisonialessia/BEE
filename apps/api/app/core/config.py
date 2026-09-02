@@ -182,6 +182,17 @@ class Settings(BaseSettings):
     # this project isn't taking on right now.
     SUPPORT_ADMIN_SECRET: str | None = None
 
+    # ----- Error monitoring (see app.main's lifespan) ---------------------------
+    # None (the default) means sentry_sdk.init() is never called — zero error
+    # visibility, but also zero behavior change and no Sentry account needed
+    # to run this app. Get a DSN from sentry.io → Settings → Projects → your
+    # project → Client Keys (DSN).
+    SENTRY_DSN: str | None = None
+    # Off by default — error capture doesn't need trace sampling, and turning
+    # this on has a real cost (Sentry bills per transaction). A deployment
+    # that wants tracing sets this explicitly (0.0-1.0).
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.0
+
     # ----- CORS ----------------------------------------------------------------
     # Comma-separated list of origins allowed to call the API (the Next.js app).
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"

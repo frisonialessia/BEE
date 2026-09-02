@@ -33,3 +33,8 @@ email-validator>=2.1.0,<3.0.0
 # HTTP client for outbound calls to third-party OAuth/REST APIs (Google's
 # token + Gmail send endpoints today — see app.services.integrations).
 httpx>=0.27.0,<1.0.0
+
+# Error monitoring — inert (sentry_sdk.init() never called) unless SENTRY_DSN
+# is set, see app.main's lifespan and .env.example. [fastapi] extra pulls in
+# the Starlette/FastAPI integration (request context on captured events).
+sentry-sdk[fastapi]>=2.0.0,<3.0.0

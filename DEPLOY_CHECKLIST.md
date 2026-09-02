@@ -50,6 +50,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 | `CRON_SECRET` + `MARKET_SCAN_ENABLED=true` | Proactive market scan (Vercel Cron) — see §3.8 below |
 | `ACCOUNT_RESEARCH_ENABLED=true` | Deep per-account research (AccountResearchAgent) — see §3.9 below |
 | `SENDGRID_WEBHOOK_SECRET` / `RESEND_WEBHOOK_SECRET` | Email open/click/reply → DarkFunnel signals — see §3.9 below |
+| `SENTRY_DSN` (backend, `apps/api/.env.example`) + `NEXT_PUBLIC_SENTRY_DSN` (frontend, `apps/web/.env.example`) | Error monitoring — unset means zero error visibility in production, not a crash; set both before real traffic if you want to know when something breaks |
 
 Full reference: `apps/api/.env.example`
 

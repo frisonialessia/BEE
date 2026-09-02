@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
@@ -25,6 +26,9 @@ export default function RootError({
 
   useEffect(() => {
     console.error("Unhandled error:", error);
+    // No-op when NEXT_PUBLIC_SENTRY_DSN isn't set (see instrumentation-client.ts)
+    // — Sentry.init() was never called, so this has nowhere to send the event.
+    Sentry.captureException(error);
   }, [error]);
 
   return (
