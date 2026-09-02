@@ -41,6 +41,7 @@ from app.schemas.priority import DecisionCard, DecisionUrgency, RecommendedActio
 from app.services.anomaly_detector import AnomalyDetector
 from app.services.cycle_predictor.service import CyclePredictorService
 from app.services.dark_funnel.service import DarkFunnelService
+from app.services.team_profile import TeamProfileService
 
 logger = get_logger(__name__)
 
@@ -57,15 +58,17 @@ def build_today_feed(
     *,
     organization_id: uuid.UUID | None,
     visible_user_ids: set[uuid.UUID] | None,
+    team_id: uuid.UUID | None = None,
 ) -> TodayFeedOut:
     dark_funnel = DarkFunnelService(session)
     cycle_predictor = CyclePredictorService(session)
     anomalies = AnomalyDetector(session)
+    team_profiles = TeamProfileService(session)
 
     candidates = _open_opportunities(session, organization_id, visible_user_ids)
     scored: list[DecisionCard] = []
     for opp in candidates:
-        card = _score_opportunity(session, opp, dark_funnel, cycle_predictor, organization_id)
+        card = _score_opportunity(session, opp, dark_funnel, cycle_predictor, organization_id, team_profiles, team_id)
         if card is not None:
             scored.append(card)
 
@@ -115,6 +118,8 @@ def _score_opportunity(
     dark_funnel: DarkFunnelService,
     cycle_predictor: CyclePredictorService,
     organization_id: uuid.UUID | None,
+    team_profiles: TeamProfileService,
+    team_id: uuid.UUID | None,
 ) -> DecisionCard | None:
     # A dismissed-until marker (see the /dismiss endpoint) hides a card from
     # today's feed without deleting or otherwise mutating the opportunity —
@@ -144,6 +149,14 @@ def _score_opportunity(
     # opportunity so a brand-new one with no signal history yet still
     # ranks above nothing at all.
     score = (dark_score / 100.0) * 0.5 + urgency_component * 0.35 + 0.15
+
+    # Team bias: a team's own signal_weights re-order what already ranks in
+    # its visible pool — e.g. a franchise-sales team weighting
+    # franchise_expansion 2x sees those opportunities surface first, without
+    # this affecting any other team's feed. Neutral (1.0) when the team has
+    # no profile, matching pre-TeamProfile behavior exactly.
+    if opp.signal is not None:
+        score *= team_profiles.get_signal_weight(team_id, opp.signal.signal_type.value)
 
     pending = session.exec(
         select(PendingAction)

@@ -91,6 +91,7 @@ class AccountResearchAgent:
         *,
         organization_id: uuid.UUID | None,
         force: bool = False,
+        research_focus: str | None = None,
     ) -> ResearchOutcome:
         """Return a fresh-enough AccountBrief for *company*, running a new
         research pass only when the cache and budget both allow it.
@@ -98,6 +99,13 @@ class AccountResearchAgent:
         ``force=True`` skips the TTL cache check (still respects the daily
         budget) — used by the explicit "re-research this account" action,
         where a stale-but-present brief is not what the caller asked for.
+
+        ``research_focus`` — the requesting user's TeamProfile.research_focus,
+        when set (see TeamProfileService.get_research_focus) — steers the LLM
+        synthesis toward what that team actually sells. Ignored on a cache
+        hit (a cached brief was already synthesized, possibly under a
+        different team's focus, but re-running research on every focus
+        change would defeat the TTL cache's whole purpose).
         """
         if not self.settings.ACCOUNT_RESEARCH_ENABLED:
             return ResearchOutcome(brief=self._latest_brief(company.id), from_cache=True, disabled=True)
@@ -116,7 +124,7 @@ class AccountResearchAgent:
                 brief=self._latest_brief(company.id), from_cache=True, budget_exceeded=True
             )
 
-        brief = self._run(company, organization_id)
+        brief = self._run(company, organization_id, research_focus)
         return ResearchOutcome(brief=brief, from_cache=False)
 
     def get_latest_brief(self, company_id: uuid.UUID) -> AccountBrief | None:
@@ -165,7 +173,9 @@ class AccountResearchAgent:
 
     # ── The research pass itself ────────────────────────────────────────────
 
-    def _run(self, company: Company, organization_id: uuid.UUID | None) -> AccountBrief:
+    def _run(
+        self, company: Company, organization_id: uuid.UUID | None, research_focus: str | None = None
+    ) -> AccountBrief:
         api = ExternalAPIOrchestrator(self.session)
         domain = company.domain or company.name
         findings: dict[str, Any] = {}
@@ -189,7 +199,7 @@ class AccountResearchAgent:
             findings["market_news"] = {"items": news.items[:3]}
             sources.append("google_search")
 
-        summary, generated_by, model_used = self._synthesize(company, findings)
+        summary, generated_by, model_used = self._synthesize(company, findings, research_focus)
 
         brief = AccountBrief(
             organization_id=organization_id,
@@ -212,7 +222,7 @@ class AccountResearchAgent:
     # ── Synthesis: LLM when configured, deterministic template otherwise ────
 
     def _synthesize(
-        self, company: Company, findings: dict[str, Any]
+        self, company: Company, findings: dict[str, Any], research_focus: str | None = None
     ) -> tuple[str, str, str | None]:
         if not findings:
             return (
@@ -224,7 +234,7 @@ class AccountResearchAgent:
 
         if self.settings.AI_PROVIDER in ("openai", "anthropic") and self.settings.AI_API_KEY:
             try:
-                summary = self._call_llm(company, findings)
+                summary = self._call_llm(company, findings, research_focus)
                 model = (
                     self.settings.AI_MODEL
                     if self.settings.AI_PROVIDER == "openai"
@@ -254,12 +264,19 @@ class AccountResearchAgent:
         body = " ".join(p for p in parts if p)
         return body or f"Limited public research available for {company.name}."
 
-    def _call_llm(self, company: Company, findings: dict[str, Any]) -> str:
+    def _call_llm(self, company: Company, findings: dict[str, Any], research_focus: str | None = None) -> str:
         user_prompt = (
             f"Company: {company.name} ({company.domain or 'no domain on file'})\n\n"
             f"Findings JSON:\n{json.dumps(findings, default=str)}"
         )
         provider = self.settings.AI_PROVIDER
+        system_prompt = _SYNTHESIS_SYSTEM_PROMPT
+        if research_focus:
+            # Steers emphasis only — rule 1 above ("use ONLY facts present in
+            # the findings JSON") still governs; this can't make the LLM
+            # invent facts the findings don't contain, only prioritize which
+            # of the actual findings to lead with.
+            system_prompt += f"\n\nThe requesting team's research focus: {research_focus}"
 
         if provider == "openai":
             from openai import OpenAI
@@ -268,7 +285,7 @@ class AccountResearchAgent:
             resp = client.chat.completions.create(
                 model=self.settings.AI_MODEL,
                 messages=[
-                    {"role": "system", "content": _SYNTHESIS_SYSTEM_PROMPT},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.3,
@@ -284,7 +301,7 @@ class AccountResearchAgent:
                 model=self.settings.ANTHROPIC_MODEL,
                 max_tokens=350,
                 temperature=0.3,
-                system=_SYNTHESIS_SYSTEM_PROMPT,
+                system=system_prompt,
                 messages=[{"role": "user", "content": user_prompt}],
             )
             return (resp.content[0].text if resp.content else "").strip()

@@ -335,6 +335,25 @@
       "created": "Team created",
       "createError": "Couldn't create the team."
     },
+    "teamProfiles": {
+      "eyebrow": "Signal intelligence",
+      "title": "Team focus",
+      "subtitle": "Bias which signals surface first in Priority for each team, and steer account research toward what they actually sell.",
+      "configure": "Configure",
+      "noWeights": "No signal weighting yet — every signal type ranks neutrally.",
+      "weightsLabel": "Signal weights",
+      "weightsHint": "A weight above 1 makes that signal type surface higher in this team's Priority feed; below 1 pushes it down. 1 = neutral (default).",
+      "selectSignalType": "Select a signal type…",
+      "add": "Add",
+      "remove": "Remove",
+      "researchFocusLabel": "Research focus (optional)",
+      "researchFocusPlaceholder": "E.g. Focus on regulatory readiness for LATAM fintech accounts.",
+      "saving": "Saving…",
+      "save": "Save profile",
+      "cancel": "Cancel",
+      "saved": "Team profile saved",
+      "saveError": "Couldn't save the team profile."
+    },
     "people": {
       "eyebrow": "People",
       "you": "(you)",

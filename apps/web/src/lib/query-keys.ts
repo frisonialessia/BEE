@@ -50,6 +50,7 @@ export const queryKeys = {
   teams: {
     all: ["teams"] as const,
     list: () => [...queryKeys.teams.all, "list"] as const,
+    profile: (teamId: string) => [...queryKeys.teams.all, "profile", teamId] as const,
   },
   users: {
     all: ["users"] as const,

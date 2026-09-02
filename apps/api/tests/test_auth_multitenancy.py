@@ -531,6 +531,101 @@ class TestTeamEndpoints:
         assert names == ["Org1 Team"]
 
 
+class TestTeamProfileEndpoints:
+    def test_owner_can_set_and_get_team_profile(self, client: TestClient):
+        owner = _register(client, org_name="Acme Corp", email="tp-owner1@acme.io")
+        headers = _auth_headers(owner["access_token"])
+        team = client.post("/api/v1/teams", json={"name": "Franchise Sales"}, headers=headers).json()
+
+        resp = client.put(
+            f"/api/v1/teams/{team['id']}/profile",
+            json={
+                "signal_weights": {"franchise_expansion": 2.0, "funding_round": 0.5},
+                "research_focus": "Focus on multi-location retail chains expanding in LATAM.",
+            },
+            headers=headers,
+        )
+        assert resp.status_code == 200, resp.text
+        data = resp.json()
+        assert data["signal_weights"]["franchise_expansion"] == 2.0
+        assert "LATAM" in data["research_focus"]
+
+        get_resp = client.get(f"/api/v1/teams/{team['id']}/profile", headers=headers)
+        assert get_resp.status_code == 200
+        assert get_resp.json()["signal_weights"]["franchise_expansion"] == 2.0
+
+    def test_put_replaces_wholesale(self, client: TestClient):
+        owner = _register(client, org_name="Acme Corp", email="tp-owner2@acme.io")
+        headers = _auth_headers(owner["access_token"])
+        team = client.post("/api/v1/teams", json={"name": "Sales"}, headers=headers).json()
+
+        client.put(
+            f"/api/v1/teams/{team['id']}/profile",
+            json={"signal_weights": {"hiring": 1.5}, "research_focus": "Original focus"},
+            headers=headers,
+        )
+        resp = client.put(
+            f"/api/v1/teams/{team['id']}/profile",
+            json={"signal_weights": {}, "research_focus": None},
+            headers=headers,
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["signal_weights"] == {}
+        assert data["research_focus"] is None
+
+    def test_get_team_profile_not_found(self, client: TestClient):
+        owner = _register(client, org_name="Acme Corp", email="tp-owner3@acme.io")
+        headers = _auth_headers(owner["access_token"])
+        team = client.post("/api/v1/teams", json={"name": "Sales"}, headers=headers).json()
+
+        resp = client.get(f"/api/v1/teams/{team['id']}/profile", headers=headers)
+        assert resp.status_code == 404
+
+    def test_set_team_profile_rejects_out_of_range_weight(self, client: TestClient):
+        owner = _register(client, org_name="Acme Corp", email="tp-owner4@acme.io")
+        headers = _auth_headers(owner["access_token"])
+        team = client.post("/api/v1/teams", json={"name": "Sales"}, headers=headers).json()
+
+        resp = client.put(
+            f"/api/v1/teams/{team['id']}/profile",
+            json={"signal_weights": {"hiring": 500.0}},
+            headers=headers,
+        )
+        assert resp.status_code == 422
+
+    def test_member_cannot_set_team_profile(self, client: TestClient, session: Session):
+        owner = _register(client, org_name="Acme Corp", email="tp-owner5@acme.io")
+        headers = _auth_headers(owner["access_token"])
+        team = client.post("/api/v1/teams", json={"name": "Sales"}, headers=headers).json()
+
+        org_id = owner["user"]["organization_id"]
+        member = _make_user(session, session.get(Organization, uuid.UUID(org_id)), UserRole.MEMBER, email="tp-member1@acme.io")
+        session.commit()
+        token = create_access_token(member.id, organization_id=member.organization_id, role=member.role.value)
+
+        resp = client.put(
+            f"/api/v1/teams/{team['id']}/profile",
+            json={"signal_weights": {}},
+            headers=_auth_headers(token),
+        )
+        assert resp.status_code == 403
+
+    def test_team_profile_cross_org_404(self, client: TestClient):
+        owner1 = _register(client, org_name="Org Alpha", email="tp-a@x.io")
+        owner2 = _register(client, org_name="Org Beta", email="tp-b@x.io")
+        team = client.post(
+            "/api/v1/teams", json={"name": "Alpha Team"}, headers=_auth_headers(owner1["access_token"])
+        ).json()
+
+        resp = client.put(
+            f"/api/v1/teams/{team['id']}/profile",
+            json={"signal_weights": {}},
+            headers=_auth_headers(owner2["access_token"]),
+        )
+        assert resp.status_code == 404
+
+
 class TestUserEndpoints:
     def test_owner_can_create_teammate(self, client: TestClient):
         owner = _register(client, org_name="Acme Corp", email="hire1@acme.io")

@@ -34,6 +34,7 @@ from app.services.account_research import AccountResearchAgent
 from app.services.external_api.orchestrator import ExternalAPIOrchestrator
 from app.services.market_scan.orchestrator import MarketScanOrchestrator
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
+from app.services.team_profile import TeamProfileService
 
 logger = get_logger(__name__)
 
@@ -362,8 +363,9 @@ def research_company(
     if company is None or _hidden_from(session, current_user, company):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
 
+    research_focus = TeamProfileService(session).get_research_focus(current_user.team_id)
     outcome = AccountResearchAgent(session).research(
-        company, organization_id=current_user.organization_id, force=force
+        company, organization_id=current_user.organization_id, force=force, research_focus=research_focus
     )
     return AccountResearchResult(
         brief=AccountBriefOut.model_validate(outcome.brief) if outcome.brief else None,

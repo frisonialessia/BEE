@@ -20,6 +20,7 @@ import {
 } from "@/hooks/queries/use-users";
 import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
 import { QuotasSection } from "@/features/team/quotas-section";
+import { TeamProfilesSection } from "@/features/team/team-profiles-section";
 import { resizeImageToDataUrl } from "@/lib/image";
 import { cn } from "@/lib/utils";
 import { ROLE_LABELS, type TeamOut, type UserOut, type UserRole } from "@/types/auth";
@@ -814,6 +815,8 @@ export function TeamAdminView() {
 
             {canManage && <InviteUserForm teams={teams ?? []} />}
           </section>
+
+          <TeamProfilesSection teams={teams ?? []} canManage={canManage} />
 
           <QuotasSection users={users ?? []} teams={teams ?? []} canManage={canManage} />
 

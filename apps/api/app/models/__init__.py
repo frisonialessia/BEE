@@ -49,6 +49,7 @@ from app.models.signal import Signal
 from app.models.strategy_outcome import StrategyOutcome
 from app.models.tactic_variant import TacticVariant, VariantOutcome
 from app.models.team import Team
+from app.models.team_profile import TeamProfile
 from app.models.user import User
 from app.models.workflow_task import WorkflowTask
 
@@ -92,6 +93,7 @@ __all__ = [
     "OutboundWebhook",
     "PasswordResetToken",
     "Team",
+    "TeamProfile",
     "User",
     "ActionStatus",
     "ActionType",
