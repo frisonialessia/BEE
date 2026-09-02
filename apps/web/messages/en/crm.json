@@ -24,7 +24,14 @@
       "detected": "Detected by BEE, not worked yet",
       "ready_to_action": "Sales strategy ready to go",
       "prioritized": "Set by hand by your team",
-      "in_progress": "You've already talked to them"
+      "in_progress": "You've already talked to them",
+      "closed": "Won, lost, or dismissed"
+    },
+    "guide": {
+      "title": "How do I use this pipeline?",
+      "subtitle": "5 stages, not a generic CRM's — every card moves left to right.",
+      "dismiss": "Got it",
+      "reopen": "How do I use this pipeline?"
     },
     "stageHelp": {
       "detected": "Same as \"New\" in a traditional CRM. BEE already detected the signal (a funding round, a key hire, a stack change) — nobody on the team has acted on it yet.",

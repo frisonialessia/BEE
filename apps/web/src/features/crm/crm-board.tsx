@@ -4,7 +4,7 @@ import { AlertCircle, ArrowUpRight, CircleHelp, Flame, Inbox } from "lucide-reac
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -248,6 +248,83 @@ function CrmColumn({
   );
 }
 
+const GUIDE_DISMISSED_KEY = "bee-crm-guide-dismissed";
+const GUIDE_STAGES: (CrmStage | "closed")[] = [...CRM_STAGES.map((s) => s.id), "closed"];
+
+/** "¿Cómo uso este pipeline?" — a first-visit explainer for the 5-stage
+ *  taxonomy (own names, not a generic CRM's "New/Open/In progress"), shown
+ *  open by default and collapsed to a single reopen button once dismissed
+ *  (remembered in localStorage, same as OnboardingProvider's own intro).
+ *
+ *  Starts `open` (not the closed-then-flip-via-effect pattern
+ *  DashboardRail's collapse toggle uses) precisely because the two want
+ *  opposite first-load behavior: that one should never flash open before
+ *  collapsing for someone who chose compact, this one should never flash
+ *  hidden before showing for someone who's never seen it — so `true` is
+ *  the correct hydration-safe default for *this* preference, and the
+ *  effect only ever narrows it to `false` for a returning visitor who
+ *  already dismissed it. */
+function PipelineGuideBanner() {
+  const t = useTranslations("crm.board");
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(GUIDE_DISMISSED_KEY) === "1") {
+        // One-time mount check, not a state->effect loop — see the
+        // component docstring above for why this can't just be the lazy
+        // useState initializer instead.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setOpen(false);
+      }
+    } catch {
+      // Private browsing / storage blocked — stays open, no crash.
+    }
+  }, []);
+
+  function dismiss() {
+    setOpen(false);
+    try {
+      localStorage.setItem(GUIDE_DISMISSED_KEY, "1");
+    } catch {
+      // Losing the preference is fine, breaking isn't.
+    }
+  }
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="bee-btn-ghost mb-3 gap-1.5 text-xs">
+        <CircleHelp className="size-3.5" />
+        {t("guide.reopen")}
+      </button>
+    );
+  }
+
+  return (
+    <div className="bee-surface bee-bento-pad mb-3 space-y-3">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="bee-card-title">{t("guide.title")}</p>
+          <p className="bee-caption">{t("guide.subtitle")}</p>
+        </div>
+        <button type="button" onClick={dismiss} className="bee-btn-ghost shrink-0 text-xs">
+          {t("guide.dismiss")}
+        </button>
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {GUIDE_STAGES.map((id, i) => (
+          <div key={id} className="rounded-[var(--radius-md)] bg-[var(--color-primary)]/25 p-2">
+            <p className="bee-micro font-semibold text-foreground">
+              {i + 1}. {t(`stages.${id}`)}
+            </p>
+            <p className="bee-micro text-muted-foreground">{t(`stageSubtitles.${id}`)}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** CRM — el pipeline real, separado de "Oportunidades" (que se queda con
  *  battlecards y el flujo agregado). Arrastra una tarjeta entre etapas
  *  abiertas; ganar/perder sigue siendo una acción dedicada en el drawer
@@ -326,6 +403,7 @@ export function CrmBoard() {
       <div>
         {header}
         {newForm}
+        <PipelineGuideBanner />
         <div className="bee-bento bee-bento-pad py-12 text-center">
           <Inbox className="mx-auto mb-2 size-5 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">{t("emptyState.title")}</p>
@@ -339,6 +417,7 @@ export function CrmBoard() {
     <div>
       {header}
       {newForm}
+      <PipelineGuideBanner />
 
       {/* items-start (not the default items-stretch): each column sizes to
           its own cards instead of all four being forced to match
