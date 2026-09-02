@@ -225,6 +225,27 @@ class Settings(BaseSettings):
     # Comma-separated list of origins allowed to call the API (the Next.js app).
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
 
+    # Optional regex, matched in ADDITION to BACKEND_CORS_ORIGINS above (see
+    # cors_origins' own docstring: that list is an *exact* string match).
+    # Exists for exactly one situation: a Vercel project's frontend is
+    # reachable at several auto-generated aliases at once (its stable
+    # production alias, its git-branch alias, every unique-per-deployment
+    # URL — e.g. bee-web-theta.vercel.app, bee-web-git-main-<team>.vercel.app,
+    # bee-web-<hash>-<team>.vercel.app for apps/web specifically), and
+    # BACKEND_CORS_ORIGINS listing only one of them means every visitor who
+    # lands on a different alias gets a browser-level CORS rejection —
+    # surfacing as "No se pudo conectar con el servidor" client-side with
+    # nothing logged server-side (the request never reaches this API; see
+    # app.core.api.client.ts's own comment on that exact string). Unset (the
+    # default) changes nothing — every origin must still be listed exactly
+    # in BACKEND_CORS_ORIGINS. Set it to scope a whole family of Vercel
+    # aliases at once instead of enumerating each one by hand and having to
+    # remember to add the next one Vercel generates — e.g.
+    # ``^https://bee-web(-[a-zA-Z0-9]+)*\.vercel\.app$`` matches every alias
+    # above (and any future one Vercel creates for this same project) without
+    # opening CORS to any origin outside that one project's own domains.
+    BACKEND_CORS_ORIGIN_REGEX: str | None = None
+
     # Base URL of the deployed frontend (no trailing slash) — used only to
     # build the redirect target after an OAuth callback (e.g. Google) hands
     # control back to us server-side, since that's a browser navigation, not

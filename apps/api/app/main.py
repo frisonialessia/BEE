@@ -120,6 +120,10 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
+        # None (the default) is a no-op — Starlette only applies the regex
+        # check when it's set. See BACKEND_CORS_ORIGIN_REGEX's own comment
+        # in config.py for why this exists alongside the exact-match list.
+        allow_origin_regex=settings.BACKEND_CORS_ORIGIN_REGEX,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*", "X-API-Key"],
