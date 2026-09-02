@@ -23,6 +23,7 @@ import { useMoveOpportunityStage, useOpportunities } from "@/hooks/queries/use-o
 import { useLeadDiscProfile } from "@/hooks/queries/use-psychographic";
 import type { CrmStage } from "@/lib/api/opportunities";
 import { CRM_STAGES } from "@/lib/crm-board";
+import { stripOpportunityTitlePrefix } from "@/lib/format";
 import { ApiError } from "@/types/api";
 import { CLOSED_OPPORTUNITY_STATUSES } from "@/types/domain";
 
@@ -104,7 +105,7 @@ export function OpportunityDrawer() {
           <div>
             <p className="bee-eyebrow">{t("eyebrow")}</p>
             <h2 className="mt-1 text-lg font-semibold tracking-tight">
-              {opportunity?.title.replace(/^Opportunity:\s*/, "") ?? t("loading")}
+              {opportunity ? stripOpportunityTitlePrefix(opportunity.title) : t("loading")}
             </h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">

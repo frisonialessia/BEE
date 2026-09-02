@@ -1,3 +1,4 @@
+import { stripOpportunityTitlePrefix } from "@/lib/format";
 import type { Company, Lead, Opportunity } from "@/types/domain";
 
 export interface SearchResult {
@@ -35,7 +36,7 @@ export function buildSearchIndex({
     return {
       id: `opportunity-${o.id}`,
       kind: "opportunity",
-      title: o.title.replace(/^Opportunity:\s*/, ""),
+      title: stripOpportunityTitlePrefix(o.title),
       subtitle: company ? company.name : "Oportunidad",
       href: `/dashboard/opportunities/${o.id}`,
     };

@@ -197,6 +197,7 @@ export interface Battlecard {
   opportunity_id: string;
   title: string;
   status: OpportunityStatus;
+  opportunity_type: OpportunityType;
   score: number;
   ready_to_action: boolean;
   hot_lead: boolean;

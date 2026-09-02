@@ -1,7 +1,7 @@
 import type { Locale } from "@/i18n/locales";
 import { defaultLocale } from "@/i18n/locales";
 import type { OpportunityStatus, SignalType, TimingUrgency } from "@/lib/types";
-import type { LeadStatus, LossReason } from "@/types/domain";
+import type { LeadStatus, LossReason, OpportunityType } from "@/types/domain";
 
 const SIGNAL_TYPE_LABELS_ES: Record<SignalType, string> = {
   funding_round: "Ronda de financiación",
@@ -149,6 +149,49 @@ export function getOpportunityStatusLabels(
 
 /** @deprecated Use `getOpportunityStatusLabels(locale)` instead. */
 export const opportunityStatusLabels = OPPORTUNITY_STATUS_LABELS_ES;
+
+// ── Revenue Continuity Radar: opportunity_type ──────────────────────────────
+
+const OPPORTUNITY_TYPE_LABELS_ES: Record<OpportunityType, string> = {
+  new_logo: "Cliente nuevo",
+  expansion: "Expansión",
+  renewal_risk: "Riesgo de renovación",
+};
+
+const OPPORTUNITY_TYPE_LABELS_EN: Record<OpportunityType, string> = {
+  new_logo: "New logo",
+  expansion: "Expansion",
+  renewal_risk: "Renewal risk",
+};
+
+export function getOpportunityTypeLabels(
+  locale: Locale = defaultLocale,
+): Record<OpportunityType, string> {
+  return locale === "en" ? OPPORTUNITY_TYPE_LABELS_EN : OPPORTUNITY_TYPE_LABELS_ES;
+}
+
+/** "new_logo" is the default/majority case — a neutral outline badge, not
+ * a color competing with the status badge next to it. "expansion" is a
+ * positive signal (success/green); "renewal_risk" needs to stand out
+ * (warning/amber) since missing it in a list view is exactly the failure
+ * this whole feature exists to prevent. */
+export function opportunityTypeVariant(type: OpportunityType): "outline" | "success" | "warning" {
+  if (type === "expansion") return "success";
+  if (type === "renewal_risk") return "warning";
+  return "outline";
+}
+
+// The three title prefixes SignalEngine._create_opportunity writes — see
+// app.services.signal_engine.engine's _OPPORTUNITY_TITLE_PREFIXES. Every
+// view that displays an opportunity's title strips it (the status/type
+// badges next to the title already carry that information — showing it
+// twice is redundant), so this is the one place that prefix list is typed
+// out, instead of eight independent copies of the same regex drifting.
+const OPPORTUNITY_TITLE_PREFIX_RE = /^(Opportunity|Expansion opportunity|Renewal risk):\s*/i;
+
+export function stripOpportunityTitlePrefix(title: string): string {
+  return title.replace(OPPORTUNITY_TITLE_PREFIX_RE, "");
+}
 
 const URGENCY_LABELS_ES: Record<TimingUrgency, string> = {
   immediate: "Contactar de inmediato",

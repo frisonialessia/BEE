@@ -229,6 +229,9 @@ class BattlecardOut(BaseModel):
     opportunity_id: uuid.UUID
     title: str
     status: str
+    # Revenue Continuity Radar — "new_logo" | "expansion" | "renewal_risk".
+    # See app.models.base.OPPORTUNITY_TYPES and RevenueContinuityService.
+    opportunity_type: str = "new_logo"
     score: float
     ready_to_action: bool
     hot_lead: bool = False  # True when BehavioralCollector detects buying intent

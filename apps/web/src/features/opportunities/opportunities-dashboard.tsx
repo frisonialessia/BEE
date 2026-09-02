@@ -15,6 +15,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useUsers } from "@/hooks/queries/use-users";
+import { stripOpportunityTitlePrefix } from "@/lib/format";
 
 /** Oportunidades y battlecards — plays listos para el CEO. */
 export function OpportunitiesDashboard() {
@@ -36,7 +37,7 @@ export function OpportunitiesDashboard() {
   const userById = new Map((users ?? []).map((u) => [u.id, u]));
 
   const exportRows = opportunities.map((o) => ({
-    titulo: o.title.replace(/^Opportunity:\s*/, ""),
+    titulo: stripOpportunityTitlePrefix(o.title),
     estado: t(`status.${o.status}`),
     puntaje: Math.round(o.score),
     empresa: o.company_id ? (companyById.get(o.company_id)?.name ?? "") : "",

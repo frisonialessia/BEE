@@ -21,9 +21,12 @@ import { Badge } from "@/components/ui/badge";
 import type { Locale } from "@/i18n/locales";
 import { formatRelativeTime } from "@/lib/i18n/format";
 import {
+  getOpportunityTypeLabels,
   getSignalTypeLabels,
   getUrgencyLabels,
+  opportunityTypeVariant,
   scoreVariant,
+  stripOpportunityTitlePrefix,
 } from "@/lib/format";
 import type { Battlecard } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -36,6 +39,8 @@ export function BattlecardView({ card }: { card: Battlecard }) {
   const urgency = strategy.timing_window.urgency;
   const signalTypeLabels = getSignalTypeLabels(locale);
   const urgencyLabels = getUrgencyLabels(locale);
+  const opportunityTypeLabels = getOpportunityTypeLabels(locale);
+  const opportunityType = card.opportunity_type ?? "new_logo";
 
   return (
     <div className="space-y-4">
@@ -60,9 +65,14 @@ export function BattlecardView({ card }: { card: Battlecard }) {
               {signalTypeLabels[signal.signal_type as keyof typeof signalTypeLabels] ??
                 signal.signal_type}
             </Badge>
+            {opportunityType !== "new_logo" && (
+              <Badge variant={opportunityTypeVariant(opportunityType)}>
+                {opportunityTypeLabels[opportunityType]}
+              </Badge>
+            )}
           </div>
           <h2 className="text-base font-semibold leading-snug">
-            {card.title.replace(/^Opportunity:\s*/, "")}
+            {stripOpportunityTitlePrefix(card.title)}
           </h2>
           <p className="text-xs text-muted-foreground">
             {t("signalDetected", { time: formatRelativeTime(signal.detected_at, locale) })}{" "}

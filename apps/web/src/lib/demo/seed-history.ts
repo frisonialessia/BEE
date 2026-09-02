@@ -622,6 +622,7 @@ export function historicalBattlecards(locale: Locale = defaultLocale): Battlecar
       opportunity_id: `demo-opp-${def.id}`,
       title: template.signalTitle(def.company),
       status: statusFor(def.outcome),
+      opportunity_type: "new_logo",
       score: def.score,
       ready_to_action: true,
       hot_lead: def.score >= 75,

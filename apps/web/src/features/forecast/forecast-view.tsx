@@ -14,6 +14,7 @@ import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context"
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import type { Locale } from "@/i18n/locales";
+import { stripOpportunityTitlePrefix } from "@/lib/format";
 import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeForecast, qualificationScore } from "@/lib/forecast";
 import { computeMonthlyTrends } from "@/lib/trends";
@@ -167,7 +168,7 @@ export function ForecastView() {
                           >
                             <div className="min-w-0">
                               <p className="truncate text-xs font-medium">
-                                {opportunity.title.replace(/^Opportunity:\s*/, "")}
+                                {stripOpportunityTitlePrefix(opportunity.title)}
                               </p>
                               <p className="truncate bee-micro">
                                 {company?.name ?? t("forecast.atRiskSection.noCompany")} ·{" "}

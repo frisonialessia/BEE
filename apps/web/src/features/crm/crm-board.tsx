@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, ArrowUpRight, Flame, Inbox } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -10,9 +10,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
 import { useMoveOpportunityStage, useOpportunities } from "@/hooks/queries/use-opportunities";
+import type { Locale } from "@/i18n/locales";
 import type { CrmStage } from "@/lib/api/opportunities";
 import { CRM_STAGES, groupByCrmStage } from "@/lib/crm-board";
-import { scoreVariant } from "@/lib/format";
+import {
+  getOpportunityTypeLabels,
+  opportunityTypeVariant,
+  scoreVariant,
+  stripOpportunityTitlePrefix,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ApiError } from "@/types/api";
 import type { Opportunity } from "@/types/domain";
@@ -40,12 +46,15 @@ function CrmCard({
   onMove: (id: string, stage: CrmStage) => void;
 }) {
   const t = useTranslations("crm.board");
+  const locale = useLocale() as Locale;
   const strategy = opportunity.strategy;
   const channel = strategy?.channel;
   const nextAction = strategy?.next_best_action;
   const isHot = Boolean((strategy as Record<string, unknown> | undefined)?.hot_lead);
   const reviewRequired = Boolean(strategy?.manual_review_required);
   const accent = CHART_ACCENT[opportunity.status as CrmStage] ?? "";
+  const opportunityType = opportunity.opportunity_type ?? "new_logo";
+  const opportunityTypeLabels = getOpportunityTypeLabels(locale);
 
   return (
     <div
@@ -66,7 +75,7 @@ function CrmCard({
     >
       <div className="flex items-start justify-between gap-2">
         <p className="line-clamp-2 text-sm font-medium leading-snug tracking-tight">
-          {opportunity.title.replace(/^Opportunity:\s*/, "")}
+          {stripOpportunityTitlePrefix(opportunity.title)}
         </p>
         <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
       </div>
@@ -75,6 +84,11 @@ function CrmCard({
         <Badge variant={scoreVariant(opportunity.score)} className="font-mono text-[11px]">
           {Math.round(opportunity.score)}
         </Badge>
+        {opportunityType !== "new_logo" && (
+          <Badge variant={opportunityTypeVariant(opportunityType)} className="text-[11px]">
+            {opportunityTypeLabels[opportunityType]}
+          </Badge>
+        )}
         {isHot && (
           <span className="inline-flex items-center gap-1 text-[11px] text-[var(--color-chart-5)]">
             <Flame className="size-3" />
@@ -207,6 +221,8 @@ function CrmColumn({
  *  es de solo lectura a propósito. */
 export function CrmBoard() {
   const t = useTranslations("crm.board");
+  const locale = useLocale() as Locale;
+  const opportunityTypeLabels = getOpportunityTypeLabels(locale);
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 300);
   const { openOpportunity } = useOpportunityDrawer();
   const moveStage = useMoveOpportunityStage();
@@ -342,18 +358,28 @@ export function CrmBoard() {
                   )}
                 >
                   <p className="line-clamp-2 text-sm font-medium leading-snug tracking-tight">
-                    {opp.title.replace(/^Opportunity:\s*/, "")}
+                    {stripOpportunityTitlePrefix(opp.title)}
                   </p>
-                  <Badge
-                    variant={opp.status === "won" ? "success" : "secondary"}
-                    className="mt-2 text-[11px]"
-                  >
-                    {opp.status === "won"
-                      ? t("closedStatus.won")
-                      : opp.status === "lost"
-                        ? t("closedStatus.lost")
-                        : t("closedStatus.dismissed")}
-                  </Badge>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <Badge
+                      variant={opp.status === "won" ? "success" : "secondary"}
+                      className="text-[11px]"
+                    >
+                      {opp.status === "won"
+                        ? t("closedStatus.won")
+                        : opp.status === "lost"
+                          ? t("closedStatus.lost")
+                          : t("closedStatus.dismissed")}
+                    </Badge>
+                    {(opp.opportunity_type ?? "new_logo") !== "new_logo" && (
+                      <Badge
+                        variant={opportunityTypeVariant(opp.opportunity_type ?? "new_logo")}
+                        className="text-[11px]"
+                      >
+                        {opportunityTypeLabels[opp.opportunity_type ?? "new_logo"]}
+                      </Badge>
+                    )}
+                  </div>
                 </button>
               ))
             )}

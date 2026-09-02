@@ -18,7 +18,13 @@ import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/types/api";
-import { getOpportunityStatusLabels, getValidationFlagLabels } from "@/lib/format";
+import {
+  getOpportunityStatusLabels,
+  getOpportunityTypeLabels,
+  getValidationFlagLabels,
+  opportunityTypeVariant,
+  stripOpportunityTitlePrefix,
+} from "@/lib/format";
 import { formatDate, formatRelativeTime } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
 import { parseCsv, pickColumn as pick } from "@/lib/csv";
@@ -238,6 +244,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
   const t = useTranslations("companiesLeads.companyDetail");
   const locale = useLocale() as Locale;
   const opportunityStatusLabels = getOpportunityStatusLabels(locale);
+  const opportunityTypeLabels = getOpportunityTypeLabels(locale);
   const validationFlagLabels = getValidationFlagLabels(locale);
   const { data: companyResult, isLoading } = useCompany(companyId);
   const { data: leadsResult } = useLeads(200);
@@ -430,11 +437,16 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
                 className="bee-bento bee-bento-pad flex w-full items-center justify-between gap-3 text-left transition-colors hover:border-[var(--color-chart-4)]"
               >
                 <span className="min-w-0 truncate text-sm font-medium">
-                  {opp.title.replace(/^Opportunity:\s*/, "")}
+                  {stripOpportunityTitlePrefix(opp.title)}
                 </span>
-                <Badge variant="secondary" className="shrink-0">
-                  {opportunityStatusLabels[opp.status]}
-                </Badge>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {(opp.opportunity_type ?? "new_logo") !== "new_logo" && (
+                    <Badge variant={opportunityTypeVariant(opp.opportunity_type ?? "new_logo")}>
+                      {opportunityTypeLabels[opp.opportunity_type ?? "new_logo"]}
+                    </Badge>
+                  )}
+                  <Badge variant="secondary">{opportunityStatusLabels[opp.status]}</Badge>
+                </div>
               </button>
             ))}
           </div>

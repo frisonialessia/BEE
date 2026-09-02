@@ -1,3 +1,4 @@
+import { stripOpportunityTitlePrefix } from "@/lib/format";
 import { CLOSED_OPPORTUNITY_STATUSES, type Opportunity } from "@/types/domain";
 import type { HotLeadScore } from "@/types/extended";
 import type { LeadCard, LeadColumnId } from "@/types/control";
@@ -35,7 +36,7 @@ export function opportunityToLeadCard(opp: Opportunity): LeadCard {
   return {
     opportunity_id: opp.id,
     signal_id: opp.signal_id,
-    title: opp.title.replace(/^Opportunity:\s*/i, ""),
+    title: stripOpportunityTitlePrefix(opp.title),
     company_name: null,
     lead_name: null,
     score: opp.score,

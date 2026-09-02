@@ -507,6 +507,7 @@ def get_battlecard(
         status=str(
             opportunity.status.value if hasattr(opportunity.status, "value") else opportunity.status
         ),
+        opportunity_type=opportunity.opportunity_type,
         score=opportunity.score,
         ready_to_action=opportunity.status == OpportunityStatus.READY_TO_ACTION,
         hot_lead=strategy_dict.get("hot_lead", False),
