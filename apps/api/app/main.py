@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -66,6 +67,25 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_app() -> FastAPI:
     """Build and configure the FastAPI application."""
+    # Must run before FastAPI(...) below — sentry_sdk needs to see the
+    # Starlette/FastAPI integration registered before the app it instruments
+    # exists. Skipped under pytest for the same reason the ingestion worker
+    # is below: create_app() runs once per test via the client fixture
+    # (hundreds of times a suite), and re-registering the Starlette/FastAPI
+    # integration's instrumentation that many times in one process is
+    # needless overhead with SENTRY_DSN never set in tests anyway (dsn=None
+    # is a safe no-op, but skipping outright avoids paying init cost
+    # hundreds of times for a no-op).
+    import sys
+
+    if "pytest" not in sys.modules:
+        sentry_sdk.init(
+            dsn=settings.SENTRY_DSN,
+            environment=settings.ENVIRONMENT,
+            traces_sample_rate=settings.SENTRY_TRACES_SAMPLE_RATE,
+            release=__version__,
+        )
+
     app = FastAPI(
         title=settings.PROJECT_NAME,
         version=__version__,

@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 
 /**
@@ -21,6 +22,8 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error("Root layout error:", error);
+    // No-op when NEXT_PUBLIC_SENTRY_DSN isn't set — same as error.tsx.
+    Sentry.captureException(error);
   }, [error]);
 
   return (
