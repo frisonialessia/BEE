@@ -42,8 +42,12 @@ def get_today_feed(
 ) -> TodayFeedOut:
     visible_user_ids = get_visible_user_ids(session, current_user) if current_user else None
     organization_id = current_user.organization_id if current_user else None
+    team_id = current_user.team_id if current_user else None
     return build_today_feed(
-        session, organization_id=organization_id, visible_user_ids=visible_user_ids
+        session,
+        organization_id=organization_id,
+        visible_user_ids=visible_user_ids,
+        team_id=team_id,
     )
 
 

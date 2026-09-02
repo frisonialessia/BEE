@@ -13,6 +13,8 @@ from app.models.base import UserRole
 from app.models.team import Team
 from app.models.user import User
 from app.schemas.auth import TeamCreate, TeamOut, TeamUpdate
+from app.schemas.team_profile import TeamProfileIn, TeamProfileOut
+from app.services.team_profile import TeamProfileService
 
 router = APIRouter(prefix="/teams", tags=["Teams"])
 
@@ -48,6 +50,48 @@ def create_team(
     session.commit()
     session.refresh(team)
     return team
+
+
+@router.put(
+    "/{team_id}/profile",
+    response_model=TeamProfileOut,
+    summary="Set a team's signal weights and research focus (OWNER/ADMIN only)",
+)
+def set_team_profile(
+    team_id: uuid.UUID,
+    data: TeamProfileIn,
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> TeamProfileOut:
+    """Replaces the team's profile wholesale — same "replace, don't patch"
+    convention as the CEO voice profile. Biases /priority/today's ranking
+    for this team's opportunities and, when research_focus is set, steers
+    AccountResearchAgent's synthesis for whoever's on this team.
+    """
+    svc = TeamProfileService(session)
+    profile = svc.create_or_update(team_id, current_user.organization_id, data)
+    if profile is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found.")
+    session.commit()
+    session.refresh(profile)
+    return TeamProfileOut.model_validate(profile)
+
+
+@router.get(
+    "/{team_id}/profile",
+    response_model=TeamProfileOut,
+    summary="Get a team's signal weights and research focus",
+)
+def get_team_profile(
+    team_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> TeamProfileOut:
+    svc = TeamProfileService(session)
+    profile = svc.get(team_id, current_user.organization_id)
+    if profile is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No profile set for this team yet.")
+    return TeamProfileOut.model_validate(profile)
 
 
 @router.get("", response_model=list[TeamOut], summary="List teams in the caller's organization")

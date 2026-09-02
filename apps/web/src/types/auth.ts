@@ -71,6 +71,20 @@ export interface TeamCreateIn {
   parent_team_id?: string | null;
 }
 
+export interface TeamProfileOut {
+  id: string;
+  team_id: string;
+  signal_weights: Record<string, number>;
+  research_focus: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TeamProfileIn {
+  signal_weights: Record<string, number>;
+  research_focus?: string | null;
+}
+
 export interface UserCreateIn {
   email: string;
   password: string;

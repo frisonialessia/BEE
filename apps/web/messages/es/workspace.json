@@ -335,6 +335,25 @@
       "created": "Equipo creado",
       "createError": "No se pudo crear el equipo."
     },
+    "teamProfiles": {
+      "eyebrow": "Inteligencia de señales",
+      "title": "Foco del equipo",
+      "subtitle": "Da prioridad a las señales que más importan a cada equipo en su Bandeja, y orienta la investigación de cuentas hacia lo que realmente venden.",
+      "configure": "Configurar",
+      "noWeights": "Todavía sin ponderación de señales — cada tipo rankea de forma neutral.",
+      "weightsLabel": "Ponderación de señales",
+      "weightsHint": "Un peso mayor a 1 hace que ese tipo de señal aparezca más arriba en la Bandeja de este equipo; menor a 1 lo empuja hacia abajo. 1 = neutral (por defecto).",
+      "selectSignalType": "Elegir tipo de señal…",
+      "add": "Agregar",
+      "remove": "Quitar",
+      "researchFocusLabel": "Foco de investigación (opcional)",
+      "researchFocusPlaceholder": "Ej. Enfocarse en la preparación regulatoria de cuentas fintech en LATAM.",
+      "saving": "Guardando…",
+      "save": "Guardar perfil",
+      "cancel": "Cancelar",
+      "saved": "Perfil de equipo guardado",
+      "saveError": "No se pudo guardar el perfil del equipo."
+    },
     "people": {
       "eyebrow": "Personas",
       "you": "(tú)",
