@@ -17,13 +17,14 @@ from app.models.contact_submission import ContactSubmission
 
 @pytest.fixture(autouse=True)
 def reset_rate_limiter():
-    """The rate limiter is a process-global dict (see contact.py's own
-    docstring on why — same tradeoff as every other rate limiter already
-    in this codebase). Without resetting it, one test's submissions would
-    count against the next test's IP, since TestClient's IP is constant."""
-    contact_endpoint._ip_submission_log.clear()
+    """The rate limiter is a process-global SignupGuard (see contact.py's
+    own docstring on why it's shared with signup/password-reset's
+    implementation, not a fourth copy). Without resetting it, one test's
+    submissions would count against the next test's IP, since TestClient's
+    IP is constant."""
+    contact_endpoint._guard.reset()
     yield
-    contact_endpoint._ip_submission_log.clear()
+    contact_endpoint._guard.reset()
 
 
 VALID_PAYLOAD = {

@@ -14,24 +14,39 @@ database and an unbounded pile of throwaway organizations are:
 2. This module — a per-IP rate limit on registration attempts, independent
    of the invite code (a leaked code, or brute-forcing one, still hits this).
 
-Per-process only, same limitation as ``app.core.replay_guard`` and
-``IngestionWorker`` — a multi-instance deployment needs a shared store
-(Redis) for this to hold across instances.
+Per-process by default — same limitation as ``app.core.replay_guard`` and
+``IngestionWorker`` — but upgrades to a Redis-backed sliding window (a
+sorted set per key, scored by wall-clock time so it's comparable across
+processes) whenever ``app.core.redis.get_redis_client()`` returns a client,
+holding the quota across every instance instead of one. See that module's
+docstring for the fallback behavior when Redis is unset or unreachable.
 """
 
 from __future__ import annotations
 
 import threading
 import time
+import uuid
+
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 _WINDOW_SECONDS = 3600
 
 
 class SignupGuard:
-    """Sliding-window per-key (IP) attempt counter."""
+    """Sliding-window per-key (IP) attempt counter.
 
-    def __init__(self, max_per_hour: int) -> None:
+    ``redis_namespace`` distinguishes independent quotas that happen to
+    share this class (signup vs. password-reset vs. the /contact form) so
+    they never collide in the shared Redis keyspace — each singleton below
+    passes its own.
+    """
+
+    def __init__(self, max_per_hour: int, *, redis_namespace: str = "signup_guard") -> None:
         self._max = max_per_hour
+        self._redis_namespace = redis_namespace
         self._hits: dict[str, list[float]] = {}
         self._lock = threading.Lock()
 
@@ -43,6 +58,40 @@ class SignupGuard:
         if self._max <= 0:
             return True
 
+        from app.core.redis import get_redis_client
+
+        client = get_redis_client()
+        if client is not None:
+            try:
+                return self._try_consume_redis(client, key)
+            except Exception:  # noqa: BLE001
+                logger.warning(
+                    "Redis unavailable for signup_guard[%s] — falling back to process-local state",
+                    self._redis_namespace,
+                    exc_info=True,
+                )
+        return self._try_consume_local(key)
+
+    def _try_consume_redis(self, client, key: str) -> bool:  # noqa: ANN001
+        """Sorted-set sliding window: members are unique per-call tokens,
+        scored by wall-clock time so the window is meaningful across
+        processes (unlike ``time.monotonic()``, which the local fallback
+        below uses safely only because it never leaves one process)."""
+        redis_key = f"bee:{self._redis_namespace}:{key}"
+        now = time.time()
+        cutoff = now - _WINDOW_SECONDS
+        pipe = client.pipeline()
+        pipe.zremrangebyscore(redis_key, 0, cutoff)
+        pipe.zcard(redis_key)
+        _, count = pipe.execute()
+        if count >= self._max:
+            client.expire(redis_key, _WINDOW_SECONDS)
+            return False
+        client.zadd(redis_key, {f"{now}:{uuid.uuid4().hex[:8]}": now})
+        client.expire(redis_key, _WINDOW_SECONDS)
+        return True
+
+    def _try_consume_local(self, key: str) -> bool:
         now = time.monotonic()
         cutoff = now - _WINDOW_SECONDS
         with self._lock:
@@ -55,7 +104,9 @@ class SignupGuard:
             return True
 
     def reset(self) -> None:
-        """Clear all tracked attempts (tests only)."""
+        """Clear all tracked attempts (tests only) — local state only; a
+        test exercising the Redis path clears it via the fakeredis/real
+        client directly (flushdb), not through this method."""
         with self._lock:
             self._hits.clear()
 
@@ -72,7 +123,7 @@ def get_signup_guard() -> SignupGuard:
 
     max_per_hour = settings.SIGNUP_RATE_LIMIT_PER_HOUR
     if _guard is None or _guard_max != max_per_hour:
-        _guard = SignupGuard(max_per_hour)
+        _guard = SignupGuard(max_per_hour, redis_namespace="signup_guard")
         _guard_max = max_per_hour
     return _guard
 

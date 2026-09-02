@@ -18,16 +18,22 @@ that dedupes *business* re-ingestion (a legitimately retried delivery
 carrying the same event), while this rejects the *transport-level* replay of
 a captured request outright, before it's even parsed.
 
-Per-process only, same limitation ``IngestionWorker`` itself already has
-(see README §7 gotcha #2) — a multi-instance deployment needs a shared
-store (Redis) for this to hold across instances. Acceptable for BEE's
-current single-instance architecture; upgrading both together is future work.
+Per-process by default — same limitation ``IngestionWorker`` itself already
+has (see README §7 gotcha #2) — but upgrades to Redis (an atomic ``SET NX
+EX``, one round trip, no race between the check and the record the local
+path needs a lock for) whenever ``app.core.redis.get_redis_client()``
+returns a client. See that module's docstring for the fallback behavior
+when Redis is unset or unreachable.
 """
 
 from __future__ import annotations
 
 import threading
 import time
+
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 class ReplayGuard:
@@ -53,6 +59,28 @@ class ReplayGuard:
         if self._window_seconds <= 0:
             return True
 
+        from app.core.redis import get_redis_client
+
+        client = get_redis_client()
+        if client is not None:
+            try:
+                return self._check_and_record_redis(client, key)
+            except Exception:  # noqa: BLE001
+                logger.warning(
+                    "Redis unavailable for replay_guard — falling back to process-local state",
+                    exc_info=True,
+                )
+        return self._check_and_record_local(key)
+
+    def _check_and_record_redis(self, client, key: str) -> bool:  # noqa: ANN001
+        redis_key = f"bee:replay_guard:{key}"
+        # SET ... NX EX is atomic: "was this key absent, and is it now set
+        # with this TTL" in one round trip — no separate check-then-record
+        # race to worry about, unlike the local dict path below.
+        was_new = client.set(redis_key, "1", nx=True, ex=self._window_seconds)
+        return bool(was_new)
+
+    def _check_and_record_local(self, key: str) -> bool:
         now = time.monotonic()
         cutoff = now - self._window_seconds
         with self._lock:

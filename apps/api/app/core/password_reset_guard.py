@@ -8,9 +8,9 @@ shouldn't incidentally block the other for the same IP). Same
 reused as-is rather than duplicated; only the singleton and its settings key
 (``PASSWORD_RESET_RATE_LIMIT_PER_HOUR``) differ.
 
-Per-process only, same limitation noted on the class itself — a
-multi-instance deployment needs a shared store (Redis) for this to hold
-across instances.
+Per-process by default, same as noted on the class itself — upgrades to
+Redis (its own namespace, independent of signup_guard's quota) whenever
+one is configured; see ``app.core.redis``.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ def get_password_reset_guard() -> SignupGuard:
 
     max_per_hour = settings.PASSWORD_RESET_RATE_LIMIT_PER_HOUR
     if _guard is None or _guard_max != max_per_hour:
-        _guard = SignupGuard(max_per_hour)
+        _guard = SignupGuard(max_per_hour, redis_namespace="password_reset_guard")
         _guard_max = max_per_hour
     return _guard
 

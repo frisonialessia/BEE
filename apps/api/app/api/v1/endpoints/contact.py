@@ -11,10 +11,11 @@ so it gets its own light defenses instead of inheriting auth:
    fills every input trips it, and gets a fake-success response instead
    of a real write (never tell a bot it was caught; that just teaches it
    to route around the honeypot).
-2. A small per-IP token bucket, process-local like every other rate
-   limiter already in this codebase (OmnichannelGateway, GlobalRateLimiter
-   in external_api/rate_limiter.py) — sufficient for a single-instance
-   deployment, not meant to survive a determined attacker.
+2. A small per-IP sliding-window limiter, reusing ``app.core.signup_guard.
+   SignupGuard`` (its own Redis-backed-when-configured, process-local-
+   otherwise namespace — independent quota from signup/password-reset,
+   see that class's own docstring) rather than a fourth ad hoc copy of the
+   same dict-of-timestamps logic this codebase had accumulated.
 
 Every submission that passes those two checks is persisted, full stop —
 see ContactSubmission's own docstring for why silently dropping a real
@@ -23,7 +24,6 @@ prospect's message here isn't an option this codebase gets to take.
 
 from __future__ import annotations
 
-import time
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -32,6 +32,7 @@ from sqlmodel import Session
 
 from app.core.database import get_session
 from app.core.logging import get_logger
+from app.core.signup_guard import SignupGuard
 from app.models.contact_submission import ContactSubmission
 from app.schemas.contact import ContactSubmissionIn, ContactSubmissionOut
 
@@ -39,26 +40,7 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/contact", tags=["Public Contact"])
 
 _RATE_LIMIT_PER_HOUR = 5
-_RATE_WINDOW_SECONDS = 3600.0
-_ip_submission_log: dict[str, list[float]] = {}
-
-
-def _rate_limited(ip: str) -> bool:
-    """True if this IP has already made 5+ submissions in the last hour.
-
-    Process-local dict, not Redis — same tradeoff already accepted
-    elsewhere in this codebase for single-instance deployments (see the
-    module docstring). Prunes old timestamps on every call instead of
-    running a background sweep, so the dict never grows unbounded even
-    without a cron job.
-    """
-    now = time.monotonic()
-    recent = [t for t in _ip_submission_log.get(ip, []) if now - t < _RATE_WINDOW_SECONDS]
-    _ip_submission_log[ip] = recent
-    if len(recent) >= _RATE_LIMIT_PER_HOUR:
-        return True
-    recent.append(now)
-    return False
+_guard = SignupGuard(_RATE_LIMIT_PER_HOUR, redis_namespace="contact_form")
 
 
 @router.post(
@@ -81,7 +63,7 @@ def submit_contact(
         logger.warning("Contact form honeypot triggered ip=%s", client_ip)
         return ContactSubmissionOut(id=uuid4(), created_at=datetime.now(UTC))
 
-    if _rate_limited(client_ip):
+    if not _guard.try_consume(client_ip):
         logger.warning("Contact form rate limit hit ip=%s", client_ip)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,

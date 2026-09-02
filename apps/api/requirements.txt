@@ -38,3 +38,22 @@ httpx>=0.27.0,<1.0.0
 # is set, see app.main's lifespan and .env.example. [fastapi] extra pulls in
 # the Starlette/FastAPI integration (request context on captured events).
 sentry-sdk[fastapi]>=2.0.0,<3.0.0
+
+# Shared state (opt-in) — see app.core.redis. Every guard/limiter that can
+# use this falls back to process-local state when REDIS_URL is unset, so
+# this dependency being present changes nothing until that setting is.
+redis>=5.0.0,<7.0.0
+
+# Secrets vault backend (opt-in) — see app.services.secret_manager. Only
+# imported when SECRET_BACKEND=aws_secrets_manager; env-var secrets (the
+# default) never touch this.
+boto3>=1.34.0,<2.0.0
+
+# Distributed tracing (opt-in) — see app.core.tracing. Inert unless
+# OTEL_EXPORTER_OTLP_ENDPOINT is set, same convention as Sentry above.
+opentelemetry-api>=1.27.0,<2.0.0
+opentelemetry-sdk>=1.27.0,<2.0.0
+opentelemetry-instrumentation-fastapi>=0.48b0
+opentelemetry-instrumentation-sqlalchemy>=0.48b0
+opentelemetry-instrumentation-httpx>=0.48b0
+opentelemetry-exporter-otlp>=1.27.0,<2.0.0

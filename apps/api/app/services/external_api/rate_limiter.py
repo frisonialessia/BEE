@@ -1,9 +1,21 @@
 """Global rate limiter for external API providers.
 
 Each provider has an independent token bucket so LinkedIn throttling does not
-affect G2 or Google Search. Buckets are process-local (same pattern as
-OmnichannelGateway) — sufficient for single-instance deployments; for
-multi-instance, back with Redis in a future iteration.
+affect G2 or Google Search. Buckets are process-local by default (same
+pattern as OmnichannelGateway) — sufficient for single-instance
+deployments — but ``acquire()`` upgrades to a Redis-backed counter, shared
+across every instance, whenever ``app.core.redis.get_redis_client()``
+returns a client. See that module's docstring for the fallback behavior
+when Redis is unset or unreachable.
+
+The Redis path trades the local bucket's exact rolling-window semantics for
+a simpler fixed-hour counter (INCR + EXPIRE) plus a separate min-interval
+check — not perfectly equivalent, but the same "conservative, good enough
+for abuse mitigation, not a hard SLA" tradeoff this limiter already made
+locally. Two non-atomic round trips (read last-call, then INCR) mean a
+tight race can occasionally let one extra call through under concurrent
+load from multiple instances — acceptable for what this actually protects
+(third-party provider quotas), not something worth a Lua script for yet.
 """
 
 from __future__ import annotations
@@ -73,16 +85,57 @@ class GlobalRateLimiter:
         bucket = self._buckets.get(provider)
         if bucket is None:
             return True
-        allowed = bucket.try_consume()
+
+        from app.core.redis import get_redis_client
+
+        client = get_redis_client()
+        if client is not None:
+            try:
+                allowed = self._acquire_redis(client, provider, bucket)
+            except Exception:  # noqa: BLE001
+                logger.warning(
+                    "Redis unavailable for rate_limiter[%s] — falling back to process-local bucket",
+                    provider,
+                    exc_info=True,
+                )
+                allowed = bucket.try_consume()
+        else:
+            allowed = bucket.try_consume()
+
         if not allowed:
-            logger.warning(
-                "GlobalRateLimiter: %s rate limit reached (tokens=%d)",
-                provider,
-                bucket.tokens_remaining,
-            )
+            logger.warning("GlobalRateLimiter: %s rate limit reached", provider)
         return allowed
 
+    def _acquire_redis(self, client, provider: ProviderName, bucket: _TokenBucket) -> bool:  # noqa: ANN001
+        """Fixed-hour counter + min-interval check — see module docstring
+        for why this isn't the exact same rolling-window algorithm as the
+        local bucket."""
+        now = time.time()
+        last_call_key = f"bee:rate_limiter:{provider}:last_call"
+        count_key = f"bee:rate_limiter:{provider}:count"
+
+        last_call_raw = client.get(last_call_key)
+        if last_call_raw is not None and now - float(last_call_raw) < bucket._min_interval:  # noqa: SLF001
+            return False
+
+        count = client.incr(count_key)
+        if count == 1:
+            client.expire(count_key, 3600)
+        if count > bucket._capacity:  # noqa: SLF001
+            return False
+
+        client.set(last_call_key, now, ex=3600)
+        return True
+
     def status(self) -> dict[str, dict[str, int | float]]:
+        """Process-local bucket state — always reflects capacity, but
+        ``tokens_remaining`` is only authoritative when ``acquire()`` is
+        using the local fallback (no Redis configured, or Redis
+        unreachable). When the Redis path is active, the real count lives
+        in Redis instead (``bee:rate_limiter:{provider}:count``) — this
+        keeps returning the last local value rather than reading it back
+        out, so treat it as informational only in that case, not a live
+        reading."""
         return {
             name: {
                 "tokens_remaining": bucket.tokens_remaining,

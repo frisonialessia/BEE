@@ -75,6 +75,19 @@ class Settings(BaseSettings):
     DB_POOL_SIZE: int = 2
     DB_MAX_OVERFLOW: int = 3
 
+    # ----- Shared state (Redis, opt-in) -----------------------------------------
+    # See app.core.redis. Every per-process guard/limiter in this codebase
+    # (signup_guard, password_reset_guard, replay_guard, rate_limiter, the
+    # /contact per-IP limiter) already documents itself as "sufficient for
+    # a single instance, needs a shared store for multi-instance" — this is
+    # that shared store. Unset (the default) keeps every one of them exactly
+    # as they behave today: process-local, zero behavior change. Setting
+    # this alone is enough — no other flag needed — each guard checks for a
+    # reachable Redis client itself and falls back to local state per-call
+    # if the client is absent or a Redis command fails, so a Redis outage
+    # degrades to today's behavior rather than taking any guard down.
+    REDIS_URL: str | None = None
+
     # ----- Security ------------------------------------------------------------
     # Shared secret used to verify HMAC signatures on incoming webhooks so that
     # only trusted upstream integrations can push signals into the engine.
