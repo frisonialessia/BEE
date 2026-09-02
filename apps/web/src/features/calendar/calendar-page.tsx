@@ -15,6 +15,8 @@ import { useUsers } from "@/hooks/queries/use-users";
 import type { Locale } from "@/i18n/locales";
 import type { MeetingCreateIn } from "@/lib/api/meetings";
 import { stripOpportunityTitlePrefix } from "@/lib/format";
+import { resolveTimezone, zonedFakeLocalDate, zonedWallClockToUtc } from "@/lib/timezone";
+import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/types/api";
 import type { Meeting, MeetingClientContext, MeetingColor } from "@/types/domain";
 
@@ -44,9 +46,12 @@ const HOUR_HEIGHT = 56; // px per hour row
 
 /** Pixel top/height for one meeting block within the hour grid — clamped
  * to the visible window (a meeting outside business hours still shows,
- * pinned to the nearest edge, rather than disappearing entirely). */
-function meetingPosition(meeting: Meeting): { top: number; height: number } {
-  const start = new Date(meeting.starts_at);
+ * pinned to the nearest edge, rather than disappearing entirely).
+ * `timeZone` decides whose wall clock "top" is measured against — the
+ * viewer's chosen timezone, not whatever the browser happens to be set
+ * to (see zonedFakeLocalDate). */
+function meetingPosition(meeting: Meeting, timeZone: string): { top: number; height: number } {
+  const start = zonedFakeLocalDate(new Date(meeting.starts_at), timeZone);
   const startHour = start.getHours() + start.getMinutes() / 60;
   const endHour = startHour + meeting.duration_minutes / 60;
   const clampedStart = Math.max(GRID_START_HOUR, Math.min(startHour, GRID_END_HOUR));
@@ -77,10 +82,23 @@ function toDatetimeLocalValue(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-function timeLabel(iso: string, locale: Locale) {
+/** The exact inverse of toDatetimeLocalValue — splits a "YYYY-MM-DDTHH:mm"
+ *  string (this format is all both toDatetimeLocalValue and the native
+ *  datetime-local input ever produce) back into numeric components, ready
+ *  for zonedWallClockToUtc. `month` comes back 0-based, matching Date's
+ *  own convention. */
+function parseDatetimeLocalValue(value: string) {
+  const [datePart, timePart] = value.split("T");
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = (timePart ?? "00:00").split(":").map(Number);
+  return { year, month: month - 1, day, hour, minute };
+}
+
+function timeLabel(iso: string, locale: Locale, timeZone: string) {
   return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", {
     hour: "2-digit",
     minute: "2-digit",
+    timeZone,
   }).format(new Date(iso));
 }
 
@@ -110,11 +128,11 @@ function emptyForm(defaultStart: Date): MeetingFormState {
   };
 }
 
-function formFromMeeting(meeting: Meeting): MeetingFormState {
+function formFromMeeting(meeting: Meeting, timeZone: string): MeetingFormState {
   return {
     title: meeting.title,
     purpose: meeting.purpose ?? "",
-    startsAt: toDatetimeLocalValue(new Date(meeting.starts_at)),
+    startsAt: toDatetimeLocalValue(zonedFakeLocalDate(new Date(meeting.starts_at), timeZone)),
     durationMinutes: meeting.duration_minutes,
     meetingUrl: meeting.meeting_url ?? "",
     opportunityId: meeting.opportunity_id ?? "",
@@ -159,6 +177,7 @@ function MiniMonthCalendar({
   meetingDates,
   onSelectDay,
   locale,
+  todayStr,
 }: {
   monthCursor: Date;
   onMonthChange: (next: Date) => void;
@@ -166,6 +185,7 @@ function MiniMonthCalendar({
   meetingDates: Set<string>;
   onSelectDay: (day: Date) => void;
   locale: Locale;
+  todayStr: string;
 }) {
   const intlLocale = locale === "en" ? "en-US" : "es-MX";
   const grid = useMemo(() => buildMonthGrid(monthCursor), [monthCursor]);
@@ -173,7 +193,6 @@ function MiniMonthCalendar({
     () => grid.slice(0, 7).map((d) => new Intl.DateTimeFormat(intlLocale, { weekday: "narrow" }).format(d)),
     [grid, intlLocale],
   );
-  const todayStr = new Date().toDateString();
   const weekDayStrs = new Set(weekDays.map((d) => d.toDateString()));
 
   return (
@@ -276,10 +295,19 @@ function TimeBreakdownBars({
 export function CalendarPage() {
   const t = useTranslations("calendar");
   const locale = useLocale() as Locale;
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
+  const { user } = useAuth();
+  // Every meeting time below is rendered/edited in *this* — the viewer's
+  // own chosen timezone (User.timezone) if they set one, their browser's
+  // detected zone otherwise (resolveTimezone). weekStart/days/the hour
+  // grid all operate in this zone's wall-clock terms via the
+  // zonedFakeLocalDate/zonedWallClockToUtc pair in lib/timezone — see
+  // weekStartUtc below for where that gets bridged back to a real instant
+  // for querying the API.
+  const tz = resolveTimezone(user?.timezone);
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(zonedFakeLocalDate(new Date(), tz)));
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Meeting | null>(null);
-  const [form, setForm] = useState<MeetingFormState>(() => emptyForm(new Date()));
+  const [form, setForm] = useState<MeetingFormState>(() => emptyForm(zonedFakeLocalDate(new Date(), tz)));
   const [detail, setDetail] = useState<Meeting | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -298,19 +326,33 @@ export function CalendarPage() {
     setMonthOverride(null);
   }
 
-  const weekEnd = useMemo(() => new Date(weekStart.getTime() + 7 * DAY_MS), [weekStart]);
+  // weekStart above lives in "fake-local" wall-clock space (see its own
+  // comment) — every place that actually talks to the API (the query
+  // below, the meetings filter) needs a real UTC instant instead, which is
+  // what bridges it back: the real moment "weekStart's Y/M/D, 00:00, in
+  // tz" corresponds to. Once anchored to a real instant, plain millisecond
+  // arithmetic for a week/N weeks later is exact — UTC has no DST to trip
+  // over, unlike the fake-local side.
+  const weekStartUtc = useMemo(
+    () => zonedWallClockToUtc(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate(), 0, 0, tz),
+    [weekStart, tz],
+  );
+  const weekEndUtc = useMemo(() => new Date(weekStartUtc.getTime() + 7 * DAY_MS), [weekStartUtc]);
   // Padded well past the visible week (~5 weeks either side) so the mini
   // month calendar's own meeting-dot markers have data too, without a
   // second query — one fetch backs both widgets.
-  const queryStart = useMemo(() => new Date(weekStart.getTime() - 35 * DAY_MS), [weekStart]);
-  const queryEnd = useMemo(() => new Date(weekStart.getTime() + 42 * DAY_MS), [weekStart]);
+  const queryStart = useMemo(() => new Date(weekStartUtc.getTime() - 35 * DAY_MS), [weekStartUtc]);
+  const queryEnd = useMemo(() => new Date(weekStartUtc.getTime() + 42 * DAY_MS), [weekStartUtc]);
   const { data: allMeetings, isLoading } = useMeetings({
     startsAfter: queryStart.toISOString(),
     startsBefore: queryEnd.toISOString(),
   });
   const meetings = useMemo(
-    () => (allMeetings ?? []).filter((m) => m.starts_at >= weekStart.toISOString() && m.starts_at < weekEnd.toISOString()),
-    [allMeetings, weekStart, weekEnd],
+    () =>
+      (allMeetings ?? []).filter(
+        (m) => m.starts_at >= weekStartUtc.toISOString() && m.starts_at < weekEndUtc.toISOString(),
+      ),
+    [allMeetings, weekStartUtc, weekEndUtc],
   );
   const { data: users } = useUsers();
   const { data: oppsResult } = useOpportunities(undefined, 100);
@@ -330,18 +372,21 @@ export function CalendarPage() {
     const map = new Map<string, Meeting[]>();
     for (const day of days) map.set(day.toDateString(), []);
     for (const m of meetings ?? []) {
-      const key = new Date(m.starts_at).toDateString();
+      // A real instant off the wire — convert to tz's wall-clock day so it
+      // lands in the column the viewer actually reads as "that day",
+      // matching `days`' own fake-local .toDateString() keys above.
+      const key = zonedFakeLocalDate(new Date(m.starts_at), tz).toDateString();
       if (map.has(key)) map.get(key)!.push(m);
     }
     for (const list of map.values()) list.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
     return map;
-  }, [meetings, days]);
+  }, [meetings, days, tz]);
 
   // Which calendar days (across the whole padded query range, not just
   // this week) have at least one meeting — the mini calendar's dots.
   const meetingDates = useMemo(
-    () => new Set((allMeetings ?? []).map((m) => new Date(m.starts_at).toDateString())),
-    [allMeetings],
+    () => new Set((allMeetings ?? []).map((m) => zonedFakeLocalDate(new Date(m.starts_at), tz).toDateString())),
+    [allMeetings, tz],
   );
 
   // Minutes of this week's meetings by client_context — the sidebar's
@@ -360,7 +405,7 @@ export function CalendarPage() {
     return { totals, grandTotal };
   }, [meetings]);
 
-  const today = new Date().toDateString();
+  const today = zonedFakeLocalDate(new Date(), tz).toDateString();
 
   function openCreateFor(day: Date) {
     const start = new Date(day);
@@ -373,7 +418,7 @@ export function CalendarPage() {
   function openEdit(meeting: Meeting) {
     setDetail(null);
     setEditing(meeting);
-    setForm(formFromMeeting(meeting));
+    setForm(formFromMeeting(meeting, tz));
     setFormOpen(true);
   }
 
@@ -381,10 +426,14 @@ export function CalendarPage() {
     e.preventDefault();
     if (!form.title.trim()) return;
     setSaving(true);
+    const { year, month, day, hour, minute } = parseDatetimeLocalValue(form.startsAt);
     const body: MeetingCreateIn = {
       title: form.title.trim(),
       purpose: form.purpose.trim() || undefined,
-      starts_at: new Date(form.startsAt).toISOString(),
+      // form.startsAt is a bare "YYYY-MM-DDTHH:mm" string with no timezone
+      // of its own — it means that wall-clock time *in tz*, not in
+      // whatever zone the browser happens to be set to.
+      starts_at: zonedWallClockToUtc(year, month, day, hour, minute, tz).toISOString(),
       duration_minutes: form.durationMinutes,
       meeting_url: form.meetingUrl.trim() || undefined,
       opportunity_id: form.opportunityId || undefined,
@@ -441,7 +490,11 @@ export function CalendarPage() {
             <p className="bee-caption mt-1">{t("page.caption")}</p>
           </div>
         </div>
-        <button type="button" onClick={() => openCreateFor(new Date())} className="bee-btn bee-btn--primary text-xs">
+        <button
+          type="button"
+          onClick={() => openCreateFor(zonedFakeLocalDate(new Date(), tz))}
+          className="bee-btn bee-btn--primary text-xs"
+        >
           {t("page.newMeeting")}
         </button>
       </header>
@@ -455,13 +508,18 @@ export function CalendarPage() {
             meetingDates={meetingDates}
             onSelectDay={(day) => changeWeek(startOfWeek(day))}
             locale={locale}
+            todayStr={today}
           />
           <TimeBreakdownBars totals={timeBreakdown.totals} grandTotal={timeBreakdown.grandTotal} />
         </aside>
 
         <div className="lg:order-2">
       <div className="mb-4 flex items-center gap-2">
-        <button type="button" onClick={() => changeWeek(startOfWeek(new Date()))} className="bee-btn-ghost text-xs">
+        <button
+          type="button"
+          onClick={() => changeWeek(startOfWeek(zonedFakeLocalDate(new Date(), tz)))}
+          className="bee-btn-ghost text-xs"
+        >
           {t("page.today")}
         </button>
         <button
@@ -545,7 +603,7 @@ export function CalendarPage() {
                     />
                   ))}
                   {dayMeetings.map((m) => {
-                    const pos = meetingPosition(m);
+                    const pos = meetingPosition(m, tz);
                     // A personal color (m.color) wins over the client_context
                     // tone when set — same color-mix() recipe globals.css's
                     // own bee-bento--* tint classes use, just parameterized
@@ -564,7 +622,7 @@ export function CalendarPage() {
                             : {}),
                         }}
                       >
-                        <p className="bee-micro font-mono">{timeLabel(m.starts_at, locale)}</p>
+                        <p className="bee-micro font-mono">{timeLabel(m.starts_at, locale, tz)}</p>
                         <p className="line-clamp-2 text-xs font-medium leading-snug">{m.title}</p>
                         <div className="mt-auto flex items-center gap-1.5 text-muted-foreground">
                           {m.attendee_user_ids.length > 0 && (
@@ -600,7 +658,7 @@ export function CalendarPage() {
               </DialogHeader>
               <div className="space-y-3">
                 <p className="bee-caption">
-                  {timeLabel(detail.starts_at, locale)} · {detail.duration_minutes} min
+                  {timeLabel(detail.starts_at, locale, tz)} · {detail.duration_minutes} min
                 </p>
                 {detail.client_context && (
                   <Badge variant={CLIENT_CONTEXT_VARIANT[detail.client_context]} className="w-fit">

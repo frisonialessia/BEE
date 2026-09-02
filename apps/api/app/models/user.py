@@ -57,6 +57,15 @@ class User(TimestampMixin, table=True):
     avatar_url: str | None = Field(default=None, max_length=300_000)
     phone: str | None = Field(default=None, max_length=32)
     bio: str | None = Field(default=None, max_length=500)
+    # IANA timezone name (e.g. "America/Mexico_City"), not a UTC offset — an
+    # offset alone can't survive a DST transition. NULL means "not chosen
+    # yet"; the frontend falls back to the browser's own detected timezone
+    # for that user in the meantime, same "not filled in yet is fine"
+    # convention as the other profile fields above. Every meeting time is
+    # already stored as an absolute UTC instant (Meeting.starts_at), so
+    # changing this only changes how *this* user's own client formats it —
+    # never the stored value, and never another teammate's view of it.
+    timezone: str | None = Field(default=None, max_length=64)
 
     # ----- Relationships -------------------------------------------------------
     organization: "Organization" = Relationship(back_populates="users")

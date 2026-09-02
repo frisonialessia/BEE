@@ -175,17 +175,17 @@ const DEMO_TEAMS: TeamOut[] = [
 ];
 
 const DEMO_USERS_ES: UserOut[] = [
-  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@demo.bee", full_name: "Ana García", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@demo.bee", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@demo.bee", full_name: "Sofía Méndez", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@demo.bee", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@demo.bee", full_name: "Ana García", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@demo.bee", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@demo.bee", full_name: "Sofía Méndez", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@demo.bee", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
 ];
 
 const DEMO_USERS_EN: UserOut[] = [
-  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@demo.bee", full_name: "Ana Garcia", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@demo.bee", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@demo.bee", full_name: "Sofia Mendez", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@demo.bee", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@demo.bee", full_name: "Ana Garcia", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@demo.bee", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@demo.bee", full_name: "Sofia Mendez", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@demo.bee", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
 ];
 
 export function demoFetchUsers(): UserOut[] {

@@ -81,6 +81,7 @@ class UserOut(BaseModel):
     avatar_url: str | None
     phone: str | None
     bio: str | None
+    timezone: str | None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -147,6 +148,13 @@ class UserProfileUpdateIn(BaseModel):
     avatar_url: str | None = Field(default=None, max_length=300_000)
     phone: str | None = Field(default=None, max_length=32)
     bio: str | None = Field(default=None, max_length=500)
+    # IANA name, e.g. "America/Mexico_City" — see User.timezone's docstring.
+    # Not validated against the IANA database here: an unrecognized string
+    # just falls back to the browser's own timezone on the frontend
+    # (Intl.DateTimeFormat throws on an invalid zone, and the call sites
+    # that format a time already catch that) rather than a 422 blocking a
+    # profile save over it.
+    timezone: str | None = Field(default=None, max_length=64)
 
 
 class ApiKeyCreate(BaseModel):

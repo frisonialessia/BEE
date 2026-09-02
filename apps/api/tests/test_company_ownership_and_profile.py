@@ -228,6 +228,21 @@ class TestSelfServiceProfile:
         assert body["bio"] == "Closes deals."
         assert body["avatar_url"] == "https://x.io/a.png"
 
+    def test_user_can_set_own_timezone(self, client: TestClient, session: Session):
+        org = _make_org(session, "Acme Timezone")
+        user = _make_user(session, org, UserRole.MEMBER)
+        assert user.timezone is None
+
+        resp = client.patch(
+            "/api/v1/users/me",
+            json={"timezone": "America/Mexico_City"},
+            headers=_headers(user),
+        )
+        assert resp.status_code == 200
+        assert resp.json()["timezone"] == "America/Mexico_City"
+        session.refresh(user)
+        assert user.timezone == "America/Mexico_City"
+
     def test_profile_update_cannot_change_role(self, client: TestClient, session: Session):
         """UserProfileUpdateIn has no `role` field at all — a MEMBER sending
         one is simply ignored by FastAPI request validation (extra fields

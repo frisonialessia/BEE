@@ -17,6 +17,7 @@ export interface UserOut {
   avatar_url: string | null;
   phone: string | null;
   bio: string | null;
+  timezone: string | null;
   created_at: string;
 }
 
@@ -25,6 +26,7 @@ export interface UserProfileUpdateIn {
   avatar_url?: string | null;
   phone?: string | null;
   bio?: string | null;
+  timezone?: string | null;
 }
 
 export interface TokenResponse {

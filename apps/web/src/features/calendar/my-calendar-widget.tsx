@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 
 import { useMeetings } from "@/hooks/queries/use-meetings";
+import { resolveTimezone } from "@/lib/timezone";
 import { useAuth } from "@/providers/auth-provider";
 import type { Locale } from "@/i18n/locales";
 import type { MeetingClientContext } from "@/types/domain";
@@ -37,6 +38,7 @@ export function MyCalendarWidget() {
   const pathname = usePathname();
   const { user } = useAuth();
   const calendarHref = pathname?.startsWith("/probar") ? "/probar/calendar" : "/dashboard/calendar";
+  const tz = resolveTimezone(user?.timezone);
 
   const nowIso = useMemo(() => new Date().toISOString(), []);
   const { data: meetings, isLoading } = useMeetings({ startsAfter: nowIso });
@@ -80,6 +82,7 @@ export function MyCalendarWidget() {
                     weekday: "short",
                     hour: "2-digit",
                     minute: "2-digit",
+                    timeZone: tz,
                   }).format(new Date(m.starts_at))}
                 </span>
                 <span className="min-w-0 flex-1 truncate text-xs font-medium">{m.title}</span>

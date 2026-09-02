@@ -24,6 +24,7 @@ import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-secti
 import { QuotasSection } from "@/features/team/quotas-section";
 import { TeamProfilesSection } from "@/features/team/team-profiles-section";
 import { resizeImageToDataUrl } from "@/lib/image";
+import { availableTimezones, detectedTimezone } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
 import { ROLE_LABELS, type TeamOut, type UserOut, type UserRole } from "@/types/auth";
 import { ApiError } from "@/types/api";
@@ -396,13 +397,21 @@ function MyProfileSection() {
   const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatar_url ?? "");
   const [phone, setPhone] = useState(currentUser?.phone ?? "");
   const [bio, setBio] = useState(currentUser?.bio ?? "");
+  // Pre-filled with the browser's own detected zone when the user hasn't
+  // explicitly chosen one yet — an empty <select> reading "not set" would
+  // just make them go find their own timezone in a 400-entry list; this
+  // way the default is already right for the common case and they only
+  // touch it if it's wrong (traveling, a team based somewhere else, …).
+  const [timezone, setTimezone] = useState(currentUser?.timezone ?? detectedTimezone());
   const [processingImage, setProcessingImage] = useState(false);
+  const timezoneOptions = useMemo(() => availableTimezones(), []);
 
   function openForm() {
     setFullName(currentUser?.full_name ?? "");
     setAvatarUrl(currentUser?.avatar_url ?? "");
     setPhone(currentUser?.phone ?? "");
     setBio(currentUser?.bio ?? "");
+    setTimezone(currentUser?.timezone ?? detectedTimezone());
     setOpen(true);
   }
 
@@ -428,6 +437,7 @@ function MyProfileSection() {
         avatar_url: avatarUrl || null,
         phone: phone.trim() || null,
         bio: bio.trim() || null,
+        timezone: timezone || null,
       });
       setUser(updated);
       toast.success(t("updated"));
@@ -518,6 +528,21 @@ function MyProfileSection() {
                 placeholder={t("bioPlaceholder")}
               />
             </label>
+            <label className="space-y-1 text-xs sm:col-span-2">
+              <span className="bee-caption">{t("timezoneLabel")}</span>
+              <select
+                value={timezone}
+                onChange={(e) => setTimezone(e.target.value)}
+                className="bee-input"
+              >
+                {timezoneOptions.map((tz) => (
+                  <option key={tz} value={tz}>
+                    {tz.replace(/_/g, " ")}
+                  </option>
+                ))}
+              </select>
+              <span className="bee-micro block">{t("timezoneHint")}</span>
+            </label>
           </div>
           <div className="flex gap-2">
             <button
@@ -543,6 +568,14 @@ function MyProfileSection() {
             <div>
               <dt className="bee-caption">{t("bioLabel")}</dt>
               <dd>{currentUser?.bio || t("empty")}</dd>
+            </div>
+            <div>
+              <dt className="bee-caption">{t("timezoneLabel")}</dt>
+              <dd>
+                {currentUser?.timezone
+                  ? currentUser.timezone.replace(/_/g, " ")
+                  : `${detectedTimezone().replace(/_/g, " ")} (${t("timezoneAuto")})`}
+              </dd>
             </div>
           </dl>
         </div>
