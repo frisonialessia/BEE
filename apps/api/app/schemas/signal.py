@@ -101,6 +101,9 @@ class OpportunityOut(BaseModel):
     id: uuid.UUID
     title: str
     status: OpportunityStatus
+    # Revenue Continuity Radar — "new_logo" | "expansion" | "renewal_risk".
+    # See app.models.base.OPPORTUNITY_TYPES and RevenueContinuityService.
+    opportunity_type: str = "new_logo"
     score: float
     strategy: dict[str, Any]
     signal_id: uuid.UUID | None

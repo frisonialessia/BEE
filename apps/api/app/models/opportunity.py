@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import JSON, Column
 from sqlmodel import Field, Relationship
 
-from app.models.base import OpportunityStatus, TimestampMixin, new_uuid
+from app.models.base import NEW_LOGO, OpportunityStatus, TimestampMixin, new_uuid
 
 if TYPE_CHECKING:  # pragma: no cover
     from app.models.company import Company
@@ -53,6 +53,17 @@ class Opportunity(TimestampMixin, table=True):
 
     title: str = Field(nullable=False)
     status: OpportunityStatus = Field(default=OpportunityStatus.DETECTED, index=True)
+
+    # ----- Revenue Continuity Radar ---------------------------------------------
+    # Which stage of the revenue lifecycle this opportunity belongs to — one of
+    # app.models.base.{NEW_LOGO, EXPANSION, RENEWAL_RISK}. Set by
+    # RevenueContinuityService at creation time (see SignalEngine._create_opportunity)
+    # from whether the target company already has a WON opportunity plus the
+    # triggering signal_type. Defaults to NEW_LOGO — the entire pre-existing
+    # acquisition pipeline is completely unaffected by this field's existence.
+    # Plain string, not a SQLModel Enum column — see app.models.base's comment
+    # on OPPORTUNITY_TYPES for why.
+    opportunity_type: str = Field(default=NEW_LOGO, max_length=32, index=True)
 
     # Priority score (0-100) used to rank opportunities in the pipeline.
     score: float = Field(default=0.0, index=True)

@@ -173,6 +173,7 @@ const baseSampleOpportunitiesEs: Opportunity[] = [
     id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
     title: "Oportunidad: Northwind Labs cerró una Serie B de $32M",
     status: "ready_to_action",
+    opportunity_type: "new_logo",
     score: 92,
     strategy: {
       pain_point: "Los equipos post-financiación deben escalar su outbound antes de que se estanque el plan de contratación de 90 días.",
@@ -210,6 +211,7 @@ const baseSampleOpportunitiesEs: Opportunity[] = [
     id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
     title: "Oportunidad: Acme Corp contrató a un nuevo VP de Revenue Operations",
     status: "ready_to_action",
+    opportunity_type: "new_logo",
     score: 74,
     strategy: {
       pain_point: "El nuevo líder de RevOps está evaluando todo el stack de ventas en sus primeros 90 días.",
@@ -248,6 +250,7 @@ const baseSampleOpportunitiesEn: Opportunity[] = [
     id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
     title: "Opportunity: Northwind Labs closed a $32M Series B",
     status: "ready_to_action",
+    opportunity_type: "new_logo",
     score: 92,
     strategy: {
       pain_point: "Post-funding teams need to scale outbound before their 90-day hiring plan stalls.",
@@ -285,6 +288,7 @@ const baseSampleOpportunitiesEn: Opportunity[] = [
     id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
     title: "Opportunity: Acme Corp hired a new VP of Revenue Operations",
     status: "ready_to_action",
+    opportunity_type: "new_logo",
     score: 74,
     strategy: {
       pain_point: "The new RevOps leader is evaluating the whole sales stack in their first 90 days.",

@@ -120,10 +120,20 @@ export type StrategyPartial = Partial<StrategySchema> & Record<string, unknown>;
 
 // ── OpportunityOut ────────────────────────────────────────────────────────────
 
+/**
+ * Revenue Continuity Radar classification — see
+ * app.models.base.OPPORTUNITY_TYPES / RevenueContinuityService on the
+ * backend. "expansion"/"renewal_risk" only ever appear on a signal about a
+ * company that already has a WON opportunity; every net-new prospect is
+ * "new_logo".
+ */
+export type OpportunityType = "new_logo" | "expansion" | "renewal_risk";
+
 export interface Opportunity {
   id: string;
   title: string;
   status: OpportunityStatus;
+  opportunity_type: OpportunityType;
   score: number;
   strategy: StrategyPartial;
   signal_id: string | null;

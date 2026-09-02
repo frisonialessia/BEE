@@ -199,6 +199,22 @@ class OpportunityStatus(str, Enum):
     DISMISSED = "dismissed"
 
 
+# ── Revenue Continuity Radar ────────────────────────────────────────────────
+# Opportunity.opportunity_type — which stage of the revenue lifecycle this
+# opportunity belongs to. Deliberately a plain string constant set, NOT a
+# ``str, Enum`` SQLModel column: an ``Enum``-typed column maps to a native
+# Postgres ENUM type (see OpportunityStatus/SignalType above), which needs an
+# ``ALTER TYPE ... ADD VALUE`` migration to grow — exactly the gap the
+# ``FRANCHISE_EXPANSION``-era SignalType additions never got a migration for.
+# ``loss_reason`` on Opportunity already sets this precedent (see that
+# field's own comment): a plain, indexed string column that a new lifecycle
+# bucket can join with zero migration beyond a data backfill.
+NEW_LOGO = "new_logo"
+EXPANSION = "expansion"
+RENEWAL_RISK = "renewal_risk"
+OPPORTUNITY_TYPES = frozenset({NEW_LOGO, EXPANSION, RENEWAL_RISK})
+
+
 class EmployeeRange(str, Enum):
     """Company-size bracket for an Organization's own profile — not a
     prospect's, this org's. Standard SaaS onboarding buckets, fixed rather

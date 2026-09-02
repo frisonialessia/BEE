@@ -585,6 +585,7 @@ export function historicalOpportunities(locale: Locale = defaultLocale): Opportu
       id: `demo-opp-${def.id}`,
       title: `${OPPORTUNITY_TITLE_PREFIX[locale]}${template.signalTitle(def.company)}`,
       status: statusFor(def.outcome),
+      opportunity_type: "new_logo",
       score: def.score,
       strategy,
       signal_id: `demo-signal-${def.id}`,

@@ -81,6 +81,32 @@ class OpportunityRepository(BaseRepository[Opportunity]):
         statement = statement.limit(limit).offset(offset)
         return list(self.session.exec(statement).all())
 
+    def has_won_opportunity(
+        self,
+        company_id: uuid.UUID,
+        *,
+        organization_id: uuid.UUID | None = None,
+        exclude_opportunity_id: uuid.UUID | None = None,
+    ) -> bool:
+        """True if this company already has at least one WON opportunity.
+
+        The single question RevenueContinuityService needs answered to tell
+        a net-new prospect from an existing customer — see that service's
+        module docstring. ``exclude_opportunity_id`` lets a caller check
+        "any *other* WON opportunity" when re-classifying an opportunity
+        that might itself already be WON.
+        """
+        from app.models.base import OpportunityStatus
+
+        statement = select(Opportunity.id).where(
+            Opportunity.company_id == company_id,
+            Opportunity.status == OpportunityStatus.WON,
+        )
+        if exclude_opportunity_id is not None:
+            statement = statement.where(Opportunity.id != exclude_opportunity_id)
+        statement = scope_by_organization_id(statement, Opportunity.organization_id, organization_id)
+        return self.session.exec(statement).first() is not None
+
     def list_scoped(
         self,
         *,

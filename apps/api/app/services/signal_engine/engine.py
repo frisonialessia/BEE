@@ -32,6 +32,7 @@ from sqlmodel import Session
 # Ensure built-in signal analyzers are registered on import.
 import app.services.signal_engine.analyzers  # noqa: F401  (registration side effect)
 from app.core.logging import get_logger
+from app.models.base import EXPANSION, RENEWAL_RISK
 from app.models.opportunity import Opportunity
 from app.models.signal import Signal
 from app.repositories.company import CompanyRepository
@@ -39,6 +40,7 @@ from app.repositories.lead import LeadRepository
 from app.repositories.opportunity import OpportunityRepository
 from app.repositories.signal import SignalRepository
 from app.schemas.signal import SignalWebhookIn
+from app.services.revenue_continuity import RevenueContinuityService
 from app.services.signal_engine.analyzers import get_analyzers
 from app.services.signal_engine.analyzers.base import AnalysisResult
 from app.services.strategy_generator import StrategyGeneratorService
@@ -280,6 +282,15 @@ class SignalEngine:
         )
         return applied, aggregate
 
+    # Revenue Continuity Radar — see RevenueContinuityService's module
+    # docstring. Purely cosmetic labeling on top of the classification;
+    # falling back to the NEW_LOGO prefix for any value this map doesn't
+    # recognize keeps this forward-compatible with new buckets.
+    _OPPORTUNITY_TITLE_PREFIXES = {
+        EXPANSION: "Expansion opportunity",
+        RENEWAL_RISK: "Renewal risk",
+    }
+
     def _create_opportunity(
         self,
         signal: Signal,
@@ -291,13 +302,20 @@ class SignalEngine:
         Status will be promoted to READY_TO_ACTION by the strategy service
         after enrichment, not here.
         """
+        opportunity_type = RevenueContinuityService(self.session).classify(
+            company_id=signal.company_id,
+            signal_type=signal.signal_type,
+            organization_id=organization_id,
+        )
+        title_prefix = self._OPPORTUNITY_TITLE_PREFIXES.get(opportunity_type, "Opportunity")
         opportunity = Opportunity(
             organization_id=organization_id,
             signal_id=signal.id,
             lead_id=signal.lead_id,
             company_id=signal.company_id,
-            title=f"Opportunity: {signal.title}",
+            title=f"{title_prefix}: {signal.title}",
             score=signal.score,
             strategy=aggregate.strategy or {},
+            opportunity_type=opportunity_type,
         )
         return self.opportunities.add(opportunity)
