@@ -1,0 +1,56 @@
+{
+  "page": {
+    "eyebrow": "Calendar",
+    "title": "Calendar",
+    "caption": "Team meetings — each one tied to your real pipeline, not a separate agenda.",
+    "newMeeting": "+ New meeting",
+    "today": "Today",
+    "prevWeek": "Previous week",
+    "nextWeek": "Next week",
+    "emptyDay": "No meetings",
+    "loading": "Loading…"
+  },
+  "clientContext": {
+    "active_client": "Active client",
+    "hot_lead": "Hot lead",
+    "prospect": "Prospect",
+    "new_contact": "First contact"
+  },
+  "card": {
+    "attendeesCount": "{count, plural, one {# invited} other {# invited}}",
+    "joinMeeting": "Join"
+  },
+  "form": {
+    "createTitle": "New meeting",
+    "editTitle": "Edit meeting",
+    "titleLabel": "Title *",
+    "titlePlaceholder": "What's it about?",
+    "purposeLabel": "What the meeting is for",
+    "purposePlaceholder": "Context for whoever sees it on the calendar — e.g. \"Product demo, address pricing objections\"",
+    "startsAtLabel": "Date and time",
+    "durationLabel": "Duration (minutes)",
+    "meetingUrlLabel": "Meeting link",
+    "meetingUrlPlaceholder": "https://meet.google.com/...",
+    "linkOpportunityLabel": "Link to an opportunity",
+    "linkOpportunityNone": "None",
+    "linkLeadLabel": "Link to a lead",
+    "linkLeadNone": "None",
+    "attendeesLabel": "Invite your team",
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "delete": "Delete meeting",
+    "deleting": "Deleting…",
+    "createError": "Couldn't create the meeting — try again.",
+    "updateError": "Couldn't update the meeting — try again.",
+    "deleteError": "Couldn't delete the meeting — try again.",
+    "createSuccess": "Meeting created.",
+    "deleteConfirm": "Delete this meeting?"
+  },
+  "detail": {
+    "with": "With",
+    "purposeEmpty": "No description",
+    "edit": "Edit",
+    "close": "Close"
+  }
+}

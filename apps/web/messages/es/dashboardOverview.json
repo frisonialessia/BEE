@@ -94,7 +94,9 @@
     "title": "Ranking",
     "subtitle": "Oportunidades ganadas",
     "empty": "Todavía no hay oportunidades ganadas asignadas a un miembro del equipo.",
-    "tooltip": "{won, plural, one {# ganada} other {# ganadas}} · {pct}% del líder ({leaderName})"
+    "tooltip": "{won, plural, one {# ganada} other {# ganadas}} · {pct}% del líder ({leaderName})",
+    "allTeams": "Todos los equipos",
+    "teamFilterAria": "Filtrar ranking por equipo"
   },
   "criticalAccounts": {
     "title": "Cuentas críticas de hoy",

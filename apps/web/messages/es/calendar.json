@@ -1,0 +1,56 @@
+{
+  "page": {
+    "eyebrow": "Calendario",
+    "title": "Calendario",
+    "caption": "Reuniones del equipo — cada una ligada a tu pipeline real, no una agenda aparte.",
+    "newMeeting": "+ Nueva reunión",
+    "today": "Hoy",
+    "prevWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "emptyDay": "Sin reuniones",
+    "loading": "Cargando…"
+  },
+  "clientContext": {
+    "active_client": "Cliente activo",
+    "hot_lead": "Lead caliente",
+    "prospect": "Prospecto",
+    "new_contact": "Primer contacto"
+  },
+  "card": {
+    "attendeesCount": "{count, plural, one {# invitado} other {# invitados}}",
+    "joinMeeting": "Unirse"
+  },
+  "form": {
+    "createTitle": "Nueva reunión",
+    "editTitle": "Editar reunión",
+    "titleLabel": "Título *",
+    "titlePlaceholder": "¿De qué se trata?",
+    "purposeLabel": "Para qué es la junta",
+    "purposePlaceholder": "Contexto para quien la vea en el calendario — ej. \"Demo de producto, cerrar objeciones de precio\"",
+    "startsAtLabel": "Fecha y hora",
+    "durationLabel": "Duración (minutos)",
+    "meetingUrlLabel": "Link de la reunión",
+    "meetingUrlPlaceholder": "https://meet.google.com/...",
+    "linkOpportunityLabel": "Vincular a una oportunidad",
+    "linkOpportunityNone": "Ninguna",
+    "linkLeadLabel": "Vincular a un lead",
+    "linkLeadNone": "Ninguno",
+    "attendeesLabel": "Invitar a tu equipo",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "delete": "Eliminar reunión",
+    "deleting": "Eliminando…",
+    "createError": "No se pudo crear la reunión — intenta de nuevo.",
+    "updateError": "No se pudo actualizar la reunión — intenta de nuevo.",
+    "deleteError": "No se pudo eliminar la reunión — intenta de nuevo.",
+    "createSuccess": "Reunión creada.",
+    "deleteConfirm": "¿Eliminar esta reunión?"
+  },
+  "detail": {
+    "with": "Con",
+    "purposeEmpty": "Sin descripción",
+    "edit": "Editar",
+    "close": "Cerrar"
+  }
+}

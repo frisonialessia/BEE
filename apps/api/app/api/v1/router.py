@@ -31,6 +31,7 @@ from app.api.v1.endpoints import (
     internal_market_scan,
     internal_support,
     leads,
+    meetings,
     ml_training,
     network,
     opportunities,
@@ -65,6 +66,7 @@ api_router.include_router(users.router)
 api_router.include_router(api_keys.router)
 api_router.include_router(signals.router)
 api_router.include_router(leads.router)
+api_router.include_router(meetings.router)
 api_router.include_router(companies.router)
 api_router.include_router(contact.router)
 api_router.include_router(opportunities.router)

@@ -1,5 +1,6 @@
 import {
   Building2,
+  CalendarDays,
   Crosshair,
   Fingerprint,
   Flame,
@@ -54,6 +55,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/dashboard/companies", icon: Building2, labelKey: "companies" },
       { href: "/dashboard/leads", icon: Users, labelKey: "leads" },
       { href: "/dashboard/opportunities", icon: Target, labelKey: "opportunities" },
+      { href: "/dashboard/calendar", icon: CalendarDays, labelKey: "calendar" },
     ],
   },
   {

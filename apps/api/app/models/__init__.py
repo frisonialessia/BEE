@@ -33,6 +33,7 @@ from app.models.integration_connection import IntegrationConnection
 from app.models.lead import Lead
 from app.models.market_insight import MarketInsight
 from app.models.market_scan_log import MarketScanLog
+from app.models.meeting import Meeting
 from app.models.message_template import MessageTemplate
 from app.models.network import NetworkConnection
 from app.models.opportunity import Opportunity
@@ -63,6 +64,7 @@ __all__ = [
     "Lead",
     "MarketInsight",
     "MarketScanLog",
+    "Meeting",
     "MessageTemplate",
     "PendingAction",
     "Quota",

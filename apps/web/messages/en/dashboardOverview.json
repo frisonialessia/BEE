@@ -94,7 +94,9 @@
     "title": "Leaderboard",
     "subtitle": "Opportunities won",
     "empty": "No opportunities won by a team member yet.",
-    "tooltip": "{won, plural, one {# won} other {# won}} · {pct}% of the leader ({leaderName})"
+    "tooltip": "{won, plural, one {# won} other {# won}} · {pct}% of the leader ({leaderName})",
+    "allTeams": "All teams",
+    "teamFilterAria": "Filter leaderboard by team"
   },
   "criticalAccounts": {
     "title": "Today's critical accounts",

@@ -24,6 +24,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
+import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
 import { computeTodayImpact } from "@/lib/today-impact";
 import { bucketAverageByDay, bucketByDay } from "@/lib/trend";
@@ -41,6 +42,7 @@ export function DashboardOverview() {
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
   const { data: allOppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 200);
   const { data: usersResult, isLoading: usersLoading } = useUsers();
+  const { data: teamsResult } = useTeams();
   const { data: companiesResult } = useCompanies(200);
   const { openOpportunity } = useOpportunityDrawer();
 
@@ -231,7 +233,11 @@ export function DashboardOverview() {
           </div>
           <RevenueSimulatorWidget />
 
-          <Leaderboard opportunities={allOppsResult?.data ?? []} users={usersResult ?? []} />
+          <Leaderboard
+            opportunities={allOppsResult?.data ?? []}
+            users={usersResult ?? []}
+            teams={teamsResult ?? []}
+          />
         </section>
 
         <section className="bee-span-12 space-y-3">

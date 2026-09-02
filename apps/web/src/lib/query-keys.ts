@@ -39,6 +39,11 @@ export const queryKeys = {
     list: (limit?: number) => [...queryKeys.leads.all, "list", limit] as const,
     duplicates: () => [...queryKeys.leads.all, "duplicates"] as const,
   },
+  meetings: {
+    all: ["meetings"] as const,
+    range: (startsAfter?: string, startsBefore?: string) =>
+      [...queryKeys.meetings.all, "range", startsAfter ?? "", startsBefore ?? ""] as const,
+  },
   companies: {
     all: ["companies"] as const,
     list: (limit?: number) => [...queryKeys.companies.all, "list", limit] as const,

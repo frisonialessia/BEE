@@ -86,6 +86,7 @@ const NAMESPACES = [
   "nav",
   "marketing",
   "auth",
+  "calendar",
   "crm",
   "dashboardOverview",
   "opportunitiesPriority",
