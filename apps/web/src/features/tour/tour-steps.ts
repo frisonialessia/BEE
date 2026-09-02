@@ -56,7 +56,7 @@ export function buildTourSteps(mode: TourMode): TourStep[] {
       href: `${base}/crm`,
       title: "3. Pipeline (CRM)",
       description:
-        "Cada oportunidad ya priorizada vive acá. Arrastrá una tarjeta para avanzarla de etapa — el pipeline entero, de un vistazo.",
+        'Cada oportunidad ya priorizada vive acá, en 5 etapas: Detectadas → Listas para actuar → Tu prioridad → En conversación → Cerradas. No son las de un CRM genérico ("Nuevo, Abierto...") — cada columna tiene su propio ícono "?" con lo que significa. Arrastrá una tarjeta para avanzarla.',
       placement: "right",
     },
     {

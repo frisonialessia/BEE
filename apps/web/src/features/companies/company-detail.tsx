@@ -183,6 +183,10 @@ const INPUT_CLASS =
 
 function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () => void }) {
   const t = useTranslations("companiesLeads.companyDetail.contacts.newContactForm");
+  // Same 5-stage taxonomy the CRM board's own "?" tooltips explain
+  // (stageSubtitles) — reused here so picking a stage doesn't require a
+  // trip to the CRM board just to know what it means.
+  const tStage = useTranslations("crm.board");
   const createLead = useCreateLead();
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [fullName, setFullName] = useState("");
@@ -339,6 +343,11 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
           ))}
         </select>
         <p className="mt-1 bee-micro">{t("pipelineStageHint")}</p>
+        {pipelineStage && (
+          <p className="mt-0.5 bee-micro text-muted-foreground">
+            {tStage(`stageSubtitles.${pipelineStage}`)}
+          </p>
+        )}
       </div>
 
       {pipelineStage && (
