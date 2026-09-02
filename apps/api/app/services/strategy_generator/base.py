@@ -166,6 +166,19 @@ class EnrichmentContext:
     external_intent_keywords: list[str] = field(default_factory=list)
     external_providers_called: list[str] = field(default_factory=list)
 
+    # ── CEO brand voice — auto-injected from PersonalBrandService ────────────
+    # The active VoiceProfile + relevant fragments, already packaged as a
+    # ready-to-inject brief string (same field ExecutiveAgent's ArtifactContext
+    # already carries). Never empty in normal operation — PersonalBrandService
+    # returns a neutral-tone fallback sentence when there's no active profile
+    # — but defaults to "" here so a generator/prompt builder can still detect
+    # "PersonalBrandService itself was unavailable" (StrategyGeneratorService's
+    # _query_brand_brief returns "" on any exception) and skip the section
+    # entirely rather than inject nothing useful. Rule-based generators ignore
+    # this field regardless (their pain_point/closing_argument text is
+    # templated, not free-form prose with a "voice" to apply).
+    brand_brief: str = ""
+
     @property
     def best_hint(self) -> SuccessHint | None:
         """Return the highest win-rate actionable hint, or None."""

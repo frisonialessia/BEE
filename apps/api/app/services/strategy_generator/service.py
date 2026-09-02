@@ -216,6 +216,9 @@ class StrategyGeneratorService:
             company_domain, enriched_company.get("name"), enriched_lead.get("full_name")
         )
 
+        # ── 9. CEO brand voice (PersonalBrandService) ──────────────────────────
+        brand_brief = self._query_brand_brief(signal)
+
         return EnrichmentContext(
             signal_type=signal_type,
             signal_title=signal.title,
@@ -245,7 +248,27 @@ class StrategyGeneratorService:
             dark_funnel_score=dark_funnel_score,
             dark_funnel_stage=dark_funnel_stage,
             intro_paths=intro_paths,
+            brand_brief=brand_brief,
         )
+
+    def _query_brand_brief(self, signal: Signal) -> str:
+        """Retrieve the CEO brand voice context from PersonalBrandService.
+
+        Non-blocking: any failure (no active profile, vector store
+        unavailable) returns "" so a battlecard is never blocked on this —
+        same defensive pattern every other _query_* helper here follows.
+        """
+        try:
+            from app.services.personal_brand import PersonalBrandService
+            from app.services.vector_store import get_vector_store
+
+            svc = PersonalBrandService(self.session, get_vector_store())
+            return svc.generate_brand_brief(
+                topic=signal.title[:200], organization_id=signal.organization_id
+            )
+        except Exception:  # noqa: BLE001
+            logger.debug("PersonalBrandService unavailable — brand_brief will be empty", exc_info=True)
+            return ""
 
     def _query_psychographic(self, lead_id: uuid.UUID | None) -> tuple[str | None, str | None]:
         """Retrieve the lead's DISC style from PsychographicAnalyzer.

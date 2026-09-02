@@ -132,6 +132,74 @@ def test_context_wires_dark_funnel_psychographic_and_network(session):
     assert ctx.intro_paths[0].connector_name == "Sam Connector"
 
 
+def test_context_wires_brand_voice(session):
+    """Regression test: EnrichmentContext.brand_brief must reflect the
+    active VoiceProfile when one exists — previously _build_context never
+    queried PersonalBrandService at all, unlike ExecutiveAgent and
+    SmartEngagementEngine, which already consumed brand_brief."""
+    from app.schemas.brand import VoiceProfileCreate
+    from app.services.personal_brand import PersonalBrandService
+    from app.services.vector_store import get_vector_store
+
+    brand_svc = PersonalBrandService(session, get_vector_store())
+    brand_svc.create_or_update_profile(
+        VoiceProfileCreate(display_name="Alex Rivera", tone_descriptors=["direct"], preferred_cta="Let's talk.")
+    )
+    session.commit()
+
+    engine = SignalEngine(session)
+    outcome = engine.ingest(_funding_payload("funding-brand-01"))
+
+    svc = StrategyGeneratorService(session)
+    ctx = svc._build_context(outcome.signal)
+
+    assert ctx.brand_brief != ""
+    assert "Alex Rivera" in ctx.brand_brief
+
+
+def test_context_brand_brief_neutral_without_profile(session):
+    """Without an active profile, get_brand_context() (called through
+    generate_brand_brief) returns a neutral-tone fallback sentence rather
+    than an empty string — brand_brief is never truly '' in practice unless
+    PersonalBrandService itself is unavailable (see _query_brand_brief's
+    except branch)."""
+    engine = SignalEngine(session)
+    outcome = engine.ingest(_funding_payload("funding-no-brand-01"))
+
+    svc = StrategyGeneratorService(session)
+    ctx = svc._build_context(outcome.signal)
+
+    assert "No brand profile configured" in ctx.brand_brief
+
+
+def test_prompt_includes_brand_voice_section_when_present():
+    from app.services.strategy_generator.llm_prompt import build_user_prompt
+
+    ctx = EnrichmentContext(
+        signal_type=SignalType.FUNDING_ROUND,
+        signal_title="Acme Corp raised a $20M Series B",
+        signal_score=0.8,
+        brand_brief="## CEO Voice Profile\n**Tone**: direct, no-BS",
+    )
+    prompt = build_user_prompt(ctx)
+    assert "CEO BRAND VOICE" in prompt
+    assert "no-BS" in prompt
+
+
+def test_prompt_omits_brand_voice_section_when_absent():
+    """brand_brief defaults to "" (e.g. when PersonalBrandService itself is
+    unavailable — see _query_brand_brief's except branch): the section
+    header must not appear, even though the unconditional task instruction
+    still mentions "CEO BRAND VOICE" by name."""
+    from app.services.strategy_generator.llm_prompt import build_user_prompt
+
+    ctx = EnrichmentContext(
+        signal_type=SignalType.FUNDING_ROUND, signal_title="Acme Corp raised a $20M Series B", signal_score=0.8
+    )
+    prompt = build_user_prompt(ctx)
+    assert "=== CEO BRAND VOICE ===" not in prompt
+
+
 # ── Rule-based generators ──────────────────────────────────────────────────────
 
 def test_funding_generator_produces_complete_battlecard(session):
