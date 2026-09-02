@@ -19,8 +19,17 @@ from app.core.config import settings
 from app.core.database import init_db
 from app.core.logging import configure_logging, get_logger
 from app.core.middleware import APIKeyMiddleware, SecurityHeadersMiddleware
+from app.services.events import register_listeners
 
 logger = get_logger(__name__)
+
+# Registered at import time, not inside lifespan() below — this needs to be
+# guaranteed regardless of whether a given test harness's TestClient
+# actually drives the lifespan context manager, and register_listeners()
+# is idempotent and does nothing DB/IO-bound, so there's no startup-order
+# reason to defer it. See app.services.events.dispatcher for what this
+# wires up and why it exists.
+register_listeners()
 
 
 @asynccontextmanager
