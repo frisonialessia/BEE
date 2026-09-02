@@ -135,7 +135,7 @@ export default async function Home() {
         {/* ── Vista previa del producto ───────────────────────────────────── */}
         <section id="producto" className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="bee-eyebrow">{t("demoEyebrow")}</p>
+            <p className="bee-eyebrow bee-eyebrow--blue">{t("demoEyebrow")}</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("demoTitle")}</h2>
           </div>
           <div className="mt-10">
@@ -150,7 +150,7 @@ export default async function Home() {
         {/* ── Módulos de valor ─────────────────────────────────────────────── */}
         <section id="modulos" className="border-t border-border bg-[var(--color-primary)]/15">
           <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
-            <p className="bee-eyebrow">{t("modulesEyebrow")}</p>
+            <p className="bee-eyebrow bee-eyebrow--blue">{t("modulesEyebrow")}</p>
             <h2 className="mt-2 max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
               {t("modulesTitle")}
             </h2>
@@ -187,7 +187,7 @@ export default async function Home() {
         {/* ── Autoridad / garantías del sistema ───────────────────────────── */}
         <section id="features" className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
           <div className="mx-auto max-w-2xl text-center">
-            <p className="bee-eyebrow">{t("guaranteesEyebrow")}</p>
+            <p className="bee-eyebrow bee-eyebrow--warm">{t("guaranteesEyebrow")}</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("guaranteesTitle")}</h2>
             <p className="bee-caption mt-3">{t("guaranteesSubtitle")}</p>
           </div>

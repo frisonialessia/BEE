@@ -48,10 +48,10 @@ export function MarketingBeforeAfter() {
   const tStages = useTranslations("landing.stages");
 
   return (
-    <section className="border-t border-border bg-[var(--color-primary)]/10">
+    <section className="border-t border-border bg-[var(--color-chart-6)]/10">
       <div className="mx-auto w-full max-w-4xl px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="bee-eyebrow">{t("eyebrow")}</p>
+          <p className="bee-eyebrow bee-eyebrow--violet">{t("eyebrow")}</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("heading")}</h2>
         </div>
 
