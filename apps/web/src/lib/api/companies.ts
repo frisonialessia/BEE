@@ -1,8 +1,9 @@
 import { apiFetch } from "@/lib/api/client";
 import { isDemoMode } from "@/lib/demo/mode";
-import { demoFetchCompanies, demoFetchCompany } from "@/lib/demo/store";
+import { demoFetchCompanies, demoFetchCompany, demoGetCompanyBrief, demoResearchCompany } from "@/lib/demo/store";
 import type { FetchResult } from "@/types/api";
 import type { AccountActivityEvent, Company } from "@/types/domain";
+import type { AccountBrief, AccountResearchResult } from "@/types/extended";
 
 export interface CompanyCreateIn {
   name: string;
@@ -119,4 +120,36 @@ export async function mergeCompanies(keepId: string, mergeId: string): Promise<C
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ keep_id: keepId, merge_id: mergeId }),
   });
+}
+
+// ── AccountResearchAgent ──────────────────────────────────────────────────────
+
+/** Passive read — never triggers research on its own, just checks whether
+ * a brief already exists (e.g. from a previous visit, or the owner-
+ * reassignment auto-trigger — see companies.py's update_company). */
+export async function fetchCompanyBrief(companyId: string): Promise<FetchResult<AccountBrief | null>> {
+  if (isDemoMode()) return { data: demoGetCompanyBrief(companyId), live: false };
+  try {
+    const data = await apiFetch<AccountBrief | null>(`/api/v1/companies/${companyId}/brief`, {
+      cache: "no-store",
+    });
+    return { data, live: true };
+  } catch {
+    return { data: null, live: false };
+  }
+}
+
+/** The explicit "Investigate this account" action. Never throws on a
+ * disabled deployment or an exhausted daily budget — see
+ * AccountResearchAgent.research's own docstring — those come back as
+ * `disabled`/`budget_exceeded` flags on the result, not an error. */
+export async function researchCompany(
+  companyId: string,
+  force = false,
+): Promise<AccountResearchResult> {
+  if (isDemoMode()) return demoResearchCompany(companyId, force);
+  return apiFetch<AccountResearchResult>(
+    `/api/v1/companies/${companyId}/research?force=${force}`,
+    { method: "POST" },
+  );
 }

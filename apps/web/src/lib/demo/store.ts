@@ -33,6 +33,8 @@ import type {
   Signal,
 } from "@/types/domain";
 import type {
+  AccountBrief,
+  AccountResearchResult,
   AnomalyAlert as ExtendedAnomalyAlert,
   AnomalyCheckResult,
   AuditEntry,
@@ -1513,6 +1515,66 @@ const SEED_MARKET_INSIGHTS_EN: MarketInsight[] = [
 
 export function demoGetMarketInsights(): MarketInsight[] {
   return getDemoLocale() === "en" ? SEED_MARKET_INSIGHTS_EN : SEED_MARKET_INSIGHTS_ES;
+}
+
+// ── AccountResearchAgent — Account Brief ────────────────────────────────────
+// Persisted per company (localStorage), same "nothing until you ask for it"
+// posture as the real on-demand agent — no company starts pre-researched.
+// The synthesized brief below is templated from the demo company's OWN
+// already-known fields (industry/size/country/description), not invented
+// facts about it — same honesty rule the rest of the sandbox already
+// follows for its (also fictional) seeded companies.
+
+const ACCOUNT_BRIEFS_KEY = "bee_demo_account_briefs_v1";
+const loadAccountBriefs = () => loadJSON<Record<string, AccountBrief>>(ACCOUNT_BRIEFS_KEY, {});
+
+export function demoGetCompanyBrief(companyId: string): AccountBrief | null {
+  return loadAccountBriefs()[companyId] ?? null;
+}
+
+export function demoResearchCompany(companyId: string, force: boolean): AccountResearchResult {
+  const briefs = loadAccountBriefs();
+  if (!force && briefs[companyId]) {
+    return { brief: briefs[companyId], from_cache: true, budget_exceeded: false, disabled: false };
+  }
+
+  const company = demoFetchCompany(companyId);
+  if (!company) return { brief: null, from_cache: false, budget_exceeded: false, disabled: false };
+
+  const en = getDemoLocale() === "en";
+  const parts = [company.industry, company.size ? `${company.size} employees` : null, company.country].filter(
+    Boolean,
+  );
+  const brief: AccountBrief = {
+    id: `demo-brief-${companyId}`,
+    company_id: companyId,
+    summary: en
+      ? `${company.name} is a ${parts.join(", ")} company${company.domain ? ` (${company.domain})` : ""}. ${company.description ?? "No further public profile detail found."}`
+      : `${company.name} es una empresa de ${parts.join(", ")}${company.domain ? ` (${company.domain})` : ""}. ${company.description ?? "No se encontraron más detalles públicos de perfil."}`,
+    findings: en
+      ? {
+          company_profile: parts.join(" · ") || "Not enough public data to profile this account yet.",
+          web_presence: company.domain
+            ? `Public site at ${company.domain} — no structured tech-stack data available in this sandbox.`
+            : "No public domain on file for this account.",
+          hiring_signals: "No qualifying hiring signals in the lookback window.",
+        }
+      : {
+          perfil_empresa: parts.join(" · ") || "Todavía no hay suficiente dato público para perfilar esta cuenta.",
+          presencia_web: company.domain
+            ? `Sitio público en ${company.domain} — sin datos estructurados de stack tecnológico en este sandbox.`
+            : "Esta cuenta no tiene dominio público registrado.",
+          senales_contratacion: "Sin señales de contratación calificadas en la ventana de búsqueda.",
+        },
+    sources: company.domain ? ["website", "hiring_signals"] : ["hiring_signals"],
+    generated_by: "demo",
+    model_used: null,
+    created_at: new Date().toISOString(),
+  };
+
+  briefs[companyId] = brief;
+  saveJSON(ACCOUNT_BRIEFS_KEY, briefs);
+  return { brief, from_cache: false, budget_exceeded: false, disabled: false };
 }
 
 // ── Voz de marca — Correction Learning / Deep Learning panel ────────────────

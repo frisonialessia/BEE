@@ -47,6 +47,16 @@
       "opportunities": "Oportunidades",
       "signals": "Señales"
     },
+    "accountBrief": {
+      "heading": "Investigación de cuenta",
+      "investigate": "Investigar esta cuenta",
+      "researchAgain": "Investigar de nuevo",
+      "researching": "Investigando…",
+      "empty": "Todavía no se investigó esta cuenta en profundidad.",
+      "disabledNote": "La investigación profunda de cuentas no está habilitada en este despliegue todavía.",
+      "budgetExceededNote": "Se alcanzó el presupuesto diario de investigación — mostrando el último resultado disponible.",
+      "generatedAt": "Generado {time}"
+    },
     "contacts": {
       "heading": "Contactos ({count})",
       "addContact": "+ Agregar contacto",

@@ -728,3 +728,23 @@ export interface AnomalyCheckResult {
   summary: string;
   checked_segments: number;
 }
+
+// ── AccountResearchAgent ──────────────────────────────────────────────────────
+
+export interface AccountBrief {
+  id: string;
+  company_id: string;
+  summary: string;
+  findings: Record<string, unknown>;
+  sources: string[];
+  generated_by: string;
+  model_used: string | null;
+  created_at: string;
+}
+
+export interface AccountResearchResult {
+  brief: AccountBrief | null;
+  from_cache: boolean;
+  budget_exceeded: boolean;
+  disabled: boolean;
+}

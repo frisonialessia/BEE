@@ -47,6 +47,16 @@
       "opportunities": "Opportunities",
       "signals": "Signals"
     },
+    "accountBrief": {
+      "heading": "Account research",
+      "investigate": "Investigate this account",
+      "researchAgain": "Research again",
+      "researching": "Researching…",
+      "empty": "This account hasn't been researched in depth yet.",
+      "disabledNote": "Deep account research isn't enabled for this deployment yet.",
+      "budgetExceededNote": "Daily research budget reached — showing the most recent result available.",
+      "generatedAt": "Generated {time}"
+    },
     "contacts": {
       "heading": "Contacts ({count})",
       "addContact": "+ Add contact",
