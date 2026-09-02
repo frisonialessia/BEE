@@ -1,17 +1,22 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { useCreateOpportunity } from "@/hooks/queries/use-opportunities";
 import type { Locale } from "@/i18n/locales";
 import { getSignalTypeLabels } from "@/lib/format";
+import { resizeImageToDataUrl } from "@/lib/image";
 import type { SignalType } from "@/types/domain";
-
 
 const INPUT_CLASS =
   "rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]";
+
+// Same set LeadCreateIn's own "de dónde salió" field uses (see
+// company-detail.tsx's NewContactForm) — one taxonomy for "where did this
+// come from" across leads and opportunities, not two that could drift.
+const OPPORTUNITY_SOURCES = ["referral", "inbound", "outbound", "event", "cold_call", "other"] as const;
 
 /**
  * Alta manual de una oportunidad — el "+ Nueva oportunidad" del CRM y de la
@@ -34,6 +39,7 @@ export function NewOpportunityForm({
   const t = useTranslations("crm.form");
   const signalTypeOptions = Object.entries(getSignalTypeLabels(locale)) as [SignalType, string][];
   const createOpportunity = useCreateOpportunity();
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [companyName, setCompanyName] = useState(company?.name ?? "");
   const [companyDomain, setCompanyDomain] = useState(company?.domain ?? "");
   const [companyIndustry, setCompanyIndustry] = useState("");
@@ -43,6 +49,13 @@ export function NewOpportunityForm({
   const [signalType, setSignalType] = useState<SignalType>("other");
   const [description, setDescription] = useState("");
   const [score, setScore] = useState(50);
+  // Deal context — optional, same fields (and same intent) as Leads' own
+  // NewContactForm: background a rep already has that the AI can't infer.
+  const [estimatedValue, setEstimatedValue] = useState("");
+  const [source, setSource] = useState("");
+  const [nextMeetingAt, setNextMeetingAt] = useState("");
+  const [meetingsHeldCount, setMeetingsHeldCount] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
 
   const companyLocked = Boolean(company);
 
@@ -56,6 +69,22 @@ export function NewOpportunityForm({
     setSignalType("other");
     setDescription("");
     setScore(50);
+    setEstimatedValue("");
+    setSource("");
+    setNextMeetingAt("");
+    setMeetingsHeldCount("");
+    setPhotoUrl("");
+  }
+
+  async function handlePhotoPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow picking the same file again after a change
+    if (!file) return;
+    try {
+      setPhotoUrl(await resizeImageToDataUrl(file));
+    } catch {
+      toast.error(t("errorToast"));
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -72,6 +101,11 @@ export function NewOpportunityForm({
         signal_type: signalType,
         description: description.trim(),
         score,
+        amount: estimatedValue ? Number(estimatedValue) : undefined,
+        source: source || undefined,
+        next_meeting_at: nextMeetingAt ? new Date(nextMeetingAt).toISOString() : undefined,
+        meetings_held_count: meetingsHeldCount ? Number(meetingsHeldCount) : undefined,
+        photo_url: photoUrl || undefined,
       });
       toast.success(t("successToast"));
       reset();
@@ -114,24 +148,78 @@ export function NewOpportunityForm({
         </div>
       )}
 
-      <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="mb-2 flex items-start gap-3">
+        <div className="flex shrink-0 flex-col items-center gap-1.5">
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- a client-resized data: URI, not an optimizable remote asset
+            <img src={photoUrl} alt="" className="size-14 rounded-full object-cover" />
+          ) : (
+            <span className="flex size-14 items-center justify-center rounded-full bg-[var(--color-card)] text-xs text-muted-foreground">
+              {t("photoLabel")}
+            </span>
+          )}
+          <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoPick} className="hidden" />
+          <button type="button" onClick={() => photoInputRef.current?.click()} className="bee-btn-ghost text-xs">
+            {photoUrl ? t("photoChange") : t("photoUpload")}
+          </button>
+        </div>
+
+        <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-3">
+          <input
+            value={leadFullName}
+            onChange={(e) => setLeadFullName(e.target.value)}
+            placeholder={t("contactName")}
+            className={INPUT_CLASS}
+          />
+          <input
+            value={leadTitle}
+            onChange={(e) => setLeadTitle(e.target.value)}
+            placeholder={t("contactTitle")}
+            className={INPUT_CLASS}
+          />
+          <input
+            value={leadEmail}
+            onChange={(e) => setLeadEmail(e.target.value)}
+            placeholder={t("contactEmail")}
+            type="email"
+            className={INPUT_CLASS}
+          />
+        </div>
+      </div>
+
+      <div className="mb-2 grid grid-cols-1 gap-2 sm:grid-cols-4">
         <input
-          value={leadFullName}
-          onChange={(e) => setLeadFullName(e.target.value)}
-          placeholder={t("contactName")}
+          value={estimatedValue}
+          onChange={(e) => setEstimatedValue(e.target.value)}
+          placeholder={`${t("estimatedValueLabel")} (${t("estimatedValuePlaceholder")})`}
+          type="number"
+          min="0"
+          step="any"
+          className={INPUT_CLASS}
+        />
+        <select value={source} onChange={(e) => setSource(e.target.value)} aria-label={t("sourceLabel")} className={INPUT_CLASS}>
+          <option value="">{t("sourcePlaceholder")}</option>
+          {OPPORTUNITY_SOURCES.map((s) => (
+            <option key={s} value={s}>
+              {t(`sourceOptions.${s}`)}
+            </option>
+          ))}
+        </select>
+        <input
+          value={nextMeetingAt}
+          onChange={(e) => setNextMeetingAt(e.target.value)}
+          aria-label={t("nextMeetingLabel")}
+          title={t("nextMeetingLabel")}
+          type="datetime-local"
           className={INPUT_CLASS}
         />
         <input
-          value={leadTitle}
-          onChange={(e) => setLeadTitle(e.target.value)}
-          placeholder={t("contactTitle")}
-          className={INPUT_CLASS}
-        />
-        <input
-          value={leadEmail}
-          onChange={(e) => setLeadEmail(e.target.value)}
-          placeholder={t("contactEmail")}
-          type="email"
+          value={meetingsHeldCount}
+          onChange={(e) => setMeetingsHeldCount(e.target.value)}
+          placeholder={t("meetingsHeldLabel")}
+          type="number"
+          min="0"
+          step="1"
           className={INPUT_CLASS}
         />
       </div>

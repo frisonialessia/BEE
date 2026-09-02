@@ -200,6 +200,10 @@ export function buildDemoCompanySet(
     amount: null,
     expected_close_date: null,
     qualification: {},
+    source: null,
+    next_meeting_at: null,
+    meetings_held_count: 0,
+    photo_url: null,
     created_at: now,
     updated_at: now,
     loss_reason: null,
@@ -546,6 +550,12 @@ export interface ManualOpportunityInput {
   title?: string;
   description: string;
   score: number;
+  // Deal context — optional, parity with the real backend's OpportunityCreateIn.
+  amount?: number;
+  source?: string;
+  next_meeting_at?: string;
+  meetings_held_count?: number;
+  photo_url?: string;
 }
 
 /** Local counterpart to the real backend's `POST /opportunities`: resolves
@@ -623,9 +633,13 @@ export function buildManualOpportunitySet(
     lead_id: leadId,
     company_id: companyId,
     assigned_to_user_id: null,
-    amount: null,
+    amount: input.amount ?? null,
     expected_close_date: null,
     qualification: {},
+    source: input.source ?? null,
+    next_meeting_at: input.next_meeting_at ?? null,
+    meetings_held_count: input.meetings_held_count ?? 0,
+    photo_url: input.photo_url ?? null,
     created_at: now,
     updated_at: now,
     loss_reason: null,

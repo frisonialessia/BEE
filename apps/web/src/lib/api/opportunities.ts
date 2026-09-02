@@ -39,6 +39,12 @@ export interface OpportunityCreateIn {
   title?: string;
   description: string;
   score?: number;
+  // Deal context — optional, parity with LeadCreateIn's own fields.
+  amount?: number;
+  source?: string;
+  next_meeting_at?: string;
+  meetings_held_count?: number;
+  photo_url?: string;
 }
 
 /** Carga manual de una oportunidad — el "+ Nueva oportunidad" del CRM y de

@@ -145,6 +145,11 @@ export interface Opportunity {
   amount: number | null;
   expected_close_date: string | null;
   qualification: Record<string, boolean>;
+  // Deal context captured at manual creation — see new-opportunity-form.tsx.
+  source: string | null;
+  next_meeting_at: string | null;
+  meetings_held_count: number;
+  photo_url: string | null;
   created_at: string;
   updated_at: string;
   // Win/Loss Analysis — null until PATCH /{id}/outcome is called.
