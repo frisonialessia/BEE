@@ -562,6 +562,13 @@
   box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-chart-5) 15%, transparent);
 }
 
+/* Tighter halo for the floating launcher specifically — "el globo" reads
+ * as too large with the full 8px ring at that small a size, on top of the
+ * button's own footprint. */
+.bee-assistant-halo-sm {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-chart-5) 14%, transparent);
+}
+
 .bee-kpi-strip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));

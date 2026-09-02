@@ -93,14 +93,14 @@ export function AskBeeFab() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="bee-assistant-gradient bee-assistant-halo flex size-[58px] items-center justify-center rounded-full text-white transition-transform hover:scale-105"
+        className="bee-assistant-gradient bee-assistant-halo-sm flex size-12 items-center justify-center rounded-full text-white transition-transform hover:scale-105"
         aria-label={open ? t("fab.toggleCloseAria") : t("fab.toggleOpenAria")}
       >
         {open ? (
-          <X className="size-5" />
+          <X className="size-4" />
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, sin fondo propio (a diferencia de icon.svg, que trae su hexágono claro). Ícono chico (24px sobre un botón de 58px) a propósito: a todo color se pierde si ocupa el botón entero — con aire alrededor se lee limpio.
-          <img src="/assistant-bee.svg" alt="" className="size-6" aria-hidden="true" />
+          // eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, sin fondo propio (a diferencia de icon.svg, que trae su hexágono claro). Ícono chico (20px sobre un botón de 48px) a propósito: a todo color se pierde si ocupa el botón entero — con aire alrededor se lee limpio.
+          <img src="/assistant-bee.svg" alt="" className="size-5" aria-hidden="true" />
         )}
       </button>
     </div>

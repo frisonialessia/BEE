@@ -97,14 +97,19 @@ export default function ProbarOverviewPage() {
         ))}
       </div>
 
-      {/* Mismo orden que el Resumen real (dashboard-overview.tsx): Mi
-       * calendario / Colmena / Leaderboard, los tres del mismo alto,
-       * lado a lado — antes del embudo, con la Colmena en el medio en
-       * vez de sola a ancho completo. height=260, igual que el real. */}
-      <div className="mt-2 grid gap-3 lg:grid-cols-3">
-        <MyCalendarWidget />
-        <SignalHexMap height={260} />
-        <Leaderboard opportunities={opportunities} users={usersResult ?? []} teams={teamsResult ?? []} />
+      {/* Mismo layout que el Resumen real (dashboard-overview.tsx): la
+       * Colmena a 2/3 de ancho como pieza hero, Mi calendario y el
+       * Leaderboard apilados en el tercio restante — items-start para que
+       * cada columna mida según su propio contenido en vez de estirarse a
+       * la altura de la Colmena y dejar espacio en blanco debajo. */}
+      <div className="mt-2 grid items-start gap-3 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <SignalHexMap height={280} />
+        </div>
+        <div className="flex flex-col gap-3">
+          <MyCalendarWidget />
+          <Leaderboard opportunities={opportunities} users={usersResult ?? []} teams={teamsResult ?? []} />
+        </div>
       </div>
 
       {/* Mismo título/caption que estas dos secciones ya usan en el Resumen

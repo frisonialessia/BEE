@@ -92,7 +92,10 @@ export function Leaderboard({
       </div>
 
       {ranked.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("empty")}</p>
+        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border px-4 py-10 text-center">
+          <Trophy className="size-6 text-muted-foreground/40" />
+          <p className="text-sm font-light text-muted-foreground">{t("empty")}</p>
+        </div>
       ) : (
         <ul className="space-y-2">
           {ranked.map((row, i) => {

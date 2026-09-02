@@ -150,22 +150,26 @@ export function DashboardOverview() {
       <CriticalAccountsDigest battlecards={battlecards} today={new Date()} />
       <DailyBrief />
 
-      {/* Compact card row — Mi calendario (lo mío ahora), la Colmena
-          (inteligencia de mercado) y el Leaderboard (cómo va el equipo),
-          los tres del mismo alto para leerse de un vistazo, lado a lado —
-          en vez de la Colmena a ancho completo y el Leaderboard escondido
-          abajo del todo junto al simulador de ingresos. items-stretch (el
-          default de grid, no items-start como la fila de heatmaps de
-          abajo) para que los tres compartan la altura de la tarjeta más
-          alta en vez de cada uno recortar a su propio contenido. */}
-      <div className="mb-4 grid gap-3 lg:grid-cols-3">
-        <MyCalendarWidget />
-        <SignalHexMap height={260} />
-        <Leaderboard
-          opportunities={allOppsResult?.data ?? []}
-          users={usersResult ?? []}
-          teams={teamsResult ?? []}
-        />
+      {/* Colmena (inteligencia de mercado) como pieza hero a 2/3 de ancho —
+          a 1/3 quedaba tan angosta que los hexágonos se veían apretados y
+          hasta recortados contra el borde de la tarjeta. Mi calendario y el
+          Leaderboard van apilados en la columna restante. items-start (no
+          el items-stretch por default de grid) para que cada columna mida
+          según su propio contenido — con items-stretch, Mi calendario y el
+          Leaderboard se estiraban a la altura de la Colmena y dejaban un
+          bloque de espacio en blanco debajo de su contenido real. */}
+      <div className="mb-4 grid items-start gap-3 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <SignalHexMap height={280} />
+        </div>
+        <div className="flex flex-col gap-3">
+          <MyCalendarWidget />
+          <Leaderboard
+            opportunities={allOppsResult?.data ?? []}
+            users={usersResult ?? []}
+            teams={teamsResult ?? []}
+          />
+        </div>
       </div>
 
       <div className="mb-4 grid items-start gap-3 lg:grid-cols-2">

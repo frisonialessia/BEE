@@ -64,7 +64,10 @@ export function MyCalendarWidget() {
       {isLoading ? (
         <p className="bee-caption">{t("page.loading")}</p>
       ) : upcoming.length === 0 ? (
-        <p className="bee-caption">{t("widget.empty")}</p>
+        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border px-4 py-8 text-center">
+          <CalendarDays className="size-6 text-muted-foreground/40" />
+          <p className="bee-caption">{t("widget.empty")}</p>
+        </div>
       ) : (
         <ul className="space-y-1.5">
           {upcoming.map((m) => {
