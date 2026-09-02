@@ -185,6 +185,7 @@ class SmartEngagementEngine:
             )
             pending_action_id = pending.id
             event.pending_action_id = pending_action_id
+            self._audit_response_drafted(event, organization_id, confidence, intent, sentiment, pending_action_id)
 
         event.processed = True
         self.session.add(event)
@@ -198,6 +199,36 @@ class SmartEngagementEngine:
         return self._to_analysis(event)
 
     # ── Private helpers ───────────────────────────────────────────────────────
+
+    def _audit_response_drafted(
+        self,
+        event: IncomingEngagementEvent,
+        organization_id: uuid.UUID | None,
+        confidence: float,
+        intent: str,
+        sentiment: str,
+        pending_action_id: uuid.UUID,
+    ) -> None:
+        """Record the draft-response decision in the audit trail. Previously
+        this engine created PendingActions (via the gateway's own approval
+        gate) without ever logging why — a real gap versus StrategyGenerator/
+        ExecutiveAgent, which both already do this."""
+        try:
+            from app.models.audit_trail import AgentType, DecisionType
+            from app.services.audit_trail import AuditTrailService
+
+            AuditTrailService(self.session).record_decision(
+                agent_type=AgentType.SMART_ENGAGEMENT,
+                decision_type=DecisionType.ENGAGEMENT_RESPONSE_DRAFTED,
+                organization_id=organization_id,
+                pending_action_id=pending_action_id,
+                confidence_score=confidence,
+                context_snapshot={"intent": intent, "sentiment": sentiment, "source": event.source},
+                strategy_reasoning=f"Drafted a {intent} response to a {sentiment} {event.source} engagement.",
+                output_snapshot={"response_draft": event.response_draft},
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning("Failed to record engagement response draft in audit trail", exc_info=True)
 
     def _classify(self, content: str) -> tuple[str, str, float, str]:
         """Rule-based sentiment + intent classification.

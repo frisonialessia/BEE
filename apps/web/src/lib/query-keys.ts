@@ -72,6 +72,10 @@ export const queryKeys = {
     all: ["organization-profile"] as const,
     detail: () => [...queryKeys.organizationProfile.all, "detail"] as const,
   },
+  autopilot: {
+    all: ["autopilot"] as const,
+    config: () => [...queryKeys.autopilot.all, "config"] as const,
+  },
   icp: {
     all: ["icp"] as const,
     criteria: () => [...queryKeys.icp.all, "criteria"] as const,

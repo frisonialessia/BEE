@@ -16,7 +16,7 @@ import uuid
 from unittest.mock import patch
 
 import pytest
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from app.core.security import create_access_token, hash_password
 from app.models.base import UserRole
@@ -639,6 +639,25 @@ class TestSmartEngagementEngine:
         assert result.pending_action_id is not None
         assert result.response_draft is not None
 
+    def test_sales_interest_records_audit_entry(
+        self, engagement_engine: SmartEngagementEngine, session: Session
+    ) -> None:
+        """Regression test: SmartEngagementEngine used to create a
+        PendingAction with zero audit-trail entry, unlike StrategyGenerator/
+        ExecutiveAgent, which both already log every decision."""
+        from app.models.audit_trail import AgentType, AuditEntry, DecisionType
+
+        event = self._make_event("Interested in learning more. What's the price for 50 users?")
+        result = engagement_engine.process(event)
+        session.commit()
+
+        entry = session.exec(
+            select(AuditEntry).where(AuditEntry.pending_action_id == result.pending_action_id)
+        ).first()
+        assert entry is not None
+        assert entry.agent_type == AgentType.SMART_ENGAGEMENT
+        assert entry.decision_type == DecisionType.ENGAGEMENT_RESPONSE_DRAFTED
+
     def test_question_generates_response_draft(
         self, engagement_engine: SmartEngagementEngine, session: Session
     ) -> None:
@@ -762,6 +781,28 @@ class TestDynamicSequenceEngine:
         assert execution.current_step_id == "s1"
         assert execution.status == ExecutionStatus.RUNNING
         assert len(execution.pending_action_ids) >= 1
+
+    def test_step_execution_records_audit_entry(
+        self, sequence_engine: DynamicSequenceEngine, session: Session
+    ) -> None:
+        """Regression test: DynamicSequenceEngine used to create
+        PendingActions with zero audit-trail entry, unlike StrategyGenerator/
+        ExecutiveAgent, which both already log every decision."""
+        from app.models.audit_trail import AgentType, AuditEntry, DecisionType
+
+        seq = sequence_engine.create_sequence(_sample_sequence("test_audit"))
+        session.commit()
+
+        execution = sequence_engine.start_execution(ExecutionCreate(sequence_id=seq.id))
+        session.commit()
+
+        pending_id = uuid.UUID(execution.pending_action_ids[0])
+        entry = session.exec(
+            select(AuditEntry).where(AuditEntry.pending_action_id == pending_id)
+        ).first()
+        assert entry is not None
+        assert entry.agent_type == AgentType.DYNAMIC_SEQUENCE
+        assert entry.decision_type == DecisionType.SEQUENCE_STEP_EXECUTED
 
     def test_step_preview_uses_brand_voice_when_configured(self, session: Session) -> None:
         """Regression test: DynamicSequenceEngine previously never generated

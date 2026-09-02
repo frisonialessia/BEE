@@ -437,6 +437,8 @@ class DynamicSequenceEngine:
             execution.pending_action_ids = [*execution.pending_action_ids, str(pending.id)]
             self.session.add(execution)
 
+            self._audit_step_executed(execution, seq, step_name, action, channel, pending.id)
+
             logger.info(
                 "Sequence step '%s' created PendingAction %s for execution %s",
                 execution.current_step_id, pending.id, execution.id,
@@ -446,6 +448,41 @@ class DynamicSequenceEngine:
         except Exception:  # noqa: BLE001
             logger.exception("Failed to create PendingAction for sequence step %s", execution.current_step_id)
             return None
+
+    def _audit_step_executed(
+        self,
+        execution: SequenceExecution,
+        seq: DynamicSequence,
+        step_name: str,
+        action: str,
+        channel: str,
+        pending_action_id: uuid.UUID,
+    ) -> None:
+        """Record the step-advance decision in the audit trail. Previously
+        this engine created PendingActions with zero audit-trail entry — a
+        real gap versus StrategyGenerator/ExecutiveAgent, which both already
+        log every decision they make."""
+        try:
+            from app.models.audit_trail import AgentType, DecisionType
+            from app.services.audit_trail import AuditTrailService
+
+            AuditTrailService(self.session).record_decision(
+                agent_type=AgentType.DYNAMIC_SEQUENCE,
+                decision_type=DecisionType.SEQUENCE_STEP_EXECUTED,
+                organization_id=execution.organization_id,
+                opportunity_id=execution.opportunity_id,
+                pending_action_id=pending_action_id,
+                context_snapshot={
+                    "sequence_id": str(seq.id),
+                    "sequence_name": seq.name,
+                    "step_id": execution.current_step_id,
+                    "action": action,
+                    "channel": channel,
+                },
+                strategy_reasoning=f"Sequence '{seq.name}' advanced to step '{step_name}' ({action} via {channel}).",
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning("Failed to record sequence step execution in audit trail", exc_info=True)
 
     def _build_step_preview(
         self, step_name: str, action: str, channel: str, organization_id: uuid.UUID | None
