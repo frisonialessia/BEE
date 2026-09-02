@@ -6,7 +6,12 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAutopilotConfig, useUpdateAutopilotConfig } from "@/hooks/queries/use-autopilot";
+import {
+  useAutopilotConfig,
+  useSimulateAutopilotConfig,
+  useUpdateAutopilotConfig,
+} from "@/hooks/queries/use-autopilot";
+import type { AutopilotSimulationReport } from "@/lib/api/organizations";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/types/api";
 
@@ -22,12 +27,18 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
  * passes a confidence score into the gateway, so turning this on has no
  * effect yet — see PersonalBrandService/OmnichannelGateway's own docs.
  * The config still saves and is honored the moment a caller does.
+ *
+ * Also renders the Guardrail Backtesting Sandbox — a read-only "what would
+ * this candidate config have done to my real history" backtest against
+ * AutopilotGuardrailService.run_simulation, so an owner has actual evidence
+ * before raising confidence_threshold rather than a guess.
  */
 export function AutopilotSection() {
   const t = useTranslations("workspace.team.autopilot");
   const { user: currentUser } = useAuth();
   const { data: config, isLoading } = useAutopilotConfig();
   const updateConfig = useUpdateAutopilotConfig();
+  const simulateConfig = useSimulateAutopilotConfig();
 
   const isOwner = currentUser?.role === "owner";
   const [open, setOpen] = useState(false);
@@ -36,14 +47,24 @@ export function AutopilotSection() {
   const [forbiddenWords, setForbiddenWords] = useState<string[]>([]);
   const [newWord, setNewWord] = useState("");
   const [excludedIdsText, setExcludedIdsText] = useState("");
+  const [lookbackDays, setLookbackDays] = useState(90);
+  const [report, setReport] = useState<AutopilotSimulationReport | null>(null);
 
   if (!isOwner) return null;
+
+  function parseExcludedIds() {
+    return excludedIdsText
+      .split(/[\n,]/)
+      .map((s) => s.trim())
+      .filter((s) => UUID_RE.test(s));
+  }
 
   function openEditor() {
     setEnabled(config?.enabled ?? false);
     setThreshold(config?.confidence_threshold ?? 0.9);
     setForbiddenWords(config?.forbidden_words ?? []);
     setExcludedIdsText((config?.excluded_company_ids ?? []).join("\n"));
+    setReport(null);
     setOpen(true);
   }
 
@@ -59,21 +80,35 @@ export function AutopilotSection() {
   }
 
   async function handleSave() {
-    const excludedIds = excludedIdsText
-      .split(/[\n,]/)
-      .map((s) => s.trim())
-      .filter((s) => UUID_RE.test(s));
     try {
       await updateConfig.mutateAsync({
         enabled,
         confidence_threshold: threshold,
         forbidden_words: forbiddenWords,
-        excluded_company_ids: excludedIds,
+        excluded_company_ids: parseExcludedIds(),
       });
       toast.success(t("saved"));
       setOpen(false);
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : t("saveError"));
+    }
+  }
+
+  /** Read-only — backtests the candidate values currently in the editor
+   * against real history, without saving anything. See
+   * AutopilotGuardrailService.run_simulation's docstring for what this
+   * replays and its two documented data limitations. */
+  async function handleSimulate() {
+    try {
+      const result = await simulateConfig.mutateAsync({
+        confidence_threshold: threshold,
+        forbidden_words: forbiddenWords,
+        excluded_company_ids: parseExcludedIds(),
+        lookback_days: lookbackDays,
+      });
+      setReport(result);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : t("simulation.error"));
     }
   }
 
@@ -167,6 +202,72 @@ export function AutopilotSection() {
               rows={3}
               className="bee-input resize-none font-mono text-xs"
             />
+          </div>
+
+          <div className="bee-inset space-y-3 p-3">
+            <p className="bee-eyebrow">{t("simulation.eyebrow")}</p>
+            <p className="bee-caption">{t("simulation.hint")}</p>
+            <div className="flex flex-wrap items-end gap-2">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  {t("simulation.lookbackLabel")}
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={730}
+                  value={lookbackDays}
+                  onChange={(e) => setLookbackDays(Number(e.target.value) || 90)}
+                  className="bee-input w-24"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleSimulate()}
+                disabled={simulateConfig.isPending}
+                className="bee-btn-ghost text-xs"
+              >
+                {simulateConfig.isPending ? t("simulation.running") : t("simulation.run")}
+              </button>
+            </div>
+
+            {report && (
+              <div className="space-y-1.5 border-t border-border pt-3 text-sm">
+                <p className="font-medium">{t("simulation.reportTitle", { days: report.lookback_days })}</p>
+                {report.evaluated_count === 0 ? (
+                  <p className="bee-caption">{t("simulation.noHistory")}</p>
+                ) : (
+                  <>
+                    <p>{t("simulation.evaluated", { count: report.evaluated_count })}</p>
+                    <p>
+                      {t("simulation.wouldApprove", {
+                        count: report.would_auto_approve_count,
+                        pct: Math.round(report.would_auto_approve_rate * 100),
+                      })}
+                    </p>
+                    <p>
+                      {report.auto_approved_win_rate !== null
+                        ? t("simulation.autoWinRate", {
+                            pct: Math.round(report.auto_approved_win_rate * 100),
+                          })
+                        : t("simulation.noAutoOutcomeData")}
+                    </p>
+                    <p>
+                      {report.manual_review_win_rate !== null
+                        ? t("simulation.manualWinRate", {
+                            pct: Math.round(report.manual_review_win_rate * 100),
+                          })
+                        : t("simulation.noManualOutcomeData")}
+                    </p>
+                    {report.near_miss_excluded_count > 0 && (
+                      <p className="bee-caption">
+                        {t("simulation.nearMiss", { count: report.near_miss_excluded_count })}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2">

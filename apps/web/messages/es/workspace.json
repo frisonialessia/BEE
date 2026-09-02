@@ -377,7 +377,36 @@
       "save": "Guardar",
       "cancel": "Cancelar",
       "saved": "Configuración de autopilot guardada",
-      "saveError": "No se pudo guardar la configuración de autopilot."
+      "saveError": "No se pudo guardar la configuración de autopilot.",
+      "simulation": {
+        "eyebrow": "Sandbox de simulación",
+        "hint": "Backtestea esta configuración contra el historial real de oportunidades antes de guardarla — no se envía nada ni se guarda nada al correrla.",
+        "lookbackLabel": "Ventana (días)",
+        "run": "Simular con historial real",
+        "running": "Simulando…",
+        "reportTitle": "Resultado ({days} días)",
+        "evaluated": "{count} oportunidades evaluadas.",
+        "wouldApprove": "{count} se habrían aprobado automático ({pct}%).",
+        "autoWinRate": "Tasa de éxito de lo aprobado automático: {pct}%.",
+        "noAutoOutcomeData": "Sin datos de resultado suficientes para lo aprobado automático todavía.",
+        "manualWinRate": "Tasa de éxito de lo revisado manualmente: {pct}%.",
+        "noManualOutcomeData": "Sin datos de resultado suficientes para lo revisado manualmente todavía.",
+        "nearMiss": "{count} cuentas protegidas que habrían calificado igual si no estuvieran excluidas.",
+        "noHistory": "Sin oportunidades con puntaje de confianza en esta ventana todavía.",
+        "error": "No se pudo simular la configuración."
+      }
+    },
+    "federatedIntelligence": {
+      "eyebrow": "Red de inteligencia",
+      "title": "Inteligencia de señales federada",
+      "subtitle": "Comparte estadísticas agregadas y anónimas de tu historial de cierres con otras organizaciones que también participan, para calibrar la confianza de tus propias señales con su experiencia colectiva.",
+      "statusOn": "Participando",
+      "statusOff": "No participa",
+      "explainer": "Nunca se comparte información en bruto: ni nombres de empresas, ni contactos, ni el contenido de una señal. Solo estadísticas agregadas (tipo de señal + industria → tasa de éxito) y solo una vez que al menos varias organizaciones distintas contribuyeron al mismo grupo — nunca antes.",
+      "toggleLabel": "Participar en la inteligencia federada",
+      "optedInToast": "Ahora participás en la inteligencia federada.",
+      "optedOutToast": "Dejaste de participar en la inteligencia federada.",
+      "saveError": "No se pudo actualizar la configuración."
     },
     "people": {
       "eyebrow": "Personas",

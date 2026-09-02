@@ -76,6 +76,10 @@ export const queryKeys = {
     all: ["autopilot"] as const,
     config: () => [...queryKeys.autopilot.all, "config"] as const,
   },
+  federatedIntelligence: {
+    all: ["federatedIntelligence"] as const,
+    config: () => [...queryKeys.federatedIntelligence.all, "config"] as const,
+  },
   icp: {
     all: ["icp"] as const,
     criteria: () => [...queryKeys.icp.all, "criteria"] as const,

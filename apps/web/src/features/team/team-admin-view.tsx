@@ -19,6 +19,7 @@ import {
   useUsers,
 } from "@/hooks/queries/use-users";
 import { AutopilotSection } from "@/features/team/autopilot-section";
+import { FederatedIntelligenceSection } from "@/features/team/federated-intelligence-section";
 import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
 import { QuotasSection } from "@/features/team/quotas-section";
 import { TeamProfilesSection } from "@/features/team/team-profiles-section";
@@ -820,6 +821,8 @@ export function TeamAdminView() {
           <TeamProfilesSection teams={teams ?? []} canManage={canManage} />
 
           <AutopilotSection />
+
+          <FederatedIntelligenceSection />
 
           <QuotasSection users={users ?? []} teams={teams ?? []} canManage={canManage} />
 

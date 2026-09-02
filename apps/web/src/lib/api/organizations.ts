@@ -171,3 +171,77 @@ export async function updateAutopilotConfig(body: AutopilotConfigIn): Promise<Au
     body: JSON.stringify(body),
   });
 }
+
+// ── Guardrail Backtesting Sandbox ───────────────────────────────────────────
+// See AutopilotGuardrailService.run_simulation on the backend. Read-only —
+// never persists anything, safe to call as many times as an owner wants
+// while tuning a candidate config before saving it via updateAutopilotConfig.
+
+export interface AutopilotSimulationRequest {
+  confidence_threshold: number;
+  excluded_company_ids: string[];
+  forbidden_words: string[];
+  lookback_days: number;
+}
+
+export interface AutopilotSimulationSample {
+  opportunity_id: string;
+  company_id: string | null;
+  would_auto_approve: boolean;
+  reason: string;
+  confidence_score: number;
+  outcome: "won" | "lost" | null;
+}
+
+export interface AutopilotSimulationReport {
+  lookback_days: number;
+  evaluated_count: number;
+  would_auto_approve_count: number;
+  would_auto_approve_rate: number;
+  auto_approved_won: number;
+  auto_approved_lost: number;
+  auto_approved_still_open: number;
+  auto_approved_win_rate: number | null;
+  manual_review_won: number;
+  manual_review_lost: number;
+  manual_review_still_open: number;
+  manual_review_win_rate: number | null;
+  near_miss_excluded_count: number;
+  samples: AutopilotSimulationSample[];
+}
+
+export async function simulateAutopilotConfig(
+  body: AutopilotSimulationRequest,
+): Promise<AutopilotSimulationReport> {
+  return apiFetch<AutopilotSimulationReport>("/api/v1/organizations/autopilot/simulate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+// ── Federated Signal Intelligence ───────────────────────────────────────────
+// See app.services.federated_intelligence on the backend. Opt-in, OFF by
+// default — same "real-org-only" treatment as autopilot above, not wired
+// into the demo sandbox (there is nothing cross-tenant to demonstrate with
+// a single seeded org).
+
+export interface FederatedIntelligenceConfig {
+  opt_in: boolean;
+}
+
+export async function fetchFederatedIntelligenceConfig(): Promise<FederatedIntelligenceConfig> {
+  return apiFetch<FederatedIntelligenceConfig>("/api/v1/organizations/federated-intelligence", {
+    cache: "no-store",
+  });
+}
+
+export async function updateFederatedIntelligenceConfig(
+  body: FederatedIntelligenceConfig,
+): Promise<FederatedIntelligenceConfig> {
+  return apiFetch<FederatedIntelligenceConfig>("/api/v1/organizations/federated-intelligence", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}

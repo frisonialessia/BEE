@@ -377,7 +377,36 @@
       "save": "Save",
       "cancel": "Cancel",
       "saved": "Autopilot settings saved",
-      "saveError": "Couldn't save autopilot settings."
+      "saveError": "Couldn't save autopilot settings.",
+      "simulation": {
+        "eyebrow": "Simulation sandbox",
+        "hint": "Backtest this config against real opportunity history before saving it — nothing is sent or persisted by running it.",
+        "lookbackLabel": "Window (days)",
+        "run": "Backtest with real history",
+        "running": "Simulating…",
+        "reportTitle": "Result ({days} days)",
+        "evaluated": "{count} opportunities evaluated.",
+        "wouldApprove": "{count} would have auto-approved ({pct}%).",
+        "autoWinRate": "Win rate of what would have auto-approved: {pct}%.",
+        "noAutoOutcomeData": "Not enough closed-outcome data yet for what would have auto-approved.",
+        "manualWinRate": "Win rate of what stayed manual review: {pct}%.",
+        "noManualOutcomeData": "Not enough closed-outcome data yet for what stayed manual review.",
+        "nearMiss": "{count} protected accounts that would have otherwise qualified.",
+        "noHistory": "No opportunities with a confidence score in this window yet.",
+        "error": "Couldn't run the simulation."
+      }
+    },
+    "federatedIntelligence": {
+      "eyebrow": "Intelligence network",
+      "title": "Federated signal intelligence",
+      "subtitle": "Share anonymized, aggregate-only stats from your own closed-deal history with other participating organizations, to calibrate your own signal confidence with their collective experience.",
+      "statusOn": "Participating",
+      "statusOff": "Not participating",
+      "explainer": "Nothing raw is ever shared — no company names, no contacts, no signal content. Only aggregate statistics (signal type + industry → win rate), and only once several distinct organizations have contributed to the same bucket — never before.",
+      "toggleLabel": "Participate in federated intelligence",
+      "optedInToast": "You're now participating in federated intelligence.",
+      "optedOutToast": "You've stopped participating in federated intelligence.",
+      "saveError": "Couldn't update the setting."
     },
     "people": {
       "eyebrow": "People",
