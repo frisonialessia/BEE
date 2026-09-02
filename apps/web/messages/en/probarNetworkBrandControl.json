@@ -101,6 +101,15 @@
         "cancel": "Cancel"
       },
       "authorityTopics": "Authority topics",
+      "preview": {
+        "title": "See it in action",
+        "hint": "Type a topic and compare generic AI output against your own configured voice, side by side.",
+        "topicPlaceholder": "e.g. our new pricing model",
+        "button": "Preview",
+        "previewing": "Generating…",
+        "genericLabel": "Generic AI",
+        "brandedLabel": "In your voice"
+      },
       "addFragmentForm": {
         "title": "Add brand fragment",
         "categoryLabel": "Category",

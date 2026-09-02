@@ -7,6 +7,7 @@ import type {
   Battlecard,
   BrandContextResult,
   BrandFragment,
+  BrandVoicePreviewResult,
   ChannelStatus,
   DarkFunnelSignal,
   DarkFunnelSummary,
@@ -63,6 +64,7 @@ import {
   demoGetMarketInsights,
   demoListBrandFragments,
   demoNetworkStats,
+  demoPreviewBrandVoice,
   demoRecordCorrection,
   demoRejectAction,
   demoResolveDLQEvent,
@@ -358,6 +360,21 @@ export async function extractVoiceProfile(rawText: string): Promise<FetchResult<
   });
   if (!res.ok) throw new Error(`API responded ${res.status}`);
   return { data: (await res.json()) as VoiceProfileExtractResult, live: true };
+}
+
+/** Live, on-demand comparison: generic AI output vs. this org's own voice,
+ * for the same topic. Nothing is persisted. Throws (via a non-2xx status)
+ * when there's no active voice profile yet — callers should only offer this
+ * once a profile exists. */
+export async function previewBrandVoice(topic: string): Promise<FetchResult<BrandVoicePreviewResult>> {
+  if (isDemoMode()) return { data: demoPreviewBrandVoice(topic), live: true };
+  const res = await beeFetch(`${API_URL}/api/v1/brand/profile/preview`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ topic }),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return { data: (await res.json()) as BrandVoicePreviewResult, live: true };
 }
 
 export async function addBrandFragment(

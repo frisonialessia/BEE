@@ -63,6 +63,25 @@ class VoiceProfileExtractResult(BaseModel):
     model_used: str | None = None
 
 
+class BrandVoicePreviewRequest(BaseModel):
+    """A topic to generate a side-by-side sample for — generic AI output vs.
+    this org's own VoiceProfile applied to the same topic."""
+
+    topic: str = Field(min_length=3, max_length=300)
+
+
+class BrandVoicePreviewResult(BaseModel):
+    """Two short samples on the same topic: what a generic AI tool would
+    write, and what this org's configured voice actually changes about it.
+    Nothing here is persisted — this is a live, on-demand comparison."""
+
+    topic: str
+    generic_version: str
+    branded_version: str
+    generated_by: Literal["llm", "template"]
+    model_used: str | None = None
+
+
 class BrandFragmentCreate(BaseModel):
     content: str = Field(min_length=10, max_length=5000)
     category: str = Field(description="BrandFragmentCategory value")

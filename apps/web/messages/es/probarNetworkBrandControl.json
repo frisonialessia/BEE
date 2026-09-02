@@ -101,6 +101,15 @@
         "cancel": "Cancelar"
       },
       "authorityTopics": "Temas de autoridad",
+      "preview": {
+        "title": "Verlo en acción",
+        "hint": "Escribe un tema y compara la salida de una IA genérica contra tu propia voz configurada, lado a lado.",
+        "topicPlaceholder": "ej. nuestro nuevo modelo de precios",
+        "button": "Generar preview",
+        "previewing": "Generando…",
+        "genericLabel": "IA genérica",
+        "brandedLabel": "Con tu voz"
+      },
       "addFragmentForm": {
         "title": "Agregar fragmento de marca",
         "categoryLabel": "Categoría",
