@@ -8,8 +8,16 @@ SmartEngagementEngine) and the actual channel APIs (LinkedIn, Email, X).
 It enforces two critical guarantees:
 
 1. **Approval gate**: ``prepare_action()`` ALWAYS creates a PendingAction
-   (PENDING_APPROVAL) before any content is dispatched. The CEO must
-   explicitly approve before anything is sent publicly.
+   before any content is dispatched. By default it starts PENDING_APPROVAL
+   and the CEO must explicitly approve before anything is sent publicly.
+   The one exception is explicit, per-organization, opt-in autopilot (see
+   ``app.services.autopilot`` — OFF by default, and only ever consulted
+   when a caller passes both ``organization_id`` and ``confidence_score``):
+   a PendingAction is still always created and still fully audited, just
+   pre-approved (``approved_by="autopilot"``) when confidence, account
+   exclusion, and forbidden-word checks all pass. There is still no
+   shortcut around the state machine or the audit trail — only around the
+   wait for a human to click Approve on an already-vetted case.
 
 2. **Rate limiting**: ``TokenBucket.consume()`` ensures no channel is hit
    faster than its API allows. When the bucket is empty, the action is
@@ -32,13 +40,17 @@ from __future__ import annotations
 
 import time
 import uuid
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlmodel import Session
 
 from app.core.logging import get_logger
 from app.models.base import ActionStatus, ActionType
 from app.services.omnichannel.interface import ChannelPayload, ChannelResult, IChannelProvider
+
+if TYPE_CHECKING:
+    from app.models.pending_action import PendingAction
+    from app.services.autopilot import AutopilotDecision
 
 logger = get_logger(__name__)
 
@@ -125,12 +137,16 @@ class OmnichannelGateway:
         opportunity_id: uuid.UUID | None = None,
         metadata: dict[str, Any] | None = None,
         priority: int = 5,
+        organization_id: uuid.UUID | None = None,
+        confidence_score: float | None = None,
+        company_id: uuid.UUID | None = None,
     ) -> Any:
-        """Create a PendingAction for CEO approval.
+        """Create a PendingAction for CEO approval — or, when this org has
+        opted into autopilot and this specific action clears every
+        guardrail, a pre-approved one (see the module docstring).
 
         This is the ONLY way business logic should initiate an outbound
-        message. The PendingAction holds the full payload and stays in
-        PENDING_APPROVAL until the CEO clicks "Approve" in the dashboard.
+        message. The PendingAction holds the full payload.
 
         Args:
             channel:        Target channel ("email" | "linkedin" | "twitter")
@@ -142,6 +158,17 @@ class OmnichannelGateway:
             opportunity_id: Link to the opportunity this relates to
             metadata:       Extra channel-specific data
             priority:       1-10 priority (1 = highest)
+            organization_id: Tenant boundary — also required, together with
+                             confidence_score, for autopilot to ever be
+                             consulted. A caller with no tenant context in
+                             scope simply gets today's unconditional
+                             PENDING_APPROVAL behavior, unchanged.
+            confidence_score: The originating strategy/artifact's confidence
+                             (0-1), when the caller has one. Omitting it
+                             (the default) always skips autopilot.
+            company_id:      The target account, checked against this org's
+                             autopilot exclusion list when autopilot would
+                             otherwise approve.
 
         Returns:
             A PendingAction DB object.
@@ -160,6 +187,7 @@ class OmnichannelGateway:
         action_type = self._map_channel_to_action_type(channel)
 
         pending = PendingAction(
+            organization_id=organization_id,
             opportunity_id=opportunity_id,
             action_type=action_type,
             status=ActionStatus.PENDING_APPROVAL,
@@ -176,15 +204,60 @@ class OmnichannelGateway:
             priority=priority,
             generator="omnichannel_gateway",
         )
+
+        decision = self._evaluate_autopilot(organization_id, confidence_score, company_id, body)
+        if decision.auto_approve:
+            pending.mark_approved("autopilot")
+
         self.session.add(pending)
         self.session.flush()
         self.session.refresh(pending)
 
+        if decision.auto_approve:
+            self._audit_autopilot_approval(pending, organization_id, confidence_score, decision)
+
         logger.info(
-            "PendingAction created for channel=%s recipient=%s priority=%d action_id=%s",
-            channel, recipient_id, priority, pending.id,
+            "PendingAction created for channel=%s recipient=%s priority=%d action_id=%s status=%s",
+            channel, recipient_id, priority, pending.id, pending.status,
         )
         return pending
+
+    def _evaluate_autopilot(
+        self,
+        organization_id: uuid.UUID | None,
+        confidence_score: float | None,
+        company_id: uuid.UUID | None,
+        body: str,
+    ) -> AutopilotDecision:
+        from app.services.autopilot import AutopilotGuardrailService
+
+        return AutopilotGuardrailService(self.session).evaluate(
+            organization_id, confidence_score=confidence_score, company_id=company_id, content=body
+        )
+
+    def _audit_autopilot_approval(
+        self,
+        pending: PendingAction,
+        organization_id: uuid.UUID | None,
+        confidence_score: float | None,
+        decision: AutopilotDecision,
+    ) -> None:
+        try:
+            from app.models.audit_trail import AgentType, DecisionType
+            from app.services.audit_trail import AuditTrailService
+
+            AuditTrailService(self.session).record_decision(
+                agent_type=AgentType.AUTOPILOT,
+                decision_type=DecisionType.AUTOPILOT_AUTO_APPROVED,
+                organization_id=organization_id,
+                opportunity_id=pending.opportunity_id,
+                pending_action_id=pending.id,
+                confidence_score=confidence_score or 1.0,
+                strategy_reasoning=decision.reason,
+                output_snapshot={"pending_action_id": str(pending.id), "channel": pending.payload.get("channel")},
+            )
+        except Exception:  # noqa: BLE001 — never let audit logging block the (already-approved) action
+            logger.warning("Failed to record autopilot approval in audit trail", exc_info=True)
 
     def dispatch_approved(self, pending_action: Any) -> ChannelResult:
         """Execute a previously APPROVED PendingAction by sending via the channel.

@@ -9,6 +9,7 @@ from app.models.account_activity import AccountActivityEvent, AccountActivityEve
 from app.models.account_brief import AccountBrief
 from app.models.anomaly import AnomalyAlert
 from app.models.audit_trail import AuditEntry
+from app.models.autopilot_config import AutopilotConfig
 from app.models.base import (
     ActionStatus,
     ActionType,
@@ -84,6 +85,7 @@ __all__ = [
     "HotLeadScore",
     "NetworkConnection",
     "AuditEntry",
+    "AutopilotConfig",
     "FailedEvent",
     "AnomalyAlert",
     "ArtifactCorrection",

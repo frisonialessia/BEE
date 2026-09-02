@@ -57,6 +57,8 @@ class AgentType(str):
     DARK_FUNNEL = "dark_funnel"
     TREND_ANALYST = "trend_analyst"
     WORKFLOW_ORCHESTRATOR = "workflow_orchestrator"
+    DYNAMIC_SEQUENCE = "dynamic_sequence"
+    AUTOPILOT = "autopilot"
 
 
 class DecisionType(str):
@@ -78,6 +80,10 @@ class DecisionType(str):
     GENERATOR_DEMOTED = "generator_demoted"      # skipped in favor of the next generator — see
                                                   # StrategyGeneratorService._run_generators and
                                                   # AuditTrailService.generator_approval_rate
+    SEQUENCE_STEP_EXECUTED = "sequence_step_executed"      # DynamicSequenceEngine._execute_step
+    ENGAGEMENT_RESPONSE_DRAFTED = "engagement_response_drafted"  # SmartEngagementEngine
+    AUTOPILOT_AUTO_APPROVED = "autopilot_auto_approved"    # PendingAction skipped human approval —
+                                                            # see app.services.autopilot
 
 
 class AuditEntry(TimestampMixin, table=True):

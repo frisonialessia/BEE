@@ -134,3 +134,40 @@ export async function updateIcpCriteria(body: IcpCriteria): Promise<IcpCriteria>
     body: JSON.stringify(body),
   });
 }
+
+export interface AutopilotConfig {
+  enabled: boolean;
+  confidence_threshold: number;
+  excluded_company_ids: string[];
+  forbidden_words: string[];
+}
+
+export interface AutopilotConfigIn {
+  enabled: boolean;
+  confidence_threshold: number;
+  excluded_company_ids: string[];
+  forbidden_words: string[];
+}
+
+export const DEFAULT_AUTOPILOT_CONFIG: AutopilotConfig = {
+  enabled: false,
+  confidence_threshold: 0.9,
+  excluded_company_ids: [],
+  forbidden_words: [],
+};
+
+/** Real-org-only, same as the rest of /dashboard/team — there's no
+ * autonomous-execution concept to demonstrate in a sandbox with no real
+ * outbound channels connected, so this isn't wired into isDemoMode() at
+ * all (unlike ICP criteria, which the sandbox pre-seeds read-only). */
+export async function fetchAutopilotConfig(): Promise<AutopilotConfig> {
+  return apiFetch<AutopilotConfig>("/api/v1/organizations/autopilot", { cache: "no-store" });
+}
+
+export async function updateAutopilotConfig(body: AutopilotConfigIn): Promise<AutopilotConfig> {
+  return apiFetch<AutopilotConfig>("/api/v1/organizations/autopilot", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
