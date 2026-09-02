@@ -81,3 +81,89 @@ def test_unknown_event_falls_back_gracefully(session):
 def test_builtin_analyzers_are_registered():
     names = {a.name for a in get_analyzers()}
     assert {"funding", "hiring", "tech_adoption", "generic_fallback"} <= names
+
+
+# ── Multisectorial signal vectors ────────────────────────────────────────────
+
+def test_franchise_expansion_signal_is_classified(session):
+    engine = SignalEngine(session)
+    payload = SignalWebhookIn(
+        title="Acme Corp is opening a new franchise location in Austin",
+        event="franchise.location.opened",
+        external_id="provider:evt_franchise_1",
+        company=CompanyRef(name="Acme Corp", domain="acme.com"),
+    )
+    outcome = engine.ingest(payload)
+
+    assert outcome.signal.signal_type == SignalType.FRANCHISE_EXPANSION
+    assert "franchise_expansion" in outcome.analyzers_applied
+    assert outcome.opportunity is not None
+    assert outcome.opportunity.strategy.get("playbook") == "franchise_expansion_outreach"
+
+
+def test_merger_acquisition_signal_is_classified(session):
+    engine = SignalEngine(session)
+    payload = SignalWebhookIn(
+        title="Acme Corp acquires Globex Inc",
+        event="merger.deal.closed",
+        external_id="provider:evt_merger_1",
+        company=CompanyRef(name="Acme Corp", domain="acme.com"),
+    )
+    outcome = engine.ingest(payload)
+
+    assert outcome.signal.signal_type == SignalType.MERGER_ACQUISITION
+    assert "merger_acquisition" in outcome.analyzers_applied
+    assert outcome.opportunity is not None
+    assert outcome.opportunity.strategy.get("playbook") == "post_merger_consolidation_outreach"
+
+
+def test_public_tender_signal_is_classified(session):
+    engine = SignalEngine(session)
+    payload = SignalWebhookIn(
+        title="Acme Corp won a public tender for infrastructure services",
+        event="tender.awarded",
+        external_id="provider:evt_tender_1",
+        company=CompanyRef(name="Acme Corp", domain="acme.com"),
+    )
+    outcome = engine.ingest(payload)
+
+    assert outcome.signal.signal_type == SignalType.PUBLIC_TENDER
+    assert "public_tender" in outcome.analyzers_applied
+    assert outcome.opportunity is not None
+
+
+def test_regulatory_change_signal_is_classified(session):
+    engine = SignalEngine(session)
+    payload = SignalWebhookIn(
+        title="New regulation mandated by the government affects Acme Corp's sector",
+        event="regulatory.update",
+        external_id="provider:evt_reg_1",
+        company=CompanyRef(name="Acme Corp", domain="acme.com"),
+    )
+    outcome = engine.ingest(payload)
+
+    assert outcome.signal.signal_type == SignalType.REGULATORY_CHANGE
+    assert "regulatory_change" in outcome.analyzers_applied
+
+
+def test_funding_grant_signal_is_classified(session):
+    engine = SignalEngine(session)
+    payload = SignalWebhookIn(
+        title="Acme Corp received a grant awarded by the innovation fund",
+        event="grant.awarded",
+        external_id="provider:evt_grant_1",
+        company=CompanyRef(name="Acme Corp", domain="acme.com"),
+    )
+    outcome = engine.ingest(payload)
+
+    assert outcome.signal.signal_type == SignalType.FUNDING_GRANT
+    assert "funding_grant" in outcome.analyzers_applied
+    assert outcome.opportunity is not None
+
+
+def test_multisectorial_analyzers_are_registered():
+    names = {a.name for a in get_analyzers()}
+    assert {
+        "franchise_expansion", "merger_acquisition", "public_tender",
+        "regulatory_change", "funding_grant",
+    } <= names

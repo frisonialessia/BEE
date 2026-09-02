@@ -341,6 +341,169 @@ class TechAdoptionStrategyGenerator(StrategyGenerator):
         )
 
 
+_MULTISECTORIAL_COPY: dict[SignalType, dict[str, str]] = {
+    SignalType.FRANCHISE_EXPANSION: {
+        "pain_point": (
+            "{company} está abriendo nuevas sucursales — cada ubicación nueva "
+            "necesita repetir el mismo proceso comercial desde cero, y sin un "
+            "sistema central, la calidad y la velocidad de cada apertura dependen "
+            "de quién esté a cargo ese día."
+        ),
+        "closing_argument": (
+            "Vimos que {company} está expandiendo su red de sucursales. Ese "
+            "crecimiento normalmente destapa la necesidad de un proceso comercial "
+            "que se replique igual de bien en la sucursal 20 que en la primera. "
+            "¿Vale una llamada de 15 minutos para ver cómo encaja?"
+        ),
+        "window_reason": (
+            "El presupuesto de una nueva apertura ya está asignado y en ejecución "
+            "activa — el momento de sumar herramientas es mientras se define el "
+            "playbook de la nueva sucursal, no después de que ya quedó fijo."
+        ),
+        "expires": "antes de que se defina el playbook operativo de la nueva sucursal",
+        "urgency": "this_month",
+        "action": "reach_out",
+        "default_channel": "email",
+        "default_playbook": "franchise_expansion_outreach",
+    },
+    SignalType.MERGER_ACQUISITION: {
+        "pain_point": (
+            "{company} está en medio de una fusión o adquisición — la entidad "
+            "combinada tiene que decidir qué herramientas y procesos de cada lado "
+            "se quedan y cuáles se descartan. Esa decisión se toma rápido y una "
+            "sola vez."
+        ),
+        "closing_argument": (
+            "Vimos el movimiento corporativo de {company}. Las consolidaciones "
+            "como esta suelen abrir una ventana corta para ganar el gasto "
+            "combinado antes de que el nuevo stack quede fijo. ¿Charlamos esta "
+            "semana mientras esa decisión sigue abierta?"
+        ),
+        "window_reason": (
+            "La revisión de proveedores heredados ocurre en los primeros 60-90 "
+            "días post-cierre, antes de que la entidad combinada estandarice su "
+            "stack definitivo."
+        ),
+        "expires": "90 días después del cierre de la operación",
+        "urgency": "immediate",
+        "action": "reach_out",
+        "default_channel": "email",
+        "default_playbook": "post_merger_consolidation_outreach",
+    },
+    SignalType.PUBLIC_TENDER: {
+        "pain_point": (
+            "{company} ganó una licitación pública con una fecha de entrega fija "
+            "y presupuesto ya aprobado — pero cumplir ese cronograma con procesos "
+            "comerciales genéricos suele quedar corto frente a lo que el contrato "
+            "exige."
+        ),
+        "closing_argument": (
+            "Vimos que {company} ganó una licitación reciente. Ese tipo de "
+            "contrato viene con plazos estrictos y presupuesto ya asignado — "
+            "vale la pena ver si podemos ayudar a cumplir el cronograma sin "
+            "fricciones. ¿20 minutos esta semana?"
+        ),
+        "window_reason": (
+            "El presupuesto de un contrato público está aprobado y etiquetado "
+            "para ese proyecto específico — la ventana de compra está abierta "
+            "desde la adjudicación hasta el arranque de la ejecución."
+        ),
+        "expires": "al inicio de la ejecución del contrato",
+        "urgency": "this_week",
+        "action": "reach_out",
+        "default_channel": "email",
+        "default_playbook": "public_tender_outreach",
+    },
+    SignalType.REGULATORY_CHANGE: {
+        "pain_point": (
+            "Un cambio regulatorio está forzando a {company} a adaptar procesos "
+            "o herramientas en un plazo de cumplimiento fijo — a diferencia de "
+            "una compra por roadmap propio, esta decisión no es opcional ni "
+            "postergable."
+        ),
+        "closing_argument": (
+            "Vimos que el nuevo marco regulatorio afecta directamente a "
+            "{company}. Ese tipo de cambio suele forzar decisiones de compra en "
+            "plazos cortos — vale la pena entender si estamos alineados antes de "
+            "que se acerque la fecha límite de cumplimiento."
+        ),
+        "window_reason": (
+            "Los plazos de cumplimiento regulatorio son fijos e impuestos "
+            "externamente — no hay margen de negociación en el timing como con "
+            "una compra discrecional."
+        ),
+        "expires": "en la fecha límite de cumplimiento normativo",
+        "urgency": "this_month",
+        "action": "research",
+        "default_channel": "email",
+        "default_playbook": "regulatory_compliance_outreach",
+    },
+    SignalType.FUNDING_GRANT: {
+        "pain_point": (
+            "{company} recibió un fondo público o subvención con presupuesto "
+            "etiquetado y requisitos de reporte — ese tipo de fondo suele exigir "
+            "justamente el tipo de inversión que todavía no tienen resuelta."
+        ),
+        "closing_argument": (
+            "Vimos que {company} recibió financiamiento de un fondo público. "
+            "Ese presupuesto suele venir con requisitos de reporte específicos — "
+            "vale la pena ver si encajamos con lo que el fondo exige antes de "
+            "que se cierre el período de ejecución."
+        ),
+        "window_reason": (
+            "Los fondos públicos tienen un período de ejecución con fecha límite "
+            "— el presupuesto no ejecutado a tiempo normalmente se pierde, lo "
+            "que crea urgencia real de gasto."
+        ),
+        "expires": "al cierre del período de ejecución del fondo",
+        "urgency": "this_month",
+        "action": "reach_out",
+        "default_channel": "email",
+        "default_playbook": "funding_grant_outreach",
+    },
+}
+
+
+@register_strategy_generator
+class MultisectorialStrategyGenerator(StrategyGenerator):
+    """Battlecard generator for the multisectorial signal vectors — franchise
+    expansion, M&A, public tenders, regulatory change, funding grants.
+
+    One generator, not five: the five signal types share the same shape
+    (a specific, time-boxed trigger with a known or inferable budget) and
+    differ only in their copy, kept in _MULTISECTORIAL_COPY above rather
+    than five near-duplicate classes.
+    """
+
+    name = "multisectorial_strategy"
+    priority = 70
+
+    def supports(self, ctx: EnrichmentContext) -> bool:
+        return ctx.signal_type in _MULTISECTORIAL_COPY
+
+    def generate(self, ctx: EnrichmentContext) -> StrategySchema:
+        company = _company(ctx)
+        copy = _MULTISECTORIAL_COPY[ctx.signal_type]
+        channel, playbook = _apply_hints(ctx, copy["default_channel"], copy["default_playbook"])
+
+        return StrategySchema(
+            pain_point=copy["pain_point"].format(company=company),
+            closing_argument=copy["closing_argument"].format(company=company),
+            timing_window=TimingWindow(
+                urgency=copy["urgency"],  # type: ignore[arg-type]
+                reason=copy["window_reason"],
+                expires_at=copy["expires"],
+            ),
+            playbook=playbook,
+            next_best_action=copy["action"],
+            channel=channel,
+            rationale=f"Score de señal {ctx.signal_score:.0f}/100 — {company}.",
+            generator=self.name,
+            generator_version="1.0.0",
+            generated_at=datetime.now(UTC),
+        )
+
+
 @register_strategy_generator
 class GenericStrategyGenerator(StrategyGenerator):
     """Safety-net battlecard generator for unclassified signals.

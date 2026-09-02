@@ -16,6 +16,11 @@ export type SignalType =
   | "engagement"
   | "news_mention"
   | "expansion"
+  | "franchise_expansion"
+  | "merger_acquisition"
+  | "public_tender"
+  | "regulatory_change"
+  | "funding_grant"
   | "other";
 
 export type SignalSource =
