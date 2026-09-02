@@ -549,6 +549,19 @@
   }
 }
 
+/* Marca del Asistente BEE — degradado azul → violeta (chart-4 → chart-5),
+ * en vez del morado plano #d567ff de antes: la mascota a todo color se
+ * perdía contra un fondo sólido del mismo tono. Un solo lugar para el
+ * degradado y el halo — usado por el botón flotante, el header del panel
+ * rápido, el hero de la página completa y los mini-avatares de burbuja. */
+.bee-assistant-gradient {
+  background: linear-gradient(135deg, var(--color-chart-4), var(--color-chart-5));
+}
+
+.bee-assistant-halo {
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-chart-5) 15%, transparent);
+}
+
 .bee-kpi-strip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));

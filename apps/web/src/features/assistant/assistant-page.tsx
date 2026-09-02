@@ -46,9 +46,9 @@ export function AssistantPage() {
     <div className="flex h-full flex-col">
       {!hasMessages ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 text-center">
-          <span className="flex size-14 items-center justify-center rounded-full bg-[#d567ff]">
+          <span className="bee-assistant-gradient bee-assistant-halo flex size-14 items-center justify-center rounded-full">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, mismo asset que el FAB (ask-bee-fab.tsx) */}
-            <img src="/assistant-bee.svg" alt="" className="size-8" aria-hidden="true" />
+            <img src="/assistant-bee.svg" alt="" className="size-6" aria-hidden="true" />
           </span>
           <div>
             <p className="text-2xl font-semibold tracking-tight">
@@ -98,9 +98,9 @@ export function AssistantPage() {
             ))}
             {pending && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="flex size-7 items-center justify-center rounded-full bg-[#d567ff]">
+                <span className="bee-assistant-gradient flex size-[17px] items-center justify-center rounded-full">
                   {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca */}
-                  <img src="/assistant-bee.svg" alt="" className="size-4" aria-hidden="true" />
+                  <img src="/assistant-bee.svg" alt="" className="size-2.5" aria-hidden="true" />
                 </span>
                 {tAssistant("thinking")}
               </div>

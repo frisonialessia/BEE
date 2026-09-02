@@ -7,9 +7,9 @@ export function ChatMessage({ message }: { message: AssistantMessage }) {
   return (
     <div className={cn("flex items-start gap-2.5", isUser && "flex-row-reverse")}>
       {!isUser && (
-        <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-[#d567ff]">
+        <span className="bee-assistant-gradient mt-0.5 flex size-[17px] shrink-0 items-center justify-center rounded-full">
           {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, mismo asset que el FAB (ask-bee-fab.tsx) */}
-          <img src="/assistant-bee.svg" alt="" className="size-4" aria-hidden="true" />
+          <img src="/assistant-bee.svg" alt="" className="size-2.5" aria-hidden="true" />
         </span>
       )}
       <div

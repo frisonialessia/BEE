@@ -42,10 +42,15 @@ export function AskBeeFab() {
     <div className="fixed bottom-5 right-5 z-40">
       {open && (
         <div className="bee-fab-panel mb-3 flex h-[420px] w-[min(340px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border bg-[var(--color-background)] shadow-[0_8px_32px_color-mix(in_srgb,var(--color-text)_16%,transparent)]">
-          <div className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3">
-            {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, no una foto */}
-            <img src="/assistant-bee.svg" alt="" className="size-7 shrink-0" aria-hidden="true" />
-            <p className="text-sm font-semibold">{t("fab.title")}</p>
+          <div className="bee-assistant-gradient flex shrink-0 items-center gap-2.5 px-4 py-3">
+            <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-white/20 shadow-[0_0_0_5px_rgba(255,255,255,0.12)]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, no una foto */}
+              <img src="/assistant-bee.svg" alt="" className="size-4" aria-hidden="true" />
+            </span>
+            <div className="min-w-0 text-white">
+              <p className="text-sm font-semibold leading-tight">{t("fab.title")}</p>
+              <p className="text-[11px] leading-tight text-white/85">{t("fab.subtitle")}</p>
+            </div>
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
@@ -88,14 +93,14 @@ export function AskBeeFab() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex size-12 items-center justify-center rounded-full bg-[#d567ff] text-white shadow-[0_4px_16px_color-mix(in_srgb,#d567ff_45%,transparent)] transition-transform hover:scale-105"
+        className="bee-assistant-gradient bee-assistant-halo flex size-[58px] items-center justify-center rounded-full text-white transition-transform hover:scale-105"
         aria-label={open ? t("fab.toggleCloseAria") : t("fab.toggleOpenAria")}
       >
         {open ? (
           <X className="size-5" />
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, sin fondo propio (a diferencia de icon.svg, que trae su hexágono claro — visible aquí encima del círculo morado del botón)
-          <img src="/assistant-bee.svg" alt="" className="size-8" aria-hidden="true" />
+          // eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, sin fondo propio (a diferencia de icon.svg, que trae su hexágono claro). Ícono chico (24px sobre un botón de 58px) a propósito: a todo color se pierde si ocupa el botón entero — con aire alrededor se lee limpio.
+          <img src="/assistant-bee.svg" alt="" className="size-6" aria-hidden="true" />
         )}
       </button>
     </div>

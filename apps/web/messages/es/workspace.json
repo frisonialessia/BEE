@@ -518,6 +518,7 @@
     },
     "fab": {
       "title": "Asistente BEE",
+      "subtitle": "En línea · responde en segundos",
       "emptyHint": "Pregúntame sobre tu pipeline, tus leads calientes, o el ranking del equipo.",
       "quickPlaceholder": "Pregunta rápido…",
       "sendAria": "Enviar",
