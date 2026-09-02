@@ -73,11 +73,39 @@ the URL given to each provider with `?org_key=<organization's key>` — or, if
 the provider supports custom headers, `X-BEE-Org-Key`. Without either, the
 behavior is the same as always (untagged).
 
-### 2. `IngestionWorker` is in-process (`asyncio.Queue`)
+### 2. `IngestionWorker` is in-process (`asyncio.Queue`) by default
 
-Starts automatically on boot when `EXTERNAL_INGESTION_ENABLED=true`. For
-**multi-instance** deployments, consider a Redis-backed queue (future work)
-so enrichment tasks aren't lost on restart.
+Starts automatically on boot when `EXTERNAL_INGESTION_ENABLED=true`. On a
+**serverless** deployment (Vercel — this project's actual target, see §7
+below) this is more than a multi-instance inconvenience: a queued task
+lives only in one function invocation's memory, so it can vanish entirely
+the moment that invocation suspends — there is no "later" for an
+in-process queue to survive into.
+
+The durable alternative (no longer future work) is `JOB_QUEUE_BACKEND=redis`
+— see `app.services.job_queue` and `app.services.external_api.worker.
+run_job_queue_tick`. Requires:
+1. `REDIS_URL` set (see §Shared state below).
+2. `apps/api/vercel.json`'s `/api/v1/internal/jobs/tick` cron entry
+   deployed (drains a batch every minute — same `CRON_SECRET`-gated,
+   Vercel-Cron-only shape as the market-scan tick in §8).
+3. Nothing else — `IngestionWorker.enqueue()` falls back to the in-process
+   queue automatically if the durable push ever fails, so this is safe to
+   flip on incrementally and never loses a task by switching backends.
+
+### 2b. Shared state (Redis, opt-in) — `REDIS_URL`
+
+Backs the durable job queue above *and* every per-process rate
+limiter/guard already in this codebase (signup, password-reset, webhook
+replay protection, the external-provider rate limiter) — see
+`app.core.redis`'s module docstring. Unset (the default) keeps every one
+of those exactly as they behave without it: process-local, correct for a
+single warm instance, just not shared across concurrent ones. Set this
+once the deployment runs more than one instance at a time and those
+guards need to hold their quota/state across all of them — no other flag
+needed for the guards (only the job queue also needs
+`JOB_QUEUE_BACKEND=redis` on top, since that one changes *how* tasks are
+processed, not just where a counter lives).
 
 ### 3. pgvector on managed Postgres (outside docker-compose)
 

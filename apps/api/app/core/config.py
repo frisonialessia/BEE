@@ -309,6 +309,24 @@ class Settings(BaseSettings):
     # Minimum time between two scans of the same company.
     MARKET_SCAN_INTERVAL_HOURS: int = 24
 
+    # ----- Durable job queue (opt-in) -------------------------------------------
+    # See app.services.job_queue and app.services.external_api.worker.
+    # IngestionWorker's asyncio.Queue lives entirely in one process's memory —
+    # on a serverless deployment (Vercel — see DEPLOY_CHECKLIST.md) a queued
+    # task can vanish the moment that function instance suspends, since there
+    # is no persistent process for a queue to live in. "redis" switches
+    # IngestionWorker.enqueue() to push onto a Redis-backed durable queue
+    # instead (requires REDIS_URL — see app.core.redis), drained by a Vercel
+    # Cron Job hitting GET /internal/jobs/tick, the same
+    # enqueue-durably/drain-on-a-cron-tick shape already proven by
+    # MarketScanOrchestrator. "in_process" (the default) is today's
+    # behavior, completely unchanged.
+    JOB_QUEUE_BACKEND: Literal["in_process", "redis"] = "in_process"
+    # Envelopes drained per cron tick. Same maxDuration=60s conservatism as
+    # MARKET_SCAN_BATCH_SIZE — each envelope runs the same processing
+    # IngestionWorker's own loop already does per task.
+    JOB_QUEUE_TICK_BATCH_SIZE: int = 20
+
     # ----- AccountResearchAgent (deep per-account research, opt-in) -------------
     # See app.services.account_research. Distinct from MarketScanOrchestrator
     # above: that pipeline is cheap, per-tick, and eager (runs on every due

@@ -9,6 +9,10 @@
     {
       "path": "/api/v1/internal/market-scan/tick",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/v1/internal/jobs/tick",
+      "schedule": "* * * * *"
     }
   ]
 }

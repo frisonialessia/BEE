@@ -88,7 +88,35 @@ class IngestionWorker:
         logger.info("IngestionWorker: stopped (processed=%d errors=%d)", self.processed_count, self.error_count)
 
     async def enqueue(self, task: IngestionTask) -> str:
-        """Add a task to the queue. Returns task_id immediately."""
+        """Add a task to the queue. Returns task_id immediately.
+
+        When ``settings.JOB_QUEUE_BACKEND == "redis"``, tries the durable
+        Redis-backed queue first (see ``run_job_queue_tick`` for how it
+        gets drained on a serverless deployment) — falls back to this
+        worker's own in-process ``asyncio.Queue`` if that push fails (no
+        Redis configured, or unreachable), so a task is never silently
+        dropped just because the durable backend is selected but
+        currently unavailable.
+        """
+        from app.core.config import get_settings
+
+        if get_settings().JOB_QUEUE_BACKEND == "redis":
+            from app.services.job_queue import get_job_queue_service
+
+            if get_job_queue_service().enqueue(_task_to_dict(task)):
+                logger.info(
+                    "IngestionWorker: enqueued task=%s type=%s provider=%s (durable queue)",
+                    task.task_id,
+                    task.task_type.value,
+                    task.provider,
+                )
+                return task.task_id
+            logger.warning(
+                "IngestionWorker: durable queue enqueue failed for task=%s — "
+                "falling back to in-process queue",
+                task.task_id,
+            )
+
         await self._queue.put(task)
         logger.info(
             "IngestionWorker: enqueued task=%s type=%s provider=%s",
@@ -485,3 +513,86 @@ def reset_ingestion_worker() -> None:
     """Reset the worker singleton (scripts/tests)."""
     global _worker  # noqa: PLW0603
     _worker = None
+
+
+@dataclass
+class JobQueueTickSummary:
+    """What one Vercel Cron invocation of the durable job queue did — also
+    what ``GET /internal/jobs/tick`` returns. Same shape/conventions as
+    ``MarketScanOrchestrator.TickSummary``: ``enabled=False`` (every count
+    at 0) is the expected, successful response for every tick until
+    ``JOB_QUEUE_BACKEND=redis`` is deliberately configured — not an error.
+    """
+
+    enabled: bool
+    processed: int = 0
+    rescheduled: int = 0
+    dead_lettered: int = 0
+    remaining_depth: int = 0
+    duration_ms: int = 0
+
+
+def run_job_queue_tick(batch_size: int | None = None) -> JobQueueTickSummary:
+    """Drain and process one batch of the durable job queue.
+
+    Reuses ``IngestionWorker._process_sync`` unchanged — this is the exact
+    same per-task processing the in-process ``asyncio.Queue`` path already
+    runs, just invoked from a cron tick instead of the background loop. A
+    task that fails is rescheduled with the Dead Letter Queue's own
+    exponential-backoff schedule (``app.models.dead_letter.
+    compute_next_retry_delay``/``_MAX_ATTEMPTS``) up to the same attempt
+    ceiling, then routed to the DLQ exactly the way ``IngestionWorker``'s
+    own in-process failure path already does — a job exhausting its
+    retries here is not a second, differently-behaved failure mode.
+    """
+    import time as _time
+
+    from app.core.config import get_settings
+    from app.models.dead_letter import _MAX_ATTEMPTS, compute_next_retry_delay
+    from app.services.job_queue import get_job_queue_service
+
+    settings = get_settings()
+    if settings.JOB_QUEUE_BACKEND != "redis":
+        return JobQueueTickSummary(enabled=False)
+
+    t0 = _time.monotonic()
+    queue = get_job_queue_service()
+    batch = queue.drain_batch(batch_size or settings.JOB_QUEUE_TICK_BATCH_SIZE)
+
+    worker = IngestionWorker()
+    processed = rescheduled = dead_lettered = 0
+    for envelope in batch:
+        task = _task_from_dict(envelope["payload"])
+        try:
+            worker._process_sync(task)  # noqa: SLF001
+            processed += 1
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("run_job_queue_tick: task %s failed", task.task_id)
+            attempt = envelope.get("attempt", 0) + 1
+            if attempt >= _MAX_ATTEMPTS:
+                worker._send_to_dlq(task, str(exc))  # noqa: SLF001
+                dead_lettered += 1
+            else:
+                delay = compute_next_retry_delay(attempt)
+                if queue.reschedule(envelope, delay_seconds=delay):
+                    rescheduled += 1
+                else:
+                    # Redis went away between drain and reschedule — don't
+                    # lose the task silently, same "never drop, worst case
+                    # escalate" rule the in-process path already follows.
+                    worker._send_to_dlq(task, str(exc))  # noqa: SLF001
+                    dead_lettered += 1
+
+    duration_ms = int((_time.monotonic() - t0) * 1000)
+    logger.info(
+        "run_job_queue_tick: processed=%d rescheduled=%d dead_lettered=%d duration_ms=%d",
+        processed, rescheduled, dead_lettered, duration_ms,
+    )
+    return JobQueueTickSummary(
+        enabled=True,
+        processed=processed,
+        rescheduled=rescheduled,
+        dead_lettered=dead_lettered,
+        remaining_depth=queue.queue_depth(),
+        duration_ms=duration_ms,
+    )
