@@ -18,6 +18,13 @@
     "via": "via {value}",
     "expires": "Expires: {date}"
   },
+  "whyThisStrategy": {
+    "heading": "Why this strategy",
+    "confidencePct": "{pct}% confidence",
+    "manualReviewExplainer": "Confidence fell below the auto-execute threshold, or this strategy matches a pattern BEE has seen in past losses — a human should review it before it goes out.",
+    "generatorReasoning": "Generator's reasoning",
+    "variant": "Variant: {arm}"
+  },
   "revenueSimulator": {
     "heading": "Revenue simulator",
     "caption": "Projects the impact of increasing outreach in a segment",

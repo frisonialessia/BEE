@@ -113,6 +113,11 @@ export const queryKeys = {
     all: ["integrations"] as const,
     list: () => [...queryKeys.integrations.all, "list"] as const,
   },
+  auditDecisions: {
+    all: ["audit-decisions"] as const,
+    strategyReasoning: (opportunityId: string) =>
+      [...queryKeys.auditDecisions.all, "strategy-reasoning", opportunityId] as const,
+  },
   control: {
     all: ["control"] as const,
     systemHealth: () => [...queryKeys.control.all, "system-health"] as const,

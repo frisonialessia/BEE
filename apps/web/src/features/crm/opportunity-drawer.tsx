@@ -13,6 +13,7 @@ import { QualificationPanel } from "@/components/forecast/qualification-panel";
 import { OpportunityCard } from "@/components/opportunity-card";
 import { RecordOutcomePanel } from "@/components/outcome/record-outcome-panel";
 import { OpportunityTimeline } from "@/components/timeline/opportunity-timeline";
+import { WhyThisStrategyPanel } from "@/components/strategy/why-this-strategy-panel";
 import { TaskListPanel } from "@/components/tasks/task-list-panel";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -155,6 +156,10 @@ export function OpportunityDrawer() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">{t("battlecardUnavailable")}</p>
+          )}
+
+          {battlecard && opportunityId && (
+            <WhyThisStrategyPanel card={battlecard} opportunityId={opportunityId} />
           )}
 
           {opportunity?.lead_id && (

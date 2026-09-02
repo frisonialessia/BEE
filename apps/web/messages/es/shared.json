@@ -18,6 +18,13 @@
     "via": "vía {value}",
     "expires": "Vence: {date}"
   },
+  "whyThisStrategy": {
+    "heading": "Por qué esta estrategia",
+    "confidencePct": "{pct}% de confianza",
+    "manualReviewExplainer": "La confianza cayó por debajo del umbral de auto-ejecución, o esta estrategia coincide con un patrón que BEE ya vio en pérdidas pasadas — conviene que una persona la revise antes de enviarla.",
+    "generatorReasoning": "Razonamiento del generador",
+    "variant": "Variante: {arm}"
+  },
   "revenueSimulator": {
     "heading": "Simulador de ingresos",
     "caption": "Proyecta el impacto de aumentar la prospección en un segmento",
