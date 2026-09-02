@@ -218,8 +218,13 @@ class ExecutiveAgent:
             # PersonalBrandService requires a vector store for semantic fragment
             # retrieval; generate_brand_brief() returns the ready-to-inject string
             # (get_brand_context() returns the full BrandContextResult object).
+            # organization_id is required here, not optional: scope_by_organization_id
+            # treats a missing id as "unscoped" (by design, for API-key-only callers),
+            # so omitting it would let get_active_profile() return ANY organization's
+            # active voice profile — see strategy_generator._query_brand_brief for the
+            # same pattern done correctly.
             svc = PersonalBrandService(self.session, get_vector_store())
-            return svc.generate_brand_brief(topic=query[:200])
+            return svc.generate_brand_brief(topic=query[:200], organization_id=opp.organization_id)
         except Exception:  # noqa: BLE001
             logger.debug("PersonalBrandService unavailable — brand_brief will be empty", exc_info=True)
             return ""
@@ -310,11 +315,16 @@ class ExecutiveAgent:
             timestamp=bundle.generated_at,
             bundle=bundle,
         )
-        webhook_emitter.emit_event(
+        delivered = webhook_emitter.emit_event(
             event.model_dump(mode="json"),
             webhook_url=url,
             secret=secret,
         )
+        if not delivered:
+            # No retry/DLQ wiring for this webhook yet (unlike the workflow
+            # orchestrator's outbound webhooks) — surfacing the failure in
+            # logs is the minimum so a silent drop is at least observable.
+            logger.warning("Artifact webhook delivery failed for opportunity %s", bundle.opportunity_id)
 
     # ── Private context resolvers ────────────────────────────────────────────
 

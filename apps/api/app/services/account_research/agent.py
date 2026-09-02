@@ -296,7 +296,7 @@ class AccountResearchAgent:
         if provider == "anthropic":
             import anthropic
 
-            client = anthropic.Anthropic(api_key=self.settings.AI_API_KEY)
+            client = anthropic.Anthropic(api_key=self.settings.AI_API_KEY, timeout=self.settings.AI_TIMEOUT_SECONDS)
             resp = client.messages.create(
                 model=self.settings.ANTHROPIC_MODEL,
                 max_tokens=350,

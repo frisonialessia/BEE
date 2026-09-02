@@ -103,7 +103,12 @@ class EmailProvider(IChannelProvider):
             msg["From"] = getattr(s, "EMAIL_FROM_ADDRESS", "bee@example.com")
             msg["To"] = payload.recipient_id
 
-            with smtplib.SMTP(getattr(s, "EMAIL_SMTP_HOST", ""), getattr(s, "EMAIL_SMTP_PORT", 587)) as server:
+            # Explicit timeout — without one, a stalled SMTP connection hangs
+            # the request thread indefinitely (matches the 10s convention
+            # used by the LinkedIn/Twitter providers' httpx clients).
+            with smtplib.SMTP(
+                getattr(s, "EMAIL_SMTP_HOST", ""), getattr(s, "EMAIL_SMTP_PORT", 587), timeout=10
+            ) as server:
                 server.ehlo()
                 server.starttls()
                 server.login(
