@@ -69,4 +69,8 @@ class CompanyOut(BaseModel):
     website: str | None
     description: str | None
     attributes: dict[str, Any]
+    # See Company.fit_score's own docstring — server-computed, not
+    # user-settable, so this appears only on CompanyOut, never on
+    # CompanyCreateIn/CompanyUpdateIn.
+    fit_score: float | None = None
     created_at: datetime

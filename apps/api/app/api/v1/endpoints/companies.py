@@ -31,6 +31,7 @@ from app.schemas.company import (
 from app.schemas.dedup import CompanyDuplicateGroup, MergeIn
 from app.services.account_activity import list_events_for_company, record_event
 from app.services.account_research import AccountResearchAgent
+from app.services.events import publish
 from app.services.external_api.orchestrator import ExternalAPIOrchestrator
 from app.services.market_scan.orchestrator import MarketScanOrchestrator
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
@@ -81,6 +82,10 @@ def create_company(
     session.add(company)
     session.commit()
     session.refresh(company)
+
+    publish("company.updated", session=session, company_id=company.id)
+    session.commit()
+
     return CompanyOut.model_validate(company)
 
 
@@ -129,6 +134,14 @@ def create_company_from_domain(
         logger.exception("create_company_from_domain: immediate scan failed for company_id=%s", company.id)
 
     session.refresh(company)
+
+    # After the scan, not before — scan_company_now is what has a chance
+    # of filling in industry/size/country, which is what fit scoring
+    # actually reads.
+    publish("company.updated", session=session, company_id=company.id)
+    session.commit()
+    session.refresh(company)
+
     return CompanyOut.model_validate(company)
 
 
@@ -304,12 +317,20 @@ def update_company(
 
     updates = data.model_dump(exclude_unset=True)
     reassigned = "owner_user_id" in updates and updates["owner_user_id"] != company.owner_user_id
+    # Only these four actually feed ICP fit scoring (see
+    # app.services.icp.fit_score) — publishing on every edit (renaming
+    # the company, changing its domain) would recompute for no reason.
+    fit_relevant = bool({"industry", "size", "country", "revenue_range"} & updates.keys())
     for field, value in updates.items():
         setattr(company, field, value)
 
     session.add(company)
     session.commit()
     session.refresh(company)
+
+    if fit_relevant:
+        publish("company.updated", session=session, company_id=company.id)
+        session.commit()
 
     record_event(
         session,

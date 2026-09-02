@@ -23,6 +23,7 @@ from app.schemas.organization import (
     OrganizationProfileIn,
     OrganizationProfileOut,
 )
+from app.services.events import publish
 
 router = APIRouter(prefix="/organizations", tags=["Organizations"])
 
@@ -65,6 +66,12 @@ def set_icp_criteria(
     session.add(org)
     session.commit()
     session.refresh(org)
+
+    # New criteria can shift what "a good fit" means for every account at
+    # once, not just one — see app.services.icp.recompute_org_fit_scores.
+    publish("icp_criteria.updated", session=session, organization_id=org.id)
+    session.commit()
+
     return ICPCriteriaOut(**org.icp_criteria)
 
 

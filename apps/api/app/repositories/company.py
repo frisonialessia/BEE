@@ -13,6 +13,7 @@ from app.models.opportunity import Opportunity
 from app.models.signal import Signal
 from app.repositories.base import BaseRepository
 from app.schemas.signal import CompanyRef
+from app.services.events import publish
 from app.services.permissions import scope_by_organization_id
 
 
@@ -107,7 +108,13 @@ class CompanyRepository(BaseRepository[Company]):
             industry=ref.industry,
             country=ref.country,
         )
-        return self.add(company)
+        created = self.add(company)
+        # A brand-new company should get an initial fit_score immediately
+        # if the org already has an ICP configured, rather than sitting at
+        # None until some unrelated later edit happens to trigger a
+        # recompute — see app.services.icp.recompute_company_fit_score.
+        publish("company.updated", session=self.session, company_id=created.id)
+        return created
 
     def find_duplicate_groups(self, organization_id: uuid.UUID | None = None) -> list[tuple[str, list[Company]]]:
         """Group companies that are very likely the same real-world account.

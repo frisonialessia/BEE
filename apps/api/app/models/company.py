@@ -82,6 +82,19 @@ class Company(TimestampMixin, table=True):
     # this account" without querying MarketScanLog.
     last_scanned_at: datetime | None = Field(default=None)
 
+    # ----- ICP fit (0-100, server-authoritative) --------------------------------
+    # How well this account matches the organization's stated ICP
+    # (Organization.icp_criteria) — see app.services.icp.fit_score for the
+    # exact algorithm (a straight port of the frontend's own lib/icp.ts,
+    # which computed this live and only in the browser; nothing server-side
+    # could sort, filter, or notify on it before this). NULL means either
+    # "ICP not configured for this org yet" or "not recomputed since a
+    # relevant field changed" — never fabricated as 0, which would read as
+    # "definitely a bad fit" instead of "unknown". Recomputed via
+    # app.services.events listeners on company edits and ICP criteria
+    # changes — see app/services/events/listeners.py.
+    fit_score: float | None = Field(default=None, index=True)
+
     # ----- Relationships -------------------------------------------------------
     leads: list["Lead"] = Relationship(back_populates="company")
     signals: list["Signal"] = Relationship(back_populates="company")

@@ -17,5 +17,30 @@ below for its exact kwarg contract):
 
 from __future__ import annotations
 
-# Phase 3 (ICP fit-score persistence) and Phase 4 (meetings -> engagement
-# feedback) add their subscribe() calls here — see those commits.
+import uuid
+
+from sqlmodel import Session
+
+from app.services.events.dispatcher import subscribe
+from app.services.icp import recompute_company_fit_score, recompute_org_fit_scores
+
+# ----- ICP fit-score persistence --------------------------------------------
+# See app/services/icp/recompute.py for what these actually do; this file
+# only wires *when* they run. Neither listener commits — same transaction
+# as the publisher (see dispatcher.py's own docstring on why), so it's
+# the publisher's job to commit after publish() returns, same as it
+# commits its own primary change.
+
+
+def _on_company_updated(*, session: Session, company_id: uuid.UUID) -> None:
+    recompute_company_fit_score(session, company_id)
+
+
+def _on_icp_criteria_updated(*, session: Session, organization_id: uuid.UUID) -> None:
+    recompute_org_fit_scores(session, organization_id)
+
+
+subscribe("company.updated", _on_company_updated)
+subscribe("icp_criteria.updated", _on_icp_criteria_updated)
+
+# Phase 4 (meetings -> engagement feedback) adds its subscribe() calls here.
