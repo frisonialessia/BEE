@@ -116,6 +116,11 @@ class OpportunityOut(BaseModel):
     amount: float | None = None
     expected_close_date: date | None = None
     qualification: dict[str, bool] = Field(default_factory=dict)
+    # Deal context captured at manual creation — see app.models.opportunity.
+    source: str | None = None
+    next_meeting_at: datetime | None = None
+    meetings_held_count: int = 0
+    photo_url: str | None = None
     # Needed for trend/cohort BI (created_at) — was tracked on the model
     # (TimestampMixin) but never returned to clients.
     created_at: datetime
@@ -193,6 +198,13 @@ class OpportunityCreateIn(BaseModel):
     # signal score, seeding both the synthesized signal's and the
     # opportunity's score until real signals or outcomes recalibrate it.
     score: float = Field(default=50.0, ge=0, le=100)
+
+    # ----- Deal context (optional, parity with LeadCreateIn) --------------------
+    amount: float | None = Field(default=None, ge=0)
+    source: str | None = Field(default=None, max_length=100)
+    next_meeting_at: datetime | None = None
+    meetings_held_count: int | None = Field(default=None, ge=0)
+    photo_url: str | None = Field(default=None, max_length=300_000)
 
 
 class SignalIngestResult(BaseModel):

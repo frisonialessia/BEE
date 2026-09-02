@@ -2,6 +2,8 @@
   "closeMenu": "Close navigation menu",
   "openMenu": "Open navigation menu",
   "mainNavigation": "Main navigation",
+  "collapseSidebar": "Collapse menu",
+  "expandSidebar": "Expand menu",
   "groups": {
     "accounts": "Accounts",
     "intelligence": "Intelligence",

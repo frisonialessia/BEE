@@ -177,6 +177,11 @@ def create_opportunity(
         title=data.title or f"Oportunidad: {company_name}",
         score=data.score,
         strategy={},
+        amount=data.amount,
+        source=data.source,
+        next_meeting_at=data.next_meeting_at,
+        meetings_held_count=data.meetings_held_count or 0,
+        photo_url=data.photo_url,
     )
     session.add(opportunity)
     session.commit()
@@ -288,6 +293,10 @@ def list_opportunities(
             if item.expected_close_date
             else None,
             "qualification": item.qualification or {},
+            "source": item.source,
+            "next_meeting_at": item.next_meeting_at.isoformat() if item.next_meeting_at else None,
+            "meetings_held_count": item.meetings_held_count,
+            "photo_url": item.photo_url,
             "created_at": item.created_at.isoformat(),
             "updated_at": item.updated_at.isoformat(),
             # Win/Loss Analysis — null until the outcome is recorded.

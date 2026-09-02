@@ -5,7 +5,6 @@
     "description": "El pipeline real, etapa por etapa — arrastra una tarjeta para moverla"
   },
   "board": {
-    "toolbarHint": "Arrastra una tarjeta para moverla de etapa, o usa el selector de cada tarjeta",
     "live": "En vivo",
     "demo": "Datos demo",
     "newOpportunity": "+ Nueva oportunidad",

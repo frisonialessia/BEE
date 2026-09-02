@@ -1,13 +1,17 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/logo";
 import { useMobileNav } from "@/components/dashboard/mobile-nav-context";
 import { NAV_GROUPS, type NavGroup } from "@/lib/nav-items";
 import { cn } from "@/lib/utils";
+
+const COLLAPSE_KEY = "bee-rail-collapsed";
 
 /** El Resumen va primero — es lo más importante, la vista que responde
  *  "¿cómo va todo?" de un vistazo. Cuenta, notificaciones y el asistente
@@ -27,7 +31,14 @@ import { cn } from "@/lib/utils";
 
 /** Sidebar lateral con nombre de página visible en cada ítem de navegación.
  *  En pantallas chicas (<768px) vive fuera de cuadro y entra como panel
- *  superpuesto — ver useMobileNav y .bee-rail en globals.css. */
+ *  superpuesto — ver useMobileNav y .bee-rail en globals.css.
+ *
+ *  Contraíble a solo-íconos (botón al pie, persistido en localStorage) —
+ *  el ancho fijo le quitaba espacio real al contenido, que es lo que
+ *  termina viéndose condensado. Solo aplica en escritorio: el panel
+ *  superpuesto de mobile siempre se abre a ancho completo (ver el
+ *  media query de .bee-rail--collapsed en globals.css), donde no hay
+ *  contenido de al lado compitiendo por espacio. */
 export function DashboardRail({
   groups = NAV_GROUPS,
   homeHref = "/dashboard",
@@ -38,6 +49,35 @@ export function DashboardRail({
   const pathname = usePathname();
   const { open, close } = useMobileNav();
   const t = useTranslations("nav");
+  // Starts expanded on every render up to and including hydration (/probar
+  // renders this rail directly, with no client-only auth gate in front of
+  // it like the real dashboard has — so unlike OnboardingProvider, this
+  // one really can be part of the server-rendered HTML) and only then
+  // syncs from localStorage — a one-time mount read, not a state->effect
+  // loop, so no cascading-render risk despite the lint rule's default
+  // assumption.
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "1");
+    } catch {
+      // Private browsing / storage blocked — stays expanded, no crash.
+    }
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(COLLAPSE_KEY, next ? "1" : "0");
+      } catch {
+        // Same as above — losing the preference is fine, breaking isn't.
+      }
+      return next;
+    });
+  }
 
   return (
     <>
@@ -49,15 +89,18 @@ export function DashboardRail({
           onClick={close}
         />
       )}
-      <aside className={cn("bee-rail", open && "bee-rail--open")} aria-label={t("mainNavigation")}>
+      <aside
+        className={cn("bee-rail", open && "bee-rail--open", collapsed && "bee-rail--collapsed")}
+        aria-label={t("mainNavigation")}
+      >
         <Link href={homeHref} className="mb-4 px-1.5" aria-label="Inicio BEE" onClick={close}>
-          <Logo />
+          <Logo withText={!collapsed} />
         </Link>
 
         <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain">
           {groups.map((group, gi) => (
             <div key={group.groupKey ?? `group-${gi}`} className={gi > 0 ? "mt-3" : undefined}>
-              {group.groupKey && (
+              {group.groupKey && !collapsed && (
                 <p className="mb-1 px-2.5 bee-eyebrow">
                   {t(`groups.${group.groupKey}`)}
                 </p>
@@ -66,6 +109,7 @@ export function DashboardRail({
                 {group.items.map(({ href, icon: Icon, labelKey, ...rest }) => {
                   const exact = "exact" in rest && rest.exact;
                   const active = exact ? pathname === href : pathname.startsWith(href);
+                  const label = t(`items.${labelKey}`);
 
                   return (
                     <Link
@@ -76,10 +120,15 @@ export function DashboardRail({
                       // nav items by their own href, since this rail is the one
                       // piece of chrome mounted (and identical) on every route.
                       data-tour={href}
-                      className={cn("bee-rail-link", active && "bee-rail-link--active")}
+                      title={collapsed ? label : undefined}
+                      className={cn(
+                        "bee-rail-link",
+                        active && "bee-rail-link--active",
+                        collapsed && "bee-rail-link--collapsed",
+                      )}
                     >
                       <Icon className="size-4 shrink-0 stroke-[1.5]" />
-                      <span>{t(`items.${labelKey}`)}</span>
+                      {!collapsed && <span>{label}</span>}
                     </Link>
                   );
                 })}
@@ -87,6 +136,17 @@ export function DashboardRail({
             </div>
           ))}
         </nav>
+
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          className="bee-rail-collapse-toggle"
+          aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")}
+          title={collapsed ? t("expandSidebar") : t("collapseSidebar")}
+        >
+          {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
+          {!collapsed && <span>{t("collapseSidebar")}</span>}
+        </button>
       </aside>
     </>
   );

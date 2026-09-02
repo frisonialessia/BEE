@@ -2,6 +2,8 @@
   "closeMenu": "Cerrar menú de navegación",
   "openMenu": "Abrir menú de navegación",
   "mainNavigation": "Navegación principal",
+  "collapseSidebar": "Contraer menú",
+  "expandSidebar": "Expandir menú",
   "groups": {
     "accounts": "Cuentas",
     "intelligence": "Inteligencia",

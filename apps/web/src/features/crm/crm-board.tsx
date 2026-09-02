@@ -173,7 +173,7 @@ function CrmColumn({
   const priorityHref = pathname?.startsWith("/probar") ? "/probar/priority" : "/dashboard/priority";
 
   return (
-    <div className="flex h-full w-[min(100%,280px)] shrink-0 flex-col">
+    <div className="flex w-[min(100%,280px)] shrink-0 flex-col">
       <div className="mb-1 flex shrink-0 items-baseline justify-between px-1">
         <div className="flex items-center gap-1">
           <h3 className="bee-eyebrow">{label}</h3>
@@ -214,15 +214,13 @@ function CrmColumn({
           onDrop(stage);
         }}
         className={cn(
-          // h-full (not the old max-h-[65vh]) — this column now stretches
-          // to match the row's own height, which is itself the page-level
-          // bee-page-fill/bee-panel-fill standard (globals.css), not a
-          // vh value measured against the whole browser viewport (which
-          // undercounted how much space was actually available — same
-          // fix as Control's bottom-row height bug). An empty column
-          // still reads fine at this height: its "Sin oportunidades aquí"
-          // message centers within it via flex, same as before.
-          "flex h-full min-h-[220px] flex-1 flex-col gap-2.5 overflow-y-auto rounded-[var(--radius-lg)] border-2 border-dashed border-transparent bg-[var(--color-primary)]/25 p-2.5 transition-colors",
+          // No fixed/percentage height and no overflow-y-auto here anymore
+          // — the column grows with its own cards and the whole page
+          // scrolls, same as every other section (Resumen included),
+          // instead of being locked to viewport height with its own
+          // internal scrollbar. min-h keeps an empty column's "Sin
+          // oportunidades aquí" message from collapsing to nothing.
+          "flex min-h-[160px] flex-col gap-2.5 rounded-[var(--radius-lg)] border-2 border-dashed border-transparent bg-[var(--color-primary)]/25 p-2.5 transition-colors",
           over && "border-[var(--color-chart-4)] bg-[var(--color-chart-4)]/10",
         )}
       >
@@ -304,14 +302,11 @@ export function CrmBoard() {
   }
 
   const header = (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-      <p className="bee-caption">{t("toolbarHint")}</p>
-      <div className="flex items-center gap-2">
-        <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demo")}</Badge>
-        <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary text-xs">
-          {t("newOpportunity")}
-        </button>
-      </div>
+    <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
+      <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demo")}</Badge>
+      <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary text-xs">
+        {t("newOpportunity")}
+      </button>
     </div>
   );
   const newForm = showNew && <NewOpportunityForm onDone={() => setShowNew(false)} />;
@@ -341,21 +336,17 @@ export function CrmBoard() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="shrink-0">
-        {header}
-        {newForm}
-      </div>
+    <div>
+      {header}
+      {newForm}
 
-      {/* h-full + the flex default (items-stretch): every column now
-          matches this row's own height (see bee-page-fill/bee-panel-fill
-          in globals.css) instead of each other's content height — an
-          intentional, defined board size a rep can see more leads within,
-          not an accidental one driven by whichever column had the most
-          cards. min-h-0: this row is a flex-1 child of the h-full column
-          above, and needs it to actually shrink to available space
-          instead of growing past it (the standard flex-child gotcha). */}
-      <div className="flex h-full min-h-0 flex-1 gap-4 overflow-x-auto pb-2">
+      {/* items-start (not the default items-stretch): each column sizes to
+          its own cards instead of all four being forced to match
+          whichever one has the most — that's what let the whole board's
+          height grow with real content and the page scroll normally,
+          instead of every column being locked to a shared fixed height
+          with its own internal scrollbar. */}
+      <div className="flex items-start gap-4 overflow-x-auto pb-2">
         {CRM_STAGES.map((s) => (
           <CrmColumn
             key={s.id}

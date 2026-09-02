@@ -358,13 +358,47 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  width: 232px;
+  width: 204px;
   flex-shrink: 0;
   padding: 1rem 0.75rem;
   background: var(--color-background);
   border-right: 1px solid var(--color-divider);
   gap: 0.25rem;
   overflow-y: auto;
+  transition: width 160ms ease;
+}
+
+/* Solo-íconos — el ancho fijo del rail le restaba espacio real al
+   contenido de cada página, que es lo que terminaba viéndose condensado.
+   Ver dashboard-rail.tsx's toggle. */
+.bee-rail--collapsed {
+  width: 64px;
+}
+
+.bee-rail-collapse-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 34px;
+  padding: 0 0.625rem;
+  margin-top: 0.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--bee-card-border);
+  color: var(--color-text-muted);
+  font-size: var(--bee-text-caption);
+  font-weight: 500;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.bee-rail-collapse-toggle:hover {
+  background: var(--color-primary);
+  color: var(--color-text);
+}
+
+.bee-rail--collapsed .bee-rail-collapse-toggle {
+  justify-content: center;
+  padding: 0;
 }
 
 .bee-rail-link {
@@ -385,6 +419,11 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.bee-rail-link--collapsed {
+  justify-content: center;
+  padding: 0;
 }
 
 .bee-rail-link:hover {
@@ -421,6 +460,18 @@
   .bee-rail--open {
     transform: translateX(0);
     box-shadow: 12px 0 32px color-mix(in srgb, var(--color-text) 14%, transparent);
+  }
+
+  /* The overlay panel always opens at full width on mobile — there's no
+     content beside it competing for space, so "collapsed" (a desktop-only
+     preference, possibly persisted from an earlier session) never applies
+     here. */
+  .bee-rail--collapsed {
+    width: 232px;
+  }
+
+  .bee-rail-collapse-toggle {
+    display: none;
   }
 
   .bee-rail-overlay {
@@ -562,11 +613,16 @@
   box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-chart-5) 15%, transparent);
 }
 
-/* Tighter halo for the floating launcher specifically — "el globo" reads
- * as too large with the full 8px ring at that small a size, on top of the
- * button's own footprint. */
-.bee-assistant-halo-sm {
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-chart-5) 14%, transparent);
+/* The floating launcher itself — a light fill (the site's own background,
+ * not a filled brand color) with a thick colored contour instead of the
+ * gradient fill: the button was carrying more visual weight than a
+ * launcher should, competing with the actual tools instead of just
+ * pointing at them. The mascot stays full-color and is now the only
+ * saturated thing in the button. */
+.bee-assistant-fab {
+  background: var(--color-background);
+  border: 3px solid var(--color-chart-5);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--color-text) 14%, transparent);
 }
 
 .bee-kpi-strip {

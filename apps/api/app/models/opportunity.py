@@ -97,6 +97,21 @@ class Opportunity(TimestampMixin, table=True):
     # keys read as "not yet confirmed", never as "disqualified".
     qualification: dict[str, bool] = Field(default_factory=dict, sa_column=Column(JSON))
 
+    # ----- Deal context (captured at manual creation, see POST /opportunities) --
+    # All optional, all rep-entered background the AI strategy generator can't
+    # infer on its own — same "not filled in yet is fine" convention as
+    # Lead's own deal-context fields (see app.models.lead.Lead), which this
+    # mirrors for parity between the two manual-creation forms.
+    source: str | None = Field(default=None, max_length=100)
+    next_meeting_at: datetime | None = Field(default=None)
+    # Prior contact the rep already had with this account before BEE ever
+    # tracked it — a manual count, not derived from Meeting rows (a brand
+    # new Opportunity has none of those yet at creation time).
+    meetings_held_count: int = Field(default=0)
+    # A client-resized data: URI, not a link — see User.avatar_url's
+    # docstring for the reasoning and the size cap this relies on.
+    photo_url: str | None = Field(default=None, max_length=300_000)
+
     # ----- Outcome detail (Win/Loss Analysis) -----------------------------------
     # Set once, by FeedbackLoopService.record_outcome, the moment status
     # transitions to WON/LOST — never edited afterward (outcome recording is

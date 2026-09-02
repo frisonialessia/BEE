@@ -93,7 +93,7 @@ export function AskBeeFab() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="bee-assistant-gradient bee-assistant-halo-sm flex size-12 items-center justify-center rounded-full text-white transition-transform hover:scale-105"
+        className="bee-assistant-fab flex size-12 items-center justify-center rounded-full text-[var(--color-chart-5)] transition-transform hover:scale-105"
         aria-label={open ? t("fab.toggleCloseAria") : t("fab.toggleOpenAria")}
       >
         {open ? (

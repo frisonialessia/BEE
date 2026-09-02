@@ -111,6 +111,56 @@ class TestCreateOpportunityManually:
         assert opportunity.strategy.get("pain_point")
         assert opportunity.strategy.get("closing_argument")
 
+    def test_deal_context_fields_round_trip(self, client: TestClient, session: Session) -> None:
+        """amount/source/next_meeting_at/meetings_held_count/photo_url —
+        optional deal context a rep can capture at creation time, parity
+        with LeadCreateIn's own deal-context fields."""
+        _org, owner = _make_org_and_owner(session, "OrgDealContext")
+
+        resp = client.post(
+            "/api/v1/opportunities",
+            headers=_auth_headers(owner),
+            json={
+                "company_name": "Nimbus Cloud",
+                "description": "Referido por un cliente actual, ya tuvimos dos llamadas previas.",
+                "amount": 42000,
+                "source": "referral",
+                "next_meeting_at": "2026-09-10T15:00:00Z",
+                "meetings_held_count": 2,
+                "photo_url": "data:image/png;base64,abc123",
+            },
+        )
+        assert resp.status_code == 201, resp.text
+        body = resp.json()
+        assert body["amount"] == 42000
+        assert body["source"] == "referral"
+        assert body["next_meeting_at"] == "2026-09-10T15:00:00"
+        assert body["meetings_held_count"] == 2
+        assert body["photo_url"] == "data:image/png;base64,abc123"
+
+        opportunity = session.get(Opportunity, uuid.UUID(body["id"]))
+        assert opportunity is not None
+        assert opportunity.amount == 42000
+        assert opportunity.meetings_held_count == 2
+
+    def test_deal_context_fields_default_when_omitted(self, client: TestClient, session: Session) -> None:
+        """Every deal-context field is optional — omitting all of them keeps
+        today's behavior unchanged (no 422, no accidental defaults)."""
+        _org, owner = _make_org_and_owner(session, "OrgDealContextOmitted")
+
+        resp = client.post(
+            "/api/v1/opportunities",
+            headers=_auth_headers(owner),
+            json={"company_name": "Plain Co", "description": "Sin contexto adicional."},
+        )
+        assert resp.status_code == 201, resp.text
+        body = resp.json()
+        assert body["amount"] is None
+        assert body["source"] is None
+        assert body["next_meeting_at"] is None
+        assert body["meetings_held_count"] == 0
+        assert body["photo_url"] is None
+
     def test_reuses_existing_company_by_domain_instead_of_duplicating(
         self, client: TestClient, session: Session
     ) -> None:
