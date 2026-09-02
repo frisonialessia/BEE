@@ -121,6 +121,146 @@ function formFromMeeting(meeting: Meeting): MeetingFormState {
   };
 }
 
+// Solid fills for the sidebar's time-breakdown bars — the hour grid's
+// blocks use the pastel bee-bento--* tint classes (right for a filled
+// card), but a 4px-tall bar needs a real color, not a pastel wash. Same
+// chart-N variables the rest of the app already assigns to these ideas
+// elsewhere (chart-1 = warm/hot, chart-4 = primary/blue, chart-5 = muted,
+// chart-6 = violet).
+const CLIENT_CONTEXT_BAR_COLOR: Record<MeetingClientContext, string> = {
+  active_client: "var(--color-chart-4)",
+  hot_lead: "var(--color-chart-1)",
+  prospect: "var(--color-chart-6)",
+  new_contact: "var(--color-chart-5)",
+};
+const CLIENT_CONTEXT_ORDER: MeetingClientContext[] = ["active_client", "hot_lead", "prospect", "new_contact"];
+
+function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+/** 6 full weeks (Monday-start) covering `monthCursor`'s month — always 42
+ * cells so the grid's height never jumps between months with 4 vs 6 rows. */
+function buildMonthGrid(monthCursor: Date): Date[] {
+  const gridStart = startOfWeek(startOfMonth(monthCursor));
+  return Array.from({ length: 42 }, (_, i) => new Date(gridStart.getTime() + i * DAY_MS));
+}
+
+function MiniMonthCalendar({
+  monthCursor,
+  onMonthChange,
+  weekDays,
+  meetingDates,
+  onSelectDay,
+  locale,
+}: {
+  monthCursor: Date;
+  onMonthChange: (next: Date) => void;
+  weekDays: Date[];
+  meetingDates: Set<string>;
+  onSelectDay: (day: Date) => void;
+  locale: Locale;
+}) {
+  const intlLocale = locale === "en" ? "en-US" : "es-MX";
+  const grid = useMemo(() => buildMonthGrid(monthCursor), [monthCursor]);
+  const weekdayLabels = useMemo(
+    () => grid.slice(0, 7).map((d) => new Intl.DateTimeFormat(intlLocale, { weekday: "narrow" }).format(d)),
+    [grid, intlLocale],
+  );
+  const todayStr = new Date().toDateString();
+  const weekDayStrs = new Set(weekDays.map((d) => d.toDateString()));
+
+  return (
+    <div className="bee-surface bee-bento-pad">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-sm font-semibold capitalize">
+          {new Intl.DateTimeFormat(intlLocale, { month: "long", year: "numeric" }).format(monthCursor)}
+        </p>
+        <div className="flex gap-0.5">
+          <button
+            type="button"
+            onClick={() => onMonthChange(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))}
+            className="bee-btn-ghost px-1.5"
+          >
+            <ChevronLeft className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onMonthChange(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))}
+            className="bee-btn-ghost px-1.5"
+          >
+            <ChevronRight className="size-3.5" />
+          </button>
+        </div>
+      </div>
+      <div className="grid grid-cols-7 gap-y-0.5 text-center">
+        {weekdayLabels.map((label, i) => (
+          <span key={i} className="bee-micro text-muted-foreground">
+            {label}
+          </span>
+        ))}
+        {grid.map((day) => {
+          const inMonth = day.getMonth() === monthCursor.getMonth();
+          const isToday = day.toDateString() === todayStr;
+          const isSelectedWeek = weekDayStrs.has(day.toDateString());
+          const hasMeeting = meetingDates.has(day.toDateString());
+          return (
+            <button
+              key={day.toISOString()}
+              type="button"
+              onClick={() => onSelectDay(day)}
+              className={`relative rounded-[var(--radius-sm)] py-1 text-xs transition-colors ${
+                isSelectedWeek ? "bg-[var(--color-chart-4)]/15" : "hover:bg-[var(--color-primary)]/30"
+              } ${inMonth ? "" : "text-muted-foreground/40"} ${isToday ? "font-bold text-[var(--color-chart-4)]" : ""}`}
+            >
+              {day.getDate()}
+              {hasMeeting && (
+                <span className="absolute inset-x-0 bottom-0.5 flex justify-center">
+                  <span className="size-1 rounded-full bg-[var(--color-chart-4)]" />
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TimeBreakdownBars({
+  totals,
+  grandTotal,
+}: {
+  totals: Record<MeetingClientContext, number>;
+  grandTotal: number;
+}) {
+  const t = useTranslations("calendar");
+  if (grandTotal === 0) return null;
+
+  return (
+    <div className="bee-surface bee-bento-pad space-y-2.5">
+      <p className="bee-eyebrow">{t("sidebar.timeBreakdown")}</p>
+      {CLIENT_CONTEXT_ORDER.filter((key) => totals[key] > 0).map((key) => {
+        const pct = Math.round((totals[key] / grandTotal) * 100);
+        return (
+          <div key={key} className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="bee-micro">{t(`clientContext.${key}`)}</span>
+              <span className="bee-micro font-mono">{pct}%</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-[var(--color-card)]">
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${pct}%`, background: CLIENT_CONTEXT_BAR_COLOR[key] }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Calendario — vista semanal, cada reunión ligada opcionalmente a una
  *  oportunidad o un lead: client_context (Cliente activo/Lead caliente/
  *  Prospecto/Primer contacto) lo calcula el backend a partir de datos que
@@ -138,11 +278,34 @@ export function CalendarPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // The mini month calendar follows whatever week the main grid is showing
+  // — jumping weeks via "Hoy"/prev/next/a day click keeps both in sync,
+  // via changeWeek() below clearing the override in the same event handler
+  // — but browsing the mini calendar to a different month on its own
+  // (peeking ahead, via its own prev/next month buttons) doesn't yank the
+  // main grid along with it. No effect needed: both setState calls happen
+  // together in one event handler, not chained across a render.
+  const [monthOverride, setMonthOverride] = useState<Date | null>(null);
+  const monthCursor = monthOverride ?? weekStart;
+  function changeWeek(next: Date) {
+    setWeekStart(next);
+    setMonthOverride(null);
+  }
+
   const weekEnd = useMemo(() => new Date(weekStart.getTime() + 7 * DAY_MS), [weekStart]);
-  const { data: meetings, isLoading } = useMeetings({
-    startsAfter: weekStart.toISOString(),
-    startsBefore: weekEnd.toISOString(),
+  // Padded well past the visible week (~5 weeks either side) so the mini
+  // month calendar's own meeting-dot markers have data too, without a
+  // second query — one fetch backs both widgets.
+  const queryStart = useMemo(() => new Date(weekStart.getTime() - 35 * DAY_MS), [weekStart]);
+  const queryEnd = useMemo(() => new Date(weekStart.getTime() + 42 * DAY_MS), [weekStart]);
+  const { data: allMeetings, isLoading } = useMeetings({
+    startsAfter: queryStart.toISOString(),
+    startsBefore: queryEnd.toISOString(),
   });
+  const meetings = useMemo(
+    () => (allMeetings ?? []).filter((m) => m.starts_at >= weekStart.toISOString() && m.starts_at < weekEnd.toISOString()),
+    [allMeetings, weekStart, weekEnd],
+  );
   const { data: users } = useUsers();
   const { data: oppsResult } = useOpportunities(undefined, 100);
   const { data: leadsResult } = useLeads(100);
@@ -167,6 +330,29 @@ export function CalendarPage() {
     for (const list of map.values()) list.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
     return map;
   }, [meetings, days]);
+
+  // Which calendar days (across the whole padded query range, not just
+  // this week) have at least one meeting — the mini calendar's dots.
+  const meetingDates = useMemo(
+    () => new Set((allMeetings ?? []).map((m) => new Date(m.starts_at).toDateString())),
+    [allMeetings],
+  );
+
+  // Minutes of this week's meetings by client_context — the sidebar's
+  // "time breakdown" bars, same categories/colors the hour grid's blocks
+  // already use (see CLIENT_CONTEXT_TONE), not a calendar-specific
+  // taxonomy invented on the side.
+  const timeBreakdown = useMemo(() => {
+    const totals: Record<MeetingClientContext, number> = {
+      active_client: 0,
+      hot_lead: 0,
+      prospect: 0,
+      new_contact: 0,
+    };
+    for (const m of meetings) totals[m.client_context ?? "new_contact"] += m.duration_minutes;
+    const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+    return { totals, grandTotal };
+  }, [meetings]);
 
   const today = new Date().toDateString();
 
@@ -253,13 +439,27 @@ export function CalendarPage() {
         </button>
       </header>
 
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr]">
+        <aside className="space-y-4 lg:order-1">
+          <MiniMonthCalendar
+            monthCursor={monthCursor}
+            onMonthChange={setMonthOverride}
+            weekDays={days}
+            meetingDates={meetingDates}
+            onSelectDay={(day) => changeWeek(startOfWeek(day))}
+            locale={locale}
+          />
+          <TimeBreakdownBars totals={timeBreakdown.totals} grandTotal={timeBreakdown.grandTotal} />
+        </aside>
+
+        <div className="lg:order-2">
       <div className="mb-4 flex items-center gap-2">
-        <button type="button" onClick={() => setWeekStart(startOfWeek(new Date()))} className="bee-btn-ghost text-xs">
+        <button type="button" onClick={() => changeWeek(startOfWeek(new Date()))} className="bee-btn-ghost text-xs">
           {t("page.today")}
         </button>
         <button
           type="button"
-          onClick={() => setWeekStart(new Date(weekStart.getTime() - 7 * DAY_MS))}
+          onClick={() => changeWeek(new Date(weekStart.getTime() - 7 * DAY_MS))}
           aria-label={t("page.prevWeek")}
           className="bee-btn-ghost px-2"
         >
@@ -267,7 +467,7 @@ export function CalendarPage() {
         </button>
         <button
           type="button"
-          onClick={() => setWeekStart(new Date(weekStart.getTime() + 7 * DAY_MS))}
+          onClick={() => changeWeek(new Date(weekStart.getTime() + 7 * DAY_MS))}
           aria-label={t("page.nextWeek")}
           className="bee-btn-ghost px-2"
         >
@@ -370,6 +570,8 @@ export function CalendarPage() {
           </div>
         </div>
       )}
+        </div>
+      </div>
 
       {/* Detail dialog */}
       <Dialog open={detail !== null} onOpenChange={(open) => !open && setDetail(null)}>

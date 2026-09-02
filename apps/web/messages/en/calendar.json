@@ -10,6 +10,9 @@
     "emptyDay": "No meetings",
     "loading": "Loading…"
   },
+  "sidebar": {
+    "timeBreakdown": "Time breakdown"
+  },
   "clientContext": {
     "active_client": "Active client",
     "hot_lead": "Hot lead",
