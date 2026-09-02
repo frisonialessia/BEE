@@ -75,8 +75,11 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * stores backing Control/Red/Voz de marca/Resiliencia (see the sections
  * below) — a returning visitor on an older snapshot never had those keys
  * seeded at all, so without this bump those 4 sections would load empty
- * instead of the intended full simulation. */
-const SEED_VERSION = "4";
+ * instead of the intended full simulation; `"5"` adds 2 more lost seeds
+ * (s19/s20) with distinct named competitors (Apollo.io, Clay) so Win/Loss's
+ * `Competitors` box has as many rows as `Loss reasons` (both 5) instead of
+ * visibly shorter, and reads as more than just competing CRMs. */
+const SEED_VERSION = "5";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Which language the currently-stored seed was written in — separate from
