@@ -16,7 +16,7 @@ import type { Locale } from "@/i18n/locales";
 import type { MeetingCreateIn } from "@/lib/api/meetings";
 import { stripOpportunityTitlePrefix } from "@/lib/format";
 import { ApiError } from "@/types/api";
-import type { Meeting, MeetingClientContext } from "@/types/domain";
+import type { Meeting, MeetingClientContext, MeetingColor } from "@/types/domain";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const CLIENT_CONTEXT_VARIANT: Record<MeetingClientContext, "success" | "warning" | "outline" | "secondary"> = {
@@ -93,6 +93,7 @@ interface MeetingFormState {
   opportunityId: string;
   leadId: string;
   attendeeUserIds: string[];
+  color: MeetingColor | "";
 }
 
 function emptyForm(defaultStart: Date): MeetingFormState {
@@ -105,6 +106,7 @@ function emptyForm(defaultStart: Date): MeetingFormState {
     opportunityId: "",
     leadId: "",
     attendeeUserIds: [],
+    color: "",
   };
 }
 
@@ -118,6 +120,7 @@ function formFromMeeting(meeting: Meeting): MeetingFormState {
     opportunityId: meeting.opportunity_id ?? "",
     leadId: meeting.lead_id ?? "",
     attendeeUserIds: meeting.attendee_user_ids,
+    color: meeting.color ?? "",
   };
 }
 
@@ -134,6 +137,9 @@ const CLIENT_CONTEXT_BAR_COLOR: Record<MeetingClientContext, string> = {
   new_contact: "var(--color-chart-5)",
 };
 const CLIENT_CONTEXT_ORDER: MeetingClientContext[] = ["active_client", "hot_lead", "prospect", "new_contact"];
+// The organizational color picker in the create/edit form — every color
+// the app's chart palette defines, nothing calendar-specific invented.
+const MEETING_COLORS: MeetingColor[] = ["chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6"];
 
 function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
@@ -384,6 +390,7 @@ export function CalendarPage() {
       opportunity_id: form.opportunityId || undefined,
       lead_id: form.leadId || undefined,
       attendee_user_ids: form.attendeeUserIds,
+      color: form.color || undefined,
     };
     try {
       if (editing) {
@@ -539,13 +546,23 @@ export function CalendarPage() {
                   ))}
                   {dayMeetings.map((m) => {
                     const pos = meetingPosition(m);
+                    // A personal color (m.color) wins over the client_context
+                    // tone when set — same color-mix() recipe globals.css's
+                    // own bee-bento--* tint classes use, just parameterized
+                    // by whichever chart color the rep picked.
                     return (
                       <button
                         key={m.id}
                         type="button"
                         onClick={() => setDetail(m)}
-                        className={`bee-bento absolute inset-x-1 flex flex-col gap-0.5 overflow-hidden p-1.5 text-left ${CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
-                        style={{ top: pos.top, height: pos.height }}
+                        className={`bee-bento absolute inset-x-1 flex flex-col gap-0.5 overflow-hidden p-1.5 text-left ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
+                        style={{
+                          top: pos.top,
+                          height: pos.height,
+                          ...(m.color
+                            ? { background: `color-mix(in srgb, var(--color-${m.color}) 35%, var(--color-background))` }
+                            : {}),
+                        }}
                       >
                         <p className="bee-micro font-mono">{timeLabel(m.starts_at, locale)}</p>
                         <p className="line-clamp-2 text-xs font-medium leading-snug">{m.title}</p>
@@ -769,6 +786,32 @@ export function CalendarPage() {
                   );
                 })}
               </div>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("form.colorLabel")}</label>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, color: "" }))}
+                  aria-label={t("form.colorNone")}
+                  aria-pressed={form.color === ""}
+                  className={`flex size-6 items-center justify-center rounded-full border-2 ${form.color === "" ? "border-[var(--color-chart-4)]" : "border-transparent"}`}
+                >
+                  <span className="size-4 rounded-full border border-dashed border-muted-foreground" />
+                </button>
+                {MEETING_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, color: c }))}
+                    aria-label={c}
+                    aria-pressed={form.color === c}
+                    className={`size-6 rounded-full border-2 transition-transform ${form.color === c ? "scale-110 border-[var(--color-text)]" : "border-transparent"}`}
+                    style={{ background: `var(--color-${c})` }}
+                  />
+                ))}
+              </div>
+              <p className="mt-1 bee-micro">{t("form.colorHint")}</p>
             </div>
 
             <DialogFooter className="mt-2 flex items-center justify-between gap-2 sm:justify-between">

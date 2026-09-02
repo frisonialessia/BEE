@@ -10,6 +10,7 @@ import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-he
 import { AddCompanyForm } from "@/features/probar/add-company-form";
 import { SignalHexMap } from "@/features/control/components/SignalHexMap";
 import { Leaderboard } from "@/features/dashboard/leaderboard";
+import { MyCalendarWidget } from "@/features/calendar/my-calendar-widget";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -137,8 +138,9 @@ export default function ProbarOverviewPage() {
         </section>
       </div>
 
-      <div className="mt-2">
+      <div className="mt-2 grid items-start gap-3 lg:grid-cols-2">
         <Leaderboard opportunities={opportunities} users={usersResult ?? []} teams={teamsResult ?? []} />
+        <MyCalendarWidget />
       </div>
     </div>
   );

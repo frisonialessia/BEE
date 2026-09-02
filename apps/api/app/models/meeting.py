@@ -54,6 +54,14 @@ class Meeting(TimestampMixin, table=True):
     # who needs to see this" list, separate from created_by_user_id so a
     # meeting a manager books still shows up on the rep's calendar too.
     attendee_user_ids: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    # Personal color tag, picked freely by whoever creates the meeting —
+    # purely organizational (unlike client_context, which BEE derives and
+    # nothing picks by hand). One of app.schemas.meeting.MEETING_COLORS —
+    # a token name (e.g. "chart-1"), not a raw hex, so it resolves through
+    # the same CSS custom properties everything else in the UI already
+    # uses and adapts to dark mode automatically. Null falls back to the
+    # client_context-based tone the calendar already had.
+    color: str | None = Field(default=None, max_length=20)
 
     opportunity: "Opportunity" = Relationship()
     lead: "Lead" = Relationship()

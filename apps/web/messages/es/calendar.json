@@ -13,6 +13,11 @@
   "sidebar": {
     "timeBreakdown": "Desglose de tiempo"
   },
+  "widget": {
+    "title": "Mi calendario",
+    "viewAll": "Ver todo →",
+    "empty": "Sin reuniones próximas."
+  },
   "clientContext": {
     "active_client": "Cliente activo",
     "hot_lead": "Lead caliente",
@@ -39,6 +44,9 @@
     "linkLeadLabel": "Vincular a un lead",
     "linkLeadNone": "Ninguno",
     "attendeesLabel": "Invitar a tu equipo",
+    "colorLabel": "Color",
+    "colorNone": "Sin color",
+    "colorHint": "Solo para organizarte — no cambia nada del pipeline.",
     "save": "Guardar",
     "saving": "Guardando…",
     "cancel": "Cancelar",

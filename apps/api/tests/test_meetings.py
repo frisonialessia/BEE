@@ -266,3 +266,65 @@ class TestUpdateAndDeleteMeeting:
 
         get_resp = client.get(f"/api/v1/meetings/{meeting_id}", headers=_auth_headers(owner))
         assert get_resp.status_code == 404
+
+
+class TestMeetingColor:
+    """Personal color tag — freely picked, unlike client_context which BEE
+    derives (see ClientContext's own docstring in schemas/meeting.py)."""
+
+    def test_create_with_color(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session, "OrgMeetColor")
+        owner = _make_user(session, org, "Owner")
+        resp = client.post(
+            "/api/v1/meetings",
+            headers=_auth_headers(owner),
+            json={
+                "title": "Color-tagged",
+                "starts_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+                "color": "chart-3",
+            },
+        )
+        assert resp.status_code == 201, resp.text
+        assert resp.json()["color"] == "chart-3"
+
+    def test_defaults_to_none(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session, "OrgMeetColorNone")
+        owner = _make_user(session, org, "Owner")
+        resp = client.post(
+            "/api/v1/meetings",
+            headers=_auth_headers(owner),
+            json={"title": "No color", "starts_at": datetime.now(UTC).isoformat()},
+        )
+        assert resp.json()["color"] is None
+
+    def test_invalid_color_rejected(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session, "OrgMeetColorBad")
+        owner = _make_user(session, org, "Owner")
+        resp = client.post(
+            "/api/v1/meetings",
+            headers=_auth_headers(owner),
+            json={
+                "title": "Bad color",
+                "starts_at": datetime.now(UTC).isoformat(),
+                "color": "hotpink",
+            },
+        )
+        assert resp.status_code == 422
+
+    def test_update_color(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session, "OrgMeetColorUpdate")
+        owner = _make_user(session, org, "Owner")
+        create_resp = client.post(
+            "/api/v1/meetings",
+            headers=_auth_headers(owner),
+            json={"title": "Recolor me", "starts_at": datetime.now(UTC).isoformat()},
+        )
+        meeting_id = create_resp.json()["id"]
+
+        patch_resp = client.patch(
+            f"/api/v1/meetings/{meeting_id}",
+            headers=_auth_headers(owner),
+            json={"color": "chart-6"},
+        )
+        assert patch_resp.status_code == 200, patch_resp.text
+        assert patch_resp.json()["color"] == "chart-6"

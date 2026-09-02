@@ -20,6 +20,7 @@ import { CriticalAccountsDigest } from "@/features/dashboard/critical-accounts-d
 import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { DecisionFeed } from "@/features/dashboard/decision-feed";
 import { Leaderboard } from "@/features/dashboard/leaderboard";
+import { MyCalendarWidget } from "@/features/calendar/my-calendar-widget";
 import { usePagination } from "@/hooks/use-pagination";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -238,6 +239,8 @@ export function DashboardOverview() {
             users={usersResult ?? []}
             teams={teamsResult ?? []}
           />
+
+          <MyCalendarWidget />
         </section>
 
         <section className="bee-span-12 space-y-3">

@@ -117,6 +117,7 @@ def create_meeting(
         duration_minutes=data.duration_minutes,
         meeting_url=data.meeting_url,
         attendee_user_ids=[str(uid) for uid in data.attendee_user_ids],
+        color=data.color,
     )
     session.add(meeting)
     session.commit()

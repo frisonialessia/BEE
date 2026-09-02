@@ -1,7 +1,7 @@
 import { apiFetch } from "@/lib/api/client";
 import { isDemoMode } from "@/lib/demo/mode";
 import { demoCreateMeeting, demoDeleteMeeting, demoFetchMeetings, demoUpdateMeeting } from "@/lib/demo/store";
-import type { Meeting } from "@/types/domain";
+import type { Meeting, MeetingColor } from "@/types/domain";
 
 /** Calendario — fully interactive in the sandbox too (see lib/demo/store.ts's
  * Meetings section): seeded with meetings tied to the sandbox's own demo
@@ -17,6 +17,7 @@ export interface MeetingCreateIn {
   duration_minutes?: number;
   meeting_url?: string;
   attendee_user_ids?: string[];
+  color?: MeetingColor;
 }
 
 export interface MeetingUpdateIn {
@@ -26,6 +27,7 @@ export interface MeetingUpdateIn {
   duration_minutes?: number;
   meeting_url?: string;
   attendee_user_ids?: string[];
+  color?: MeetingColor;
 }
 
 export async function fetchMeetings(params?: {

@@ -16,6 +16,13 @@ from pydantic import BaseModel, ConfigDict, Field
 # caliente" (hot_lead), "prospecto" (prospect), "primera vez" (new_contact).
 ClientContext = Literal["active_client", "hot_lead", "prospect", "new_contact"]
 
+# Personal color tag — picked freely by whoever creates the meeting, purely
+# organizational (unlike ClientContext, which BEE derives and nothing picks
+# by hand). Token names resolving through the same CSS custom properties
+# the rest of the UI already uses (--color-chart-1..6), not raw hex, so a
+# theme change or dark mode never needs this list touched.
+MeetingColor = Literal["chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6"]
+
 
 class MeetingCreateIn(BaseModel):
     opportunity_id: uuid.UUID | None = None
@@ -26,6 +33,7 @@ class MeetingCreateIn(BaseModel):
     duration_minutes: int = Field(default=30, ge=5, le=480)
     meeting_url: str | None = Field(default=None, max_length=1000)
     attendee_user_ids: list[uuid.UUID] = Field(default_factory=list)
+    color: MeetingColor | None = None
 
 
 class MeetingUpdateIn(BaseModel):
@@ -37,6 +45,7 @@ class MeetingUpdateIn(BaseModel):
     duration_minutes: int | None = Field(default=None, ge=5, le=480)
     meeting_url: str | None = None
     attendee_user_ids: list[uuid.UUID] | None = None
+    color: MeetingColor | None = None
 
 
 class MeetingOut(BaseModel):
@@ -52,6 +61,7 @@ class MeetingOut(BaseModel):
     duration_minutes: int
     meeting_url: str | None
     attendee_user_ids: list[str]
+    color: str | None
     created_at: datetime
 
     # Denormalized at read time (see the endpoint) so the calendar can

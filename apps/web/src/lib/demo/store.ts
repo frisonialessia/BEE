@@ -713,6 +713,7 @@ function buildMeeting(partial: {
   opportunity?: Opportunity;
   lead?: Lead;
   attendeeUserIds?: string[];
+  color?: Meeting["color"];
 }): Meeting {
   const opportunity = partial.opportunity;
   const lead = partial.lead ?? undefined;
@@ -727,6 +728,7 @@ function buildMeeting(partial: {
     duration_minutes: partial.durationMinutes,
     meeting_url: partial.meetingUrl ?? null,
     attendee_user_ids: partial.attendeeUserIds ?? [],
+    color: partial.color ?? null,
     created_at: new Date().toISOString(),
     company_name: null,
     contact_name: lead?.full_name ?? null,
@@ -797,6 +799,7 @@ function seedMeetings(locale: Locale): Meeting[] {
       hour: 9,
       durationMinutes: 30,
       attendeeUserIds: users.map((u) => u.id),
+      color: "chart-2",
     }),
     buildMeeting({
       id: "demo-meeting-5",
@@ -842,6 +845,7 @@ export function demoCreateMeeting(body: MeetingCreateIn): Meeting {
     duration_minutes: body.duration_minutes ?? 30,
     meeting_url: body.meeting_url ?? null,
     attendee_user_ids: body.attendee_user_ids ?? [],
+    color: body.color ?? null,
     created_at: new Date().toISOString(),
     company_name: company?.name ?? null,
     contact_name: lead?.full_name ?? null,
@@ -872,6 +876,7 @@ export function demoUpdateMeeting(meetingId: string, body: MeetingUpdateIn): Mee
     ...(body.duration_minutes !== undefined ? { duration_minutes: body.duration_minutes } : {}),
     ...(body.meeting_url !== undefined ? { meeting_url: body.meeting_url } : {}),
     ...(body.attendee_user_ids !== undefined ? { attendee_user_ids: body.attendee_user_ids } : {}),
+    ...(body.color !== undefined ? { color: body.color } : {}),
   };
   saveMeetings(list);
   return list[idx];

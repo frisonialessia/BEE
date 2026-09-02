@@ -13,6 +13,11 @@
   "sidebar": {
     "timeBreakdown": "Time breakdown"
   },
+  "widget": {
+    "title": "My calendar",
+    "viewAll": "View all →",
+    "empty": "No upcoming meetings."
+  },
   "clientContext": {
     "active_client": "Active client",
     "hot_lead": "Hot lead",
@@ -39,6 +44,9 @@
     "linkLeadLabel": "Link to a lead",
     "linkLeadNone": "None",
     "attendeesLabel": "Invite your team",
+    "colorLabel": "Color",
+    "colorNone": "No color",
+    "colorHint": "Just for your own organization — doesn't change anything in the pipeline.",
     "save": "Save",
     "saving": "Saving…",
     "cancel": "Cancel",
