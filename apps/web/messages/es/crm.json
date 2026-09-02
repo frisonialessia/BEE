@@ -15,12 +15,26 @@
     "reviewRequired": "Requiere revisión",
     "viaChannel": "vía {channel}",
     "stages": {
-      "detected": "Detectadas",
+      "detected": "Nuevas",
       "ready_to_action": "Listas para actuar",
-      "prioritized": "Priorizadas",
-      "in_progress": "En progreso",
+      "prioritized": "Tu prioridad",
+      "in_progress": "En conversación",
       "closed": "Cerradas"
     },
+    "stageSubtitles": {
+      "detected": "Detectadas por BEE, sin trabajar",
+      "ready_to_action": "Con estrategia de venta lista",
+      "prioritized": "Marcada a mano por el equipo",
+      "in_progress": "Ya hablaste con el cliente"
+    },
+    "stageHelp": {
+      "detected": "Equivale a \"Nuevo\" en un CRM tradicional. BEE ya detectó la señal (una ronda, una contratación clave, un cambio de stack) — todavía nadie del equipo actuó sobre esta oportunidad.",
+      "ready_to_action": "Equivale a \"Calificado\" / \"En trabajo\". La IA ya armó el argumento, el canal y el mensaje — solo falta que alguien la tome y actúe.",
+      "prioritized": "A diferencia de las demás columnas, esta no la llena BEE solo — la mueve el equipo a mano para marcar \"esto es lo primero que atacamos esta semana\". No la confundas con Priorización (Bandeja de Decisiones) en el menú: esa es el ranking automático de IA sobre todo el pipeline; esta es tu propia lista corta, manual.",
+      "in_progress": "Equivale a \"Propuesta\" / \"Negociación\". Alguien del equipo ya contactó a este lead — la conversación está en marcha."
+    },
+    "stageHelpAria": "Qué significa esta etapa",
+    "prioritizedLink": "Ver Bandeja de Decisiones →",
     "emptyColumn": {
       "title": "Sin oportunidades aquí",
       "hint": "Arrastra una tarjeta para moverla"

@@ -15,12 +15,26 @@
     "reviewRequired": "Needs review",
     "viaChannel": "via {channel}",
     "stages": {
-      "detected": "Detected",
+      "detected": "New",
       "ready_to_action": "Ready to action",
-      "prioritized": "Prioritized",
-      "in_progress": "In progress",
+      "prioritized": "Your priority",
+      "in_progress": "In conversation",
       "closed": "Closed"
     },
+    "stageSubtitles": {
+      "detected": "Detected by BEE, not worked yet",
+      "ready_to_action": "Sales strategy ready to go",
+      "prioritized": "Set by hand by your team",
+      "in_progress": "You've already talked to them"
+    },
+    "stageHelp": {
+      "detected": "Same as \"New\" in a traditional CRM. BEE already detected the signal (a funding round, a key hire, a stack change) — nobody on the team has acted on it yet.",
+      "ready_to_action": "Same as \"Qualified\" / \"Working\". The AI already built the argument, channel, and message — it just needs someone to pick it up and act.",
+      "prioritized": "Unlike the other columns, BEE doesn't fill this one on its own — your team moves cards here by hand to flag \"this is what we're tackling first this week.\" Don't confuse it with Prioritization (Decision Inbox) in the sidebar: that's the automatic AI ranking across the whole pipeline; this is your own short, manual list.",
+      "in_progress": "Same as \"Proposal\" / \"Negotiation\". Someone on the team already reached out — the conversation is underway."
+    },
+    "stageHelpAria": "What this stage means",
+    "prioritizedLink": "See Decision Inbox →",
     "emptyColumn": {
       "title": "No opportunities here",
       "hint": "Drag a card to move it"

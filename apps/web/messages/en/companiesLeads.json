@@ -70,7 +70,8 @@
         "emailPlaceholder": "Email",
         "saving": "Saving…",
         "save": "Save",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "createError": "Couldn't save the contact — try again."
       },
       "csvImport": {
         "importing": "Importing…",

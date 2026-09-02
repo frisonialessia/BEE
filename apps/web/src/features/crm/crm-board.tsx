@@ -1,12 +1,15 @@
 "use client";
 
-import { AlertCircle, ArrowUpRight, Flame, Inbox } from "lucide-react";
+import { AlertCircle, ArrowUpRight, CircleHelp, Flame, Inbox } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
 import { useMoveOpportunityStage, useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -158,13 +161,46 @@ function CrmColumn({
   onMove: (id: string, stage: CrmStage) => void;
 }) {
   const t = useTranslations("crm.board");
+  const pathname = usePathname();
   const [over, setOver] = useState(false);
+
+  // "Tu prioridad" is the one column BEE never fills on its own — nothing
+  // in the backend auto-promotes an opportunity into it (see stageHelp's
+  // own explainer). Pointing to Priorización's Bandeja de Decisiones from
+  // right here is what makes the distinction land instead of just being
+  // read once and forgotten: "if this isn't automatic, where's the
+  // automatic version?" answered in the same glance.
+  const priorityHref = pathname?.startsWith("/probar") ? "/probar/priority" : "/dashboard/priority";
 
   return (
     <div className="flex h-full w-[min(100%,280px)] shrink-0 flex-col">
-      <div className="mb-3 flex shrink-0 items-baseline justify-between px-1">
-        <h3 className="bee-eyebrow">{label}</h3>
+      <div className="mb-1 flex shrink-0 items-baseline justify-between px-1">
+        <div className="flex items-center gap-1">
+          <h3 className="bee-eyebrow">{label}</h3>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                aria-label={t("stageHelpAria")}
+                className="text-muted-foreground/70 transition-colors hover:text-foreground"
+              >
+                <CircleHelp className="size-3" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[260px] text-left" side="bottom">
+              {t(`stageHelp.${stage}`)}
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <span className="font-mono bee-micro">{cards.length}</span>
+      </div>
+      <div className="mb-2.5 flex shrink-0 items-center justify-between gap-2 px-1">
+        <p className="bee-micro text-muted-foreground">{t(`stageSubtitles.${stage}`)}</p>
+        {stage === "prioritized" && (
+          <Link href={priorityHref} className="shrink-0 bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
+            {t("prioritizedLink")}
+          </Link>
+        )}
       </div>
       <div
         onDragOver={(e) => {

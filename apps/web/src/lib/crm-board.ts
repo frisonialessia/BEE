@@ -1,11 +1,15 @@
 import type { CrmStage } from "@/lib/api/opportunities";
 import { CLOSED_OPPORTUNITY_STATUSES, type Opportunity } from "@/types/domain";
 
+// `label` below is a fallback only — every render site pulls the real,
+// localized copy via t(`stages.${id}`) (see messages/{es,en}/crm.json's
+// board.stages/stageSubtitles/stageHelp) so it can carry the fuller
+// subtitle + explainer text a bare id/label pair can't hold.
 export const CRM_STAGES: { id: CrmStage; label: string }[] = [
-  { id: "detected", label: "Detectadas" },
+  { id: "detected", label: "Nuevas" },
   { id: "ready_to_action", label: "Listas para actuar" },
-  { id: "prioritized", label: "Priorizadas" },
-  { id: "in_progress", label: "En progreso" },
+  { id: "prioritized", label: "Tu prioridad" },
+  { id: "in_progress", label: "En conversación" },
 ];
 
 /** Agrupa por etapa REAL (`Opportunity.status`), no por una columna derivada

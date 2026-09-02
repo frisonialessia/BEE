@@ -70,7 +70,8 @@
         "emailPlaceholder": "Correo",
         "saving": "Guardando…",
         "save": "Guardar",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "createError": "No se pudo guardar el contacto — intenta de nuevo."
       },
       "csvImport": {
         "importing": "Importando…",

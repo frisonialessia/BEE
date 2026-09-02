@@ -184,16 +184,23 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!fullName.trim()) return;
-    await createLead.mutateAsync({
-      full_name: fullName.trim(),
-      company_id: companyId,
-      title: title.trim() || undefined,
-      email: email.trim() || undefined,
-    });
-    setFullName("");
-    setTitle("");
-    setEmail("");
-    onDone();
+    try {
+      await createLead.mutateAsync({
+        full_name: fullName.trim(),
+        company_id: companyId,
+        title: title.trim() || undefined,
+        email: email.trim() || undefined,
+      });
+      setFullName("");
+      setTitle("");
+      setEmail("");
+      onDone();
+    } catch (err) {
+      // Was previously unhandled — a failed create left the form open with
+      // zero feedback, the rejection only visible in the browser console.
+      // Same pattern as CompanyOwner's reassign handler just above.
+      toast.error(err instanceof ApiError ? err.message : t("createError"));
+    }
   }
 
   return (
