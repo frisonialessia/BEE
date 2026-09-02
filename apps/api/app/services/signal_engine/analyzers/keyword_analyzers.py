@@ -157,6 +157,228 @@ class TechAdoptionAnalyzer(SignalAnalyzer):
 
 
 @register_analyzer
+class FranchiseExpansionAnalyzer(SignalAnalyzer):
+    """Detects franchise/new-location expansion signals.
+
+    A company opening new franchise locations or branches needs to stand up
+    the same commercial process at every new site — a recurring, budgeted
+    need rather than a one-off purchase, making it a strong outreach trigger.
+    """
+
+    name = "franchise_expansion"
+    priority = 75
+
+    KEYWORDS = (
+        "franchise", "franchisee", "new location", "new branch", "opening its",
+        "franquicia", "franquiciado", "nueva sucursal", "nueva tienda", "apertura de",
+    )
+
+    def supports(self, payload: SignalWebhookIn) -> bool:
+        text = _haystack(payload)
+        return payload.event.startswith("franchise") or any(k in text for k in self.KEYWORDS)
+
+    def analyze(self, payload: SignalWebhookIn) -> AnalysisResult:
+        text = _haystack(payload)
+        matched = [k for k in self.KEYWORDS if k in text]
+        company = payload.company.name if payload.company else "the account"
+        return AnalysisResult(
+            signal_type=SignalType.FRANCHISE_EXPANSION,
+            score=65.0,
+            confidence=0.65,
+            tags=matched or ["franchise_expansion"],
+            strategy={
+                "playbook": "franchise_expansion_outreach",
+                "next_best_action": "reach_out",
+                "channel": "email",
+                "rationale": (
+                    f"{company} is opening new locations — a recurring, multi-site "
+                    "need for whatever process gets replicated at every new branch."
+                ),
+            },
+            metadata={"matched_keywords": matched},
+        )
+
+
+@register_analyzer
+class MergerAcquisitionAnalyzer(SignalAnalyzer):
+    """Detects M&A / corporate restructuring signals.
+
+    A merger or acquisition triggers a vendor consolidation review — the
+    combined entity re-evaluates every tool and process it inherited, which
+    is exactly the window where an incumbent can be displaced or a new
+    vendor can win consolidated spend.
+    """
+
+    name = "merger_acquisition"
+    priority = 95
+
+    KEYWORDS = (
+        "merger", "acquired", "acquisition", "acquires", "to merge with",
+        "fusión", "adquisición", "adquiere", "fusionarse con",
+    )
+
+    def supports(self, payload: SignalWebhookIn) -> bool:
+        text = _haystack(payload)
+        return payload.event.startswith("merger") or payload.event.startswith("acquisition") or any(
+            k in text for k in self.KEYWORDS
+        )
+
+    def analyze(self, payload: SignalWebhookIn) -> AnalysisResult:
+        text = _haystack(payload)
+        matched = [k for k in self.KEYWORDS if k in text]
+        company = payload.company.name if payload.company else "the account"
+        return AnalysisResult(
+            signal_type=SignalType.MERGER_ACQUISITION,
+            score=85.0,
+            confidence=0.75,
+            tags=matched or ["merger_acquisition"],
+            strategy={
+                "playbook": "post_merger_consolidation_outreach",
+                "next_best_action": "reach_out",
+                "channel": "email",
+                "rationale": (
+                    f"{company} is going through a merger or acquisition — the "
+                    "combined entity is actively re-evaluating inherited vendors "
+                    "and tools, a rare window to win consolidated spend."
+                ),
+            },
+            metadata={"matched_keywords": matched},
+        )
+
+
+@register_analyzer
+class PublicTenderAnalyzer(SignalAnalyzer):
+    """Detects public-sector tender/procurement signals.
+
+    A company that just won (or is bidding on) a public tender is entering
+    a scaling phase with a hard delivery deadline and a known budget — a
+    concrete, time-boxed reason to reach out now.
+    """
+
+    name = "public_tender"
+    priority = 70
+
+    KEYWORDS = (
+        "tender", "public tender", "government contract", "rfp awarded", "procurement",
+        "licitación", "licitación pública", "contrato público", "adjudicación",
+    )
+
+    def supports(self, payload: SignalWebhookIn) -> bool:
+        text = _haystack(payload)
+        return payload.event.startswith("tender") or payload.event.startswith("procurement") or any(
+            k in text for k in self.KEYWORDS
+        )
+
+    def analyze(self, payload: SignalWebhookIn) -> AnalysisResult:
+        text = _haystack(payload)
+        matched = [k for k in self.KEYWORDS if k in text]
+        company = payload.company.name if payload.company else "the account"
+        return AnalysisResult(
+            signal_type=SignalType.PUBLIC_TENDER,
+            score=70.0,
+            confidence=0.6,
+            tags=matched or ["public_tender"],
+            strategy={
+                "playbook": "public_tender_outreach",
+                "next_best_action": "reach_out",
+                "channel": "email",
+                "rationale": (
+                    f"{company} won or is bidding on a public tender — a "
+                    "time-boxed delivery deadline and a known budget already "
+                    "allocated for it."
+                ),
+            },
+            metadata={"matched_keywords": matched},
+        )
+
+
+@register_analyzer
+class RegulatoryChangeAnalyzer(SignalAnalyzer):
+    """Detects regulatory-change signals affecting the account's industry.
+
+    A new regulation forces companies to adapt process or tooling on a
+    compliance deadline — a rare case where the buyer's timing is dictated
+    externally, not by their own roadmap.
+    """
+
+    name = "regulatory_change"
+    priority = 65
+
+    KEYWORDS = (
+        "new regulation", "regulatory change", "compliance deadline", "mandated by",
+        "nueva regulación", "cambio regulatorio", "obligado por ley", "nueva normativa",
+    )
+
+    def supports(self, payload: SignalWebhookIn) -> bool:
+        text = _haystack(payload)
+        return payload.event.startswith("regulatory") or any(k in text for k in self.KEYWORDS)
+
+    def analyze(self, payload: SignalWebhookIn) -> AnalysisResult:
+        text = _haystack(payload)
+        matched = [k for k in self.KEYWORDS if k in text]
+        company = payload.company.name if payload.company else "the account"
+        return AnalysisResult(
+            signal_type=SignalType.REGULATORY_CHANGE,
+            score=60.0,
+            confidence=0.6,
+            tags=matched or ["regulatory_change"],
+            strategy={
+                "playbook": "regulatory_compliance_outreach",
+                "next_best_action": "research",
+                "channel": "email",
+                "rationale": (
+                    f"A regulatory change affects {company}'s industry — "
+                    "compliance deadlines create externally-forced timing, not "
+                    "discretionary budget."
+                ),
+            },
+            metadata={"matched_keywords": matched},
+        )
+
+
+@register_analyzer
+class FundingGrantAnalyzer(SignalAnalyzer):
+    """Detects public funding-grant signals — distinct from FUNDING_ROUND
+    (venture capital): a grant or public fund program the account received
+    or newly qualifies for, common outside the VC-backed tech sector.
+    """
+
+    name = "funding_grant"
+    priority = 78
+
+    KEYWORDS = (
+        "grant awarded", "public grant", "funding program", "received a grant", "grant recipient",
+        "subvención", "fondo de financiamiento", "beca otorgada", "recibió un fondo",
+    )
+
+    def supports(self, payload: SignalWebhookIn) -> bool:
+        text = _haystack(payload)
+        return payload.event.startswith("grant") or any(k in text for k in self.KEYWORDS)
+
+    def analyze(self, payload: SignalWebhookIn) -> AnalysisResult:
+        text = _haystack(payload)
+        matched = [k for k in self.KEYWORDS if k in text]
+        company = payload.company.name if payload.company else "the account"
+        return AnalysisResult(
+            signal_type=SignalType.FUNDING_GRANT,
+            score=68.0,
+            confidence=0.6,
+            tags=matched or ["funding_grant"],
+            strategy={
+                "playbook": "funding_grant_outreach",
+                "next_best_action": "reach_out",
+                "channel": "email",
+                "rationale": (
+                    f"{company} received or qualifies for a public funding grant — "
+                    "earmarked, non-dilutive budget with reporting requirements "
+                    "that often mandate exactly this kind of purchase."
+                ),
+            },
+            metadata={"matched_keywords": matched},
+        )
+
+
+@register_analyzer
 class BehavioralAnalyzer(SignalAnalyzer):
     """Analyzes behavioral/intent signals from the BehavioralCollector.
 

@@ -245,6 +245,40 @@ def test_tech_generator_produces_complete_battlecard(session):
     assert strategy.timing_window.urgency == "this_month"
 
 
+def test_multisectorial_generator_covers_all_five_new_signal_types():
+    """Unit-level check (no DB round trip): every multisectorial signal type
+    produces a complete, distinctly-worded battlecard — not the generic
+    fallback's placeholder text."""
+    from app.services.strategy_generator.rule_based import MultisectorialStrategyGenerator
+
+    gen = MultisectorialStrategyGenerator()
+    types = (
+        SignalType.FRANCHISE_EXPANSION,
+        SignalType.MERGER_ACQUISITION,
+        SignalType.PUBLIC_TENDER,
+        SignalType.REGULATORY_CHANGE,
+        SignalType.FUNDING_GRANT,
+    )
+    seen_pain_points = set()
+    for signal_type in types:
+        ctx = EnrichmentContext(
+            signal_type=signal_type,
+            signal_title="Test signal",
+            signal_score=70.0,
+            company_name="Acme Corp",
+        )
+        assert gen.supports(ctx)
+        strategy = gen.generate(ctx)
+        assert "Acme Corp" in strategy.pain_point
+        assert "Acme Corp" in strategy.closing_argument
+        assert strategy.playbook != "generic_outreach"
+        assert strategy.timing_window.urgency in ("immediate", "this_week", "this_month", "watch")
+        seen_pain_points.add(strategy.pain_point)
+
+    # Each signal type gets genuinely different copy, not one template reused.
+    assert len(seen_pain_points) == len(types)
+
+
 def test_generic_fallback_generator_runs_on_unknown_signal(session):
     engine = SignalEngine(session)
     payload = SignalWebhookIn(

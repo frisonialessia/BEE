@@ -83,6 +83,12 @@ class SignalType(str, Enum):
     ENGAGEMENT = "engagement"  # e.g. website visit, content download
     NEWS_MENTION = "news_mention"
     EXPANSION = "expansion"  # new office, new market
+    # ── Multisectorial signal vectors (beyond tech-stack/hiring signals) ──────
+    FRANCHISE_EXPANSION = "franchise_expansion"  # new franchise locations opening
+    MERGER_ACQUISITION = "merger_acquisition"  # M&A activity, corporate restructuring
+    PUBLIC_TENDER = "public_tender"  # government/public-sector tender won or opened
+    REGULATORY_CHANGE = "regulatory_change"  # a regulatory shift affecting the industry
+    FUNDING_GRANT = "funding_grant"  # a grant/public-fund program the account qualifies for
     OTHER = "other"
 
 

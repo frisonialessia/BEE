@@ -12,6 +12,11 @@ const SIGNAL_TYPE_LABELS_ES: Record<SignalType, string> = {
   engagement: "Engagement",
   news_mention: "Mención en prensa",
   expansion: "Expansión",
+  franchise_expansion: "Expansión de franquicias",
+  merger_acquisition: "Fusión / adquisición",
+  public_tender: "Licitación pública",
+  regulatory_change: "Cambio regulatorio",
+  funding_grant: "Fondo / subvención",
   other: "Otra",
 };
 
@@ -24,6 +29,11 @@ const SIGNAL_TYPE_LABELS_EN: Record<SignalType, string> = {
   engagement: "Engagement",
   news_mention: "Press mention",
   expansion: "Expansion",
+  franchise_expansion: "Franchise expansion",
+  merger_acquisition: "Merger / acquisition",
+  public_tender: "Public tender",
+  regulatory_change: "Regulatory change",
+  funding_grant: "Funding grant",
   other: "Other",
 };
 

@@ -348,6 +348,31 @@ const SIGNAL_FLAVOR: Record<Locale, Record<SignalType, SignalFlavor>> = {
       channel: "email",
       playbook: "expansion_outreach",
     },
+    franchise_expansion: {
+      opener: (c) => `${c} está abriendo nuevas sucursales — cada apertura necesita el mismo proceso comercial replicado.`,
+      channel: "email",
+      playbook: "franchise_expansion_outreach",
+    },
+    merger_acquisition: {
+      opener: (c) => `${c} está en una fusión o adquisición — ventana corta para ganar el gasto combinado antes de que el stack quede fijo.`,
+      channel: "email",
+      playbook: "post_merger_consolidation_outreach",
+    },
+    public_tender: {
+      opener: (c) => `${c} ganó una licitación pública — presupuesto ya aprobado con plazo de entrega fijo.`,
+      channel: "email",
+      playbook: "public_tender_outreach",
+    },
+    regulatory_change: {
+      opener: (c) => `Un cambio regulatorio obliga a ${c} a actuar en un plazo de cumplimiento — timing impuesto, no discrecional.`,
+      channel: "email",
+      playbook: "regulatory_compliance_outreach",
+    },
+    funding_grant: {
+      opener: (c) => `${c} recibió un fondo público con presupuesto etiquetado y plazo de ejecución.`,
+      channel: "email",
+      playbook: "funding_grant_outreach",
+    },
     other: {
       opener: (c) => `Se identificó una oportunidad para ${c} a partir de contexto directo del equipo comercial.`,
       channel: "email",
@@ -394,6 +419,31 @@ const SIGNAL_FLAVOR: Record<Locale, Record<SignalType, SignalFlavor>> = {
       opener: (c) => `${c} is expanding operations — a new office or market usually comes with new budget.`,
       channel: "email",
       playbook: "expansion_outreach",
+    },
+    franchise_expansion: {
+      opener: (c) => `${c} is opening new locations — every opening needs the same sales process replicated.`,
+      channel: "email",
+      playbook: "franchise_expansion_outreach",
+    },
+    merger_acquisition: {
+      opener: (c) => `${c} is going through a merger or acquisition — a short window to win the combined spend before the stack locks in.`,
+      channel: "email",
+      playbook: "post_merger_consolidation_outreach",
+    },
+    public_tender: {
+      opener: (c) => `${c} won a public tender — already-approved budget with a fixed delivery deadline.`,
+      channel: "email",
+      playbook: "public_tender_outreach",
+    },
+    regulatory_change: {
+      opener: (c) => `A regulatory change forces ${c} to act on a compliance deadline — externally imposed timing, not discretionary.`,
+      channel: "email",
+      playbook: "regulatory_compliance_outreach",
+    },
+    funding_grant: {
+      opener: (c) => `${c} received a public fund with earmarked budget and an execution deadline.`,
+      channel: "email",
+      playbook: "funding_grant_outreach",
     },
     other: {
       opener: (c) => `An opportunity was identified for ${c} from direct context provided by the sales team.`,
