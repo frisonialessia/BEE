@@ -72,6 +72,10 @@ export function DashboardRail({
                       key={href}
                       href={href}
                       onClick={close}
+                      // Tour target — the guided tour (features/tour) highlights
+                      // nav items by their own href, since this rail is the one
+                      // piece of chrome mounted (and identical) on every route.
+                      data-tour={href}
                       className={cn("bee-rail-link", active && "bee-rail-link--active")}
                     >
                       <Icon className="size-4 shrink-0 stroke-[1.5]" />

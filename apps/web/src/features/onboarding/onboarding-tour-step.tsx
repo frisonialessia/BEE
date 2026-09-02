@@ -1,91 +1,64 @@
 "use client";
 
-import Link from "next/link";
-import { KanbanSquare, Lightbulb, Radio, Users, type LucideIcon } from "lucide-react";
+import { Compass, KanbanSquare, Lightbulb, Radio, TrendingUp, Users, type LucideIcon } from "lucide-react";
 
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { buildTourSteps } from "@/features/tour/tour-steps";
+import { useTour } from "@/features/tour/tour-context";
 
-interface Step {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  href: string;
-  cta: string;
-}
-
-/** The order that actually tells BEE's story, not the nav rail's grouping
- * (Cuentas/Inteligencia/Operaciones, alphabetical-ish within each) — a
- * first-time visitor needs signal → pipeline → strategy → team, in that
- * order, before any of the other dozen sections make sense. */
-const STEPS: Step[] = [
-  {
-    icon: Radio,
-    title: "1. Señales",
-    description: "Mira qué detectó el mercado — funding, contrataciones clave, cambios de stack tecnológico.",
-    href: "/dashboard/signals",
-    cta: "Ver señales",
-  },
-  {
-    icon: KanbanSquare,
-    title: "2. Pipeline (CRM)",
-    description: "Esas señales ya priorizadas en un pipeline — arrastra una tarjeta para avanzarla de etapa.",
-    href: "/dashboard/crm",
-    cta: "Abrir pipeline",
-  },
-  {
-    icon: Lightbulb,
-    title: "3. Estrategia",
-    description: "Abre una oportunidad y mira la jugada que armó la IA: argumento, canal, email y próximos pasos listos.",
-    href: "/dashboard/strategies",
-    cta: "Ver estrategias",
-  },
-  {
-    icon: Users,
-    title: "4. Equipo",
-    description: "Invita a tu equipo para que colabore en el mismo pipeline, con visibilidad según su rol.",
-    href: "/dashboard/team",
-    cta: "Invitar equipo",
-  },
+/** Just a preview of what the interactive tour covers — not itself
+ * clickable, unlike the old version of this step (four links straight to
+ * each page). The real thing is `<TourOverlay>` (features/tour): it
+ * highlights the actual nav rail item on the actual page, page by page,
+ * with Siguiente/Atrás — see tour-steps.ts for why this order. */
+const PREVIEW: { icon: LucideIcon; label: string }[] = [
+  { icon: Radio, label: "Señales" },
+  { icon: Compass, label: "Priorización" },
+  { icon: KanbanSquare, label: "Pipeline" },
+  { icon: Lightbulb, label: "Estrategia" },
+  { icon: TrendingUp, label: "Pronóstico" },
+  { icon: Users, label: "Equipo" },
 ];
 
 export function OnboardingTourStep({ onDone }: { onDone: () => void }) {
+  const { start } = useTour();
+
+  function startGuidedTour() {
+    // Close the intro dialog first — the tour overlay renders in the same
+    // shell layout, right on top of the dashboard itself, so the two would
+    // otherwise stack.
+    onDone();
+    start(buildTourSteps("dashboard"));
+  }
+
   return (
     <>
       <DialogHeader>
         <DialogTitle className="bee-display text-xl">Así funciona BEE</DialogTitle>
         <DialogDescription>
-          Cuatro pasos, en el orden que recomendamos para tu primera vuelta. El resto del menú
-          (Empresas, Pronóstico, Secuencias…) queda para cuando ya conozcas el loop principal.
+          Un recorrido guiado de 7 pasos, directo sobre el producto — te vamos mostrando cada
+          lugar clave a medida que avanzás, en el orden que tiene sentido para tu primera vuelta.
         </DialogDescription>
       </DialogHeader>
 
-      <ol className="mt-4 flex flex-col gap-3">
-        {STEPS.map((step) => (
+      <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {PREVIEW.map(({ icon: Icon, label }) => (
           <li
-            key={step.href}
-            className="flex items-start gap-3 rounded-[var(--radius-md)] border border-[var(--color-divider)] p-3"
+            key={label}
+            className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-divider)] px-2.5 py-2"
           >
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-              <step.icon className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">{step.title}</p>
-              <p className="bee-caption mt-0.5">{step.description}</p>
-            </div>
-            <Link
-              href={step.href}
-              onClick={onDone}
-              className="bee-btn-ghost shrink-0 self-center px-2.5 py-1 text-xs"
-            >
-              {step.cta}
-            </Link>
+            <Icon className="size-3.5 shrink-0 stroke-[1.5] text-[var(--color-chart-4)]" />
+            <span className="truncate text-xs font-medium">{label}</span>
           </li>
         ))}
-      </ol>
+      </ul>
 
-      <DialogFooter className="mt-2">
-        <button type="button" onClick={onDone} className="bee-btn bee-btn--primary">
-          Entendido, empezar
+      <DialogFooter className="mt-4 gap-2 sm:gap-2">
+        <button type="button" onClick={onDone} className="bee-btn-ghost">
+          Ahora no
+        </button>
+        <button type="button" onClick={startGuidedTour} className="bee-btn bee-btn--primary">
+          Empezar el tour guiado
         </button>
       </DialogFooter>
     </>

@@ -14,6 +14,8 @@ import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
 import { OnboardingIntro } from "@/features/onboarding/onboarding-intro";
 import { OnboardingProvider } from "@/features/onboarding/onboarding-context";
+import { TourOverlay } from "@/features/tour/tour-overlay";
+import { TourProvider } from "@/features/tour/tour-context";
 import { useScrollResetOnNavigate } from "@/hooks/use-scroll-reset-on-navigate";
 import { useAuth } from "@/providers/auth-provider";
 
@@ -44,27 +46,30 @@ export default function DashboardLayout({
   }
 
   return (
-    <OnboardingProvider>
-      <OpportunityDrawerProvider>
-        <MobileNavProvider>
-          <CommandPaletteProvider>
-            <div className="bee-app">
-              <DashboardRail />
-              <div className="bee-main">
-                <DashboardHeader />
-                <div className="bee-scroll" ref={scrollRef}>
-                  {children}
+    <TourProvider>
+      <OnboardingProvider>
+        <OpportunityDrawerProvider>
+          <MobileNavProvider>
+            <CommandPaletteProvider>
+              <div className="bee-app">
+                <DashboardRail />
+                <div className="bee-main">
+                  <DashboardHeader />
+                  <div className="bee-scroll" ref={scrollRef}>
+                    {children}
+                  </div>
                 </div>
+                <OpportunityDrawer />
+                <OnboardingIntro />
+                <AskBeeFab />
+                <FloatingCursors />
+                <CommandPalette />
+                <TourOverlay />
               </div>
-              <OpportunityDrawer />
-              <OnboardingIntro />
-              <AskBeeFab />
-              <FloatingCursors />
-              <CommandPalette />
-            </div>
-          </CommandPaletteProvider>
-        </MobileNavProvider>
-      </OpportunityDrawerProvider>
-    </OnboardingProvider>
+            </CommandPaletteProvider>
+          </MobileNavProvider>
+        </OpportunityDrawerProvider>
+      </OnboardingProvider>
+    </TourProvider>
   );
 }

@@ -34,6 +34,8 @@ export function AccountMenu() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        // Tour target — see features/tour/tour-steps.ts's closing step.
+        data-tour="tour-account-menu"
         className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-[var(--color-primary)]"
       >
         <span className="flex size-7 items-center justify-center rounded-full bg-[var(--color-cta)] text-[11px] font-bold text-white">
