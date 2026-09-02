@@ -88,6 +88,19 @@ class Settings(BaseSettings):
     # degrades to today's behavior rather than taking any guard down.
     REDIS_URL: str | None = None
 
+    # ----- Secrets vault ---------------------------------------------------------
+    # SecretManager (app/services/secret_manager) resolves every external-API
+    # credential from the environment by default — "env" keeps that behavior
+    # exactly. Setting SECRET_BACKEND="aws_secrets_manager" makes it consult a
+    # single AWS Secrets Manager secret first (a JSON object keyed by the same
+    # env-var names, e.g. {"LINKEDIN_ACCESS_TOKEN": "..."}), falling back to
+    # the environment for any key not present there — so a partially-populated
+    # AWS secret degrades gracefully instead of breaking providers that
+    # haven't been migrated to it yet. See secret_manager/aws_backend.py.
+    SECRET_BACKEND: Literal["env", "aws_secrets_manager"] = "env"
+    AWS_SECRETS_MANAGER_SECRET_ID: str | None = None
+    AWS_REGION: str | None = None
+
     # ----- Security ------------------------------------------------------------
     # Shared secret used to verify HMAC signatures on incoming webhooks so that
     # only trusted upstream integrations can push signals into the engine.

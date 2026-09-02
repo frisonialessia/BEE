@@ -65,42 +65,61 @@ class SecretManager:
     def __init__(self) -> None:
         self._settings = get_settings()
 
+    def _resolve(self, key: str) -> str | None:
+        """Resolve one credential field by its Settings attribute name.
+
+        AWS Secrets Manager first when ``SECRET_BACKEND=aws_secrets_manager``
+        (falling back to the environment for any key not present in the AWS
+        secret, so a partially-populated secret degrades gracefully instead
+        of breaking providers that haven't been migrated to it), or the
+        environment directly otherwise. This is the only difference the
+        backend setting makes — every method below, and every caller of
+        ``get()``/``is_configured()``/etc., is unaffected either way.
+        """
+        if self._settings.SECRET_BACKEND == "aws_secrets_manager":
+            from app.services.secret_manager.aws_backend import get_aws_secret  # noqa: PLC0415
+
+            value = get_aws_secret(key)
+            if value is not None:
+                return value
+        return getattr(self._settings, key, None)
+
     def get(self, provider: ProviderName) -> ProviderCredentials:
         """Return credentials for *provider* (may be unconfigured)."""
         if provider == "linkedin":
             return ProviderCredentials(
                 provider="linkedin",
-                access_token=self._settings.LINKEDIN_ACCESS_TOKEN,
-                client_id=self._settings.LINKEDIN_CLIENT_ID,
-                client_secret=self._settings.LINKEDIN_CLIENT_SECRET,
-                webhook_secret=self._settings.LINKEDIN_WEBHOOK_SECRET,
+                access_token=self._resolve("LINKEDIN_ACCESS_TOKEN"),
+                client_id=self._resolve("LINKEDIN_CLIENT_ID"),
+                client_secret=self._resolve("LINKEDIN_CLIENT_SECRET"),
+                webhook_secret=self._resolve("LINKEDIN_WEBHOOK_SECRET"),
             )
         if provider == "g2":
             return ProviderCredentials(
                 provider="g2",
-                api_key=self._settings.G2_API_KEY,
-                webhook_secret=self._settings.G2_WEBHOOK_SECRET,
+                api_key=self._resolve("G2_API_KEY"),
+                webhook_secret=self._resolve("G2_WEBHOOK_SECRET"),
             )
         if provider == "google_search":
             return ProviderCredentials(
                 provider="google_search",
-                api_key=self._settings.GOOGLE_SEARCH_API_KEY,
-                webhook_secret=self._settings.GOOGLE_WEBHOOK_SECRET,
-                extra={"cx": self._settings.GOOGLE_SEARCH_CX},
+                api_key=self._resolve("GOOGLE_SEARCH_API_KEY"),
+                webhook_secret=self._resolve("GOOGLE_WEBHOOK_SECRET"),
+                extra={"cx": self._resolve("GOOGLE_SEARCH_CX")},
             )
         if provider == "capterra":
             return ProviderCredentials(
                 provider="capterra",
-                api_key=self._settings.CAPTERRA_API_KEY,
-                webhook_secret=self._settings.CAPTERRA_WEBHOOK_SECRET,
+                api_key=self._resolve("CAPTERRA_API_KEY"),
+                webhook_secret=self._resolve("CAPTERRA_WEBHOOK_SECRET"),
             )
         if provider == "sendgrid":
             # No api_key/access_token — BEE never calls SendGrid's API, only
             # verifies the signature on its inbound event webhook. is_configured()
             # is still meaningful: it reports whether that webhook secret is set.
-            return ProviderCredentials(provider="sendgrid", webhook_secret=self._settings.SENDGRID_WEBHOOK_SECRET)
+            return ProviderCredentials(provider="sendgrid", webhook_secret=self._resolve("SENDGRID_WEBHOOK_SECRET"))
         if provider == "resend":
-            return ProviderCredentials(provider="resend", webhook_secret=self._settings.RESEND_WEBHOOK_SECRET)
+            return ProviderCredentials(provider="resend", webhook_secret=self._resolve("RESEND_WEBHOOK_SECRET"))
         raise ValueError(f"Unknown provider: {provider}")
 
     def is_configured(self, provider: ProviderName) -> bool:
@@ -112,7 +131,7 @@ class SecretManager:
         if creds.webhook_secret:
             return creds.webhook_secret
         # Fall back to global signing secret when provider-specific secret unset
-        return self._settings.WEBHOOK_SIGNING_SECRET or None
+        return self._resolve("WEBHOOK_SIGNING_SECRET") or None
 
     def configured_providers(self) -> list[ProviderName]:
         """Return list of providers that have at least one credential set."""
