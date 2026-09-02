@@ -337,6 +337,17 @@ const SEEDS: SeedDef[] = [
   { id: "s16", company: "Cobre Insurtech", domain: "cobreinsurtech.co", industry: "Seguros", country: "Colombia", signalType: "funding_round", leadName: "Andrés Molina", leadTitle: "VP Growth", seniority: "vp", amount: 47000, score: 77, daysAgoCreated: 16, outcome: "in_progress", qualifiedCount: 4, daysUntilClose: 125 },
   { id: "s17", company: "Silo Data Works", domain: "silodata.io", industry: "Datos / Analytics", country: "Estados Unidos", signalType: "engagement", leadName: "Taylor Brooks", leadTitle: "Head of Revenue", seniority: "director", amount: 39000, score: 81, daysAgoCreated: 145, outcome: "won", cycleDays: 48, qualifiedCount: 6 },
   { id: "s18", company: "Raíz Educación", domain: "raizeducacion.mx", industry: "EdTech", country: "México", signalType: "news_mention", leadName: "Fernanda Ríos", leadTitle: "Gerente Comercial", seniority: "manager", amount: 12500, score: 58, daysAgoCreated: 4, outcome: "ready_to_action", qualifiedCount: 3, daysUntilClose: 40 },
+  // s19/s20: two more distinct named competitors, on lost reasons
+  // ("price"/"product_fit") that are narratively compatible with "went with
+  // a competitor instead" — unlike s05/s11's "no_decision"/"timing" losses,
+  // which explicitly mean nobody was chosen, so a competitor name there
+  // would contradict the reason itself. Apollo.io and Clay are BEE's actual
+  // adjacent category (AI-driven sales intelligence/enrichment), not just
+  // more CRMs — see Win/Loss's `Competitors` box, which otherwise skewed
+  // toward reading as "competing CRMs" when HubSpot/Salesforce/Pipedrive
+  // were the only three examples.
+  { id: "s19", company: "Bruma Analytics", domain: "brumaanalytics.com.ar", industry: "Datos / Analytics", country: "Argentina", signalType: "tech_adoption", leadName: "Nicolás Ibarra", leadTitle: "VP Sales", seniority: "vp", amount: 31000, score: 69, daysAgoCreated: 60, outcome: "lost", cycleDays: 33, qualifiedCount: 2, lossReason: "price", competitor: "Apollo.io" },
+  { id: "s20", company: "Fenix Wearables", domain: "fenixwearables.com", industry: "Hardware", country: "Estados Unidos", signalType: "engagement", leadName: "Casey Morgan", leadTitle: "Head of GTM", seniority: "director", amount: 27500, score: 63, daysAgoCreated: 44, outcome: "lost", cycleDays: 19, qualifiedCount: 1, lossReason: "product_fit", competitor: "Clay" },
 ];
 
 const EVALUATION_WINDOW_REASON: Record<Locale, string> = {
