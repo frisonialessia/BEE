@@ -51,6 +51,20 @@ const MODULE_TONES = {
   simulator: "bee-bento--violet",
   automation: "bee-bento--muted",
 } as const;
+// Stroke color for each module's icon + background motif — chart-4 (blue)
+// reads fine directly on its own wash, the other three need mixing toward
+// --color-text (same recipe as .bee-eyebrow's modifiers in globals.css) or
+// they wash out against their own tint. Written out in full rather than
+// through a shared custom property: Lightning CSS constant-folds a
+// color-mix()-only custom property into every CSS rule that reads it and
+// drops the property itself, so a var() written from inline style/JSX
+// (invisible to that optimization pass) resolves to nothing.
+const MODULE_STROKES = {
+  signals: "var(--color-chart-4)",
+  brief: "color-mix(in srgb, var(--color-accent-warm) 70%, var(--color-text) 30%)",
+  simulator: "color-mix(in srgb, var(--color-chart-6) 65%, var(--color-text) 35%)",
+  automation: "color-mix(in srgb, var(--color-chart-5) 70%, var(--color-text) 30%)",
+} as const;
 const MODULE_SPANS = {
   signals: "bee-span-8",
   brief: "bee-span-4",
@@ -66,14 +80,22 @@ const GUARANTEE_ICONS = {
   secureByDesign: Radio,
 } as const;
 const GUARANTEE_KEYS = ["noHallucinations", "humanApproval", "multiTenant", "secureByDesign"] as const;
-// Reuses the same 4 bento tones as MODULE_TONES above, in the same order —
-// one tone per card, cycling through the whole palette instead of leaving
-// every card on a flat white background (the "más colores de BEE" ask).
-const GUARANTEE_TONES = [
-  "bee-bento--primary",
-  "bee-bento--warm",
-  "bee-bento--violet",
-  "bee-bento--muted",
+// Guarantees reads as a trust/security section, not a product tour — a
+// full-color wash there (the old GUARANTEE_TONES, reusing MODULE_TONES)
+// competes with Platform's cards for the same visual trick right above it.
+// Cards are white with a 3px accent bar instead (see .bee-bar-card in
+// globals.css); the accent still cycles through the same 4-tone order.
+const GUARANTEE_BAR_TONES = [
+  "bee-bar-card--primary",
+  "bee-bar-card--warm",
+  "bee-bar-card--violet",
+  "bee-bar-card--muted",
+] as const;
+const GUARANTEE_ICON_STROKES = [
+  "var(--color-chart-4)",
+  "color-mix(in srgb, var(--color-accent-warm) 70%, var(--color-text) 30%)",
+  "color-mix(in srgb, var(--color-chart-6) 65%, var(--color-text) 35%)",
+  "color-mix(in srgb, var(--color-chart-5) 70%, var(--color-text) 30%)",
 ] as const;
 
 /** Manchas de gradiente detrás del hero — mezcla de la paleta institucional,
@@ -89,6 +111,56 @@ function HeroAtmosphere() {
       <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background" />
     </div>
   );
+}
+
+/** Subtle background motif per module card — a corner flourish, not a
+ * full-bleed pattern, so it survives the cards' variable content height
+ * (fixed pixel size + the card's own overflow-hidden clip it cleanly on
+ * short cards, instead of stretching/distorting like a viewBox scaled to
+ * fill an unpredictable height would). Hidden below sm: at one column the
+ * motif has no spare corner to sit in without crowding the text. */
+function ModuleMotif({ module: moduleKey }: { module: (typeof MODULE_KEYS)[number] }) {
+  const stroke = MODULE_STROKES[moduleKey];
+  const common = "pointer-events-none absolute hidden sm:block";
+  switch (moduleKey) {
+    case "signals":
+      // Radiating pulse — signals arriving.
+      return (
+        <svg className={`${common} -right-6 -top-8 size-40`} viewBox="0 0 160 160" fill="none" aria-hidden>
+          <circle cx="80" cy="80" r="18" style={{ stroke }} strokeWidth="1.5" opacity="0.35" />
+          <circle cx="80" cy="80" r="34" style={{ stroke }} strokeWidth="1.5" opacity="0.25" />
+          <circle cx="80" cy="80" r="50" style={{ stroke }} strokeWidth="1.5" opacity="0.15" />
+          <circle cx="80" cy="80" r="66" style={{ stroke }} strokeWidth="1.5" opacity="0.08" />
+        </svg>
+      );
+    case "brief":
+      // Sunrise arc — the morning brief.
+      return (
+        <svg className={`${common} -bottom-10 -right-4 size-36`} viewBox="0 0 144 144" fill="none" aria-hidden>
+          <path d="M-8 112a80 80 0 0 1 160 0" style={{ stroke }} strokeWidth="1.5" opacity="0.3" />
+          <circle cx="72" cy="112" r="20" style={{ fill: stroke }} opacity="0.14" />
+        </svg>
+      );
+    case "simulator":
+      // Ascending bars — the revenue projection.
+      return (
+        <svg className={`${common} -bottom-6 -right-4 size-32`} viewBox="0 0 128 128" fill="none" aria-hidden>
+          <rect x="76" y="82" width="13" height="38" rx="2" style={{ fill: stroke }} opacity="0.18" />
+          <rect x="96" y="62" width="13" height="58" rx="2" style={{ fill: stroke }} opacity="0.26" />
+          <rect x="116" y="34" width="13" height="86" rx="2" style={{ fill: stroke }} opacity="0.34" />
+        </svg>
+      );
+    case "automation":
+      // Connected nodes — sequences advancing on their own.
+      return (
+        <svg className={`${common} -right-6 -top-6 size-36`} viewBox="0 0 144 144" fill="none" aria-hidden>
+          <circle cx="96" cy="30" r="4" style={{ fill: stroke }} opacity="0.4" />
+          <circle cx="120" cy="58" r="4" style={{ fill: stroke }} opacity="0.4" />
+          <circle cx="96" cy="86" r="4" style={{ fill: stroke }} opacity="0.4" />
+          <path d="M96 30 96 86 M96 58 120 58" style={{ stroke }} strokeWidth="1.5" opacity="0.28" />
+        </svg>
+      );
+  }
 }
 
 export default async function Home() {
@@ -161,16 +233,20 @@ export default async function Home() {
                   <Link
                     key={key}
                     href={MODULE_HREFS[key]}
-                    className={`${MODULE_SPANS[key]} bee-bento bee-bento-pad bee-glass--hover group block ${MODULE_TONES[key]}`}
+                    className={`${MODULE_SPANS[key]} bee-bento bee-bento-pad bee-glass--hover group relative block overflow-hidden ${MODULE_TONES[key]}`}
                   >
-                    <div className="flex h-full gap-4">
+                    <ModuleMotif module={key} />
+                    <div className="relative flex h-full gap-4">
                       <div className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-                        <Icon className="size-5 stroke-[1.5] text-[var(--color-chart-4)]" />
+                        <Icon className="size-5 stroke-[1.5]" style={{ color: MODULE_STROKES[key] }} />
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-sm font-semibold tracking-tight">{t(`modules.${key}.title`)}</h3>
                         <p className="bee-caption mt-1.5">{t(`modules.${key}.description`)}</p>
-                        <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] opacity-0 transition-opacity group-hover:opacity-100">
+                        <span
+                          className="mt-3 inline-flex items-center gap-1 text-xs font-medium opacity-0 transition-opacity group-hover:opacity-100"
+                          style={{ color: MODULE_STROKES[key] }}
+                        >
                           {t("modulesExplore")} <ArrowRight className="size-3" />
                         </span>
                       </div>
@@ -198,10 +274,10 @@ export default async function Home() {
               return (
                 <div
                   key={key}
-                  className={`bee-bento bee-bento-pad bee-glass--hover ${GUARANTEE_TONES[i]}`}
+                  className={`bee-bento bee-bento-pad bee-bar-card bee-glass--hover ${GUARANTEE_BAR_TONES[i]}`}
                 >
                   <div className="flex size-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-                    <Icon className="size-4.5 stroke-[1.5] text-[var(--color-chart-4)]" />
+                    <Icon className="size-4.5 stroke-[1.5]" style={{ color: GUARANTEE_ICON_STROKES[i] }} />
                   </div>
                   <h3 className="mt-3 text-sm font-semibold tracking-tight">{t(`guarantees.${key}.title`)}</h3>
                   <p className="bee-caption mt-1.5">{t(`guarantees.${key}.description`)}</p>
