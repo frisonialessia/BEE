@@ -44,6 +44,7 @@ from app.schemas.brand import (
     BrandContextResult,
     BrandFragmentCreate,
     BrandFragmentOut,
+    BrandVoicePreviewResult,
     VoiceProfileCreate,
     VoiceProfileExtractResult,
     VoiceProfileOut,
@@ -86,6 +87,19 @@ _CTA_KEYWORDS = (
     "call this week", "worth a chat", "grab time", "grab 15", "happy to",
     "would you", "would love", "make sense",
 )
+
+_GENERIC_PREVIEW_SYSTEM_PROMPT = """Write a short LinkedIn post opener \
+(2-3 sentences) about the given topic. Professional, neutral, corporate \
+tone — the kind of generic AI-generated post seen everywhere. No specific \
+voice or personality. Respond with ONLY the post text, no quotes, no \
+preamble."""
+
+_BRANDED_PREVIEW_SYSTEM_PROMPT_TEMPLATE = """Write a short LinkedIn post \
+opener (2-3 sentences) about the given topic, in EXACTLY this voice:
+
+{brand_brief}
+
+Respond with ONLY the post text, no quotes, no preamble."""
 
 _BRIEF_HEADER = """
 ## CEO Voice Profile
@@ -467,6 +481,109 @@ class PersonalBrandService:
         """Quick brief for prompt injection without returning full context object."""
         context = self.get_brand_context(query=topic or artifact_type, top_k=3, organization_id=organization_id)
         return context.brand_brief
+
+    # ── Live preview: generic vs. voice-applied ─────────────────────────────
+
+    def generate_preview(
+        self, topic: str, organization_id: uuid.UUID | None = None
+    ) -> BrandVoicePreviewResult | None:
+        """A short side-by-side sample on `topic`: what a generic AI tool
+        would write vs. what this org's own voice actually changes about it.
+
+        Returns None when there's no active profile yet — nothing to apply.
+        Never persisted; purely a live, on-demand comparison. Same "never
+        lose the request" contract as extract_profile_draft: tries the LLM
+        when configured, falls back to a deterministic template on any
+        failure (or when AI_PROVIDER=none) so this never raises.
+        """
+        context = self.get_brand_context(query=topic, top_k=3, organization_id=organization_id)
+        active_profile = context.voice_profile
+        if active_profile is None:
+            return None
+
+        if self.settings.AI_PROVIDER in ("openai", "anthropic") and self.settings.AI_API_KEY:
+            try:
+                generic = self._call_llm_text(_GENERIC_PREVIEW_SYSTEM_PROMPT, topic)
+                branded_system = _BRANDED_PREVIEW_SYSTEM_PROMPT_TEMPLATE.format(brand_brief=context.brand_brief)
+                branded = self._call_llm_text(branded_system, topic)
+                model = (
+                    self.settings.AI_MODEL
+                    if self.settings.AI_PROVIDER == "openai"
+                    else self.settings.ANTHROPIC_MODEL
+                )
+                return BrandVoicePreviewResult(
+                    topic=topic,
+                    generic_version=generic,
+                    branded_version=branded,
+                    generated_by="llm",
+                    model_used=model,
+                )
+            except Exception:  # noqa: BLE001 — never lose the request, fall back instead
+                logger.exception("PersonalBrandService: LLM preview failed, falling back to template")
+
+        return BrandVoicePreviewResult(
+            topic=topic,
+            generic_version=self._template_generic_preview(topic),
+            branded_version=self._template_branded_preview(topic, active_profile),
+            generated_by="template",
+            model_used=None,
+        )
+
+    def _call_llm_text(self, system_prompt: str, topic: str) -> str:
+        """Plain-text (not JSON-mode) LLM call — same provider branching as
+        _call_llm_extraction, but the preview wants prose, not structured
+        fields."""
+        provider = self.settings.AI_PROVIDER
+        user_prompt = f"Topic: {topic}"
+
+        if provider == "openai":
+            from openai import OpenAI
+
+            client = OpenAI(api_key=self.settings.AI_API_KEY, timeout=self.settings.AI_TIMEOUT_SECONDS)
+            resp = client.chat.completions.create(
+                model=self.settings.AI_MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+                temperature=0.6,
+                max_tokens=200,
+            )
+            return (resp.choices[0].message.content or "").strip()
+        if provider == "anthropic":
+            import anthropic
+
+            client = anthropic.Anthropic(api_key=self.settings.AI_API_KEY)
+            resp = client.messages.create(
+                model=self.settings.ANTHROPIC_MODEL,
+                max_tokens=200,
+                temperature=0.6,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}],
+            )
+            return (resp.content[0].text if resp.content else "").strip()
+        raise ValueError(f"Unsupported AI_PROVIDER: {provider}")
+
+    def _template_generic_preview(self, topic: str) -> str:
+        return (
+            f"Excited to share some thoughts on {topic}. We're committed to "
+            "delivering value and driving results for our customers. Let's "
+            "connect if this resonates with you!"
+        )
+
+    def _template_branded_preview(self, topic: str, profile: VoiceProfileOut) -> str:
+        tone = profile.tone_descriptors[0] if profile.tone_descriptors else None
+        lead_topic = profile.authority_topics[0] if profile.authority_topics else None
+        emoji = " 🔥" if profile.use_emojis else ""
+
+        parts = [f"{topic.capitalize()}.{emoji}"]
+        if lead_topic:
+            parts.append(f"This is exactly the kind of thing we obsess over in {lead_topic}.")
+        if tone:
+            parts.append(f"(Written {tone} — no filler, no jargon.)")
+        if profile.preferred_cta:
+            parts.append(profile.preferred_cta)
+        return " ".join(parts)
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 

@@ -303,6 +303,16 @@ export interface VoiceProfileExtractResult {
   model_used: string | null;
 }
 
+/** A live, on-demand side-by-side: generic AI output vs. this org's own
+ * voice, for the same topic. Never persisted. */
+export interface BrandVoicePreviewResult {
+  topic: string;
+  generic_version: string;
+  branded_version: string;
+  generated_by: "llm" | "template" | "demo";
+  model_used: string | null;
+}
+
 export interface BrandFragment {
   id: string;
   profile_id: string;

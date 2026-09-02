@@ -20,10 +20,11 @@ import {
   getBrandProfile,
   getChannelStatus,
   listBrandFragments,
+  previewBrandVoice,
 } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { BrandFragment, ChannelStatus, VoiceProfile } from "@/lib/types";
+import type { BrandFragment, BrandVoicePreviewResult, ChannelStatus, VoiceProfile } from "@/lib/types";
 
 const CHANNEL_ICONS: Record<string, string> = {
   email: "✉",
@@ -73,6 +74,9 @@ export function BrandVoicePanel() {
   const [pasteText, setPasteText] = useState("");
   const [extracting, setExtracting] = useState(false);
   const [extractedBy, setExtractedBy] = useState<"llm" | "heuristic" | "demo" | null>(null);
+  const [previewTopic, setPreviewTopic] = useState("");
+  const [previewing, setPreviewing] = useState(false);
+  const [preview, setPreview] = useState<BrandVoicePreviewResult | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -153,6 +157,17 @@ export function BrandVoicePanel() {
       setExtractedBy(draft.generated_by);
     } finally {
       setExtracting(false);
+    }
+  }
+
+  async function handlePreview() {
+    if (previewTopic.trim().length < 3) return;
+    setPreviewing(true);
+    try {
+      const result = await previewBrandVoice(previewTopic);
+      setPreview(result.data);
+    } finally {
+      setPreviewing(false);
     }
   }
 
@@ -388,6 +403,43 @@ export function BrandVoicePanel() {
           {/* CTA */}
           {profile.preferred_cta && (
             <p className="bee-caption italic">&quot;{profile.preferred_cta}&quot;</p>
+          )}
+        </div>
+      )}
+
+      {/* Live voice preview */}
+      {profile && (
+        <div className="bee-inset space-y-3 p-5">
+          <p className="bee-eyebrow">{t("preview.title")}</p>
+          <p className="bee-caption">{t("preview.hint")}</p>
+          <div className="flex flex-wrap gap-2">
+            <input
+              value={previewTopic}
+              onChange={(e) => setPreviewTopic(e.target.value)}
+              placeholder={t("preview.topicPlaceholder")}
+              className="bee-input min-w-[200px] flex-1"
+            />
+            <button
+              onClick={() => void handlePreview()}
+              disabled={previewing || previewTopic.trim().length < 3}
+              className="bee-btn bee-btn--primary"
+            >
+              {previewing ? t("preview.previewing") : t("preview.button")}
+            </button>
+          </div>
+          {preview && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="bee-panel space-y-1.5 p-3">
+                <p className="bee-caption font-medium">{t("preview.genericLabel")}</p>
+                <p className="text-sm text-muted-foreground">{preview.generic_version}</p>
+              </div>
+              <div className="bee-panel space-y-1.5 border-l-2 border-[var(--color-chart-4)] p-3">
+                <p className="bee-caption font-medium" style={{ color: "var(--color-chart-4)" }}>
+                  {t("preview.brandedLabel")}
+                </p>
+                <p className="text-sm">{preview.branded_version}</p>
+              </div>
+            </div>
           )}
         </div>
       )}

@@ -40,6 +40,7 @@ import type {
   AuditEntry,
   AuditSummary,
   BrandFragment,
+  BrandVoicePreviewResult,
   CorrectionOut,
   DLQRetryResult,
   DLQSummary,
@@ -1448,6 +1449,35 @@ export function demoExtractVoiceProfile(rawText: string): VoiceProfileExtractRes
     generated_by: "demo",
     model_used: null,
   };
+}
+
+/**
+ * demoPreviewBrandVoice — client-side stand-in for the real LLM/template
+ * preview endpoint. Mirrors PersonalBrandService's template fallback
+ * (_template_generic_preview/_template_branded_preview) exactly, so the
+ * demo and the real no-LLM-configured path read identically. Built only
+ * from the profile's own already-configured fields — same honesty rule
+ * every other demo synthesis function in this file follows.
+ */
+export function demoPreviewBrandVoice(topic: string): BrandVoicePreviewResult {
+  const profile = loadBrandProfile();
+  const generic =
+    `Excited to share some thoughts on ${topic}. We're committed to delivering value and driving ` +
+    "results for our customers. Let's connect if this resonates with you!";
+
+  if (!profile) {
+    return { topic, generic_version: generic, branded_version: generic, generated_by: "demo", model_used: null };
+  }
+
+  const tone = profile.tone_descriptors[0];
+  const leadTopic = profile.authority_topics[0];
+  const emoji = profile.use_emojis ? " 🔥" : "";
+  const parts = [`${topic.charAt(0).toUpperCase()}${topic.slice(1)}.${emoji}`];
+  if (leadTopic) parts.push(`This is exactly the kind of thing we obsess over in ${leadTopic}.`);
+  if (tone) parts.push(`(Written ${tone} — no filler, no jargon.)`);
+  if (profile.preferred_cta) parts.push(profile.preferred_cta);
+
+  return { topic, generic_version: generic, branded_version: parts.join(" "), generated_by: "demo", model_used: null };
 }
 
 export function demoAddBrandFragment(

@@ -14,6 +14,8 @@ from app.schemas.brand import (
     BrandContextResult,
     BrandFragmentCreate,
     BrandFragmentOut,
+    BrandVoicePreviewRequest,
+    BrandVoicePreviewResult,
     VoiceProfileCreate,
     VoiceProfileExtractRequest,
     VoiceProfileExtractResult,
@@ -73,6 +75,29 @@ def extract_profile(
     deterministic heuristic extractor otherwise — never fails outright.
     """
     return svc.extract_profile_draft(data.raw_text)
+
+
+@router.post(
+    "/profile/preview",
+    response_model=BrandVoicePreviewResult,
+    summary="Live preview: generic AI output vs. this org's own voice",
+)
+def preview_voice(
+    data: BrandVoicePreviewRequest,
+    svc: PersonalBrandService = Depends(_get_service),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
+) -> BrandVoicePreviewResult:
+    """Generate a short side-by-side sample on a topic: what a generic AI
+    tool would write vs. what this org's configured voice actually changes.
+
+    Nothing is persisted. Uses the configured LLM when available; falls back
+    to a deterministic template on any failure. 404s only when there is no
+    active voice profile yet — set one up first.
+    """
+    result = svc.generate_preview(data.topic, organization_id)
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active voice profile. Create one first.")
+    return result
 
 
 @router.get(

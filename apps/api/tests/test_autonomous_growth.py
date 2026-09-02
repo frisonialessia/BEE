@@ -383,6 +383,56 @@ class TestVoiceProfileExtraction:
 
 
 # ══════════════════════════════════════════════════════════════════
+# PersonalBrandService — live voice preview (generic vs. branded)
+# ══════════════════════════════════════════════════════════════════
+
+class TestBrandVoicePreview:
+    def test_returns_none_without_active_profile(self, brand_svc: PersonalBrandService) -> None:
+        assert brand_svc.generate_preview("funding rounds") is None
+
+    def test_template_preview_has_distinct_versions(self, brand_svc: PersonalBrandService, profile) -> None:  # noqa: ARG002
+        result = brand_svc.generate_preview("our new pricing model")
+        assert result is not None
+        assert result.generated_by == "template"
+        assert result.model_used is None
+        assert result.generic_version != result.branded_version
+        assert len(result.generic_version) > 0
+        assert len(result.branded_version) > 0
+
+    def test_template_branded_includes_preferred_cta(self, brand_svc: PersonalBrandService, profile) -> None:
+        result = brand_svc.generate_preview("go-to-market strategy")
+        assert result is not None
+        assert profile.preferred_cta in result.branded_version
+
+    def test_llm_preview_used_when_configured(self, brand_svc: PersonalBrandService, profile) -> None:  # noqa: ARG002
+        original_provider, original_key = brand_svc.settings.AI_PROVIDER, brand_svc.settings.AI_API_KEY
+        try:
+            brand_svc.settings.AI_PROVIDER = "openai"
+            brand_svc.settings.AI_API_KEY = "sk-test"
+            with patch.object(brand_svc, "_call_llm_text", side_effect=["Generic post.", "Branded post."]):
+                result = brand_svc.generate_preview("AI in sales")
+        finally:
+            brand_svc.settings.AI_PROVIDER, brand_svc.settings.AI_API_KEY = original_provider, original_key
+        assert result is not None
+        assert result.generated_by == "llm"
+        assert result.model_used == brand_svc.settings.AI_MODEL
+        assert result.generic_version == "Generic post."
+        assert result.branded_version == "Branded post."
+
+    def test_llm_preview_falls_back_to_template_on_failure(self, brand_svc: PersonalBrandService, profile) -> None:  # noqa: ARG002
+        original_provider, original_key = brand_svc.settings.AI_PROVIDER, brand_svc.settings.AI_API_KEY
+        try:
+            brand_svc.settings.AI_PROVIDER = "openai"
+            brand_svc.settings.AI_API_KEY = "sk-test"
+            with patch.object(brand_svc, "_call_llm_text", side_effect=RuntimeError("timeout")):
+                result = brand_svc.generate_preview("expansion into new markets")
+        finally:
+            brand_svc.settings.AI_PROVIDER, brand_svc.settings.AI_API_KEY = original_provider, original_key
+        assert result is not None
+        assert result.generated_by == "template"
+
+
+# ══════════════════════════════════════════════════════════════════
 # OmnichannelGateway
 # ══════════════════════════════════════════════════════════════════
 
@@ -897,6 +947,28 @@ class TestBrandEndpoints:
     def test_extract_profile_draft_requires_auth(self, client) -> None:
         resp = client.post("/api/v1/brand/profile/extract", json={"raw_text": _SAMPLE_TEXT})
         assert resp.status_code == 401
+
+    def test_preview_voice_without_profile(self, client) -> None:
+        resp = client.post("/api/v1/brand/profile/preview", json={"topic": "our new product launch"})
+        assert resp.status_code == 404
+
+    def test_preview_voice(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        client.post(
+            "/api/v1/brand/profile",
+            json={"display_name": "Alex Rivera", "tone_descriptors": ["direct"], "preferred_cta": "Let's talk."},
+            headers=headers,
+        )
+        resp = client.post(
+            "/api/v1/brand/profile/preview",
+            json={"topic": "our new product launch"},
+            headers=headers,
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["topic"] == "our new product launch"
+        assert data["generated_by"] == "template"
+        assert data["generic_version"] != data["branded_version"]
 
     def test_extract_profile_draft_rejects_too_short_text(self, client, session: Session) -> None:
         resp = client.post(
