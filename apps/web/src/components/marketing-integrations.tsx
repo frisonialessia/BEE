@@ -14,13 +14,41 @@ import { getTranslations } from "next-intl/server";
  * `name` no está traducido — son nombres propios/marcas (LinkedIn, G2,
  * Google Search, Email), no texto en español que necesite versión en
  * inglés.
+ *
+ * Cards are white with a small tinted icon chip, not a full-color wash —
+ * a directory of real sources reads more like a spec sheet than a set of
+ * colored blocks, and it keeps this section from competing with Platform's
+ * full-wash cards right above it for the same visual trick.
  */
 
+// ink: written out as a full color-mix() expression rather than through a
+// shared custom property — Lightning CSS constant-folds a color-mix()-only
+// custom property into every CSS rule that reads it and drops the property
+// itself, so a var() read from an inline style (invisible to that
+// optimization pass, as this one is) resolves to nothing.
 const INTEGRATIONS = [
-  { icon: Users, name: "LinkedIn", id: "linkedin", tone: "bee-bento--primary" },
-  { icon: Star, name: "G2", id: "g2", tone: "bee-bento--warm" },
-  { icon: Search, name: "Google Search", id: "googleSearch", tone: "bee-bento--violet" },
-  { icon: Mail, name: "Email", id: "email", tone: "bee-bento--muted" },
+  { icon: Users, name: "LinkedIn", id: "linkedin", chip: "bee-chip--primary", ink: "var(--color-chart-4)" },
+  {
+    icon: Star,
+    name: "G2",
+    id: "g2",
+    chip: "bee-chip--warm",
+    ink: "color-mix(in srgb, var(--color-accent-warm) 70%, var(--color-text) 30%)",
+  },
+  {
+    icon: Search,
+    name: "Google Search",
+    id: "googleSearch",
+    chip: "bee-chip--violet",
+    ink: "color-mix(in srgb, var(--color-chart-6) 65%, var(--color-text) 35%)",
+  },
+  {
+    icon: Mail,
+    name: "Email",
+    id: "email",
+    chip: "bee-chip--muted",
+    ink: "color-mix(in srgb, var(--color-chart-5) 70%, var(--color-text) 30%)",
+  },
 ] as const;
 
 export async function MarketingIntegrations() {
@@ -34,12 +62,11 @@ export async function MarketingIntegrations() {
       </div>
       <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {INTEGRATIONS.map((i) => (
-          <div
-            key={i.name}
-            className={`bee-bento bee-bento-pad bee-glass--hover flex items-start gap-3 ${i.tone}`}
-          >
-            <div className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-              <i.icon className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
+          <div key={i.name} className="bee-bento bee-bento-pad bee-glass--hover flex items-start gap-3">
+            <div
+              className={`flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] ${i.chip}`}
+            >
+              <i.icon className="size-4 stroke-[1.5]" style={{ color: i.ink }} />
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold">{i.name}</p>

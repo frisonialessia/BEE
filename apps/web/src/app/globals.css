@@ -260,11 +260,49 @@
 
 .bee-bento--primary { background: var(--color-primary); }
 .bee-bento--warm { background: color-mix(in srgb, var(--color-accent-warm) 40%, var(--color-background)); }
-.bee-bento--muted { background: var(--color-block-muted); }
-.bee-bento--violet { background: color-mix(in srgb, var(--color-chart-6) 40%, var(--color-background)); }
+/* Was `background: var(--color-block-muted)` — a flat #ede4f7 that landed
+   almost exactly on top of --violet's own color-mix() result (both a pale
+   lavender), so any row using both tones showed what looked like the same
+   card twice (Revenue simulator/Multi-channel automation, Google
+   Search/Email, Real multi-tenancy/Secure by design). Switched to the same
+   color-mix() recipe as the other three tones, off chart-5 (magenta, not
+   chart-6/violet) — one formula for all four, and a real hue apart from
+   --violet instead of a near-duplicate of it. --color-block-muted itself
+   is untouched (crm-board.tsx still uses it directly). */
+.bee-bento--muted { background: color-mix(in srgb, var(--color-chart-5) 55%, var(--color-background)); }
+.bee-bento--violet { background: color-mix(in srgb, var(--color-chart-6) 45%, var(--color-background)); }
 
 .bee-bento-pad { padding: var(--bee-pad-surface); }
 .bee-bento-pad-lg { padding: var(--bee-pad-surface-lg); }
+
+/* ── Icon chips — the accent lives in a small tinted icon box instead of
+   the card fill (marketing-integrations.tsx: a directory of real signal
+   sources reads more like a spec sheet on a white card than a set of
+   colored blocks). */
+.bee-chip--primary { background: color-mix(in srgb, var(--color-chart-4) 20%, var(--color-card)); }
+.bee-chip--warm { background: color-mix(in srgb, var(--color-accent-warm) 26%, var(--color-card)); }
+.bee-chip--violet { background: color-mix(in srgb, var(--color-chart-6) 20%, var(--color-card)); }
+.bee-chip--muted { background: color-mix(in srgb, var(--color-chart-5) 18%, var(--color-card)); }
+
+/* ── Accent-bar cards — the accent lives in a 3px left edge instead of a
+   full-card wash (app/page.tsx GUARANTEES: a trust/security section reads
+   more credible on a neutral white card than a loud pastel block). Relies
+   on cascade order, not specificity, to win over .bee-bento-pad's
+   shorthand `padding` — keep this rule below .bee-bento-pad above. */
+.bee-bar-card { position: relative; padding-left: calc(var(--bee-pad-surface) + 0.125rem); }
+.bee-bar-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.875rem;
+  bottom: 0.875rem;
+  width: 3px;
+  border-radius: 2px;
+}
+.bee-bar-card--primary::before { background: var(--color-chart-4); }
+.bee-bar-card--warm::before { background: var(--color-accent-warm); }
+.bee-bar-card--violet::before { background: var(--color-chart-6); }
+.bee-bar-card--muted::before { background: var(--color-chart-5); }
 
 .bee-panel {
   background: var(--color-card);
