@@ -88,7 +88,7 @@ export function AskBeeFab() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex size-12 items-center justify-center rounded-full bg-[var(--color-cta)] text-white shadow-[0_4px_16px_color-mix(in_srgb,var(--color-cta)_45%,transparent)] transition-transform hover:scale-105"
+        className="flex size-12 items-center justify-center rounded-full bg-[#d567ff] text-white shadow-[0_4px_16px_color-mix(in_srgb,#d567ff_45%,transparent)] transition-transform hover:scale-105"
         aria-label={open ? t("fab.toggleCloseAria") : t("fab.toggleOpenAria")}
       >
         {open ? (
