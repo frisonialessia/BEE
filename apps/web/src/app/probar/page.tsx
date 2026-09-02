@@ -30,8 +30,9 @@ const KPI_TILES = [
 
 /** Landing page of the sandbox — nav calls it "Resumen" too, so a visitor
  * exploring the sandbox should see the same depth the real Dashboard's
- * "Resumen" shows (colmena de intención, embudo, heatmap industria ×
- * señal, heatmap de actividad), fit into one screen: a KPI strip this compact only makes
+ * "Resumen" shows (mi calendario / colmena de intención / leaderboard en
+ * una fila, embudo, heatmap industria × señal, heatmap de actividad), fit
+ * into one screen: a KPI strip this compact only makes
  * sense as a quick orientation row, not competing for space with the
  * widgets that actually carry the depth. Counts/widgets go through the
  * same hooks the rest of the app uses (not lib/demo/store directly) —
@@ -96,19 +97,15 @@ export default function ProbarOverviewPage() {
         ))}
       </div>
 
-      {/* Mismo orden que el Resumen real (dashboard-overview.tsx): Colmena
-       * antes del embudo. Trae su propio título — no lo envolvemos en un
-       * bee-eyebrow como al resto de esta página, igual que en el
-       * dashboard real. height=240 (el tamaño de Control, no los 320 del
-       * Resumen real) para no romper el "todo en una pantalla" que el
-       * resto de esta página persigue; useHiveLeads ya cae a
-       * sampleHotLeads sin sesión, así que no hace falta datos aparte. */}
-      <SignalHexMap className="mt-2" height={240} />
-
-      <section className="mt-2 space-y-2">
-        <p className="bee-eyebrow">{t("funnelEyebrow")}</p>
-        <PipelineFunnel opportunities={opportunities} />
-      </section>
+      {/* Mismo orden que el Resumen real (dashboard-overview.tsx): Mi
+       * calendario / Colmena / Leaderboard, los tres del mismo alto,
+       * lado a lado — antes del embudo, con la Colmena en el medio en
+       * vez de sola a ancho completo. height=260, igual que el real. */}
+      <div className="mt-2 grid gap-3 lg:grid-cols-3">
+        <MyCalendarWidget />
+        <SignalHexMap height={260} />
+        <Leaderboard opportunities={opportunities} users={usersResult ?? []} teams={teamsResult ?? []} />
+      </div>
 
       {/* Mismo título/caption que estas dos secciones ya usan en el Resumen
        * real (dashboard-overview.tsx) — acá corrían con un solo renglón
@@ -138,10 +135,10 @@ export default function ProbarOverviewPage() {
         </section>
       </div>
 
-      <div className="mt-2 grid items-start gap-3 lg:grid-cols-2">
-        <Leaderboard opportunities={opportunities} users={usersResult ?? []} teams={teamsResult ?? []} />
-        <MyCalendarWidget />
-      </div>
+      <section className="mt-2 space-y-2">
+        <p className="bee-eyebrow">{t("funnelEyebrow")}</p>
+        <PipelineFunnel opportunities={opportunities} />
+      </section>
     </div>
   );
 }

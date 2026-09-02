@@ -150,19 +150,23 @@ export function DashboardOverview() {
       <CriticalAccountsDigest battlecards={battlecards} today={new Date()} />
       <DailyBrief />
 
-      {/* mb-4 throughout this stack of full-width report sections — used to
-          drift between mb-3 and mb-4 with no reason (TodayImpactCard,
-          CriticalAccountsDigest and DailyBrief above all self-apply mb-4;
-          these three matched each other at mb-3 but not their siblings). */}
-      <SignalHexMap className="mb-4" height={320} />
-
-      <section className="mb-4 space-y-3">
-        <div>
-          <h3 className="bee-card-title">{t("sections.funnel.title")}</h3>
-          <p className="bee-caption">{t("sections.funnel.caption")}</p>
-        </div>
-        <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
-      </section>
+      {/* Compact card row — Mi calendario (lo mío ahora), la Colmena
+          (inteligencia de mercado) y el Leaderboard (cómo va el equipo),
+          los tres del mismo alto para leerse de un vistazo, lado a lado —
+          en vez de la Colmena a ancho completo y el Leaderboard escondido
+          abajo del todo junto al simulador de ingresos. items-stretch (el
+          default de grid, no items-start como la fila de heatmaps de
+          abajo) para que los tres compartan la altura de la tarjeta más
+          alta en vez de cada uno recortar a su propio contenido. */}
+      <div className="mb-4 grid gap-3 lg:grid-cols-3">
+        <MyCalendarWidget />
+        <SignalHexMap height={260} />
+        <Leaderboard
+          opportunities={allOppsResult?.data ?? []}
+          users={usersResult ?? []}
+          teams={teamsResult ?? []}
+        />
+      </div>
 
       <div className="mb-4 grid items-start gap-3 lg:grid-cols-2">
         <section className="bee-surface bee-bento-pad space-y-3">
@@ -185,6 +189,14 @@ export function DashboardOverview() {
           <SignalActivityHeatmap signals={signals} />
         </section>
       </div>
+
+      <section className="mb-4 space-y-3">
+        <div>
+          <h3 className="bee-card-title">{t("sections.funnel.title")}</h3>
+          <p className="bee-caption">{t("sections.funnel.caption")}</p>
+        </div>
+        <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
+      </section>
 
       <div className="bee-bento-grid">
         {battlecards.length > 0 && (
@@ -233,14 +245,6 @@ export function DashboardOverview() {
             <p className="bee-caption">{t("sections.revenueSimulator.caption")}</p>
           </div>
           <RevenueSimulatorWidget />
-
-          <Leaderboard
-            opportunities={allOppsResult?.data ?? []}
-            users={usersResult ?? []}
-            teams={teamsResult ?? []}
-          />
-
-          <MyCalendarWidget />
         </section>
 
         <section className="bee-span-12 space-y-3">
