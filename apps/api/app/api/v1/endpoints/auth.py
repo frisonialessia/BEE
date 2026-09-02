@@ -10,17 +10,23 @@ from sqlmodel import Session
 from app.api.deps import get_current_user
 from app.core.config import get_settings
 from app.core.database import get_session
+from app.core.logging import get_logger
+from app.core.password_reset_guard import get_password_reset_guard
 from app.core.security import create_access_token, hash_password, verify_password
 from app.core.signup_guard import get_signup_guard
 from app.models.user import User
 from app.schemas.auth import (
+    ForgotPasswordIn,
     OrganizationRegister,
     PasswordChangeIn,
+    ResetPasswordIn,
     TokenResponse,
     UserLogin,
     UserOut,
 )
 from app.services.auth import AuthService
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -124,3 +130,72 @@ def change_my_password(
     current_user.hashed_password = hash_password(data.new_password)
     session.add(current_user)
     session.commit()
+
+
+@router.post(
+    "/forgot-password",
+    status_code=status.HTTP_200_OK,
+    summary="Request a password-reset email",
+)
+def forgot_password(
+    data: ForgotPasswordIn, request: Request, session: Session = Depends(get_session)
+) -> dict[str, str]:
+    """The self-serve entry point that didn't exist before this endpoint —
+    previously the only recovery path was the BEE-team-only emergency tool
+    (``POST /api/v1/internal/support/reset-password``).
+
+    Always returns the same generic 200 regardless of whether the email
+    matches an account — same anti-enumeration posture as ``/auth/login``
+    and ``AuthService.authenticate``. Rate-limited per-IP, independent of
+    whether the address exists, so this can't be used to spam a real
+    customer's inbox either.
+    """
+    if not get_password_reset_guard().try_consume(_client_key(request)):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many reset attempts from this address. Try again later.",
+        )
+
+    service = AuthService(session)
+    result = service.create_password_reset_token(data.email)
+    if result is not None:
+        user, plaintext_token = result
+        settings = get_settings()
+        reset_link = f"{settings.FRONTEND_URL.rstrip('/')}/reset-password?token={plaintext_token}"
+
+        from app.services.omnichannel.interface import ChannelPayload
+        from app.services.omnichannel.providers.email import EmailProvider
+
+        result_send = EmailProvider().send(
+            ChannelPayload(
+                channel="email",
+                recipient_id=user.email,
+                subject="Reset your BEE password",
+                body=(
+                    f"Hi {user.full_name},\n\n"
+                    "Someone requested a password reset for your BEE account. "
+                    f"If this was you, set a new password here:\n\n{reset_link}\n\n"
+                    f"This link expires in {settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES} minutes. "
+                    "If you didn't request this, you can safely ignore this email — "
+                    "your password hasn't changed."
+                ),
+            )
+        )
+        if not result_send.success:
+            logger.warning("forgot-password: email send failed for user_id=%s: %s", user.id, result_send.error)
+
+    return {"detail": "If that email is registered, a reset link has been sent."}
+
+
+@router.post(
+    "/reset-password",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Redeem a password-reset token",
+)
+def reset_password(data: ResetPasswordIn, session: Session = Depends(get_session)) -> None:
+    service = AuthService(session)
+    if not service.reset_password(data.token, data.new_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This reset link is invalid or has expired. Request a new one.",
+        )

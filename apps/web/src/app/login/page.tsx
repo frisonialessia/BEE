@@ -61,9 +61,14 @@ export default function LoginPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="password" className="bee-caption block">
-                {t("passwordLabel")}
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="bee-caption block">
+                  {t("passwordLabel")}
+                </label>
+                <Link href="/forgot-password" className="bee-caption text-foreground underline underline-offset-4">
+                  {t("forgotPassword")}
+                </Link>
+              </div>
               <input
                 id="password"
                 type="password"

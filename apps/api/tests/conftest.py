@@ -134,9 +134,13 @@ def client_fixture(engine) -> Generator[TestClient, None, None]:
     # without resetting it, a test file that calls POST /auth/register more
     # than SIGNUP_RATE_LIMIT_PER_HOUR times (the default is 5) starts
     # getting 429s from unrelated earlier tests' registrations.
+    from app.core.password_reset_guard import reset_password_reset_guard
     from app.core.signup_guard import reset_signup_guard
 
     reset_signup_guard()
+    # Same process-wide-singleton reasoning as reset_signup_guard() above,
+    # for POST /auth/forgot-password's rate limiter.
+    reset_password_reset_guard()
     # WEBHOOK_SIGNATURE_REQUIRED now defaults to True (secure-by-default in
     # production) — tests exercising /signals/webhook and /webhooks/receive
     # without computing a real signature are effectively running as "local

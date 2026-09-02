@@ -205,6 +205,22 @@ def hash_api_key(plaintext: str) -> str:
     return hashlib.sha256(plaintext.encode("utf-8")).hexdigest()
 
 
+def generate_password_reset_token() -> tuple[str, str]:
+    """Generate a new password-reset token.
+
+    Returns ``(plaintext, token_hash)`` — same show-once-never-stored
+    contract as :func:`generate_api_key`, and deliberately reuses
+    :func:`hash_api_key` for the hash rather than a parallel implementation:
+    the token is machine-generated and high-entropy, not a user-chosen
+    secret, so the same fast deterministic SHA-256 (not bcrypt) applies for
+    the same reason it does there. The plaintext is emailed to the user
+    once, embedded in the reset link, and is never itself persisted — only
+    its hash, on :class:`~app.models.password_reset_token.PasswordResetToken`.
+    """
+    plaintext = secrets.token_urlsafe(32)
+    return plaintext, hash_api_key(plaintext)
+
+
 class InvalidTokenError(Exception):
     """Raised when a JWT is missing, malformed, expired, or wrongly typed."""
 

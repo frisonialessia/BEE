@@ -48,6 +48,15 @@ export interface UserLoginIn {
   password: string;
 }
 
+export interface ForgotPasswordIn {
+  email: string;
+}
+
+export interface ResetPasswordIn {
+  token: string;
+  new_password: string;
+}
+
 export interface TeamOut {
   id: string;
   organization_id: string;

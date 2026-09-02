@@ -310,11 +310,19 @@ don't persist across restarts or share state across instances (see gotcha
 
 ## 8. Internal support tool — emergency password reset
 
-There is no self-serve "forgot password" flow yet. `POST
-/api/v1/internal/support/reset-password` is a single emergency action for
-the BEE team (not customer-facing): given an email, it generates a new
-temporary password and returns it exactly once — whoever calls it relays it
-out-of-band to the affected person.
+Self-serve recovery exists (`POST /auth/forgot-password` → email a reset
+link → `POST /auth/reset-password`), works out of the box with sane
+defaults, and needs nothing new configured — it reuses `EMAIL_SMTP_*`
+(§2 above; mock-logs the email instead of sending when unconfigured) and
+`FRONTEND_URL` (for the link in the email). Two optional knobs if the
+defaults don't fit: `PASSWORD_RESET_RATE_LIMIT_PER_HOUR` (default `5`,
+per-IP) and `PASSWORD_RESET_TOKEN_EXPIRE_MINUTES` (default `60`).
+
+`POST /api/v1/internal/support/reset-password` remains a *separate*,
+BEE-team-only emergency action (not the customer path above): given an
+email, it generates a new temporary password and returns it exactly once —
+whoever calls it relays it out-of-band to the affected person. Useful when
+a customer can't receive email at all, or as a break-glass tool.
 
 - **`SUPPORT_ADMIN_SECRET`** — unset by default, in which case the endpoint
   404s and doesn't exist. Only configure it if this tool is genuinely

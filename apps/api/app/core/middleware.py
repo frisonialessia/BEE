@@ -62,6 +62,13 @@ _ALWAYS_EXEMPT = frozenset(
         # and the password check itself on /login.
         "/api/v1/auth/register",
         "/api/v1/auth/login",
+        # Same reasoning as the two above: a visitor who forgot their
+        # password has no session and shouldn't need a key baked into a
+        # frontend bundle to reach the recovery flow. Abuse protection is
+        # password_reset_guard's per-IP rate limit + the token comparison
+        # itself — see app.api.v1.endpoints.auth.
+        "/api/v1/auth/forgot-password",
+        "/api/v1/auth/reset-password",
     }
 )
 

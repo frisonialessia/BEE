@@ -39,6 +39,7 @@ from app.models.opportunity_task import OpportunityTask
 from app.models.organization import Organization
 from app.models.organization_api_key import OrganizationApiKey
 from app.models.outbound_webhook import OutboundWebhook
+from app.models.password_reset_token import PasswordResetToken
 from app.models.pending_action import PendingAction
 from app.models.psychographic import LeadPsychographic
 from app.models.quota import Quota
@@ -89,6 +90,7 @@ __all__ = [
     "Organization",
     "OrganizationApiKey",
     "OutboundWebhook",
+    "PasswordResetToken",
     "Team",
     "User",
     "ActionStatus",
