@@ -223,7 +223,7 @@ export function BrandVoicePanel() {
 
       {/* Create profile form */}
       {showCreate && (
-        <div className="bee-inset space-y-3 p-4">
+        <div className="bee-inset space-y-4 p-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="bee-eyebrow">{t("createForm.title")}</p>
             <div className="flex gap-1">
@@ -274,38 +274,65 @@ export function BrandVoicePanel() {
             </div>
           )}
 
-          <input
-            value={createName}
-            onChange={(e) => setCreateName(e.target.value)}
-            placeholder={t("createForm.namePlaceholder")}
-            className="bee-input"
-          />
-          <input
-            value={createTone}
-            onChange={(e) => setCreateTone(e.target.value)}
-            placeholder={t("createForm.tonePlaceholder")}
-            className="bee-input"
-          />
-          <input
-            value={createTopics}
-            onChange={(e) => setCreateTopics(e.target.value)}
-            placeholder={t("createForm.topicsPlaceholder")}
-            className="bee-input"
-          />
-          <textarea
-            value={createBio}
-            onChange={(e) => setCreateBio(e.target.value)}
-            placeholder={t("createForm.bioPlaceholder")}
-            rows={2}
-            className="bee-input resize-none"
-          />
-          <input
-            value={createCTA}
-            onChange={(e) => setCreateCTA(e.target.value)}
-            placeholder={t("createForm.ctaPlaceholder")}
-            className="bee-input"
-          />
-          <div className="flex gap-2">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
+                {t("createForm.nameLabel")}
+              </label>
+              <input
+                value={createName}
+                onChange={(e) => setCreateName(e.target.value)}
+                placeholder={t("createForm.namePlaceholder")}
+                className="bee-input"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
+                {t("createForm.toneLabel")}
+              </label>
+              <input
+                value={createTone}
+                onChange={(e) => setCreateTone(e.target.value)}
+                placeholder={t("createForm.tonePlaceholder")}
+                className="bee-input"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
+                {t("createForm.topicsLabel")}
+              </label>
+              <input
+                value={createTopics}
+                onChange={(e) => setCreateTopics(e.target.value)}
+                placeholder={t("createForm.topicsPlaceholder")}
+                className="bee-input"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
+                {t("createForm.bioLabel")}
+              </label>
+              <textarea
+                value={createBio}
+                onChange={(e) => setCreateBio(e.target.value)}
+                placeholder={t("createForm.bioPlaceholder")}
+                rows={2}
+                className="bee-input resize-none"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-muted-foreground mb-1">
+                {t("createForm.ctaLabel")}
+              </label>
+              <input
+                value={createCTA}
+                onChange={(e) => setCreateCTA(e.target.value)}
+                placeholder={t("createForm.ctaPlaceholder")}
+                className="bee-input"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
             <button
               onClick={() => void handleCreateProfile()}
               disabled={saving || !createName}
@@ -367,33 +394,48 @@ export function BrandVoicePanel() {
 
       {/* Add/edit fragment form */}
       {showAddFragment && profile && (
-        <div className="bee-inset space-y-3 p-4">
+        <div className="bee-inset space-y-4 p-5">
           <p className="bee-eyebrow">
             {editingFragmentId ? t("library.editFormTitle") : t("addFragmentForm.title")}
           </p>
-          <select
-            value={fragmentCategory}
-            onChange={(e) => setFragmentCategory(e.target.value)}
-            className="bee-input"
-          >
-            {FRAGMENT_CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>{c.label}</option>
-            ))}
-          </select>
-          <textarea
-            value={fragmentContent}
-            onChange={(e) => setFragmentContent(e.target.value)}
-            placeholder={t("addFragmentForm.contentPlaceholder")}
-            rows={4}
-            className="bee-input resize-none"
-          />
-          <input
-            value={fragmentTags}
-            onChange={(e) => setFragmentTags(e.target.value)}
-            placeholder={t("addFragmentForm.tagsPlaceholder")}
-            className="bee-input"
-          />
-          <div className="flex flex-wrap gap-2">
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              {t("addFragmentForm.categoryLabel")}
+            </label>
+            <select
+              value={fragmentCategory}
+              onChange={(e) => setFragmentCategory(e.target.value)}
+              className="bee-input"
+            >
+              {FRAGMENT_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              {t("addFragmentForm.contentLabel")}
+            </label>
+            <textarea
+              value={fragmentContent}
+              onChange={(e) => setFragmentContent(e.target.value)}
+              placeholder={t("addFragmentForm.contentPlaceholder")}
+              rows={4}
+              className="bee-input resize-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">
+              {t("addFragmentForm.tagsLabel")}
+            </label>
+            <input
+              value={fragmentTags}
+              onChange={(e) => setFragmentTags(e.target.value)}
+              placeholder={t("addFragmentForm.tagsPlaceholder")}
+              className="bee-input"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2 pt-1">
             <button
               onClick={() => void handleAddFragment()}
               disabled={saving || !fragmentContent}
