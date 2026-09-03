@@ -30,6 +30,22 @@
       "won": "Ganada",
       "lost": "Perdida",
       "dismissed": "Descartada"
+    },
+    "list": {
+      "searchPlaceholder": "Buscar por oportunidad, empresa o responsable…",
+      "empty": "Ninguna oportunidad coincide.",
+      "noCompany": "Sin empresa",
+      "unassigned": "Sin asignar",
+      "itemLabel": "oportunidades",
+      "columns": {
+        "title": "Oportunidad",
+        "company": "Empresa",
+        "stage": "Etapa",
+        "owner": "Responsable",
+        "amount": "Monto",
+        "close": "Cierre estimado",
+        "score": "Puntaje"
+      }
     }
   },
   "pipelineFlow": {

@@ -30,6 +30,22 @@
       "won": "Won",
       "lost": "Lost",
       "dismissed": "Dismissed"
+    },
+    "list": {
+      "searchPlaceholder": "Search by opportunity, company or owner…",
+      "empty": "No opportunity matches.",
+      "noCompany": "No company",
+      "unassigned": "Unassigned",
+      "itemLabel": "opportunities",
+      "columns": {
+        "title": "Opportunity",
+        "company": "Company",
+        "stage": "Stage",
+        "owner": "Owner",
+        "amount": "Amount",
+        "close": "Expected close",
+        "score": "Score"
+      }
     }
   },
   "pipelineFlow": {

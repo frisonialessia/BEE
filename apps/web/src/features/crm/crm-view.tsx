@@ -4,20 +4,22 @@ import { useTranslations } from "next-intl";
 
 import { MergedPageTabs } from "@/components/merged-page-tabs";
 import { CrmBoard } from "@/features/crm/crm-board";
-import { OpportunitiesDashboard } from "@/features/opportunities/opportunities-dashboard";
+import {
+  BattlecardsGallery,
+  OpportunitiesList,
+  PipelineFlowTab,
+} from "@/features/opportunities/opportunities-dashboard";
 
-/** CRM — el pipeline real de BEE, arrastrable etapa por etapa, con
- *  Oportunidades (battlecards + flujo agregado) como una segunda pestaña
- *  — dos vistas del mismo pipeline, no dos conceptos distintos, así que
- *  antes eran dos filas del sidebar y ahora son una sola con pestañas
- *  (ver lib/nav-items.ts). /dashboard/opportunities sigue existiendo como
- *  redirect a ?tab=opportunities, ningún link/bookmark viejo se rompe.
+/** CRM — four views of the same pipeline in one tab strip: Pipeline (the
+ *  drag-and-drop board), Oportunidades (the searchable list), Battlecards
+ *  (the AI plays) and Flujo (stage-to-stage aggregate). Battlecards and
+ *  Flujo used to sit as sub-tabs inside Oportunidades — two clicks and a
+ *  nested strip for views people open constantly; now every view is one
+ *  click from the top. /dashboard/opportunities still redirects to
+ *  ?tab=opportunities, so no old link breaks.
  *
- *  Página normal, mismo scroll que Resumen — antes usaba bee-page-fill
- *  (alto fijo al viewport, scroll interno solo dentro de cada columna),
- *  que hacía incómodo bajar a ver las tarjetas de más abajo en una
- *  columna larga. Ahora el board simplemente crece con su contenido y es
- *  la página completa la que hace scroll, como cualquier otra sección. */
+ *  Página normal, mismo scroll que Resumen — el board crece con su
+ *  contenido y es la página completa la que hace scroll. */
 export function CrmView() {
   const t = useTranslations("crm.view");
 
@@ -35,11 +37,9 @@ export function CrmView() {
         defaultValue="pipeline"
         tabs={[
           { value: "pipeline", label: t("pipelineTab"), content: <CrmBoard /> },
-          {
-            value: "opportunities",
-            label: t("opportunitiesTab"),
-            content: <OpportunitiesDashboard showHeader={false} />,
-          },
+          { value: "opportunities", label: t("opportunitiesTab"), content: <OpportunitiesList /> },
+          { value: "battlecards", label: t("battlecardsTab"), content: <BattlecardsGallery /> },
+          { value: "flow", label: t("flowTab"), content: <PipelineFlowTab /> },
         ]}
       />
     </div>

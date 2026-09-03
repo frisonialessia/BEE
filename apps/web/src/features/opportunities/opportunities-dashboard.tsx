@@ -1,143 +1,237 @@
 "use client";
 
-import { Bot } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { Bot, Search } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 
 import { BattlecardView } from "@/components/battlecard";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { PipelineFlow } from "@/features/opportunities/pipeline-flow";
 import { usePagination } from "@/hooks/use-pagination";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useUsers } from "@/hooks/queries/use-users";
-import { stripOpportunityTitlePrefix } from "@/lib/format";
-import { LiveBadge } from "@/components/live-badge";
+import type { Locale } from "@/i18n/locales";
+import { STAGE_TONE } from "@/lib/crm-board";
+import { scoreVariant, stripOpportunityTitlePrefix } from "@/lib/format";
+import { formatCurrencyUSDCompact, formatDate } from "@/lib/i18n/format";
 
-/** Oportunidades y battlecards — plays listos para el CEO.
+/**
+ * The three non-board views of the pipeline, each a top-level tab of the
+ * CRM page (see crm-view.tsx):
  *
- * `showHeader=false` when embedded as a tab of the merged CRM page (see
- * crm-view.tsx) — the page-level header already carries the eyebrow/title,
- * a second one directly under it would be redundant. The live/demo badge
- * and CSV export button stay either way; those are real actions, not
- * decoration a page-level header already covers. */
-export function OpportunitiesDashboard({ showHeader = true }: { showHeader?: boolean }) {
+ *  - OpportunitiesList — every opportunity as a searchable, sortable
+ *    table (company, stage, owner, amount, close date, score) with CSV
+ *    export. The "spreadsheet" view the board can't give.
+ *  - BattlecardsGallery — the AI-enriched plays, one card each.
+ *  - PipelineFlowTab — the aggregate stage-to-stage flow.
+ *
+ * They used to be nested (Oportunidades → Battlecards | Flujo); lifting
+ * them to the CRM's own tab strip means one click to any view, and gives
+ * "Oportunidades" a content of its own instead of being a wrapper.
+ */
+
+export function OpportunitiesList() {
   const t = useTranslations("opportunitiesPriority.opportunities");
-  const { data: battlecardsResult, isLoading: loadingBattlecards } = useBattlecards();
-  const { data: allOppsResult, isLoading: loadingOpps } = useOpportunities(undefined, 200);
+  const locale = useLocale() as Locale;
+  const { data: allOppsResult, isLoading } = useOpportunities(undefined, 300);
   const { data: companiesResult } = useCompanies(200);
   const { data: users } = useUsers();
   const { openOpportunity } = useOpportunityDrawer();
+  const [query, setQuery] = useState("");
 
-  const battlecards = battlecardsResult?.data ?? [];
-  const opportunities = allOppsResult?.data ?? [];
-  const live = Boolean(battlecardsResult?.live || allOppsResult?.live);
-  const loading = loadingBattlecards || loadingOpps;
+  const companyById = useMemo(
+    () => new Map((companiesResult?.data ?? []).map((c) => [c.id, c])),
+    [companiesResult],
+  );
+  const userById = useMemo(() => new Map((users ?? []).map((u) => [u.id, u])), [users]);
 
-  const battlecardPagination = usePagination(battlecards);
+  const rows = useMemo(() => {
+    const all = (allOppsResult?.data ?? []).map((o) => ({
+      opportunity: o,
+      title: stripOpportunityTitlePrefix(o.title),
+      company: o.company_id ? (companyById.get(o.company_id)?.name ?? "") : "",
+      owner: o.assigned_to_user_id ? (userById.get(o.assigned_to_user_id)?.full_name ?? "") : "",
+    }));
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? all.filter((r) => r.title.toLowerCase().includes(q) || r.company.toLowerCase().includes(q) || r.owner.toLowerCase().includes(q))
+      : all;
+    return filtered.sort((a, b) => b.opportunity.score - a.opportunity.score);
+  }, [allOppsResult, companyById, userById, query]);
 
-  const companyById = new Map((companiesResult?.data ?? []).map((c) => [c.id, c]));
-  const userById = new Map((users ?? []).map((u) => [u.id, u]));
+  const pagination = usePagination(rows);
 
-  const exportRows = opportunities.map((o) => ({
-    titulo: stripOpportunityTitlePrefix(o.title),
-    estado: t(`status.${o.status}`),
-    puntaje: Math.round(o.score),
-    empresa: o.company_id ? (companyById.get(o.company_id)?.name ?? "") : "",
-    responsable: o.assigned_to_user_id ? (userById.get(o.assigned_to_user_id)?.full_name ?? "") : "",
+  const exportRows = rows.map((r) => ({
+    titulo: r.title,
+    estado: t(`status.${r.opportunity.status}`),
+    puntaje: Math.round(r.opportunity.score),
+    empresa: r.company,
+    responsable: r.owner,
   }));
 
-  return (
-    <div>
-      <header className={showHeader ? "mb-4" : "mb-4"}>
-        {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
-        <div className={`flex flex-wrap items-start justify-between gap-3 ${showHeader ? "mt-1" : ""}`}>
-          {showHeader && (
-            <div>
-              <h1 className="bee-display">{t("title")}</h1>
-              <p className="bee-caption mt-1">{t("subtitle")}</p>
-            </div>
-          )}
-          <div className="ml-auto flex items-center gap-2">
-            {showHeader && <LiveBadge live={live} />}
-            <ExportCsvButton
-              rows={exportRows}
-              filename={t("exportFilename")}
-              columns={[
-                { key: "titulo", header: t("csv.title") },
-                { key: "estado", header: t("csv.status") },
-                { key: "puntaje", header: t("csv.score") },
-                { key: "empresa", header: t("csv.company") },
-                { key: "responsable", header: t("csv.owner") },
-              ]}
-            />
-          </div>
-        </div>
-      </header>
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-9 w-72" />
+        <Skeleton className="h-64" />
+      </div>
+    );
+  }
 
-      {loading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-80" />
-          <Skeleton className="h-64" />
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <label className="relative block w-full max-w-xs">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t("list.searchPlaceholder")}
+            className="bee-input"
+            style={{ paddingLeft: "2rem" }}
+          />
+        </label>
+        <ExportCsvButton
+          rows={exportRows}
+          filename={t("exportFilename")}
+          columns={[
+            { key: "titulo", header: t("csv.title") },
+            { key: "estado", header: t("csv.status") },
+            { key: "puntaje", header: t("csv.score") },
+            { key: "empresa", header: t("csv.company") },
+            { key: "responsable", header: t("csv.owner") },
+          ]}
+        />
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="bee-bento bee-bento-pad py-8 text-center">
+          <p className="text-sm text-muted-foreground">{t("list.empty")}</p>
         </div>
       ) : (
-        <Tabs defaultValue="battlecards">
-          <TabsList className="border border-border bg-background">
-            <TabsTrigger value="battlecards" className="rounded-sm">
-              {t("tabs.battlecards", { count: battlecards.length })}
-            </TabsTrigger>
-            <TabsTrigger value="flujo" className="rounded-sm">
-              {t("tabs.flow")}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="battlecards" className="mt-4 space-y-4">
-            {battlecards.length === 0 ? (
-              <div className="bee-bento bee-bento-pad py-8 text-center">
-                <p className="text-sm text-muted-foreground">{t("emptyBattlecards.title")}</p>
-                <p className="bee-caption mt-1">{t("emptyBattlecards.subtitle")}</p>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Bot className="size-3.5" />
-                  {t("battlecardsHint")}
-                </div>
-                <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                  {battlecardPagination.pageItems.map((card) => (
-                    <button
-                      key={card.opportunity_id}
-                      type="button"
-                      onClick={() => openOpportunity(card.opportunity_id)}
-                      className={`bee-bento bee-bento-pad text-left hover:border-[var(--color-chart-4)] ${
-                        ""
-                      }`}
-                    >
-                      <BattlecardView card={card} />
-                    </button>
-                  ))}
-                </div>
-                <PaginationBar
-                  page={battlecardPagination.page}
-                  pageSize={battlecardPagination.pageSize}
-                  totalPages={battlecardPagination.totalPages}
-                  totalItems={battlecardPagination.totalItems}
-                  onPageChange={battlecardPagination.goToPage}
-                  onPageSizeChange={battlecardPagination.changePageSize}
-                  itemLabel="battlecards"
-                />
-              </>
-            )}
-          </TabsContent>
-
-          <TabsContent value="flujo" className="mt-4">
-            <PipelineFlow opportunities={opportunities} />
-          </TabsContent>
-        </Tabs>
+        <>
+          <div className="bee-bento overflow-x-auto">
+            <table className="w-full min-w-[720px] text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  <th className="bee-eyebrow px-3 py-2.5 font-medium">{t("list.columns.title")}</th>
+                  <th className="bee-eyebrow px-3 py-2.5 font-medium">{t("list.columns.company")}</th>
+                  <th className="bee-eyebrow px-3 py-2.5 font-medium">{t("list.columns.stage")}</th>
+                  <th className="bee-eyebrow px-3 py-2.5 font-medium">{t("list.columns.owner")}</th>
+                  <th className="bee-eyebrow px-3 py-2.5 text-right font-medium">{t("list.columns.amount")}</th>
+                  <th className="bee-eyebrow px-3 py-2.5 font-medium">{t("list.columns.close")}</th>
+                  <th className="bee-eyebrow px-3 py-2.5 text-right font-medium">{t("list.columns.score")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pagination.pageItems.map(({ opportunity: o, title, company, owner }) => (
+                  <tr
+                    key={o.id}
+                    onClick={() => openOpportunity(o.id)}
+                    className="cursor-pointer border-b border-border/60 last:border-0 hover:bg-[var(--color-primary)]/25"
+                  >
+                    <td className="px-3 py-2.5">
+                      <span className="line-clamp-1 font-medium">{title}</span>
+                    </td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{company || t("list.noCompany")}</td>
+                    <td className="px-3 py-2.5">
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                        <span
+                          className="size-2 shrink-0 rounded-full"
+                          style={{ background: STAGE_TONE[o.status].bar }}
+                          aria-hidden="true"
+                        />
+                        {t(`status.${o.status}`)}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5 text-muted-foreground">{owner || t("list.unassigned")}</td>
+                    <td className="px-3 py-2.5 text-right font-mono tabular-nums">
+                      {o.amount != null ? formatCurrencyUSDCompact(o.amount, locale) : "—"}
+                    </td>
+                    <td className="px-3 py-2.5 text-muted-foreground">
+                      {o.expected_close_date ? formatDate(o.expected_close_date, locale) : "—"}
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <Badge variant={scoreVariant(o.score)} className="font-mono text-micro">
+                        {Math.round(o.score)}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <PaginationBar
+            page={pagination.page}
+            pageSize={pagination.pageSize}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            onPageChange={pagination.goToPage}
+            onPageSizeChange={pagination.changePageSize}
+            itemLabel={t("list.itemLabel")}
+          />
+        </>
       )}
     </div>
   );
+}
+
+export function BattlecardsGallery() {
+  const t = useTranslations("opportunitiesPriority.opportunities");
+  const { data: battlecardsResult, isLoading } = useBattlecards();
+  const { openOpportunity } = useOpportunityDrawer();
+  const battlecards = battlecardsResult?.data ?? [];
+  const pagination = usePagination(battlecards);
+
+  if (isLoading) return <Skeleton className="h-64" />;
+
+  if (battlecards.length === 0) {
+    return (
+      <div className="bee-bento bee-bento-pad py-8 text-center">
+        <p className="text-sm text-muted-foreground">{t("emptyBattlecards.title")}</p>
+        <p className="bee-caption mt-1">{t("emptyBattlecards.subtitle")}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Bot className="size-3.5" />
+        {t("battlecardsHint")}
+      </div>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        {pagination.pageItems.map((card) => (
+          <button
+            key={card.opportunity_id}
+            type="button"
+            onClick={() => openOpportunity(card.opportunity_id)}
+            className="bee-bento bee-bento-pad text-left hover:border-[var(--color-chart-4)]"
+          >
+            <BattlecardView card={card} />
+          </button>
+        ))}
+      </div>
+      <PaginationBar
+        page={pagination.page}
+        pageSize={pagination.pageSize}
+        totalPages={pagination.totalPages}
+        totalItems={pagination.totalItems}
+        onPageChange={pagination.goToPage}
+        onPageSizeChange={pagination.changePageSize}
+        itemLabel="battlecards"
+      />
+    </div>
+  );
+}
+
+export function PipelineFlowTab() {
+  const { data: allOppsResult, isLoading } = useOpportunities(undefined, 300);
+  if (isLoading) return <Skeleton className="h-64" />;
+  return <PipelineFlow opportunities={allOppsResult?.data ?? []} />;
 }
