@@ -28,6 +28,10 @@
       "backHome": "Volver al inicio"
     }
   },
+  "headerHelp": {
+    "ariaLabel": "¿Cómo funciona BEE?",
+    "label": "¿Cómo funciona?"
+  },
   "commandPalette": {
     "openAria": "Abrir paleta de comandos",
     "hintTitle": "Paleta de comandos",
@@ -45,5 +49,17 @@
     "groupGoTo": "Ir a",
     "groupActions": "Acciones",
     "logout": "Cerrar sesión"
+  },
+  "globalSearch": {
+    "placeholder": "Buscar empresas, oportunidades, contactos…",
+    "loading": "Buscando…",
+    "noResults": "Sin resultados para \"{query}\"."
+  },
+  "notificationBell": {
+    "ariaLabel": "Notificaciones",
+    "ariaLabelUnread": "Notificaciones ({count} sin leer)",
+    "title": "Notificaciones",
+    "loading": "Cargando…",
+    "empty": "No hay novedades por ahora."
   }
 }

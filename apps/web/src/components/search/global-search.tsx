@@ -23,6 +23,7 @@ export function GlobalSearch({ className }: { className?: string }) {
   // KIND_ICON above) because it needs useTranslations(), which only works
   // inside a component/hook.
   const t = useTranslations("common.commandPalette.kinds");
+  const tSearch = useTranslations("common.globalSearch");
   const KIND_LABEL: Record<SearchResult["kind"], string> = {
     company: t("company"),
     opportunity: t("opportunity"),
@@ -68,7 +69,7 @@ export function GlobalSearch({ className }: { className?: string }) {
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder="Buscar empresas, oportunidades, contactos…"
+          placeholder={tSearch("placeholder")}
           className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground"
         />
       </div>
@@ -76,10 +77,10 @@ export function GlobalSearch({ className }: { className?: string }) {
       {open && query.trim() && (
         <div className="bee-glass absolute left-0 top-full z-50 mt-2 max-h-96 w-full min-w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-[var(--radius-lg)]">
           {loading ? (
-            <p className="px-4 py-4 text-center text-xs text-muted-foreground">Buscando…</p>
+            <p className="px-4 py-4 text-center text-xs text-muted-foreground">{tSearch("loading")}</p>
           ) : results.length === 0 ? (
             <p className="px-4 py-4 text-center text-xs text-muted-foreground">
-              Sin resultados para &quot;{query}&quot;.
+              {tSearch("noResults", { query })}
             </p>
           ) : (
             <ul>

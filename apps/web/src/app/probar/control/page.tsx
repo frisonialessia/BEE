@@ -34,7 +34,7 @@ export default function ProbarControlPage() {
         tabs={[
           {
             value: "overview",
-            label: tNav("items.control"),
+            label: t("overviewTab"),
             content: (
               <ControlLayout
                 header={null}

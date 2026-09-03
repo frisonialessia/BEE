@@ -28,6 +28,10 @@
       "backHome": "Back to home"
     }
   },
+  "headerHelp": {
+    "ariaLabel": "How does BEE work?",
+    "label": "How it works"
+  },
   "commandPalette": {
     "openAria": "Open command palette",
     "hintTitle": "Command palette",
@@ -45,5 +49,17 @@
     "groupGoTo": "Go to",
     "groupActions": "Actions",
     "logout": "Sign out"
+  },
+  "globalSearch": {
+    "placeholder": "Search companies, opportunities, contacts…",
+    "loading": "Searching…",
+    "noResults": "No results for \"{query}\"."
+  },
+  "notificationBell": {
+    "ariaLabel": "Notifications",
+    "ariaLabelUnread": "Notifications ({count} unread)",
+    "title": "Notifications",
+    "loading": "Loading…",
+    "empty": "No updates for now."
   }
 }

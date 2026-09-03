@@ -121,7 +121,7 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
             placeholder={t("config.descriptionPlaceholder")}
             className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
           />
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <select
               value={signalType}
               onChange={(e) => setSignalType(e.target.value as SignalType | "")}

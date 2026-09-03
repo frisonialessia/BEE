@@ -100,7 +100,7 @@ export function ScenarioSimulatorPanel() {
       <div className="space-y-3">
         <div className="bee-bento bee-bento-pad space-y-3">
           <p className="text-xs font-semibold">{t("paramsTitle")}</p>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <input
               value={sector}
               onChange={(e) => setSector(e.target.value)}

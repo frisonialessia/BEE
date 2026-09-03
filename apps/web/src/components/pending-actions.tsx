@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CheckCircle, Clock, Mail, ShieldCheck, XCircle } from "lucide-react";
 
 import { approveAction, getPendingActions, rejectAction } from "@/lib/api";
@@ -20,14 +20,19 @@ const ACTION_TYPE_ICONS: Record<string, React.ReactNode> = {
   send_email: <Mail className="size-4 stroke-[1.25]" />,
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending_approval: "Pendiente de aprobación",
-  approved: "Aprobado",
-  rejected: "Rechazado",
-  executing: "Ejecutando",
-  completed: "Completado",
-  failed: "Fallido",
-};
+// Mirrors the translated `status.*` keys — kept as a plain set (not read
+// from the messages themselves) just to know, without throwing, whether a
+// given backend status has a translation before asking next-intl for it;
+// an unrecognized status (the backend's status enum can grow) falls back
+// to the raw value instead of a missing-key error.
+const KNOWN_STATUSES = new Set([
+  "pending_approval",
+  "approved",
+  "rejected",
+  "executing",
+  "completed",
+  "failed",
+]);
 
 const STATUS_STYLES: Record<string, string> = {
   pending_approval: "bg-[color-mix(in_srgb,var(--color-chart-1)_25%,var(--color-background))]",
@@ -46,6 +51,7 @@ interface PendingActionCardProps {
 
 function PendingActionCard({ action, onApprove, onReject }: PendingActionCardProps) {
   const locale = useLocale() as Locale;
+  const t = useTranslations("probarNetworkBrandControl.pendingActions");
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
 
   async function handleApprove() {
@@ -67,7 +73,9 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
   }
 
   const isPending = action.status === "pending_approval";
-  const statusLabel = STATUS_LABELS[action.status] ?? action.status.replace(/_/g, " ");
+  const statusLabel = KNOWN_STATUSES.has(action.status)
+    ? t(`status.${action.status}` as "status.pending_approval")
+    : action.status.replace(/_/g, " ");
 
   return (
     <div className="bee-bento bee-bento--primary bee-bento-pad space-y-3">
@@ -108,7 +116,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
 
       {action.retry_count > 0 && (
         <p className="text-xs" style={{ color: "var(--color-chart-2)" }}>
-          Reintento #{action.retry_count}
+          {t("retryCount", { count: action.retry_count })}
         </p>
       )}
 
@@ -121,7 +129,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
             className="bee-btn flex-1"
           >
             <CheckCircle className="size-3.5" />
-            {loading === "approve" ? "Aprobando…" : "Aprobar"}
+            {loading === "approve" ? t("approving") : t("approve")}
           </button>
           <button
             type="button"
@@ -130,14 +138,14 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
             className="bee-btn flex-1 bg-background"
           >
             <XCircle className="size-3.5" />
-            {loading === "reject" ? "Rechazando…" : "Rechazar"}
+            {loading === "reject" ? t("rejecting") : t("reject")}
           </button>
         </div>
       )}
 
       {action.approved_by && (
         <p className="bee-micro">
-          Aprobado por {action.approved_by}
+          {t("approvedBy", { name: action.approved_by })}
           {action.approved_at &&
             ` · ${formatDate(action.approved_at, locale)}`}
         </p>
@@ -147,6 +155,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
 }
 
 export function PendingActionsPanel() {
+  const t = useTranslations("probarNetworkBrandControl.pendingActions");
   const [actions, setActions] = useState<PendingAction[]>([]);
   const [loading, setLoading] = useState(true);
   const [live, setLive] = useState(false);
@@ -181,14 +190,12 @@ export function PendingActionsPanel() {
         <div>
           <h3 className="flex items-center gap-1.5 bee-card-title">
             <ShieldCheck className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-5)" }} />
-            Cola de ejecución
+            {t("title")}
           </h3>
-          <p className="bee-caption mt-0.5">
-            Acciones en espera de aprobación antes de que BEE las ejecute externamente
-          </p>
+          <p className="bee-caption mt-0.5">{t("caption")}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Badge variant={live ? "success" : "warning"}>{live ? "En vivo" : "Datos demo"}</Badge>
+          <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
           {pendingCount > 0 && (
             <span
               className="rounded-sm border border-border px-2 py-0.5 text-xs font-semibold"
@@ -196,7 +203,7 @@ export function PendingActionsPanel() {
                 background: "color-mix(in srgb, var(--color-chart-1) 25%, var(--color-background))",
               }}
             >
-              {pendingCount} pendientes
+              {t("pendingCount", { count: pendingCount })}
             </span>
           )}
         </div>
@@ -214,10 +221,8 @@ export function PendingActionsPanel() {
             className="mx-auto mb-2 size-6 stroke-[1.25]"
             style={{ color: "var(--color-chart-5)" }}
           />
-          <p className="text-xs text-muted-foreground">No hay acciones pendientes.</p>
-          <p className="mt-1 bee-micro">
-            Los artefactos de ejecución aparecerán aquí cuando BEE los genere.
-          </p>
+          <p className="text-xs text-muted-foreground">{t("emptyTitle")}</p>
+          <p className="mt-1 bee-micro">{t("emptySubtitle")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -237,7 +242,7 @@ export function PendingActionsPanel() {
           className="inline-block size-1.5"
           style={{ background: "var(--color-chart-1)" }}
         />
-        Puerta de seguridad: ninguna acción se ejecuta sin la aprobación explícita del CEO.
+        {t("safetyGate")}
       </p>
     </div>
   );

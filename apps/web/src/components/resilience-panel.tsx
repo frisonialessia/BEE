@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,11 +23,11 @@ import type { Locale } from "@/i18n/locales";
 // accents instead: amber (pending/caution) → blue (in progress/info) →
 // var(--success), magenta (resolved) → orange (permanently failed, the most
 // severe state BEE has a color for).
-const DLQ_STATUS_CONFIG: Record<string, { label: string; varColor: string }> = {
-  pending: { label: "Pendiente", varColor: "var(--warning)" },
-  retrying: { label: "Reintentando", varColor: "var(--color-chart-4)" },
-  resolved: { label: "Resuelto", varColor: "var(--success)" },
-  permanently_failed: { label: "Fallido", varColor: "var(--color-chart-2)" },
+const DLQ_STATUS_COLOR: Record<string, string> = {
+  pending: "var(--warning)",
+  retrying: "var(--color-chart-4)",
+  resolved: "var(--success)",
+  permanently_failed: "var(--color-chart-2)",
 };
 
 function statusChipStyle(varColor: string) {
@@ -44,7 +44,9 @@ function DLQEventRow({ event, onRetry, onResolve }: {
   onResolve: (id: string) => void;
 }) {
   const locale = useLocale() as Locale;
-  const cfg = DLQ_STATUS_CONFIG[event.status] ?? DLQ_STATUS_CONFIG.pending;
+  const t = useTranslations("probarNetworkBrandControl.resiliencePanel.dlq");
+  const varColor = DLQ_STATUS_COLOR[event.status] ?? DLQ_STATUS_COLOR.pending;
+  const statusLabel = t(`status.${event.status}` as "status.pending");
   const [expanded, setExpanded] = useState(false);
   const isFailed = event.status === "permanently_failed";
 
@@ -58,11 +60,13 @@ function DLQEventRow({ event, onRetry, onResolve }: {
       }
     >
       <div className="flex items-center gap-2">
-        <span className="text-xs px-2 py-0.5 rounded-sm border font-medium" style={statusChipStyle(cfg.varColor)}>
-          {cfg.label}
+        <span className="text-xs px-2 py-0.5 rounded-sm border font-medium" style={statusChipStyle(varColor)}>
+          {statusLabel}
         </span>
         <span className="text-sm font-medium text-foreground truncate flex-1">{event.event_name}</span>
-        <span className="text-xs text-muted-foreground shrink-0">#{event.attempt_count} intento{event.attempt_count !== 1 ? "s" : ""}</span>
+        <span className="text-xs text-muted-foreground shrink-0">
+          #{t("attemptCount", { count: event.attempt_count })}
+        </span>
       </div>
 
       {event.last_error && (
@@ -74,7 +78,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
           onClick={() => setExpanded((v) => !v)}
           className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
         >
-          {expanded ? "Ocultar" : "Detalles"}
+          {expanded ? t("hide") : t("details")}
         </button>
 
         {event.status !== "resolved" && event.status !== "permanently_failed" && (
@@ -83,7 +87,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
             className="bee-btn-ghost bee-btn-ghost--fill"
             style={{ "--bee-fill": "var(--color-chart-4)", "--bee-fill-text": "var(--color-background)" } as React.CSSProperties}
           >
-            Reintentar ahora
+            {t("retryNow")}
           </button>
         )}
         {event.status !== "resolved" && (
@@ -92,24 +96,24 @@ function DLQEventRow({ event, onRetry, onResolve }: {
             className="bee-btn-ghost"
             style={{ borderColor: "var(--success)", color: "var(--success)" }}
           >
-            Resolver
+            {t("resolve")}
           </button>
         )}
         {event.ceo_alerted && (
-          <span className="text-xs font-medium" style={{ color: "var(--color-chart-2)" }}>⚠ CEO alertado</span>
+          <span className="text-xs font-medium" style={{ color: "var(--color-chart-2)" }}>{t("ceoAlerted")}</span>
         )}
       </div>
 
       {expanded && (
         <div className="mt-2 rounded-sm border border-border bg-[var(--color-background)] p-2 text-xs space-y-1">
-          <p><span className="font-medium">Tipo:</span> {event.event_type}</p>
-          <p><span className="font-medium">Creado:</span> {formatDateTime(event.created_at, locale)}</p>
+          <p><span className="font-medium">{t("type")}</span> {event.event_type}</p>
+          <p><span className="font-medium">{t("created")}</span> {formatDateTime(event.created_at, locale)}</p>
           {event.next_retry_at && (
-            <p><span className="font-medium">Próximo reintento:</span> {formatDateTime(event.next_retry_at, locale)}</p>
+            <p><span className="font-medium">{t("nextRetry")}</span> {formatDateTime(event.next_retry_at, locale)}</p>
           )}
           {event.error_history.length > 0 && (
             <div>
-              <p className="font-medium">Historial de errores:</p>
+              <p className="font-medium">{t("errorHistory")}</p>
               <ul className="ml-2 space-y-0.5">
                 {event.error_history.map((h, i) => (
                   <li key={i} className="text-muted-foreground">#{h.attempt}: {h.error}</li>
@@ -124,6 +128,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
 }
 
 function DLQPanel() {
+  const t = useTranslations("probarNetworkBrandControl.resiliencePanel.dlq");
   const [summary, setSummary] = useState<DLQSummary | null>(null);
   const [events, setEvents] = useState<FailedEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -156,23 +161,24 @@ function DLQPanel() {
 
   async function handleResolve(id: string) {
     try {
-      await resolveDLQEvent(id, "Resuelto manualmente desde el panel");
+      await resolveDLQEvent(id, t("resolvedManuallyReason"));
       await load();
     } catch { /* handled */ }
   }
 
   const filtered = statusFilter ? events.filter((e) => e.status === statusFilter) : events;
+  const statusOptions = ["", "pending", "retrying", "resolved", "permanently_failed"] as const;
 
   return (
     <div className="space-y-4">
       {summary && (
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {[
-            { label: "Total", value: summary.total_events, color: "var(--color-text)" },
-            { label: "Pendientes", value: summary.pending_count, color: "var(--warning)" },
-            { label: "Resueltos", value: summary.resolved_count, color: "var(--success)" },
-            { label: "Fallidos", value: summary.permanently_failed_count, color: "var(--color-chart-2)" },
-            { label: "Vencidos ahora", value: summary.due_for_retry_count, color: "var(--color-chart-4)" },
+            { label: t("stats.total"), value: summary.total_events, color: "var(--color-text)" },
+            { label: t("stats.pending"), value: summary.pending_count, color: "var(--warning)" },
+            { label: t("stats.resolved"), value: summary.resolved_count, color: "var(--success)" },
+            { label: t("stats.failed"), value: summary.permanently_failed_count, color: "var(--color-chart-2)" },
+            { label: t("stats.dueNow"), value: summary.due_for_retry_count, color: "var(--color-chart-4)" },
           ].map(({ label, value, color }) => (
             <div key={label} className="bee-bento p-2 text-center">
               <p className="bee-stat__val" style={{ color }}>{value}</p>
@@ -183,13 +189,13 @@ function DLQPanel() {
       )}
 
       <div className="bee-filter-tabs">
-        {["", "pending", "retrying", "resolved", "permanently_failed"].map((s) => (
+        {statusOptions.map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
             className={`bee-filter-tab ${statusFilter === s ? "bee-filter-tab--active" : ""}`}
           >
-            {s === "" ? "Todos" : DLQ_STATUS_CONFIG[s]?.label ?? s}
+            {s === "" ? t("all") : t(`status.${s}` as "status.pending")}
           </button>
         ))}
       </div>
@@ -201,9 +207,11 @@ function DLQPanel() {
       ) : filtered.length === 0 ? (
         <div className="py-8 text-center">
           <p className="text-sm text-muted-foreground">
-            No hay eventos fallidos{statusFilter ? ` con estado "${DLQ_STATUS_CONFIG[statusFilter]?.label ?? statusFilter}"` : ""}.
+            {statusFilter
+              ? t("emptyTitleFiltered", { status: t(`status.${statusFilter}` as "status.pending") })
+              : t("emptyTitleAll")}
           </p>
-          <p className="bee-caption mt-1">BEE está gestionando todas las acciones externas sin problemas.</p>
+          <p className="bee-caption mt-1">{t("emptySubtitle")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -217,17 +225,6 @@ function DLQPanel() {
 }
 
 // ── Audit Trail Panel ─────────────────────────────────────────────────────────
-
-const AGENT_LABELS: Record<string, string> = {
-  strategy_generator: "Generador de estrategia",
-  executive_agent: "Agente ejecutivo",
-  psychographic_analyzer: "Psicográfico",
-  dark_funnel: "Dark Funnel",
-  smart_engagement: "Engagement",
-  agent_orchestrator: "Orquestador",
-  workflow_orchestrator: "Flujo de trabajo",
-  trend_analyst: "Analista de tendencias",
-};
 
 function ConfidenceBadge({ score }: { score: number }) {
   // Same ≥0.75/≥0.5 thresholds as scoreColorVar() (lib/format.ts) — this used
@@ -244,7 +241,18 @@ function ConfidenceBadge({ score }: { score: number }) {
 }
 
 function AuditEntryRow({ entry }: { entry: AuditEntry }) {
+  const t = useTranslations("probarNetworkBrandControl.resiliencePanel.audit");
   const [expanded, setExpanded] = useState(false);
+  const agentLabels = {
+    strategy_generator: t("agentLabels.strategy_generator"),
+    executive_agent: t("agentLabels.executive_agent"),
+    psychographic_analyzer: t("agentLabels.psychographic_analyzer"),
+    dark_funnel: t("agentLabels.dark_funnel"),
+    smart_engagement: t("agentLabels.smart_engagement"),
+    agent_orchestrator: t("agentLabels.agent_orchestrator"),
+    workflow_orchestrator: t("agentLabels.workflow_orchestrator"),
+    trend_analyst: t("agentLabels.trend_analyst"),
+  } as Record<string, string>;
 
   return (
     <div
@@ -257,14 +265,14 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
     >
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs bg-[var(--color-primary)] text-muted-foreground px-2 py-0.5 rounded-md">
-          {AGENT_LABELS[entry.agent_type] ?? entry.agent_type}
+          {agentLabels[entry.agent_type] ?? entry.agent_type}
         </span>
         <span className="text-sm font-medium text-foreground truncate flex-1">
           {entry.decision_type.replace(/_/g, " ")}
         </span>
         <ConfidenceBadge score={entry.confidence_score} />
         {entry.manual_review_required && (
-          <span className="text-xs font-medium" style={{ color: "var(--color-chart-2)" }}>Requiere revisión</span>
+          <span className="text-xs font-medium" style={{ color: "var(--color-chart-2)" }}>{t("reviewRequired")}</span>
         )}
         <span className="text-xs text-muted-foreground shrink-0">
           {new Date(entry.created_at).toLocaleTimeString()}
@@ -279,14 +287,14 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
         onClick={() => setExpanded((v) => !v)}
         className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
       >
-        {expanded ? "Ocultar" : "Instantánea completa"}
+        {expanded ? t("hide") : t("fullSnapshot")}
       </button>
 
       {expanded && (
         <div className="mt-1 space-y-2">
           {Object.keys(entry.context_snapshot).length > 0 && (
             <div className="rounded-sm border border-border bg-[var(--color-background)] p-2">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Contexto</p>
+              <p className="text-xs font-medium text-muted-foreground mb-1">{t("context")}</p>
               <pre className="text-xs text-foreground overflow-auto">{JSON.stringify(entry.context_snapshot, null, 2)}</pre>
             </div>
           )}
@@ -295,12 +303,12 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
               className="p-2 rounded-sm"
               style={{ background: "color-mix(in srgb, var(--color-chart-4) 12%, var(--color-background))" }}
             >
-              <p className="text-xs font-medium mb-1" style={{ color: "var(--color-chart-4)" }}>Datos de mercado utilizados</p>
+              <p className="text-xs font-medium mb-1" style={{ color: "var(--color-chart-4)" }}>{t("marketDataUsed")}</p>
               <pre className="text-xs text-foreground overflow-auto">{JSON.stringify(entry.market_data_used, null, 2)}</pre>
             </div>
           )}
           {entry.processing_ms && (
-            <p className="text-xs text-muted-foreground">{entry.processing_ms} ms de procesamiento</p>
+            <p className="text-xs text-muted-foreground">{t("processingMs", { ms: entry.processing_ms })}</p>
           )}
         </div>
       )}
@@ -309,6 +317,7 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
 }
 
 function AuditPanel() {
+  const t = useTranslations("probarNetworkBrandControl.resiliencePanel.audit");
   const [summary, setSummary] = useState<AuditSummary | null>(null);
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -334,18 +343,18 @@ function AuditPanel() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <div className="bee-bento p-2 text-center">
             <p className="bee-stat__val">{summary.total_entries}</p>
-            <p className="bee-stat__lbl">Total de decisiones</p>
+            <p className="bee-stat__lbl">{t("stats.total")}</p>
           </div>
           <div
             className="bee-bento p-2 text-center"
             style={{ borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 12%, var(--color-background))" }}
           >
             <p className="bee-stat__val" style={{ color: "var(--color-chart-2)" }}>{summary.manual_review_count}</p>
-            <p className="bee-stat__lbl">Requieren revisión</p>
+            <p className="bee-stat__lbl">{t("stats.reviewRequired")}</p>
           </div>
           <div className="bee-bento p-2 text-center">
             <p className="bee-stat__val" style={{ color: "var(--success)" }}>{(summary.avg_confidence_score * 100).toFixed(0)}%</p>
-            <p className="bee-stat__lbl">Confianza promedio</p>
+            <p className="bee-stat__lbl">{t("stats.avgConfidence")}</p>
           </div>
         </div>
       )}
@@ -353,7 +362,7 @@ function AuditPanel() {
       <div className="flex items-center gap-2">
         <Label className="cursor-pointer font-normal">
           <Checkbox checked={reviewOnly} onCheckedChange={(checked) => setReviewOnly(checked === true)} />
-          <span className="text-xs text-muted-foreground">Mostrar solo decisiones de baja confianza</span>
+          <span className="text-xs text-muted-foreground">{t("reviewOnlyLabel")}</span>
         </Label>
       </div>
 
@@ -363,8 +372,8 @@ function AuditPanel() {
         </div>
       ) : entries.length === 0 ? (
         <div className="py-8 text-center">
-          <p className="text-sm text-muted-foreground">Todavía no hay entradas de auditoría.</p>
-          <p className="bee-caption mt-1">Las decisiones de los agentes van a aparecer aquí a medida que BEE procese señales.</p>
+          <p className="text-sm text-muted-foreground">{t("emptyTitle")}</p>
+          <p className="bee-caption mt-1">{t("emptySubtitle")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -380,6 +389,7 @@ function AuditPanel() {
 // ── Combined Resilience Panel (exported) ──────────────────────────────────────
 
 export function ResiliencePanel() {
+  const t = useTranslations("probarNetworkBrandControl.resiliencePanel");
   const [activeTab, setActiveTab] = useState<"dlq" | "audit">("dlq");
 
   return (
@@ -394,7 +404,7 @@ export function ResiliencePanel() {
             onClick={() => setActiveTab(tab)}
             className={`bee-filter-tab ${activeTab === tab ? "bee-filter-tab--active" : ""}`}
           >
-            {tab === "dlq" ? "Cola de eventos fallidos" : "Registro de auditoría"}
+            {t(`tabs.${tab}`)}
           </button>
         ))}
       </div>

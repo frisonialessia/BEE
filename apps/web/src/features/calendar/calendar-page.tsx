@@ -2,7 +2,7 @@
 
 import { CheckCircle2, ChevronLeft, ChevronRight, Link2, Plus, Trash2, Users, Video } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -352,7 +352,8 @@ function MonthGridView({
   );
 
   return (
-    <div className="bee-surface overflow-hidden rounded-[var(--radius-lg)]">
+    <div className="bee-surface overflow-x-auto rounded-[var(--radius-lg)]">
+      <div className="min-w-[560px]">
       <div className="grid grid-cols-7 border-b border-border">
         {weekdayLabels.map((label, i) => (
           <p key={i} className="bee-eyebrow px-2 py-2 text-center">
@@ -404,6 +405,7 @@ function MonthGridView({
             </button>
           );
         })}
+      </div>
       </div>
     </div>
   );
@@ -577,7 +579,25 @@ export function CalendarPage() {
   // zonedFakeLocalDate/zonedWallClockToUtc pair in lib/timezone — see
   // weekStartUtc below for where that gets bridged back to a real instant
   // for querying the API.
-  const tz = resolveTimezone(user?.timezone);
+  //
+  // resolveTimezone's browser-detected fallback (Intl.DateTimeFormat's own
+  // resolvedOptions().timeZone) only exists client-side and can disagree
+  // with whatever zone the Next.js server process happens to run in — a
+  // classic hydration-mismatch source when nothing in `user` sets an
+  // explicit timezone (true for the whole /probar sandbox, and for any
+  // dashboard user who hasn't set one). Deferring the fallback to after
+  // mount keeps the server render and the first client render in
+  // agreement (both "UTC") — the real detected zone kicks in a frame
+  // later, same standard fix as any other browser-only read.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    // One-shot "we're past hydration now" flag — nothing to synchronize
+    // with an external system, just the standard way to defer a
+    // browser-only read past the first (SSR-matching) render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+  const tz = user?.timezone || (mounted ? resolveTimezone(undefined) : "UTC");
   const [weekStart, setWeekStart] = useState(() => startOfWeek(zonedFakeLocalDate(new Date(), tz)));
   // "Day" isn't offered yet — the week grid already reads fine for a
   // single busy day (see the overlap layout above), and adding a third
@@ -950,8 +970,16 @@ export function CalendarPage() {
         )}
         {/* Whose wall clock every time on this page is in — see
             tzOffsetLabel's own docstring for why the reference this was
-            built against shows it too. */}
-        <span className="bee-caption ml-auto font-mono text-muted-foreground">{tzOffsetLabel(tz)}</span>
+            built against shows it too. Client-only (mounted &&): Node's
+            ICU and a browser's can format the same zone's shortOffset
+            differently (observed: "GMT+0" server-side vs. "GMT"
+            client-side for UTC) — a real cross-engine formatting gap, not
+            a stale/drifting value, so there's no "right" SSR answer to
+            match; rendering nothing until mount is what actually avoids
+            the hydration mismatch, not just hides it. */}
+        <span className="bee-caption ml-auto font-mono text-muted-foreground">
+          {mounted ? tzOffsetLabel(tz) : null}
+        </span>
       </div>
 
       {isLoading ? (
@@ -1035,7 +1063,7 @@ export function CalendarPage() {
                         key={m.id}
                         type="button"
                         onClick={() => setDetail(m)}
-                        className={`bee-bento absolute flex flex-col gap-0.5 overflow-hidden rounded-lg p-1.5 text-left shadow-sm ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
+                        className={`bee-bento absolute flex flex-col gap-0.5 overflow-hidden rounded-lg p-1.5 text-left ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
                         style={{
                           top: pos.top,
                           height: pos.height,
@@ -1193,7 +1221,7 @@ export function CalendarPage() {
                 className="bee-input w-full"
               />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
                   {t("form.startsAtLabel")}
@@ -1232,7 +1260,7 @@ export function CalendarPage() {
                 className="bee-input w-full"
               />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
                   {t("form.linkOpportunityLabel")}

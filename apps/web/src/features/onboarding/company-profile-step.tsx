@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EMPLOYEE_RANGES, type EmployeeRange } from "@/lib/api/organizations";
@@ -14,6 +15,7 @@ import { useUpdateOrganizationProfile } from "@/hooks/queries/use-organization-p
  * used for segmentation later and worth asking for up front. */
 export function CompanyProfileStep({ onDone }: { onDone: () => void }) {
   const updateProfile = useUpdateOrganizationProfile();
+  const t = useTranslations("onboarding.intro.companyProfile");
   const [employeeRange, setEmployeeRange] = useState<EmployeeRange | "">("");
   const [industry, setIndustry] = useState("");
 
@@ -30,17 +32,14 @@ export function CompanyProfileStep({ onDone }: { onDone: () => void }) {
   return (
     <form onSubmit={handleSubmit}>
       <DialogHeader>
-        <DialogTitle className="bee-display text-xl">Cuéntanos de tu empresa</DialogTitle>
-        <DialogDescription>
-          Un dato rápido antes de arrancar — nos ayuda a mostrarte lo relevante para el tamaño de
-          tu equipo. Puedes cambiarlo después en Configuración.
-        </DialogDescription>
+        <DialogTitle className="bee-display text-xl">{t("title")}</DialogTitle>
+        <DialogDescription>{t("description")}</DialogDescription>
       </DialogHeader>
 
       <div className="mt-4 flex flex-col gap-4">
         <div className="space-y-1.5">
           <label htmlFor="employeeRange" className="bee-caption block">
-            ¿Cuántas personas trabajan en tu empresa? *
+            {t("employeeRangeLabel")}
           </label>
           <select
             id="employeeRange"
@@ -50,11 +49,11 @@ export function CompanyProfileStep({ onDone }: { onDone: () => void }) {
             className="bee-input"
           >
             <option value="" disabled>
-              Elige un rango
+              {t("employeeRangePlaceholder")}
             </option>
             {EMPLOYEE_RANGES.map((range) => (
               <option key={range} value={range}>
-                {range} empleados
+                {range} {t("employeeRangeSuffix")}
               </option>
             ))}
           </select>
@@ -62,28 +61,28 @@ export function CompanyProfileStep({ onDone }: { onDone: () => void }) {
 
         <div className="space-y-1.5">
           <label htmlFor="industry" className="bee-caption block">
-            Industria <span className="text-muted-foreground">(opcional)</span>
+            {t("industryLabel")} <span className="text-muted-foreground">{t("optional")}</span>
           </label>
           <input
             id="industry"
             value={industry}
             onChange={(e) => setIndustry(e.target.value)}
             className="bee-input"
-            placeholder="Ej: B2B SaaS, Fintech, E-commerce"
+            placeholder={t("industryPlaceholder")}
           />
         </div>
       </div>
 
       <DialogFooter className="mt-2">
         <button type="button" onClick={onDone} className="bee-btn-ghost">
-          Omitir por ahora
+          {t("skip")}
         </button>
         <button
           type="submit"
           disabled={!employeeRange || updateProfile.isPending}
           className="bee-btn bee-btn--primary"
         >
-          {updateProfile.isPending ? "Guardando…" : "Continuar"}
+          {updateProfile.isPending ? t("saving") : t("continue")}
         </button>
       </DialogFooter>
     </form>

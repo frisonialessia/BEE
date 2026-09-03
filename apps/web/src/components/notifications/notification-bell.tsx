@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Bell, Flame, Radio } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -31,6 +31,7 @@ const KIND_COLOR: Record<AppNotification["kind"], string> = {
 /** Campana de notificaciones — vive en el encabezado, no en el sidebar. */
 export function NotificationBell() {
   const locale = useLocale() as Locale;
+  const t = useTranslations("common.notificationBell");
   const { notifications, unreadCount, markAllSeen, isLoading } = useNotifications();
   // Pushes an immediate refetch of the sources above the moment a hot
   // signal/opportunity/meeting event happens (see that hook's own
@@ -61,7 +62,7 @@ export function NotificationBell() {
         type="button"
         onClick={toggle}
         className="relative flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[var(--color-primary)] hover:text-foreground"
-        aria-label={`Notificaciones${unreadCount > 0 ? ` (${unreadCount} sin leer)` : ""}`}
+        aria-label={unreadCount > 0 ? t("ariaLabelUnread", { count: unreadCount }) : t("ariaLabel")}
       >
         <Bell className="size-4 stroke-[1.5]" />
         {unreadCount > 0 && (
@@ -74,13 +75,13 @@ export function NotificationBell() {
       {open && (
         <div className="bee-glass absolute right-0 top-full z-50 mt-2 max-h-[70vh] w-80 max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-[var(--radius-lg)]">
           <div className="sticky top-0 border-b border-border bg-[var(--color-background)]/80 px-4 py-3 backdrop-blur">
-            <p className="text-sm font-semibold">Notificaciones</p>
+            <p className="text-sm font-semibold">{t("title")}</p>
           </div>
           {isLoading ? (
-            <p className="px-4 py-6 text-center text-xs text-muted-foreground">Cargando…</p>
+            <p className="px-4 py-6 text-center text-xs text-muted-foreground">{t("loading")}</p>
           ) : notifications.length === 0 ? (
             <p className="px-4 py-6 text-center text-xs text-muted-foreground">
-              No hay novedades por ahora.
+              {t("empty")}
             </p>
           ) : (
             <ul>

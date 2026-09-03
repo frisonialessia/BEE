@@ -93,6 +93,7 @@ const NAMESPACES = [
   "signalsStrategies",
   "forecastWinLoss",
   "companiesLeads",
+  "onboarding",
   "sharedB",
   "shared",
   "workspace",

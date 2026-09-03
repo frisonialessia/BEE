@@ -1,0 +1,85 @@
+{
+  "intro": {
+    "companyProfile": {
+      "title": "Tell us about your company",
+      "description": "One quick detail before you start — it helps us show you what's relevant for your team's size. You can change it later in Settings.",
+      "employeeRangeLabel": "How many people work at your company? *",
+      "employeeRangePlaceholder": "Choose a range",
+      "employeeRangeSuffix": "employees",
+      "industryLabel": "Industry",
+      "optional": "(optional)",
+      "industryPlaceholder": "e.g. B2B SaaS, Fintech, E-commerce",
+      "skip": "Skip for now",
+      "saving": "Saving…",
+      "continue": "Continue"
+    },
+    "teamSetup": {
+      "title": "Create your first team",
+      "description": "A team groups your reps and defines who sees whose work. If it's just a few of you for now, feel free to skip this — create one whenever you want from Team.",
+      "nameLabel": "Team name",
+      "namePlaceholder": "e.g. LATAM Sales",
+      "skip": "Skip for now",
+      "creating": "Creating…",
+      "create": "Create team"
+    },
+    "tourPreview": {
+      "title": "How BEE works",
+      "description": "A guided 7-step walkthrough, right on the actual product — we'll show you every key spot as you go, in the order that makes sense for your first pass.",
+      "preview": {
+        "signals": "Signals",
+        "priority": "Prioritization",
+        "pipeline": "Pipeline",
+        "strategy": "Strategy",
+        "forecast": "Forecast",
+        "team": "Team"
+      },
+      "notNow": "Not now",
+      "start": "Start the guided tour"
+    }
+  },
+  "tour": {
+    "steps": {
+      "signals": {
+        "title": "1. Signals",
+        "description": "It all starts here: what the market already made public — a funding round, a key hire, a stack change — before anyone else notices."
+      },
+      "priority": {
+        "title": "2. Prioritization",
+        "description": "The Decision Inbox crosses those signals with how well they fit your ICP — so you know which one to chase first, instead of chasing all of them equally."
+      },
+      "pipeline": {
+        "title": "3. Pipeline (CRM)",
+        "description": "Every already-prioritized opportunity lives here, across 5 stages: Detected → Ready to act → Your priority → In conversation → Closed. Not a generic CRM's stages (\"New, Open...\") — every column has its own \"?\" icon explaining what it means. Drag a card to move it forward."
+      },
+      "strategy": {
+        "title": "4. Strategy",
+        "description": "Open an opportunity and look at the play the AI put together: the argument, the channel, the email — ready to send, not a generic template."
+      },
+      "darkFunnel": {
+        "title": "5. Dark Funnel",
+        "description": "Buying intent nobody else sees: anonymous visits, comparisons, quiet research — before they ever raise a hand."
+      },
+      "forecast": {
+        "title": "6. Forecast",
+        "description": "What's going to close this month and what's at risk — calculated straight from the real pipeline, not a separate spreadsheet someone has to update by hand."
+      },
+      "closingDashboard": {
+        "title": "7. Your team",
+        "description": "From here you invite your team to collaborate on the same pipeline, each with the visibility that matches their role."
+      },
+      "closingProbar": {
+        "title": "7. Your turn",
+        "description": "This was a quick spin with sample data. Create your free account to connect your own signals and watch BEE work with your real pipeline."
+      }
+    },
+    "overlay": {
+      "dialogAriaLabel": "Guided tour",
+      "badge": "Guided tour",
+      "closeAriaLabel": "Close the tour",
+      "skip": "Skip tour",
+      "back": "Back",
+      "next": "Next",
+      "done": "Done"
+    }
+  }
+}

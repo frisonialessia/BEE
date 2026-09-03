@@ -195,7 +195,8 @@
     }
   },
   "control": {
-    "caption": "Kanban de acción · inteligencia hexagonal · métricas del sistema",
+    "caption": "Kanban de acción · inteligencia hexagonal · métricas del sistema · resiliencia",
+    "overviewTab": "Sistema",
     "leadWorkspace": {
       "ariaLabel": "Espacio de leads",
       "eyebrow": "Zona de acción",
@@ -267,5 +268,91 @@
       "unavailable": "Flujo no disponible.",
       "waiting": "Esperando webhooks entrantes."
     }
+  },
+  "resiliencePanel": {
+    "tabs": {
+      "dlq": "Cola de eventos fallidos",
+      "audit": "Registro de auditoría"
+    },
+    "dlq": {
+      "status": {
+        "pending": "Pendiente",
+        "retrying": "Reintentando",
+        "resolved": "Resuelto",
+        "permanently_failed": "Fallido"
+      },
+      "all": "Todos",
+      "attemptCount": "{count, plural, one {# intento} other {# intentos}}",
+      "hide": "Ocultar",
+      "details": "Detalles",
+      "retryNow": "Reintentar ahora",
+      "resolve": "Resolver",
+      "resolvedManuallyReason": "Resuelto manualmente desde el panel",
+      "ceoAlerted": "⚠ CEO alertado",
+      "type": "Tipo:",
+      "created": "Creado:",
+      "nextRetry": "Próximo reintento:",
+      "errorHistory": "Historial de errores:",
+      "stats": {
+        "total": "Total",
+        "pending": "Pendientes",
+        "resolved": "Resueltos",
+        "failed": "Fallidos",
+        "dueNow": "Vencidos ahora"
+      },
+      "emptyTitleAll": "No hay eventos fallidos.",
+      "emptyTitleFiltered": "No hay eventos fallidos con estado \"{status}\".",
+      "emptySubtitle": "BEE está gestionando todas las acciones externas sin problemas."
+    },
+    "audit": {
+      "agentLabels": {
+        "strategy_generator": "Generador de estrategia",
+        "executive_agent": "Agente ejecutivo",
+        "psychographic_analyzer": "Psicográfico",
+        "dark_funnel": "Dark Funnel",
+        "smart_engagement": "Engagement",
+        "agent_orchestrator": "Orquestador",
+        "workflow_orchestrator": "Flujo de trabajo",
+        "trend_analyst": "Analista de tendencias"
+      },
+      "reviewRequired": "Requiere revisión",
+      "hide": "Ocultar",
+      "fullSnapshot": "Instantánea completa",
+      "context": "Contexto",
+      "marketDataUsed": "Datos de mercado utilizados",
+      "processingMs": "{ms} ms de procesamiento",
+      "stats": {
+        "total": "Total de decisiones",
+        "reviewRequired": "Requieren revisión",
+        "avgConfidence": "Confianza promedio"
+      },
+      "reviewOnlyLabel": "Mostrar solo decisiones de baja confianza",
+      "emptyTitle": "Todavía no hay entradas de auditoría.",
+      "emptySubtitle": "Las decisiones de los agentes van a aparecer aquí a medida que BEE procese señales."
+    }
+  },
+  "pendingActions": {
+    "status": {
+      "pending_approval": "Pendiente de aprobación",
+      "approved": "Aprobado",
+      "rejected": "Rechazado",
+      "executing": "Ejecutando",
+      "completed": "Completado",
+      "failed": "Fallido"
+    },
+    "title": "Cola de ejecución",
+    "caption": "Acciones en espera de aprobación antes de que BEE las ejecute externamente",
+    "live": "En vivo",
+    "demoData": "Datos demo",
+    "pendingCount": "{count} pendientes",
+    "retryCount": "Reintento #{count}",
+    "approving": "Aprobando…",
+    "approve": "Aprobar",
+    "rejecting": "Rechazando…",
+    "reject": "Rechazar",
+    "approvedBy": "Aprobado por {name}",
+    "emptyTitle": "No hay acciones pendientes.",
+    "emptySubtitle": "Los artefactos de ejecución aparecerán aquí cuando BEE los genere.",
+    "safetyGate": "Puerta de seguridad: ninguna acción se ejecuta sin la aprobación explícita del CEO."
   }
 }

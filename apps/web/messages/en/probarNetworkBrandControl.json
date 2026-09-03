@@ -195,7 +195,8 @@
     }
   },
   "control": {
-    "caption": "Action kanban · hex intelligence · system metrics",
+    "caption": "Action kanban · hex intelligence · system metrics · resilience",
+    "overviewTab": "System",
     "leadWorkspace": {
       "ariaLabel": "Lead workspace",
       "eyebrow": "Action zone",
@@ -267,5 +268,91 @@
       "unavailable": "Stream unavailable.",
       "waiting": "Waiting for incoming webhooks."
     }
+  },
+  "resiliencePanel": {
+    "tabs": {
+      "dlq": "Failed event queue",
+      "audit": "Audit log"
+    },
+    "dlq": {
+      "status": {
+        "pending": "Pending",
+        "retrying": "Retrying",
+        "resolved": "Resolved",
+        "permanently_failed": "Failed"
+      },
+      "all": "All",
+      "attemptCount": "{count, plural, one {# attempt} other {# attempts}}",
+      "hide": "Hide",
+      "details": "Details",
+      "retryNow": "Retry now",
+      "resolve": "Resolve",
+      "resolvedManuallyReason": "Manually resolved from the panel",
+      "ceoAlerted": "⚠ CEO alerted",
+      "type": "Type:",
+      "created": "Created:",
+      "nextRetry": "Next retry:",
+      "errorHistory": "Error history:",
+      "stats": {
+        "total": "Total",
+        "pending": "Pending",
+        "resolved": "Resolved",
+        "failed": "Failed",
+        "dueNow": "Due now"
+      },
+      "emptyTitleAll": "No failed events.",
+      "emptyTitleFiltered": "No failed events with status \"{status}\".",
+      "emptySubtitle": "BEE is handling every external action without issues."
+    },
+    "audit": {
+      "agentLabels": {
+        "strategy_generator": "Strategy generator",
+        "executive_agent": "Executive agent",
+        "psychographic_analyzer": "Psychographic",
+        "dark_funnel": "Dark Funnel",
+        "smart_engagement": "Engagement",
+        "agent_orchestrator": "Orchestrator",
+        "workflow_orchestrator": "Workflow",
+        "trend_analyst": "Trend analyst"
+      },
+      "reviewRequired": "Needs review",
+      "hide": "Hide",
+      "fullSnapshot": "Full snapshot",
+      "context": "Context",
+      "marketDataUsed": "Market data used",
+      "processingMs": "{ms} ms processing",
+      "stats": {
+        "total": "Total decisions",
+        "reviewRequired": "Need review",
+        "avgConfidence": "Avg. confidence"
+      },
+      "reviewOnlyLabel": "Show only low-confidence decisions",
+      "emptyTitle": "No audit entries yet.",
+      "emptySubtitle": "Agent decisions will show up here as BEE processes signals."
+    }
+  },
+  "pendingActions": {
+    "status": {
+      "pending_approval": "Pending approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "executing": "Executing",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "title": "Execution queue",
+    "caption": "Actions waiting for approval before BEE executes them externally",
+    "live": "Live",
+    "demoData": "Demo data",
+    "pendingCount": "{count} pending",
+    "retryCount": "Retry #{count}",
+    "approving": "Approving…",
+    "approve": "Approve",
+    "rejecting": "Rejecting…",
+    "reject": "Reject",
+    "approvedBy": "Approved by {name}",
+    "emptyTitle": "No pending actions.",
+    "emptySubtitle": "Execution artifacts will show up here as BEE generates them.",
+    "safetyGate": "Safety gate: no action executes without explicit CEO approval."
   }
 }

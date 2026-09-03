@@ -2,6 +2,7 @@
 
 import { ChevronDown, LogOut, Users } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/providers/auth-provider";
@@ -16,6 +17,8 @@ function initials(name: string) {
 /** Menú de cuenta — quién eres, tu rol, y cerrar sesión. Vive en el encabezado. */
 export function AccountMenu() {
   const { user, logout } = useAuth();
+  const tNav = useTranslations("nav");
+  const t = useTranslations("common.commandPalette");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -58,7 +61,7 @@ export function AccountMenu() {
             className="flex items-center gap-2 px-4 py-2.5 text-xs font-medium transition-colors hover:bg-[var(--color-primary)]/40"
           >
             <Users className="size-3.5" />
-            Equipo
+            {tNav("items.team")}
           </Link>
           <button
             type="button"
@@ -66,7 +69,7 @@ export function AccountMenu() {
             className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs font-medium transition-colors hover:bg-[var(--color-primary)]/40"
           >
             <LogOut className="size-3.5" />
-            Cerrar sesión
+            {t("logout")}
           </button>
         </div>
       )}

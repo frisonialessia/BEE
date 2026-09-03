@@ -85,7 +85,7 @@ export default function ProbarOverviewPage() {
        * "CRM", no "Pipeline": ese nombre ya es de otra sección (Dark
        * Funnel) — usar la palabra suelta acá confundiría a cuál se
        * refiere el link. */}
-      <div className="bee-kpi-strip !mt-0 !grid-cols-4">
+      <div className="bee-kpi-strip !mt-0">
         {KPI_TILES.map((tile) => (
           <Link key={tile.key} href={tile.href} className="bee-kpi-tile bee-glass--hover block">
             <div className="flex items-center justify-between gap-2">

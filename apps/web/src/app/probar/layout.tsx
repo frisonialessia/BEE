@@ -24,14 +24,15 @@ import { PROBAR_NAV_GROUPS } from "@/app/probar/nav-items";
  * trigger. Lives inside TourProvider, same as TourOverlay itself. */
 function TourTriggerButton() {
   const { start } = useTour();
+  const t = useTranslations("onboarding.tour");
   return (
     <button
       type="button"
-      onClick={() => start(buildTourSteps("probar"))}
+      onClick={() => start(buildTourSteps("probar", (key) => t(`steps.${key}` as "steps.signals.title")))}
       className="bee-btn-ghost ml-auto hidden items-center gap-1.5 px-3 py-1.5 text-xs sm:inline-flex"
     >
       <Compass className="size-3.5" />
-      Tour guiado
+      {t("overlay.badge")}
     </button>
   );
 }

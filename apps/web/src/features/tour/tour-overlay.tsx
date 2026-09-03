@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 
 import { useTour } from "@/features/tour/tour-context";
@@ -132,6 +133,7 @@ export function TourOverlay() {
 
 function TourTooltip({ box }: { box: Rect }) {
   const { step, stepIndex, totalSteps, next, back, stop } = useTour();
+  const t = useTranslations("onboarding.tour.overlay");
   if (!step) return null;
 
   const isLast = stepIndex + 1 >= totalSteps;
@@ -151,11 +153,11 @@ function TourTooltip({ box }: { box: Rect }) {
       className="pointer-events-auto fixed w-[min(320px,calc(100vw-2.5rem))] space-y-3 rounded-[var(--radius-xl)] border border-border bg-[var(--color-background)] p-4 shadow-[0_12px_40px_color-mix(in_srgb,var(--color-text)_20%,transparent)]"
       style={style}
       role="dialog"
-      aria-label="Tour guiado"
+      aria-label={t("dialogAriaLabel")}
     >
       <div className="flex items-start justify-between gap-3">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-chart-4)] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white">
-          Tour guiado
+          {t("badge")}
           <span className="opacity-80">
             {stepIndex + 1}/{totalSteps}
           </span>
@@ -163,7 +165,7 @@ function TourTooltip({ box }: { box: Rect }) {
         <button
           type="button"
           onClick={stop}
-          aria-label="Cerrar el tour"
+          aria-label={t("closeAriaLabel")}
           className="shrink-0 rounded-full p-1 text-muted-foreground hover:bg-[var(--color-primary)] hover:text-foreground"
         >
           <X className="size-4" />
@@ -181,12 +183,12 @@ function TourTooltip({ box }: { box: Rect }) {
           onClick={stop}
           className="bee-micro text-muted-foreground underline underline-offset-2 hover:text-foreground"
         >
-          Saltar tour
+          {t("skip")}
         </button>
         <div className="flex gap-2">
           {!isFirst && (
             <button type="button" onClick={back} className="bee-btn-ghost px-3 py-1.5 text-xs">
-              Atrás
+              {t("back")}
             </button>
           )}
           <button
@@ -194,7 +196,7 @@ function TourTooltip({ box }: { box: Rect }) {
             onClick={next}
             className="bee-btn bee-btn--primary px-3 py-1.5 text-xs"
           >
-            {isLast ? "Listo" : "Siguiente"}
+            {isLast ? t("done") : t("next")}
           </button>
         </div>
       </div>

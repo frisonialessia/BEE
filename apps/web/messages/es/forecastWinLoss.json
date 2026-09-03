@@ -7,6 +7,7 @@
     "subtitle": "Pipeline ponderado por probabilidad de cierre, mes a mes, y qué deals están en riesgo",
     "tabs": {
       "forecast": "Pronóstico",
+      "overview": "Resumen",
       "simulator": "Simulador de escenarios"
     },
     "outerTabs": {

@@ -62,7 +62,7 @@ export function ForecastView() {
         tabs={[
           {
             value: "forecast",
-            label: t("forecast.tabs.forecast"),
+            label: t("forecast.tabs.overview"),
             content: isLoading ? (
               <div className="space-y-4">
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

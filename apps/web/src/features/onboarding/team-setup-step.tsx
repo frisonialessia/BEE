@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCreateTeam } from "@/hooks/queries/use-teams";
@@ -14,6 +15,7 @@ import { useCreateTeam } from "@/hooks/queries/use-teams";
  * create one later from Equipo. */
 export function TeamSetupStep({ onDone }: { onDone: () => void }) {
   const createTeam = useCreateTeam();
+  const t = useTranslations("onboarding.intro.teamSetup");
   const [name, setName] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -26,36 +28,33 @@ export function TeamSetupStep({ onDone }: { onDone: () => void }) {
   return (
     <form onSubmit={handleSubmit}>
       <DialogHeader>
-        <DialogTitle className="bee-display text-xl">Crea tu primer equipo</DialogTitle>
-        <DialogDescription>
-          Un equipo agrupa a tus reps y define quién ve el trabajo de quién. Si por ahora son pocos,
-          puedes saltarte esto — lo creas cuando quieras desde Equipo.
-        </DialogDescription>
+        <DialogTitle className="bee-display text-xl">{t("title")}</DialogTitle>
+        <DialogDescription>{t("description")}</DialogDescription>
       </DialogHeader>
 
       <div className="mt-4 space-y-1.5">
         <label htmlFor="teamName" className="bee-caption block">
-          Nombre del equipo
+          {t("nameLabel")}
         </label>
         <input
           id="teamName"
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="bee-input"
-          placeholder="Ej: Ventas LATAM"
+          placeholder={t("namePlaceholder")}
         />
       </div>
 
       <DialogFooter className="mt-4">
         <button type="button" onClick={onDone} className="bee-btn-ghost">
-          Omitir por ahora
+          {t("skip")}
         </button>
         <button
           type="submit"
           disabled={!name.trim() || createTeam.isPending}
           className="bee-btn bee-btn--primary"
         >
-          {createTeam.isPending ? "Creando…" : "Crear equipo"}
+          {createTeam.isPending ? t("creating") : t("create")}
         </button>
       </DialogFooter>
     </form>
