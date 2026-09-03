@@ -34,4 +34,8 @@ class Quota(TimestampMixin, table=True):
 
     period_start: date = Field(nullable=False, index=True)
     period_end: date = Field(nullable=False)
-    target_amount: float = Field(nullable=False)
+    # Revenue target in the team's currency (0 when the quota is only a
+    # client-count target) and/or a number-of-new-clients target — a rep
+    # can be measured on either, or both. See app.schemas.quota.
+    target_amount: float = Field(default=0.0, nullable=False)
+    target_count: int | None = Field(default=None)

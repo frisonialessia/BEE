@@ -38,6 +38,9 @@ class Team(TimestampMixin, table=True):
 
     name: str = Field(nullable=False)
     description: str | None = Field(default=None)
+    # ISO 4217 code the team sells in — quotas and the sales page render
+    # amounts in it. USD by default; set by OWNER/ADMIN via PATCH /teams/{id}.
+    currency: str = Field(default="USD", max_length=3, nullable=False)
 
     # ----- Relationships -------------------------------------------------------
     organization: "Organization" = Relationship(back_populates="teams")

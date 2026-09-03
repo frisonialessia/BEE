@@ -44,6 +44,7 @@ def create_team(
         organization_id=current_user.organization_id,
         name=data.name,
         description=data.description,
+        currency=data.currency.upper(),
         parent_team_id=data.parent_team_id,
     )
     session.add(team)
@@ -131,6 +132,8 @@ def update_team(
         team.name = data.name
     if data.description is not None:
         team.description = data.description
+    if data.currency is not None:
+        team.currency = data.currency.upper()
 
     session.add(team)
     session.commit()

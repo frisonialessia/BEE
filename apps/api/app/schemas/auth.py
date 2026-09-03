@@ -97,12 +97,15 @@ class TeamCreate(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     description: str | None = None
     parent_team_id: uuid.UUID | None = None
+    # ISO 4217 — the currency this team sells (and is measured) in.
+    currency: str = Field(default="USD", min_length=3, max_length=3, pattern=r"^[A-Za-z]{3}$")
 
 
 class TeamUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
     parent_team_id: uuid.UUID | None = None
+    currency: str | None = Field(default=None, min_length=3, max_length=3, pattern=r"^[A-Za-z]{3}$")
 
 
 class TeamOut(BaseModel):
@@ -111,6 +114,7 @@ class TeamOut(BaseModel):
     parent_team_id: uuid.UUID | None
     name: str
     description: str | None
+    currency: str = "USD"
 
     model_config = ConfigDict(from_attributes=True)
 
