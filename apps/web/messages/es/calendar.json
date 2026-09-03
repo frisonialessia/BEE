@@ -8,10 +8,19 @@
     "prevWeek": "Semana anterior",
     "nextWeek": "Semana siguiente",
     "emptyDay": "Sin reuniones",
-    "loading": "Cargando…"
+    "loading": "Cargando…",
+    "weekView": "Semana",
+    "monthView": "Mes"
   },
   "sidebar": {
-    "timeBreakdown": "Desglose de tiempo"
+    "timeBreakdown": "Desglose de tiempo",
+    "today": "Hoy",
+    "upcomingEvent": "Próxima reunión",
+    "rsvpLabel": "Invitación",
+    "rsvpQuestion": "¿Vas a \"{title}\"?",
+    "rsvpAccept": "Sí",
+    "rsvpDecline": "No",
+    "rsvpError": "No se pudo registrar tu respuesta — intenta de nuevo."
   },
   "widget": {
     "title": "Mi calendario",

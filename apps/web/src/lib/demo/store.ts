@@ -714,6 +714,7 @@ function buildMeeting(partial: {
   lead?: Lead;
   attendeeUserIds?: string[];
   color?: Meeting["color"];
+  attendeeResponses?: Meeting["attendee_responses"];
 }): Meeting {
   const opportunity = partial.opportunity;
   const lead = partial.lead ?? undefined;
@@ -728,6 +729,7 @@ function buildMeeting(partial: {
     duration_minutes: partial.durationMinutes,
     meeting_url: partial.meetingUrl ?? null,
     attendee_user_ids: partial.attendeeUserIds ?? [],
+    attendee_responses: partial.attendeeResponses ?? {},
     color: partial.color ?? null,
     completed_at: null,
     created_at: new Date().toISOString(),
@@ -846,6 +848,7 @@ export function demoCreateMeeting(body: MeetingCreateIn): Meeting {
     duration_minutes: body.duration_minutes ?? 30,
     meeting_url: body.meeting_url ?? null,
     attendee_user_ids: body.attendee_user_ids ?? [],
+    attendee_responses: {},
     color: body.color ?? null,
     completed_at: null,
     created_at: new Date().toISOString(),
@@ -896,6 +899,18 @@ export function demoCompleteMeeting(meetingId: string): Meeting {
     list[idx] = { ...list[idx], completed_at: new Date().toISOString() };
     saveMeetings(list);
   }
+  return list[idx];
+}
+
+export function demoRespondToMeeting(meetingId: string, response: "accepted" | "declined"): Meeting {
+  const list = loadMeetings();
+  const idx = findMeetingOrThrow(list, meetingId);
+  const responderId = demoFetchUsers()[0].id;
+  list[idx] = {
+    ...list[idx],
+    attendee_responses: { ...list[idx].attendee_responses, [responderId]: response },
+  };
+  saveMeetings(list);
   return list[idx];
 }
 

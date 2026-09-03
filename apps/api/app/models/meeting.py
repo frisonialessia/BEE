@@ -63,6 +63,17 @@ class Meeting(TimestampMixin, table=True):
     # client_context-based tone the calendar already had.
     color: str | None = Field(default=None, max_length=20)
 
+    # RSVP per attendee — {user_id: "pending" | "accepted" | "declined"}.
+    # An attendee_user_ids entry with no key here is implicitly "pending":
+    # this dict only ever gets an entry via POST /meetings/{id}/respond, so
+    # a newly-invited attendee (or an attendee on a meeting created before
+    # this field existed) naturally reads as not-yet-responded rather than
+    # needing a migration to backfill "pending" for everyone. Lets a
+    # manager/CEO book a meeting with a rep and the rep accept/decline it
+    # from BEE, same as any real calendar invite — see
+    # app.api.v1.endpoints.meetings.respond_to_meeting.
+    attendee_responses: dict[str, str] = Field(default_factory=dict, sa_column=Column(JSON))
+
     # Set once, by POST /meetings/{id}/complete — NULL means "hasn't
     # happened yet (or nobody's said it did)", never inferred from
     # starts_at + duration having passed: a rep confirming it actually

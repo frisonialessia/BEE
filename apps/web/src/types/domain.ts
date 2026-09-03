@@ -411,6 +411,10 @@ export interface Meeting {
   duration_minutes: number;
   meeting_url: string | null;
   attendee_user_ids: string[];
+  // {user_id: "accepted" | "declined"} — an attendee id with no entry here
+  // is implicitly "pending" (hasn't responded yet). See POST
+  // /meetings/{id}/respond on the backend.
+  attendee_responses: Record<string, "accepted" | "declined">;
   color: MeetingColor | null;
   // Set once via POST /meetings/{id}/complete — a scheduled meeting alone
   // never sets this. See that endpoint's own docstring for why the

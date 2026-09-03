@@ -328,3 +328,87 @@ class TestMeetingColor:
         )
         assert patch_resp.status_code == 200, patch_resp.text
         assert patch_resp.json()["color"] == "chart-6"
+
+
+class TestRespondToMeeting:
+    def test_invited_attendee_can_accept(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session, "OrgMeetRespond1")
+        owner = _make_user(session, org, "Owner")
+        rep = _make_user(session, org, "Rep", role=UserRole.MEMBER)
+        create_resp = client.post(
+            "/api/v1/meetings",
+            headers=_auth_headers(owner),
+            json={
+                "title": "1:1 with CEO",
+                "starts_at": datetime.now(UTC).isoformat(),
+                "attendee_user_ids": [str(rep.id)],
+            },
+        )
+        meeting_id = create_resp.json()["id"]
+        assert create_resp.json()["attendee_responses"] == {}
+
+        resp = client.post(
+            f"/api/v1/meetings/{meeting_id}/respond",
+            headers=_auth_headers(rep),
+            json={"response": "accepted"},
+        )
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["attendee_responses"] == {str(rep.id): "accepted"}
+
+    def test_invited_attendee_can_decline(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session, "OrgMeetRespond2")
+        owner = _make_user(session, org, "Owner")
+        rep = _make_user(session, org, "Rep", role=UserRole.MEMBER)
+        create_resp = client.post(
+            "/api/v1/meetings",
+            headers=_auth_headers(owner),
+            json={
+                "title": "1:1 with CEO",
+                "starts_at": datetime.now(UTC).isoformat(),
+                "attendee_user_ids": [str(rep.id)],
+            },
+        )
+        meeting_id = create_resp.json()["id"]
+
+        resp = client.post(
+            f"/api/v1/meetings/{meeting_id}/respond",
+            headers=_auth_headers(rep),
+            json={"response": "declined"},
+        )
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["attendee_responses"] == {str(rep.id): "declined"}
+
+    def test_non_attendee_cannot_respond(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session, "OrgMeetRespond3")
+        owner = _make_user(session, org, "Owner")
+        # ADMIN, not MEMBER — org-wide visibility (get_visible_user_ids
+        # returns None for OWNER/ADMIN), so this bystander legitimately
+        # *sees* the meeting (not a 404 from the visibility rule) but was
+        # never invited to it, isolating the 403 this test actually checks.
+        bystander = _make_user(session, org, "Bystander", role=UserRole.ADMIN)
+        create_resp = client.post(
+            "/api/v1/meetings",
+            headers=_auth_headers(owner),
+            json={"title": "1:1 with CEO", "starts_at": datetime.now(UTC).isoformat()},
+        )
+        meeting_id = create_resp.json()["id"]
+
+        resp = client.post(
+            f"/api/v1/meetings/{meeting_id}/respond",
+            headers=_auth_headers(bystander),
+            json={"response": "accepted"},
+        )
+        assert resp.status_code == 403
+
+    def test_unauthenticated_cannot_respond(self, client: TestClient, session: Session) -> None:
+        org = _make_org(session, "OrgMeetRespond4")
+        owner = _make_user(session, org, "Owner")
+        create_resp = client.post(
+            "/api/v1/meetings",
+            headers=_auth_headers(owner),
+            json={"title": "1:1 with CEO", "starts_at": datetime.now(UTC).isoformat()},
+        )
+        meeting_id = create_resp.json()["id"]
+
+        resp = client.post(f"/api/v1/meetings/{meeting_id}/respond", json={"response": "accepted"})
+        assert resp.status_code == 401

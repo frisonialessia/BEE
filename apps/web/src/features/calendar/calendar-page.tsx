@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ChevronLeft, ChevronRight, Link2, Trash2, Users, Video } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Link2, Plus, Trash2, Users, Video } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import {
   useCreateMeeting,
   useDeleteMeeting,
   useMeetings,
+  useRespondToMeeting,
   useUpdateMeeting,
 } from "@/hooks/queries/use-meetings";
 import { useLeads } from "@/hooks/queries/use-leads";
@@ -65,6 +66,72 @@ function meetingPosition(meeting: Meeting, timeZone: string): { top: number; hei
   const top = (clampedStart - GRID_START_HOUR) * HOUR_HEIGHT;
   const height = Math.max(20, (clampedEnd - clampedStart) * HOUR_HEIGHT - 2);
   return { top, height };
+}
+
+/** Side-by-side column assignment for meetings that overlap in time —
+ * without this, two meetings booked at the same hour draw stacked exactly
+ * on top of each other and one is effectively invisible/unclickable.
+ * Standard greedy calendar layout: sort by start, give each meeting the
+ * first column whose previous occupant has already ended; every meeting in
+ * a connected run of overlaps then shares that run's column count so they
+ * end up evenly divided instead of full-width. */
+function layoutDayMeetings(
+  meetings: Meeting[],
+  tz: string,
+): Map<string, { column: number; columns: number }> {
+  const withRange = meetings
+    .map((m) => {
+      const pos = meetingPosition(m, tz);
+      return { id: m.id, start: pos.top, end: pos.top + pos.height };
+    })
+    .sort((a, b) => a.start - b.start);
+
+  const result = new Map<string, { column: number; columns: number }>();
+  let clusterIds: string[] = [];
+  let columnEnds: number[] = [];
+  let clusterEnd = -Infinity;
+
+  function flushCluster() {
+    for (const id of clusterIds) {
+      const existing = result.get(id);
+      if (existing) result.set(id, { column: existing.column, columns: columnEnds.length });
+    }
+    clusterIds = [];
+    columnEnds = [];
+  }
+
+  for (const item of withRange) {
+    if (item.start >= clusterEnd) {
+      flushCluster();
+      clusterEnd = -Infinity;
+    }
+    let column = columnEnds.findIndex((end) => end <= item.start);
+    if (column === -1) {
+      column = columnEnds.length;
+      columnEnds.push(item.end);
+    } else {
+      columnEnds[column] = item.end;
+    }
+    result.set(item.id, { column, columns: 1 });
+    clusterIds.push(item.id);
+    clusterEnd = Math.max(clusterEnd, item.end);
+  }
+  flushCluster();
+  return result;
+}
+
+/** "GMT-5"/"GMT+1" style label — shown next to the week grid so it's clear
+ * whose wall clock every meeting time on this page is in, same reasoning
+ * the reference calendar shows it for. */
+function tzOffsetLabel(tz: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone: tz, timeZoneName: "shortOffset" }).formatToParts(
+      new Date(),
+    );
+    return parts.find((p) => p.type === "timeZoneName")?.value ?? tz;
+  } catch {
+    return tz;
+  }
 }
 
 function initials(name: string) {
@@ -258,6 +325,207 @@ function MiniMonthCalendar({
   );
 }
 
+/** Full month grid — the calendar's other real gap besides overlap layout:
+ * this page used to only ever render a week. Reuses buildMonthGrid (same
+ * 42-cell, always-6-rows grid the mini calendar already builds) at full
+ * size, with up to 3 meeting titles per day and a "+N" overflow count.
+ * Clicking a day jumps back to the week view centered on it — this is a
+ * navigation surface, not a second place to read a day's full schedule. */
+function MonthGridView({
+  monthCursor,
+  meetingsByDay,
+  onSelectDay,
+  locale,
+  todayStr,
+}: {
+  monthCursor: Date;
+  meetingsByDay: Map<string, Meeting[]>;
+  onSelectDay: (day: Date) => void;
+  locale: Locale;
+  todayStr: string;
+}) {
+  const intlLocale = locale === "en" ? "en-US" : "es-MX";
+  const grid = useMemo(() => buildMonthGrid(monthCursor), [monthCursor]);
+  const weekdayLabels = useMemo(
+    () => grid.slice(0, 7).map((d) => new Intl.DateTimeFormat(intlLocale, { weekday: "short" }).format(d)),
+    [grid, intlLocale],
+  );
+
+  return (
+    <div className="bee-surface overflow-hidden rounded-[var(--radius-lg)]">
+      <div className="grid grid-cols-7 border-b border-border">
+        {weekdayLabels.map((label, i) => (
+          <p key={i} className="bee-eyebrow px-2 py-2 text-center">
+            {label}
+          </p>
+        ))}
+      </div>
+      <div className="grid grid-cols-7">
+        {grid.map((day) => {
+          const inMonth = day.getMonth() === monthCursor.getMonth();
+          const isToday = day.toDateString() === todayStr;
+          const dayMeetings = meetingsByDay.get(day.toDateString()) ?? [];
+          const shown = dayMeetings.slice(0, 3);
+          const overflow = dayMeetings.length - shown.length;
+          return (
+            <button
+              key={day.toISOString()}
+              type="button"
+              onClick={() => onSelectDay(day)}
+              className={`min-h-24 border-b border-l border-border p-1.5 text-left align-top transition-colors hover:bg-[var(--color-primary)]/20 ${inMonth ? "" : "bg-muted/30"}`}
+            >
+              <span
+                className={`inline-flex size-5 items-center justify-center rounded-full text-xs ${
+                  isToday
+                    ? "bg-[var(--color-chart-4)] font-bold text-white"
+                    : inMonth
+                      ? "font-medium"
+                      : "text-muted-foreground/50"
+                }`}
+              >
+                {day.getDate()}
+              </span>
+              <div className="mt-1 space-y-0.5">
+                {shown.map((m) => (
+                  <p
+                    key={m.id}
+                    className={`truncate rounded-[3px] px-1 py-0.5 text-[10px] font-medium ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
+                    style={
+                      m.color
+                        ? { background: `color-mix(in srgb, var(--color-${m.color}) 35%, var(--color-background))` }
+                        : undefined
+                    }
+                  >
+                    {m.title}
+                  </p>
+                ))}
+                {overflow > 0 && <p className="bee-micro px-1 text-muted-foreground">+{overflow}</p>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SidebarProfileCard({ name, role, onQuickAdd }: { name: string; role: string; onQuickAdd: () => void }) {
+  return (
+    <div className="bee-surface flex items-center gap-2.5 bee-bento-pad">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-cta)] text-xs font-bold text-white">
+        {initials(name)}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold">{name}</p>
+        <p className="truncate bee-micro capitalize">{role}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onQuickAdd}
+        aria-label="+"
+        className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-text)] text-background transition-opacity hover:opacity-85"
+      >
+        <Plus className="size-4" />
+      </button>
+    </div>
+  );
+}
+
+/** Next meeting from now on, across the whole padded query window (not just
+ * the visible week) — the reference calendar's "Upcoming event" card. Reads
+ * off allMeetings, not the week-filtered `meetings`, so it still shows
+ * something useful even while browsing a different week/month. */
+function UpcomingEventCard({
+  meeting,
+  locale,
+  tz,
+  onOpen,
+}: {
+  meeting: Meeting;
+  locale: Locale;
+  tz: string;
+  onOpen: () => void;
+}) {
+  const t = useTranslations("calendar");
+  const day = zonedFakeLocalDate(new Date(meeting.starts_at), tz);
+  const today = zonedFakeLocalDate(new Date(), tz).toDateString();
+  const dateLabel =
+    day.toDateString() === today
+      ? t("sidebar.today")
+      : new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { day: "numeric", month: "short" }).format(day);
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className="bee-surface block w-full bee-bento-pad text-left transition-colors hover:bg-[var(--color-primary)]/15"
+    >
+      <p className="bee-eyebrow">{t("sidebar.upcomingEvent")}</p>
+      <div className="mt-1.5 flex items-center gap-2">
+        {meeting.meeting_url ? (
+          <Video className="size-4 shrink-0 text-[var(--color-chart-4)]" />
+        ) : (
+          <Users className="size-4 shrink-0 text-[var(--color-chart-4)]" />
+        )}
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{meeting.title}</p>
+          <p className="bee-micro">
+            {dateLabel}, {timeLabel(meeting.starts_at, locale, tz)}
+          </p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+/** "¿Vas a la reunión?" — an attendee accepting/declining an invite someone
+ * else (a manager/CEO) booked for them, straight from BEE. Only ever shows
+ * for a meeting the viewer is actually invited to and hasn't answered yet
+ * (attendee_responses has no entry for them) — answering it removes it from
+ * this slot, the next unanswered invite (if any) takes its place. Built to
+ * connect to a real inbox later (Gmail or whatever email provider this
+ * platform integrates) — for now, accepting/declining only updates BEE's
+ * own record of the invite, nothing is sent anywhere yet. */
+function RsvpWidget({
+  meeting,
+  locale,
+  tz,
+  onRespond,
+  responding,
+}: {
+  meeting: Meeting;
+  locale: Locale;
+  tz: string;
+  onRespond: (response: "accepted" | "declined") => void;
+  responding: boolean;
+}) {
+  const t = useTranslations("calendar");
+  return (
+    <div className="bee-surface space-y-2.5 bee-bento-pad">
+      <p className="bee-eyebrow">{t("sidebar.rsvpLabel")}</p>
+      <p className="text-sm font-medium">{t("sidebar.rsvpQuestion", { title: meeting.title })}</p>
+      <p className="bee-micro">{timeLabel(meeting.starts_at, locale, tz)}</p>
+      <div className="flex gap-1.5">
+        <button
+          type="button"
+          onClick={() => onRespond("accepted")}
+          disabled={responding}
+          className="bee-btn bee-btn--primary flex-1 text-xs"
+        >
+          {t("sidebar.rsvpAccept")}
+        </button>
+        <button
+          type="button"
+          onClick={() => onRespond("declined")}
+          disabled={responding}
+          className="bee-btn-ghost flex-1 text-xs"
+        >
+          {t("sidebar.rsvpDecline")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function TimeBreakdownBars({
   totals,
   grandTotal,
@@ -311,6 +579,10 @@ export function CalendarPage() {
   // for querying the API.
   const tz = resolveTimezone(user?.timezone);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(zonedFakeLocalDate(new Date(), tz)));
+  // "Day" isn't offered yet — the week grid already reads fine for a
+  // single busy day (see the overlap layout above), and adding a third
+  // view is separate scope from closing the "only ever a week" gap.
+  const [view, setView] = useState<"week" | "month">("week");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Meeting | null>(null);
   const [form, setForm] = useState<MeetingFormState>(() => emptyForm(zonedFakeLocalDate(new Date(), tz)));
@@ -344,11 +616,20 @@ export function CalendarPage() {
     [weekStart, tz],
   );
   const weekEndUtc = useMemo(() => new Date(weekStartUtc.getTime() + 7 * DAY_MS), [weekStartUtc]);
-  // Padded well past the visible week (~5 weeks either side) so the mini
-  // month calendar's own meeting-dot markers have data too, without a
-  // second query — one fetch backs both widgets.
-  const queryStart = useMemo(() => new Date(weekStartUtc.getTime() - 35 * DAY_MS), [weekStartUtc]);
-  const queryEnd = useMemo(() => new Date(weekStartUtc.getTime() + 42 * DAY_MS), [weekStartUtc]);
+  // Anchored to monthCursor (the 1st of whichever month is showing — the
+  // mini calendar's own or, once monthOverride diverges from weekStart, a
+  // month browsed ahead without jumping weeks), not weekStart — that's the
+  // one query backing three widgets now (week grid, mini calendar dots,
+  // full month grid), and month view needs data for a month that can be
+  // well outside the visible week. Padded ~5 weeks either side of the 1st
+  // so the always-42-cell month grid (which starts a few days before the
+  // 1st and can run into the next month) is fully covered too.
+  const queryAnchorUtc = useMemo(
+    () => zonedWallClockToUtc(monthCursor.getFullYear(), monthCursor.getMonth(), 1, 0, 0, tz),
+    [monthCursor, tz],
+  );
+  const queryStart = useMemo(() => new Date(queryAnchorUtc.getTime() - 35 * DAY_MS), [queryAnchorUtc]);
+  const queryEnd = useMemo(() => new Date(queryAnchorUtc.getTime() + 42 * DAY_MS), [queryAnchorUtc]);
   const { data: allMeetings, isLoading } = useMeetings({
     startsAfter: queryStart.toISOString(),
     startsBefore: queryEnd.toISOString(),
@@ -367,6 +648,7 @@ export function CalendarPage() {
   const updateMeeting = useUpdateMeeting();
   const deleteMeeting = useDeleteMeeting();
   const completeMeeting = useCompleteMeeting();
+  const respondToMeeting = useRespondToMeeting();
 
   const usersById = useMemo(() => new Map((users ?? []).map((u) => [u.id, u])), [users]);
 
@@ -413,6 +695,46 @@ export function CalendarPage() {
   }, [meetings]);
 
   const today = zonedFakeLocalDate(new Date(), tz).toDateString();
+
+  // Same shape as `byDay` but over the whole padded query window, not just
+  // this week — what MonthGridView renders.
+  const allByDay = useMemo(() => {
+    const map = new Map<string, Meeting[]>();
+    for (const m of allMeetings ?? []) {
+      const key = zonedFakeLocalDate(new Date(m.starts_at), tz).toDateString();
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(m);
+    }
+    for (const list of map.values()) list.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+    return map;
+  }, [allMeetings, tz]);
+
+  const nowIso = new Date().toISOString();
+  const upcomingMeeting = useMemo(
+    () => (allMeetings ?? []).find((m) => m.starts_at >= nowIso && m.completed_at === null),
+    [allMeetings, nowIso],
+  );
+  // The first invite the viewer hasn't answered yet — see RsvpWidget's own
+  // docstring for why this only ever shows one at a time.
+  const pendingRsvpMeeting = useMemo(() => {
+    if (!user) return undefined;
+    return (allMeetings ?? []).find(
+      (m) =>
+        m.starts_at >= nowIso &&
+        m.attendee_user_ids.includes(user.id) &&
+        m.created_by_user_id !== user.id &&
+        !(user.id in m.attendee_responses),
+    );
+  }, [allMeetings, nowIso, user]);
+
+  function respondToRsvp(meetingId: string, response: "accepted" | "declined") {
+    respondToMeeting.mutate(
+      { id: meetingId, response },
+      {
+        onError: (err) => toast.error(err instanceof ApiError ? err.message : t("sidebar.rsvpError")),
+      },
+    );
+  }
 
   function openCreateFor(day: Date) {
     const start = new Date(day);
@@ -518,6 +840,30 @@ export function CalendarPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr]">
         <aside className="space-y-4 lg:order-1">
+          {user && (
+            <SidebarProfileCard
+              name={user.full_name}
+              role={user.role}
+              onQuickAdd={() => openCreateFor(zonedFakeLocalDate(new Date(), tz))}
+            />
+          )}
+          {upcomingMeeting && (
+            <UpcomingEventCard
+              meeting={upcomingMeeting}
+              locale={locale}
+              tz={tz}
+              onOpen={() => setDetail(upcomingMeeting)}
+            />
+          )}
+          {pendingRsvpMeeting && (
+            <RsvpWidget
+              meeting={pendingRsvpMeeting}
+              locale={locale}
+              tz={tz}
+              responding={respondToMeeting.isPending}
+              onRespond={(response) => respondToRsvp(pendingRsvpMeeting.id, response)}
+            />
+          )}
           <MiniMonthCalendar
             monthCursor={monthCursor}
             onMonthChange={setMonthOverride}
@@ -531,17 +877,43 @@ export function CalendarPage() {
         </aside>
 
         <div className="lg:order-2">
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="bee-filter-tabs">
+          <button
+            type="button"
+            onClick={() => setView("week")}
+            aria-pressed={view === "week"}
+            className={view === "week" ? "bee-filter-tab bee-filter-tab--active" : "bee-filter-tab"}
+          >
+            {t("page.weekView")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("month")}
+            aria-pressed={view === "month"}
+            className={view === "month" ? "bee-filter-tab bee-filter-tab--active" : "bee-filter-tab"}
+          >
+            {t("page.monthView")}
+          </button>
+        </div>
         <button
           type="button"
-          onClick={() => changeWeek(startOfWeek(zonedFakeLocalDate(new Date(), tz)))}
+          onClick={() =>
+            view === "week"
+              ? changeWeek(startOfWeek(zonedFakeLocalDate(new Date(), tz)))
+              : setMonthOverride(zonedFakeLocalDate(new Date(), tz))
+          }
           className="bee-btn-ghost text-xs"
         >
           {t("page.today")}
         </button>
         <button
           type="button"
-          onClick={() => changeWeek(new Date(weekStart.getTime() - 7 * DAY_MS))}
+          onClick={() =>
+            view === "week"
+              ? changeWeek(new Date(weekStart.getTime() - 7 * DAY_MS))
+              : setMonthOverride(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))
+          }
           aria-label={t("page.prevWeek")}
           className="bee-btn-ghost px-2"
         >
@@ -549,25 +921,52 @@ export function CalendarPage() {
         </button>
         <button
           type="button"
-          onClick={() => changeWeek(new Date(weekStart.getTime() + 7 * DAY_MS))}
+          onClick={() =>
+            view === "week"
+              ? changeWeek(new Date(weekStart.getTime() + 7 * DAY_MS))
+              : setMonthOverride(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))
+          }
           aria-label={t("page.nextWeek")}
           className="bee-btn-ghost px-2"
         >
           <ChevronRight className="size-4" />
         </button>
-        <p className="bee-caption ml-1">
-          {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { day: "numeric", month: "short" }).format(
-            days[0],
-          )}
-          {" – "}
-          {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { day: "numeric", month: "short" }).format(
-            days[6],
-          )}
-        </p>
+        {view === "week" ? (
+          <p className="bee-caption ml-1">
+            {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { day: "numeric", month: "short" }).format(
+              days[0],
+            )}
+            {" – "}
+            {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { day: "numeric", month: "short" }).format(
+              days[6],
+            )}
+          </p>
+        ) : (
+          <p className="bee-caption ml-1 capitalize">
+            {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { month: "long", year: "numeric" }).format(
+              monthCursor,
+            )}
+          </p>
+        )}
+        {/* Whose wall clock every time on this page is in — see
+            tzOffsetLabel's own docstring for why the reference this was
+            built against shows it too. */}
+        <span className="bee-caption ml-auto font-mono text-muted-foreground">{tzOffsetLabel(tz)}</span>
       </div>
 
       {isLoading ? (
         <Skeleton className="h-[600px] rounded-[var(--radius-lg)]" />
+      ) : view === "month" ? (
+        <MonthGridView
+          monthCursor={monthCursor}
+          meetingsByDay={allByDay}
+          onSelectDay={(day) => {
+            changeWeek(startOfWeek(day));
+            setView("week");
+          }}
+          locale={locale}
+          todayStr={today}
+        />
       ) : (
         <div className="bee-surface overflow-x-auto rounded-[var(--radius-lg)]">
           <div className="grid min-w-[720px] grid-cols-[3.5rem_repeat(7,1fr)]">
@@ -606,6 +1005,7 @@ export function CalendarPage() {
             </div>
             {days.map((day) => {
               const dayMeetings = byDay.get(day.toDateString()) ?? [];
+              const layout = layoutDayMeetings(dayMeetings, tz);
               return (
                 <div
                   key={day.toISOString()}
@@ -621,6 +1021,11 @@ export function CalendarPage() {
                   ))}
                   {dayMeetings.map((m) => {
                     const pos = meetingPosition(m, tz);
+                    // Overlapping meetings (e.g. two booked at the same hour)
+                    // used to draw stacked exactly on top of each other, one
+                    // effectively invisible/unclickable — layoutDayMeetings
+                    // above splits them into side-by-side columns instead.
+                    const { column, columns } = layout.get(m.id) ?? { column: 0, columns: 1 };
                     // A personal color (m.color) wins over the client_context
                     // tone when set — same color-mix() recipe globals.css's
                     // own bee-bento--* tint classes use, just parameterized
@@ -630,10 +1035,12 @@ export function CalendarPage() {
                         key={m.id}
                         type="button"
                         onClick={() => setDetail(m)}
-                        className={`bee-bento absolute inset-x-1 flex flex-col gap-0.5 overflow-hidden p-1.5 text-left ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
+                        className={`bee-bento absolute flex flex-col gap-0.5 overflow-hidden rounded-lg p-1.5 text-left shadow-sm ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
                         style={{
                           top: pos.top,
                           height: pos.height,
+                          left: `calc(${(column / columns) * 100}% + 2px)`,
+                          width: `calc(${100 / columns}% - 4px)`,
                           ...(m.color
                             ? { background: `color-mix(in srgb, var(--color-${m.color}) 35%, var(--color-background))` }
                             : {}),

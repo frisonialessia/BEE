@@ -7,6 +7,7 @@ import {
   createMeeting,
   deleteMeeting,
   fetchMeetings,
+  respondToMeeting,
   updateMeeting,
   type MeetingCreateIn,
   type MeetingUpdateIn,
@@ -44,6 +45,17 @@ export function useCompleteMeeting() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (meetingId: string) => completeMeeting(meetingId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all });
+    },
+  });
+}
+
+export function useRespondToMeeting() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, response }: { id: string; response: "accepted" | "declined" }) =>
+      respondToMeeting(id, response),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all });
     },

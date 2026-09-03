@@ -5,6 +5,7 @@ import {
   demoCreateMeeting,
   demoDeleteMeeting,
   demoFetchMeetings,
+  demoRespondToMeeting,
   demoUpdateMeeting,
 } from "@/lib/demo/store";
 import type { Meeting, MeetingColor } from "@/types/domain";
@@ -76,6 +77,21 @@ export async function updateMeeting(meetingId: string, body: MeetingUpdateIn): P
 export async function completeMeeting(meetingId: string): Promise<Meeting> {
   if (isDemoMode()) return demoCompleteMeeting(meetingId);
   return apiFetch<Meeting>(`/api/v1/meetings/${meetingId}/complete`, { method: "POST" });
+}
+
+/** An attendee accepting/declining an invite someone else booked for
+ * them — see POST /meetings/{id}/respond's own docstring on the backend
+ * for why only an actual attendee can call this. */
+export async function respondToMeeting(
+  meetingId: string,
+  response: "accepted" | "declined",
+): Promise<Meeting> {
+  if (isDemoMode()) return demoRespondToMeeting(meetingId, response);
+  return apiFetch<Meeting>(`/api/v1/meetings/${meetingId}/respond`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ response }),
+  });
 }
 
 export async function deleteMeeting(meetingId: string): Promise<void> {

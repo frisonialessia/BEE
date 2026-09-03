@@ -23,6 +23,12 @@ ClientContext = Literal["active_client", "hot_lead", "prospect", "new_contact"]
 # theme change or dark mode never needs this list touched.
 MeetingColor = Literal["chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6"]
 
+AttendeeResponse = Literal["accepted", "declined"]
+
+
+class MeetingRespondIn(BaseModel):
+    response: AttendeeResponse
+
 
 class MeetingCreateIn(BaseModel):
     opportunity_id: uuid.UUID | None = None
@@ -61,6 +67,7 @@ class MeetingOut(BaseModel):
     duration_minutes: int
     meeting_url: str | None
     attendee_user_ids: list[str]
+    attendee_responses: dict[str, str] = Field(default_factory=dict)
     color: str | None
     completed_at: datetime | None = None
     created_at: datetime

@@ -22,7 +22,13 @@ from app.models.lead import Lead
 from app.models.meeting import Meeting
 from app.models.opportunity import Opportunity
 from app.models.user import User
-from app.schemas.meeting import ClientContext, MeetingCreateIn, MeetingOut, MeetingUpdateIn
+from app.schemas.meeting import (
+    ClientContext,
+    MeetingCreateIn,
+    MeetingOut,
+    MeetingRespondIn,
+    MeetingUpdateIn,
+)
 from app.services.events import publish
 from app.services.permissions import get_visible_user_ids, scope_by_organization_id
 
@@ -254,6 +260,41 @@ def complete_meeting(
         session.commit()
         session.refresh(meeting)
 
+    return _to_out(session, meeting)
+
+
+@router.post(
+    "/{meeting_id}/respond",
+    response_model=MeetingOut,
+    summary="Accept or decline a meeting invite (attendee only)",
+)
+def respond_to_meeting(
+    meeting_id: uuid.UUID,
+    data: MeetingRespondIn,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> MeetingOut:
+    """A manager/CEO books a meeting and adds a rep to attendee_user_ids —
+    this is that rep accepting/declining it from BEE, the same shape any
+    real calendar invite has. Only an actual attendee can respond (not the
+    organizer alone, not an uninvited bystander) — organizer intent is
+    everything up to this point, but from here the invitee's own answer is
+    the only thing this endpoint records."""
+    meeting = session.get(Meeting, meeting_id)
+    if meeting is None or _hidden_from(session, current_user, meeting):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Meeting not found.")
+    if str(current_user.id) not in meeting.attendee_user_ids:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Only an invited attendee can respond to this meeting."
+        )
+
+    # Reassign (not mutate-in-place) — SQLAlchemy only detects a JSON
+    # column changed on assignment, not on mutating the dict object it
+    # already holds a reference to.
+    meeting.attendee_responses = {**meeting.attendee_responses, str(current_user.id): data.response}
+    session.add(meeting)
+    session.commit()
+    session.refresh(meeting)
     return _to_out(session, meeting)
 
 
