@@ -39,7 +39,7 @@ export function AskBeeFab() {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-40">
+    <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end">
       {open && (
         <div className="bee-fab-panel mb-3 flex h-[420px] w-[min(340px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border bg-[var(--color-background)] shadow-[0_8px_32px_color-mix(in_srgb,var(--color-text)_16%,transparent)]">
           <div className="bee-assistant-gradient flex shrink-0 items-center gap-2.5 px-4 py-3">
