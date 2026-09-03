@@ -19,6 +19,7 @@ from app.core.config import settings
 from app.core.database import init_db
 from app.core.logging import configure_logging, get_logger
 from app.core.middleware import APIKeyMiddleware, SecurityHeadersMiddleware
+from app.core.tracing import setup_tracing
 from app.services.events import register_listeners
 
 logger = get_logger(__name__)
@@ -139,6 +140,14 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+    # Same "skip under pytest" reasoning as sentry_sdk.init() above — a
+    # no-op when OTEL_EXPORTER_OTLP_ENDPOINT is unset anyway (never set in
+    # tests), so skipping outright avoids re-instrumenting FastAPI/
+    # SQLAlchemy/httpx hundreds of times across the test suite's own
+    # create_app() calls for zero benefit.
+    if "pytest" not in sys.modules:
+        setup_tracing(app)
 
     @app.get("/", tags=["System"], summary="Service root")
     def root() -> dict[str, str]:

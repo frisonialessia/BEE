@@ -221,6 +221,18 @@ class Settings(BaseSettings):
     # that wants tracing sets this explicitly (0.0-1.0).
     SENTRY_TRACES_SAMPLE_RATE: float = 0.0
 
+    # ----- Distributed tracing (see app.core.tracing) ---------------------------
+    # None (the default) means setup_tracing() is a no-op — the
+    # opentelemetry-* dependencies stay installed but never initialized,
+    # zero behavior change and no collector needed to run this app. Point
+    # this at an OpenTelemetry Collector or a managed OTLP/gRPC endpoint,
+    # e.g. http://localhost:4317 for a local collector.
+    OTEL_EXPORTER_OTLP_ENDPOINT: str | None = None
+    # Unlike Sentry's traces (billed per-transaction), nothing here is
+    # metered until spans leave the collector — full sampling by default;
+    # a deployment pointed at a metered backend turns this down explicitly.
+    OTEL_TRACES_SAMPLE_RATE: float = 1.0
+
     # ----- CORS ----------------------------------------------------------------
     # Comma-separated list of origins allowed to call the API (the Next.js app).
     BACKEND_CORS_ORIGINS: str = "http://localhost:3000"
