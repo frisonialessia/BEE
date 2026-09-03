@@ -251,7 +251,9 @@
       "bi": "Reporting & BI",
       "pm": "Project management",
       "other": "Other",
-      "signals": "Inbound signals"
+      "signals": "Inbound signals",
+      "marketSources": "Market sources",
+      "digest": "Daily digest"
     },
     "automation": {
       "hint": "n8n, Zapier, Make, or your own system connect here — create an outbound webhook and point its \"Webhook\" node (or equivalent trigger) at the URL we give you. No shared credentials involved: every event arrives signed with X-BEE-Signature so you can verify it actually came from BEE."
@@ -335,6 +337,55 @@
       "jira_project_missing": "Connected — pick a Jira project to turn on the sync.",
       "server_shared_credential": "Shared server credential, not per account — configured once for the whole deployment.",
       "server_mock_mode": "Simulated mode — no server credential configured."
+    },
+    "marketSources": {
+      "title": "Market-scan senses",
+      "subtitleEnabled": "BEE scans every account every {hours} h with these sources. The keyless ones are always on.",
+      "subtitleDisabled": "The proactive scan is switched off on this deployment (MARKET_SCAN_ENABLED). These are the sources it would use.",
+      "live": "Live",
+      "needsKey": "Needs a key",
+      "requiresCredentials": "Turns on once the key is configured on the server.",
+      "keyless": "No credentials — always on.",
+      "sources": {
+        "gdelt": {
+          "label": "Press (GDELT)",
+          "description": "Worldwide news coverage: rounds, acquisitions, launches, expansions and appointments from the last 7 days."
+        },
+        "hiring": {
+          "label": "Hiring (Greenhouse · Lever)",
+          "description": "Public job boards. Several open roles at once — especially in sales — signals budget."
+        },
+        "google_search": {
+          "label": "News (Google)",
+          "description": "Market-news search through Google Custom Search. Adds to press coverage when a key is set."
+        }
+      }
+    },
+    "digest": {
+      "title": "Today's play in Slack or Teams",
+      "subtitle": "Every day, at the hour you pick, BEE posts the highest-leverage plays to the team channel with a link to each. Paste an incoming webhook URL.",
+      "statusOn": "On",
+      "statusOff": "Off",
+      "webhookLabel": "Incoming webhook (Slack / Teams)",
+      "webhookSetPlaceholder": "Configured ({hint}) — paste another URL to replace it",
+      "hourLabel": "Send time",
+      "enabledLabel": "Send daily",
+      "save": "Save",
+      "saving": "Saving…",
+      "sendNow": "Send now",
+      "sending": "Sending…",
+      "savedToast": "Daily digest saved.",
+      "saveError": "Could not save the daily digest.",
+      "sentToast": "Digest sent ({count} plays).",
+      "lastSent": "Last sent {when}.",
+      "neverSent": "No digest has been sent yet.",
+      "skipReasons": {
+        "not_configured": "Paste the webhook URL first.",
+        "disabled": "The digest is switched off.",
+        "already_sent_today": "Already sent today.",
+        "not_the_hour": "It isn't the configured hour yet.",
+        "delivery_failed": "The webhook rejected the message. Check the URL."
+      }
     }
   },
   "team": {
@@ -594,6 +645,24 @@
       "openFull": "Open full conversation →",
       "toggleOpenAria": "Open assistant",
       "toggleCloseAria": "Close assistant"
+    },
+    "tools": {
+      "read": "Looked up",
+      "write": "Changed",
+      "names": {
+        "list_today_priorities": "Today's play",
+        "search_opportunities": "Searched the pipeline",
+        "get_opportunity_brief": "Read the opportunity brief",
+        "list_signals": "Reviewed signals",
+        "list_hot_accounts": "Reviewed hot accounts",
+        "list_tasks": "Reviewed tasks",
+        "create_task": "Created a task",
+        "dismiss_from_feed": "Dismissed from today's play"
+      }
+    },
+    "engine": {
+      "copilot": "Copilot with access to your pipeline",
+      "local": "Quick answers over this view's data"
     }
   }
 }

@@ -12,6 +12,7 @@ from app.api.v1.endpoints import (
     analytics,
     anomalies,
     api_keys,
+    assistant,
     audit,
     auth,
     autopilot,
@@ -104,3 +105,4 @@ api_router.include_router(anomalies.router)
 api_router.include_router(webhooks.router)
 api_router.include_router(billing.router)
 api_router.include_router(search.router)
+api_router.include_router(assistant.router)

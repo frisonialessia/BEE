@@ -251,7 +251,9 @@
       "bi": "Reportes y BI",
       "pm": "Gestión de proyectos",
       "other": "Otras",
-      "signals": "Señales entrantes"
+      "signals": "Señales entrantes",
+      "marketSources": "Fuentes de mercado",
+      "digest": "Resumen diario"
     },
     "automation": {
       "hint": "n8n, Zapier, Make o tu propio sistema se conectan aquí — crea un webhook saliente y apunta el nodo \"Webhook\" (o el trigger equivalente) a la URL que te damos. No hay credenciales de por medio: cada evento llega firmado con X-BEE-Signature para que puedas verificar que viene de BEE."
@@ -335,6 +337,55 @@
       "jira_project_missing": "Conectado — falta configurar un proyecto de Jira para activar la sincronización.",
       "server_shared_credential": "Credencial compartida del servidor, no por cuenta — se configura una sola vez para todo el despliegue.",
       "server_mock_mode": "Modo simulado — no hay credencial del servidor configurada."
+    },
+    "marketSources": {
+      "title": "Sentidos del escaneo de mercado",
+      "subtitleEnabled": "BEE escanea cada cuenta cada {hours} h con estas fuentes. Las que no necesitan clave están siempre activas.",
+      "subtitleDisabled": "El escaneo proactivo está desactivado en este despliegue (MARKET_SCAN_ENABLED). Estas son las fuentes que usaría.",
+      "live": "Activa",
+      "needsKey": "Requiere clave",
+      "requiresCredentials": "Se activa al configurar la clave en el servidor.",
+      "keyless": "Sin credenciales — siempre activa.",
+      "sources": {
+        "gdelt": {
+          "label": "Prensa (GDELT)",
+          "description": "Cobertura mundial de noticias: rondas, adquisiciones, lanzamientos, expansiones y nombramientos de los últimos 7 días."
+        },
+        "hiring": {
+          "label": "Contratación (Greenhouse · Lever)",
+          "description": "Portales públicos de empleo. Varias vacantes abiertas a la vez — sobre todo en ventas — es señal de presupuesto."
+        },
+        "google_search": {
+          "label": "Noticias (Google)",
+          "description": "Búsqueda de noticias de mercado con Google Custom Search. Complementa a la prensa cuando hay clave."
+        }
+      }
+    },
+    "digest": {
+      "title": "La jugada de hoy en Slack o Teams",
+      "subtitle": "Cada día, a la hora que elijas, BEE publica las jugadas de mayor impacto en el canal del equipo con un enlace a cada una. Pega la URL de un webhook entrante.",
+      "statusOn": "Activo",
+      "statusOff": "Inactivo",
+      "webhookLabel": "Webhook entrante (Slack / Teams)",
+      "webhookSetPlaceholder": "Configurado ({hint}) — pega otra URL para reemplazarlo",
+      "hourLabel": "Hora de envío",
+      "enabledLabel": "Enviar cada día",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "sendNow": "Enviar ahora",
+      "sending": "Enviando…",
+      "savedToast": "Resumen diario guardado.",
+      "saveError": "No se pudo guardar el resumen diario.",
+      "sentToast": "Resumen enviado ({count} jugadas).",
+      "lastSent": "Último envío {when}.",
+      "neverSent": "Todavía no se ha enviado ningún resumen.",
+      "skipReasons": {
+        "not_configured": "Primero pega la URL del webhook.",
+        "disabled": "El resumen está desactivado.",
+        "already_sent_today": "Hoy ya se envió.",
+        "not_the_hour": "Todavía no es la hora configurada.",
+        "delivery_failed": "El webhook no aceptó el mensaje. Revisa la URL."
+      }
     }
   },
   "team": {
@@ -594,6 +645,24 @@
       "openFull": "Abrir conversación completa →",
       "toggleOpenAria": "Abrir asistente",
       "toggleCloseAria": "Cerrar asistente"
+    },
+    "tools": {
+      "read": "Consultó",
+      "write": "Cambió",
+      "names": {
+        "list_today_priorities": "La jugada de hoy",
+        "search_opportunities": "Buscó en el pipeline",
+        "get_opportunity_brief": "Leyó la ficha de la oportunidad",
+        "list_signals": "Revisó señales",
+        "list_hot_accounts": "Revisó cuentas calientes",
+        "list_tasks": "Revisó tareas",
+        "create_task": "Creó una tarea",
+        "dismiss_from_feed": "Descartó de la jugada de hoy"
+      }
+    },
+    "engine": {
+      "copilot": "Copiloto con acceso a tu pipeline",
+      "local": "Respuestas rápidas sobre los datos de esta vista"
     }
   }
 }

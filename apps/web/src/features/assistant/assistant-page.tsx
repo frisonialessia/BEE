@@ -19,7 +19,7 @@ export function AssistantPage() {
   const t = useTranslations("workspace.assistant.page");
   const tAssistant = useTranslations("workspace.assistant");
   const { user } = useAuth();
-  const { messages, send, pending } = useAssistantChat();
+  const { messages, send, pending, engine } = useAssistantChat();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const examples = [
@@ -56,6 +56,7 @@ export function AssistantPage() {
               {user ? `, ${user.full_name.split(" ")[0]}` : ""}
             </p>
             <p className="mt-1 text-lg text-muted-foreground">{t("whatsOnMind")}</p>
+            <p className="bee-caption mt-2">{tAssistant(`engine.${engine}`)}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="w-full max-w-xl">

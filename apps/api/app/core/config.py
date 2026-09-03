@@ -532,8 +532,9 @@ class Settings(BaseSettings):
     AI_PROVIDER: Literal["openai", "anthropic", "none"] = "none"
     AI_API_KEY: str | None = None
     AI_MODEL: str = "gpt-4o-mini"
-    # Anthropic-specific model (used when AI_PROVIDER=anthropic)
-    ANTHROPIC_MODEL: str = "claude-3-5-sonnet-20241022"
+    # Anthropic-specific model (used when AI_PROVIDER=anthropic) — the
+    # strategy generator and the copilot (app.services.assistant) both read it.
+    ANTHROPIC_MODEL: str = "claude-opus-5"
     # LLM generation timeouts (seconds)
     AI_TIMEOUT_SECONDS: int = 30
     AI_MAX_RETRIES: int = 2
