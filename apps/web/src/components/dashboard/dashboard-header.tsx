@@ -30,9 +30,10 @@ export function DashboardHeader() {
         </div>
         {/* hidden below sm — this cluster is already tight on a
          * phone-width header (MobileNavToggle + GlobalSearch already
-         * compete for space there); the dashboard rail itself is full-
-         * width on mobile and has room to carry this control instead, a
-         * follow-up not yet wired. */}
+         * compete for space there). DashboardRail carries the mobile
+         * copy instead (its own off-canvas panel opens to full width
+         * and has room to spare) — see its `sm:hidden` LanguageSwitcher,
+         * the exact complement of this one. */}
         <LanguageSwitcher variant="subtle" className="hidden sm:inline-flex" />
         <NotificationBell />
         <AccountMenu />

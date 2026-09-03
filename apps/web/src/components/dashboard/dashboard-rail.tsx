@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/logo";
 import { useMobileNav } from "@/components/dashboard/mobile-nav-context";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { NAV_GROUPS, type NavGroup } from "@/lib/nav-items";
 import { cn } from "@/lib/utils";
 
@@ -136,6 +137,14 @@ export function DashboardRail({
             </div>
           ))}
         </nav>
+
+        {/* sm:hidden — the complement of DashboardHeader's own
+         * `hidden sm:inline-flex` LanguageSwitcher: below `sm` the header
+         * has no room for it (MobileNavToggle + GlobalSearch already
+         * compete for that space), but this off-canvas panel opens to
+         * full width there and has room to spare. Exactly one of the two
+         * copies is ever visible at a given width, never both. */}
+        <LanguageSwitcher variant="subtle" className="mb-2 self-start sm:hidden" />
 
         <button
           type="button"
