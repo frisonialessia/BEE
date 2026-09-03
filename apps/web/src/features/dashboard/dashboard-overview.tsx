@@ -15,6 +15,7 @@ import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { DecisionFeed } from "@/features/dashboard/decision-feed";
 import { GettingStartedCard } from "@/features/dashboard/getting-started-card";
 import { MyCalendarWidget } from "@/features/calendar/my-calendar-widget";
+import { SalesPanel } from "@/features/dashboard/sales-panel";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useDashboardBase } from "@/lib/demo/mode";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -164,7 +165,11 @@ export function DashboardOverview({
           />
         </OverviewCard>
 
-        {/* Row 3 — the patterns. */}
+        {/* Row 3 — the money: revenue won and its trend, performance tiles,
+            team ranking. One period toggle drives the three boxes. */}
+        <SalesPanel />
+
+        {/* Row 4 — the patterns. */}
         <OverviewCard span={6} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
           <IndustrySignalHeatmap
             opportunities={allOppsResult?.data ?? []}

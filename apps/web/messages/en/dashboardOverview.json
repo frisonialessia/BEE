@@ -212,5 +212,36 @@
         "cta": "Manage team"
       }
     }
+  },
+  "salesPanel": {
+    "period": "{days}d",
+    "vsPrevious": "vs. previous period",
+    "unknownRep": "Unassigned",
+    "days": "{count}d",
+    "revenue": {
+      "title": "Revenue won",
+      "caption": "Closed in the period · last 6 months"
+    },
+    "stages": {
+      "new": "New",
+      "talking": "In conversation",
+      "won": "Won"
+    },
+    "performance": {
+      "title": "Sales performance",
+      "caption": "Last {days} days · 8-week trend"
+    },
+    "tiles": {
+      "won": "Won",
+      "pipeline": "Open pipeline",
+      "winRate": "Win rate",
+      "cycle": "Avg. cycle"
+    },
+    "ranking": {
+      "title": "Team ranking",
+      "caption": "By revenue won · {days}d",
+      "empty": "No closed deals in this period yet.",
+      "deals": "{count, plural, =1 {1 deal} other {# deals}}"
+    }
   }
 }

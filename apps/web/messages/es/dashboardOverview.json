@@ -212,5 +212,36 @@
         "cta": "Gestionar equipo"
       }
     }
+  },
+  "salesPanel": {
+    "period": "{days} d",
+    "vsPrevious": "vs. periodo anterior",
+    "unknownRep": "Sin asignar",
+    "days": "{count} d",
+    "revenue": {
+      "title": "Ingresos ganados",
+      "caption": "Cerrado en el periodo · últimos 6 meses"
+    },
+    "stages": {
+      "new": "Nuevas",
+      "talking": "En conversación",
+      "won": "Ganadas"
+    },
+    "performance": {
+      "title": "Rendimiento comercial",
+      "caption": "Últimos {days} días · tendencia de 8 semanas"
+    },
+    "tiles": {
+      "won": "Ganado",
+      "pipeline": "Pipeline abierto",
+      "winRate": "Tasa de cierre",
+      "cycle": "Ciclo medio"
+    },
+    "ranking": {
+      "title": "Ranking del equipo",
+      "caption": "Por ingresos ganados · {days} d",
+      "empty": "Todavía no hay cierres en este periodo.",
+      "deals": "{count, plural, =1 {1 cierre} other {# cierres}}"
+    }
   }
 }

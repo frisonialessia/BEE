@@ -153,7 +153,11 @@ function CriticalAccountRow({ battlecard }: { battlecard: Battlecard }) {
     <button
       type="button"
       onClick={() => openOpportunity(battlecard.opportunity_id)}
-      className={`bee-bento flex w-full items-center gap-4 px-3 py-3 text-left transition-colors hover:border-[var(--color-chart-4)] ${battlecard.hot_lead ? "bee-outline--magenta" : ""}`}
+      className="bee-bento flex w-full items-center gap-4 px-3 py-3 text-left transition-opacity hover:opacity-90"
+      style={{
+        background: signalFill(battlecard.signal.signal_type),
+        borderColor: TONE_CSS_VAR[signalTone(battlecard.signal.signal_type)],
+      }}
     >
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-semibold">
