@@ -57,6 +57,9 @@ export function AddCompanyForm() {
         <input
           id="demoCompanyName"
           required
+          // Deliberate: this form only renders after the user clicks the trigger button above to
+          // open it — not a page-load steal-focus, the concern the rule exists for.
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}

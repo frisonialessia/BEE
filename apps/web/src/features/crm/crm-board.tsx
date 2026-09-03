@@ -117,6 +117,9 @@ function CrmCard({
           una oportunidad de etapa desde esos dispositivos. stopPropagation
           en click/pointerDown para que interactuar con el select no abra el
           drawer (el onClick de la tarjeta) ni intente iniciar un drag. */}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events --
+          onClick here only stops propagation to the parent card; it triggers no action of its own and
+          nothing here needs a keyboard equivalent — keyboard users reach the <select> below directly. */}
       <div
         className="mt-2.5 border-t border-border/60 pt-2"
         onClick={(e) => e.stopPropagation()}
@@ -202,6 +205,10 @@ function CrmColumn({
           </Link>
         )}
       </div>
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions --
+          HTML5 drag-and-drop has no keyboard equivalent by design; the per-card <select> a few lines
+          up (see the comment above it) is this column's already-built, fully keyboard-accessible way
+          to move an opportunity between stages. */}
       <div
         onDragOver={(e) => {
           e.preventDefault();

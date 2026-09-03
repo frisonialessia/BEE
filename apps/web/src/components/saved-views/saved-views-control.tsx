@@ -111,6 +111,10 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
                   onChange={(e) => setName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && saveCurrent()}
                   placeholder={t("namePlaceholder")}
+                  // Deliberate: this form only renders after the user clicks a button to open it,
+                  // inside an already-open popover — not a page-load steal-focus, the concern the
+                  // rule exists for.
+                  // eslint-disable-next-line jsx-a11y/no-autofocus
                   autoFocus
                   className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
                 />

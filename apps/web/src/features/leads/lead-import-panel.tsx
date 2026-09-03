@@ -188,6 +188,9 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
             </button>
           </section>
 
+          {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions --
+              HTML5 drag-and-drop has no keyboard equivalent by design; the button just below opens
+              the same native file picker for keyboard/screen-reader users. */}
           <section
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
