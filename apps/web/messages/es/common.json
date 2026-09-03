@@ -41,6 +41,7 @@
     "placeholder": "Ir a una sección, buscar una empresa, oportunidad o contacto…",
     "noResults": "Sin resultados.",
     "groupResults": "Resultados",
+    "groupSmart": "Búsqueda inteligente",
     "groupGoTo": "Ir a",
     "groupActions": "Acciones",
     "logout": "Cerrar sesión"

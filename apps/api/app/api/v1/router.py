@@ -47,6 +47,7 @@ from app.api.v1.endpoints import (
     quotas,
     saved_views,
     scenarios,
+    search,
     sequences,
     signals,
     sso,
@@ -102,3 +103,4 @@ api_router.include_router(scenarios.router)
 api_router.include_router(anomalies.router)
 api_router.include_router(webhooks.router)
 api_router.include_router(billing.router)
+api_router.include_router(search.router)

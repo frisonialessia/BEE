@@ -41,6 +41,7 @@
     "placeholder": "Go to a section, search a company, opportunity, or contact…",
     "noResults": "No results.",
     "groupResults": "Results",
+    "groupSmart": "Smart search",
     "groupGoTo": "Go to",
     "groupActions": "Actions",
     "logout": "Sign out"

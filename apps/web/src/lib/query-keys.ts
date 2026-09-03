@@ -2,6 +2,10 @@
  * TanStack Query key factory — single source for cache identity and invalidation.
  */
 export const queryKeys = {
+  search: {
+    all: ["search"] as const,
+    brain: (q: string, limit?: number) => [...queryKeys.search.all, "brain", q, limit] as const,
+  },
   signals: {
     all: ["signals"] as const,
     list: (limit?: number) => [...queryKeys.signals.all, "list", limit] as const,

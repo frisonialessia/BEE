@@ -1,17 +1,37 @@
 "use client";
 
-import { Building2, LogOut, Search, Target, User as UserIcon, type LucideIcon } from "lucide-react";
+import { Building2, LogOut, Radio, Search, Sparkles, Target, User as UserIcon, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useCommandPalette } from "@/components/command-palette/command-palette-context";
+import { useBrainSearch } from "@/hooks/queries/use-brain-search";
 import { useCompanies } from "@/hooks/queries/use-companies";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
+import type { BrainSearchResult } from "@/lib/api/search";
 import { NAV_ITEMS } from "@/lib/nav-items";
 import { buildSearchIndex, searchIndex, type SearchResult } from "@/lib/search/build-search-index";
 import { useAuth } from "@/providers/auth-provider";
+
+const BRAIN_ENTITY_ICON: Record<BrainSearchResult["entity_type"], LucideIcon> = {
+  signal: Radio,
+  company: Building2,
+  opportunity: Target,
+};
+
+function brainResultHref(r: BrainSearchResult): string {
+  switch (r.entity_type) {
+    case "company":
+      return `/dashboard/companies/${r.entity_id}`;
+    case "opportunity":
+      return `/dashboard/opportunities/${r.entity_id}`;
+    case "signal":
+      return "/dashboard/signals";
+  }
+}
 
 interface PaletteEntry {
   id: string;
@@ -44,6 +64,8 @@ export function CommandPalette() {
   const { data: leadsResult } = useLeads(200);
 
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 300);
+  const { data: brainResult, isFetching: brainSearching } = useBrainSearch(debouncedQuery, 6);
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -86,6 +108,28 @@ export function CommandPalette() {
     );
   }, [query, companiesResult?.data, oppsResult?.data, leadsResult?.data, router, t]);
 
+  // "Ask BEE" — cross-entity semantic search (signals, companies,
+  // opportunities/strategies) via BrainSearchService, debounced above so a
+  // fast typist doesn't fire one backend request per keystroke. Separate
+  // group from searchEntries above (which is a plain, instant, client-side
+  // substring match over the already-fetched company/opportunity/lead
+  // lists) — this one can surface matches those 200-row, exact-substring
+  // results miss (semantic overlap, or anything past row 200), including
+  // signals, which the client-side index doesn't cover at all.
+  const brainEntries = useMemo((): PaletteEntry[] => {
+    const results = brainResult?.data ?? [];
+    return results.map(
+      (r): PaletteEntry => ({
+        id: `brain-${r.entity_type}-${r.entity_id}`,
+        label: r.title,
+        sublabel: r.snippet || undefined,
+        icon: BRAIN_ENTITY_ICON[r.entity_type],
+        groupLabel: t("groupSmart"),
+        onSelect: () => router.push(brainResultHref(r)),
+      }),
+    );
+  }, [brainResult, router, t]);
+
   const navEntries = useMemo((): PaletteEntry[] => {
     const q = query.trim().toLowerCase();
     return NAV_ITEMS.map((item) => ({ item, label: tNav(item.labelKey) }))
@@ -116,8 +160,8 @@ export function CommandPalette() {
   }, [query, logout, t]);
 
   const entries = useMemo(
-    () => [...navEntries, ...searchEntries, ...actionEntries],
-    [navEntries, searchEntries, actionEntries],
+    () => [...navEntries, ...searchEntries, ...brainEntries, ...actionEntries],
+    [navEntries, searchEntries, brainEntries, actionEntries],
   );
 
   // La lista de resultados cambia con cada tecla — si no reajustamos,
@@ -183,6 +227,9 @@ export function CommandPalette() {
             placeholder={t("placeholder")}
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
+          {brainSearching && debouncedQuery.trim().length >= 3 && (
+            <Sparkles className="size-3.5 shrink-0 animate-pulse text-[var(--color-chart-4)]" aria-hidden />
+          )}
           <kbd className="shrink-0 rounded-[var(--radius-sm)] border border-border px-1.5 py-0.5 bee-micro">
             Esc
           </kbd>
