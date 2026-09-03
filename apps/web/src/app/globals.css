@@ -835,13 +835,6 @@
   --bee-control-min-w: 6.5rem;
 }
 
-/* Icon-only button (a close "×", a pagination arrow) — square, opts out of
-   the floor width that text buttons share. */
-.bee-btn--icon {
-  min-width: 0;
-  width: var(--bee-control-h-primary);
-  padding: 0;
-}
 
 .bee-input {
   width: 100%;
@@ -948,6 +941,15 @@
 }
 
 .bee-btn-ghost--dashed:hover { color: var(--color-text); border-color: var(--color-text-muted); }
+
+/* Icon-only button (a close "×", a calendar arrow) — square, opts out of the
+   floor width text buttons share. Declared after .bee-btn/.bee-btn-ghost on
+   purpose: same specificity, so source order is what lets it win. */
+.bee-btn--icon {
+  min-width: 0;
+  width: var(--bee-control-h-primary);
+  padding: 0;
+}
 
 /* Selected state for a .bee-btn-ghost used as a tab/mode toggle (e.g. Brand
  * Voice's "Fill manually" vs "Paste & extract") — same fixed height/padding,
