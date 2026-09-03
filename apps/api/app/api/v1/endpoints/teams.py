@@ -79,18 +79,24 @@ def set_team_profile(
 
 @router.get(
     "/{team_id}/profile",
-    response_model=TeamProfileOut,
-    summary="Get a team's signal weights and research focus",
+    response_model=TeamProfileOut | None,
+    summary="Get a team's signal weights and research focus (null when none is set yet)",
 )
 def get_team_profile(
     team_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
-) -> TeamProfileOut:
+) -> TeamProfileOut | None:
+    """``null`` (200) rather than 404 for a team that hasn't set a profile:
+    that is every team's initial state, and the Strategies page asks for it
+    on load — a 404 there showed up as a red "Failed to load resource" in
+    the browser console on every visit, indistinguishable from a real error.
+    A team from another organization is still invisible (also ``null``),
+    same as before."""
     svc = TeamProfileService(session)
     profile = svc.get(team_id, current_user.organization_id)
     if profile is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No profile set for this team yet.")
+        return None
     return TeamProfileOut.model_validate(profile)
 
 

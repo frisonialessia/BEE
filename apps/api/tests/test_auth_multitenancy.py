@@ -580,7 +580,10 @@ class TestTeamProfileEndpoints:
         team = client.post("/api/v1/teams", json={"name": "Sales"}, headers=headers).json()
 
         resp = client.get(f"/api/v1/teams/{team['id']}/profile", headers=headers)
-        assert resp.status_code == 404
+        # "No profile yet" is a team's normal initial state — 200 + null, not
+        # a 404 that reads as a failed request in the browser console.
+        assert resp.status_code == 200
+        assert resp.json() is None
 
     def test_set_team_profile_rejects_out_of_range_weight(self, client: TestClient):
         owner = _register(client, org_name="Acme Corp", email="tp-owner4@acme.io")

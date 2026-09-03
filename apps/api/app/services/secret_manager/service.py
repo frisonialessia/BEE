@@ -125,10 +125,21 @@ class SecretManager:
     def is_configured(self, provider: ProviderName) -> bool:
         return self.get(provider).is_configured()
 
-    def get_webhook_secret(self, provider: ProviderName) -> str | None:
-        """Return the HMAC secret for validating inbound webhooks from *provider*."""
-        creds = self.get(provider)
-        if creds.webhook_secret:
+    def get_webhook_secret(self, provider: ProviderName | str) -> str | None:
+        """Return the HMAC secret for validating inbound webhooks from *provider*.
+
+        Providers without their own credential entry here (``hiring`` is
+        registered with the ExternalAPIOrchestrator but has no ``*_WEBHOOK_SECRET``
+        of its own) fall straight through to the global signing secret rather
+        than raising — this is called from ``GET /webhooks/status`` for *every*
+        registered provider and from signature verification on inbound
+        webhooks, and an unknown name used to turn both into a 500.
+        """
+        try:
+            creds: ProviderCredentials | None = self.get(provider)  # type: ignore[arg-type]
+        except ValueError:
+            creds = None
+        if creds is not None and creds.webhook_secret:
             return creds.webhook_secret
         # Fall back to global signing secret when provider-specific secret unset
         return self._resolve("WEBHOOK_SIGNING_SECRET") or None

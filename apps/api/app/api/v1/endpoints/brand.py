@@ -102,16 +102,21 @@ def preview_voice(
 
 @router.get(
     "/profile",
-    response_model=VoiceProfileOut,
-    summary="Get the active CEO voice profile",
+    response_model=VoiceProfileOut | None,
+    summary="Get the active CEO voice profile (null when none exists yet)",
 )
 def get_profile(
     svc: PersonalBrandService = Depends(_get_service),
     organization_id: uuid.UUID | None = Depends(get_organization_id),
-) -> VoiceProfileOut:
+) -> VoiceProfileOut | None:
+    """``null`` (200), not 404, when the organization hasn't created a voice
+    profile yet: "no profile" is the normal first-run state of every new
+    account, not an error — and a 404 here lit up the browser console with
+    a red "Failed to load resource" on every visit to /dashboard/brand until
+    the profile existed, indistinguishable from a real broken call."""
     profile = svc.get_active_profile(organization_id)
     if not profile:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active voice profile. Create one first.")
+        return None
     return VoiceProfileOut.model_validate(profile)
 
 

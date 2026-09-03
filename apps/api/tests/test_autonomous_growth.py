@@ -984,8 +984,11 @@ class TestBrandEndpoints:
         assert resp.status_code == 401
 
     def test_get_profile_not_found(self, client) -> None:
+        # "No profile yet" is the normal first-run state — 200 + null, not
+        # a 404 that reads as a broken call in the browser console.
         resp = client.get("/api/v1/brand/profile")
-        assert resp.status_code == 404
+        assert resp.status_code == 200
+        assert resp.json() is None
 
     def test_create_and_get_profile(self, client, session: Session) -> None:
         headers = _auth_headers(session)
