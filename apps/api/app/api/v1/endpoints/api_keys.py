@@ -21,6 +21,7 @@ from app.models.base import UserRole
 from app.models.organization_api_key import OrganizationApiKey
 from app.models.user import User
 from app.schemas.auth import ApiKeyCreate, ApiKeyCreated, ApiKeyOut
+from app.services.admin_audit import AdminAuditService
 
 router = APIRouter(prefix="/organizations/api-keys", tags=["Organization API Keys"])
 
@@ -54,6 +55,19 @@ def create_api_key(
         key_hash=key_hash,
     )
     session.add(key)
+    session.flush()
+    AdminAuditService(session).log(
+        organization_id=current_user.organization_id,
+        actor_user_id=current_user.id,
+        action="api_key.created",
+        summary=f"{current_user.email} created API key '{data.name}'.",
+        entity_type="organization_api_key",
+        entity_id=key.id,
+        # Never the plaintext or hash — key_prefix is already the
+        # deliberately-safe "enough to recognize, not enough to reconstruct"
+        # slice, same one shown in the listing UI.
+        detail={"key_prefix": key.key_prefix},
+    )
     session.commit()
     session.refresh(key)
     return ApiKeyCreated(api_key=plaintext, **ApiKeyOut.model_validate(key).model_dump())
@@ -87,4 +101,13 @@ def revoke_api_key(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API key not found.")
     key.is_active = False
     session.add(key)
+    AdminAuditService(session).log(
+        organization_id=current_user.organization_id,
+        actor_user_id=current_user.id,
+        action="api_key.revoked",
+        summary=f"{current_user.email} revoked API key '{key.name}'.",
+        entity_type="organization_api_key",
+        entity_id=key.id,
+        detail={"key_prefix": key.key_prefix},
+    )
     session.commit()

@@ -7,9 +7,13 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
-from app.api.deps import get_organization_id
+from app.api.deps import get_organization_id, require_roles
 from app.core.database import get_session
+from app.models.base import UserRole
+from app.models.user import User
+from app.schemas.admin_audit import AdminAuditLogOut
 from app.schemas.audit_trail import AuditDecisionChain, AuditEntryOut, AuditSummary
+from app.services.admin_audit import AdminAuditService
 from app.services.audit_trail import AuditTrailService
 
 router = APIRouter(prefix="/audit", tags=["Audit Trail (Observability)"])
@@ -121,3 +125,35 @@ def get_audit_summary(
 ) -> AuditSummary:
     """Return aggregate statistics about the audit trail."""
     return audit.get_summary(organization_id)
+
+
+@router.get(
+    "/admin",
+    response_model=list[AdminAuditLogOut],
+    summary="Browse the general admin audit log (OWNER/ADMIN only)",
+)
+def list_admin_audit_log(
+    action: str | None = Query(default=None, description="Filter by action, e.g. 'user.role_changed'"),
+    entity_id: uuid.UUID | None = Query(default=None),
+    limit: int = Query(default=100, le=500),
+    offset: int = Query(default=0, ge=0),
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> list[AdminAuditLogOut]:
+    """"Who changed what" for security-relevant admin actions — role
+    changes, user deletion, API key create/revoke, integration connect/
+    disconnect, org settings changes. See app.models.admin_audit_log for
+    why this is separate from /audit/decisions above (that's an AI
+    agent's own decision log, this is a human admin's).
+
+    OWNER/ADMIN only, unlike the decision-log endpoints above — this can
+    reveal which teammate did what, which every role shouldn't see.
+    """
+    entries = AdminAuditService(session).list_entries(
+        organization_id=current_user.organization_id,
+        action=action,
+        entity_id=entity_id,
+        limit=limit,
+        offset=offset,
+    )
+    return [AdminAuditLogOut.model_validate(e) for e in entries]

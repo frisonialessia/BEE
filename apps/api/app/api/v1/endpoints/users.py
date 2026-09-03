@@ -19,6 +19,7 @@ from app.models.base import UserRole
 from app.models.team import Team
 from app.models.user import User
 from app.schemas.auth import UserCreate, UserOut, UserProfileUpdateIn, UserUpdate
+from app.services.admin_audit import AdminAuditService
 from app.services.permissions import get_visible_user_ids
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -133,6 +134,14 @@ def delete_my_account(
 
     current_user.is_active = False
     session.add(current_user)
+    AdminAuditService(session).log(
+        organization_id=current_user.organization_id,
+        actor_user_id=current_user.id,
+        action="user.self_deleted",
+        summary=f"{current_user.email} deleted their own account.",
+        entity_type="user",
+        entity_id=current_user.id,
+    )
     session.commit()
 
 
@@ -157,17 +166,36 @@ def update_user(
         # is intentionally not exposed yet.
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="The organization OWNER's role cannot be changed.")
 
+    changes: dict[str, dict[str, str | bool | None]] = {}
     if data.team_id is not None:
         team = session.get(Team, data.team_id)
         if team is None or team.organization_id != current_user.organization_id:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found.")
+        changes["team_id"] = {"from": str(target.team_id), "to": str(data.team_id)}
         target.team_id = data.team_id
-    if data.role is not None:
+    if data.role is not None and data.role != target.role:
+        changes["role"] = {"from": target.role.value, "to": data.role.value}
         target.role = data.role
-    if data.is_active is not None:
+    if data.is_active is not None and data.is_active != target.is_active:
+        changes["is_active"] = {"from": target.is_active, "to": data.is_active}
         target.is_active = data.is_active
 
     session.add(target)
+    if changes:
+        # entity_id/actor distinct people — target being changed, current_user
+        # doing the changing. "role" is singled out in the action name (not
+        # just a generic "user.updated") since it's the change a security
+        # review is most likely to ask about specifically.
+        action = "user.role_changed" if "role" in changes else "user.updated"
+        AdminAuditService(session).log(
+            organization_id=current_user.organization_id,
+            actor_user_id=current_user.id,
+            action=action,
+            summary=f"{current_user.email} updated {target.email} ({', '.join(changes)}).",
+            entity_type="user",
+            entity_id=target.id,
+            detail=changes,
+        )
     session.commit()
     session.refresh(target)
     return target
@@ -213,4 +241,12 @@ def delete_user(
 
     target.is_active = False
     session.add(target)
+    AdminAuditService(session).log(
+        organization_id=current_user.organization_id,
+        actor_user_id=current_user.id,
+        action="user.deactivated",
+        summary=f"{current_user.email} removed {target.email} from the organization.",
+        entity_type="user",
+        entity_id=target.id,
+    )
     session.commit()

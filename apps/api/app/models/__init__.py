@@ -7,6 +7,7 @@ relies on to create the schema.
 
 from app.models.account_activity import AccountActivityEvent, AccountActivityEventType
 from app.models.account_brief import AccountBrief
+from app.models.admin_audit_log import AdminAuditLog
 from app.models.anomaly import AnomalyAlert
 from app.models.audit_trail import AuditEntry
 from app.models.autopilot_config import AutopilotConfig
@@ -87,6 +88,7 @@ __all__ = [
     "HotLeadScore",
     "NetworkConnection",
     "AuditEntry",
+    "AdminAuditLog",
     "AutopilotConfig",
     "FailedEvent",
     "AnomalyAlert",

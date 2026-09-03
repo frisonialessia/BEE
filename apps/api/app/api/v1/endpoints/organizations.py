@@ -69,7 +69,10 @@ def set_icp_criteria(
 
     # New criteria can shift what "a good fit" means for every account at
     # once, not just one — see app.services.icp.recompute_org_fit_scores.
-    publish("icp_criteria.updated", session=session, organization_id=org.id)
+    # Also drives the admin audit log entry (app.services.events.listeners'
+    # _on_icp_criteria_updated_audit_log) — actor_user_id is passed through
+    # for that alone, the fit-score recompute listener ignores it.
+    publish("icp_criteria.updated", session=session, organization_id=org.id, actor_user_id=current_user.id)
     session.commit()
 
     return ICPCriteriaOut(**org.icp_criteria)

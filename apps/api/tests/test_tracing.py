@@ -19,6 +19,31 @@ def _reset_state():
     reset_tracing_state()
     yield
     reset_tracing_state()
+    # SQLAlchemyInstrumentor/HTTPXClientInstrumentor (unlike
+    # FastAPIInstrumentor, which is per-app-instance) patch process-wide —
+    # a test in TestSetupTracingEnabled below that actually calls
+    # setup_tracing() would otherwise leave EVERY DB query and httpx call
+    # in the rest of the suite wrapped in a span for a TracerProvider
+    # whose BatchSpanProcessor keeps retrying an export to an unreachable
+    # localhost:4317 for the remainder of the process. Undo all of it,
+    # every test, regardless of whether this particular one instrumented
+    # anything — uninstrumenting something never instrumented is a no-op.
+    from opentelemetry import trace
+    from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+    from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
+    # The default global provider (nothing configured yet, or this
+    # particular test never called setup_tracing()) is a bare
+    # ProxyTracerProvider with no shutdown() at all — only a real
+    # TracerProvider (set once setup_tracing() actually runs) has one.
+    current_provider = trace.get_tracer_provider()
+    shutdown = getattr(current_provider, "shutdown", None)
+    if shutdown is not None:
+        shutdown()
+    if SQLAlchemyInstrumentor().is_instrumented_by_opentelemetry:
+        SQLAlchemyInstrumentor().uninstrument()
+    if HTTPXClientInstrumentor().is_instrumented_by_opentelemetry:
+        HTTPXClientInstrumentor().uninstrument()
 
 
 class TestSetupTracingDisabled:

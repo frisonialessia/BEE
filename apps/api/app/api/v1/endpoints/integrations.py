@@ -38,6 +38,8 @@ Each OAuth handshake spans three endpoints, same shape for every provider:
 
 from __future__ import annotations
 
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
 from sqlmodel import Session
@@ -56,6 +58,7 @@ from app.schemas.integrations import (
     JiraConfigIn,
     SalesforceImportSummaryOut,
 )
+from app.services.admin_audit import AdminAuditService
 from app.services.integrations import (
     gmail_oauth,
     hubspot_oauth,
@@ -87,6 +90,32 @@ _JIRA_STATE_PURPOSE = "jira_connect"
 # its own organization-scoped row above (see module docstring).
 _SERVER_CHANNEL_LABELS = {"email": "Email (SMTP)", "twitter": "X / Twitter"}
 _SERVER_CHANNEL_CATEGORIES = {"email": "email", "twitter": "social"}
+
+
+def _audit_connected(session: Session, *, organization_id: uuid.UUID, provider: str) -> None:
+    """Every *_callback below calls this right after save_X_connection —
+    actor_user_id is always None here (see each callback's own comment on
+    why: the OAuth redirect carries no session), still worth recording
+    when/which org connected which provider even without who."""
+    AdminAuditService(session).log(
+        organization_id=organization_id,
+        actor_user_id=None,
+        action="integration.connected",
+        summary=f"{provider.capitalize()} connected.",
+        entity_type="integration_connection",
+        detail={"provider": provider},
+    )
+
+
+def _audit_disconnected(session: Session, *, current_user: User, provider: str) -> None:
+    AdminAuditService(session).log(
+        organization_id=current_user.organization_id,
+        actor_user_id=current_user.id,
+        action="integration.disconnected",
+        summary=f"{current_user.email} disconnected {provider.capitalize()}.",
+        entity_type="integration_connection",
+        detail={"provider": provider},
+    )
 
 
 @router.get("", response_model=list[IntegrationStatusOut], summary="Status of every integration")
@@ -266,6 +295,7 @@ def gmail_callback(
         tokens=tokens,
         account_email=account_email,
     )
+    _audit_connected(session, organization_id=organization_id, provider="gmail")
     session.commit()
 
     return RedirectResponse(f"{redirect_base}?connected=gmail")
@@ -277,6 +307,8 @@ def gmail_disconnect(
     session: Session = Depends(get_session),
 ) -> dict[str, bool]:
     disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "gmail")
+    if disconnected:
+        _audit_disconnected(session, current_user=current_user, provider="gmail")
     session.commit()
     return {"disconnected": disconnected}
 
@@ -340,6 +372,7 @@ def linkedin_callback(
         tokens=tokens,
         account_label=account_label,
     )
+    _audit_connected(session, organization_id=organization_id, provider="linkedin")
     session.commit()
 
     return RedirectResponse(f"{redirect_base}?connected=linkedin")
@@ -351,6 +384,8 @@ def linkedin_disconnect(
     session: Session = Depends(get_session),
 ) -> dict[str, bool]:
     disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "linkedin")
+    if disconnected:
+        _audit_disconnected(session, current_user=current_user, provider="linkedin")
     session.commit()
     return {"disconnected": disconnected}
 
@@ -412,6 +447,7 @@ def salesforce_callback(
         connected_by_user_id=None,  # the callback carries no session — see module docstring
         tokens=tokens,
     )
+    _audit_connected(session, organization_id=organization_id, provider="salesforce")
     session.commit()
 
     return RedirectResponse(f"{redirect_base}?connected=salesforce")
@@ -423,6 +459,8 @@ def salesforce_disconnect(
     session: Session = Depends(get_session),
 ) -> dict[str, bool]:
     disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "salesforce")
+    if disconnected:
+        _audit_disconnected(session, current_user=current_user, provider="salesforce")
     session.commit()
     return {"disconnected": disconnected}
 
@@ -512,6 +550,7 @@ def hubspot_callback(
         tokens=tokens,
         account_label=account_label,
     )
+    _audit_connected(session, organization_id=organization_id, provider="hubspot")
     session.commit()
 
     return RedirectResponse(f"{redirect_base}?connected=hubspot")
@@ -523,6 +562,8 @@ def hubspot_disconnect(
     session: Session = Depends(get_session),
 ) -> dict[str, bool]:
     disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "hubspot")
+    if disconnected:
+        _audit_disconnected(session, current_user=current_user, provider="hubspot")
     session.commit()
     return {"disconnected": disconnected}
 
@@ -609,6 +650,7 @@ def jira_callback(
         connected_by_user_id=None,  # the callback carries no session — see module docstring
         tokens=tokens,
     )
+    _audit_connected(session, organization_id=organization_id, provider="jira")
     session.commit()
 
     return RedirectResponse(f"{redirect_base}?connected=jira")
@@ -620,6 +662,8 @@ def jira_disconnect(
     session: Session = Depends(get_session),
 ) -> dict[str, bool]:
     disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "jira")
+    if disconnected:
+        _audit_disconnected(session, current_user=current_user, provider="jira")
     session.commit()
     return {"disconnected": disconnected}
 
