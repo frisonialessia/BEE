@@ -13,7 +13,8 @@ below for its exact kwarg contract):
   (app/api/v1/endpoints/organizations.py's set_icp_criteria). Two
   listeners: fit-score recompute, and an AdminAuditService entry.
 * ``meeting.completed`` — a Meeting was marked completed
-  (app/api/v1/endpoints/meetings.py's complete_meeting).
+  (app/api/v1/endpoints/meetings.py's complete_meeting). Two listeners:
+  engagement feedback, and a real-time notification.
 """
 
 from __future__ import annotations
@@ -22,10 +23,12 @@ import uuid
 
 from sqlmodel import Session
 
+from app.models.meeting import Meeting
 from app.services.admin_audit import AdminAuditService
 from app.services.events.dispatcher import subscribe
 from app.services.icp import recompute_company_fit_score, recompute_org_fit_scores
 from app.services.meeting_engagement import record_meeting_engagement
+from app.services.realtime import publish_notification
 
 # ----- ICP fit-score persistence --------------------------------------------
 # See app/services/icp/recompute.py for what these actually do; this file
@@ -73,4 +76,20 @@ def _on_meeting_completed(*, session: Session, meeting_id: uuid.UUID) -> None:
     record_meeting_engagement(session, meeting_id)
 
 
+def _on_meeting_completed_notify(*, session: Session, meeting_id: uuid.UUID) -> None:
+    # Its own lookup rather than reusing record_meeting_engagement's —
+    # that one no-ops (and returns nothing) when the meeting isn't linked
+    # to an Opportunity/Lead, but a completed meeting is still worth a
+    # real-time nudge either way; only organization_id is needed here.
+    meeting = session.get(Meeting, meeting_id)
+    if meeting is None or meeting.organization_id is None:
+        return
+    publish_notification(
+        meeting.organization_id,
+        event_type="meeting.completed",
+        payload={"meeting_id": str(meeting_id), "title": meeting.title},
+    )
+
+
 subscribe("meeting.completed", _on_meeting_completed)
+subscribe("meeting.completed", _on_meeting_completed_notify)

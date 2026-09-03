@@ -31,6 +31,13 @@ Built-in handlers
   ``OutboundWebhookHandler`` (per-org credentials via ``IntegrationConnection``,
   not one shared env-var URL) but the other direction: BEE pushes a real
   Jira issue out, not just a webhook payload — see its own docstring below.
+* ``RealtimeNotificationHandler`` — fires on ``opportunity.ready_to_action`` /
+  ``opportunity.won`` / ``opportunity.lost``, publishes to the org's
+  real-time channel (app.services.realtime) an open dashboard tab is
+  subscribed to via SSE — see app.api.v1.endpoints.notifications_stream.
+  Distinct from ``ReadyToActionNotifyHandler`` above: that one posts to an
+  *external* Slack/Teams webhook, this one is BEE's own in-app "hey, look
+  at this now" channel.
 """
 
 from __future__ import annotations
@@ -474,4 +481,68 @@ class JiraSyncHandler(WorkflowHandler):
 
         return _create_task(
             session, event, self.name, self.version, WorkflowTaskStatus.COMPLETED, payload, result=result
+        )
+
+
+@register_workflow_handler
+class RealtimeNotificationHandler(WorkflowHandler):
+    """Pushes a real-time, in-app notification to every open dashboard tab
+    for this event's organization — see app.services.realtime and
+    app.api.v1.endpoints.notifications_stream (the SSE endpoint a tab
+    actually subscribes to).
+
+    Fires on ``opportunity.ready_to_action`` / ``opportunity.won`` /
+    ``opportunity.lost`` — the three moments the priority feed / dashboard
+    most wants a rep to notice immediately rather than on the next
+    30-second poll. "mock mode" here means Redis isn't configured
+    (app.services.realtime.publish_notification no-ops in that case) — same
+    every-handler convention as the rest of this file, just Redis instead
+    of an env-var URL as the "is this actually wired up" gate.
+    """
+
+    name = "realtime_notification"
+    version = "1.0.0"
+    event_types = ["opportunity.ready_to_action", "opportunity.won", "opportunity.lost"]
+
+    def handle(self, event: BeeEvent, session: Session) -> WorkflowTask:
+        from app.core.redis import get_redis_client
+        from app.services.realtime import publish_notification
+
+        payload = {
+            "event_type": event.event_type,
+            "opportunity_id": str(event.entity_id) if event.entity_id else None,
+            "timestamp": datetime.now(UTC).isoformat(),
+            **event.payload,
+        }
+
+        org_id_raw = event.payload.get("organization_id")
+        org_id = uuid.UUID(org_id_raw) if org_id_raw else None
+        if org_id is None:
+            return _create_task(
+                session, event, self.name, self.version,
+                WorkflowTaskStatus.MOCK_DISPATCHED, payload,
+                result={"mock": True, "note": "No organization_id on this event — nothing to notify."},
+                mock=True,
+            )
+
+        if get_redis_client() is None:
+            return _create_task(
+                session, event, self.name, self.version,
+                WorkflowTaskStatus.MOCK_DISPATCHED, payload,
+                result={"mock": True, "note": "Redis isn't configured — real-time notifications are off."},
+                mock=True,
+            )
+
+        publish_notification(
+            org_id,
+            event_type=event.event_type,
+            payload={
+                "opportunity_id": payload["opportunity_id"],
+                "company_name": event.payload.get("company_name"),
+                "score": event.payload.get("score"),
+            },
+        )
+        return _create_task(
+            session, event, self.name, self.version, WorkflowTaskStatus.COMPLETED, payload,
+            result={"channel": "realtime"},
         )

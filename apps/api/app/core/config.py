@@ -88,6 +88,15 @@ class Settings(BaseSettings):
     # degrades to today's behavior rather than taking any guard down.
     REDIS_URL: str | None = None
 
+    # ----- Real-time notifications (see app.services.realtime) ------------------
+    # How long GET /notifications/stream (SSE) holds one connection open
+    # before ending the stream and letting the browser's EventSource
+    # auto-reconnect — bounded rather than infinite so the connection
+    # doesn't outlive an idle-connection timeout on the hosting platform
+    # (Vercel and most load balancers cap this well under an hour) with a
+    # confusing silent drop instead of a clean, expected reconnect.
+    NOTIFICATIONS_STREAM_MAX_SECONDS: int = 60
+
     # ----- Secrets vault ---------------------------------------------------------
     # SecretManager (app/services/secret_manager) resolves every external-API
     # credential from the environment by default — "env" keeps that behavior
@@ -135,11 +144,16 @@ class Settings(BaseSettings):
     API_SECRET_KEY: str | None = None
     # Comma-separated list of paths exempt from API key auth (exact prefix match).
     # /api/v1/health and /api/v1/ready are always exempt.
-    # /api/v1/integrations/{gmail,linkedin}/callback are exempt too: each is
-    # hit by a plain browser redirect from the provider, which carries
-    # neither X-API-Key nor our Authorization bearer — they authenticate via
-    # their own signed ``state`` param instead (see
-    # app.core.security.decode_oauth_state_token).
+    # /api/v1/integrations/{gmail,linkedin,salesforce,hubspot,jira}/callback
+    # are exempt too: each is hit by a plain browser redirect from the
+    # provider, which carries neither X-API-Key nor our Authorization
+    # bearer — they authenticate via their own signed ``state`` param
+    # instead (see app.core.security.decode_oauth_state_token).
+    # /api/v1/notifications/stream is exempt for the same root cause, a
+    # different browser API: EventSource (the SSE client) can't attach
+    # custom headers at all — see
+    # app.api.deps.get_current_user_from_query_or_header for how it
+    # authenticates instead.
     # /api/v1/internal/market-scan/tick and /api/v1/internal/jobs/tick are
     # exempt too: Vercel Cron issues a plain GET with only the
     # Authorization: Bearer $CRON_SECRET header it auto-injects (see
@@ -150,8 +164,9 @@ class Settings(BaseSettings):
     API_KEY_EXEMPT_PATHS: str = (
         "/api/v1/health,/api/v1/ready,/api/v1/webhooks/receive,/api/v1/contact,"
         "/api/v1/integrations/gmail/callback,/api/v1/integrations/linkedin/callback,"
-        "/api/v1/integrations/salesforce/callback,/api/v1/internal/market-scan/tick,"
-        "/api/v1/internal/jobs/tick"
+        "/api/v1/integrations/salesforce/callback,/api/v1/integrations/hubspot/callback,"
+        "/api/v1/integrations/jira/callback,/api/v1/notifications/stream,"
+        "/api/v1/internal/market-scan/tick,/api/v1/internal/jobs/tick"
     )
 
     # ----- Multi-tenant user auth (Organization / Team / User) ------------------

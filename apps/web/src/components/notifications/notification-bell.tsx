@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { useNotifications } from "@/hooks/use-notifications";
+import { useRealtimeNotifications } from "@/hooks/use-realtime-notifications";
 import type { Locale } from "@/i18n/locales";
 import { formatRelativeTime } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,10 @@ const KIND_COLOR: Record<AppNotification["kind"], string> = {
 export function NotificationBell() {
   const locale = useLocale() as Locale;
   const { notifications, unreadCount, markAllSeen, isLoading } = useNotifications();
+  // Pushes an immediate refetch of the sources above the moment a hot
+  // signal/opportunity/meeting event happens (see that hook's own
+  // docstring) — the bell otherwise only refreshed on its own 30s poll.
+  useRealtimeNotifications();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 

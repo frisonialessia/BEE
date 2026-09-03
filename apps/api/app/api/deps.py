@@ -92,6 +92,36 @@ def get_current_user_optional(
     return _load_user_from_token(credentials.credentials, session)
 
 
+def get_current_user_from_query_or_header(
+    token: str | None = Query(default=None),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer_scheme),
+    session: Session = Depends(get_session),
+) -> User:
+    """Like :func:`get_current_user`, but also accepts the session token as
+    an ``?token=`` query parameter — for the one class of endpoint that
+    genuinely can't send an ``Authorization`` header: the browser's native
+    ``EventSource`` API (the SSE stream at
+    ``app.api.v1.endpoints.notifications_stream``) has no way to attach
+    custom headers, only cookies or the URL itself. The header still wins
+    when both are somehow present, same precedence
+    :func:`get_organization_from_webhook_key` uses for its analogous
+    header-vs-query-param case.
+
+    Not for general use — every other authenticated endpoint should keep
+    using :func:`get_current_user`, since a token in a URL ends up in
+    server access logs and browser history in a way a header never does;
+    this trade-off is only acceptable because SSE leaves no real
+    alternative.
+    """
+    raw = credentials.credentials if credentials is not None else token
+    if raw is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing session token. Include an 'Authorization: Bearer <token>' header or a ?token= query parameter.",
+        )
+    return _load_user_from_token(raw, session)
+
+
 def _resolve_org_api_key(plaintext: str | None, session: Session) -> uuid.UUID | None:
     """Shared lookup behind :func:`get_organization_from_api_key` and
     :func:`get_organization_from_webhook_key`.

@@ -35,6 +35,7 @@ from app.api.v1.endpoints import (
     meetings,
     ml_training,
     network,
+    notifications_stream,
     opportunities,
     opportunity_tasks,
     orchestrator,
@@ -90,6 +91,7 @@ api_router.include_router(integrations.router)
 api_router.include_router(psychographic.router)
 api_router.include_router(dark_funnel.router)
 api_router.include_router(network.router)
+api_router.include_router(notifications_stream.router)
 api_router.include_router(dead_letter.router)
 api_router.include_router(audit.router)
 api_router.include_router(corrections.router)
