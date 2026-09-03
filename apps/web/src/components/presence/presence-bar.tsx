@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useUsers } from "@/hooks/queries/use-users";
 
 function initials(name: string) {
@@ -10,13 +12,15 @@ function initials(name: string) {
 }
 
 /**
- * Presencia del equipo — decorativa: miembros reales (no inventados) con un
- * indicador "en línea". BEE no tiene todavía un canal en tiempo real que
- * sepa quién está conectado de verdad, así que el estado es una
- * simulación visual sobre datos reales, no una medición. Vive dentro del
- * encabezado (ver DashboardHeader), no flotando aparte.
+ * Team strip in the header — the organization's real members as avatars.
+ * Deliberately *not* a presence indicator: BEE has no realtime channel that
+ * knows who is connected, and the previous version painted a green "online"
+ * dot on every member plus "N en línea" — an invented fact shown to a real
+ * customer (and floating fake cursors with teammates' names, now removed).
+ * What can be stated truthfully is who is on the team and how many.
  */
 export function TeamPresence() {
+  const t = useTranslations("common.teamStrip");
   const { data: users } = useUsers();
   const team = (users ?? []).slice(0, 4);
 
@@ -28,13 +32,12 @@ export function TeamPresence() {
         {team.map((user) => (
           <span key={user.id} className="bee-presence-avatar" title={user.full_name}>
             {initials(user.full_name)}
-            <span className="bee-presence-dot" aria-hidden />
           </span>
         ))}
       </div>
       {team.length > 1 && (
         <span className="hidden text-xs font-medium text-muted-foreground sm:inline">
-          {team.length} en línea
+          {t("members", { count: users?.length ?? team.length })}
         </span>
       )}
     </div>

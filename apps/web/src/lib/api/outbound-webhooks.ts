@@ -1,3 +1,4 @@
+import { isDemoMode } from "@/lib/demo/mode";
 import { apiFetch } from "@/lib/api/client";
 import type { FetchResult } from "@/types/api";
 
@@ -32,6 +33,10 @@ export interface OutboundWebhookUpdateIn {
 }
 
 export async function fetchOutboundWebhooks(): Promise<FetchResult<OutboundWebhook[]>> {
+  // Same as every other lib/api module: the sandbox never calls the real
+  // API (see lib/demo/mode.ts) — without this, /probar/integrations logged
+  // a 401 on every visit.
+  if (isDemoMode()) return { data: [], live: false };
   try {
     const data = await apiFetch<OutboundWebhook[]>("/api/v1/outbound-webhooks", { cache: "no-store" });
     return { data, live: true };

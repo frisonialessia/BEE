@@ -9,7 +9,6 @@ import { CommandPaletteProvider } from "@/components/command-palette/command-pal
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { DashboardRail } from "@/components/dashboard/dashboard-rail";
 import { MobileNavProvider } from "@/components/dashboard/mobile-nav-context";
-import { FloatingCursors } from "@/components/presence/floating-cursors";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
 import { OnboardingIntro } from "@/features/onboarding/onboarding-intro";
@@ -62,7 +61,6 @@ export default function DashboardLayout({
                 <OpportunityDrawer />
                 <OnboardingIntro />
                 <AskBeeFab />
-                <FloatingCursors />
                 <CommandPalette />
                 <TourOverlay />
               </div>

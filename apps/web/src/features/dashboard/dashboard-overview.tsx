@@ -18,6 +18,7 @@ import { SignalHexMap } from "@/features/control/components/SignalHexMap";
 import { CriticalAccountsDigest } from "@/features/dashboard/critical-accounts-digest";
 import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { DecisionFeed } from "@/features/dashboard/decision-feed";
+import { GettingStartedCard } from "@/features/dashboard/getting-started-card";
 import { Leaderboard } from "@/features/dashboard/leaderboard";
 import { MyCalendarWidget } from "@/features/calendar/my-calendar-widget";
 import { usePagination } from "@/hooks/use-pagination";
@@ -122,6 +123,11 @@ export function DashboardOverview() {
         </div>
       </header>
 
+      <GettingStartedCard
+        signalCount={signals.length}
+        opportunityCount={allOppsResult?.data.length ?? 0}
+        userCount={usersResult?.length ?? 0}
+      />
       <DecisionFeed />
       <TodayImpactCard impact={todayImpact} />
       <CriticalAccountsDigest battlecards={battlecards} today={new Date()} />
@@ -135,7 +141,7 @@ export function DashboardOverview() {
           según su propio contenido — con items-stretch, Mi calendario y el
           Leaderboard se estiraban a la altura de la Colmena y dejaban un
           bloque de espacio en blanco debajo de su contenido real. */}
-      <div className="mb-4 grid items-start gap-3 lg:grid-cols-3">
+      <div className="mb-4 grid grid-cols-1 items-start gap-3 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <SignalHexMap height={280} />
         </div>
@@ -149,7 +155,7 @@ export function DashboardOverview() {
         </div>
       </div>
 
-      <div className="mb-4 grid items-start gap-3 lg:grid-cols-2">
+      <div className="mb-4 grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
         <section className="bee-surface bee-bento-pad space-y-3">
           <div>
             <h3 className="bee-card-title">{t("sections.industryHeatmap.title")}</h3>
@@ -237,7 +243,7 @@ export function DashboardOverview() {
           {signals.length === 0 ? (
             <p className="bee-caption py-6 text-center">{t("sections.allSignals.empty")}</p>
           ) : (
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {signalPagination.pageItems.map((signal, i) => (
                 <SignalCard key={signal.id} signal={signal} toneIndex={i} />
               ))}

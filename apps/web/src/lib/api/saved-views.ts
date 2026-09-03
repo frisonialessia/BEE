@@ -20,6 +20,9 @@ export interface SavedViewCreateIn {
 }
 
 export async function fetchSavedViews(page: string): Promise<FetchResult<SavedView[]>> {
+  // The sandbox has no session — hitting the real API from /probar only
+  // produced a 401 in the console on every Leads visit.
+  if (isDemoMode()) return { data: [], live: false };
   try {
     const data = await apiFetch<SavedView[]>(
       `/api/v1/saved-views?page=${encodeURIComponent(page)}`,
