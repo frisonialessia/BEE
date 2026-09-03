@@ -125,6 +125,20 @@ class Organization(TimestampMixin, table=True):
     # one more place for it to drift out of sync with what Stripe reports.
     stripe_subscription_status: str | None = Field(default=None)
 
+    # ----- Daily digest (see app.services.digest) -------------------------------
+    # "La jugada de hoy" pushed to a Slack/Teams incoming webhook once a day.
+    # Off by default, same "ships complete, starts off" convention as SSO
+    # and federated intelligence above; an OWNER/ADMIN pastes the webhook
+    # URL in Integrations. The URL is a bearer-style secret (anyone holding
+    # it can post to the channel) — never returned in full by the API, see
+    # OrganizationDigestOut.webhook_url_hint.
+    digest_webhook_url: str | None = Field(default=None)
+    digest_enabled: bool = Field(default=False, nullable=False)
+    # Hour of day, UTC, the cron tick sends at — 8 = start of the European
+    # working day, which is where BEE's first customers are.
+    digest_hour_utc: int = Field(default=8, nullable=False)
+    digest_last_sent_at: datetime | None = Field(default=None)
+
     # ----- Relationships -------------------------------------------------------
     teams: list["Team"] = Relationship(back_populates="organization")
     users: list["User"] = Relationship(back_populates="organization")

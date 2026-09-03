@@ -10,7 +10,9 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BiFeedSection } from "@/features/integrations/bi-feed-section";
+import { DailyDigestSection } from "@/features/integrations/daily-digest-section";
 import { InboundSignalsSection } from "@/features/integrations/inbound-signals-section";
+import { MarketSourcesSection } from "@/features/integrations/market-sources-section";
 import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
 import { useIsDemoMode } from "@/lib/demo/mode";
 import { useAuth } from "@/providers/auth-provider";
@@ -459,6 +461,22 @@ export function IntegrationsView() {
             <p className="bee-eyebrow">{t("categories.automation")}</p>
             <p className="bee-caption">{t("automation.hint")}</p>
             <OutboundWebhooksSection canManage={canManage} />
+          </section>
+
+          {/* Fuentes de mercado — the proactive scan's senses. Read-only:
+             sources are deployment-wide, but a person should see why press
+             and hiring signals arrive with no key and what Google adds. */}
+          <section className="space-y-3">
+            <p className="bee-eyebrow">{t("categories.marketSources")}</p>
+            <MarketSourcesSection />
+          </section>
+
+          {/* Resumen diario — La jugada de hoy pushed to Slack/Teams. Lives
+             here, next to the other webhook-shaped integrations, not in
+             Equipo: it's a channel, not a people setting. */}
+          <section className="space-y-3">
+            <p className="bee-eyebrow">{t("categories.digest")}</p>
+            <DailyDigestSection canManage={canManage} />
           </section>
 
           {/* Reportes y BI — same reasoning as Automatización right above:

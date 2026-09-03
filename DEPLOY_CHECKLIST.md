@@ -193,6 +193,13 @@ you set `CRON_SECRET`, every one of those invocations 404s** (visible as a
 failed run in Vercel's Cron dashboard — harmless, no data touched, but
 expect to see it until you configure the secret).
 
+The same `CRON_SECRET` gates the two other cron routes in that file:
+`/api/v1/internal/jobs/tick` (every minute, the durable job queue) and
+`/api/v1/internal/digest/tick` (hourly — posts "La jugada de hoy" to each
+organization's Slack/Teams webhook at the hour its admin picked under
+Integraciones → Resumen diario; nothing is sent for organizations that
+haven't configured one).
+
 1. Set `CRON_SECRET` (exact name — Vercel auto-injects
    `Authorization: Bearer $CRON_SECRET` on cron-triggered requests only when
    the project env var is named exactly this). Generate the same way as

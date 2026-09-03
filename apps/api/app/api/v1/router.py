@@ -30,6 +30,7 @@ from app.api.v1.endpoints import (
     health,
     insights,
     integrations,
+    internal_digest,
     internal_job_queue,
     internal_market_scan,
     internal_support,
@@ -69,6 +70,7 @@ api_router.include_router(ml_training.router)
 api_router.include_router(internal_support.router)
 api_router.include_router(internal_market_scan.router)
 api_router.include_router(internal_job_queue.router)
+api_router.include_router(internal_digest.router)
 api_router.include_router(teams.router)
 api_router.include_router(users.router)
 api_router.include_router(api_keys.router)

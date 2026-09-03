@@ -36,6 +36,7 @@ from app.models.opportunity import Opportunity
 from app.models.user import User
 from app.schemas.auth import UserOut
 from app.schemas.company import CompanyOut
+from app.schemas.digest import DigestSendOut, OrganizationDigestIn, OrganizationDigestOut
 from app.schemas.lead import LeadOut
 from app.schemas.meeting import MeetingOut
 from app.schemas.organization import (
@@ -51,6 +52,7 @@ from app.schemas.organization import (
 )
 from app.schemas.signal import OpportunityOut
 from app.services.admin_audit import AdminAuditService
+from app.services.digest import DailyDigestService
 from app.services.events import publish
 from app.services.permissions import scope_by_organization_id
 from app.services.sso import is_globally_configured as sso_is_globally_configured
@@ -150,6 +152,65 @@ def set_organization_profile(
     return OrganizationProfileOut(
         industry=org.industry, employee_range=org.employee_range, website=org.website
     )
+
+
+def _digest_out(org) -> OrganizationDigestOut:  # noqa: ANN001
+    url = org.digest_webhook_url
+    return OrganizationDigestOut(
+        enabled=org.digest_enabled,
+        hour_utc=org.digest_hour_utc,
+        webhook_configured=bool(url),
+        webhook_url_hint=f"…{url[-6:]}" if url else None,
+        last_sent_at=org.digest_last_sent_at,
+    )
+
+
+@router.get(
+    "/digest",
+    response_model=OrganizationDigestOut,
+    summary="Daily digest settings — where and when 'La jugada de hoy' is posted",
+)
+def get_digest_settings(current_user: User = Depends(get_current_user)) -> OrganizationDigestOut:
+    return _digest_out(current_user.organization)
+
+
+@router.put(
+    "/digest",
+    response_model=OrganizationDigestOut,
+    summary="Configure the daily digest (Slack/Teams incoming webhook, hour, on/off)",
+)
+def set_digest_settings(
+    data: OrganizationDigestIn,
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> OrganizationDigestOut:
+    """Partial patch — see OrganizationDigestIn. The webhook URL is the
+    one secret here: accepted on write, never echoed back in full."""
+    org = current_user.organization
+    payload = data.model_dump(exclude_unset=True)
+    if "webhook_url" in payload:
+        org.digest_webhook_url = payload["webhook_url"] or None
+    if "enabled" in payload and payload["enabled"] is not None:
+        org.digest_enabled = payload["enabled"]
+    if "hour_utc" in payload and payload["hour_utc"] is not None:
+        org.digest_hour_utc = payload["hour_utc"]
+    session.add(org)
+    session.commit()
+    session.refresh(org)
+    return _digest_out(org)
+
+
+@router.post(
+    "/digest/send",
+    response_model=DigestSendOut,
+    summary="Post today's digest to the configured webhook right now",
+)
+def send_digest_now(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> DigestSendOut:
+    result = DailyDigestService(session).send_now(current_user.organization)
+    return DigestSendOut(sent=result.sent, reason=result.reason, cards=result.cards)  # type: ignore[arg-type]
 
 
 @router.get(
