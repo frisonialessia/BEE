@@ -116,7 +116,12 @@ export function RevenueSimulatorWidget() {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-2">
+      {/* grid-cols-1, not grid-cols-2 like this component's own KPI tiles
+          below (or Dark Funnel's) — these are form fields (a <select>, a
+          text input, a range slider), not compact stat numbers, and a
+          <select> squeezed into a 2-up mobile column is genuinely hard to
+          read/tap, not just visually tight. */}
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <div className="space-y-1">
           <label className="bee-kpi-tile__label">{t("form.signal")}</label>
           <select

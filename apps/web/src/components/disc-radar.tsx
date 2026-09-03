@@ -4,7 +4,14 @@ import { useTranslations } from "next-intl";
 
 const AXIS_KEYS = ["d", "i", "s", "c"] as const;
 
-const SIZE = 220;
+// SIZE used to be 220 (CENTER 110) — the I/C axis labels sit at 1.32×RADIUS
+// from center (see labelPos below) with a "start"/"end" text-anchor, so
+// their text extends outward in ONE direction from a point only ~7px from
+// that edge ("D · 100%" or a longer translation is easily 40-60px wide) —
+// most of the label rendered past the SVG's own bounds, clipped away. RADIUS
+// stays the same (same visual size for the radar itself); SIZE grows to add
+// real margin around it for those two labels to actually fit.
+const SIZE = 300;
 const CENTER = SIZE / 2;
 const RADIUS = 78;
 const RINGS = [0.25, 0.5, 0.75, 1];

@@ -224,6 +224,7 @@
       "connectionError": "Couldn't connect to the BEE API — check NEXT_PUBLIC_API_URL",
       "fallbackNoticePrefix": "Showing fallback status — start the API or set",
       "fallbackNoticeMiddle": "in",
+      "loadLabel": "Worker load",
       "worker": {
         "ingestLabel": "Ingestion",
         "queueLabel": "Queue",

@@ -217,7 +217,7 @@ export function ScenarioSimulatorPanel() {
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               <VariantCard variant={result.conservative} />
               <VariantCard variant={result.realistic} />
               <VariantCard variant={result.optimistic} />

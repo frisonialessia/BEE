@@ -331,7 +331,7 @@ function AuditPanel() {
   return (
     <div className="space-y-4">
       {summary && (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <div className="bee-bento p-2 text-center">
             <p className="bee-stat__val">{summary.total_entries}</p>
             <p className="bee-stat__lbl">Total de decisiones</p>

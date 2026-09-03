@@ -34,12 +34,22 @@ export function Sparkline({
   const max = Math.max(...values);
   const min = Math.min(...values);
   const range = max - min || 1;
-  const stepX = width / (values.length - 1);
-  const pad = 3; // deja lugar al grosor del trazo y al punto final
+  // padX used to be 0 — the first/last point sat exactly at x=0/x=width, so
+  // the final point's visible dot (r=2.5) rendered with its outer half cut
+  // off by the SVG's own edge, a real datum quietly losing half its ink.
+  // Sized to the visible dot's own radius + half the stroke width, not the
+  // larger invisible hover-target circle (r=7) — that one's `fill:
+  // transparent`, so a sliver of its hit-area clipping at the very two
+  // endpoints has no visual cost, and padding for it would shrink the
+  // plotted line noticeably on an already-small inline sparkline.
+  const padX = 4;
+  const padY = 3; // deja lugar al grosor del trazo y al punto final
+  const plotW = width - padX * 2;
+  const stepX = plotW / (values.length - 1);
 
   const points = values.map((v, i) => {
-    const x = i * stepX;
-    const y = pad + (1 - (v - min) / range) * (height - pad * 2);
+    const x = padX + i * stepX;
+    const y = padY + (1 - (v - min) / range) * (height - padY * 2);
     return [x, y] as const;
   });
 

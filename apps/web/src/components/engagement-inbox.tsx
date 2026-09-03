@@ -153,7 +153,7 @@ export function EngagementInboxPanel() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-3 gap-2 text-center">
+      <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
         <div className="bee-inset p-2">
           <p className="bee-stat__val">{events.length}</p>
           <p className="bee-stat__lbl">{t("stats.total")}</p>

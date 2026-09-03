@@ -561,7 +561,7 @@ export function BrandVoicePanel() {
       {channels.length > 0 && (
         <div>
           <p className="bee-caption mb-2">{t("channelConnections")}</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {channels.map((ch) => (
               <div
                 key={ch.channel}

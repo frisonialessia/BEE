@@ -224,6 +224,7 @@
       "connectionError": "No se pudo conectar con la API de BEE — revisa NEXT_PUBLIC_API_URL",
       "fallbackNoticePrefix": "Mostrando estado de respaldo — inicia la API o configura",
       "fallbackNoticeMiddle": "en",
+      "loadLabel": "Carga del worker",
       "worker": {
         "ingestLabel": "Ingesta",
         "queueLabel": "Cola",

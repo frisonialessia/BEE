@@ -27,12 +27,6 @@
       "in_progress": "Ya hablaste con el cliente",
       "closed": "Ganada, perdida o descartada"
     },
-    "guide": {
-      "title": "¿Cómo uso este pipeline?",
-      "subtitle": "5 etapas, no las de un CRM genérico — cada tarjeta avanza de izquierda a derecha.",
-      "dismiss": "Entendido",
-      "reopen": "¿Cómo uso este pipeline?"
-    },
     "stageHelp": {
       "detected": "Equivale a \"Nuevo\" en un CRM tradicional. BEE ya detectó la señal (una ronda, una contratación clave, un cambio de stack) — todavía nadie del equipo actuó sobre esta oportunidad.",
       "ready_to_action": "Equivale a \"Calificado\" / \"En trabajo\". La IA ya armó el argumento, el canal y el mensaje — solo falta que alguien la tome y actúe.",

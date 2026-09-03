@@ -154,8 +154,25 @@ export function SystemHealth() {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col justify-center">
+      <div className="flex flex-1 flex-col justify-center gap-4">
         <WorkerKpis worker={snapshot.worker} />
+        {/* worker.load_pct was already in the API response and unused here
+         * — this card's only content used to be the 2×2 KPI grid above,
+         * which left a lot of empty vertical space next to its taller row
+         * siblings (Intent Hive, Anomalías). A real, already-available
+         * number filling real space, not a filler element. */}
+        <div>
+          <div className="mb-1 flex items-center justify-between bee-micro">
+            <span className="text-muted-foreground">{t("loadLabel")}</span>
+            <span className="font-mono font-medium text-foreground">{snapshot.worker.load_pct}%</span>
+          </div>
+          <div className="bee-bar-track">
+            <div
+              className={cn("bee-bar", snapshot.worker.load_pct >= 80 ? "bee-bar--2" : "bee-bar--4")}
+              style={{ width: `${Math.min(100, Math.max(0, snapshot.worker.load_pct))}%` }}
+            />
+          </div>
+        </div>
       </div>
 
       {!live && (
