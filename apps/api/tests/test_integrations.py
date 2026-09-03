@@ -164,15 +164,20 @@ class TestListIntegrations:
 
         assert rows["gmail"]["connected"] is False
         assert rows["gmail"]["scope"] == "organization"
+        assert rows["gmail"]["category"] == "email"
         assert rows["linkedin"]["connected"] is False
         assert rows["linkedin"]["scope"] == "organization"
+        assert rows["linkedin"]["category"] == "social"
         assert rows["salesforce"]["connected"] is False
         assert rows["salesforce"]["scope"] == "organization"
+        assert rows["salesforce"]["category"] == "crm"
         # Server-wide channels are surfaced too, but read-only. LinkedIn's
         # server credential isn't shown separately — it would be a second,
         # confusingly-named row next to the one that actually has a button.
         assert rows["email"]["scope"] == "server"
+        assert rows["email"]["category"] == "email"
         assert "twitter" in rows
+        assert rows["twitter"]["category"] == "social"
 
 
 class TestGmailAuthorize:

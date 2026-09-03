@@ -243,6 +243,16 @@
     "redirecting": "Redirigiendo…",
     "connectPrefix": "Conectar {label}",
     "defaultAccountLabel": "esta cuenta",
+    "categories": {
+      "crm": "CRM",
+      "email": "Correo",
+      "social": "Redes sociales",
+      "automation": "Automatización",
+      "bi": "Reportes y BI",
+      "other": "Otras"
+    },
+    "genericConnectedCopy": "{label} conectado como {account}.",
+    "genericDisconnectedCopy": "Conecta tu cuenta de {label}.",
     "gmail": {
       "disconnectedCopy": "Conecta tu cuenta de Gmail para que las secuencias envíen correos desde tu propia bandeja.",
       "connectedCopy": "Las secuencias envían correos desde {account}, no desde un servidor compartido."

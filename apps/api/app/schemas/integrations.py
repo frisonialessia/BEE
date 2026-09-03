@@ -21,6 +21,12 @@ class IntegrationStatusOut(BaseModel):
     label: str
     connected: bool
     scope: str  # "organization" | "server"
+    # "crm" | "email" | "social" | "automation" | "bi" — lets the frontend
+    # group the page by what kind of tool this is instead of hand-picking
+    # each provider by name (see IntegrationsView.tsx). Optional/untyped on
+    # purpose, same reasoning as IntegrationConnection.provider being a
+    # free string: new categories need no migration here either.
+    category: str | None = None
     account_email: str | None = None
     connected_at: datetime | None = None
     detail: str | None = None

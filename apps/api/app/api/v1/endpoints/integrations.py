@@ -68,6 +68,7 @@ _SALESFORCE_STATE_PURPOSE = "salesforce_connect"
 # Server-scoped channels are shown as-is except "linkedin", which now has
 # its own organization-scoped row above (see module docstring).
 _SERVER_CHANNEL_LABELS = {"email": "Email (SMTP)", "twitter": "X / Twitter"}
+_SERVER_CHANNEL_CATEGORIES = {"email": "email", "twitter": "social"}
 
 
 @router.get("", response_model=list[IntegrationStatusOut], summary="Status of every integration")
@@ -85,6 +86,7 @@ def list_integrations(
             label="Gmail",
             connected=gmail is not None,
             scope="organization",
+            category="email",
             account_email=gmail.external_account_email if gmail else None,
             connected_at=gmail.created_at if gmail else None,
             last_error=gmail.last_error if gmail else None,
@@ -99,6 +101,7 @@ def list_integrations(
             label="LinkedIn",
             connected=linkedin is not None,
             scope="organization",
+            category="social",
             account_email=linkedin.external_account_email if linkedin else None,
             connected_at=linkedin.created_at if linkedin else None,
             last_error=linkedin.last_error if linkedin else None,
@@ -113,6 +116,7 @@ def list_integrations(
             label="Salesforce",
             connected=salesforce is not None,
             scope="organization",
+            category="crm",
             account_email=salesforce.external_account_email if salesforce else None,
             connected_at=salesforce.created_at if salesforce else None,
             last_error=salesforce.last_error if salesforce else None,
@@ -134,6 +138,7 @@ def list_integrations(
                 label=_SERVER_CHANNEL_LABELS.get(channel, channel.title()),
                 connected=bool(status_dict.get("authenticated")),
                 scope="server",
+                category=_SERVER_CHANNEL_CATEGORIES.get(channel),
                 detail="Credencial compartida del servidor, no por cuenta." if status_dict.get("authenticated")
                 else "Modo simulado — no hay credencial del servidor configurada.",
             )

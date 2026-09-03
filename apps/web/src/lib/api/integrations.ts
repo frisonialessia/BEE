@@ -10,6 +10,10 @@ export interface IntegrationStatus {
    *  Connect/Disconnect button. "server" — a single credential the whole
    *  deployment shares, shown read-only for transparency. */
   scope: "organization" | "server";
+  /** "crm" | "email" | "social" | "automation" | "bi" | null — groups the
+   *  page (see IntegrationsView.tsx). Untyped/optional on the wire, same
+   *  reasoning as the backend's own IntegrationStatusOut.category. */
+  category: string | null;
   account_email: string | null;
   connected_at: string | null;
   detail: string | null;
@@ -27,14 +31,15 @@ const READ_ONLY_MESSAGE = "Integraciones no está disponible en el sandbox — c
  *  point is itself worth showing, since it's the same screen a just-
  *  registered account lands on. */
 const DEMO_INTEGRATIONS: IntegrationStatus[] = [
-  { provider: "gmail", label: "Gmail", connected: false, scope: "organization", account_email: null, connected_at: null, detail: null, last_error: null },
-  { provider: "linkedin", label: "LinkedIn", connected: false, scope: "organization", account_email: null, connected_at: null, detail: null, last_error: null },
-  { provider: "salesforce", label: "Salesforce", connected: false, scope: "organization", account_email: null, connected_at: null, detail: null, last_error: null },
+  { provider: "gmail", label: "Gmail", connected: false, scope: "organization", category: "email", account_email: null, connected_at: null, detail: null, last_error: null },
+  { provider: "linkedin", label: "LinkedIn", connected: false, scope: "organization", category: "social", account_email: null, connected_at: null, detail: null, last_error: null },
+  { provider: "salesforce", label: "Salesforce", connected: false, scope: "organization", category: "crm", account_email: null, connected_at: null, detail: null, last_error: null },
   {
     provider: "email",
     label: "Email (SMTP)",
     connected: false,
     scope: "server",
+    category: "email",
     account_email: null,
     connected_at: null,
     detail: "Credencial compartida del servidor, no por cuenta — se configura una sola vez para todo el despliegue.",
@@ -45,6 +50,7 @@ const DEMO_INTEGRATIONS: IntegrationStatus[] = [
     label: "X / Twitter",
     connected: false,
     scope: "server",
+    category: "social",
     account_email: null,
     connected_at: null,
     detail: "Credencial compartida del servidor, no por cuenta — se configura una sola vez para todo el despliegue.",

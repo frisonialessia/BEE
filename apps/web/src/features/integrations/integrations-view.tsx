@@ -21,6 +21,15 @@ import type { IntegrationStatus, OAuthProvider, SalesforceImportSummary } from "
 
 const CONNECTED_LABELS: Record<string, string> = { gmail: "Gmail", linkedin: "LinkedIn", salesforce: "Salesforce" };
 
+// One icon per provider, a generic fallback for whatever's added next
+// (see the Integrations view's own comment on why this stays a lookup
+// instead of a per-provider hardcoded JSX block). Categories drive the
+// section a provider's card lands under — see IntegrationStatus.category
+// on the backend (app.api.v1.endpoints.integrations.list_integrations).
+const PROVIDER_ICONS: Record<string, LucideIcon> = { gmail: Mail, linkedin: Users, salesforce: Cloud };
+const DEFAULT_PROVIDER_ICON: LucideIcon = Plug;
+const CATEGORY_ORDER = ["crm", "email", "social", "automation", "bi"] as const;
+
 /** Reads the one-time ?connected=<provider> / ?integration_error=... query
  * params left by an OAuth callback redirect (see
  * app.api.v1.endpoints.integrations) and turns them into a toast, then
@@ -238,10 +247,19 @@ export function IntegrationsView() {
   const canManage = isDemo || user?.role === "owner" || user?.role === "admin";
   const { data: result, isLoading } = useIntegrations();
   const statuses = result?.data ?? [];
-  const gmail = statuses.find((s) => s.provider === "gmail");
-  const linkedin = statuses.find((s) => s.provider === "linkedin");
-  const salesforce = statuses.find((s) => s.provider === "salesforce");
+  const orgProviders = statuses.filter((s) => s.scope === "organization");
   const serverChannels = statuses.filter((s) => s.scope === "server");
+
+  // Grouped by category (falling back to a single "otras" bucket for
+  // anything uncategorized) instead of three hand-picked provider blocks
+  // — this is the actual point of the redesign: a 4th/5th CRM connector
+  // (see the roadmap this shipped alongside) needs a new entry in
+  // list_integrations, never a new JSX block here.
+  const categorized = CATEGORY_ORDER.map((category) => ({
+    category,
+    providers: orgProviders.filter((s) => s.category === category),
+  })).filter((group) => group.providers.length > 0);
+  const uncategorized = orgProviders.filter((s) => !CATEGORY_ORDER.includes(s.category as (typeof CATEGORY_ORDER)[number]));
 
   return (
     <div>
@@ -262,40 +280,40 @@ export function IntegrationsView() {
         </div>
       ) : (
         <div className="space-y-6">
-          {gmail && (
-            <OAuthProviderRow
-              provider="gmail"
-              label="Gmail"
-              icon={Mail}
-              status={gmail}
-              canManage={canManage}
-              connectedCopy={(account) => t("gmail.connectedCopy", { account })}
-              disconnectedCopy={t("gmail.disconnectedCopy")}
-            />
-          )}
-          {linkedin && (
-            <OAuthProviderRow
-              provider="linkedin"
-              label="LinkedIn"
-              icon={Users}
-              status={linkedin}
-              canManage={canManage}
-              connectedCopy={(account) => t("linkedin.connectedCopy", { account })}
-              disconnectedCopy={t("linkedin.disconnectedCopy")}
-            />
-          )}
-          {salesforce && (
-            <OAuthProviderRow
-              provider="salesforce"
-              label="Salesforce"
-              icon={Cloud}
-              status={salesforce}
-              canManage={canManage}
-              connectedCopy={(account) => t("salesforce.connectedCopy", { account })}
-              disconnectedCopy={t("salesforce.disconnectedCopy")}
-            >
-              {canManage && <SalesforceImportButton />}
-            </OAuthProviderRow>
+          {[...categorized, ...(uncategorized.length > 0 ? [{ category: null, providers: uncategorized }] : [])].map(
+            ({ category, providers }) => (
+              <section key={category ?? "other"} className="space-y-3">
+                <p className="bee-eyebrow">
+                  {category ? t(`categories.${category}`) : t("categories.other")}
+                </p>
+                {providers.map((status) => {
+                  const provider = status.provider as OAuthProvider;
+                  const Icon = PROVIDER_ICONS[status.provider] ?? DEFAULT_PROVIDER_ICON;
+                  return (
+                    <OAuthProviderRow
+                      key={status.provider}
+                      provider={provider}
+                      label={status.label}
+                      icon={Icon}
+                      status={status}
+                      canManage={canManage}
+                      connectedCopy={(account) =>
+                        t.has(`${status.provider}.connectedCopy`)
+                          ? t(`${status.provider}.connectedCopy`, { account })
+                          : t("genericConnectedCopy", { label: status.label, account })
+                      }
+                      disconnectedCopy={
+                        t.has(`${status.provider}.disconnectedCopy`)
+                          ? t(`${status.provider}.disconnectedCopy`)
+                          : t("genericDisconnectedCopy", { label: status.label })
+                      }
+                    >
+                      {status.provider === "salesforce" && canManage && <SalesforceImportButton />}
+                    </OAuthProviderRow>
+                  );
+                })}
+              </section>
+            ),
           )}
           {!canManage && <p className="bee-caption">{t("manageNotice")}</p>}
 

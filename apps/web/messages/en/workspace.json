@@ -243,6 +243,16 @@
     "redirecting": "Redirecting…",
     "connectPrefix": "Connect {label}",
     "defaultAccountLabel": "this account",
+    "categories": {
+      "crm": "CRM",
+      "email": "Email",
+      "social": "Social",
+      "automation": "Automation",
+      "bi": "Reporting & BI",
+      "other": "Other"
+    },
+    "genericConnectedCopy": "{label} connected as {account}.",
+    "genericDisconnectedCopy": "Connect your {label} account.",
     "gmail": {
       "disconnectedCopy": "Connect your Gmail account so sequences send emails from your own inbox.",
       "connectedCopy": "Sequences send emails from {account}, not a shared server."
