@@ -10,6 +10,7 @@ import {
   Plug,
   Radio,
   Scale,
+  Settings,
   ShieldCheck,
   SlidersHorizontal,
   Target,
@@ -79,6 +80,21 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/dashboard/integrations", icon: Plug, labelKey: "integrations" },
       { href: "/dashboard/resilience", icon: ShieldCheck, labelKey: "resilience" },
     ],
+  },
+  {
+    // Ungrouped, like "Resumen" above — but trailing, not leading: this
+    // renders last, right above DashboardRail's own collapse toggle /
+    // mobile language switcher, the conventional "settings pinned at the
+    // bottom, separate from content nav" spot. Team (members, roles,
+    // autopilot, federated intelligence, quotas, outbound webhooks,
+    // delete-account) was previously reachable ONLY from AccountMenu's
+    // dropdown in the header — real, frequently-needed configuration
+    // buried one extra click behind an avatar, unlike every other page
+    // in this app. AccountMenu keeps its own "Equipo" shortcut too (a
+    // second, harmless entry point to the same page, same as most SaaS
+    // apps); this is the fix for discoverability, not a replacement.
+    groupKey: null,
+    items: [{ href: "/dashboard/team", icon: Settings, labelKey: "team" }],
   },
 ];
 

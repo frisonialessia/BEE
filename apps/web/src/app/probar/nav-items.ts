@@ -5,8 +5,18 @@ import type { NavGroup } from "@/lib/nav-items";
  * same labels, same grouping — someone moving from the sandbox to a real
  * account should recognize the menu instantly), just every href rewritten
  * from `/dashboard/...` to `/probar/...`. Kept as a derived mapping, not a
- * hand-copied list, so the two navs can never drift out of sync. */
-export const PROBAR_NAV_GROUPS: NavGroup[] = NAV_GROUPS.map((group) => ({
+ * hand-copied list, so the two navs can never drift out of sync.
+ *
+ * Team is dropped entirely, not just left unsimulated like the sections
+ * PROBAR_LIVE_SECTIONS below documents — there is no sandbox account, team,
+ * or set of members to manage, so unlike Control/Resiliencia/Red/Voz de
+ * marca (real infrastructure state a demo can honestly say it isn't
+ * simulating) there's nothing an honest /probar/team placeholder would
+ * even be a placeholder *for*. Same reasoning already applies to
+ * "assistant", which was never in NAV_GROUPS to begin with. */
+export const PROBAR_NAV_GROUPS: NavGroup[] = NAV_GROUPS.filter(
+  (group) => !group.items.some((item) => item.href === "/dashboard/team"),
+).map((group) => ({
   ...group,
   items: group.items.map((item) => ({
     ...item,
