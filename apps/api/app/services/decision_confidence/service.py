@@ -1,4 +1,10 @@
-"""ObservabilityService — AI confidence scoring and manual review flagging.
+"""DecisionConfidenceService — AI confidence scoring and manual review flagging.
+
+Formerly ``DecisionConfidenceService`` — renamed because it collides with actual
+infra observability (tracing/metrics, see ``app.core.otel``) in a way that
+misleads anyone asking "does BEE have observability?" This module has
+nothing to do with tracing a request through the system; it scores how
+much BEE itself trusts a *decision* it just made.
 
 Every strategy that BEE generates gets a ``confidence_score`` (0-1) that
 quantifies how reliable the battlecard is. When confidence falls below 0.80,
@@ -7,20 +13,21 @@ badge on the battlecard before any action is permitted.
 
 How confidence is calculated
 -----------------------------
-The score is a weighted combination of signals:
+The score is a weighted combination of signals (weights as actually
+implemented in ``_compute_score`` below):
 
-* **Generator reliability** (40% weight): rule-based generators are
+* **Generator reliability** (50% weight): rule-based generators are
   deterministic but templated (0.85); future LLM generators derive their
   score from model uncertainty / perplexity metrics.
 
-* **Battlecard completeness** (30% weight): all three CEO fields must be
+* **Battlecard completeness** (35% weight): all three CEO fields must be
   non-empty and of meaningful length. Short or missing fields reduce confidence.
 
-* **Hint alignment** (15% weight): when the chosen channel/playbook matches
+* **Hint alignment** (8% weight): when the chosen channel/playbook matches
   the top success hint, confidence increases slightly — historical data
   corroborates the recommendation.
 
-* **Market insight support** (15% weight): when an active market insight
+* **Market insight support** (7% weight): when an active market insight
   supports this signal type and industry, confidence increases.
 
 LLM integration path
@@ -51,7 +58,7 @@ GENERATOR_BASE_SCORES: dict[str, float] = {
 DEFAULT_GENERATOR_SCORE = 0.80
 
 
-class ObservabilityService:
+class DecisionConfidenceService:
     """Scores strategy confidence and sets manual review flags.
 
     Stateless — no DB dependency. Called by ``StrategyGeneratorService``

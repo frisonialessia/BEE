@@ -13,7 +13,7 @@ Responsibilities
 3. Build an :class:`~app.services.strategy_generator.base.EnrichmentContext`
    injected with all three data sources.
 4. Find the highest-priority generator that supports the context and run it.
-5. Score the resulting strategy via :class:`~app.services.observability.ObservabilityService`
+5. Score the resulting strategy via :class:`~app.services.decision_confidence.DecisionConfidenceService`
    to set ``confidence_score`` and ``manual_review_required``.
 6. Write the enriched strategy back to the ``Opportunity`` row.
 7. Promote the opportunity to ``READY_TO_ACTION`` iff enrichment succeeded.
@@ -42,8 +42,8 @@ from app.models.base import NEW_LOGO, OpportunityStatus, SignalType
 from app.models.opportunity import Opportunity
 from app.models.signal import Signal
 from app.schemas.strategy import StrategySchema
+from app.services.decision_confidence import DecisionConfidenceService
 from app.services.feedback_loop import FeedbackLoopService
-from app.services.observability import ObservabilityService
 from app.services.strategy_generator.base import EnrichmentContext
 from app.services.strategy_generator.registry import get_strategy_generators
 
@@ -51,7 +51,7 @@ logger = get_logger(__name__)
 
 
 class StrategyGeneratorService:
-    """Orchestrates strategy generation with adaptive memory, market context, and observability."""
+    """Orchestrates strategy generation with adaptive memory, market context, and decision-confidence scoring."""
 
     def __init__(
         self,
@@ -61,7 +61,7 @@ class StrategyGeneratorService:
     ) -> None:
         self.session = session
         self._feedback = feedback_service or FeedbackLoopService(session)
-        self._observability = ObservabilityService()
+        self._decision_confidence = DecisionConfidenceService()
         # Defaults to a real TrendAnalyst, same as _feedback above — this
         # class's own docstring documents both as auto-injecting into every
         # new strategy "no code changes required", but until now this
@@ -95,8 +95,8 @@ class StrategyGeneratorService:
             )
             return False
 
-        # Apply observability scoring (sets confidence_score + manual_review_required).
-        strategy = self._observability.score_and_flag(
+        # Apply decision-confidence scoring (sets confidence_score + manual_review_required).
+        strategy = self._decision_confidence.score_and_flag(
             strategy,
             generator_name=strategy.generator,
             success_hints=ctx.success_hints,

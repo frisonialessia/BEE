@@ -2,7 +2,7 @@
 
 Covers:
 * AgentOrchestrator — state machine, security enforcement, polling endpoints
-* ObservabilityService — confidence scoring + manual review flagging
+* DecisionConfidenceService — confidence scoring + manual review flagging
 * TacticVariants (A/B testing) — variant creation, arm assignment, outcome tracking
 * TrendAnalyst — aggregate signal pattern detection
 * DataValidator — lead freshness auditing
@@ -42,7 +42,7 @@ from app.schemas.orchestrator import (
 from app.schemas.strategy import StrategySchema, TimingWindow
 from app.schemas.variants import ActiveVariantRef
 from app.services.data_validator.service import DataValidator
-from app.services.observability.service import CONFIDENCE_THRESHOLD, ObservabilityService
+from app.services.decision_confidence.service import CONFIDENCE_THRESHOLD, DecisionConfidenceService
 from app.services.omnichannel.gateway import OmnichannelGateway
 from app.services.orchestrator.service import AgentOrchestrator
 
@@ -355,19 +355,19 @@ class TestOrchestratorEndpoints:
         assert len(resp.json()) == 1
 
 
-# ── ObservabilityService tests ─────────────────────────────────────────────────
+# ── DecisionConfidenceService tests ─────────────────────────────────────────────────
 
 
-class TestObservabilityService:
+class TestDecisionConfidenceService:
     def test_complete_rule_based_strategy_above_threshold(self):
-        svc = ObservabilityService()
+        svc = DecisionConfidenceService()
         strategy = _make_strategy()
         result = svc.score_and_flag(strategy, generator_name="funding_strategy")
         assert result.confidence_score >= CONFIDENCE_THRESHOLD
         assert not result.manual_review_required
 
     def test_stub_strategy_with_short_fields_reduces_score(self):
-        svc = ObservabilityService()
+        svc = DecisionConfidenceService()
         strategy = _make_strategy(
             pain_point="Short.",
             closing_argument="Ok.",
@@ -377,14 +377,14 @@ class TestObservabilityService:
         assert result.confidence_score < 0.90
 
     def test_generic_generator_scores_lower(self):
-        svc = ObservabilityService()
+        svc = DecisionConfidenceService()
         strategy = _make_strategy()
         result = svc.score_and_flag(strategy, generator_name="generic_strategy")
         # generic_strategy base is 0.55 → overall score below a specialized generator
         assert result.confidence_score < 0.85
 
     def test_manual_review_triggered_below_threshold(self):
-        svc = ObservabilityService()
+        svc = DecisionConfidenceService()
         strategy = _make_strategy(
             pain_point="x",
             closing_argument="y",
@@ -395,7 +395,7 @@ class TestObservabilityService:
             assert result.manual_review_required
 
     def test_aligned_hint_boosts_score(self):
-        svc = ObservabilityService()
+        svc = DecisionConfidenceService()
         strategy = _make_strategy(channel="email", playbook="post_funding_outreach")
         hint = SuccessHint(
             playbook="post_funding_outreach",
@@ -409,7 +409,7 @@ class TestObservabilityService:
         assert result.confidence_score >= 0.82
 
     def test_market_insight_boosts_score(self):
-        svc = ObservabilityService()
+        svc = DecisionConfidenceService()
         strategy = _make_strategy()
         insights = [
             MarketInsightRef(
@@ -423,7 +423,7 @@ class TestObservabilityService:
         assert result.confidence_score >= 0.82
 
     def test_score_clamped_to_0_1(self):
-        svc = ObservabilityService()
+        svc = DecisionConfidenceService()
         strategy = _make_strategy()
         result = svc.score_and_flag(strategy)
         assert 0.0 <= result.confidence_score <= 1.0

@@ -47,7 +47,7 @@ class AutopilotConfig(TimestampMixin, table=True):
 
     # Only opportunities with strategy.confidence_score at or above this bar
     # are eligible for auto-approval. 0.9 is deliberately more conservative
-    # than ObservabilityService's 0.80 manual_review_required bar — that
+    # than DecisionConfidenceService's 0.80 manual_review_required bar — that
     # threshold decides "does a human need to LOOK at this", this one
     # decides "can a human SKIP looking at this", a strictly higher bar.
     confidence_threshold: float = Field(default=0.9, nullable=False)

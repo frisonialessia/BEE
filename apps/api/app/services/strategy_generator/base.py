@@ -167,7 +167,7 @@ class EnrichmentContext:
     # similar context, or to explicitly flag the resulting strategy for
     # human review when a generator recommends it anyway. Every consumer
     # (rule_based.py's priority chain, the LLM system prompt, and
-    # ObservabilityService's manual_review_required backstop) enforces this.
+    # DecisionConfidenceService's manual_review_required backstop) enforces this.
     # Empty list = no similar losses yet, or none close enough to be useful.
     cautionary_patterns: list[dict] = field(default_factory=list)
 
@@ -204,7 +204,7 @@ class EnrichmentContext:
 
         The single shared check every consumer of ``cautionary_patterns``
         uses — ``rule_based.py``'s selection chain and
-        ``ObservabilityService``'s manual-review backstop both call this
+        ``DecisionConfidenceService``'s manual-review backstop both call this
         instead of re-implementing the match/threshold logic. ``min_score``
         mirrors the 0.40 bar ``rule_based.py`` already uses for treating a
         similar-win match as reliable, so a cautionary match is held to the

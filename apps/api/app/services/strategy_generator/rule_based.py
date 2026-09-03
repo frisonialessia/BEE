@@ -79,7 +79,7 @@ def _apply_hints_and_variant(
     is never second-guessed this way — overriding an active A/B experiment
     would corrupt its data, so a variant's config is always honored as-is.
     If every tier is cautioned, the defaults are still returned (there is
-    nothing else to fall back to) — ObservabilityService's
+    nothing else to fall back to) — DecisionConfidenceService's
     manual_review_required check is the backstop for that case.
     """
     # 1. A/B variant overrides take highest priority to ensure clean experiment data.

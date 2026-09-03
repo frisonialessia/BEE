@@ -449,7 +449,7 @@ class FeedbackLoopService:
         these documents back, never ``_query_similar_wins`` — a loss is a
         warning to weigh against a recommendation, not a template to copy.
         Every consumer of ``EnrichmentContext.cautionary_patterns`` (rule-
-        based generators, the LLM prompt, ``ObservabilityService``) is
+        based generators, the LLM prompt, ``DecisionConfidenceService``) is
         required to treat a match as a reason to reconsider or flag for
         human review, never as a reason to imitate the losing play.
 

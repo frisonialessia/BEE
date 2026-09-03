@@ -351,7 +351,7 @@ def test_all_builtin_generators_registered():
 # Regression test: every rule-based generator used to hardcode
 # generator="rule_based" in its StrategySchema literally, instead of
 # generator=self.name — so StrategyGeneratorService.enrich() always called
-# ObservabilityService.score_and_flag(generator_name="rule_based"), and the
+# DecisionConfidenceService.score_and_flag(generator_name="rule_based"), and the
 # per-generator entries in GENERATOR_BASE_SCORES ("funding_strategy": 0.85,
 # "generic_strategy": 0.55, ...) were unreachable dead code: EVERY rule-based
 # strategy — including GenericStrategyGenerator's safety-net battlecard —
