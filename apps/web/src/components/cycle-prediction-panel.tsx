@@ -11,6 +11,7 @@ import { formatLongDate } from "@/lib/i18n/format";
 import { getSignalTypeLabels } from "@/lib/format";
 import type { SignalType } from "@/types/domain";
 import type { CycleSignalRecalibration } from "@/types/extended";
+import { LiveBadge } from "@/components/live-badge";
 
 const CONFIDENCE_KEYS = ["low", "medium", "high"] as const;
 
@@ -54,7 +55,7 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
           <Clock className="size-4 stroke-[1.5] text-muted-foreground" />
           {t("heading")}
         </h3>
-        {result?.live === false && <Badge variant="warning">{t("demoData")}</Badge>}
+        <LiveBadge live={result?.live !== false} hideLive />
       </div>
 
       {!prediction.available ? (

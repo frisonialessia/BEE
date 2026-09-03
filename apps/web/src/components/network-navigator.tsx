@@ -4,8 +4,8 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import type { IntroPath, NetworkConnection, NetworkQueryResult, NetworkStats } from "@/lib/types";
 import { addNetworkConnection, findIntroPaths, getNetworkConnections, getNetworkStats } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LiveBadge } from "@/components/live-badge";
 
 // BEE has no green/blue/purple scales of its own — success maps to
 // var(--success) (chart-5, magenta), caution to var(--warning) (chart-1,
@@ -106,7 +106,6 @@ function PathCard({ path }: { path: IntroPath }) {
 
 export function NetworkNavigatorPanel() {
   const t = useTranslations("probarNetworkBrandControl.network.panel");
-  const tLive = useTranslations("crm.board");
   const [connections, setConnections] = useState<NetworkConnection[]>([]);
   const [stats, setStats] = useState<NetworkStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -258,7 +257,7 @@ export function NetworkNavigatorPanel() {
       <div className="flex items-center justify-between gap-2">
         <h3 className="bee-card-title">{t("connectionsTitle", { count: connections.length })}</h3>
         <div className="flex items-center gap-2">
-          <Badge variant={live ? "success" : "warning"}>{live ? tLive("live") : tLive("demo")}</Badge>
+          <LiveBadge live={live} />
           <button
             onClick={() => setShowAdd((v) => !v)}
             className="bee-btn-ghost bee-btn-ghost--dashed"

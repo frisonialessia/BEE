@@ -10,6 +10,7 @@ import { MobileNavProvider } from "@/components/dashboard/mobile-nav-context";
 import { MobileNavToggle } from "@/components/dashboard/mobile-nav-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
+import { Badge } from "@/components/ui/badge";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
 import { TourOverlay } from "@/features/tour/tour-overlay";
@@ -52,6 +53,7 @@ function TourTriggerButton() {
  */
 export default function ProbarLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations("common.probarBanner");
+  const tBadge = useTranslations("common.liveBadge");
   const scrollRef = useScrollResetOnNavigate<HTMLDivElement>();
 
   return (
@@ -89,7 +91,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
                 <Link href="/probar" aria-label={t("homeAria")} className="flex items-center gap-3">
                   <Logo />
                 </Link>
-                <span className="bee-caption hidden sm:inline">{t("sandboxLabel")}</span>
+                <Badge variant="warning" className="hidden sm:inline-flex">{tBadge("demo")}</Badge>
                 <TourTriggerButton />
                 <LanguageSwitcher variant="subtle" className="hidden sm:inline-flex" />
               </header>

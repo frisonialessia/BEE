@@ -5,12 +5,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { CompetitorBreakdown } from "@/components/win-loss/competitor-breakdown";
 import { LossReasonChart } from "@/components/win-loss/loss-reason-chart";
 import { MeddicCorrelationChart } from "@/components/win-loss/meddic-correlation-chart";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import type { Locale } from "@/i18n/locales";
 import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeWinLoss } from "@/lib/win-loss";
+import { LiveBadge } from "@/components/live-badge";
 
 /** Ganado/Perdido — por qué se ganan y se pierden los deals, no solo cuántos.
  *  Todo calculado en el cliente a partir de las oportunidades ya cargadas
@@ -41,9 +41,7 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
             </div>
           )}
           {showHeader && (
-            <Badge className="ml-auto" variant={live ? "success" : "warning"}>
-              {live ? t("liveBadge") : t("demoBadge")}
-            </Badge>
+            <LiveBadge live={live} className="ml-auto" />
           )}
         </div>
       </header>

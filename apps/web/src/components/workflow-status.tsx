@@ -12,9 +12,9 @@ import {
 } from "lucide-react";
 
 import { getWorkflowStatus, getWorkflowTasks } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { WorkflowStatus, WorkflowTask } from "@/lib/types";
+import { LiveBadge } from "@/components/live-badge";
 
 const STATUS_ICON: Record<string, React.ReactNode> = {
   mock_dispatched: <Layers className="size-3 stroke-[1.25] text-muted-foreground" />,
@@ -105,7 +105,7 @@ export function WorkflowStatusPanel() {
           <p className="bee-caption mt-1">{t("subtitle")}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
+          <LiveBadge live={live} />
           {status && (
             <span className="text-xs text-muted-foreground">
               {status.total_tasks} {t("totalSuffix")}

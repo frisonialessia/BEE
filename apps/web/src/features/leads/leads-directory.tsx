@@ -24,6 +24,7 @@ import { useIsDemoMode } from "@/lib/demo/mode";
 import { formatRelativeTime } from "@/lib/i18n/format";
 import { getLeadStatusLabels, getValidationFlagLabels, scoreVariant } from "@/lib/format";
 import type { Lead, LeadStatus } from "@/types/domain";
+import { LiveBadge } from "@/components/live-badge";
 
 type SortKey = "score_desc" | "score_asc" | "recent" | "name";
 
@@ -195,7 +196,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
             </div>
           )}
           <div className="ml-auto flex items-center gap-2">
-            {showHeader && <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>}
+            {showHeader && <LiveBadge live={live} />}
             <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost inline-flex items-center gap-2">
               <Upload className="size-3.5" />
               {t("importButton")}

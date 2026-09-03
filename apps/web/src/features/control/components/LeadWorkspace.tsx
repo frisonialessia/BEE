@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLeadBoard } from "@/hooks/queries/use-lead-board";
 import { KANBAN_COLUMNS, groupLeadCards } from "@/lib/control/lead-board";
+import { LiveBadge } from "@/components/live-badge";
 
 /** Espacio de leads — resumen compacto del pipeline (no un Kanban completo:
  *  ese es el trabajo dedicado de CRM, con drag-and-drop real). Esto es
@@ -33,9 +34,7 @@ export function LeadWorkspace() {
           <p className="bee-eyebrow">{t("eyebrow")}</p>
           <h2 className="mt-1 bee-card-title">{t("title")}</h2>
         </div>
-        {result?.live === false && (
-          <span className="bee-micro">{t("demoOffline")}</span>
-        )}
+        <LiveBadge live={result?.live !== false} hideLive />
       </div>
 
       {isLoading ? (

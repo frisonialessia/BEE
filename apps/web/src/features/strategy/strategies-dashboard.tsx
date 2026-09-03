@@ -8,7 +8,6 @@ import { PaginationBar } from "@/components/dashboard/pagination-bar";
 import { OpportunityCard } from "@/components/opportunity-card";
 import { MarketInsightsList } from "@/components/strategy/market-insights-list";
 import { SuccessPatternsList } from "@/components/strategy/success-patterns-list";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
@@ -16,6 +15,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import { useSuccessPatterns } from "@/hooks/queries/use-feedback";
 import { useMarketInsights } from "@/hooks/queries/use-market-insights";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
+import { LiveBadge } from "@/components/live-badge";
 
 /** Estrategias y battlecards — plays listos para el CEO. */
 export function StrategiesDashboard() {
@@ -47,9 +47,7 @@ export function StrategiesDashboard() {
               {t("subtitle")}
             </p>
           </div>
-          <Badge variant={live ? "success" : "warning"}>
-            {live ? t("live") : t("demo")}
-          </Badge>
+          <LiveBadge live={live} />
         </div>
       </header>
 

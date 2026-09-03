@@ -7,7 +7,6 @@ import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-he
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
 import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-heatmap";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SignalHexMap } from "@/features/control/components/SignalHexMap";
 import { CriticalAccountsDigest } from "@/features/dashboard/critical-accounts-digest";
@@ -20,6 +19,7 @@ import { useDashboardBase } from "@/lib/demo/mode";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
+import { LiveBadge } from "@/components/live-badge";
 
 /**
  * Resumen — the analytics tool: KPI strip, enriched battlecards, and the
@@ -30,14 +30,9 @@ import { useUsers } from "@/hooks/queries/use-users";
  */
 export function DashboardOverview({
   headerAction,
-  statusLabel,
 }: {
-  /** Extra control rendered next to the status badge — the sandbox puts its
-   *  "Simula tu empresa" form here so /probar is this exact page, not a copy. */
+  /** Extra control rendered next to the status badge, when a host page needs one. */
   headerAction?: React.ReactNode;
-  /** Overrides the live/demo badge text (the sandbox says "datos de ejemplo",
-   *  not "API desconectada", which would read as a failure there). */
-  statusLabel?: string;
 } = {}) {
   const t = useTranslations("dashboardOverview.overview");
   const tFeed = useTranslations("dashboardOverview.decisionFeed");
@@ -91,9 +86,7 @@ export function DashboardOverview({
             <p className="bee-caption mt-1">{t("subtitle")}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={live ? "success" : "warning"}>
-              {statusLabel ?? (live ? t("statusLive") : t("statusDemo"))}
-            </Badge>
+            <LiveBadge live={live} />
             {headerAction}
           </div>
         </div>

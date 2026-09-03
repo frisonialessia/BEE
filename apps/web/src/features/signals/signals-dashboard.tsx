@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { SignalCard } from "@/components/signal-card";
 import { SignalVolumeChart } from "@/components/signals/signal-volume-chart";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MergedPageTabs } from "@/components/merged-page-tabs";
 import { PriorityMatrixView } from "@/features/priority/priority-matrix-view";
@@ -13,6 +12,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import { useSignals } from "@/hooks/queries/use-signals";
 import type { Locale } from "@/i18n/locales";
 import { computeDailySignalVolume } from "@/lib/signal-trends";
+import { LiveBadge } from "@/components/live-badge";
 
 /** Panel de señales — triggers de mercado del Signal Engine — con
  *  Priorización (fit × intención) como segunda pestaña: Priorización se
@@ -41,9 +41,7 @@ export function SignalsDashboard() {
               {t("subtitle")}
             </p>
           </div>
-          <Badge variant={live ? "success" : "warning"}>
-            {live ? t("live") : t("demo")}
-          </Badge>
+          <LiveBadge live={live} />
         </div>
 
         <div className="mt-4 flex gap-4 text-sm text-muted-foreground">

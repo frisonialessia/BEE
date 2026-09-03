@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { PriorityMatrixChart, QUADRANT_COLOR } from "@/components/priority/priority-matrix-chart";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IcpSettingsForm } from "@/features/priority/icp-settings-form";
 import { useCompanies } from "@/hooks/queries/use-companies";
@@ -16,6 +15,7 @@ import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { EMPTY_ICP_CRITERIA } from "@/lib/api/organizations";
 import { computePriorities, isIcpConfigured, type PriorityQuadrant } from "@/lib/icp";
+import { LiveBadge } from "@/components/live-badge";
 
 const QUADRANT_ORDER: PriorityQuadrant[] = ["priority", "nurture", "opportunistic", "deprioritize"];
 
@@ -80,7 +80,7 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
             </div>
           )}
           <div className="ml-auto flex items-center gap-2">
-            {showHeader && <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>}
+            {showHeader && <LiveBadge live={live} />}
             <button
               type="button"
               onClick={() => setEditingIcp((v) => !v)}

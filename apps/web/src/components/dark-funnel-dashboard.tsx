@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { DarkFunnelSummary, HotLeadScore } from "@/lib/types";
 import { getDarkFunnelHotLeads, getDarkFunnelSummary, ingestDarkFunnelSignal } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
+import { LiveBadge } from "@/components/live-badge";
 
 // BEE's palette has no red — the heat gradient (hottest → coolest) maps onto
 // the chart accents instead: magenta (5, "hot"/success everywhere else in
@@ -235,7 +235,7 @@ export function DarkFunnelDashboard() {
           ))}
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demo")}</Badge>
+          <LiveBadge live={live} />
           <button
             onClick={() => setShowSimulate((v) => !v)}
             className="bee-btn-ghost bee-btn-ghost--dashed"

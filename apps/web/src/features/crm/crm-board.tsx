@@ -25,6 +25,7 @@ import {
 import { cn } from "@/lib/utils";
 import { ApiError } from "@/types/api";
 import type { Opportunity } from "@/types/domain";
+import { LiveBadge } from "@/components/live-badge";
 
 const CHART_ACCENT: Record<CrmStage, string> = {
   detected: "bee-kanban-card--chart-3",
@@ -310,7 +311,7 @@ export function CrmBoard() {
 
   const header = (
     <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
-      <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demo")}</Badge>
+      <LiveBadge live={live} />
       <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary text-xs">
         {t("newOpportunity")}
       </button>

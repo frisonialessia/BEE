@@ -6,7 +6,6 @@ import { ForecastBarChart } from "@/components/forecast/forecast-bar-chart";
 import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
 import { ScenarioSimulatorPanel } from "@/components/forecast/scenario-simulator-panel";
 import { TrendsChart } from "@/components/forecast/trends-chart";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MergedPageTabs } from "@/components/merged-page-tabs";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
@@ -18,6 +17,7 @@ import { stripOpportunityTitlePrefix } from "@/lib/format";
 import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeForecast, qualificationScore } from "@/lib/forecast";
 import { computeMonthlyTrends } from "@/lib/trends";
+import { LiveBadge } from "@/components/live-badge";
 
 /** Pronóstico de ingresos — pipeline ponderado por probabilidad de cierre,
  *  deals en riesgo, el simulador de escenarios "qué pasaría si", y
@@ -52,7 +52,7 @@ export function ForecastView() {
             <h1 className="bee-display">{t("forecast.title")}</h1>
             <p className="bee-caption mt-1">{t("forecast.subtitle")}</p>
           </div>
-          <Badge variant={live ? "success" : "warning"}>{live ? t("liveBadge") : t("demoBadge")}</Badge>
+          <LiveBadge live={live} />
         </div>
       </header>
 

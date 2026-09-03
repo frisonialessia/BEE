@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
 import { CompanyDuplicatesPanel } from "@/components/dedup/company-duplicates-panel";
@@ -16,6 +15,7 @@ import { useCompanies, useCreateCompany } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useIsDemoMode } from "@/lib/demo/mode";
+import { LiveBadge } from "@/components/live-badge";
 
 function NewCompanyForm({ onDone }: { onDone: () => void }) {
   const t = useTranslations("companiesLeads.companiesList.newCompanyForm");
@@ -143,7 +143,7 @@ export function CompaniesList() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
+            <LiveBadge live={live} />
             {!demo && (
               <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary">
                 {t("newCompanyButton")}

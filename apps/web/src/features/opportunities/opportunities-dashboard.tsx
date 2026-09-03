@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 
 import { BattlecardView } from "@/components/battlecard";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
@@ -16,6 +15,7 @@ import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useUsers } from "@/hooks/queries/use-users";
 import { stripOpportunityTitlePrefix } from "@/lib/format";
+import { LiveBadge } from "@/components/live-badge";
 
 /** Oportunidades y battlecards — plays listos para el CEO.
  *
@@ -62,7 +62,7 @@ export function OpportunitiesDashboard({ showHeader = true }: { showHeader?: boo
             </div>
           )}
           <div className="ml-auto flex items-center gap-2">
-            {showHeader && <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>}
+            {showHeader && <LiveBadge live={live} />}
             <ExportCsvButton
               rows={exportRows}
               filename={t("exportFilename")}

@@ -74,5 +74,9 @@
   },
   "teamStrip": {
     "members": "{count, plural, one {# en el equipo} other {# en el equipo}}"
+  },
+  "liveBadge": {
+    "live": "En vivo",
+    "demo": "Datos demo"
   }
 }

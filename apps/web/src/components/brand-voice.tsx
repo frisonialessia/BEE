@@ -25,6 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { BrandFragment, BrandVoicePreviewResult, ChannelStatus, VoiceProfile } from "@/lib/types";
+import { LiveBadge } from "@/components/live-badge";
 
 const CHANNEL_ICONS: Record<string, string> = {
   email: "✉",
@@ -34,7 +35,6 @@ const CHANNEL_ICONS: Record<string, string> = {
 
 export function BrandVoicePanel() {
   const t = useTranslations("probarNetworkBrandControl.brand.panel");
-  const tLive = useTranslations("crm.board");
   const CHANNEL_LABELS: Record<string, string> = {
     email: t("channelLabels.email"),
     linkedin: t("channelLabels.linkedin"),
@@ -213,7 +213,7 @@ export function BrandVoicePanel() {
           <p className="bee-panel__subtitle">{t("subtitle")}</p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <Badge variant={live ? "success" : "warning"}>{live ? tLive("live") : tLive("demo")}</Badge>
+          <LiveBadge live={live} />
           {!profile && (
             <button onClick={() => setShowCreate(true)} className="bee-btn bee-btn--primary">
               {t("setUpVoice")}

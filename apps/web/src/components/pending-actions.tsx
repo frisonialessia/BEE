@@ -10,11 +10,11 @@ import { useLocale, useTranslations } from "next-intl";
 import { CheckCircle, Clock, Mail, ShieldCheck, XCircle } from "lucide-react";
 
 import { approveAction, getPendingActions, rejectAction } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
 import type { PendingAction } from "@/lib/types";
+import { LiveBadge } from "@/components/live-badge";
 
 const ACTION_TYPE_ICONS: Record<string, React.ReactNode> = {
   send_email: <Mail className="size-4 stroke-[1.25]" />,
@@ -195,7 +195,7 @@ export function PendingActionsPanel() {
           <p className="bee-caption mt-1">{t("caption")}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
+          <LiveBadge live={live} />
           {pendingCount > 0 && (
             <span
               className="rounded-sm border border-border px-2 py-1 text-xs font-semibold"
