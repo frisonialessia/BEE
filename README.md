@@ -189,6 +189,10 @@ for it now.
 
 ---
 
+Billing (Stripe) is built and ready but deliberately not connected — see
+`apps/api/README.md`'s "Billing (Stripe) — built, not connected" section.
+Not a priority for the MVP; nothing in the app gates on it.
+
 ## 5. Quickstart
 
 ### Everything at once (recommended)

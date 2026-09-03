@@ -84,6 +84,19 @@ class MyAnalyzer(SignalAnalyzer):
 That is the *entire* integration surface — the engine, endpoints, and DB stay
 untouched.
 
+### Billing (Stripe) — built, not connected
+
+`app/services/billing/` + `app/api/v1/endpoints/billing.py` already implement
+Stripe Checkout, the Customer Portal, and a signature-verified webhook
+(`Organization.stripe_customer_id`/`stripe_subscription_id`/
+`stripe_subscription_status`). **Deliberately not enforcing anything yet** —
+no plan/feature is gated on subscription status, and there's no frontend UI
+to start a checkout. This is intentionally deprioritized for the MVP; "wire
+it into a real pricing page" is a follow-up, not a blocker. To turn it on
+when that's ready: set `STRIPE_API_KEY` + `STRIPE_WEBHOOK_SECRET` (see
+`.env.example`) and register the webhook endpoint in the Stripe dashboard —
+the backend needs nothing further.
+
 ## Quickstart
 
 ```bash
