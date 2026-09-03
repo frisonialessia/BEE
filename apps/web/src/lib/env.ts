@@ -3,6 +3,13 @@ import { z } from "zod";
 const envSchema = z.object({
   NEXT_PUBLIC_API_URL: z.string().url().default("http://localhost:8000"),
   NEXT_PUBLIC_BEE_API_KEY: z.string().optional(),
+  // Product analytics (see src/providers/posthog-provider.tsx) — unset
+  // (the default) means PostHog is never initialized, zero behavior
+  // change and no PostHog account needed to run this app, same "opt-in,
+  // inert unless configured" contract as every backend equivalent
+  // (SENTRY_DSN, OTEL_EXPORTER_OTLP_ENDPOINT).
+  NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
+  NEXT_PUBLIC_POSTHOG_HOST: z.string().url().default("https://us.i.posthog.com"),
 });
 
 export type PublicEnv = z.infer<typeof envSchema>;
@@ -26,5 +33,7 @@ export function getPublicEnv(): PublicEnv {
   return envSchema.parse({
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_BEE_API_KEY: process.env.NEXT_PUBLIC_BEE_API_KEY,
+    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
   });
 }
