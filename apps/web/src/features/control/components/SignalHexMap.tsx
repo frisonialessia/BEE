@@ -118,7 +118,7 @@ export function SignalHexMap({
   const { data: result, isLoading } = useHiveLeads(maxLeads);
   const { data: boardResult } = useLeadBoard(200);
   const { openOpportunity } = useOpportunityDrawer();
-  const leads: HotLeadScore[] = result?.data ?? [];
+  const leads: HotLeadScore[] = useMemo(() => result?.data ?? [], [result?.data]);
 
   const domainToOpportunity = useMemo(() => {
     const map = new Map<string, string>();
@@ -306,7 +306,7 @@ export function SignalHexMap({
       <span className="bee-hex-float" style={{ width: 90, height: 104, top: -30, right: -20, animationDelay: "0s" }} aria-hidden />
       <span className="bee-hex-float" style={{ width: 56, height: 64, bottom: -16, left: 12, animationDelay: "1.4s" }} aria-hidden />
       <span className="bee-hex-float" style={{ width: 40, height: 46, top: "40%", right: 24, animationDelay: "2.6s" }} aria-hidden />
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+      <div className="relative z-[1] mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           {/* Two lines (title + caption), same as every other Resumen
               section header (Embudo de cierre, Dónde eres más fuerte, …) —
@@ -344,11 +344,16 @@ export function SignalHexMap({
           flex-1 parent gives them instead of getting pinned to the prop's
           literal px value with blank space left over underneath. Same
           "roomy container, small drawn content" bug the bar charts had. */}
-      <div className="relative min-h-0 flex-1" style={{ minHeight: height }}>
+      {/* min-w-0 + overflow-hidden: the canvas is a replaced element whose
+          intrinsic width (last measured size, 600px before the first
+          measurement) would otherwise feed back into the card's min-content
+          width — the ResizeObserver then measured *that* inflated width and
+          the hive stayed 600px wide on a 375px phone (see /probar). */}
+      <div className="relative z-[1] min-h-0 w-full min-w-0 flex-1 overflow-hidden" style={{ minHeight: height }}>
         {isLoading ? (
           <Skeleton className="h-full w-full rounded-2xl" />
         ) : leads.length === 0 ? (
-          <div className="flex h-full items-center justify-center rounded-2xl border-2 border-dashed border-border text-sm font-light text-[var(--color-text-muted)]">
+          <div className="absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-dashed border-border px-4 text-center text-sm font-light text-[var(--color-text-muted)]">
             {t("empty")}
           </div>
         ) : (

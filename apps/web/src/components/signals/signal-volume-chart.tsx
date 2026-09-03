@@ -1,5 +1,7 @@
 import { useTranslations } from "next-intl";
 
+import { cn } from "@/lib/utils";
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { DailySignalPoint } from "@/lib/signal-trends";
 
@@ -22,11 +24,11 @@ export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
 
   return (
     <div className="flex items-end gap-1.5 overflow-x-auto pb-1" style={{ height: "var(--bee-chart-h)" }}>
-      {points.map((p) => {
+      {points.map((p, i) => {
         const totalPct = (p.count / maxCount) * 100;
         const hotPct = (p.hotCount / maxCount) * 100;
         return (
-          <div key={p.key} className="flex h-full min-w-8 flex-1 flex-col items-center gap-1">
+          <div key={p.key} className="flex h-full min-w-4 flex-1 flex-col items-center gap-1 sm:min-w-8">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="relative flex w-full flex-1 items-end justify-center rounded-t-[var(--radius-sm)] bg-[var(--color-primary)]/40">
@@ -46,7 +48,12 @@ export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
                   : t("tooltip", { label: p.label, count: p.count })}
               </TooltipContent>
             </Tooltip>
-            <p className="bee-micro">{p.label.split(" ")[0]}</p>
+            {/* 14 day labels don't fit a phone-width card (the row used to
+                scroll sideways with no visible scrollbar, showing 8 of 14
+                days) — every other label below sm, all of them above. */}
+            <p className={cn("bee-micro whitespace-nowrap", i % 2 === 1 && "hidden sm:block")}>
+              {p.label.split(" ")[0]}
+            </p>
           </div>
         );
       })}

@@ -62,7 +62,7 @@ export async function MarketingOrbit() {
               <p className="mt-3 text-xs font-semibold leading-snug tracking-tight text-foreground sm:text-sm">
                 {t(`${card.id}.headline`)}
               </p>
-              <p className="mt-2.5 text-[11px] font-semibold uppercase tracking-wide" style={{ color: card.accent }}>
+              <p className="mt-2.5 text-micro font-semibold uppercase tracking-wide" style={{ color: card.accent }}>
                 {t(`${card.id}.label`)}
               </p>
             </div>

@@ -224,7 +224,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
               </p>
             )}
             {parseError && (
-              <p className="flex items-center gap-1.5 text-[11px] text-[var(--color-chart-2)]">
+              <p className="flex items-center gap-1.5 text-micro text-[var(--color-chart-2)]">
                 <AlertCircle className="size-3.5 shrink-0" />
                 {parseError}
               </p>
@@ -235,7 +235,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
             <section className="bee-bento bee-bento-pad space-y-2">
               <p className="text-xs font-semibold">{t("step3.title")}</p>
               <div className="overflow-x-auto rounded-[var(--radius-md)] border border-border">
-                <table className="w-full text-[11px]">
+                <table className="w-full text-micro">
                   <thead className="bg-[var(--color-muted)]/40 text-left text-muted-foreground">
                     <tr>
                       <th className="px-2 py-1.5 font-medium">{t("step3.headers.name")}</th>
@@ -277,7 +277,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
                 {result.skipped > 0 && ` · ${t("result.skippedRows", { count: result.skipped })}`}
               </p>
               {result.rows.some((r) => r.status === "error") && (
-                <ul className="mt-1 space-y-0.5 text-[11px] text-[var(--color-chart-2)]">
+                <ul className="mt-1 space-y-0.5 text-micro text-[var(--color-chart-2)]">
                   {result.rows
                     .filter((r) => r.status === "error")
                     .slice(0, 10)
@@ -292,7 +292,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
           )}
 
           {importMutation.isError && (
-            <p className="flex items-center gap-1.5 text-[11px] text-[var(--color-chart-2)]">
+            <p className="flex items-center gap-1.5 text-micro text-[var(--color-chart-2)]">
               <AlertCircle className="size-3.5 shrink-0" />
               {t("importError")}
             </p>

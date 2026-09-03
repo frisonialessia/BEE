@@ -158,6 +158,12 @@
   --color-chart-4: var(--color-chart-4);
   --color-chart-5: var(--color-chart-5);
   --font-sans: var(--bee-font);
+  /* `text-micro` utility — the 11px compact size (.bee-micro's font-size,
+     without its muted color) for badges, table headers and inline metadata
+     that carry their own color. Replaces the text-[10px]/text-[11px]
+     arbitrary values that kept reappearing in components. */
+  --text-micro: var(--bee-text-title);
+  --text-micro--line-height: 1.4;
 }
 
 /* ── Typography ─────────────────────────────────────────────────────── */
@@ -1204,6 +1210,12 @@
    interaction, aria-hidden by the component that renders them. */
 .bee-hex-float {
   position: absolute;
+  /* Decoration sits *under* the card's content. Without an explicit
+     stacking order these painted over the header/empty-state text (they
+     are later siblings, so they won each paint tie) — on a phone the
+     top-right hexagon literally covered the last words of the empty
+     state. Content wrappers in SignalHexMap opt into z-index: 1. */
+  z-index: 0;
   clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0% 50%);
   background: color-mix(in srgb, var(--color-chart-4) 16%, transparent);
   border: 1px solid color-mix(in srgb, var(--color-chart-4) 25%, transparent);
@@ -1233,37 +1245,8 @@
   font-weight: 700;
 }
 
-.bee-presence-dot {
-  position: absolute;
-  right: -1px;
-  bottom: -1px;
-  width: 9px;
-  height: 9px;
-  border-radius: 9999px;
-  background: var(--color-chart-1);
-  border: 2px solid var(--color-background);
-}
 
-.bee-cursor {
-  position: fixed;
-  z-index: 30;
-  pointer-events: none;
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  transition: left 3.5s ease-in-out, top 3.5s ease-in-out;
-  opacity: 0.55;
-}
 
-.bee-cursor__label {
-  font-size: 10px;
-  font-weight: 600;
-  padding: 0.125rem 0.5rem;
-  border-radius: 9999px;
-  background: color-mix(in srgb, var(--color-chart-6) 85%, transparent);
-  color: #ffffff;
-  white-space: nowrap;
-}
 
 /* ── Ticker de señales — cinta horizontal en loop, puro CSS ─────────────── */
 

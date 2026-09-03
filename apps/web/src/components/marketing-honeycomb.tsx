@@ -180,7 +180,7 @@ function HexTooltip({
         <>
           <p className="mt-1 text-xs font-medium leading-snug">{lead.company}</p>
           <p className="bee-micro">{lead.domain}</p>
-          <div className="mt-1.5 flex flex-wrap gap-1 text-[10px]">
+          <div className="mt-1.5 flex flex-wrap gap-1 text-micro">
             <span className="rounded-md bg-muted px-1.5 py-0.5">
               {tStages(lead.stage)}
             </span>

@@ -33,7 +33,7 @@ function HandlerIcon({ name }: { name: string }) {
     ready_to_action_notify: "NTF",
   };
   return (
-    <span className="rounded-sm border border-border bg-background px-1 py-0.5 text-[11px] font-medium text-muted-foreground">
+    <span className="rounded-sm border border-border bg-background px-1 py-0.5 text-micro font-medium text-muted-foreground">
       {map[name] ?? name.slice(0, 3).toUpperCase()}
     </span>
   );
@@ -57,7 +57,7 @@ function TaskRow({ task }: { task: WorkflowTask }) {
           </span>
         )}
       </div>
-      <span className="bee-eyebrow text-[11px] normal-case tracking-normal">
+      <span className="bee-eyebrow text-micro normal-case tracking-normal">
         {t.has(`statusLabels.${task.status}`) ? t(`statusLabels.${task.status}`) : task.status}
       </span>
     </div>

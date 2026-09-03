@@ -498,7 +498,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
         {leads.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("contacts.empty")}</p>
         ) : (
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {leads.map((lead) => {
               const hasIssues = lead.validation_flags.length > 0 || lead.stale_risk;
               return (

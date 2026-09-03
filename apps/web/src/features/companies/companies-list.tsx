@@ -181,7 +181,7 @@ export function CompaniesList() {
                 <CompanyDuplicatesPanel />
 
                 {isLoading ? (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <Skeleton key={i} className="h-32" />
                     ))}
@@ -192,7 +192,7 @@ export function CompaniesList() {
                     <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
                   </div>
                 ) : (
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {companies.map((company) => {
             const cardContent = (
               <>

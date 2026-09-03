@@ -60,7 +60,10 @@ export function StrategiesDashboard() {
         </div>
       ) : (
         <Tabs defaultValue="battlecards">
-          <TabsList className="border border-border bg-background">
+          {/* Four triggers don't fit a phone-width row — let the list wrap
+              instead of overflowing the page horizontally (h-9 is pinned by
+              the variant, so the same variant selector releases it). */}
+          <TabsList className="h-auto max-w-full flex-wrap border border-border bg-background group-data-[orientation=horizontal]/tabs:h-auto">
             <TabsTrigger value="battlecards" className="rounded-sm">
               {t("tabBattlecards", { count: battlecards.length })}
             </TabsTrigger>
@@ -89,7 +92,7 @@ export function StrategiesDashboard() {
                   <Bot className="size-3.5" />
                   {t("battlecardsHint")}
                 </div>
-                <div className="grid gap-3 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                   {battlecardPagination.pageItems.map((card, i) => (
                     <button
                       key={card.opportunity_id}
@@ -117,7 +120,7 @@ export function StrategiesDashboard() {
           </TabsContent>
 
           <TabsContent value="pipeline" className="mt-6 space-y-4">
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
               {pipelinePagination.pageItems.map((opp) => (
                 <button
                   key={opp.id}

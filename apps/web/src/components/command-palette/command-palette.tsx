@@ -241,7 +241,7 @@ export function CommandPalette() {
           ) : (
             [...groups.entries()].map(([groupLabel, items]) => (
               <div key={groupLabel} className="mb-1.5 last:mb-0">
-                <p className="px-4 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                <p className="px-4 py-1 text-micro font-semibold uppercase tracking-wide text-muted-foreground/70">
                   {groupLabel}
                 </p>
                 {items.map(({ entry, index }) => {

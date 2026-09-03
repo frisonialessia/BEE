@@ -96,7 +96,7 @@ export function ScenarioSimulatorPanel() {
   const usedDefaultDealValue = result?.supporting_data.used_default_deal_value ?? false;
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div className="space-y-3">
         <div className="bee-bento bee-bento-pad space-y-3">
           <p className="text-xs font-semibold">{t("paramsTitle")}</p>
@@ -185,7 +185,7 @@ export function ScenarioSimulatorPanel() {
           >
             {loading ? t("runningButton") : t("runButton")}
           </button>
-          {error && <p className="text-[11px] text-[var(--color-chart-2)]">{t("errorMessage")}</p>}
+          {error && <p className="text-micro text-[var(--color-chart-2)]">{t("errorMessage")}</p>}
         </div>
       </div>
 
@@ -198,13 +198,13 @@ export function ScenarioSimulatorPanel() {
         ) : (
           <>
             {!result.has_any_historical_data ? (
-              <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-chart-2)] bg-[color-mix(in_srgb,var(--color-chart-2)_15%,var(--color-background))] p-2.5 text-[11px]">
+              <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-chart-2)] bg-[color-mix(in_srgb,var(--color-chart-2)_15%,var(--color-background))] p-2.5 text-micro">
                 <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                 {t("noHistoricalData")}
               </div>
             ) : (
               result.low_data_confidence && (
-                <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[color-mix(in_srgb,var(--warning)_15%,var(--color-background))] p-2.5 text-[11px]">
+                <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[color-mix(in_srgb,var(--warning)_15%,var(--color-background))] p-2.5 text-micro">
                   <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
                   {t("lowConfidence", { count: result.historical_sample_size })}
                 </div>
@@ -257,7 +257,7 @@ export function ScenarioSimulatorPanel() {
                   <ul className="space-y-0.5 text-muted-foreground">
                     {result.risk_factors.map((r, i) => (
                       <li key={i}>
-                        <Badge variant="warning" className="mr-1 text-[11px]">
+                        <Badge variant="warning" className="mr-1 text-micro">
                           !
                         </Badge>
                         {r}

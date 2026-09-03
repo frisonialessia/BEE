@@ -156,7 +156,7 @@ function InviteUserForm({ teams }: { teams: TeamOut[] }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
       <input
         required
         type="text"
@@ -501,7 +501,7 @@ function MyProfileSection() {
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="space-y-1 text-xs">
               <span className="bee-caption">{t("nameLabel")}</span>
               <input
@@ -560,7 +560,7 @@ function MyProfileSection() {
       ) : (
         <div className="flex items-center gap-3">
           <AvatarCircle src={currentUser?.avatar_url} size={48} />
-          <dl className="grid flex-1 gap-2 text-sm sm:grid-cols-2">
+          <dl className="grid grid-cols-1 flex-1 gap-2 text-sm sm:grid-cols-2">
             <div>
               <dt className="bee-caption">{t("phoneLabel")}</dt>
               <dd>{currentUser?.phone || t("empty")}</dd>
@@ -698,7 +698,7 @@ function ChangePasswordSection() {
       </div>
 
       {open && (
-        <form onSubmit={handleSubmit} className="grid gap-2 sm:grid-cols-3">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <input
             type="password"
             required

@@ -59,7 +59,7 @@ export function SignalsDashboard() {
             value: "feed",
             label: t("outerTabs.feed"),
             content: isLoading ? (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Skeleton key={i} className="h-28" />
                 ))}
@@ -85,7 +85,7 @@ export function SignalsDashboard() {
                  * descripción + tags, texto largo que se lee peor recortado en
                  * una tarjeta angosta de scroll horizontal que apilado a lo
                  * ancho de la pantalla. */}
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {pagination.pageItems.map((signal, i) => (
                     <SignalCard key={signal.id} signal={signal} toneIndex={i} />
                   ))}

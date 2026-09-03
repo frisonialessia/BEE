@@ -49,7 +49,7 @@ export function AskBeeFab() {
             </span>
             <div className="min-w-0 flex-1 text-white">
               <p className="text-sm font-semibold leading-tight">{t("fab.title")}</p>
-              <p className="text-[11px] leading-tight text-white/85">{t("fab.subtitle")}</p>
+              <p className="text-micro leading-tight text-white/85">{t("fab.subtitle")}</p>
             </div>
             {/* X explícita del lado derecho del panel — antes cerrar dependía
              * únicamente del botón flotante de abajo cambiando de ícono, que

@@ -57,7 +57,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
           </p>
         </div>
         {battlecard.hot_lead && (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-chart-5)]/20 px-2 py-0.5 text-[11px] font-medium text-[var(--color-chart-5)]">
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-chart-5)]/20 px-2 py-0.5 text-micro font-medium text-[var(--color-chart-5)]">
             <Zap className="size-2.5" />
             {t("hotBadge")}
           </span>
@@ -77,7 +77,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
         <p className="bee-eyebrow">
           {t("recommendedAngle")}
         </p>
-        <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed">{battlecard.strategy.closing_argument}</p>
+        <p className="mt-0.5 line-clamp-2 text-micro leading-relaxed">{battlecard.strategy.closing_argument}</p>
         <p className="mt-1 bee-micro">
           {t("viaChannel", { playbook: battlecard.strategy.playbook, channel: battlecard.strategy.channel })}
         </p>
@@ -85,7 +85,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
 
       <div className="flex items-center gap-2 pt-1">
         {triggered ? (
-          <span className="flex items-center gap-1.5 text-[11px] text-[var(--success)]">
+          <span className="flex items-center gap-1.5 text-micro text-[var(--success)]">
             <CheckCircle2 className="size-3.5" />
             {t("sequenceStarted")}
           </span>
@@ -149,7 +149,7 @@ export function CriticalAccountsDigest({
         <Rocket className="size-3.5 text-[var(--color-chart-5)]" />
         <p className="bee-eyebrow">{t("title")}</p>
       </div>
-      <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         {critical.map((b) => (
           <CriticalAccountCard key={b.opportunity_id} battlecard={b} />
         ))}

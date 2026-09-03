@@ -90,7 +90,7 @@ export function BiFeedSection({ canManage }: { canManage: boolean }) {
         {FEEDS.map((feed) => (
           <div key={feed} className="min-w-0">
             <p className="bee-micro font-medium text-muted-foreground">{t(`feeds.${feed}`)}</p>
-            <code className="mt-0.5 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-[11px]">
+            <code className="mt-0.5 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">
               {feedUrl(feed, justCreated?.api_key ?? null)}
             </code>
           </div>

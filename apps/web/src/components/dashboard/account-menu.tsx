@@ -41,10 +41,10 @@ export function AccountMenu() {
         data-tour="tour-account-menu"
         className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-[var(--color-primary)]"
       >
-        <span className="flex size-7 items-center justify-center rounded-full bg-[var(--color-cta)] text-[11px] font-bold text-white">
+        <span className="flex size-7 items-center justify-center rounded-full bg-[var(--color-cta)] text-micro font-bold text-white">
           {initials(user.full_name)}
         </span>
-        <span className="hidden text-xs font-medium sm:inline">{user.full_name.split(" ")[0]}</span>
+        <span className="hidden text-xs font-medium lg:inline">{user.full_name.split(" ")[0]}</span>
         <ChevronDown className="size-3.5 text-muted-foreground" />
       </button>
 

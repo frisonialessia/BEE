@@ -84,16 +84,16 @@ function CrmCard({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Badge variant={scoreVariant(opportunity.score)} className="font-mono text-[11px]">
+        <Badge variant={scoreVariant(opportunity.score)} className="font-mono text-micro">
           {Math.round(opportunity.score)}
         </Badge>
         {opportunityType !== "new_logo" && (
-          <Badge variant={opportunityTypeVariant(opportunityType)} className="text-[11px]">
+          <Badge variant={opportunityTypeVariant(opportunityType)} className="text-micro">
             {opportunityTypeLabels[opportunityType]}
           </Badge>
         )}
         {isHot && (
-          <span className="inline-flex items-center gap-1 text-[11px] text-[var(--color-chart-5)]">
+          <span className="inline-flex items-center gap-1 text-micro text-[var(--color-chart-5)]">
             <Flame className="size-3" />
             {t("hot")}
           </span>
@@ -129,7 +129,7 @@ function CrmCard({
           value={opportunity.status}
           onChange={(e) => onMove(opportunity.id, e.target.value as CrmStage)}
           aria-label={t("moveToStage")}
-          className="w-full rounded-sm border border-border bg-background px-1.5 py-1 text-[11px] text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+          className="w-full rounded-sm border border-border bg-background px-1.5 py-1 text-micro text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         >
           {CRM_STAGES.map((s) => (
             <option key={s.id} value={s.id}>
@@ -397,7 +397,7 @@ export function CrmBoard() {
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     <Badge
                       variant={opp.status === "won" ? "success" : "secondary"}
-                      className="text-[11px]"
+                      className="text-micro"
                     >
                       {opp.status === "won"
                         ? t("closedStatus.won")
@@ -408,7 +408,7 @@ export function CrmBoard() {
                     {(opp.opportunity_type ?? "new_logo") !== "new_logo" && (
                       <Badge
                         variant={opportunityTypeVariant(opp.opportunity_type ?? "new_logo")}
-                        className="text-[11px]"
+                        className="text-micro"
                       >
                         {opportunityTypeLabels[opp.opportunity_type ?? "new_logo"]}
                       </Badge>

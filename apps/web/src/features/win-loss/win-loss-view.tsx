@@ -93,7 +93,7 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
               card to the taller one's height, leaving blank space below its
               last row instead of just being its own natural height (same fix
               already applied to the two Resumen heatmaps below). */}
-          <div className="grid items-start gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
             <section className="bee-surface bee-bento-pad">
               <h3 className="bee-card-title">{t("winLoss.reasons.title")}</h3>
               <p className="bee-caption mb-4">{t("winLoss.reasons.caption")}</p>

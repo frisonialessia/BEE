@@ -57,6 +57,13 @@ const HOUR_HEIGHT = 56; // px per hour row
  * `timeZone` decides whose wall clock "top" is measured against — the
  * viewer's chosen timezone, not whatever the browser happens to be set
  * to (see zonedFakeLocalDate). */
+
+/** "agosto de 2026" → "Agosto de 2026": only the first letter. Tailwind's
+ *  `capitalize` upper-cased every word ("Agosto De 2026"). */
+function sentenceCase(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 function meetingPosition(meeting: Meeting, timeZone: string): { top: number; height: number } {
   const start = zonedFakeLocalDate(new Date(meeting.starts_at), timeZone);
   const startHour = start.getHours() + start.getMinutes() / 60;
@@ -271,8 +278,10 @@ function MiniMonthCalendar({
   return (
     <div className="bee-surface bee-bento-pad">
       <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-semibold capitalize">
-          {new Intl.DateTimeFormat(intlLocale, { month: "long", year: "numeric" }).format(monthCursor)}
+        <p className="text-sm font-semibold">
+          {sentenceCase(
+            new Intl.DateTimeFormat(intlLocale, { month: "long", year: "numeric" }).format(monthCursor),
+          )}
         </p>
         <div className="flex gap-0.5">
           <button
@@ -390,7 +399,7 @@ function MonthGridView({
                 {shown.map((m) => (
                   <p
                     key={m.id}
-                    className={`truncate rounded-[3px] px-1 py-0.5 text-[10px] font-medium ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
+                    className={`truncate rounded-[3px] px-1 py-0.5 text-micro font-medium ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
                     style={
                       m.color
                         ? { background: `color-mix(in srgb, var(--color-${m.color}) 35%, var(--color-background))` }
@@ -962,9 +971,11 @@ export function CalendarPage() {
             )}
           </p>
         ) : (
-          <p className="bee-caption ml-1 capitalize">
-            {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { month: "long", year: "numeric" }).format(
-              monthCursor,
+          <p className="bee-caption ml-1">
+            {sentenceCase(
+              new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { month: "long", year: "numeric" }).format(
+                monthCursor,
+              ),
             )}
           </p>
         )}
@@ -1150,7 +1161,7 @@ export function CalendarPage() {
                       return (
                         <span
                           key={uid}
-                          className="flex size-7 items-center justify-center rounded-full bg-[var(--color-chart-4)]/20 text-[11px] font-semibold text-[var(--color-chart-4)]"
+                          className="flex size-7 items-center justify-center rounded-full bg-[var(--color-chart-4)]/20 text-micro font-semibold text-[var(--color-chart-4)]"
                           title={u?.full_name}
                         >
                           {u ? initials(u.full_name) : "?"}

@@ -96,7 +96,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
           </div>
         </div>
         <span
-          className={`shrink-0 rounded-sm border border-border px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide ${STATUS_STYLES[action.status] ?? "bg-background"}`}
+          className={`shrink-0 rounded-sm border border-border px-2 py-0.5 text-micro font-medium uppercase tracking-wide ${STATUS_STYLES[action.status] ?? "bg-background"}`}
         >
           {statusLabel}
         </span>

@@ -59,7 +59,7 @@ export function StepComposer({ onAdd }: { onAdd: (step: NewStepInput) => void })
     <form onSubmit={handleSubmit} className="bee-bento bee-bento-pad space-y-3">
       <p className="text-xs font-semibold">{t("stepComposer.title")}</p>
 
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <select
           value={actionValue}
           onChange={(e) => handleActionChange(e.target.value)}

@@ -2,6 +2,8 @@
 
 import { useLocale, useTranslations } from "next-intl";
 
+import { cn } from "@/lib/utils";
+
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Locale } from "@/i18n/locales";
 import { formatCurrencyUSD } from "@/lib/i18n/format";
@@ -17,12 +19,16 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
   const maxValue = Math.max(1, ...buckets.map((b) => b.total));
 
   return (
-    <div className="flex items-end gap-3 overflow-x-auto pb-1" style={{ height: "var(--bee-chart-h)" }}>
-      {buckets.map((b) => {
+    // Legend below the bars on a phone, beside them from sm up — side by
+    // side it ate ~90px of a 335px card and pushed the first bar's label
+    // off the left edge.
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+      <div className="flex w-full min-w-0 items-end gap-1.5 pb-1 sm:flex-1 sm:gap-3" style={{ height: "var(--bee-chart-h)" }}>
+      {buckets.map((b, i) => {
         const totalPct = (b.total / maxValue) * 100;
         const weightedPct = (b.weighted / maxValue) * 100;
         return (
-          <div key={b.key} className="flex h-full min-w-12 flex-1 flex-col items-center gap-1.5">
+          <div key={b.key} className="flex h-full min-w-5 flex-1 flex-col items-center gap-1.5 sm:min-w-12">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="relative flex w-full flex-1 items-end justify-center rounded-t-[var(--radius-sm)] bg-[var(--color-primary)]/40">
@@ -45,11 +51,17 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
                 })}
               </TooltipContent>
             </Tooltip>
-            <p className="bee-micro font-medium">{b.label}</p>
+            {/* Twelve month labels don't fit a phone-width card (the row
+                scrolled sideways with no visible scrollbar) — every other
+                label below sm, all of them above. */}
+            <p className={cn("bee-micro whitespace-nowrap font-medium", i % 2 === 1 && "hidden sm:block")}>
+              {b.label}
+            </p>
           </div>
         );
       })}
-      <div className="ml-2 flex shrink-0 flex-col justify-end gap-1.5 pb-4 bee-micro">
+      </div>
+      <div className="flex shrink-0 flex-wrap gap-x-4 gap-y-1.5 bee-micro sm:ml-2 sm:flex-col sm:justify-end sm:pb-4">
         <span className="flex items-center gap-1.5">
           <span className="size-2 rounded-[2px] bg-[var(--color-chart-2)]" /> {t("legendWeighted")}
         </span>

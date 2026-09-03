@@ -35,7 +35,7 @@ export default function ProbarSequencesPage() {
       </header>
 
       <Tabs defaultValue="biblioteca">
-        <TabsList className="border border-border bg-background">
+        <TabsList className="h-auto max-w-full flex-wrap border border-border bg-background group-data-[orientation=horizontal]/tabs:h-auto">
           <TabsTrigger value="estado" className="rounded-sm">
             {t("view.tabs.status")}
           </TabsTrigger>

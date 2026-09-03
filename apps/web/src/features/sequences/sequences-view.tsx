@@ -24,7 +24,7 @@ export function SequencesView() {
       </header>
 
       <Tabs defaultValue="estado">
-        <TabsList className="border border-border bg-background">
+        <TabsList className="h-auto max-w-full flex-wrap border border-border bg-background group-data-[orientation=horizontal]/tabs:h-auto">
           <TabsTrigger value="estado" className="rounded-sm">
             {t("tabs.status")}
           </TabsTrigger>
@@ -37,7 +37,7 @@ export function SequencesView() {
         </TabsList>
 
         <TabsContent value="estado" className="mt-6">
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <WorkflowStatusPanel />
             <EngagementInboxPanel />
           </div>

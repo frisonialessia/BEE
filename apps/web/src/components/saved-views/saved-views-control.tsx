@@ -133,14 +133,14 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
                     type="button"
                     onClick={saveCurrent}
                     disabled={name.trim() === "" || createView.isPending}
-                    className="bee-btn bee-btn--primary flex-1 text-[11px]"
+                    className="bee-btn bee-btn--primary flex-1 text-micro"
                   >
                     {t("save")}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowSaveForm(false)}
-                    className="bee-btn-ghost text-[11px]"
+                    className="bee-btn-ghost text-micro"
                   >
                     {t("cancel")}
                   </button>

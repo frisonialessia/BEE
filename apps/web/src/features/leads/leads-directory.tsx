@@ -225,7 +225,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
 
       {loading ? (
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-24" />
             ))}
@@ -239,7 +239,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard label={t("metrics.total")} value={leads.length} />
             <MetricCard
               label={t("metrics.avgScore")}
@@ -378,7 +378,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
           <div className="bee-surface overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-xs">
               <thead>
-                <tr className="border-b border-border text-[11px] uppercase tracking-wide text-muted-foreground">
+                <tr className="border-b border-border text-micro uppercase tracking-wide text-muted-foreground">
                   <th className="w-8 px-4 py-2.5">
                     <input
                       type="checkbox"
@@ -451,7 +451,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
                                 ...lead.validation_flags.map((f) => validationFlagLabels[f] ?? f),
                                 ...(lead.stale_risk ? [t("table.staleWarning")] : []),
                               ].join(" · ")}
-                              className="text-[11px] text-[var(--color-chart-1)]"
+                              className="text-micro text-[var(--color-chart-1)]"
                             >
                               {lead.validation_flags.length > 0
                                 ? t("table.issues", { count: lead.validation_flags.length })

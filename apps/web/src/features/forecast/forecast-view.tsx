@@ -170,7 +170,7 @@ export function ForecastView() {
                                   })}
                                 </p>
                               </div>
-                              <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-1)]/20 px-2 py-0.5 text-[11px] font-medium text-[var(--color-chart-1)]">
+                              <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-1)]/20 px-2 py-0.5 text-micro font-medium text-[var(--color-chart-1)]">
                                 {t(`forecast.atRiskSection.riskLabels.${reason}`)}
                               </span>
                             </button>

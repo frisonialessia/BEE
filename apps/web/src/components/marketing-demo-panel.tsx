@@ -112,7 +112,7 @@ function SignalsView() {
               <span className="text-xs font-semibold tabular-nums">{row.value}</span>
             </div>
           ))}
-          <p className="flex items-center gap-1.5 text-[11px] text-[var(--color-chart-5)]">
+          <p className="flex items-center gap-1.5 text-micro text-[var(--color-chart-5)]">
             <Flame className="size-3" />
             {t("hotLeads", { count: 3 })}
           </p>
@@ -185,7 +185,7 @@ function SignalsView() {
                 <span className="h-5 w-[3px] shrink-0 rounded-full" style={{ background: s.color }} aria-hidden />
                 <div>
                   <p className="text-xs font-bold leading-none tabular-nums">{s.pct}%</p>
-                  <p className="mt-0.5 text-[10px] leading-none text-muted-foreground">{tStages(s.id)}</p>
+                  <p className="mt-0.5 text-micro leading-none text-muted-foreground">{tStages(s.id)}</p>
                 </div>
               </div>
             ))}
@@ -397,7 +397,7 @@ function LeadsView() {
       <div className="flex flex-wrap items-center gap-4 border-t border-[var(--color-divider)] pt-3">
         <span className="bee-kpi-tile__label">{t("statusDistribution")}</span>
         {(["new", "qualified", "converted"] as const).map((s) => (
-          <div key={s} className="flex items-center gap-1.5 text-[11px]">
+          <div key={s} className="flex items-center gap-1.5 text-micro">
             <span
               className="size-1.5 rounded-full"
               style={{ background: s === "converted" ? "var(--color-chart-2)" : s === "qualified" ? "var(--color-chart-1)" : "var(--color-chart-4)" }}
@@ -606,7 +606,7 @@ function ForecastView() {
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 border-t border-[var(--color-divider)] pt-3 text-[11px] text-muted-foreground">
+      <div className="flex items-center justify-between gap-3 border-t border-[var(--color-divider)] pt-3 text-micro text-muted-foreground">
         <span>{t("basedOn")}</span>
         <Link
           href="/funcionalidades#simulador"

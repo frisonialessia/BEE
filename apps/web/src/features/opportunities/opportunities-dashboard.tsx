@@ -106,7 +106,7 @@ export function OpportunitiesDashboard({ showHeader = true }: { showHeader?: boo
                   <Bot className="size-3.5" />
                   {t("battlecardsHint")}
                 </div>
-                <div className="grid gap-3 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                   {battlecardPagination.pageItems.map((card, i) => (
                     <button
                       key={card.opportunity_id}

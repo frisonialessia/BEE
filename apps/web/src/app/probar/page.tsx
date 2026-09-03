@@ -102,7 +102,7 @@ export default function ProbarOverviewPage() {
        * Leaderboard apilados en el tercio restante — items-start para que
        * cada columna mida según su propio contenido en vez de estirarse a
        * la altura de la Colmena y dejar espacio en blanco debajo. */}
-      <div className="mt-2 grid items-start gap-3 lg:grid-cols-3">
+      <div className="mt-2 grid grid-cols-1 items-start gap-3 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <SignalHexMap height={280} />
         </div>
@@ -118,7 +118,7 @@ export default function ProbarOverviewPage() {
        * página que no coincidía con su versión real. Con la Colmena de
        * arriba usando bee-card-title, esa diferencia de peso tipográfico
        * quedaba mucho más visible que antes de agregarla. */}
-      <div className="mt-2 grid items-start gap-3 lg:grid-cols-2">
+      <div className="mt-2 grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
         <section className="bee-surface bee-bento-pad space-y-3">
           <div>
             <h3 className="bee-card-title">{tDash("industryHeatmap.title")}</h3>

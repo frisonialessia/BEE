@@ -44,7 +44,7 @@ function TaskRow({
           {task.title}
         </p>
         {task.due_at && (
-          <p className={cn("text-[11px]", overdue ? "text-destructive" : "text-muted-foreground")}>
+          <p className={cn("text-micro", overdue ? "text-destructive" : "text-muted-foreground")}>
             {formatDate(task.due_at, locale)} {overdue && `· ${t("overdue")}`}
           </p>
         )}

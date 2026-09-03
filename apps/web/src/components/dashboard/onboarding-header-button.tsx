@@ -19,7 +19,7 @@ export function OnboardingHeaderButton() {
       className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-[var(--color-primary)] hover:text-foreground"
     >
       <HelpCircle className="size-3.5 shrink-0" />
-      <span className="hidden sm:inline">{t("label")}</span>
+      <span className="hidden whitespace-nowrap lg:inline">{t("label")}</span>
     </button>
   );
 }

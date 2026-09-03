@@ -24,7 +24,10 @@ export function DashboardHeader() {
         <OnboardingHeaderButton />
         <AssistantHeaderLink />
         <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
-        <div className="hidden items-center gap-3 md:flex">
+        {/* lg, not md: at tablet width (768–1023px) the team strip plus the
+            language switcher pushed the account menu ~50px past the right
+            edge of the header. */}
+        <div className="hidden items-center gap-3 lg:flex">
           <TeamPresence />
           <div className="h-6 w-px bg-border" aria-hidden />
         </div>

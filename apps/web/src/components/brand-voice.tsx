@@ -289,7 +289,7 @@ export function BrandVoicePanel() {
             </div>
           )}
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className="block text-xs font-medium text-muted-foreground mb-1">
                 {t("createForm.nameLabel")}
@@ -428,7 +428,7 @@ export function BrandVoicePanel() {
             </button>
           </div>
           {preview && (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="bee-panel space-y-1.5 p-3">
                 <p className="bee-caption font-medium">{t("preview.genericLabel")}</p>
                 <p className="text-sm text-muted-foreground">{preview.generic_version}</p>

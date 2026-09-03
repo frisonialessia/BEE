@@ -59,7 +59,7 @@ function ChannelStatusBadges() {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {statuses.map((s) => (
-        <Badge key={s.channel} variant={s.mock ? "outline" : "success"} className="text-[11px]">
+        <Badge key={s.channel} variant={s.mock ? "outline" : "success"} className="text-micro">
           {s.channel}: {s.mock ? t("mock") : t("connected")}
         </Badge>
       ))}
@@ -105,7 +105,7 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div className="space-y-4">
         <div className="bee-bento bee-bento-pad space-y-2">
           <p className="text-xs font-semibold">{t("config.title")}</p>
@@ -169,7 +169,7 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
             {createSequence.isPending ? t("saving") : t("save")}
           </button>
           {createSequence.isError && (
-            <p className="text-[11px] text-[var(--color-chart-2)]">{t("saveError")}</p>
+            <p className="text-micro text-[var(--color-chart-2)]">{t("saveError")}</p>
           )}
         </div>
       </div>
@@ -241,7 +241,7 @@ function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onN
           <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
         </div>
       ) : (
-        <div className="grid gap-2.5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {sequences.map((seq) => (
             <button
               key={seq.id}
@@ -251,7 +251,7 @@ function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onN
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="truncate text-xs font-semibold">{seq.name}</p>
-                <Badge variant={seq.status === "active" ? "success" : "outline"} className="text-[11px]">
+                <Badge variant={seq.status === "active" ? "success" : "outline"} className="text-micro">
                   {seq.status}
                 </Badge>
               </div>

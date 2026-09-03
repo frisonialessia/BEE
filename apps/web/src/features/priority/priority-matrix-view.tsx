@@ -148,7 +148,7 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
                   <PriorityMatrixChart priorities={priorities} />
                   <div className="w-full flex-1 space-y-3">
                     <p className="bee-caption">{t("matrixSection.description")}</p>
-                    <ul className="grid gap-2 sm:grid-cols-2">
+                    <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                       {QUADRANT_ORDER.map((q) => (
                         <li
                           key={q}
@@ -177,7 +177,7 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
                   many companies stretches every sibling to match, so an
                   empty quadrant ends up padded with dead whitespace instead
                   of sitting at its own compact height. */}
-              <div className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {QUADRANT_ORDER.map((q) => (
                   <div key={q} className="flex flex-col">
                     <div className="mb-2 px-1">

@@ -88,11 +88,11 @@ function StatusBadge({ status }: { status: "success" | "failed" | null }) {
     return <span className="bee-micro">{t("noAttempts")}</span>;
   }
   return status === "success" ? (
-    <span className="inline-flex items-center gap-1 text-[11px] text-[var(--success)]">
+    <span className="inline-flex items-center gap-1 text-micro text-[var(--success)]">
       <CheckCircle2 className="size-3" /> {t("delivered")}
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1 text-[11px] text-destructive">
+    <span className="inline-flex items-center gap-1 text-micro text-destructive">
       <AlertTriangle className="size-3" /> {t("lastFailed")}
     </span>
   );
