@@ -17,6 +17,11 @@ export interface IntegrationStatus {
   account_email: string | null;
   connected_at: string | null;
   detail: string | null;
+  /** Machine-readable twin of `detail` — translated client-side via
+   *  workspace.integrations.detailCodes; `detail` is the server's Spanish
+   *  fallback for codes this build doesn't know. */
+  detail_code?: string | null;
+  detail_params?: Record<string, string>;
   last_error: string | null;
 }
 
@@ -45,6 +50,7 @@ const DEMO_INTEGRATIONS: IntegrationStatus[] = [
     account_email: null,
     connected_at: null,
     detail: "Credencial compartida del servidor, no por cuenta — se configura una sola vez para todo el despliegue.",
+    detail_code: "server_shared_credential",
     last_error: null,
   },
   {
@@ -56,6 +62,7 @@ const DEMO_INTEGRATIONS: IntegrationStatus[] = [
     account_email: null,
     connected_at: null,
     detail: "Credencial compartida del servidor, no por cuenta — se configura una sola vez para todo el despliegue.",
+    detail_code: "server_shared_credential",
     last_error: null,
   },
 ];

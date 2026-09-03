@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BiFeedSection } from "@/features/integrations/bi-feed-section";
+import { InboundSignalsSection } from "@/features/integrations/inbound-signals-section";
 import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
 import { useIsDemoMode } from "@/lib/demo/mode";
 import { useAuth } from "@/providers/auth-provider";
@@ -79,6 +80,18 @@ function useOAuthCallbackToast() {
   }, []);
 }
 
+
+/** Server `detail` sentences are Spanish; translate by `detail_code` when the
+ * code is known to this build, otherwise show the sentence as-is. */
+function useIntegrationDetail() {
+  const t = useTranslations("workspace.integrations.detailCodes");
+  return (status: IntegrationStatus): string | null => {
+    const code = status.detail_code;
+    if (code && t.has(code)) return t(code, status.detail_params ?? {});
+    return status.detail;
+  };
+}
+
 function OAuthProviderRow({
   provider,
   label,
@@ -101,6 +114,7 @@ function OAuthProviderRow({
   children?: ReactNode;
 }) {
   const t = useTranslations("workspace.integrations");
+  const detailOf = useIntegrationDetail();
   const connect = useConnectOAuthProvider(provider);
   const disconnect = useDisconnectOAuthProvider(provider);
 
@@ -140,11 +154,11 @@ function OAuthProviderRow({
               {status.connected ? connectedCopy(status.account_email ?? t("defaultAccountLabel")) : disconnectedCopy}
             </p>
             {status.last_error && (
-              <p className="mt-1 text-[11px] text-[var(--color-chart-2)]">
+              <p className="mt-1 text-micro text-[var(--color-chart-2)]">
                 {status.last_error} {t("lastErrorSuffix")}
               </p>
             )}
-            {status.detail && !status.connected && <p className="bee-caption mt-1">{status.detail}</p>}
+            {detailOf(status) && !status.connected && <p className="bee-caption mt-1">{detailOf(status)}</p>}
           </div>
         </div>
 
@@ -273,6 +287,7 @@ function HubSpotImportButton() {
  * external id. */
 function JiraConfigForm({ status }: { status: IntegrationStatus }) {
   const t = useTranslations("workspace.integrations.jira");
+  const detailOf = useIntegrationDetail();
   const setProjectKey = useSetJiraProjectKey();
   const [value, setValue] = useState("");
 
@@ -306,13 +321,14 @@ function JiraConfigForm({ status }: { status: IntegrationStatus }) {
       >
         {setProjectKey.isPending ? t("saving") : t("saveProjectKey")}
       </button>
-      <span className="bee-micro">{status.detail}</span>
+      <span className="bee-micro">{detailOf(status)}</span>
     </form>
   );
 }
 
 function ServerChannelRow({ status }: { status: IntegrationStatus }) {
   const t = useTranslations("workspace.integrations.serverChannels");
+  const detailOf = useIntegrationDetail();
   return (
     <div className="flex items-center justify-between gap-3 border-b border-[var(--color-divider)] py-3 last:border-b-0">
       <div className="flex items-center gap-2.5">
@@ -323,10 +339,10 @@ function ServerChannelRow({ status }: { status: IntegrationStatus }) {
         )}
         <div>
           <p className="text-xs font-medium">{status.label}</p>
-          <p className="bee-caption">{status.detail}</p>
+          <p className="bee-caption">{detailOf(status)}</p>
         </div>
       </div>
-      <Badge variant={status.connected ? "success" : "outline"} className="text-[11px]">
+      <Badge variant={status.connected ? "success" : "outline"} className="text-micro">
         {status.connected ? t("connected") : t("mock")}
       </Badge>
     </div>
@@ -423,6 +439,15 @@ export function IntegrationsView() {
             ),
           )}
           {!canManage && <p className="bee-caption">{t("manageNotice")}</p>}
+
+          {/* Señales entrantes — el flujo central del producto (webhook →
+             clasificación → oportunidad) no tenía ninguna superficie en la
+             UI: la URL solo vivía en /docs. Va primero entre las secciones
+             sin OAuth porque es lo primero que una cuenta nueva necesita. */}
+          <section className="space-y-3">
+            <p className="bee-eyebrow">{t("categories.signals")}</p>
+            <InboundSignalsSection />
+          </section>
 
           {/* Automatización — no es un proveedor OAuth más: n8n, Zapier,
              Make, o cualquier sistema propio se conectan apuntando su nodo

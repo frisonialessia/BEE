@@ -30,6 +30,13 @@ class IntegrationStatusOut(BaseModel):
     account_email: str | None = None
     connected_at: datetime | None = None
     detail: str | None = None
+    # Machine-readable twin of ``detail`` so the frontend can translate it —
+    # ``detail`` itself is a Spanish sentence composed here and rendered
+    # verbatim, which is why the Integrations page kept a Spanish line under
+    # every card in the English UI. Frontend falls back to ``detail`` for any
+    # code it doesn't know, so adding a code never breaks an older client.
+    detail_code: str | None = None
+    detail_params: dict[str, str] = Field(default_factory=dict)
     last_error: str | None = None
 
 

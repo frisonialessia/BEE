@@ -138,6 +138,7 @@ def list_integrations(
             connected_at=gmail.created_at if gmail else None,
             last_error=gmail.last_error if gmail else None,
             detail=None if gmail_oauth.is_configured() else "No configurado en el servidor todavía.",
+            detail_code=None if gmail_oauth.is_configured() else "not_configured",
         )
     )
 
@@ -153,6 +154,7 @@ def list_integrations(
             connected_at=linkedin.created_at if linkedin else None,
             last_error=linkedin.last_error if linkedin else None,
             detail=None if linkedin_oauth.is_configured() else "No configurado en el servidor todavía.",
+            detail_code=None if linkedin_oauth.is_configured() else "not_configured",
         )
     )
 
@@ -172,6 +174,12 @@ def list_integrations(
                 if salesforce
                 else (None if salesforce_oauth.is_configured() else "No configurado en el servidor todavía.")
             ),
+            detail_code=(
+                "crm_import_readonly"
+                if salesforce
+                else (None if salesforce_oauth.is_configured() else "not_configured")
+            ),
+            detail_params={"objects": "Accounts/Contacts/Leads/Opportunities", "provider": "Salesforce"},
         )
     )
 
@@ -191,6 +199,10 @@ def list_integrations(
                 if hubspot
                 else (None if hubspot_oauth.is_configured() else "No configurado en el servidor todavía.")
             ),
+            detail_code=(
+                "crm_import_readonly" if hubspot else (None if hubspot_oauth.is_configured() else "not_configured")
+            ),
+            detail_params={"objects": "Companies/Contacts/Deals", "provider": "HubSpot"},
         )
     )
 
@@ -214,6 +226,14 @@ def list_integrations(
                 if jira
                 else (None if jira_oauth.is_configured() else "No configurado en el servidor todavía.")
             ),
+            detail_code=(
+                "jira_synced"
+                if jira and jira_project_key
+                else "jira_project_missing"
+                if jira
+                else (None if jira_oauth.is_configured() else "not_configured")
+            ),
+            detail_params={"project": jira_project_key} if jira_project_key else {},
         )
     )
 
@@ -230,6 +250,7 @@ def list_integrations(
                 category=_SERVER_CHANNEL_CATEGORIES.get(channel),
                 detail="Credencial compartida del servidor, no por cuenta." if status_dict.get("authenticated")
                 else "Modo simulado — no hay credencial del servidor configurada.",
+                detail_code="server_shared_credential" if status_dict.get("authenticated") else "server_mock_mode",
             )
         )
 
