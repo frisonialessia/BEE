@@ -1,5 +1,6 @@
-import { WinLossView } from "@/features/win-loss/win-loss-view";
+import { redirect } from "next/navigation";
 
-export default function ProbarWinLossPage() {
-  return <WinLossView />;
+// See dashboard/win-loss/page.tsx's own comment.
+export default function ProbarWinLossRedirectPage() {
+  redirect("/probar/forecast?tab=winloss");
 }

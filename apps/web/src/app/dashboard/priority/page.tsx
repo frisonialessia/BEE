@@ -1,5 +1,8 @@
-import { PriorityMatrixView } from "@/features/priority/priority-matrix-view";
+import { redirect } from "next/navigation";
 
-export default function PriorityPage() {
-  return <PriorityMatrixView />;
+// Priority merged into Signals as a second tab — see
+// signals-dashboard.tsx's own docstring for why. Keeps this route alive
+// as a redirect so no old link/bookmark to it breaks.
+export default function PriorityRedirectPage() {
+  redirect("/dashboard/signals?tab=priority");
 }

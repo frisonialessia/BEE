@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import { MergedPageTabs } from "@/components/merged-page-tabs";
 import {
   AnomaliesPanel,
   ApiStatusPanel,
@@ -11,27 +12,44 @@ import {
   SignalStream,
   SystemHealth,
 } from "@/features/control";
+import { ResilienceView } from "@/features/resilience/resilience-view";
 
-/** BEE Control — workspace operativo CRM (sandbox: datos demo). */
+/** BEE Control — workspace operativo CRM (sandbox: datos demo), con
+ *  Resiliencia como segunda pestaña — ver dashboard/control/page.tsx's
+ *  own docstring for why. */
 export default function ProbarControlPage() {
   const tNav = useTranslations("nav");
   const t = useTranslations("probarNetworkBrandControl.control");
 
   return (
-    <ControlLayout
-      header={
-        <>
-          <p className="bee-eyebrow">{tNav("groups.operations")}</p>
-          <h1 className="bee-display mt-1">{tNav("items.control")}</h1>
-          <p className="bee-caption mt-1">{t("caption")}</p>
-        </>
-      }
-      action={<LeadWorkspace />}
-      hive={<SignalHexMap height={240} maxLeads={200} className="h-full" />}
-      intelligence={<SystemHealth />}
-      stream={<SignalStream />}
-      apiStatus={<ApiStatusPanel />}
-      anomalies={<AnomaliesPanel />}
-    />
+    <div>
+      <header className="mb-6">
+        <p className="bee-eyebrow">{tNav("groups.operations")}</p>
+        <h1 className="bee-display mt-1">{tNav("items.control")}</h1>
+        <p className="bee-caption mt-1">{t("caption")}</p>
+      </header>
+
+      <MergedPageTabs
+        defaultValue="overview"
+        tabs={[
+          {
+            value: "overview",
+            label: tNav("items.control"),
+            content: (
+              <ControlLayout
+                header={null}
+                action={<LeadWorkspace />}
+                hive={<SignalHexMap height={240} maxLeads={200} className="h-full" />}
+                intelligence={<SystemHealth />}
+                stream={<SignalStream />}
+                apiStatus={<ApiStatusPanel />}
+                anomalies={<AnomaliesPanel />}
+              />
+            ),
+          },
+          { value: "resilience", label: tNav("items.resilience"), content: <ResilienceView showHeader={false} /> },
+        ]}
+      />
+    </div>
   );
 }

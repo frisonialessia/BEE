@@ -9,6 +9,10 @@
       "forecast": "Pronóstico",
       "simulator": "Simulador de escenarios"
     },
+    "outerTabs": {
+      "forecast": "Pronóstico",
+      "winLoss": "Ganado/Perdido"
+    },
     "emptyState": {
       "title": "Todavía no hay monto estimado en ninguna oportunidad.",
       "subtitle": "Agrega el monto y la fecha esperada de cierre desde el panel de calificación de cada oportunidad para ver el pronóstico."

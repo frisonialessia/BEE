@@ -1,5 +1,6 @@
-import { ResilienceView } from "@/features/resilience/resilience-view";
+import { redirect } from "next/navigation";
 
-export default function ProbarResiliencePage() {
-  return <ResilienceView />;
+// See dashboard/resilience/page.tsx's own comment.
+export default function ProbarResilienceRedirectPage() {
+  redirect("/probar/control?tab=resilience");
 }

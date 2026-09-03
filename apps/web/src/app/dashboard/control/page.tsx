@@ -1,5 +1,6 @@
 "use client";
 
+import { MergedPageTabs } from "@/components/merged-page-tabs";
 import {
   AnomaliesPanel,
   ApiStatusPanel,
@@ -9,26 +10,45 @@ import {
   SignalStream,
   SystemHealth,
 } from "@/features/control";
+import { ResilienceView } from "@/features/resilience/resilience-view";
 
-/** BEE Control — workspace operativo CRM. */
+/** BEE Control — workspace operativo CRM, con Resiliencia (auditoría de
+ *  agentes, dead-letter queue, anomalías, cola de ejecución) como segunda
+ *  pestaña — ambas son observabilidad del sistema, antes dos filas del
+ *  sidebar (ver lib/nav-items.ts). /dashboard/resilience sigue existiendo
+ *  como redirect a ?tab=resilience. */
 export default function ControlPage() {
   return (
-    <ControlLayout
-      header={
-        <>
-          <p className="bee-eyebrow">Operaciones</p>
-          <h1 className="bee-display mt-1">Control</h1>
-          <p className="bee-caption mt-1">
-            Kanban de acción · inteligencia hexagonal · métricas del sistema
-          </p>
-        </>
-      }
-      action={<LeadWorkspace />}
-      hive={<SignalHexMap height={240} maxLeads={200} className="h-full" />}
-      intelligence={<SystemHealth />}
-      stream={<SignalStream />}
-      apiStatus={<ApiStatusPanel />}
-      anomalies={<AnomaliesPanel />}
-    />
+    <div>
+      <header className="mb-6">
+        <p className="bee-eyebrow">Operaciones</p>
+        <h1 className="bee-display mt-1">Control</h1>
+        <p className="bee-caption mt-1">
+          Kanban de acción · inteligencia hexagonal · métricas del sistema · resiliencia
+        </p>
+      </header>
+
+      <MergedPageTabs
+        defaultValue="overview"
+        tabs={[
+          {
+            value: "overview",
+            label: "Sistema",
+            content: (
+              <ControlLayout
+                header={null}
+                action={<LeadWorkspace />}
+                hive={<SignalHexMap height={240} maxLeads={200} className="h-full" />}
+                intelligence={<SystemHealth />}
+                stream={<SignalStream />}
+                apiStatus={<ApiStatusPanel />}
+                anomalies={<AnomaliesPanel />}
+              />
+            ),
+          },
+          { value: "resilience", label: "Resiliencia", content: <ResilienceView showHeader={false} /> },
+        ]}
+      />
+    </div>
   );
 }

@@ -1,5 +1,8 @@
-import { OpportunitiesDashboard } from "@/features/opportunities/opportunities-dashboard";
+import { redirect } from "next/navigation";
 
-export default function OpportunitiesPage() {
-  return <OpportunitiesDashboard />;
+// Opportunities merged into CRM as a second tab — see crm-view.tsx's own
+// docstring for why. Keeps this route alive as a redirect so no old
+// link/bookmark to it breaks.
+export default function OpportunitiesRedirectPage() {
+  redirect("/dashboard/crm?tab=opportunities");
 }

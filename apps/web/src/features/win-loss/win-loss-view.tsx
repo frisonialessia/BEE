@@ -19,8 +19,11 @@ import { computeWinLoss } from "@/lib/win-loss";
  *  Todo calculado en el cliente a partir de las oportunidades ya cargadas
  *  (mismo patrón que Pronóstico/Tendencias) — nada nuevo del lado del
  *  backend salvo los dos campos que el rep llena al cerrar un deal
- *  (razón de pérdida, competidor) desde el panel del drawer. */
-export function WinLossView() {
+ *  (razón de pérdida, competidor) desde el panel del drawer.
+ *
+ * `showHeader=false` when embedded as a tab of the merged Forecast page
+ * (see forecast-view.tsx) — the live/demo badge stays regardless. */
+export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
   const locale = useLocale() as Locale;
   const t = useTranslations("forecastWinLoss");
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 300);
@@ -31,14 +34,18 @@ export function WinLossView() {
 
   return (
     <div>
-      <header className="mb-6">
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="bee-display">{t("winLoss.title")}</h1>
-            <p className="bee-caption mt-1">{t("winLoss.subtitle")}</p>
-          </div>
-          <Badge variant={live ? "success" : "warning"}>{live ? t("liveBadge") : t("demoBadge")}</Badge>
+      <header className={showHeader ? "mb-6" : "mb-4"}>
+        {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
+        <div className={`flex flex-wrap items-start justify-between gap-3 ${showHeader ? "mt-1" : ""}`}>
+          {showHeader && (
+            <div>
+              <h1 className="bee-display">{t("winLoss.title")}</h1>
+              <p className="bee-caption mt-1">{t("winLoss.subtitle")}</p>
+            </div>
+          )}
+          <Badge className="ml-auto" variant={live ? "success" : "warning"}>
+            {live ? t("liveBadge") : t("demoBadge")}
+          </Badge>
         </div>
       </header>
 

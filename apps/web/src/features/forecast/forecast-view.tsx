@@ -10,7 +10,9 @@ import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MergedPageTabs } from "@/components/merged-page-tabs";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
+import { WinLossView } from "@/features/win-loss/win-loss-view";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import type { Locale } from "@/i18n/locales";
@@ -20,8 +22,12 @@ import { computeForecast, qualificationScore } from "@/lib/forecast";
 import { computeMonthlyTrends } from "@/lib/trends";
 
 /** Pronóstico de ingresos — pipeline ponderado por probabilidad de cierre,
- *  deals en riesgo, y el simulador de escenarios "qué pasaría si" — el
- *  mismo motor financiero que le pregunta un director, todo en un lugar. */
+ *  deals en riesgo, y el simulador de escenarios "qué pasaría si" — con
+ *  Ganado/Perdido como segunda pestaña de nivel superior (no confundir con
+ *  las pestañas Pronóstico/Simulador de abajo, que son internas a esta
+ *  primera pestaña): mismo motor financiero, dos ángulos sobre el mismo
+ *  pipeline, antes dos filas del sidebar — ver lib/nav-items.ts.
+ *  /dashboard/win-loss sigue existiendo como redirect a ?tab=winloss. */
 export function ForecastView() {
   const locale = useLocale() as Locale;
   const t = useTranslations("forecastWinLoss");
@@ -52,15 +58,22 @@ export function ForecastView() {
         </div>
       </header>
 
-      <Tabs defaultValue="pronostico">
-        <TabsList className="border border-border bg-background">
-          <TabsTrigger value="pronostico" className="rounded-sm">
-            {t("forecast.tabs.forecast")}
-          </TabsTrigger>
-          <TabsTrigger value="simulador" className="rounded-sm">
-            {t("forecast.tabs.simulator")}
-          </TabsTrigger>
-        </TabsList>
+      <MergedPageTabs
+        defaultValue="forecast"
+        tabs={[
+          {
+            value: "forecast",
+            label: t("forecast.outerTabs.forecast"),
+            content: (
+              <Tabs defaultValue="pronostico">
+                <TabsList className="border border-border bg-background">
+                  <TabsTrigger value="pronostico" className="rounded-sm">
+                    {t("forecast.tabs.forecast")}
+                  </TabsTrigger>
+                  <TabsTrigger value="simulador" className="rounded-sm">
+                    {t("forecast.tabs.simulator")}
+                  </TabsTrigger>
+                </TabsList>
 
         <TabsContent value="pronostico" className="mt-6">
           {isLoading ? (
@@ -194,7 +207,16 @@ export function ForecastView() {
         <TabsContent value="simulador" className="mt-6">
           <ScenarioSimulatorPanel />
         </TabsContent>
-      </Tabs>
+              </Tabs>
+            ),
+          },
+          {
+            value: "winloss",
+            label: t("forecast.outerTabs.winLoss"),
+            content: <WinLossView showHeader={false} />,
+          },
+        ]}
+      />
     </div>
   );
 }

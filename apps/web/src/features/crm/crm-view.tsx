@@ -2,11 +2,16 @@
 
 import { useTranslations } from "next-intl";
 
+import { MergedPageTabs } from "@/components/merged-page-tabs";
 import { CrmBoard } from "@/features/crm/crm-board";
+import { OpportunitiesDashboard } from "@/features/opportunities/opportunities-dashboard";
 
-/** CRM — el pipeline real de BEE, separado de Oportunidades (que ahora es
- *  solo battlecards + flujo agregado). Esta es la vista que un director
- *  espera ver primero: cuentas moviéndose de etapa en etapa, arrastrables.
+/** CRM — el pipeline real de BEE, arrastrable etapa por etapa, con
+ *  Oportunidades (battlecards + flujo agregado) como una segunda pestaña
+ *  — dos vistas del mismo pipeline, no dos conceptos distintos, así que
+ *  antes eran dos filas del sidebar y ahora son una sola con pestañas
+ *  (ver lib/nav-items.ts). /dashboard/opportunities sigue existiendo como
+ *  redirect a ?tab=opportunities, ningún link/bookmark viejo se rompe.
  *
  *  Página normal, mismo scroll que Resumen — antes usaba bee-page-fill
  *  (alto fijo al viewport, scroll interno solo dentro de cada columna),
@@ -26,7 +31,17 @@ export function CrmView() {
         </div>
       </header>
 
-      <CrmBoard />
+      <MergedPageTabs
+        defaultValue="pipeline"
+        tabs={[
+          { value: "pipeline", label: t("pipelineTab"), content: <CrmBoard /> },
+          {
+            value: "opportunities",
+            label: t("opportunitiesTab"),
+            content: <OpportunitiesDashboard showHeader={false} />,
+          },
+        ]}
+      />
     </div>
   );
 }

@@ -9,6 +9,10 @@
       "forecast": "Forecast",
       "simulator": "Scenario simulator"
     },
+    "outerTabs": {
+      "forecast": "Forecast",
+      "winLoss": "Win/Loss"
+    },
     "emptyState": {
       "title": "No opportunity has an estimated amount yet.",
       "subtitle": "Add the amount and expected close date from each opportunity's qualification panel to see the forecast."

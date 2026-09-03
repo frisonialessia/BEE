@@ -12,7 +12,11 @@
     "emptySubtitle": "They appear automatically once you connect your market sources.",
     "volumeTitle": "Signal volume",
     "volumeSubtitle": "Detected per day, last 14 days",
-    "itemLabel": "signals"
+    "itemLabel": "signals",
+    "outerTabs": {
+      "feed": "Feed",
+      "priority": "Prioritization"
+    }
   },
   "strategies": {
     "eyebrow": "Playbooks",

@@ -44,8 +44,12 @@ export function buildTourSteps(mode: TourMode): TourStep[] {
       placement: "right",
     },
     {
-      target: `${base}/priority`,
-      href: `${base}/priority`,
+      // Priorización merged into Señales as a second tab (see
+      // signals-dashboard.tsx) — target must match the actual nav rail
+      // item (data-tour={href} in nav-items.ts) for the highlight to find
+      // it; href still deep-links to the right tab.
+      target: `${base}/signals`,
+      href: `${base}/signals?tab=priority`,
       title: "2. Priorización",
       description:
         "La Bandeja de Decisiones cruza esas señales con qué tan bien encajan con tu ICP — para saber en cuál entrar primero, no perseguirlas todas por igual.",

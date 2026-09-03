@@ -25,8 +25,12 @@ function uniqueSorted(values: (string | null)[]): string[] {
 
 /** Fit × Intención — qué cuentas encajan con tu cliente ideal Y están
  *  mostrando interés real ahora mismo, en vez de tratar toda señal caliente
- *  igual sin importar si es la cuenta correcta. */
-export function PriorityMatrixView() {
+ *  igual sin importar si es la cuenta correcta.
+ *
+ * `showHeader=false` when embedded as a tab of the merged Signals page
+ * (see signals-dashboard.tsx) — the live/demo badge and "Edit ICP" button
+ * stay either way, those are real actions. */
+export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean }) {
   const t = useTranslations("opportunitiesPriority.priority");
   const { data: icpResult, isLoading: icpLoading } = useIcpCriteria();
   const { data: companiesResult, isLoading: companiesLoading } = useCompanies(300);
@@ -66,14 +70,16 @@ export function PriorityMatrixView() {
 
   return (
     <div>
-      <header className="mb-6">
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="bee-display">{t("title")}</h1>
-            <p className="bee-caption mt-1">{t("subtitle")}</p>
-          </div>
-          <div className="flex items-center gap-2">
+      <header className={showHeader ? "mb-6" : "mb-4"}>
+        {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
+        <div className={`flex flex-wrap items-start justify-between gap-3 ${showHeader ? "mt-1" : ""}`}>
+          {showHeader && (
+            <div>
+              <h1 className="bee-display">{t("title")}</h1>
+              <p className="bee-caption mt-1">{t("subtitle")}</p>
+            </div>
+          )}
+          <div className="ml-auto flex items-center gap-2">
             <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
             <button
               type="button"

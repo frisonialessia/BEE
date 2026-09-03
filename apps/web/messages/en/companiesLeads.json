@@ -4,6 +4,10 @@
     "eyebrow": "Accounts",
     "title": "Companies",
     "subtitle": "Every company with its contacts, opportunities, and signals in one place",
+    "outerTabs": {
+      "companies": "Companies",
+      "leads": "Leads"
+    },
     "live": "Live",
     "demoData": "Demo data",
     "newCompanyButton": "+ New company",

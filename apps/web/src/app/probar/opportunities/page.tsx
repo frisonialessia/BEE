@@ -1,5 +1,6 @@
-import { OpportunitiesDashboard } from "@/features/opportunities/opportunities-dashboard";
+import { redirect } from "next/navigation";
 
-export default function ProbarOpportunitiesPage() {
-  return <OpportunitiesDashboard />;
+// See dashboard/opportunities/page.tsx's own comment.
+export default function ProbarOpportunitiesRedirectPage() {
+  redirect("/probar/crm?tab=opportunities");
 }

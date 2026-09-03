@@ -1,5 +1,6 @@
-import { PriorityMatrixView } from "@/features/priority/priority-matrix-view";
+import { redirect } from "next/navigation";
 
-export default function ProbarPriorityPage() {
-  return <PriorityMatrixView />;
+// See dashboard/priority/page.tsx's own comment.
+export default function ProbarPriorityRedirectPage() {
+  redirect("/probar/signals?tab=priority");
 }

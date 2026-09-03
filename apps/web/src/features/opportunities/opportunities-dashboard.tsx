@@ -17,8 +17,14 @@ import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunit
 import { useUsers } from "@/hooks/queries/use-users";
 import { stripOpportunityTitlePrefix } from "@/lib/format";
 
-/** Oportunidades y battlecards — plays listos para el CEO. */
-export function OpportunitiesDashboard() {
+/** Oportunidades y battlecards — plays listos para el CEO.
+ *
+ * `showHeader=false` when embedded as a tab of the merged CRM page (see
+ * crm-view.tsx) — the page-level header already carries the eyebrow/title,
+ * a second one directly under it would be redundant. The live/demo badge
+ * and CSV export button stay either way; those are real actions, not
+ * decoration a page-level header already covers. */
+export function OpportunitiesDashboard({ showHeader = true }: { showHeader?: boolean }) {
   const t = useTranslations("opportunitiesPriority.opportunities");
   const { data: battlecardsResult, isLoading: loadingBattlecards } = useBattlecards();
   const { data: allOppsResult, isLoading: loadingOpps } = useOpportunities(undefined, 200);
@@ -46,14 +52,16 @@ export function OpportunitiesDashboard() {
 
   return (
     <div>
-      <header className="mb-6">
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="bee-display">{t("title")}</h1>
-            <p className="bee-caption mt-1">{t("subtitle")}</p>
-          </div>
-          <div className="flex items-center gap-2">
+      <header className={showHeader ? "mb-6" : "mb-4"}>
+        {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
+        <div className={`flex flex-wrap items-start justify-between gap-3 ${showHeader ? "mt-1" : ""}`}>
+          {showHeader && (
+            <div>
+              <h1 className="bee-display">{t("title")}</h1>
+              <p className="bee-caption mt-1">{t("subtitle")}</p>
+            </div>
+          )}
+          <div className="ml-auto flex items-center gap-2">
             <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
             <ExportCsvButton
               rows={exportRows}

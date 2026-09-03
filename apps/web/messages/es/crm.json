@@ -2,7 +2,9 @@
   "view": {
     "eyebrow": "Pipeline comercial",
     "title": "CRM",
-    "description": "El pipeline real, etapa por etapa — arrastra una tarjeta para moverla"
+    "description": "El pipeline real, etapa por etapa — arrastra una tarjeta para moverla",
+    "pipelineTab": "Pipeline",
+    "opportunitiesTab": "Oportunidades"
   },
   "board": {
     "live": "En vivo",

@@ -1,7 +1,6 @@
 import {
   Building2,
   CalendarDays,
-  Crosshair,
   Fingerprint,
   Flame,
   KanbanSquare,
@@ -9,13 +8,9 @@ import {
   Lightbulb,
   Plug,
   Radio,
-  Scale,
   Settings,
-  ShieldCheck,
   SlidersHorizontal,
-  Target,
   TrendingUp,
-  Users,
   Workflow,
   Zap,
   type LucideIcon,
@@ -50,27 +45,30 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [{ href: "/dashboard", icon: LayoutDashboard, labelKey: "overview", exact: true }],
   },
   {
+    // CRM/Oportunidades and Companies/Leads were each two rows here —
+    // both pairs are now one page with tabs (CrmView, CompaniesList); the
+    // merged-away hrefs (/opportunities, /leads) still work as redirects,
+    // see app/dashboard/{opportunities,leads}/page.tsx.
     groupKey: "accounts",
     items: [
       { href: "/dashboard/crm", icon: KanbanSquare, labelKey: "crm" },
       { href: "/dashboard/companies", icon: Building2, labelKey: "companies" },
-      { href: "/dashboard/leads", icon: Users, labelKey: "leads" },
-      { href: "/dashboard/opportunities", icon: Target, labelKey: "opportunities" },
       { href: "/dashboard/calendar", icon: CalendarDays, labelKey: "calendar" },
     ],
   },
   {
+    // Signals/Priority and Forecast/Win-Loss, same "tabs, not two rows"
+    // treatment — see signals-dashboard.tsx / forecast-view.tsx.
     groupKey: "intelligence",
     items: [
-      { href: "/dashboard/priority", icon: Crosshair, labelKey: "priority" },
       { href: "/dashboard/signals", icon: Radio, labelKey: "signals" },
       { href: "/dashboard/strategies", icon: Lightbulb, labelKey: "strategies" },
       { href: "/dashboard/dark-funnel", icon: Flame, labelKey: "darkFunnel" },
       { href: "/dashboard/forecast", icon: TrendingUp, labelKey: "forecast" },
-      { href: "/dashboard/win-loss", icon: Scale, labelKey: "winLoss" },
     ],
   },
   {
+    // Control/Resilience, same treatment — see app/dashboard/control/page.tsx.
     groupKey: "operations",
     items: [
       { href: "/dashboard/control", icon: SlidersHorizontal, labelKey: "control", exact: true },
@@ -78,7 +76,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/dashboard/brand", icon: Fingerprint, labelKey: "brand" },
       { href: "/dashboard/sequences", icon: Workflow, labelKey: "sequences" },
       { href: "/dashboard/integrations", icon: Plug, labelKey: "integrations" },
-      { href: "/dashboard/resilience", icon: ShieldCheck, labelKey: "resilience" },
     ],
   },
   {

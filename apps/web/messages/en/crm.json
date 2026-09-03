@@ -2,7 +2,9 @@
   "view": {
     "eyebrow": "Sales pipeline",
     "title": "CRM",
-    "description": "The real pipeline, stage by stage — drag a card to move it"
+    "description": "The real pipeline, stage by stage — drag a card to move it",
+    "pipelineTab": "Pipeline",
+    "opportunitiesTab": "Opportunities"
   },
   "board": {
     "live": "Live",

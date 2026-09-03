@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
 import { CompanyDuplicatesPanel } from "@/components/dedup/company-duplicates-panel";
+import { MergedPageTabs } from "@/components/merged-page-tabs";
+import { LeadsDirectory } from "@/features/leads/leads-directory";
 import { useCompanies, useCreateCompany } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -90,6 +92,11 @@ function NewCompanyForm({ onDone }: { onDone: () => void }) {
 }
 
 /** Empresas — la cuenta como unidad, con cuántos contactos y oportunidades tiene cada una. */
+/** Companies — the primary tab of the merged Companies+Leads page; Leads
+ * (LeadsDirectory, showHeader={false}) is the second tab below. Two
+ * account-record entities, previously two sidebar rows — see
+ * lib/nav-items.ts. /dashboard/leads still exists as a redirect to
+ * ?tab=leads, so no old link/bookmark breaks. */
 export function CompaniesList() {
   const t = useTranslations("companiesLeads.companiesList");
   const { data: companiesResult, isLoading } = useCompanies(100);
@@ -159,24 +166,32 @@ export function CompaniesList() {
         </div>
       </header>
 
-      {showNew && <NewCompanyForm onDone={() => setShowNew(false)} />}
+      <MergedPageTabs
+        defaultValue="companies"
+        tabs={[
+          {
+            value: "companies",
+            label: t("outerTabs.companies"),
+            content: (
+              <>
+                {showNew && <NewCompanyForm onDone={() => setShowNew(false)} />}
 
-      <CompanyDuplicatesPanel />
+                <CompanyDuplicatesPanel />
 
-      {isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-32" />
-          ))}
-        </div>
-      ) : companies.length === 0 ? (
-        <div className="bee-bento bee-bento-pad py-12 text-center">
-          <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
-          <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
-        </div>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {companies.map((company) => {
+                {isLoading ? (
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Skeleton key={i} className="h-32" />
+                    ))}
+                  </div>
+                ) : companies.length === 0 ? (
+                  <div className="bee-bento bee-bento-pad py-12 text-center">
+                    <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
+                    <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {companies.map((company) => {
             const cardContent = (
               <>
                 <div className="flex items-center gap-2.5">
@@ -224,8 +239,14 @@ export function CompaniesList() {
               </Link>
             );
           })}
-        </div>
-      )}
+                  </div>
+                )}
+              </>
+            ),
+          },
+          { value: "leads", label: t("outerTabs.leads"), content: <LeadsDirectory showHeader={false} /> },
+        ]}
+      />
     </div>
   );
 }

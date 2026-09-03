@@ -50,7 +50,10 @@ const STATUS_OPTIONS: LeadStatus[] = ["new", "qualified", "engaged", "converted"
  *  enfocar cada día: intent score, filtros, búsqueda y exportación completa.
  *  Todo se calcula en el cliente a partir de lo que ya está cargado, mismo
  *  patrón que el resto de la BI de BEE — sin endpoint de búsqueda aparte. */
-export function LeadsDirectory() {
+/** `showHeader=false` when embedded as a tab of the merged Companies page
+ * (see companies-list.tsx) — the live/demo badge, import, and CSV export
+ * actions stay either way. */
+export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } = {}) {
   const locale = useLocale() as Locale;
   const t = useTranslations("companiesLeads.leadsDirectory");
   const leadStatusLabels = getLeadStatusLabels(locale);
@@ -180,16 +183,18 @@ export function LeadsDirectory() {
 
   return (
     <div>
-      <header className="mb-6">
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="bee-display">{t("title")}</h1>
-            <p className="bee-caption mt-1">
-              {t("subtitle")}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+      <header className={showHeader ? "mb-6" : "mb-4"}>
+        {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
+        <div className={`flex flex-wrap items-start justify-between gap-3 ${showHeader ? "mt-1" : ""}`}>
+          {showHeader && (
+            <div>
+              <h1 className="bee-display">{t("title")}</h1>
+              <p className="bee-caption mt-1">
+                {t("subtitle")}
+              </p>
+            </div>
+          )}
+          <div className="ml-auto flex items-center gap-2">
             <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
             <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost inline-flex items-center gap-1.5">
               <Upload className="size-3.5" />

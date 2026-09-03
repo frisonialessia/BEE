@@ -1,5 +1,6 @@
-import { LeadsDirectory } from "@/features/leads/leads-directory";
+import { redirect } from "next/navigation";
 
-export default function ProbarLeadsPage() {
-  return <LeadsDirectory />;
+// See dashboard/leads/page.tsx's own comment.
+export default function ProbarLeadsRedirectPage() {
+  redirect("/probar/companies?tab=leads");
 }

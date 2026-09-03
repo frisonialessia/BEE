@@ -7,12 +7,18 @@ import { SignalVolumeChart } from "@/components/signals/signal-volume-chart";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MergedPageTabs } from "@/components/merged-page-tabs";
+import { PriorityMatrixView } from "@/features/priority/priority-matrix-view";
 import { usePagination } from "@/hooks/use-pagination";
 import { useSignals } from "@/hooks/queries/use-signals";
 import type { Locale } from "@/i18n/locales";
 import { computeDailySignalVolume } from "@/lib/signal-trends";
 
-/** Panel de señales — triggers de mercado del Signal Engine. */
+/** Panel de señales — triggers de mercado del Signal Engine — con
+ *  Priorización (fit × intención) como segunda pestaña: Priorización se
+ *  deriva de estas mismas señales, antes dos filas del sidebar (ver
+ *  lib/nav-items.ts). /dashboard/priority sigue existiendo como redirect
+ *  a ?tab=priority. */
 export function SignalsDashboard() {
   const locale = useLocale() as Locale;
   const t = useTranslations("signalsStrategies.signals");
@@ -46,50 +52,64 @@ export function SignalsDashboard() {
         </div>
       </header>
 
-      {isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-28" />
-          ))}
-        </div>
-      ) : isError ? (
-        <p className="text-sm text-destructive">{t("loadError")}</p>
-      ) : signals.length === 0 ? (
-        <div className="bee-bento bee-bento-pad py-12 text-center">
-          <p className="text-sm text-muted-foreground">{t("emptyTitle")}</p>
-          <p className="bee-caption mt-2">{t("emptySubtitle")}</p>
-        </div>
-      ) : (
-        <>
-          <section className="bee-surface bee-bento-pad mb-4">
-            <h3 className="bee-card-title">{t("volumeTitle")}</h3>
-            <p className="bee-caption mb-4">{t("volumeSubtitle")}</p>
-            <SignalVolumeChart points={dailyVolume} />
-          </section>
+      <MergedPageTabs
+        defaultValue="feed"
+        tabs={[
+          {
+            value: "feed",
+            label: t("outerTabs.feed"),
+            content: isLoading ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-28" />
+                ))}
+              </div>
+            ) : isError ? (
+              <p className="text-sm text-destructive">{t("loadError")}</p>
+            ) : signals.length === 0 ? (
+              <div className="bee-bento bee-bento-pad py-12 text-center">
+                <p className="text-sm text-muted-foreground">{t("emptyTitle")}</p>
+                <p className="bee-caption mt-2">{t("emptySubtitle")}</p>
+              </div>
+            ) : (
+              <>
+                <section className="bee-surface bee-bento-pad mb-4">
+                  <h3 className="bee-card-title">{t("volumeTitle")}</h3>
+                  <p className="bee-caption mb-4">{t("volumeSubtitle")}</p>
+                  <SignalVolumeChart points={dailyVolume} />
+                </section>
 
-          {/* Columna apilada en mobile a propósito, no el patrón de caja
-           * con scroll horizontal que usa el Pipeline (crm-board.tsx) o
-           * las tarjetas cortas de /probar — cada SignalCard trae título +
-           * descripción + tags, texto largo que se lee peor recortado en
-           * una tarjeta angosta de scroll horizontal que apilado a lo
-           * ancho de la pantalla. */}
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {pagination.pageItems.map((signal, i) => (
-              <SignalCard key={signal.id} signal={signal} toneIndex={i} />
-            ))}
-          </div>
+                {/* Columna apilada en mobile a propósito, no el patrón de caja
+                 * con scroll horizontal que usa el Pipeline (crm-board.tsx) o
+                 * las tarjetas cortas de /probar — cada SignalCard trae título +
+                 * descripción + tags, texto largo que se lee peor recortado en
+                 * una tarjeta angosta de scroll horizontal que apilado a lo
+                 * ancho de la pantalla. */}
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {pagination.pageItems.map((signal, i) => (
+                    <SignalCard key={signal.id} signal={signal} toneIndex={i} />
+                  ))}
+                </div>
 
-          <PaginationBar
-            page={pagination.page}
-            pageSize={pagination.pageSize}
-            totalPages={pagination.totalPages}
-            totalItems={pagination.totalItems}
-            onPageChange={pagination.goToPage}
-            onPageSizeChange={pagination.changePageSize}
-            itemLabel={t("itemLabel")}
-          />
-        </>
-      )}
+                <PaginationBar
+                  page={pagination.page}
+                  pageSize={pagination.pageSize}
+                  totalPages={pagination.totalPages}
+                  totalItems={pagination.totalItems}
+                  onPageChange={pagination.goToPage}
+                  onPageSizeChange={pagination.changePageSize}
+                  itemLabel={t("itemLabel")}
+                />
+              </>
+            ),
+          },
+          {
+            value: "priority",
+            label: t("outerTabs.priority"),
+            content: <PriorityMatrixView showHeader={false} />,
+          },
+        ]}
+      />
     </div>
   );
 }
