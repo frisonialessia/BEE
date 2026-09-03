@@ -251,6 +251,9 @@
       "bi": "Reportes y BI",
       "other": "Otras"
     },
+    "automation": {
+      "hint": "n8n, Zapier, Make o tu propio sistema se conectan aquí — crea un webhook saliente y apunta el nodo \"Webhook\" (o el trigger equivalente) a la URL que te damos. No hay credenciales de por medio: cada evento llega firmado con X-BEE-Signature para que puedas verificar que viene de BEE."
+    },
     "genericConnectedCopy": "{label} conectado como {account}.",
     "genericDisconnectedCopy": "Conecta tu cuenta de {label}.",
     "gmail": {

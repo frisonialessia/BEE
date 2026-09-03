@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
 import { useIsDemoMode } from "@/lib/demo/mode";
 import { useAuth } from "@/providers/auth-provider";
 import {
@@ -364,6 +365,18 @@ export function IntegrationsView() {
             ),
           )}
           {!canManage && <p className="bee-caption">{t("manageNotice")}</p>}
+
+          {/* Automatización — no es un proveedor OAuth más: n8n, Zapier,
+             Make, o cualquier sistema propio se conectan apuntando su nodo
+             "Webhook" a la URL que se genera aquí, no con un botón de
+             Conectar. Reutiliza el mismo componente que ya vive en Equipo
+             (misma data en vivo) — este es el lugar donde alguien buscando
+             "conectar n8n" en realidad tiene que aterrizar. */}
+          <section className="space-y-3">
+            <p className="bee-eyebrow">{t("categories.automation")}</p>
+            <p className="bee-caption">{t("automation.hint")}</p>
+            <OutboundWebhooksSection canManage={canManage} />
+          </section>
 
           <section className="bee-surface bee-bento-pad">
             <div className="mb-3 flex items-center gap-2">

@@ -251,6 +251,9 @@
       "bi": "Reporting & BI",
       "other": "Other"
     },
+    "automation": {
+      "hint": "n8n, Zapier, Make, or your own system connect here — create an outbound webhook and point its \"Webhook\" node (or equivalent trigger) at the URL we give you. No shared credentials involved: every event arrives signed with X-BEE-Signature so you can verify it actually came from BEE."
+    },
     "genericConnectedCopy": "{label} connected as {account}.",
     "genericDisconnectedCopy": "Connect your {label} account.",
     "gmail": {
