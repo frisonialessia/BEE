@@ -187,7 +187,7 @@ export function opportunityTypeVariant(type: OpportunityType): "outline" | "succ
 // badges next to the title already carry that information — showing it
 // twice is redundant), so this is the one place that prefix list is typed
 // out, instead of eight independent copies of the same regex drifting.
-const OPPORTUNITY_TITLE_PREFIX_RE = /^(Opportunity|Expansion opportunity|Renewal risk):\s*/i;
+const OPPORTUNITY_TITLE_PREFIX_RE = /^(Opportunity|Expansion opportunity|Renewal risk|Oportunidad|Oportunidad de expansión|Riesgo de renovación):\s*/i;
 
 export function stripOpportunityTitlePrefix(title: string): string {
   return title.replace(OPPORTUNITY_TITLE_PREFIX_RE, "");

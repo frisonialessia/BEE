@@ -1,0 +1,43 @@
+{
+  "eyebrow": "Revenue intelligence",
+  "title": "Sales",
+  "subtitle": "Everything closed since the organization exists",
+  "kpis": {
+    "total": "Won all-time",
+    "since": "{count, plural, =1 {1 deal} other {# deals}} in total",
+    "month": "Won this month",
+    "vsLastMonth": "vs. last month",
+    "clients": "Clients this month",
+    "goal": "Month goal",
+    "goalOf": "of {goal}",
+    "ticket": "Average ticket",
+    "cycle": "avg. cycle {days}d",
+    "noCycle": "no cycle yet"
+  },
+  "cumulative": {
+    "title": "Cumulative revenue",
+    "caption": "Last 12 months, won on won"
+  },
+  "monthly": {
+    "title": "Month by month",
+    "caption": "Won per month",
+    "captionGoal": "Won per month · goal {goal}",
+    "goalLabel": "Goal"
+  },
+  "ranking": {
+    "title": "Team ranking",
+    "caption": "Won this month · green when the goal is beaten"
+  },
+  "ledger": {
+    "title": "Every closed deal",
+    "caption": "{count, plural, =1 {1 won deal} other {# won deals}} since the start",
+    "empty": "No closed deals yet. The first one will show up here.",
+    "cols": {
+      "date": "Date",
+      "deal": "Deal",
+      "company": "Account",
+      "owner": "Owner",
+      "amount": "Amount"
+    }
+  }
+}

@@ -61,6 +61,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
       <OpportunityDrawerProvider>
         <MobileNavProvider>
           <div className="bee-app">
+                <div className="bee-ground" aria-hidden="true"><i /><i /><i /></div>
             <DashboardRail groups={PROBAR_NAV_GROUPS} homeHref="/probar" />
             <div className="bee-main">
               <div className="shrink-0 border-b border-border bg-[var(--color-chart-4)] text-white">

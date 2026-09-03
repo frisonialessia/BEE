@@ -65,12 +65,15 @@ export interface TeamOut {
   parent_team_id: string | null;
   name: string;
   description: string | null;
+  /** ISO 4217 — what this team sells and is measured in. */
+  currency: string;
 }
 
 export interface TeamCreateIn {
   name: string;
   description?: string | null;
   parent_team_id?: string | null;
+  currency?: string;
 }
 
 export interface TeamProfileOut {

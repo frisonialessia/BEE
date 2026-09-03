@@ -1,0 +1,43 @@
+{
+  "eyebrow": "Inteligencia de ingresos",
+  "title": "Ventas",
+  "subtitle": "Todo lo cerrado desde que existe la organización",
+  "kpis": {
+    "total": "Ganado histórico",
+    "since": "{count, plural, =1 {1 cierre} other {# cierres}} en total",
+    "month": "Ganado este mes",
+    "vsLastMonth": "vs. mes anterior",
+    "clients": "Clientes este mes",
+    "goal": "Meta del mes",
+    "goalOf": "de {goal}",
+    "ticket": "Ticket medio",
+    "cycle": "ciclo medio {days} d",
+    "noCycle": "sin ciclo todavía"
+  },
+  "cumulative": {
+    "title": "Ingresos acumulados",
+    "caption": "Últimos 12 meses, ganado sobre ganado"
+  },
+  "monthly": {
+    "title": "Mes a mes",
+    "caption": "Ganado por mes",
+    "captionGoal": "Ganado por mes · meta {goal}",
+    "goalLabel": "Meta"
+  },
+  "ranking": {
+    "title": "Ranking del equipo",
+    "caption": "Ganado este mes · verde al superar la meta"
+  },
+  "ledger": {
+    "title": "Todos los cierres",
+    "caption": "{count, plural, =1 {1 deal ganado} other {# deals ganados}} desde el inicio",
+    "empty": "Todavía no hay cierres. El primero aparecerá aquí.",
+    "cols": {
+      "date": "Fecha",
+      "deal": "Deal",
+      "company": "Cuenta",
+      "owner": "Responsable",
+      "amount": "Monto"
+    }
+  }
+}

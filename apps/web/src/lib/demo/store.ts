@@ -92,7 +92,7 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * a returning visitor on an older snapshot has every opportunity's
  * `assigned_to_user_id` still `null`, which reads as "no one on the team
  * has ever won a deal" instead of the sandbox just never having stamped it. */
-const SEED_VERSION = "7";
+const SEED_VERSION = "8";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Which language the currently-stored seed was written in — separate from
@@ -169,7 +169,7 @@ function saveJSON<T>(key: string, value: T): void {
 // features — showing either with zero teammates isn't a smaller honest
 // version of the feature, it's not the feature at all. These ids are
 // `demo-user-*`, never mistakable for a real account.
-const DEMO_TEAMS: TeamOut[] = [
+const DEMO_TEAMS: Omit<TeamOut, "currency">[] = [
   { id: "demo-team-north", organization_id: "demo-org", parent_team_id: null, name: "Equipo Norte", description: null },
   { id: "demo-team-south", organization_id: "demo-org", parent_team_id: null, name: "Equipo Sur", description: null },
 ];
@@ -193,7 +193,7 @@ export function demoFetchUsers(): UserOut[] {
 }
 
 export function demoFetchTeams(): TeamOut[] {
-  return DEMO_TEAMS;
+  return DEMO_TEAMS.map((t) => ({ currency: "USD", ...t }));
 }
 
 /** Deterministic (index-rotated, not random) so the same opportunity is

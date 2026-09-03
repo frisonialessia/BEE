@@ -51,6 +51,7 @@ export default function DashboardLayout({
           <MobileNavProvider>
             <CommandPaletteProvider>
               <div className="bee-app">
+                <div className="bee-ground" aria-hidden="true"><i /><i /><i /></div>
                 <DashboardRail />
                 <div className="bee-main">
                   <DashboardHeader />

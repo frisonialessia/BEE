@@ -13,7 +13,8 @@
       "readyHint": "battlecard completo",
       "hotLeads": "Leads calientes",
       "hotLeadsHint": "intención de compra",
-      "avgScore": "Score medio"
+      "avgScore": "Score medio",
+      "weeklySignals": "señales/semana"
     },
     "itemLabels": {
       "battlecards": "battlecards",
@@ -51,6 +52,19 @@
       },
       "critical": {
         "caption": "Listas para actuar · últimas 24 h"
+      },
+      "signalsWeekly": {
+        "title": "Señales por semana",
+        "caption": "Últimas 8 semanas"
+      },
+      "signalMix": {
+        "title": "Mezcla de señales",
+        "caption": "Por tipo, últimos 30 días"
+      },
+      "ranking": {
+        "title": "Ranking del equipo",
+        "caption": "Cierres de 30 días · anillo = avance a la meta",
+        "link": "Ver Ventas →"
       }
     }
   },
@@ -71,7 +85,7 @@
     "tooltipDeals": "{won} de {closed} deals cerrados ganados ({pct}%)"
   },
   "pipelineFunnel": {
-    "shareOfPipeline": "{pct}% del pipeline",
+    "shareOfPipeline": "{pct} oportunidades en total",
     "noneIn": "Sin oportunidades en: {stages}",
     "allEmpty": "Todavía no hay oportunidades en el embudo."
   },
@@ -243,5 +257,11 @@
       "empty": "Todavía no hay cierres en este periodo.",
       "deals": "{count, plural, =1 {1 cierre} other {# cierres}}"
     }
+  },
+  "goalRanking": {
+    "empty": "Todavía no hay cierres en este periodo.",
+    "unknown": "Sin asignar",
+    "deals": "{count, plural, =1 {1 cierre} other {# cierres}}",
+    "noGoal": "sin meta"
   }
 }

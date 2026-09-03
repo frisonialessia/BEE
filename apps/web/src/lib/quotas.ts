@@ -19,8 +19,8 @@ export function computeQuotaActual(
         o.status === "won" &&
         o.assigned_to_user_id &&
         memberIds.includes(o.assigned_to_user_id) &&
-        o.updated_at.slice(0, 10) >= quota.period_start &&
-        o.updated_at.slice(0, 10) <= quota.period_end,
+        (o.closed_at ?? o.updated_at).slice(0, 10) >= quota.period_start &&
+        (o.closed_at ?? o.updated_at).slice(0, 10) <= quota.period_end,
     )
     .reduce((sum, o) => sum + (o.amount ?? 0), 0);
 }
@@ -61,4 +61,28 @@ export function computeQuotaPace(
 export function isQuotaActive(quota: Quota, today: Date): boolean {
   const todayStr = today.toISOString().slice(0, 10);
   return quota.period_start <= todayStr && todayStr <= quota.period_end;
+}
+
+/** Clientes ganados dentro del período de una cuota (número de cierres),
+ *  la segunda medida de una meta junto al monto. */
+export function computeQuotaClients(quota: Quota, users: UserOut[], opportunities: Opportunity[]): number {
+  const memberIds = quota.user_id
+    ? [quota.user_id]
+    : users.filter((u) => u.team_id === quota.team_id).map((u) => u.id);
+  return opportunities.filter(
+    (o) =>
+      o.status === "won" &&
+      o.assigned_to_user_id &&
+      memberIds.includes(o.assigned_to_user_id) &&
+      (o.closed_at ?? o.updated_at).slice(0, 10) >= quota.period_start &&
+      (o.closed_at ?? o.updated_at).slice(0, 10) <= quota.period_end,
+  ).length;
+}
+
+/** Avance hacia la meta: el mayor de monto y clientes cuando hay ambos —
+ *  una meta cumplida por cualquiera de las dos vías cuenta. */
+export function computeQuotaAttainment(quota: Quota, users: UserOut[], opportunities: Opportunity[]): number {
+  const byAmount = quota.target_amount > 0 ? computeQuotaActual(quota, users, opportunities) / quota.target_amount : 0;
+  const byCount = quota.target_count ? computeQuotaClients(quota, users, opportunities) / quota.target_count : 0;
+  return Math.max(byAmount, byCount);
 }

@@ -13,7 +13,8 @@
       "readyHint": "battlecard complete",
       "hotLeads": "Hot leads",
       "hotLeadsHint": "buying intent",
-      "avgScore": "Average score"
+      "avgScore": "Average score",
+      "weeklySignals": "signals/week"
     },
     "itemLabels": {
       "battlecards": "battlecards",
@@ -51,6 +52,19 @@
       },
       "critical": {
         "caption": "Ready to action · last 24h"
+      },
+      "signalsWeekly": {
+        "title": "Signals per week",
+        "caption": "Last 8 weeks"
+      },
+      "signalMix": {
+        "title": "Signal mix",
+        "caption": "By type, last 30 days"
+      },
+      "ranking": {
+        "title": "Team ranking",
+        "caption": "30-day closes · ring = progress to goal",
+        "link": "See Sales →"
       }
     }
   },
@@ -71,7 +85,7 @@
     "tooltipDeals": "{won} of {closed} closed deals won ({pct}%)"
   },
   "pipelineFunnel": {
-    "shareOfPipeline": "{pct}% of pipeline",
+    "shareOfPipeline": "{pct} opportunities in total",
     "noneIn": "No opportunities in: {stages}",
     "allEmpty": "No opportunities in the funnel yet."
   },
@@ -243,5 +257,11 @@
       "empty": "No closed deals in this period yet.",
       "deals": "{count, plural, =1 {1 deal} other {# deals}}"
     }
+  },
+  "goalRanking": {
+    "empty": "No closed deals in this period yet.",
+    "unknown": "Unassigned",
+    "deals": "{count, plural, =1 {1 deal} other {# deals}}",
+    "noGoal": "no goal"
   }
 }

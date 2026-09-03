@@ -154,3 +154,17 @@ export function formatRelativeTime(iso: string, locale: Locale, now: Date = new 
   }
   return rtf.format(Math.round(diffSeconds / 60), "minute");
 }
+
+/** Amount in the team's own currency (ISO 4217), compact when large. */
+export function formatMoney(amount: number, currency: string, locale: Locale, compact = false): string {
+  try {
+    return new Intl.NumberFormat(tag(locale), {
+      style: "currency",
+      currency: currency || "USD",
+      notation: compact ? "compact" : "standard",
+      maximumFractionDigits: compact ? 1 : 0,
+    }).format(amount);
+  } catch {
+    return formatCurrencyUSD(amount, locale);
+  }
+}

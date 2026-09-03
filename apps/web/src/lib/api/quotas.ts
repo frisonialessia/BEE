@@ -10,6 +10,8 @@ export interface Quota {
   period_start: string;
   period_end: string;
   target_amount: number;
+  /** New-clients target — a rep can be measured on money, on logos, or both. */
+  target_count: number | null;
 }
 
 export interface QuotaCreateIn {
@@ -17,7 +19,8 @@ export interface QuotaCreateIn {
   team_id?: string;
   period_start: string;
   period_end: string;
-  target_amount: number;
+  target_amount?: number;
+  target_count?: number;
 }
 
 export async function fetchQuotas(): Promise<FetchResult<Quota[]>> {

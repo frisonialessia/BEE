@@ -1,0 +1,105 @@
+"use client";
+
+import { Trophy } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
+import { useMemo } from "react";
+
+import { DATA, SALES, mix } from "@/components/charts/palette";
+import { ProgressRing } from "@/components/charts/progress-ring";
+import { useOpportunities } from "@/hooks/queries/use-opportunities";
+import { useQuotas } from "@/hooks/queries/use-quotas";
+import { useTeams } from "@/hooks/queries/use-teams";
+import { useUsers } from "@/hooks/queries/use-users";
+import type { Locale } from "@/i18n/locales";
+import { formatMoney } from "@/lib/i18n/format";
+import { computeQuotaAttainment, isQuotaActive } from "@/lib/quotas";
+
+const RANK_TONE = [DATA.honey, DATA.indigo, DATA.violet];
+
+/**
+ * Ranking del equipo por ingresos ganados en el periodo, con el anillo de
+ * avance a la meta activa de cada persona (monto y/o clientes). En Ventas
+ * (`sales`) la fila que supera su meta se pinta de verde; en cualquier
+ * otra página el verde no aparece: el anillo lleno en miel ya lo dice.
+ */
+export function TeamGoalRanking({
+  days = 30,
+  month = false,
+  sales = false,
+  limit = 3,
+}: {
+  days?: number;
+  /** Rank by the current calendar month instead of trailing `days` — what Ventas uses so the ranking and the monthly goals share a period. */
+  month?: boolean;
+  sales?: boolean;
+  limit?: number;
+}) {
+  const t = useTranslations("dashboardOverview.goalRanking");
+  const locale = useLocale() as Locale;
+  const { data: oppsResult } = useOpportunities(undefined, 300);
+  const { data: users } = useUsers();
+  const { data: quotasResult } = useQuotas();
+  const { data: teamsData } = useTeams();
+
+  const rows = useMemo(() => {
+    const opportunities = oppsResult?.data ?? [];
+    const quotas = quotasResult?.data ?? [];
+    const teams = teamsData ?? [];
+    const allUsers = users ?? [];
+    const today = new Date();
+    const from = month ? new Date(today.getFullYear(), today.getMonth(), 1).getTime() : today.getTime() - days * 86_400_000;
+    const byRep = new Map<string, { value: number; deals: number }>();
+    for (const o of opportunities) {
+      if (o.status !== "won" || !o.assigned_to_user_id || !o.closed_at) continue;
+      if (new Date(o.closed_at).getTime() < from) continue;
+      const row = byRep.get(o.assigned_to_user_id) ?? { value: 0, deals: 0 };
+      row.value += o.amount ?? 0;
+      row.deals += 1;
+      byRep.set(o.assigned_to_user_id, row);
+    }
+    return [...byRep.entries()]
+      .sort((a, b) => b[1].value - a[1].value)
+      .slice(0, limit)
+      .map(([userId, row]) => {
+        const user = allUsers.find((u) => u.id === userId);
+        const goal = quotas.find((q) => q.user_id === userId && isQuotaActive(q, today));
+        const currency = teams.find((x) => x.id === user?.team_id)?.currency ?? teams[0]?.currency ?? "USD";
+        return {
+          userId,
+          name: user?.full_name ?? t("unknown"),
+          currency,
+          attainment: goal ? computeQuotaAttainment(goal, allUsers, opportunities) : null,
+          ...row,
+        };
+      });
+  }, [oppsResult, quotasResult, teamsData, users, days, month, limit, t]);
+
+  if (rows.length === 0) return <p className="bee-caption py-6 text-center">{t("empty")}</p>;
+
+  return (
+    <ol className="flex flex-col gap-2">
+      {rows.map((rep, i) => {
+        const reached = rep.attainment !== null && rep.attainment >= 1;
+        const ringColor = sales ? (reached ? SALES.won : SALES.lime) : reached ? DATA.honey : DATA.indigo;
+        const bg = sales && reached ? mix(SALES.mint, 55) : i === 0 ? mix(DATA.honeyFill, 22) : undefined;
+        return (
+          <li key={rep.userId} className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2" style={bg ? { background: bg } : undefined}>
+            <span className="bee-micro w-6 font-semibold text-[var(--color-text)]">#{i + 1}</span>
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: RANK_TONE[i] ?? DATA.indigo }}>
+              {rep.name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("")}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="flex items-center gap-1 text-sm font-medium">
+                {i === 0 && <Trophy className="size-3.5 shrink-0" style={{ color: sales ? SALES.won : DATA.honey }} />}
+                <span className="truncate">{rep.name}</span>
+              </p>
+              <p className="bee-micro">{t("deals", { count: rep.deals })}{rep.attainment === null ? ` · ${t("noGoal")}` : ""}</p>
+            </div>
+            {rep.attainment !== null && <ProgressRing value={rep.attainment} size={36} stroke={4} color={ringColor} />}
+            <span className="text-sm font-bold tabular-nums">{formatMoney(rep.value, rep.currency, locale, true)}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}

@@ -11,6 +11,7 @@ import {
   Settings,
   SlidersHorizontal,
   TrendingUp,
+  Trophy,
   Workflow,
   Zap,
   type LucideIcon,
@@ -65,6 +66,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/dashboard/strategies", icon: Lightbulb, labelKey: "strategies" },
       { href: "/dashboard/dark-funnel", icon: Flame, labelKey: "darkFunnel" },
       { href: "/dashboard/forecast", icon: TrendingUp, labelKey: "forecast" },
+      { href: "/dashboard/sales", icon: Trophy, labelKey: "sales" },
     ],
   },
   {

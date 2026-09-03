@@ -274,32 +274,36 @@ export function demoRevenueSimulation(params: {
   };
 }
 
-/** Quotas over a trailing six-month window (so this dataset's closed deals
- *  actually fall inside it), sized off each rep's real won revenue: three
- *  reps and the team are on pace, one rep is deliberately behind — the
- *  Brief del día then has one true thing to say about pace, not five. */
+/** Monthly goals for the current calendar month (goals are monthly, in the
+ *  team's currency and/or in clients), sized off each rep's real won revenue
+ *  this month: the first rep with a close this month is over her goal (the
+ *  one green row Ventas is allowed), the rest are on pace, and the team as a
+ *  whole sits under halfway — so the Brief and the rings have something true
+ *  to say without every number being a round success. */
 export function demoFetchQuotas(): Quota[] {
   const users = demoFetchUsers();
   const teams = demoFetchTeams();
   const opportunities = demoFetchOpportunities();
   const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   const iso = (d: Date) => d.toISOString().slice(0, 10);
-  const elapsed = Math.min(1, Math.max(0.2, (now.getTime() - start.getTime()) / (end.getTime() - start.getTime())));
   const round = (n: number) => Math.max(10_000, Math.round(n / 5_000) * 5_000);
 
-  const quotas: Quota[] = users.map((u, i) => {
-    const base = { id: `demo-quota-${u.id}`, user_id: u.id, team_id: null, period_start: iso(start), period_end: iso(end), target_amount: 0 };
+  let starPicked = false;
+  const quotas: Quota[] = users.map((u) => {
+    const base = { id: `demo-quota-${u.id}`, user_id: u.id, team_id: null, period_start: iso(start), period_end: iso(end), target_amount: 0, target_count: null };
     const actual = computeQuotaActual(base, users, opportunities);
-    // Rep #2 lands ~35 points behind the elapsed fraction; the rest ~10 ahead.
-    const target = i === 1 ? actual / Math.max(0.05, elapsed - 0.35) : actual / (elapsed + 0.1);
-    return { ...base, target_amount: round(actual > 0 ? target : 45_000) };
+    if (actual > 0 && !starPicked) {
+      starPicked = true;
+      return { ...base, target_amount: round(actual * 0.8), target_count: 1 };
+    }
+    return { ...base, target_amount: round(actual > 0 ? actual / 0.7 : 30_000) };
   });
   for (const team of teams) {
-    const base = { id: `demo-quota-${team.id}`, user_id: null, team_id: team.id, period_start: iso(start), period_end: iso(end), target_amount: 0 };
+    const base = { id: `demo-quota-${team.id}`, user_id: null, team_id: team.id, period_start: iso(start), period_end: iso(end), target_amount: 0, target_count: null };
     const actual = computeQuotaActual(base, users, opportunities);
-    quotas.push({ ...base, target_amount: round(actual > 0 ? actual / (elapsed + 0.05) : 120_000) });
+    quotas.push({ ...base, target_amount: round(actual > 0 ? actual / 0.45 : 100_000), target_count: 4 });
   }
   return quotas;
 }
