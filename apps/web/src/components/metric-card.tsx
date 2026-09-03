@@ -50,7 +50,7 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        "bee-bento relative flex h-full min-w-0 flex-col items-center justify-center px-3 py-2 text-center",
+        "bee-bento relative flex h-full min-w-0 flex-col items-center justify-center px-4 py-3 text-center",
         TONE_CLASS[tone],
         hideOnMobile && "hidden md:flex",
         className,

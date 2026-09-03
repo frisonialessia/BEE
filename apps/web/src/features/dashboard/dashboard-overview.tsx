@@ -92,6 +92,11 @@ export function DashboardOverview({
           </div>
         </div>
 
+      </header>
+
+      {/* The same KPI strip every page opens with, in the page body with
+          the same gap as everywhere else — not squeezed into the header. */}
+      <div className="mb-4">
         {/* Five compact KPIs in one row; "Score medio" hides on a phone so
             the row stays 2×2 — the same strip every page opens with. */}
         <KpiStrip
@@ -104,7 +109,7 @@ export function DashboardOverview({
             { label: t("kpis.avgScore"), value: avgScore, hideOnMobile: true },
           ]}
         />
-      </header>
+      </div>
 
       <GettingStartedCard
         signalCount={signals.length}

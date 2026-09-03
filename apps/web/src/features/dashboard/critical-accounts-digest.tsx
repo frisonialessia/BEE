@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useSequences, useStartSequenceExecution } from "@/hooks/queries/use-sequences";
 import type { Locale } from "@/i18n/locales";
+import { signalFill, signalTone, TONE_CSS_VAR } from "@/lib/brand/colors";
 import { getSignalTypeLabels } from "@/lib/format";
 import type { SignalType } from "@/lib/types";
 import type { Battlecard } from "@/types/domain";
@@ -46,7 +47,16 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
   }
 
   return (
-    <div className="bee-bento bee-bento-pad space-y-3 transition-colors hover:border-[var(--color-chart-4)]">
+    // Filled with the signal's own tone (same mapping as SignalCard): a
+    // critical account is a signal-driven card, and the fill is what makes
+    // it read as important next to the white boxes around it.
+    <div
+      className="bee-bento bee-bento-pad space-y-3 transition-opacity hover:opacity-90"
+      style={{
+        background: signalFill(battlecard.signal.signal_type),
+        borderColor: TONE_CSS_VAR[signalTone(battlecard.signal.signal_type)],
+      }}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-xs font-semibold">

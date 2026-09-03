@@ -25,10 +25,13 @@ const TONE_ICON: Record<BriefTone, LucideIcon> = {
   info: Info,
 };
 
-const TONE_OUTLINE: Record<BriefTone, string> = {
-  hot: "bee-outline--magenta",
-  risk: "bee-outline--warm",
-  info: "bee-outline--blue",
+/* Brief cards are the one place on Resumen that carries a fill: each
+   severity gets its BEE tone mixed toward white, border in the pure hue,
+   so hot/risk/info read at a glance and text stays on a light ground. */
+const TONE_FILL: Record<BriefTone, React.CSSProperties> = {
+  hot: { background: "color-mix(in srgb, var(--color-chart-5) 22%, var(--color-card))", borderColor: "var(--color-chart-5)" },
+  risk: { background: "color-mix(in srgb, var(--color-accent-warm) 32%, var(--color-card))", borderColor: "var(--color-chart-1)" },
+  info: { background: "color-mix(in srgb, var(--color-chart-4) 22%, var(--color-card))", borderColor: "var(--color-chart-4)" },
 };
 
 const TONE_COLOR: Record<BriefTone, string> = {
@@ -117,7 +120,8 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
             <Link
               key={item.id}
               href={resolveHref(item.href)}
-              className={`bee-bento flex items-start gap-4 px-3 py-3 transition-colors hover:bg-[var(--color-primary)]/20 ${TONE_OUTLINE[item.tone]}`}
+              className="bee-bento flex items-start gap-4 px-4 py-3 transition-opacity hover:opacity-90"
+              style={TONE_FILL[item.tone]}
             >
               <Icon className="mt-1 size-4 shrink-0" style={{ color: TONE_COLOR[item.tone] }} />
               <div className="min-w-0">
@@ -155,7 +159,8 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
               <Link
                 key={item.id}
                 href={resolveHref(item.href)}
-                className="bee-glass bee-glass--hover flex w-64 shrink-0 items-start gap-4 rounded-[var(--radius-lg)] px-4 py-3"
+                className="bee-bento flex w-64 shrink-0 items-start gap-4 px-4 py-3 transition-opacity hover:opacity-90"
+                style={TONE_FILL[item.tone]}
               >
                 <Icon className="mt-1 size-4 shrink-0" style={{ color: TONE_COLOR[item.tone] }} />
                 <div className="min-w-0">

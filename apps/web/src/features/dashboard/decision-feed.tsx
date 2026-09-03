@@ -30,7 +30,7 @@
  * anomaly cards, whose title is the alert's own — and for older payloads.
  */
 
-import { CheckCircle2, PlayCircle, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
@@ -96,59 +96,63 @@ function Card({ card }: { card: DecisionCard }) {
     }
   }
 
+  const canAct = card.kind === "opportunity" ? Boolean(card.pending_action_id || card.opportunity_id) : true;
+  const actionLabel =
+    card.kind === "anomaly" ? t("viewAlerts") : card.pending_action_id ? t("approve") : t("execute");
+
+  function handleAct() {
+    if (card.kind === "anomaly") return;
+    if (card.pending_action_id) void handleApprove();
+    else if (card.opportunity_id) openOpportunity(card.opportunity_id);
+  }
+
   return (
-    <div className={`bee-bento flex flex-col gap-2 p-4 ${URGENCY_TONE[card.urgency]}`}>
+    <div className={`bee-bento relative flex flex-col gap-2 p-4 pr-10 ${URGENCY_TONE[card.urgency]}`}>
+      {/* X in the corner: dismiss. Small, quiet, never a full button. */}
+      {card.kind === "opportunity" && card.opportunity_id && (
+        <button
+          type="button"
+          onClick={() => void handleDismiss()}
+          disabled={busy !== null}
+          aria-label={t("dismiss")}
+          title={t("dismiss")}
+          className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[var(--color-primary)]/40 hover:text-foreground disabled:opacity-50"
+        >
+          <X className="size-3.5" />
+        </button>
+      )}
+
       <div className="min-w-0">
         <span className="bee-eyebrow">{t(`urgency.${card.urgency}`)}</span>
         <h4 className="mt-1 line-clamp-1 text-sm font-semibold tracking-tight">{headline}</h4>
         <p className="bee-caption mt-1 line-clamp-1">{reasoning}</p>
       </div>
 
-      {card.kind === "opportunity" && (
-        <div className="mt-auto flex flex-wrap gap-2 pt-1">
-          {card.pending_action_id ? (
-            <button
-              type="button"
-              onClick={() => void handleApprove()}
-              disabled={busy !== null}
-              className="bee-btn bee-btn--primary text-xs"
-            >
-              <CheckCircle2 className="size-3.5" />
-              {busy === "approve" ? t("approving") : t("approve")}
-            </button>
-          ) : (
-            card.opportunity_id && (
-              <button
-                type="button"
-                onClick={() => openOpportunity(card.opportunity_id!)}
-                className="bee-btn bee-btn--primary text-xs"
-              >
-                <PlayCircle className="size-3.5" />
-                {t("execute")}
-              </button>
-            )
-          )}
-          {card.opportunity_id && (
-            <button
-              type="button"
-              onClick={() => void handleDismiss()}
-              disabled={busy !== null}
-              className="bee-btn-text"
-            >
-              <X className="size-3.5" />
-              {busy === "dismiss" ? t("dismissing") : t("dismiss")}
-            </button>
-          )}
-        </div>
-      )}
-
-      {card.kind === "anomaly" && (
-        <div className="mt-auto pt-1">
-          <Link href={`${base}/control?tab=resilience`} className="bee-btn-ghost text-xs">
-            {t("viewAlerts")}
+      {/* One arrow to act: approve when BEE prepared a play, open the
+          opportunity otherwise, the alerts for an anomaly. */}
+      <div className="mt-auto flex items-center justify-end pt-1">
+        {card.kind === "anomaly" ? (
+          <Link
+            href={`${base}/control?tab=resilience`}
+            aria-label={actionLabel}
+            title={actionLabel}
+            className="bee-btn bee-btn--primary bee-btn--icon"
+          >
+            <ArrowRight className="size-4" />
           </Link>
-        </div>
-      )}
+        ) : (
+          <button
+            type="button"
+            onClick={handleAct}
+            disabled={!canAct || busy !== null}
+            aria-label={actionLabel}
+            title={busy === "approve" ? t("approving") : actionLabel}
+            className="bee-btn bee-btn--primary bee-btn--icon"
+          >
+            {card.pending_action_id ? <CheckCircle2 className="size-4" /> : <ArrowRight className="size-4" />}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
