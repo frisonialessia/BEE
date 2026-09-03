@@ -73,6 +73,18 @@ _ALWAYS_EXEMPT = frozenset(
 )
 
 
+def _path_is_exempt(path: str, exempt: frozenset[str]) -> bool:
+    """Exact match first, then prefix match — shared by APIKeyMiddleware
+    and APIRateLimitMiddleware's own exempt-path lists.
+
+    NOTE: only entries with len > 1 participate in prefix matching. "/" is
+    exact-only — if it were a prefix it would exempt every path (since
+    every URL starts with "/"), which would defeat the whole point of
+    either list.
+    """
+    return path in exempt or any(path.startswith(ep) for ep in exempt if ep != path and len(ep) > 1)
+
+
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Add standard security headers to every HTTP response.
 
@@ -181,15 +193,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
         path = request.url.path
 
-        # Check exact match first, then prefix match.
-        # NOTE: Only paths with len > 1 participate in prefix matching.
-        # "/" is exact-only — if it were a prefix it would exempt every path
-        # (since every URL starts with "/"), which would defeat all authentication.
-        if path in self._exempt or any(
-            path.startswith(ep)
-            for ep in self._exempt
-            if ep != path and len(ep) > 1
-        ):
+        if _path_is_exempt(path, self._exempt):
             return await call_next(request)
 
         provided_key = request.headers.get(self._HEADER)
@@ -227,3 +231,62 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
             provided.encode("utf-8"),
             self._secret.encode("utf-8"),
         )
+
+
+class APIRateLimitMiddleware(BaseHTTPMiddleware):
+    """General per-IP rate limit across the broad API surface — see
+    ``app.core.api_rate_limit_guard``'s module docstring for why this
+    exists alongside the auth-flow-specific guards, and why its window is
+    much shorter (60s) than theirs (3600s).
+
+    Always registered (unlike APIKeyMiddleware, which only activates when
+    API_SECRET_KEY is set) — API_RATE_LIMIT_PER_MINUTE <= 0 is this
+    middleware's own off switch, same "0 disables the check" convention
+    every guard in this codebase already uses, checked fresh on every
+    request via the guard singleton rather than cached at __init__ time,
+    so changing the setting takes effect without a restart in tests.
+    """
+
+    def __init__(self, app) -> None:  # noqa: ANN001
+        super().__init__(app)
+        settings = get_settings()
+        # Deliberately NOT built from _ALWAYS_EXEMPT — that set exists so
+        # self-serve entry points never require an API key, which is a
+        # different question from whether they should be throttled (they
+        # should: /auth/register and /auth/login already have their own
+        # tighter dedicated guards, but a general backstop underneath them
+        # is still worth having, not a reason to exempt them here too).
+        # Starts from API_RATE_LIMIT_EXEMPT_PATHS alone.
+        exempt: set[str] = set()
+        if settings.API_RATE_LIMIT_EXEMPT_PATHS:
+            for path in settings.API_RATE_LIMIT_EXEMPT_PATHS.split(","):
+                path = path.strip()
+                if path:
+                    exempt.add(path)
+        self._exempt = frozenset(exempt)
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        # Same CORS pre-flight carve-out as APIKeyMiddleware — an OPTIONS
+        # request never carries real intent to call the endpoint and must
+        # never be the thing that exhausts a legitimate caller's quota.
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
+        path = request.url.path
+        if _path_is_exempt(path, self._exempt):
+            return await call_next(request)
+
+        from app.core.api_rate_limit_guard import get_api_rate_limit_guard
+        from app.core.client_ip import get_client_ip
+
+        guard = get_api_rate_limit_guard()
+        client_ip = get_client_ip(request)
+        if not guard.try_consume(client_ip):
+            logger.warning("APIRateLimitMiddleware: rate limit exceeded. ip=%s path=%s", client_ip, path)
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many requests. Try again shortly."},
+                headers={"Retry-After": "60"},
+            )
+
+        return await call_next(request)

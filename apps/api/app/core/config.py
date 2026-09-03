@@ -187,6 +187,25 @@ class Settings(BaseSettings):
     # is a one-time action. 0 disables the check entirely.
     LOGIN_RATE_LIMIT_PER_HOUR: int = 20
 
+    # ----- General API rate limiting (see app.core.api_rate_limit_guard) --------
+    # Every self-serve/auth flow above has its own dedicated, tighter guard —
+    # this is the general backstop the rest of the API never had: no
+    # throttle on the broad CRUD surface or the AI/analytics endpoints
+    # (scenario simulation, orchestrator polling, ...), which are genuinely
+    # expensive per call. Per-IP requests allowed per rolling MINUTE (not
+    # hour, like the guards above — see api_rate_limit_guard's own
+    # docstring for why this window is deliberately much shorter). 0
+    # disables the check entirely; the default is generous enough that
+    # normal dashboard usage never feels it.
+    API_RATE_LIMIT_PER_MINUTE: int = 300
+    # Comma-separated, same exact-or-prefix matching as API_KEY_EXEMPT_PATHS.
+    # Health/ready and the two Vercel Cron tick endpoints are exempt for the
+    # same reason they're exempt from API key auth (see that setting's own
+    # comment) — high-frequency, already authenticated a different way.
+    API_RATE_LIMIT_EXEMPT_PATHS: str = (
+        "/api/v1/health,/api/v1/ready,/api/v1/internal/market-scan/tick,/api/v1/internal/jobs/tick"
+    )
+
     # ----- Forgot-password abuse protection (see app.core.password_reset_guard) --
     # POST /auth/forgot-password sends an email on every call for an address
     # that exists — same SignupGuard shape as registration above, reused

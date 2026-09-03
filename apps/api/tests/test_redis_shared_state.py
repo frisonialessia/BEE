@@ -115,6 +115,20 @@ class TestSignupGuardRedisPath:
         for _ in range(10):
             assert guard.try_consume("1.2.3.4") is True
 
+    def test_custom_window_seconds_is_used_for_the_ttl_and_cutoff(
+        self, monkeypatch: pytest.MonkeyPatch, fake_client
+    ) -> None:
+        """api_rate_limit_guard needs a 60s window, not the 3600s every
+        other caller of this class uses — regression test for the
+        constructor's optional window_seconds param."""
+        monkeypatch.setattr("app.core.redis.get_redis_client", lambda: fake_client)
+        guard = SignupGuard(1, redis_namespace="test_custom_window", window_seconds=60)
+
+        assert guard.try_consume("1.2.3.4") is True
+        assert guard.try_consume("1.2.3.4") is False
+        redis_key = "bee:test_custom_window:1.2.3.4"
+        assert fake_client.ttl(redis_key) <= 60
+
 
 class TestReplayGuardRedisPath:
     def test_first_seen_true_second_seen_false(

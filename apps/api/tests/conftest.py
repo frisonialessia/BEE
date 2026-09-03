@@ -168,6 +168,7 @@ def client_fixture(engine) -> Generator[TestClient, None, None]:
     # without resetting it, a test file that calls POST /auth/register more
     # than SIGNUP_RATE_LIMIT_PER_HOUR times (the default is 5) starts
     # getting 429s from unrelated earlier tests' registrations.
+    from app.core.api_rate_limit_guard import reset_api_rate_limit_guard
     from app.core.login_guard import reset_login_guard
     from app.core.password_reset_guard import reset_password_reset_guard
     from app.core.signup_guard import reset_signup_guard
@@ -177,6 +178,12 @@ def client_fixture(engine) -> Generator[TestClient, None, None]:
     # for POST /auth/forgot-password's and POST /auth/login's rate limiters.
     reset_password_reset_guard()
     reset_login_guard()
+    # APIRateLimitMiddleware (unlike the three guards above) runs on EVERY
+    # request in EVERY test, not just the few auth endpoints — without this
+    # reset the full suite would start tripping 429s partway through on
+    # whatever "IP" TestClient requests share (well under
+    # API_RATE_LIMIT_PER_MINUTE's 60s window for hundreds of tests).
+    reset_api_rate_limit_guard()
     # WEBHOOK_SIGNATURE_REQUIRED now defaults to True (secure-by-default in
     # production) — tests exercising /signals/webhook and /webhooks/receive
     # without computing a real signature are effectively running as "local

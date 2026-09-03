@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlmodel import Session
 
 from app.api.deps import get_current_user
+from app.core.client_ip import get_client_ip
 from app.core.config import get_settings
 from app.core.database import get_session
 from app.core.logging import get_logger
@@ -30,20 +31,6 @@ from app.services.auth import AuthService
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
-
-
-def _client_key(request: Request) -> str:
-    """Best-effort caller identity for the signup rate limiter.
-
-    ``request.client.host`` is the proxy's address behind most PaaS
-    deployments (Vercel included) unless the real client IP is forwarded —
-    fall back to a fixed key rather than raising, so a missing header
-    degrades to "one shared bucket" instead of breaking registration.
-    """
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
 
 
 @router.post(
@@ -72,7 +59,7 @@ def register(
     ):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or missing invite code.")
 
-    if not get_signup_guard().try_consume(_client_key(request)):
+    if not get_signup_guard().try_consume(get_client_ip(request)):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many signup attempts from this address. Try again later.",
@@ -97,7 +84,7 @@ def login(data: UserLogin, request: Request, session: Session = Depends(get_sess
     """Rate-limited per-IP (see ``app.core.login_guard`` for why not per-email)
     — previously this endpoint had no abuse protection of any kind, meaning
     unlimited password guesses against any account."""
-    if not get_login_guard().try_consume(_client_key(request)):
+    if not get_login_guard().try_consume(get_client_ip(request)):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many login attempts from this address. Try again later.",
@@ -160,7 +147,7 @@ def forgot_password(
     whether the address exists, so this can't be used to spam a real
     customer's inbox either.
     """
-    if not get_password_reset_guard().try_consume(_client_key(request)):
+    if not get_password_reset_guard().try_consume(get_client_ip(request)):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many reset attempts from this address. Try again later.",

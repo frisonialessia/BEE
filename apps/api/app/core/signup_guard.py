@@ -44,17 +44,30 @@ class SignupGuard:
     passes its own.
     """
 
-    def __init__(self, max_per_hour: int, *, redis_namespace: str = "signup_guard") -> None:
+    def __init__(
+        self,
+        max_per_hour: int,
+        *,
+        redis_namespace: str = "signup_guard",
+        window_seconds: int = _WINDOW_SECONDS,
+    ) -> None:
         self._max = max_per_hour
         self._redis_namespace = redis_namespace
+        # Kept the constructor param named "max_per_hour" (every existing
+        # caller reads that way — one attempt per hour, per IP) rather than
+        # renaming it "max_per_window" for a name-only change; the *actual*
+        # window is window_seconds, which api_rate_limit_guard.py sets to 60
+        # for a genuinely per-minute budget instead of reusing this literal
+        # hour.
+        self._window_seconds = window_seconds
         self._hits: dict[str, list[float]] = {}
         self._lock = threading.Lock()
 
     def try_consume(self, key: str) -> bool:
-        """Return True if ``key`` is still under its hourly quota (and record
-        this attempt); False if it should be rejected. ``max_per_hour <= 0``
-        disables the check entirely (every call passes) — used to turn this
-        off in tests or a deployment that wants no rate limit at all."""
+        """Return True if ``key`` is still under quota for this window (and
+        record this attempt); False if it should be rejected. ``max_per_hour
+        <= 0`` disables the check entirely (every call passes) — used to turn
+        this off in tests or a deployment that wants no rate limit at all."""
         if self._max <= 0:
             return True
 
@@ -79,21 +92,21 @@ class SignupGuard:
         below uses safely only because it never leaves one process)."""
         redis_key = f"bee:{self._redis_namespace}:{key}"
         now = time.time()
-        cutoff = now - _WINDOW_SECONDS
+        cutoff = now - self._window_seconds
         pipe = client.pipeline()
         pipe.zremrangebyscore(redis_key, 0, cutoff)
         pipe.zcard(redis_key)
         _, count = pipe.execute()
         if count >= self._max:
-            client.expire(redis_key, _WINDOW_SECONDS)
+            client.expire(redis_key, self._window_seconds)
             return False
         client.zadd(redis_key, {f"{now}:{uuid.uuid4().hex[:8]}": now})
-        client.expire(redis_key, _WINDOW_SECONDS)
+        client.expire(redis_key, self._window_seconds)
         return True
 
     def _try_consume_local(self, key: str) -> bool:
         now = time.monotonic()
-        cutoff = now - _WINDOW_SECONDS
+        cutoff = now - self._window_seconds
         with self._lock:
             recent = [t for t in self._hits.get(key, []) if t >= cutoff]
             if len(recent) >= self._max:

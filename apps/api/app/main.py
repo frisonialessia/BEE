@@ -18,7 +18,7 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.logging import configure_logging, get_logger
-from app.core.middleware import APIKeyMiddleware, SecurityHeadersMiddleware
+from app.core.middleware import APIKeyMiddleware, APIRateLimitMiddleware, SecurityHeadersMiddleware
 from app.core.tracing import setup_tracing
 from app.services.events import register_listeners
 
@@ -114,18 +114,23 @@ def create_app() -> FastAPI:
     # thing that sees the request, the last thing that touches the response.
     # Register in the *reverse* of execution order:
 
-    # 3. Security headers — innermost, applied to every response including errors.
+    # 4. Security headers — innermost, applied to every response including errors.
     app.add_middleware(SecurityHeadersMiddleware, environment=settings.ENVIRONMENT)
 
-    # 2. API key authentication — enabled only when API_SECRET_KEY is set.
+    # 3. API key authentication — enabled only when API_SECRET_KEY is set.
     app.add_middleware(APIKeyMiddleware)
 
+    # 2. General rate limiting — runs before API key auth so a scripted
+    #    client hammering the API with no/invalid keys still gets throttled
+    #    per-IP, not just 401'd forever at zero cost to the attacker.
+    app.add_middleware(APIRateLimitMiddleware)
+
     # 1. CORS — registered LAST so it's outermost and handles pre-flight
-    #    OPTIONS requests before APIKeyMiddleware ever sees them. Browsers
-    #    never attach custom headers (X-API-Key included) to a pre-flight
-    #    request, so if APIKeyMiddleware ran first it would 401 every
-    #    pre-flight and the browser would never send the real request —
-    #    exactly what broke cross-origin calls from apps/web once
+    #    OPTIONS requests before APIKeyMiddleware/APIRateLimitMiddleware
+    #    ever see them. Browsers never attach custom headers (X-API-Key
+    #    included) to a pre-flight request, so if either ran first it would
+    #    401/429 every pre-flight and the browser would never send the real
+    #    request — exactly what broke cross-origin calls from apps/web once
     #    API_SECRET_KEY was set in production.
     app.add_middleware(
         CORSMiddleware,
