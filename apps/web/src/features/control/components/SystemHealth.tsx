@@ -3,6 +3,8 @@
 import { Activity, Database, Wifi, WifiOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { DATA, SERIES } from "@/components/charts/palette";
+import { StatTile } from "@/components/charts/stat-tile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSystemHealth } from "@/hooks/queries/use-system-health";
 import { cn } from "@/lib/utils";
@@ -11,33 +13,17 @@ import type { WorkerHealth } from "@/types/control";
 function KpiCard({
   label,
   value,
-  mono,
   warn,
-  text,
+  index,
 }: {
   label: string;
   value: string;
-  mono?: boolean;
   warn?: boolean;
-  /** This tile holds a status word ("Inactivo", "Con errores"), not a
-   *  number — the KPI-sized numeric scale wraps mid-word on tiles this
-   *  narrow. Falls back to a smaller, non-tabular size that fits. */
-  text?: boolean;
+  index: number;
 }) {
-  return (
-    <div className="bee-kpi-card">
-      <p className="bee-kpi-card__label">{label}</p>
-      <p
-        className={cn(
-          text ? "text-base font-bold tracking-tight" : "bee-kpi-card__value",
-          mono && "font-mono",
-          warn && "text-destructive",
-        )}
-      >
-        {value}
-      </p>
-    </div>
-  );
+  // Same tile as every other KPI in the app (Resumen, Ventas, Pronóstico) —
+  // honey when the worker has errors; BEE warns in honey, never in red.
+  return <StatTile label={label} value={value} tone={warn ? DATA.honey : SERIES[index % SERIES.length]} />;
 }
 
 function WorkerKpis({ worker }: { worker: WorkerHealth }) {
@@ -56,16 +42,16 @@ function WorkerKpis({ worker }: { worker: WorkerHealth }) {
     // cada resolución. Acá siempre son 4 tarjetas en un contenedor angosto,
     // así que fijamos 2×2 para que sea predecible.
     <div className="grid grid-cols-2 gap-4">
-      <KpiCard label={t("worker.ingestLabel")} value={worker.running ? stateLabel : t("worker.offValue")} text />
-      <KpiCard label={t("worker.queueLabel")} value={String(worker.queue_depth)} mono />
+      <KpiCard label={t("worker.ingestLabel")} value={worker.running ? stateLabel : t("worker.offValue")} index={0} />
+      <KpiCard label={t("worker.queueLabel")} value={String(worker.queue_depth)} index={1} />
       {/* "Procesados" partía a mitad de palabra en la columna angosta de
           Control (2 columnas × ~140px) — "Hechos" cabe en una sola línea
           sin perder claridad junto al valor. */}
-      <KpiCard label={t("worker.processedLabel")} value={String(worker.processed_count)} mono />
+      <KpiCard label={t("worker.processedLabel")} value={String(worker.processed_count)} index={2} />
       <KpiCard
         label={t("worker.errorsLabel")}
         value={String(worker.error_count)}
-        mono
+        index={3}
         warn={worker.error_count > 0}
       />
     </div>

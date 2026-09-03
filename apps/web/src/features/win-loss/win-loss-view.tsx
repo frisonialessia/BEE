@@ -68,12 +68,25 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
           <KpiStrip
             cols={4}
             items={[
-              { label: t("winLoss.kpis.winRate.label"), value: summary.winRate !== null ? `${Math.round(summary.winRate * 100)}%` : "—" },
-              { label: t("winLoss.kpis.wonValue.label"), value: formatCurrencyUSD(summary.wonValue, locale) },
-              { label: t("winLoss.kpis.lostValue.label"), value: formatCurrencyUSD(summary.lostValue, locale) },
+              {
+                label: t("winLoss.kpis.winRate.label"),
+                value: summary.winRate !== null ? `${Math.round(summary.winRate * 100)}%` : "—",
+                hint: t("winLoss.kpis.winRate.hint", { won: summary.won, total: summary.totalClosed }),
+                progress: summary.winRate ?? undefined,
+              },
+              { label: t("winLoss.kpis.wonValue.label"), value: formatCurrencyUSD(summary.wonValue, locale), hint: t("winLoss.kpis.wonValue.hint") },
+              { label: t("winLoss.kpis.lostValue.label"), value: formatCurrencyUSD(summary.lostValue, locale), hint: t("winLoss.kpis.lostValue.hint"), tone: "warm" },
               {
                 label: t("winLoss.kpis.daysToClose.label"),
                 value: summary.avgDaysToCloseWon !== null ? `${Math.round(summary.avgDaysToCloseWon)}d` : "—",
+                hint:
+                  summary.avgDaysToCloseWon !== null
+                    ? summary.avgDaysToCloseLost !== null
+                      ? t("winLoss.kpis.daysToClose.hintHasWonHasLost", { days: Math.round(summary.avgDaysToCloseLost) })
+                      : t("winLoss.kpis.daysToClose.hintHasWonNoLost")
+                    : summary.avgDaysToCloseLost !== null
+                      ? t("winLoss.kpis.daysToClose.hintNoWonHasLost", { days: Math.round(summary.avgDaysToCloseLost) })
+                      : t("winLoss.kpis.daysToClose.hintNoWonNoLost"),
               },
             ]}
           />

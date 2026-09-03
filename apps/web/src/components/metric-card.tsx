@@ -4,15 +4,20 @@ import type { LucideIcon } from "lucide-react";
 
 import { useTranslations } from "next-intl";
 
-import { Sparkline } from "@/components/sparkline";
+import { DATA, SERIES } from "@/components/charts/palette";
+import { StatTile } from "@/components/charts/stat-tile";
 import { cn } from "@/lib/utils";
 
 /**
- * KPI tile — the one stat tile in the app, and a compact one: number on
- * top, label beneath, ~56px tall (py-2), so a strip of them sits above the
- * fold without pushing the real content down. Tone is a border color,
- * never a fill (only signal cards are colored); `accent` colors the number
- * itself when a figure carries a state (at-risk count, errors).
+ * KPI tile — the one stat tile in the app. Since the charts pass it is a
+ * thin alias of `StatTile` (chip label, number, delta or hint, sparkline or
+ * ring) so a strip on Pronóstico looks exactly like the one on Resumen or
+ * Ventas. Tone comes from the fixed data series by position; `tone` picks a
+ * specific hue when a figure carries a state (warm = honey for at-risk).
+ * `icon` and `accent` are accepted for compatibility and no longer drawn:
+ * the chip dot and the sparkline color already say what the icon did, and
+ * the green/red accents are gone by design (BEE warns in honey, never red;
+ * green lives on Ventas only).
  */
 export interface MetricItem {
   label: string;
@@ -20,54 +25,40 @@ export interface MetricItem {
   hint?: string;
   icon?: LucideIcon;
   tone?: "default" | "warm" | "muted" | "blue";
-  /** CSS color for the value (e.g. "var(--color-chart-1)"). */
+  /** @deprecated kept for call sites; tiles take their tone from the series. */
   accent?: string;
-  /** Daily series (e.g. last 7 days) — draws a mini trend under the label. */
+  /** Daily series (e.g. last 7 days) — draws a mini trend on the right. */
   trend?: number[];
+  /** 0–1: draws a progress ring instead of the sparkline. */
+  progress?: number;
+  /** Fraction vs. the previous period (0.32 = +32 %). */
+  delta?: number | null;
+  deltaLabel?: string;
   /** Hide on phones so a 5-tile strip stays 2×2 instead of 2×2+1. */
   hideOnMobile?: boolean;
   className?: string;
 }
 
-const TONE_CLASS: Record<NonNullable<MetricItem["tone"]>, string> = {
-  default: "",
-  warm: "bee-outline--warm",
-  muted: "bee-outline--magenta",
-  blue: "bee-outline--blue",
+const TONE_COLOR: Record<NonNullable<MetricItem["tone"]>, string | null> = {
+  default: null,
+  warm: DATA.honey,
+  muted: DATA.magenta,
+  blue: DATA.indigo,
 };
 
-export function MetricCard({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  tone = "default",
-  accent,
-  trend,
-  hideOnMobile,
-  className,
-}: MetricItem) {
+export function MetricCard({ label, value, hint, tone = "default", trend, progress, delta, deltaLabel, hideOnMobile, className, seriesIndex = 0 }: MetricItem & { seriesIndex?: number }) {
   return (
-    <div
-      className={cn(
-        "bee-bento relative flex h-full min-w-0 flex-col items-center justify-center px-4 py-3 text-center",
-        TONE_CLASS[tone],
-        hideOnMobile && "hidden md:flex",
-        className,
-      )}
-    >
-      {Icon && <Icon className="absolute right-2.5 top-2.5 size-3.5 text-muted-foreground stroke-[1.25]" />}
-      <p className="bee-stat__val truncate" style={accent ? { color: accent } : undefined}>
-        {value}
-      </p>
-      <p className="bee-stat__lbl mt-0.5 line-clamp-2">{label}</p>
-      {trend && trend.length >= 2 && (
-        <div className="mt-1 flex justify-center">
-          <Sparkline values={trend} className="text-[var(--color-chart-4)]" />
-        </div>
-      )}
-      {hint && <p className="bee-caption mt-0.5 line-clamp-1">{hint}</p>}
-    </div>
+    <StatTile
+      label={label}
+      value={value}
+      hint={hint}
+      trend={trend}
+      progress={progress}
+      delta={delta}
+      deltaLabel={deltaLabel}
+      tone={TONE_COLOR[tone] ?? SERIES[seriesIndex % SERIES.length]}
+      className={cn(hideOnMobile && "hidden md:flex", className)}
+    />
   );
 }
 
@@ -107,8 +98,8 @@ export function KpiStrip({
   const count = Math.min(cols ?? 6, Math.max(2, visible.length)) as 2 | 3 | 4 | 5 | 6;
   return (
     <div className={cn("grid gap-4", COLS_CLASS[count], className)}>
-      {visible.map((item) => (
-        <MetricCard key={item.label} {...item} />
+      {visible.map((item, i) => (
+        <MetricCard key={item.label} {...item} seriesIndex={i} />
       ))}
     </div>
   );

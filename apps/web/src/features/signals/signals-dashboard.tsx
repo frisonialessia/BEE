@@ -13,6 +13,8 @@ import { useSignals } from "@/hooks/queries/use-signals";
 import type { Locale } from "@/i18n/locales";
 import { computeDailySignalVolume } from "@/lib/signal-trends";
 import { LiveBadge } from "@/components/live-badge";
+import { Donut } from "@/components/charts/donut";
+import { getSignalTypeLabels } from "@/lib/format";
 
 /** Panel de señales — triggers de mercado del Signal Engine — con
  *  Priorización (fit × intención) como segunda pestaña: Priorización se
@@ -29,6 +31,10 @@ export function SignalsDashboard() {
   const hotCount = signals.filter((s) => s.score >= 75).length;
   const pagination = usePagination(signals);
   const dailyVolume = computeDailySignalVolume(signals, new Date(), 14, locale);
+  const typeLabels = getSignalTypeLabels(locale);
+  const mixByType = [...signals.reduce((m, s) => m.set(s.signal_type, (m.get(s.signal_type) ?? 0) + 1), new Map<string, number>()).entries()].map(
+    ([type, value]) => ({ label: typeLabels[type as keyof typeof typeLabels] ?? type, value }),
+  );
 
   return (
     <div>
@@ -71,11 +77,20 @@ export function SignalsDashboard() {
               </div>
             ) : (
               <>
-                <section className="bee-surface bee-bento-pad mb-4">
-                  <h3 className="bee-card-title">{t("volumeTitle")}</h3>
-                  <p className="bee-caption mb-4">{t("volumeSubtitle")}</p>
-                  <SignalVolumeChart points={dailyVolume} />
-                </section>
+                <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
+                  <section className="bee-surface bee-bento-pad lg:col-span-8">
+                    <h3 className="bee-card-title">{t("volumeTitle")}</h3>
+                    <p className="bee-caption mb-4">{t("volumeSubtitle")}</p>
+                    <SignalVolumeChart points={dailyVolume} />
+                  </section>
+                  <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-4">
+                    <h3 className="bee-card-title">{t("mixTitle")}</h3>
+                    <p className="bee-caption mb-4">{t("mixSubtitle")}</p>
+                    <div className="flex min-w-0 flex-1 items-center">
+                      <Donut slices={mixByType} size={112} otherLabel={locale === "es" ? "Otras" : "Other"} />
+                    </div>
+                  </section>
+                </div>
 
                 {/* Columna apilada en mobile a propósito, no el patrón de caja
                  * con scroll horizontal que usa el Pipeline (crm-board.tsx) o

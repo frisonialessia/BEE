@@ -29,7 +29,8 @@
       },
       "won": {
         "label": "Ganado",
-        "hint": "Oportunidades cerradas como ganadas"
+        "hint": "Oportunidades cerradas como ganadas",
+        "goalHint": "de {goal} de meta del equipo este mes"
       },
       "atRisk": {
         "label": "En riesgo",
@@ -61,6 +62,13 @@
         "fecha_vencida": "Fecha de cierre vencida",
         "poco_calificada": "Poco calificada para su etapa"
       }
+    },
+    "byStage": {
+      "title": "Pipeline abierto por etapa",
+      "caption": "Monto sin ponderar y número de oportunidades en cada etapa",
+      "detected": "Nuevas",
+      "ready_to_action": "Listas para acción",
+      "in_progress": "En curso"
     }
   },
   "trendsChart": {

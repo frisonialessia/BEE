@@ -16,7 +16,9 @@
     "outerTabs": {
       "feed": "Feed",
       "priority": "Priorización"
-    }
+    },
+    "mixTitle": "Mezcla de señales",
+    "mixSubtitle": "Por tipo, todas las señales cargadas"
   },
   "strategies": {
     "eyebrow": "Playbooks",
@@ -63,6 +65,8 @@
     "signalCount": "{count, plural, one {# señal} other {# señales}}",
     "lastLabel": "Última: ",
     "emptyTitle": "Todavía no hay señales de intención.",
-    "emptySubtitle": "Usa el simulador de arriba para enviar una señal de prueba."
+    "emptySubtitle": "Usa el simulador de arriba para enviar una señal de prueba.",
+    "stageMixTitle": "Mezcla por etapa de compra",
+    "stageMixCaption": "Dónde están los leads calientes hoy"
   }
 }

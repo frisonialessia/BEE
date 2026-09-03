@@ -16,7 +16,9 @@
     "outerTabs": {
       "feed": "Feed",
       "priority": "Prioritization"
-    }
+    },
+    "mixTitle": "Signal mix",
+    "mixSubtitle": "By type, across every loaded signal"
   },
   "strategies": {
     "eyebrow": "Playbooks",
@@ -63,6 +65,8 @@
     "signalCount": "{count, plural, one {# signal} other {# signals}}",
     "lastLabel": "Last: ",
     "emptyTitle": "No intent signals yet.",
-    "emptySubtitle": "Use the simulator above to send a test signal."
+    "emptySubtitle": "Use the simulator above to send a test signal.",
+    "stageMixTitle": "Mix by buying stage",
+    "stageMixCaption": "Where today's hot leads sit"
   }
 }

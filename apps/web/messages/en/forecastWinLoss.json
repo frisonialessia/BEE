@@ -29,7 +29,8 @@
       },
       "won": {
         "label": "Won",
-        "hint": "Opportunities closed as won"
+        "hint": "Opportunities closed as won",
+        "goalHint": "of the team's {goal} goal this month"
       },
       "atRisk": {
         "label": "At risk",
@@ -61,6 +62,13 @@
         "fecha_vencida": "Close date overdue",
         "poco_calificada": "Poorly qualified for its stage"
       }
+    },
+    "byStage": {
+      "title": "Open pipeline by stage",
+      "caption": "Unweighted amount and number of opportunities in each stage",
+      "detected": "New",
+      "ready_to_action": "Ready to act",
+      "in_progress": "In progress"
     }
   },
   "trendsChart": {

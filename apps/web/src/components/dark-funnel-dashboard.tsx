@@ -6,6 +6,8 @@ import type { DarkFunnelSummary, HotLeadScore } from "@/lib/types";
 import { getDarkFunnelHotLeads, getDarkFunnelSummary, ingestDarkFunnelSignal } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { KpiStrip } from "@/components/metric-card";
+import { Donut } from "@/components/charts/donut";
+import { DATA } from "@/components/charts/palette";
 import { Skeleton } from "@/components/ui/skeleton";
 import { scoreVariant } from "@/lib/format";
 import { formatDate } from "@/lib/i18n/format";
@@ -187,15 +189,33 @@ export function DarkFunnelDashboard() {
     <div className="space-y-4">
       {/* Summary cards */}
       {summary && (
-        <KpiStrip
-          cols={4}
-          items={[
-            { label: t("summaryHotLeads"), value: summary.total_hot_leads, accent: "var(--color-chart-5)" },
-            { label: t("summaryReadyToBuy"), value: summary.ready_to_buy_count, accent: "var(--color-chart-5)" },
-            { label: t("summaryDecisionStage"), value: summary.decision_stage_count, accent: "var(--color-chart-1)" },
-            { label: t("summarySignalsToday"), value: summary.total_signals_today, accent: "var(--color-chart-4)" },
-          ]}
-        />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <KpiStrip
+              cols={2}
+              items={[
+                { label: t("summaryHotLeads"), value: summary.total_hot_leads, tone: "muted" },
+                { label: t("summaryReadyToBuy"), value: summary.ready_to_buy_count, tone: "warm" },
+                { label: t("summaryDecisionStage"), value: summary.decision_stage_count, tone: "blue" },
+                { label: t("summarySignalsToday"), value: summary.total_signals_today },
+              ]}
+            />
+          </div>
+          <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-4">
+            <h3 className="bee-card-title">{t("stageMixTitle")}</h3>
+            <p className="bee-caption mb-4">{t("stageMixCaption")}</p>
+            <div className="flex min-w-0 flex-1 items-center">
+              <Donut
+                size={112}
+                slices={[
+                  { label: t("stageReadyToBuy"), value: summary.ready_to_buy_count, color: DATA.honey },
+                  { label: t("stageDecision"), value: summary.decision_stage_count, color: DATA.indigo },
+                  { label: t("stageConsideration"), value: summary.consideration_stage_count, color: DATA.violet },
+                ]}
+              />
+            </div>
+          </section>
+        </div>
       )}
 
       {/* Controls */}
