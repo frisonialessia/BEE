@@ -182,3 +182,15 @@ export async function researchCompany(
     { method: "POST" },
   );
 }
+
+export interface CompanyScanResult {
+  enabled: boolean;
+  signals_created: number;
+  scanned_at: string | null;
+}
+
+/** "Escanear ahora" — runs the market scan (press, hiring, news) for one
+ *  account on demand; see POST /companies/{id}/scan. */
+export async function scanCompany(companyId: string): Promise<CompanyScanResult> {
+  return apiFetch<CompanyScanResult>(`/api/v1/companies/${companyId}/scan`, { method: "POST" });
+}

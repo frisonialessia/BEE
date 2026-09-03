@@ -74,3 +74,12 @@ class CompanyOut(BaseModel):
     # CompanyCreateIn/CompanyUpdateIn.
     fit_score: float | None = None
     created_at: datetime
+
+
+class CompanyScanResult(BaseModel):
+    """``POST /companies/{id}/scan`` — see that endpoint. ``enabled=false``
+    means MARKET_SCAN_ENABLED is off on this deployment (nothing ran)."""
+
+    enabled: bool
+    signals_created: int
+    scanned_at: datetime | None

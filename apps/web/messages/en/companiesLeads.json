@@ -138,6 +138,13 @@
       "viewed": "{name} viewed this account",
       "edited": "{name} edited this account",
       "assigned": "{name} reassigned this account"
+    },
+    "scan": {
+      "scanNow": "Scan now",
+      "scanning": "Scanning…",
+      "done": "Scan complete: {count, plural, =0 {no new signals} =1 {1 new signal} other {# new signals}}.",
+      "disabled": "The market scan is switched off on this deployment.",
+      "error": "Could not scan this account."
     }
   },
   "leadsDirectory": {

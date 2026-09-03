@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ArrowUpRight, Building2, Clock, Globe, Mail, Radio, Target, Upload, Users } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Building2, Clock, Globe, Mail, Radar, Radio, Target, Upload, Users } from "lucide-react";
 import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -11,11 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
-import { useCompany, useCompanyActivity, useUpdateCompany } from "@/hooks/queries/use-companies";
+import { useCompany, useCompanyActivity, useScanCompany, useUpdateCompany } from "@/hooks/queries/use-companies";
 import { useBulkCreateLeads, useCreateLead, useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
+import { useIsDemoMode } from "@/lib/demo/mode";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/types/api";
 import type { LeadPipelineStage } from "@/types/domain";
@@ -110,6 +111,32 @@ function CompanyActivityFeed({ companyId }: { companyId: string }) {
         </ul>
       )}
     </section>
+  );
+}
+
+/** "Escanear ahora" — the same market scan the cron runs, on demand for
+ *  this account. Hidden in the sandbox: nothing to scan there. */
+function ScanNowButton({ companyId }: { companyId: string }) {
+  const t = useTranslations("companiesLeads.companyDetail.scan");
+  const isDemo = useIsDemoMode();
+  const scan = useScanCompany();
+  if (isDemo) return null;
+
+  async function handleScan() {
+    try {
+      const result = await scan.mutateAsync(companyId);
+      if (!result.enabled) toast.info(t("disabled"));
+      else toast.success(t("done", { count: result.signals_created }));
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : t("error"));
+    }
+  }
+
+  return (
+    <button type="button" onClick={() => void handleScan()} disabled={scan.isPending} className="bee-btn-ghost">
+      <Radar className="size-3.5" />
+      {scan.isPending ? t("scanning") : t("scanNow")}
+    </button>
   );
 }
 
@@ -443,17 +470,20 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
             </div>
           </div>
         </div>
-        {company.website && (
-          <a
-            href={company.website}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
-          >
-            {t("website")}
-            <ArrowUpRight className="size-3" />
-          </a>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {company.website && (
+            <a
+              href={company.website}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
+            >
+              {t("website")}
+              <ArrowUpRight className="size-3" />
+            </a>
+          )}
+          <ScanNowButton companyId={companyId} />
+        </div>
       </header>
 
       {company.description && <p className="text-sm text-muted-foreground">{company.description}</p>}

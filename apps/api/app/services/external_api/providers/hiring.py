@@ -17,10 +17,13 @@ something close to their brand name. A wrong guess is a 404 from
 Greenhouse, treated exactly like "this account isn't on Greenhouse" (a
 clean zero, not an error) — see search_market_news's docstring on why
 that's the honest behavior, same discipline as GoogleSearchProvider's own
-mock mode never fabricating a result. This deliberately does not attempt
-Ashby, Lever, or any other ATS in this revision — one real, working
-integration beats three partial guesses; add the next ATS here as its own
-method once this one has proven the pattern in production.
+mock mode never fabricating a result.
+
+Lever (``api.lever.co/v0/postings/<slug>``) is the second board checked,
+with the same slug guess and the same "404 is a clean zero" contract —
+between the two they cover most venture-backed companies' public
+postings. Whichever board answers first with enough roles wins; a
+company on neither is simply a company with no hiring signal today.
 """
 
 from __future__ import annotations
@@ -38,6 +41,7 @@ from app.services.external_api.interface import (
 logger = get_logger(__name__)
 
 _GREENHOUSE_BOARDS_API = "https://boards-api.greenhouse.io/v1/boards/{slug}/jobs"
+_LEVER_POSTINGS_API = "https://api.lever.co/v0/postings/{slug}?mode=json"
 
 # A company with fewer open roles than this isn't "surging" — just normal
 # background hiring every company does. Keeps this signal meaningfully
@@ -79,54 +83,96 @@ class HiringProvider(IExternalProvider):
     def search_market_news(
         self, *, company_domain: str, company_name: str | None = None
     ) -> ExternalSearchResult:
-        """Returns at most one item — a hiring-surge summary — when the
-        guessed Greenhouse board exists and has enough open roles to be
-        meaningfully "surging" (see _SURGE_THRESHOLD). Anything short of
-        that (board not found, few roles) is a clean zero-item success,
-        not an error: a wrong slug guess is expected and common, not a
-        provider failure.
+        """Returns at most one item — a hiring-surge summary — when a guessed
+        board (Greenhouse first, then Lever) exists and has enough open
+        roles to be meaningfully "surging" (see _SURGE_THRESHOLD). Anything
+        short of that (board not found, few roles) is a clean zero-item
+        success, not an error: a wrong slug guess is expected and common,
+        not a provider failure. A transport error on one board does not
+        stop the other from being tried.
         """
         slug = _guess_greenhouse_slug(company_domain)
         name = company_name or company_domain
-        url = _GREENHOUSE_BOARDS_API.format(slug=slug)
 
-        try:
-            with httpx.Client(timeout=8.0) as client:
-                resp = client.get(url)
-                if resp.status_code == 404:
-                    # Wrong slug guess or genuinely not on Greenhouse —
-                    # the expected common case, not a warning-worthy one.
-                    return ExternalSearchResult(provider="hiring", success=True, query=slug, items=[])
-                resp.raise_for_status()
-                data = resp.json()
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("HiringProvider Greenhouse lookup failed for slug=%s: %s", slug, exc)
-            return ExternalSearchResult(provider="hiring", success=False, query=slug, error=str(exc))
+        last_error: str | None = None
+        for board, url, parse in (
+            ("greenhouse", _GREENHOUSE_BOARDS_API.format(slug=slug), _parse_greenhouse),
+            ("lever", _LEVER_POSTINGS_API.format(slug=slug), _parse_lever),
+        ):
+            try:
+                with httpx.Client(timeout=8.0) as client:
+                    resp = client.get(url)
+                    if resp.status_code == 404:
+                        # Wrong slug guess or genuinely not on this ATS —
+                        # the expected common case, not a warning-worthy one.
+                        continue
+                    resp.raise_for_status()
+                    data = resp.json()
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("HiringProvider %s lookup failed for slug=%s: %s", board, slug, exc)
+                last_error = str(exc)
+                continue
 
-        jobs = data.get("jobs", [])
-        if len(jobs) < _SURGE_THRESHOLD:
-            return ExternalSearchResult(provider="hiring", success=True, query=slug, items=[], raw=data)
+            jobs = parse(data)
+            if len(jobs) < _SURGE_THRESHOLD:
+                continue
 
-        gtm_count = sum(
-            1
-            for job in jobs
-            if any(kw in (job.get("departments") and str(job["departments"]).lower() or "") for kw in _GTM_DEPARTMENT_KEYWORDS)
-            or any(kw in (job.get("title") or "").lower() for kw in _GTM_DEPARTMENT_KEYWORDS)
+            gtm_count = sum(1 for job in jobs if _is_gtm(job))
+            detail = f"including {gtm_count} in Sales/GTM roles" if gtm_count else "across multiple teams"
+            title = f"{name} has {len(jobs)} open positions {detail} — hiring surge"
+            board_url = (
+                f"https://boards.greenhouse.io/{slug}" if board == "greenhouse" else f"https://jobs.lever.co/{slug}"
+            )
+            return ExternalSearchResult(
+                provider="hiring",
+                success=True,
+                query=slug,
+                items=[
+                    {
+                        "title": title,
+                        "link": board_url,
+                        "snippet": f"{len(jobs)} open roles found on {name}'s {board.title()} board.",
+                    }
+                ],
+                raw={"job_count": len(jobs), "gtm_count": gtm_count, "slug": slug, "board": board},
+                mock=False,
+            )
+
+        if last_error is not None:
+            return ExternalSearchResult(provider="hiring", success=False, query=slug, error=last_error)
+        return ExternalSearchResult(provider="hiring", success=True, query=slug, items=[])
+
+
+def _parse_greenhouse(data: object) -> list[dict]:
+    """boards-api answers ``{"jobs": [{"title", "departments": [...]}]}``."""
+    if not isinstance(data, dict):
+        return []
+    return [j for j in data.get("jobs", []) if isinstance(j, dict)]
+
+
+def _parse_lever(data: object) -> list[dict]:
+    """Lever answers a bare list of postings with ``text`` as the title and
+    ``categories.team``/``department`` — normalized to the Greenhouse shape
+    so the surge/GTM logic above is board-agnostic."""
+    if not isinstance(data, list):
+        return []
+    jobs: list[dict] = []
+    for posting in data:
+        if not isinstance(posting, dict):
+            continue
+        categories = posting.get("categories") or {}
+        jobs.append(
+            {
+                "title": posting.get("text") or "",
+                "departments": [categories.get("team") or "", categories.get("department") or ""],
+            }
         )
-        detail = f"including {gtm_count} in Sales/GTM roles" if gtm_count else "across multiple teams"
-        title = f"{name} has {len(jobs)} open positions {detail} — hiring surge"
+    return jobs
 
-        return ExternalSearchResult(
-            provider="hiring",
-            success=True,
-            query=slug,
-            items=[
-                {
-                    "title": title,
-                    "link": f"https://boards.greenhouse.io/{slug}",
-                    "snippet": f"{len(jobs)} open roles found on {name}'s Greenhouse board.",
-                }
-            ],
-            raw={"job_count": len(jobs), "gtm_count": gtm_count, "slug": slug},
-            mock=False,
-        )
+
+def _is_gtm(job: dict) -> bool:
+    departments = str(job.get("departments") or "").lower()
+    title = (job.get("title") or "").lower()
+    return any(kw in departments for kw in _GTM_DEPARTMENT_KEYWORDS) or any(
+        kw in title for kw in _GTM_DEPARTMENT_KEYWORDS
+    )

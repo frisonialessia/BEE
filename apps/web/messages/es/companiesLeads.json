@@ -138,6 +138,13 @@
       "viewed": "{name} vio esta cuenta",
       "edited": "{name} editó esta cuenta",
       "assigned": "{name} reasignó esta cuenta"
+    },
+    "scan": {
+      "scanNow": "Escanear ahora",
+      "scanning": "Escaneando…",
+      "done": "Escaneo completado: {count, plural, =0 {sin señales nuevas} =1 {1 señal nueva} other {# señales nuevas}}.",
+      "disabled": "El escaneo de mercado está desactivado en este despliegue.",
+      "error": "No se pudo escanear esta cuenta."
     }
   },
   "leadsDirectory": {

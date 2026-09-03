@@ -12,6 +12,7 @@ import {
   fetchLookalikeCompanies,
   mergeCompanies,
   researchCompany,
+  scanCompany,
   updateCompany,
   type CompanyCreateIn,
   type CompanyUpdateIn,
@@ -110,6 +111,20 @@ export function useResearchCompany() {
       researchCompany(companyId, force),
     onSuccess: (_result, { companyId }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.companies.brief(companyId) });
+    },
+  });
+}
+
+/** On-demand market scan for one account. New signals land in the same
+ *  lists the cron's do, so those are what gets refreshed. */
+export function useScanCompany() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (companyId: string) => scanCompany(companyId),
+    onSuccess: (_result, companyId) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.signals.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.detail(companyId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.companies.activity(companyId) });
     },
   });
 }

@@ -194,8 +194,9 @@ class MarketScanOrchestrator:
     def _scan_company(self, company: Company) -> int:
         """Scan one company across every configured market-scan provider.
 
-        Today: Google Search's market-news query (Phase 2) and the Hiring
-        provider's Greenhouse-board check (Phase 3). Returns the number of
+        Today: Google Search's market-news query (Phase 2), the Hiring
+        provider's Greenhouse/Lever board check (Phase 3) and GDELT press
+        coverage (Phase 4, keyless). Returns the number of
         Signal rows actually created — a scan that finds something already
         ingested on a prior tick reports 0 here even though the provider
         call succeeded, since SignalEngine's own external_id-based
@@ -215,6 +216,20 @@ class MarketScanOrchestrator:
             news,
             provider_key="google_search",
             event="market_scan.google_news",
+            default_signal_type=SignalType.NEWS_MENTION,
+        )
+
+        # Keyless press sense — always on, so a deployment without a Google
+        # key still gets news coverage. Same dedup scope as the other two:
+        # the same article via Google and via GDELT yields two Signals only
+        # if their URLs differ, which SignalEngine's per-provider external_id
+        # makes explicit rather than accidental.
+        press = api.scan_press_coverage(company_domain=domain, company_name=company.name)
+        created += self._ingest_items(
+            company,
+            press,
+            provider_key="gdelt",
+            event="market_scan.press_coverage",
             default_signal_type=SignalType.NEWS_MENTION,
         )
 

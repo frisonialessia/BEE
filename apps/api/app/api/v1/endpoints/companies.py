@@ -26,6 +26,7 @@ from app.schemas.company import (
     CompanyCreateFromDomainIn,
     CompanyCreateIn,
     CompanyOut,
+    CompanyScanResult,
     CompanyUpdateIn,
 )
 from app.schemas.dedup import CompanyDuplicateGroup, MergeIn
@@ -392,6 +393,38 @@ def update_company(
             )
 
     return CompanyOut.model_validate(company)
+
+
+@router.post(
+    "/{company_id}/scan",
+    response_model=CompanyScanResult,
+    summary="Run the market scan for this account right now, ahead of its cron slot",
+)
+def scan_company(
+    company_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> CompanyScanResult:
+    """"Escanear ahora" — the same per-company pass the 15-minute cron
+    runs (Google news when configured, GDELT press, Greenhouse/Lever
+    hiring), just on demand: a rep adding an account before a call
+    shouldn't wait up to a day for its first signals. Reuses
+    ``MarketScanOrchestrator.scan_company_now`` so the cursor advances
+    exactly as a cron scan would (no double scan next tick). Gated by
+    ``MARKET_SCAN_ENABLED`` like the cron: when the feature is off this is
+    a clean ``enabled=false``, not an error, so the UI can explain it.
+    """
+    repo = CompanyRepository(session)
+    company = repo.get(company_id)
+    if company is None or _hidden_from(session, current_user, company):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
+
+    orchestrator = MarketScanOrchestrator(session)
+    if not orchestrator.settings.MARKET_SCAN_ENABLED:
+        return CompanyScanResult(enabled=False, signals_created=0, scanned_at=None)
+    created = orchestrator.scan_company_now(company)
+    session.refresh(company)
+    return CompanyScanResult(enabled=True, signals_created=created, scanned_at=company.last_scanned_at)
 
 
 @router.post(

@@ -38,6 +38,7 @@ from app.services.external_api.providers.g2 import G2Provider
 from app.services.external_api.providers.google_search import GoogleSearchProvider
 from app.services.external_api.providers.hiring import HiringProvider
 from app.services.external_api.providers.linkedin import LinkedInProvider
+from app.services.external_api.providers.news import NewsProvider
 from app.services.external_api.providers.website import WebsiteEnrichmentProvider
 from app.services.external_api.rate_limiter import get_rate_limiter
 
@@ -59,6 +60,7 @@ class ExternalAPIOrchestrator:
             G2Provider(),
             GoogleSearchProvider(),
             HiringProvider(),
+            NewsProvider(),
             WebsiteEnrichmentProvider(),
         ):
             self.register_provider(provider)
@@ -185,6 +187,53 @@ class ExternalAPIOrchestrator:
                 error="Google Search not registered",
             )
         return provider.search_market_news(company_domain=company_domain, company_name=company_name)
+
+    def scan_press_coverage(
+        self, *, company_domain: str, company_name: str | None = None
+    ) -> ExternalSearchResult:
+        """Keyless press coverage (GDELT) for MarketScanOrchestrator — the
+        always-on counterpart to scan_market_news's Google query. Same
+        rate-limit-then-delegate shape.
+        """
+        if not self._acquire_rate_limit("gdelt"):
+            return ExternalSearchResult(
+                provider="gdelt",
+                success=False,
+                query=company_domain,
+                error="GDELT rate limit exceeded",
+            )
+        provider = self._providers.get("gdelt")
+        if not provider:
+            return ExternalSearchResult(
+                provider="gdelt", success=False, query=company_domain, error="GDELT provider not registered"
+            )
+        return provider.search_market_news(company_domain=company_domain, company_name=company_name)
+
+    # Providers that feed the proactive market scan, with whether they need
+    # credentials — what Integrations shows as "Fuentes de mercado".
+    MARKET_SCAN_SOURCES: tuple[tuple[ProviderName, bool], ...] = (
+        ("gdelt", False),
+        ("hiring", False),
+        ("google_search", True),
+    )
+
+    def list_market_sources(self) -> list[dict[str, Any]]:
+        """Status of each market-scan sense: name, whether it is live
+        (configured), and whether it ever needs a key at all."""
+        sources: list[dict[str, Any]] = []
+        for name, needs_key in self.MARKET_SCAN_SOURCES:
+            provider = self._providers.get(name)
+            if provider is None:
+                continue
+            sources.append(
+                {
+                    "name": name,
+                    "configured": provider.is_configured(),
+                    "requires_credentials": needs_key,
+                    "rate_limit_per_hour": provider.rate_limit.requests_per_hour,
+                }
+            )
+        return sources
 
     def scan_hiring_signals(
         self, *, company_domain: str, company_name: str | None = None
