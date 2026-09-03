@@ -69,6 +69,12 @@ _ALWAYS_EXEMPT = frozenset(
         # itself — see app.api.v1.endpoints.auth.
         "/api/v1/auth/forgot-password",
         "/api/v1/auth/reset-password",
+        # Same reasoning again: a person hasn't authenticated with BEE at
+        # all yet when either of these runs — /lookup is what decides
+        # whether to show a password field, /callback is where their IdP
+        # sends them back. See app.api.v1.endpoints.sso.
+        "/api/v1/auth/sso/lookup",
+        "/api/v1/auth/sso/callback",
     }
 )
 

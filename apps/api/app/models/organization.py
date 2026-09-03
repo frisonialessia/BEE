@@ -89,6 +89,24 @@ class Organization(TimestampMixin, table=True):
     deletion_requested_at: datetime | None = Field(default=None)
     deletion_requested_by_user_id: uuid.UUID | None = Field(default=None)
 
+    # ----- Enterprise SSO (see app.services.sso) --------------------------------
+    # Per-organization, on top of the WORKOS_* env vars being set globally —
+    # both gates must be open for POST /auth/sso/lookup to ever offer this
+    # organization SSO. False/None (the default) is the state every existing
+    # organization is in today: password login keeps working exactly as
+    # before, this is purely additive. Configured by an OWNER via
+    # PATCH /organizations/me/sso, never by self-serve signup — the same
+    # "OWNER decides, not a public endpoint" posture as the deletion request.
+    sso_enabled: bool = Field(default=False, nullable=False)
+    # WorkOS Connection ID (e.g. "conn_01EHZNVPK3SFK441A1RGBFSHRT") this
+    # organization's SSO login exchanges are matched against — set once
+    # the organization's IdP connection is provisioned in WorkOS.
+    sso_connection_id: str | None = Field(default=None)
+    # Verified email domain (e.g. "acme.com", lowercase, no "@") used to
+    # route a person typing their work email at /login to this
+    # organization's SSO connection before they ever type a password.
+    sso_domain: str | None = Field(default=None, index=True)
+
     # ----- Relationships -------------------------------------------------------
     teams: list["Team"] = Relationship(back_populates="organization")
     users: list["User"] = Relationship(back_populates="organization")

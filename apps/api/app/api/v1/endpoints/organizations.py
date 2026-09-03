@@ -46,11 +46,14 @@ from app.schemas.organization import (
     OrganizationDataExport,
     OrganizationProfileIn,
     OrganizationProfileOut,
+    SSOConfigIn,
+    SSOConfigOut,
 )
 from app.schemas.signal import OpportunityOut
 from app.services.admin_audit import AdminAuditService
 from app.services.events import publish
 from app.services.permissions import scope_by_organization_id
+from app.services.sso import is_globally_configured as sso_is_globally_configured
 
 router = APIRouter(prefix="/organizations", tags=["Organizations"])
 
@@ -295,4 +298,66 @@ def cancel_organization_deletion_request(
         requested_at=None,
         requested_by_user_id=None,
         detail="Deletion request cancelled.",
+    )
+
+
+# ── Enterprise SSO ────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/me/sso",
+    response_model=SSOConfigOut,
+    summary="Get this organization's SSO configuration (OWNER/ADMIN only)",
+)
+def get_sso_config(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+) -> SSOConfigOut:
+    org = current_user.organization
+    return SSOConfigOut(
+        sso_enabled=org.sso_enabled,
+        sso_connection_id=org.sso_connection_id,
+        sso_domain=org.sso_domain,
+        globally_configured=sso_is_globally_configured(),
+    )
+
+
+@router.patch(
+    "/me/sso",
+    response_model=SSOConfigOut,
+    summary="Configure this organization's SSO connection (OWNER only)",
+)
+def set_sso_config(
+    data: SSOConfigIn,
+    current_user: User = Depends(require_roles(UserRole.OWNER)),
+    session: Session = Depends(get_session),
+) -> SSOConfigOut:
+    """OWNER only (stricter than the OWNER/ADMIN bar the GET above and the
+    rest of this file use) — this controls how every member of the
+    organization authenticates, the same authority level as the deletion
+    request. Partial patch, same ``exclude_unset`` convention as
+    set_organization_profile."""
+    org = current_user.organization
+    changes = data.model_dump(exclude_unset=True)
+    for field, value in changes.items():
+        setattr(org, field, value)
+    session.add(org)
+    if changes:
+        AdminAuditService(session).log(
+            organization_id=org.id,
+            actor_user_id=current_user.id,
+            action="organization.sso_config_updated",
+            summary=f"{current_user.email} updated the organization's SSO configuration.",
+            # sso_connection_id isn't a secret (it's a WorkOS identifier,
+            # not a credential — the actual secret is WORKOS_API_KEY, which
+            # lives only in server config, never in this table), so it's
+            # safe to keep in the audit trail same as every other field here.
+            detail=changes,
+        )
+    session.commit()
+    session.refresh(org)
+    return SSOConfigOut(
+        sso_enabled=org.sso_enabled,
+        sso_connection_id=org.sso_connection_id,
+        sso_domain=org.sso_domain,
+        globally_configured=sso_is_globally_configured(),
     )

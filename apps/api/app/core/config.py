@@ -244,6 +244,22 @@ class Settings(BaseSettings):
     # this project isn't taking on right now.
     SUPPORT_ADMIN_SECRET: str | None = None
 
+    # ----- Enterprise SSO (see app.services.sso) ---------------------------------
+    # WorkOS-style connection: BEE never talks to a customer's IdP (Okta,
+    # Azure AD, ...) directly — WorkOS normalizes SAML/OIDC into one OAuth2-
+    # shaped authorize/token exchange, same reasoning as this codebase using
+    # a payment processor instead of handling card numbers itself. All three
+    # unset (the default) means the SSO endpoints 404 rather than existing as
+    # a live, always-on auth surface in deployments that never opt into it —
+    # same "off by default, no extra surface" convention as SUPPORT_ADMIN_SECRET.
+    # Get these from a WorkOS dashboard (dashboard.workos.com) once BEE
+    # actually has an enterprise customer asking for SSO.
+    WORKOS_API_KEY: str | None = None
+    WORKOS_CLIENT_ID: str | None = None
+    # Must exactly match the redirect URI registered in the WorkOS dashboard,
+    # e.g. https://api.bee.example.com/api/v1/auth/sso/callback.
+    WORKOS_REDIRECT_URI: str | None = None
+
     # ----- Error monitoring (see app.main's lifespan) ---------------------------
     # None (the default) means sentry_sdk.init() is never called — zero error
     # visibility, but also zero behavior change and no Sentry account needed

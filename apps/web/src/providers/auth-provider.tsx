@@ -23,6 +23,12 @@ interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (body: UserLoginIn) => Promise<void>;
+  /** Completes an SSO login — see src/app/login/page.tsx, which reads the
+   * `#sso_token=...` fragment GET /auth/sso/callback redirects back with
+   * (see apps/api's app.api.v1.endpoints.sso) and hands it here rather
+   * than duplicating the store-token-then-fetch-/me sequence login()
+   * already does. */
+  loginWithToken: (token: string) => Promise<void>;
   register: (body: OrganizationRegisterIn) => Promise<void>;
   logout: () => void;
   /** Apply a fresh UserOut returned by a mutation (e.g. PATCH /users/me)
@@ -66,6 +72,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(result.user);
   }, []);
 
+  const loginWithToken = useCallback(async (token: string) => {
+    // The callback already validated this token server-side (it's the
+    // exact JWT create_access_token issued after matching the SSO
+    // profile to an existing user) — still round-trips through /auth/me
+    // rather than trusting it blindly, same reasoning as the mount-time
+    // check above.
+    setStoredToken(token);
+    const me = await fetchMe();
+    setUser(me);
+  }, []);
+
   const register = useCallback(async (body: OrganizationRegisterIn) => {
     const result = await registerOrganization(body);
     setStoredToken(result.access_token);
@@ -100,7 +117,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, isAuthenticated: user !== null, login, register, logout, setUser }}
+      value={{
+        user,
+        isLoading,
+        isAuthenticated: user !== null,
+        login,
+        loginWithToken,
+        register,
+        logout,
+        setUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

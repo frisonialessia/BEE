@@ -105,3 +105,30 @@ class DeletionRequestOut(BaseModel):
     requested_at: datetime | None
     requested_by_user_id: uuid.UUID | None
     detail: str
+
+
+# ── Enterprise SSO ────────────────────────────────────────────────────────
+
+
+class SSOConfigIn(BaseModel):
+    """PATCH /organizations/me/sso's body — partial patch, same
+    ``exclude_unset`` convention as OrganizationProfileIn, so an OWNER can
+    set sso_connection_id today and flip sso_enabled on later without
+    resending everything."""
+
+    sso_enabled: bool | None = None
+    sso_connection_id: str | None = Field(default=None, max_length=255)
+    sso_domain: str | None = Field(default=None, max_length=255)
+
+
+class SSOConfigOut(BaseModel):
+    sso_enabled: bool
+    sso_connection_id: str | None
+    sso_domain: str | None
+    # Whether the server-wide WORKOS_* settings are present — an OWNER can
+    # fill in sso_connection_id/sso_domain and flip sso_enabled on even
+    # before the BEE team has configured WorkOS globally, but SSO login
+    # stays unreachable (POST /auth/sso/lookup reports sso_available=false)
+    # until both are true. Surfaced here so the settings UI can explain
+    # why turning it on didn't make the login screen show anything yet.
+    globally_configured: bool

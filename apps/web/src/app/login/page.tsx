@@ -2,21 +2,66 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useEffect, useState } from "react";
 
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/types/api";
 
+/** GET /auth/sso/callback (apps/api's app.api.v1.endpoints.sso) redirects
+ * back here with either `#sso_token=<jwt>` on success or `?sso_error=...`
+ * on failure — see that endpoint's own docstring for why the token rides
+ * in the URL fragment (never sent to a server, never logged) rather than
+ * a query param. */
+const SSO_ERROR_MESSAGE_KEY: Record<string, string> = {
+  exchange_failed: "ssoErrorExchangeFailed",
+  unknown_connection: "ssoErrorUnknownConnection",
+  no_account: "ssoErrorNoAccount",
+};
+
 export default function LoginPage() {
   const t = useTranslations("auth.login");
   const router = useRouter();
-  const { login } = useAuth();
+  const searchParams = useSearchParams();
+  const { login, loginWithToken } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSsoCompleting, setIsSsoCompleting] = useState(false);
+
+  useEffect(() => {
+    const ssoError = searchParams.get("sso_error");
+    if (ssoError) {
+      // One-time mount check of the URL this page loaded with, not a
+      // state->effect->state loop — same reasoning as AuthProvider's own
+      // mount-time setIsLoading(false).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError(t(SSO_ERROR_MESSAGE_KEY[ssoError] ?? "ssoErrorGeneric"));
+      return;
+    }
+
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+    const match = /(?:^#|&)sso_token=([^&]+)/.exec(hash);
+    if (!match) return;
+
+    const token = decodeURIComponent(match[1]);
+    // Strip the token from the URL immediately — it's a live session
+    // credential and shouldn't linger in history/back-forward cache.
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    setIsSsoCompleting(true);
+    loginWithToken(token)
+      .then(() => router.push("/dashboard"))
+      .catch(() => {
+        setIsSsoCompleting(false);
+        setError(t("ssoErrorGeneric"));
+      });
+    // Runs once off the URL this page mounted with — loginWithToken/router
+    // are stable callbacks, re-running this on their identity is not the
+    // intent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -43,7 +88,16 @@ export default function LoginPage() {
           <p className="bee-eyebrow">{t("eyebrow")}</p>
           <h1 className="mt-1 text-lg font-semibold">{t("title")}</h1>
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          {isSsoCompleting && (
+            <p className="mt-6 text-sm text-muted-foreground" role="status">
+              {t("ssoSigningIn")}
+            </p>
+          )}
+
+          <form
+            onSubmit={handleSubmit}
+            className={isSsoCompleting ? "hidden" : "mt-6 space-y-4"}
+          >
             <div className="space-y-1.5">
               <label htmlFor="email" className="bee-caption block">
                 {t("emailLabel")}
