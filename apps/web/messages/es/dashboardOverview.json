@@ -163,6 +163,24 @@
       "low": "Baja",
       "medium": "Media",
       "high": "Alta"
+    },
+    "reasons": {
+      "pending_approval": {
+        "headline": "Listo para aprobar — {company}",
+        "reasoning": "BEE ya preparó una jugada ({action_type}) esperando tu aprobación."
+      },
+      "hot_lead": {
+        "headline": "{company} está en modo de investigación activa",
+        "reasoning": "Score de intención {score}/100, etapa: {stage}. {signals} señal(es) reciente(s)."
+      },
+      "cycle_overdue": {
+        "headline": "{company} superó su ventana de cierre estimada",
+        "reasoning": "El ciclo esperado era de {predicted_days} días; van {days_elapsed}. Vale la pena un check-in antes de que se enfríe."
+      },
+      "in_pipeline": {
+        "headline": "{company} sigue en pipeline",
+        "reasoning": "Sin señales fuertes todavía — mantenla en radar."
+      }
     }
   },
   "gettingStarted": {

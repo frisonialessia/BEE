@@ -163,6 +163,24 @@
       "low": "Low",
       "medium": "Medium",
       "high": "High"
+    },
+    "reasons": {
+      "pending_approval": {
+        "headline": "Ready to approve — {company}",
+        "reasoning": "BEE already prepared a play ({action_type}) waiting for your approval."
+      },
+      "hot_lead": {
+        "headline": "{company} is in active research mode",
+        "reasoning": "Intent score {score}/100, stage: {stage}. {signals} recent signal(s)."
+      },
+      "cycle_overdue": {
+        "headline": "{company} is past its estimated close window",
+        "reasoning": "The expected cycle was {predicted_days} days; it's been {days_elapsed}. Worth a check-in before it goes cold."
+      },
+      "in_pipeline": {
+        "headline": "{company} is still in the pipeline",
+        "reasoning": "No strong signals yet — keep it on the radar."
+      }
     }
   },
   "gettingStarted": {

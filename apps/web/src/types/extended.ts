@@ -3,6 +3,14 @@
 export type DecisionKind = "opportunity" | "anomaly";
 export type DecisionUrgency = "low" | "medium" | "high";
 export type RecommendedAction = "call" | "email" | "review" | "wait" | "pause";
+/** Structured "why" — translated client-side (decision-feed.tsx `reasons.*`);
+ *  `headline`/`reasoning` remain the server's Spanish rendering as a fallback. */
+export type DecisionReasonCode =
+  | "pending_approval"
+  | "hot_lead"
+  | "cycle_overdue"
+  | "in_pipeline"
+  | "anomaly";
 
 export interface DecisionCard {
   id: string;
@@ -12,6 +20,8 @@ export interface DecisionCard {
   reasoning: string;
   urgency: DecisionUrgency;
   recommended_action: RecommendedAction;
+  reason_code?: DecisionReasonCode;
+  reason_params?: Record<string, string | number | null>;
   opportunity_id: string | null;
   pending_action_id: string | null;
   score: number;

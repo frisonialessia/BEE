@@ -21,13 +21,13 @@
  *   Descartar → useDismissFromFeed(), a thin wrapper over the new
  *              POST /priority/today/{id}/dismiss
  *
- * Known limitation: `headline`/`reasoning` are generated server-side in
- * Spanish only (see app.services.priority_feed._explain) — everything
- * else on this card (labels, buttons, empty state) is translated via
- * next-intl as usual. Moving the explanation itself to structured
- * reason-codes translated client-side (the same fix already applied to
- * PipelineFunnel's stage labels earlier in this codebase) is a real
- * follow-up, not an oversight — flagged rather than silently shipped.
+ * The explanation is structured: the server sends `reason_code` +
+ * `reason_params` (see app.services.priority_feed._explain) and this
+ * component renders them through `decisionFeed.reasons.*` in the viewer's
+ * locale — the same reason-codes-translated-client-side pattern as
+ * PipelineFunnel's stage labels. `headline`/`reasoning` (the server's
+ * Spanish rendering) remain the fallback for a card without a code —
+ * anomaly cards, whose title is the alert's own — and for older payloads.
  */
 
 import { CheckCircle2, PlayCircle, X } from "lucide-react";
@@ -49,8 +49,27 @@ const URGENCY_TONE: Record<DecisionUrgency, string> = {
   low: "bee-outline--blue",
 };
 
+/** Localized explanation: the reason-code template when one exists for
+ *  this code, the server's rendered sentence otherwise. */
+function useExplanation(card: DecisionCard): { headline: string; reasoning: string } {
+  const t = useTranslations("dashboardOverview.decisionFeed");
+  const code = card.reason_code;
+  if (!code || !t.has(`reasons.${code}.headline`)) {
+    return { headline: card.headline, reasoning: card.reasoning };
+  }
+  const params: Record<string, string | number> = {};
+  for (const [key, value] of Object.entries(card.reason_params ?? {})) {
+    params[key] = value ?? "";
+  }
+  return {
+    headline: t(`reasons.${code}.headline`, params),
+    reasoning: t(`reasons.${code}.reasoning`, params),
+  };
+}
+
 function Card({ card }: { card: DecisionCard }) {
   const t = useTranslations("dashboardOverview.decisionFeed");
+  const { headline, reasoning } = useExplanation(card);
   const base = useDashboardBase();
   const { openOpportunity } = useOpportunityDrawer();
   const approveAction = useApproveAction();
@@ -81,8 +100,8 @@ function Card({ card }: { card: DecisionCard }) {
     <div className={`bee-bento flex flex-col gap-2 p-3 ${URGENCY_TONE[card.urgency]}`}>
       <div className="min-w-0">
         <span className="bee-eyebrow">{t(`urgency.${card.urgency}`)}</span>
-        <h4 className="mt-1 line-clamp-1 text-sm font-semibold tracking-tight">{card.headline}</h4>
-        <p className="bee-caption mt-1 line-clamp-1">{card.reasoning}</p>
+        <h4 className="mt-1 line-clamp-1 text-sm font-semibold tracking-tight">{headline}</h4>
+        <p className="bee-caption mt-1 line-clamp-1">{reasoning}</p>
       </div>
 
       {card.kind === "opportunity" && (

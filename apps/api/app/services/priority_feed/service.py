@@ -29,7 +29,9 @@ this one.
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlmodel import Session, select
 
@@ -37,7 +39,13 @@ from app.core.logging import get_logger
 from app.models.base import ActionStatus, OpportunityStatus
 from app.models.opportunity import Opportunity
 from app.models.pending_action import PendingAction
-from app.schemas.priority import DecisionCard, DecisionUrgency, RecommendedAction, TodayFeedOut
+from app.schemas.priority import (
+    DecisionCard,
+    DecisionReasonCode,
+    DecisionUrgency,
+    RecommendedAction,
+    TodayFeedOut,
+)
 from app.services.anomaly_detector import AnomalyDetector
 from app.services.cycle_predictor.service import CyclePredictorService
 from app.services.dark_funnel.service import DarkFunnelService
@@ -89,6 +97,8 @@ def build_today_feed(
                 reasoning=alert.recommendation or alert.description or "",
                 urgency="high",
                 recommended_action="pause",
+                reason_code="anomaly",
+                reason_params={"title": alert.title},
                 score=1.0,
             )
         )
@@ -168,61 +178,100 @@ def _score_opportunity(
         .limit(1)
     ).first()
 
-    headline, reasoning, urgency, action = _explain(opp, hot_lead, cycle, pending)
+    explanation = _explain(opp, hot_lead, cycle, pending)
 
     return DecisionCard(
         id=str(opp.id),
         kind="opportunity",
         company_name=company.name if company else opp.title,
-        headline=headline,
-        reasoning=reasoning,
-        urgency=urgency,
-        recommended_action=action,
+        headline=explanation.headline,
+        reasoning=explanation.reasoning,
+        urgency=explanation.urgency,
+        recommended_action=explanation.action,
+        reason_code=explanation.reason_code,
+        reason_params=explanation.reason_params,
         opportunity_id=opp.id,
         pending_action_id=pending.id if pending else None,
         score=round(score, 4),
     )
 
 
-def _explain(
-    opp: Opportunity, hot_lead, cycle, pending: PendingAction | None
-) -> tuple[str, str, DecisionUrgency, RecommendedAction]:
+@dataclass(frozen=True, slots=True)
+class Explanation:
+    """One card's "why" in two forms: a rendered Spanish sentence pair for
+    consumers with no translation layer, and a structured ``reason_code`` +
+    ``reason_params`` the dashboard renders in the viewer's own locale."""
+
+    headline: str
+    reasoning: str
+    urgency: DecisionUrgency
+    action: RecommendedAction
+    reason_code: DecisionReasonCode
+    reason_params: dict[str, Any] = field(default_factory=dict)
+
+
+def _explain(opp: Opportunity, hot_lead, cycle, pending: PendingAction | None) -> Explanation:
     """Build the human-readable "why" — never a bare score. Every card must
     say, in plain language, what changed and why it's worth acting on
     today, the same "no black-box scores" transparency the rest of this
     codebase already commits to (see the guarantees on the landing page).
+
+    The rendered strings are Spanish; the reason_code/reason_params pair is
+    what lets the frontend say the same thing in English without a second
+    server-side copy of every sentence.
     """
     company_label = (opp.company.name if opp.company else opp.title) or "esta cuenta"
 
     if pending is not None:
-        return (
-            f"Listo para aprobar — {company_label}",
-            f"BEE ya preparó una jugada ({pending.action_type}) esperando tu aprobación.",
-            "high",
-            "call" if pending.action_type == "message" else "review",
+        return Explanation(
+            headline=f"Listo para aprobar — {company_label}",
+            reasoning=f"BEE ya preparó una jugada ({pending.action_type}) esperando tu aprobación.",
+            urgency="high",
+            action="call" if pending.action_type == "message" else "review",
+            reason_code="pending_approval",
+            reason_params={"company": company_label, "action_type": pending.action_type},
         )
 
     if hot_lead is not None and hot_lead.is_hot:
-        return (
-            f"{company_label} está en modo de investigación activa",
-            f"Score de intención {hot_lead.research_intensity_score:.0f}/100, etapa: {hot_lead.buying_stage}. "
-            f"{hot_lead.signal_count} señal(es) reciente(s).",
-            "high",
-            "call",
+        return Explanation(
+            headline=f"{company_label} está en modo de investigación activa",
+            reasoning=(
+                f"Score de intención {hot_lead.research_intensity_score:.0f}/100, etapa: {hot_lead.buying_stage}. "
+                f"{hot_lead.signal_count} señal(es) reciente(s)."
+            ),
+            urgency="high",
+            action="call",
+            reason_code="hot_lead",
+            reason_params={
+                "company": company_label,
+                "score": round(hot_lead.research_intensity_score),
+                "stage": hot_lead.buying_stage,
+                "signals": hot_lead.signal_count,
+            },
         )
 
     if cycle.available and cycle.is_overdue:
-        return (
-            f"{company_label} superó su ventana de cierre estimada",
-            f"El ciclo esperado era de {cycle.predicted_cycle_days:.0f} días; van {cycle.days_elapsed}. "
-            "Vale la pena un check-in antes de que se enfríe.",
-            "medium",
-            "email",
+        return Explanation(
+            headline=f"{company_label} superó su ventana de cierre estimada",
+            reasoning=(
+                f"El ciclo esperado era de {cycle.predicted_cycle_days:.0f} días; van {cycle.days_elapsed}. "
+                "Vale la pena un check-in antes de que se enfríe."
+            ),
+            urgency="medium",
+            action="email",
+            reason_code="cycle_overdue",
+            reason_params={
+                "company": company_label,
+                "predicted_days": round(cycle.predicted_cycle_days or 0),
+                "days_elapsed": cycle.days_elapsed,
+            },
         )
 
-    return (
-        f"{company_label} sigue en pipeline",
-        "Sin señales fuertes todavía — mantenla en radar.",
-        "low",
-        "wait",
+    return Explanation(
+        headline=f"{company_label} sigue en pipeline",
+        reasoning="Sin señales fuertes todavía — mantenla en radar.",
+        urgency="low",
+        action="wait",
+        reason_code="in_pipeline",
+        reason_params={"company": company_label},
     )

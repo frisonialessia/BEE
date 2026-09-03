@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import uuid
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 DecisionKind = Literal["opportunity", "anomaly"]
 DecisionUrgency = Literal["low", "medium", "high"]
 RecommendedAction = Literal["call", "email", "review", "wait", "pause"]
+# Structured "why" — the frontend translates these into the viewer's locale
+# (see decision-feed.tsx's `reasons.*` messages); ``headline``/``reasoning``
+# stay as the Spanish server rendering for API consumers without a
+# translation layer (Slack digest, integrations, tests).
+DecisionReasonCode = Literal["pending_approval", "hot_lead", "cycle_overdue", "in_pipeline", "anomaly"]
 
 
 class DecisionCard(BaseModel):
@@ -25,6 +30,10 @@ class DecisionCard(BaseModel):
     reasoning: str
     urgency: DecisionUrgency
     recommended_action: RecommendedAction
+    reason_code: DecisionReasonCode = "in_pipeline"
+    # Values the localized template interpolates (score, stage, days…) —
+    # numbers stay numbers so the client can format them per locale.
+    reason_params: dict[str, Any] = Field(default_factory=dict)
     opportunity_id: uuid.UUID | None = None
     pending_action_id: uuid.UUID | None = None
     score: float
