@@ -249,6 +249,7 @@
       "social": "Social",
       "automation": "Automation",
       "bi": "Reporting & BI",
+      "pm": "Project management",
       "other": "Other"
     },
     "automation": {
@@ -291,6 +292,15 @@
     "hubspot": {
       "disconnectedCopy": "Connect your HubSpot account to bring your CRM into BEE — companies, contacts, and deals, read-only.",
       "connectedCopy": "Connected to {account}. Pulls Companies, Contacts, and Deals whenever you want — never writes back to HubSpot."
+    },
+    "jira": {
+      "disconnectedCopy": "Connect Jira so BEE creates an issue when an opportunity is ready to action and comments on the outcome when it's won or lost.",
+      "connectedCopy": "Connected to {account}. Set a Jira project below to turn sync on.",
+      "projectKeyPlaceholder": "Project key (e.g. SALES)",
+      "saveProjectKey": "Save project",
+      "saving": "Saving…",
+      "configSaved": "Project {key} configured — sync is now active.",
+      "configError": "Couldn't save the project."
     },
     "import": {
       "noNew": "There was nothing new to import.",

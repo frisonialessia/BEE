@@ -28,9 +28,16 @@ from sqlmodel import Session, select
 from app.core.logging import get_logger
 from app.core.token_crypto import TokenDecryptionError, decrypt_token, encrypt_token
 from app.models.integration_connection import IntegrationConnection
-from app.services.integrations import gmail_oauth, hubspot_oauth, linkedin_oauth, salesforce_oauth
+from app.services.integrations import (
+    gmail_oauth,
+    hubspot_oauth,
+    jira_oauth,
+    linkedin_oauth,
+    salesforce_oauth,
+)
 from app.services.integrations.gmail_oauth import GmailOAuthError, GmailTokens
 from app.services.integrations.hubspot_oauth import HubSpotOAuthError, HubSpotTokens
+from app.services.integrations.jira_oauth import JiraOAuthError, JiraTokens
 from app.services.integrations.linkedin_oauth import LinkedInOAuthError, LinkedInTokens
 from app.services.integrations.salesforce_oauth import SalesforceOAuthError, SalesforceTokens
 
@@ -40,7 +47,7 @@ logger = get_logger(__name__)
 # expires mid-request.
 _REFRESH_SKEW = timedelta(minutes=2)
 
-_OAuthTokens = GmailTokens | LinkedInTokens | SalesforceTokens | HubSpotTokens
+_OAuthTokens = GmailTokens | LinkedInTokens | SalesforceTokens | HubSpotTokens | JiraTokens
 
 
 class IntegrationsService:
@@ -163,6 +170,34 @@ class IntegrationsService:
             account_label=account_label,
         )
 
+    def save_jira_connection(
+        self,
+        *,
+        organization_id: uuid.UUID,
+        connected_by_user_id: uuid.UUID | None,
+        tokens: JiraTokens,
+    ) -> IntegrationConnection:
+        return self._save_connection(
+            provider="jira",
+            organization_id=organization_id,
+            connected_by_user_id=connected_by_user_id,
+            tokens=tokens,
+            account_label=tokens.site_label,
+        )
+
+    def set_jira_project_key(self, organization_id: uuid.UUID, project_key: str) -> IntegrationConnection | None:
+        """The one setting JiraSyncHandler needs beyond the OAuth
+        connection itself — see IntegrationConnection.config's docstring.
+        Returns ``None`` if Jira isn't connected for this org yet."""
+        row = self.get_connection(organization_id, "jira")
+        if row is None:
+            return None
+        row.config = {**row.config, "project_key": project_key}
+        self.session.add(row)
+        self.session.flush()
+        self.session.refresh(row)
+        return row
+
     def disconnect(self, organization_id: uuid.UUID, provider: str) -> bool:
         """Best-effort revoke with the provider (Gmail only — LinkedIn and
         Salesforce have no public revoke-by-API-call step BEE uses here),
@@ -239,6 +274,16 @@ class IntegrationsService:
 
             access_token = fresh.access_token
             row.access_token_encrypted = encrypt_token(fresh.access_token)
+            # Persist a fresh refresh_token whenever the provider actually
+            # returns one on refresh — a real gap until now (this branch
+            # only ever touched access_token_encrypted), harmless for a
+            # provider that never re-issues one on refresh (Gmail: always
+            # None here, so this is a no-op) but a correctness bug for one
+            # that *rotates* — Jira invalidates the old refresh_token the
+            # moment it's used, so without this the very next refresh
+            # would fail outright. See jira_oauth's own module docstring.
+            if fresh.refresh_token:
+                row.refresh_token_encrypted = encrypt_token(fresh.refresh_token)
             row.token_expires_at = fresh.expires_at
             instance_url = getattr(fresh, "instance_url", None)
             if instance_url:
@@ -291,3 +336,28 @@ class IntegrationsService:
             "hubspot", organization_id, hubspot_oauth.refresh_access_token, HubSpotOAuthError
         )
         return result[0] if result else None
+
+    def get_valid_jira_access_token(self, organization_id: uuid.UUID) -> tuple[str, str] | None:
+        """Returns ``(access_token, cloud_id)`` — every Jira Cloud API call
+        targets ``https://api.atlassian.com/ex/jira/{cloud_id}/...``, same
+        "row.instance_url doubles as the extra id this provider needs"
+        pattern as Salesforce's instance_url (see jira_oauth's docstring)."""
+        result = self._get_valid_connection("jira", organization_id, jira_oauth.refresh_access_token, JiraOAuthError)
+        if not result:
+            return None
+        access_token, row = result
+        if not row.instance_url:
+            return None
+        return access_token, row.instance_url
+
+    def get_jira_project_key(self, organization_id: uuid.UUID) -> str | None:
+        """The target Jira project JiraSyncHandler creates issues in — set
+        via PATCH /integrations/jira/config, stored on
+        IntegrationConnection.config. ``None`` when unset (or Jira isn't
+        connected at all), which the handler treats as "not configured
+        yet" and runs in mock mode for, same as no connection at all."""
+        row = self.get_connection(organization_id, "jira")
+        if row is None:
+            return None
+        project_key = row.config.get("project_key")
+        return project_key if isinstance(project_key, str) and project_key else None

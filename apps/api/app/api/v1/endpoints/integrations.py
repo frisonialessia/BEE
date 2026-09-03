@@ -4,14 +4,18 @@ Two different kinds of "connected" live on the same page, and the response
 is explicit about which is which (see IntegrationStatusOut.scope):
 
 * **organization-scoped** (real OAuth, one row per org): Gmail, LinkedIn,
-  Salesforce, HubSpot. Each org connects (or not) its own account via a
-  genuine Connect/Disconnect button — see gmail_oauth.py/linkedin_oauth.py/
-  salesforce_oauth.py/hubspot_oauth.py and IntegrationsService. Salesforce
-  and HubSpot additionally get POST /salesforce/import and
+  Salesforce, HubSpot, Jira. Each org connects (or not) its own account via
+  a genuine Connect/Disconnect button — see gmail_oauth.py/linkedin_oauth.py/
+  salesforce_oauth.py/hubspot_oauth.py/jira_oauth.py and IntegrationsService.
+  Salesforce and HubSpot additionally get POST /salesforce/import and
   POST /hubspot/import — a one-way, explicit, re-runnable pull of each
-  CRM's standard objects into BEE's own Company/Lead/Opportunity tables.
-  See salesforce_import.py's/hubspot_import.py's module docstrings for why
-  it's one-way (BEE never writes back) and standard-fields-only.
+  CRM's standard objects into BEE's own Company/Lead/Opportunity tables
+  (see salesforce_import.py's/hubspot_import.py's module docstrings for why
+  it's one-way and standard-fields-only). Jira runs the other direction —
+  BEE pushes OUT: PATCH /jira/config sets a target project, then
+  JiraSyncHandler (app.services.workflow_orchestrator.handlers) creates a
+  Jira issue when an opportunity reaches Ready to action and comments on
+  it when the deal closes — see that handler's own docstring.
 * **server-scoped** (a single shared credential the whole deployment uses):
   Email/SMTP fallback, X — status reused as-is from
   OmnichannelGateway.get_channel_status(), read-only here. LinkedIn's
@@ -49,12 +53,20 @@ from app.schemas.integrations import (
     AuthorizeUrlOut,
     HubSpotImportSummaryOut,
     IntegrationStatusOut,
+    JiraConfigIn,
     SalesforceImportSummaryOut,
 )
-from app.services.integrations import gmail_oauth, hubspot_oauth, linkedin_oauth, salesforce_oauth
+from app.services.integrations import (
+    gmail_oauth,
+    hubspot_oauth,
+    jira_oauth,
+    linkedin_oauth,
+    salesforce_oauth,
+)
 from app.services.integrations.gmail_oauth import GmailOAuthError
 from app.services.integrations.hubspot_import import HubSpotImportService
 from app.services.integrations.hubspot_oauth import HubSpotOAuthError
+from app.services.integrations.jira_oauth import JiraOAuthError
 from app.services.integrations.linkedin_oauth import LinkedInOAuthError
 from app.services.integrations.salesforce_import import SalesforceImportService
 from app.services.integrations.salesforce_oauth import SalesforceOAuthError
@@ -69,6 +81,7 @@ _GMAIL_STATE_PURPOSE = "gmail_connect"
 _LINKEDIN_STATE_PURPOSE = "linkedin_connect"
 _SALESFORCE_STATE_PURPOSE = "salesforce_connect"
 _HUBSPOT_STATE_PURPOSE = "hubspot_connect"
+_JIRA_STATE_PURPOSE = "jira_connect"
 
 # Server-scoped channels are shown as-is except "linkedin", which now has
 # its own organization-scoped row above (see module docstring).
@@ -148,6 +161,29 @@ def list_integrations(
                 "Importa Companies/Contacts/Deals cuando quieras — solo lectura, nunca escribe en HubSpot."
                 if hubspot
                 else (None if hubspot_oauth.is_configured() else "No configurado en el servidor todavía.")
+            ),
+        )
+    )
+
+    jira = integrations.get_connection(current_user.organization_id, "jira")
+    jira_project_key = jira.config.get("project_key") if jira else None
+    result.append(
+        IntegrationStatusOut(
+            provider="jira",
+            label="Jira",
+            connected=jira is not None,
+            scope="organization",
+            category="pm",
+            account_email=jira.external_account_email if jira else None,
+            connected_at=jira.created_at if jira else None,
+            last_error=jira.last_error if jira else None,
+            detail=(
+                f"Sincroniza oportunidades con el proyecto {jira_project_key} — crea un issue al llegar a "
+                "Ready to action, comenta al ganar/perder."
+                if jira and jira_project_key
+                else "Conectado — falta configurar un proyecto de Jira para activar la sincronización."
+                if jira
+                else (None if jira_oauth.is_configured() else "No configurado en el servidor todavía.")
             ),
         )
     )
@@ -514,3 +550,110 @@ def hubspot_import(
     summary = importer.import_all(current_user.organization_id)
     session.commit()
     return HubSpotImportSummaryOut.model_validate(summary, from_attributes=True)
+
+
+# ── Jira ─────────────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/jira/authorize",
+    response_model=AuthorizeUrlOut,
+    summary="Get the Atlassian consent URL to connect this organization's Jira",
+)
+def jira_authorize(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+) -> AuthorizeUrlOut:
+    if not jira_oauth.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Jira todavía no está configurado en el servidor (falta la app registrada).",
+        )
+    state = create_oauth_state_token(current_user.organization_id, purpose=_JIRA_STATE_PURPOSE)
+    return AuthorizeUrlOut(authorize_url=jira_oauth.build_authorize_url(state))
+
+
+@router.get(
+    "/jira/callback",
+    summary="Atlassian redirects here after the user grants (or denies) consent",
+    include_in_schema=False,
+)
+def jira_callback(
+    session: Session = Depends(get_session),
+    code: str | None = Query(default=None),
+    state: str | None = Query(default=None),
+    error: str | None = Query(default=None),
+) -> RedirectResponse:
+    redirect_base = f"{settings.FRONTEND_URL}/dashboard/integrations"
+
+    if error:
+        logger.info("Jira OAuth denied by user: %s", error)
+        return RedirectResponse(f"{redirect_base}?integration_error=denied")
+
+    if not code or not state:
+        return RedirectResponse(f"{redirect_base}?integration_error=invalid_request")
+
+    try:
+        organization_id = decode_oauth_state_token(state, expected_purpose=_JIRA_STATE_PURPOSE)
+    except InvalidTokenError:
+        logger.warning("Jira OAuth callback with invalid/expired state token")
+        return RedirectResponse(f"{redirect_base}?integration_error=invalid_state")
+
+    try:
+        tokens = jira_oauth.exchange_code_for_tokens(code)
+    except JiraOAuthError as exc:
+        logger.warning("Jira OAuth exchange failed: %s", exc)
+        return RedirectResponse(f"{redirect_base}?integration_error=exchange_failed")
+
+    IntegrationsService(session).save_jira_connection(
+        organization_id=organization_id,
+        connected_by_user_id=None,  # the callback carries no session — see module docstring
+        tokens=tokens,
+    )
+    session.commit()
+
+    return RedirectResponse(f"{redirect_base}?connected=jira")
+
+
+@router.post("/jira/disconnect", summary="Disconnect this organization's Jira account")
+def jira_disconnect(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> dict[str, bool]:
+    disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "jira")
+    session.commit()
+    return {"disconnected": disconnected}
+
+
+@router.patch(
+    "/jira/config",
+    response_model=IntegrationStatusOut,
+    summary="Set the Jira project opportunity-stage sync creates issues in",
+)
+def jira_set_config(
+    body: JiraConfigIn,
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> IntegrationStatusOut:
+    """JiraSyncHandler (app.services.workflow_orchestrator.handlers) runs
+    in mock mode until this is set — connecting alone isn't enough, since
+    BEE has no way to guess which of an org's Jira projects should
+    receive opportunity issues."""
+    service = IntegrationsService(session)
+    row = service.set_jira_project_key(current_user.organization_id, body.project_key)
+    if row is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Conecta Jira primero desde Integraciones.",
+        )
+    session.commit()
+    return IntegrationStatusOut(
+        provider="jira",
+        label="Jira",
+        connected=True,
+        scope="organization",
+        category="pm",
+        account_email=row.external_account_email,
+        connected_at=row.created_at,
+        last_error=row.last_error,
+        detail=f"Sincroniza oportunidades con el proyecto {body.project_key}.",
+    )

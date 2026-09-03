@@ -23,7 +23,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
+from sqlalchemy import JSON, Column
 from sqlmodel import Field, UniqueConstraint
 
 from app.models.base import TimestampMixin, new_uuid
@@ -63,3 +65,13 @@ class IntegrationConnection(TimestampMixin, table=True):
     # instead of silently dropping the row — the UI shows "reconectar" with
     # this message rather than the connection just vanishing unexplained.
     last_error: str | None = Field(default=None)
+
+    # Free-form, provider-specific settings that aren't part of the OAuth
+    # handshake itself — e.g. Jira's target project key
+    # ({"project_key": "SALES"}, see PATCH /integrations/jira/config and
+    # JiraSyncHandler), which JiraSyncHandler reads to know which Jira
+    # project to create issues in. Empty for every provider that has
+    # nothing to configure beyond connect/disconnect (Gmail, LinkedIn,
+    # Salesforce, HubSpot) — same "new providers need no migration" reason
+    # ``provider`` itself is a free string rather than an enum.
+    config: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))

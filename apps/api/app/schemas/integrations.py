@@ -58,3 +58,11 @@ class SalesforceImportSummaryOut(BaseModel):
 # a distinct name for the response_model/OpenAPI schema rather than
 # reusing "Salesforce"'s, without duplicating the class.
 HubSpotImportSummaryOut = SalesforceImportSummaryOut
+
+
+class JiraConfigIn(BaseModel):
+    """Body for PATCH /integrations/jira/config — the one setting
+    JiraSyncHandler needs beyond the OAuth connection itself. See
+    IntegrationConnection.config's docstring."""
+
+    project_key: str = Field(min_length=1, max_length=64)

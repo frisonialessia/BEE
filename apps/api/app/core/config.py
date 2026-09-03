@@ -326,6 +326,23 @@ class Settings(BaseSettings):
     #   https://api.yourdomain.com/api/v1/integrations/hubspot/callback
     HUBSPOT_OAUTH_REDIRECT_URI: str | None = None
 
+    # ----- Jira OAuth (Jira connector — opportunity-stage sync) -----------------
+    # Powers "Connect Jira" at /dashboard/integrations — an Atlassian OAuth
+    # 2.0 (3LO) app created at developer.atlassian.com/console/myapps (Jira
+    # API scopes: read:jira-work, write:jira-work, offline_access; Callback
+    # URL = JIRA_OAUTH_REDIRECT_URI below). Once connected + a project key
+    # is set (PATCH /integrations/jira/config), JiraSyncHandler
+    # (app.services.workflow_orchestrator.handlers) creates a Jira issue
+    # when an opportunity reaches Ready to action and comments on it when
+    # the deal is won/lost — see that handler's own docstring for why a
+    # comment, not a workflow transition (project-specific transition IDs
+    # would be too fragile to guess at).
+    JIRA_OAUTH_CLIENT_ID: str | None = None
+    JIRA_OAUTH_CLIENT_SECRET: str | None = None
+    # Must exactly match a Callback URL on that app, e.g.:
+    #   https://api.yourdomain.com/api/v1/integrations/jira/callback
+    JIRA_OAUTH_REDIRECT_URI: str | None = None
+
     # ----- ExecutiveAgent webhook (n8n / Zapier / Make) -------------------------
     # When set, BEE fires a POST to this URL every time execution artifacts are
     # generated. The receiving workflow can then send the email, create a CRM
@@ -596,6 +613,8 @@ class Settings(BaseSettings):
             or self.SALESFORCE_OAUTH_CLIENT_SECRET
             or self.HUBSPOT_OAUTH_CLIENT_ID
             or self.HUBSPOT_OAUTH_CLIENT_SECRET
+            or self.JIRA_OAUTH_CLIENT_ID
+            or self.JIRA_OAUTH_CLIENT_SECRET
         ) and not self.TOKEN_ENCRYPTION_KEY:
             problems.append(
                 "A *_OAUTH_CLIENT_ID/SECRET pair is set but TOKEN_ENCRYPTION_KEY is not — "

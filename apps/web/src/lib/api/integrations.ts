@@ -10,9 +10,9 @@ export interface IntegrationStatus {
    *  Connect/Disconnect button. "server" — a single credential the whole
    *  deployment shares, shown read-only for transparency. */
   scope: "organization" | "server";
-  /** "crm" | "email" | "social" | "automation" | "bi" | null — groups the
-   *  page (see IntegrationsView.tsx). Untyped/optional on the wire, same
-   *  reasoning as the backend's own IntegrationStatusOut.category. */
+  /** "crm" | "email" | "social" | "automation" | "bi" | "pm" | null — groups
+   *  the page (see IntegrationsView.tsx). Untyped/optional on the wire,
+   *  same reasoning as the backend's own IntegrationStatusOut.category. */
   category: string | null;
   account_email: string | null;
   connected_at: string | null;
@@ -20,7 +20,7 @@ export interface IntegrationStatus {
   last_error: string | null;
 }
 
-export type OAuthProvider = "gmail" | "linkedin" | "salesforce" | "hubspot";
+export type OAuthProvider = "gmail" | "linkedin" | "salesforce" | "hubspot" | "jira";
 
 const READ_ONLY_MESSAGE = "Integraciones no está disponible en el sandbox — conecta una cuenta real desde el Dashboard.";
 
@@ -35,6 +35,7 @@ const DEMO_INTEGRATIONS: IntegrationStatus[] = [
   { provider: "linkedin", label: "LinkedIn", connected: false, scope: "organization", category: "social", account_email: null, connected_at: null, detail: null, last_error: null },
   { provider: "salesforce", label: "Salesforce", connected: false, scope: "organization", category: "crm", account_email: null, connected_at: null, detail: null, last_error: null },
   { provider: "hubspot", label: "HubSpot", connected: false, scope: "organization", category: "crm", account_email: null, connected_at: null, detail: null, last_error: null },
+  { provider: "jira", label: "Jira", connected: false, scope: "organization", category: "pm", account_email: null, connected_at: null, detail: null, last_error: null },
   {
     provider: "email",
     label: "Email (SMTP)",
@@ -117,5 +118,18 @@ export async function importFromHubSpot(): Promise<HubSpotImportSummary> {
   if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
   return apiFetch<HubSpotImportSummary>("/api/v1/integrations/hubspot/import", {
     method: "POST",
+  });
+}
+
+/** El único ajuste que la sincronización de oportunidades con Jira
+ * necesita además de la conexión OAuth — a qué proyecto de Jira crear los
+ * issues. Sin esto, JiraSyncHandler corre en modo simulado (ver
+ * app.services.workflow_orchestrator.handlers en el backend). */
+export async function setJiraProjectKey(projectKey: string): Promise<IntegrationStatus> {
+  if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
+  return apiFetch<IntegrationStatus>("/api/v1/integrations/jira/config", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ project_key: projectKey }),
   });
 }

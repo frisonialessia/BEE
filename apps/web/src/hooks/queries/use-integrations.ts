@@ -8,6 +8,7 @@ import {
   getOAuthAuthorizeUrl,
   importFromHubSpot,
   importFromSalesforce,
+  setJiraProjectKey,
   type OAuthProvider,
 } from "@/lib/api/integrations";
 import { queryKeys } from "@/lib/query-keys";
@@ -51,5 +52,15 @@ export function useImportFromSalesforce() {
 export function useImportFromHubSpot() {
   return useMutation({
     mutationFn: importFromHubSpot,
+  });
+}
+
+export function useSetJiraProjectKey() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (projectKey: string) => setJiraProjectKey(projectKey),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.integrations.all });
+    },
   });
 }

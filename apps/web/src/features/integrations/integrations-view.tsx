@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { CheckCircle2, Cloud, Download, Mail, Plug, Users, XCircle } from "lucide-react";
+import { CheckCircle2, Cloud, Download, Kanban, Mail, Plug, Users, XCircle } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ import {
   useImportFromHubSpot,
   useImportFromSalesforce,
   useIntegrations,
+  useSetJiraProjectKey,
 } from "@/hooks/queries/use-integrations";
 import type { IntegrationStatus, OAuthProvider, SalesforceImportSummary } from "@/lib/api/integrations";
 
@@ -27,6 +28,7 @@ const CONNECTED_LABELS: Record<string, string> = {
   linkedin: "LinkedIn",
   salesforce: "Salesforce",
   hubspot: "HubSpot",
+  jira: "Jira",
 };
 
 // One icon per provider, a generic fallback for whatever's added next
@@ -34,9 +36,15 @@ const CONNECTED_LABELS: Record<string, string> = {
 // instead of a per-provider hardcoded JSX block). Categories drive the
 // section a provider's card lands under — see IntegrationStatus.category
 // on the backend (app.api.v1.endpoints.integrations.list_integrations).
-const PROVIDER_ICONS: Record<string, LucideIcon> = { gmail: Mail, linkedin: Users, salesforce: Cloud, hubspot: Cloud };
+const PROVIDER_ICONS: Record<string, LucideIcon> = {
+  gmail: Mail,
+  linkedin: Users,
+  salesforce: Cloud,
+  hubspot: Cloud,
+  jira: Kanban,
+};
 const DEFAULT_PROVIDER_ICON: LucideIcon = Plug;
-const CATEGORY_ORDER = ["crm", "email", "social", "automation", "bi"] as const;
+const CATEGORY_ORDER = ["crm", "email", "social", "automation", "bi", "pm"] as const;
 
 /** Reads the one-time ?connected=<provider> / ?integration_error=... query
  * params left by an OAuth callback redirect (see
@@ -255,6 +263,54 @@ function HubSpotImportButton() {
   return <CrmImportButtonBody isPending={importFromHubSpot.isPending} onImport={handleImport} />;
 }
 
+/** The one setting opportunity-stage sync needs beyond the OAuth
+ * connection itself — which Jira project JiraSyncHandler creates issues
+ * in (see app.services.workflow_orchestrator.handlers on the backend).
+ * Shown as a small inline form under the connected Jira row instead of a
+ * Connect-time prompt, since BEE has no way to list an org's Jira
+ * projects without an extra API scope this integration doesn't ask for —
+ * the project key is typed in by hand, same as pasting any other
+ * external id. */
+function JiraConfigForm({ status }: { status: IntegrationStatus }) {
+  const t = useTranslations("workspace.integrations.jira");
+  const setProjectKey = useSetJiraProjectKey();
+  const [value, setValue] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!value.trim()) return;
+    try {
+      await setProjectKey.mutateAsync(value.trim().toUpperCase());
+      toast.success(t("configSaved", { key: value.trim().toUpperCase() }));
+      setValue("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("configError"));
+    }
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mt-3 flex items-center gap-2 border-t border-[var(--color-divider)] pt-3"
+    >
+      <input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={t("projectKeyPlaceholder")}
+        className="w-40 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+      />
+      <button
+        type="submit"
+        disabled={!value.trim() || setProjectKey.isPending}
+        className="bee-btn-ghost text-xs"
+      >
+        {setProjectKey.isPending ? t("saving") : t("saveProjectKey")}
+      </button>
+      <span className="bee-micro">{status.detail}</span>
+    </form>
+  );
+}
+
 function ServerChannelRow({ status }: { status: IntegrationStatus }) {
   const t = useTranslations("workspace.integrations.serverChannels");
   return (
@@ -359,6 +415,7 @@ export function IntegrationsView() {
                     >
                       {status.provider === "salesforce" && canManage && <SalesforceImportButton />}
                       {status.provider === "hubspot" && canManage && <HubSpotImportButton />}
+                      {status.provider === "jira" && canManage && <JiraConfigForm status={status} />}
                     </OAuthProviderRow>
                   );
                 })}

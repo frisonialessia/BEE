@@ -26,6 +26,11 @@ Built-in handlers
   hardcoded, env-var-only URL each), this is the user-facing, multi-tenant
   equivalent: any org registers its own destination(s) from the dashboard —
   see app.api.v1.endpoints.outbound_webhooks.
+* ``JiraSyncHandler`` — fires on ``opportunity.ready_to_action`` /
+  ``opportunity.won`` / ``opportunity.lost``. Same multi-tenant shape as
+  ``OutboundWebhookHandler`` (per-org credentials via ``IntegrationConnection``,
+  not one shared env-var URL) but the other direction: BEE pushes a real
+  Jira issue out, not just a webhook payload — see its own docstring below.
 """
 
 from __future__ import annotations
@@ -35,6 +40,7 @@ import hmac
 import json
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from sqlmodel import Session, select
 
@@ -356,4 +362,116 @@ class ReadyToActionNotifyHandler(WorkflowHandler):
             session, event, self.name, self.version, status, payload,
             result=result,
             error_message=result.get("error") if not ok else None,
+        )
+
+
+@register_workflow_handler
+class JiraSyncHandler(WorkflowHandler):
+    """Opportunity-stage sync into a per-org Jira project.
+
+    Fires on ``opportunity.ready_to_action`` (creates an issue),
+    ``opportunity.won`` / ``opportunity.lost`` (comments on the issue that
+    was created for this opportunity, if any).
+
+    Unlike CRMUpdateHandler/ServiceDeliveryHandler/BillingHandler (one
+    hardcoded env-var URL each), Jira is connected per-organization via
+    real OAuth — see ``app.services.integrations.jira_oauth`` and
+    ``PATCH /integrations/jira/config`` for the target project key. Same
+    multi-tenant lookup shape as ``OutboundWebhookHandler``, just against
+    ``IntegrationConnection`` instead of ``OutboundWebhook``.
+
+    Deliberately a comment, never a workflow transition, on won/lost — a
+    project's transition IDs (e.g. which numeric id moves an issue to
+    "Done") are configured per-project and per-workflow, nothing this
+    handler could safely guess at without either silently failing or, worse,
+    moving the issue to a status the team didn't intend. A comment always
+    works, on any Jira project, regardless of its workflow configuration.
+
+    Requires ``organization_id`` in the event payload, same reason
+    ``OutboundWebhookHandler`` does — without it there's no tenant to look
+    the Jira connection up for, so this runs in mock mode.
+    """
+
+    name = "jira_sync"
+    version = "1.0.0"
+    event_types = ["opportunity.ready_to_action", "opportunity.won", "opportunity.lost"]
+
+    def handle(self, event: BeeEvent, session: Session) -> WorkflowTask:
+        from app.models.opportunity import Opportunity
+        from app.services.integrations.jira_sync import JiraApiClient, JiraApiError
+        from app.services.integrations.service import IntegrationsService
+
+        payload = {
+            "event_type": event.event_type,
+            "opportunity_id": str(event.entity_id) if event.entity_id else None,
+            "timestamp": datetime.now(UTC).isoformat(),
+            **event.payload,
+        }
+
+        def _mock(note: str) -> WorkflowTask:
+            return _create_task(
+                session, event, self.name, self.version,
+                WorkflowTaskStatus.MOCK_DISPATCHED, payload,
+                result={"mock": True, "note": note},
+                mock=True,
+            )
+
+        org_id_raw = event.payload.get("organization_id")
+        org_id = uuid.UUID(org_id_raw) if org_id_raw else None
+        if org_id is None:
+            return _mock("No organization_id on this event — nothing to look up.")
+
+        integrations = IntegrationsService(session)
+        access = integrations.get_valid_jira_access_token(org_id)
+        if access is None:
+            return _mock("Jira isn't connected for this organization.")
+        access_token, cloud_id = access
+
+        project_key = integrations.get_jira_project_key(org_id)
+        if not project_key:
+            return _mock("Jira is connected but no project key is configured (PATCH /integrations/jira/config).")
+
+        opportunity = session.get(Opportunity, event.entity_id) if event.entity_id else None
+        if opportunity is None:
+            return _mock("Opportunity not found — nothing to sync.")
+
+        client = JiraApiClient(access_token=access_token, cloud_id=cloud_id)
+        company = event.payload.get("company_name") or "esta oportunidad"
+
+        try:
+            if event.event_type == "opportunity.ready_to_action":
+                issue_key = client.create_issue(
+                    project_key=project_key,
+                    summary=f"BEE — Oportunidad lista para actuar: {company}",
+                    description=(
+                        f"BEE generó una battlecard completa para {company} "
+                        f"(score {event.payload.get('score', 0):.0f}/100). "
+                        f"Opportunity ID: {event.entity_id}."
+                    ),
+                )
+                opportunity.attributes = {**opportunity.attributes, "jira_issue_key": issue_key}
+                session.add(opportunity)
+                session.flush()
+                result: dict[str, Any] = {"issue_key": issue_key, "action": "created"}
+            else:
+                linked_issue_key: str | None = opportunity.attributes.get("jira_issue_key")
+                if not linked_issue_key:
+                    return _mock(
+                        "No linked Jira issue for this opportunity (it never reached Ready to action) — nothing to comment on."
+                    )
+                outcome = "GANADA ✅" if event.event_type == "opportunity.won" else "PERDIDA ❌"
+                note = f"Resultado en BEE: {outcome}."
+                if event.payload.get("loss_reason"):
+                    note += f" Motivo: {event.payload['loss_reason']}."
+                client.add_comment(issue_key=linked_issue_key, text=note)
+                result = {"issue_key": linked_issue_key, "action": "commented"}
+        except JiraApiError as exc:
+            return _create_task(
+                session, event, self.name, self.version, WorkflowTaskStatus.FAILED, payload,
+                result={"error": str(exc)},
+                error_message=str(exc),
+            )
+
+        return _create_task(
+            session, event, self.name, self.version, WorkflowTaskStatus.COMPLETED, payload, result=result
         )
