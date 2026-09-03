@@ -18,6 +18,7 @@ Backend status after External Ingestion: **Ready**.
 | `LINKEDIN_WEBHOOK_SECRET` | Per-provider HMAC secret for `/api/v1/webhooks/receive` |
 | `G2_WEBHOOK_SECRET` / `GOOGLE_WEBHOOK_SECRET` | Configure when those providers are active |
 | `ENVIRONMENT` | `production` (enables HSTS headers) |
+| `EMAIL_SMTP_HOST` / `EMAIL_SMTP_USER` / `EMAIL_SMTP_PASSWORD` / `EMAIL_FROM_ADDRESS` | **Required for self-serve password recovery.** `POST /auth/forgot-password` always answers a generic 200 and hands the email to `EmailProvider`, which only *mock-logs* it while SMTP is unset — the customer sees "check your inbox" and nothing arrives. The app logs a `CRITICAL` hardening warning at boot in `ENVIRONMENT=production` until this is set. |
 | `SIGNUP_INVITE_CODE` | Optional — only set this during a closed beta. Unset (default) means `/auth/register` is fully open self-serve. See §7. |
 
 ### Database
@@ -76,6 +77,15 @@ For inbound signals/dark-funnel data on this endpoint to be tagged with an
 the URL given to each provider with `?org_key=<organization's key>` — or, if
 the provider supports custom headers, `X-BEE-Org-Key`. Without either, the
 behavior is the same as always (untagged).
+
+### 1b. Customers push signals with their organization API key, not the HMAC secret
+
+`POST /api/v1/signals/webhook` accepts either the server-wide
+`X-BEE-Signature` HMAC **or** a per-organization `X-BEE-Org-Key` (minted in
+the dashboard under Integrations → Señales entrantes). Never hand
+`WEBHOOK_SIGNING_SECRET` to a customer — it is one value shared by every
+tenant. Point their CRM/Zapier/script at the webhook with their own key;
+the request is authenticated and tenant-scoped by that key alone.
 
 ### 2. `IngestionWorker` is in-process (`asyncio.Queue`) by default
 

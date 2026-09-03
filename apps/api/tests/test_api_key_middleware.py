@@ -141,3 +141,23 @@ class TestOtherEndpointsStillRequireTheKey:
     def test_health_and_ready_stay_exempt(self, keyed_client: TestClient) -> None:
         assert keyed_client.get("/api/v1/health").status_code == 200
         assert keyed_client.get("/api/v1/ready").status_code == 200
+
+
+def test_blank_api_secret_key_disables_the_middleware(monkeypatch: pytest.MonkeyPatch) -> None:
+    """``API_SECRET_KEY=`` (the blank line ``.env.example`` and docker-compose
+    ship) must mean "auth disabled", same as the variable being absent.
+
+    Regression: pydantic-settings reads a blank line as ``""``, and the
+    middleware gated on ``is not None`` — so the documented local setup
+    enabled auth with an empty secret and 401'd every dashboard request.
+    """
+    from app.core.config import Settings
+
+    monkeypatch.setenv("API_SECRET_KEY", "")
+    monkeypatch.setenv("GOOGLE_OAUTH_CLIENT_ID", "   ")
+    fresh = Settings(_env_file=None)
+    assert fresh.API_SECRET_KEY is None
+    assert fresh.GOOGLE_OAUTH_CLIENT_ID is None
+    # Non-optional strings are left alone — blank stays blank, never None.
+    monkeypatch.setenv("BACKEND_CORS_ORIGINS", "")
+    assert Settings(_env_file=None).BACKEND_CORS_ORIGINS == ""

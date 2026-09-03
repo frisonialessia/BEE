@@ -19,6 +19,10 @@ def _base_kwargs(**overrides: object) -> dict[str, object]:
     """A production config that passes every hardening check, so each test
     only needs to override the one field it's exercising."""
     kwargs: dict[str, object] = {
+        # Never read the developer's own apps/api/.env — these tests assert
+        # on exactly the fields they pass, and a local DATABASE_URL would
+        # otherwise leak in and flip the "unconfigured database" cases.
+        "_env_file": None,
         "ENVIRONMENT": "production",
         "WEBHOOK_SIGNATURE_REQUIRED": True,
         "WEBHOOK_SIGNING_SECRET": "a-real-signing-secret",
@@ -26,6 +30,7 @@ def _base_kwargs(**overrides: object) -> dict[str, object]:
         "DATABASE_URL": "postgresql://user:pass@prod-host:5432/bee_prod",
         "BACKEND_CORS_ORIGINS": "https://app.example.com",
         "VECTOR_STORE_BACKEND": "pgvector",
+        "EMAIL_SMTP_HOST": "smtp.example.com",
     }
     kwargs.update(overrides)
     return kwargs
@@ -41,7 +46,7 @@ def test_local_environment_skips_the_check_entirely(caplog) -> None:
     """The validator is a no-op outside production, even with every default
     left in place — local/staging dev shouldn't ever see this warning."""
     with caplog.at_level(logging.CRITICAL):
-        Settings(ENVIRONMENT="local")
+        Settings(_env_file=None, ENVIRONMENT="local")
     assert "INSECURE PRODUCTION CONFIG" not in caplog.text
 
 
@@ -107,5 +112,16 @@ def test_sqlalchemy_database_uri_falls_back_silently_without_the_check() -> None
     raises — it just assembles a connection string pointing at
     localhost/bee/bee, which is only caught at request time in production
     unless the hardening validator flags it at boot."""
-    settings = Settings(ENVIRONMENT="local")
+    settings = Settings(_env_file=None, ENVIRONMENT="local")
     assert settings.sqlalchemy_database_uri == "postgresql+psycopg://bee:bee@localhost:5432/bee"
+
+
+def test_flags_unset_smtp_in_production(caplog) -> None:
+    """Without SMTP, /auth/forgot-password still answers its generic 200 but
+    EmailProvider mock-logs the reset link — self-serve recovery is silently
+    dead for real customers, so production must be told at boot."""
+    kwargs = _base_kwargs()
+    del kwargs["EMAIL_SMTP_HOST"]
+    with caplog.at_level(logging.CRITICAL):
+        Settings(**kwargs)
+    assert "EMAIL_SMTP_HOST is unset" in caplog.text

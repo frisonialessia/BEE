@@ -21,7 +21,8 @@ from __future__ import annotations
 import logging
 import secrets
 from functools import lru_cache
-from typing import Literal
+from types import NoneType, UnionType
+from typing import Literal, Union, get_args, get_origin
 
 from pydantic import Field, PostgresDsn, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -647,6 +648,39 @@ class Settings(BaseSettings):
             if origin.strip()
         ]
 
+    @model_validator(mode="before")
+    @classmethod
+    def _blank_optional_strings_mean_unset(cls, data: object) -> object:
+        """Treat ``FOO=`` (blank) exactly like ``FOO`` being absent, for every
+        optional string setting.
+
+        ``.env.example`` (and ``docker-compose.yml``) ship the opt-in secrets
+        as blank lines — ``API_SECRET_KEY=``, ``GOOGLE_OAUTH_CLIENT_ID=``,
+        ``TOKEN_ENCRYPTION_KEY=`` — documented as "leave empty to disable".
+        pydantic-settings reads a blank line as the empty string ``""``, not
+        ``None``, and everything downstream gates on ``is not None``: with
+        the documented local ``.env`` copied verbatim, ``APIKeyMiddleware``
+        switched itself *on* with an empty secret and rejected every request
+        without an ``X-API-Key`` header the frontend (also configured with a
+        blank key) never sends — a fresh ``docker compose up`` was a 401 on
+        every dashboard call. Normalizing here, once, keeps every
+        ``is None`` / ``if not settings.X`` check in the codebase honest
+        instead of teaching each one about the empty string.
+        """
+        if not isinstance(data, dict):
+            return data
+        normalized = dict(data)
+        for key, value in data.items():
+            if not isinstance(value, str) or value.strip() != "":
+                continue
+            field = cls.model_fields.get(key) or cls.model_fields.get(key.upper())
+            if field is None:
+                continue
+            annotation = field.annotation
+            if get_origin(annotation) in (Union, UnionType) and NoneType in get_args(annotation):
+                normalized[key] = None
+        return normalized
+
     @model_validator(mode="after")
     def _warn_on_production_hardening_gaps(self) -> Settings:
         """Loudly flag dev-only settings left in place in production.
@@ -692,6 +726,16 @@ class Settings(BaseSettings):
             problems.append(
                 "A *_OAUTH_CLIENT_ID/SECRET pair is set but TOKEN_ENCRYPTION_KEY is not — "
                 "connected integration tokens would fail to store"
+            )
+        # /auth/forgot-password always answers a generic 200 (anti-enumeration)
+        # and hands the reset email to EmailProvider, which *mock-logs* the
+        # message when no SMTP is configured — so without this, a real
+        # customer who forgets their password sees "check your inbox" and
+        # nothing ever arrives, with no error anywhere but a debug log line.
+        if not self.EMAIL_SMTP_HOST:
+            problems.append(
+                "EMAIL_SMTP_HOST is unset — password-reset emails will be mock-logged, "
+                "never delivered; self-serve password recovery is silently broken"
             )
         # sqlalchemy_database_uri never raises or returns None when the DB
         # isn't configured — it silently assembles a connection string from
