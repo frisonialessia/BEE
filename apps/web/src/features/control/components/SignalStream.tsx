@@ -50,12 +50,12 @@ function StreamItem({
       onClick={() => event.opportunity_id && onOpen(event.opportunity_id)}
       className={cn(
         "group relative flex w-full gap-3 py-3 pl-1 text-left transition-opacity duration-200",
-        isReady && "rounded-xl bg-[var(--color-primary)]/60 px-2 -mx-2",
+        isReady && "rounded-lg bg-[var(--color-primary)]/60 px-2 -mx-2",
         clickable && "cursor-pointer hover:opacity-90",
         !clickable && "cursor-default",
       )}
     >
-      <div className="flex flex-col items-center pt-0.5">
+      <div className="flex flex-col items-center pt-1">
         <div className={cn("flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]", meta.accent)}>
           <Icon className="size-3.5" strokeWidth={1.75} />
         </div>
@@ -63,10 +63,10 @@ function StreamItem({
       </div>
       <div className="min-w-0 flex-1 pb-1">
         <p className="bee-eyebrow">{event.label}</p>
-        <p className="mt-0.5 line-clamp-2 text-sm font-light leading-snug tracking-tight">
+        <p className="mt-1 line-clamp-2 text-sm font-light leading-snug tracking-tight">
           {event.title}
         </p>
-        <div className="mt-1.5 flex flex-wrap items-center gap-2 bee-micro">
+        <div className="mt-2 flex flex-wrap items-center gap-2 bee-micro">
           <span>{formatRelativeTime(event.timestamp, locale)}</span>
           {event.score != null && (
             <span className="font-mono tabular-nums">{Math.round(event.score)}</span>
@@ -99,7 +99,7 @@ export function SignalStream() {
       <div className="mb-3 flex shrink-0 items-start justify-between gap-2">
         <div>
           <h2 className="bee-eyebrow">{t("title")}</h2>
-          <p className="bee-caption mt-0.5">{t("caption")}</p>
+          <p className="bee-caption mt-1">{t("caption")}</p>
         </div>
         {live ? (
           <span className="relative flex size-2">
@@ -121,7 +121,7 @@ export function SignalStream() {
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-14 rounded-xl" />
+              <Skeleton key={i} className="h-14 rounded-lg" />
             ))}
           </div>
         ) : isError ? (

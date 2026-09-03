@@ -191,28 +191,28 @@ export function ScenarioSimulatorPanel() {
 
       <div className="space-y-3">
         {!result ? (
-          <div className="bee-bento bee-bento-pad flex h-full flex-col items-center justify-center gap-2 py-10 text-center">
+          <div className="bee-bento bee-bento-pad flex h-full flex-col items-center justify-center gap-2 py-8 text-center">
             <Sparkles className="size-5 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">{t("emptyState")}</p>
           </div>
         ) : (
           <>
             {!result.has_any_historical_data ? (
-              <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-chart-2)] bg-[color-mix(in_srgb,var(--color-chart-2)_15%,var(--color-background))] p-2.5 text-micro">
-                <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+              <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--color-chart-2)] bg-[color-mix(in_srgb,var(--color-chart-2)_15%,var(--color-background))] p-3 text-micro">
+                <AlertTriangle className="mt-1 size-3.5 shrink-0" />
                 {t("noHistoricalData")}
               </div>
             ) : (
               result.low_data_confidence && (
-                <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[color-mix(in_srgb,var(--warning)_15%,var(--color-background))] p-2.5 text-micro">
-                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-[var(--warning)] bg-[color-mix(in_srgb,var(--warning)_15%,var(--color-background))] p-3 text-micro">
+                  <AlertTriangle className="mt-1 size-3.5 shrink-0" />
                   {t("lowConfidence", { count: result.historical_sample_size })}
                 </div>
               )
             )}
             {usedDefaultDealValue && (
-              <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-primary)]/25 p-2.5 bee-micro">
-                <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+              <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-primary)]/25 p-3 bee-micro">
+                <AlertTriangle className="mt-1 size-3.5 shrink-0" />
                 {t("defaultDealValue", { value: formatCurrencyUSD(result.avg_deal_value, locale) })}
               </div>
             )}
@@ -224,7 +224,7 @@ export function ScenarioSimulatorPanel() {
             </div>
 
             <div className="bee-bento bee-bento-pad space-y-2 text-xs">
-              <p className="flex items-center gap-1.5 font-medium">
+              <p className="flex items-center gap-2 font-medium">
                 <TrendingUp className="size-3.5" style={{ color: "var(--color-chart-4)" }} />
                 {t("effectiveWinRate", { percent: (result.effective_win_rate * 100).toFixed(1) })}
                 <span className="text-muted-foreground">
@@ -234,7 +234,7 @@ export function ScenarioSimulatorPanel() {
               {result.key_drivers.length > 0 && (
                 <div>
                   <p className="mb-1 text-muted-foreground">{t("keyDrivers")}</p>
-                  <ul className="space-y-0.5 text-muted-foreground">
+                  <ul className="space-y-1 text-muted-foreground">
                     {result.key_drivers.map((d, i) => (
                       <li key={i}>✓ {d}</li>
                     ))}
@@ -244,7 +244,7 @@ export function ScenarioSimulatorPanel() {
               {result.recommended_actions.length > 0 && (
                 <div>
                   <p className="mb-1 text-muted-foreground">{t("recommendedActions")}</p>
-                  <ul className="space-y-0.5 text-muted-foreground">
+                  <ul className="space-y-1 text-muted-foreground">
                     {result.recommended_actions.map((a, i) => (
                       <li key={i}>→ {a}</li>
                     ))}
@@ -254,7 +254,7 @@ export function ScenarioSimulatorPanel() {
               {result.risk_factors.length > 0 && (
                 <div>
                   <p className="mb-1 text-muted-foreground">{t("riskFactors")}</p>
-                  <ul className="space-y-0.5 text-muted-foreground">
+                  <ul className="space-y-1 text-muted-foreground">
                     {result.risk_factors.map((r, i) => (
                       <li key={i}>
                         <Badge variant="warning" className="mr-1 text-micro">

@@ -58,7 +58,7 @@ export function GettingStartedCard({
   if (steps.every((s) => s.done)) return null;
 
   return (
-    <section className="bee-bento bee-bento--primary bee-bento-pad mb-4">
+    <section className="bee-bento bee-outline--blue bee-bento-pad mb-4">
       <p className="bee-eyebrow">{t("eyebrow")}</p>
       <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
       <p className="bee-caption mt-1">{t("subtitle")}</p>
@@ -71,21 +71,21 @@ export function GettingStartedCard({
             aria-current={step.done ? undefined : "step"}
           >
             {step.done ? (
-              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-[var(--color-chart-4)]" aria-hidden />
+              <CheckCircle2 className="mt-1 size-4 shrink-0 text-[var(--color-chart-4)]" aria-hidden />
             ) : (
-              <Circle className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+              <Circle className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden />
             )}
             <div className="min-w-0 flex-1">
               <p className={`text-sm font-medium ${step.done ? "text-muted-foreground line-through" : ""}`}>
                 {t(`steps.${step.key}.title`)}
               </p>
-              <p className="bee-caption mt-0.5">{t(`steps.${step.key}.description`)}</p>
+              <p className="bee-caption mt-1">{t(`steps.${step.key}.description`)}</p>
               {step.done ? (
-                <p className="bee-micro mt-1.5 font-medium text-[var(--color-chart-4)]">{t("done")}</p>
+                <p className="bee-micro mt-2 font-medium text-[var(--color-chart-4)]">{t("done")}</p>
               ) : (
                 <Link
                   href={step.href}
-                  className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
+                  className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
                 >
                   {t(`steps.${step.key}.cta`)}
                   <ArrowRight className="size-3" aria-hidden />

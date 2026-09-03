@@ -2,7 +2,9 @@ import type { LucideIcon } from "lucide-react";
 
 import { Sparkline } from "@/components/sparkline";
 
-/** Compact KPI tile for inline bento grids. */
+/** KPI tile — the one stat-tile pattern in the app: number centered on top,
+ *  label beneath, optional hint line and sparkline. Tone is a border color,
+ *  never a fill (only signal cards are colored). */
 export function MetricCard({
   label,
   value,
@@ -19,25 +21,18 @@ export function MetricCard({
   /** Serie diaria opcional (ej. últimos 7 días) — dibuja una mini-tendencia. */
   trend?: number[];
 }) {
-  const toneClass =
-    tone === "warm"
-      ? "bee-bento--warm"
-      : tone === "muted"
-        ? "bee-bento--muted"
-        : "";
+  const toneClass = tone === "warm" ? "bee-outline--warm" : tone === "muted" ? "bee-outline--magenta" : "";
 
   return (
-    <div className={`bee-glass bee-glass--hover bee-bento-pad rounded-[var(--radius-lg)] ${toneClass}`}>
-      <div className="flex items-center justify-between gap-2">
-        <span className="bee-kpi-tile__label">{label}</span>
-        {Icon && <Icon className="size-3.5 text-muted-foreground stroke-[1.25]" />}
-      </div>
-      <div className="flex items-end justify-between gap-2">
-        <div className="bee-kpi mt-2">{value}</div>
-        {trend && trend.length >= 2 && (
-          <Sparkline values={trend} className="mb-0.5 shrink-0 text-[var(--color-chart-4)]" />
-        )}
-      </div>
+    <div className={`bee-bento relative p-4 text-center ${toneClass}`}>
+      {Icon && <Icon className="absolute right-3 top-3 size-3.5 text-muted-foreground stroke-[1.25]" />}
+      <p className="bee-stat__val">{value}</p>
+      <p className="bee-stat__lbl mt-1">{label}</p>
+      {trend && trend.length >= 2 && (
+        <div className="mt-2 flex justify-center">
+          <Sparkline values={trend} className="text-[var(--color-chart-4)]" />
+        </div>
+      )}
       {hint && <p className="bee-caption mt-1">{hint}</p>}
     </div>
   );

@@ -60,7 +60,7 @@ function CorrectionLearningPanel() {
           <select
             value={artifactType}
             onChange={(e) => setArtifactType(e.target.value)}
-            className="text-xs border border-border rounded-sm px-2 py-1.5 w-full bg-[var(--color-card)]"
+            className="text-xs border border-border rounded-sm px-2 py-2 w-full bg-[var(--color-card)]"
           >
             {ARTIFACT_TYPES.map(([value, label]) => (
               <option key={value} value={value}>{label}</option>
@@ -103,7 +103,7 @@ function CorrectionLearningPanel() {
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold" style={{ color: "var(--color-chart-6)" }}>{t("resultTitle")}</span>
             <span
-              className="text-xs px-2 py-0.5 rounded-sm"
+              className="text-xs px-2 py-1 rounded-sm"
               style={{ background: "color-mix(in srgb, var(--color-chart-6) 20%, var(--color-background))", color: "var(--color-chart-6)" }}
             >
               {t("versionBadge", { version: result.profile_version, count: result.total_corrections })}
@@ -112,7 +112,7 @@ function CorrectionLearningPanel() {
           {result.extracted_rules.length > 0 && (
             <div>
               <p className="text-xs font-medium mb-1" style={{ color: "var(--color-chart-6)" }}>{t("rulesLearnedTitle")}</p>
-              <ul className="space-y-0.5">
+              <ul className="space-y-1">
                 {result.extracted_rules.map((r) => (
                   <li key={r} className="text-xs text-foreground flex items-center gap-1">
                     <span style={{ color: "var(--color-chart-6)" }}>→</span>
@@ -187,7 +187,7 @@ function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAck
       <div className="flex items-start gap-2">
         <div className="flex-1">
           <p className="text-xs font-semibold leading-tight">{alert.title}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted-foreground mt-1">
             {t("currentVsBase", {
               rolling: (alert.rolling_rate * 100).toFixed(1),
               baseline: (alert.baseline_rate * 100).toFixed(1),
@@ -195,7 +195,7 @@ function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAck
             })}
           </p>
         </div>
-        <span className="text-xs font-bold uppercase px-2 py-0.5 rounded-sm border" style={chipStyle}>
+        <span className="text-xs font-bold uppercase px-2 py-1 rounded-sm border" style={chipStyle}>
           {SEVERITY_LABEL[alert.severity] ?? alert.severity}
         </span>
       </div>
@@ -276,7 +276,7 @@ function AnomalyAlertsPanel() {
       {loading ? (
         <div className="space-y-2">{[...Array(2)].map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}</div>
       ) : alerts.length === 0 ? (
-        <div className="py-6 text-center">
+        <div className="py-8 text-center">
           <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
           <p className="bee-caption mt-1">{t("empty.hint")}</p>
         </div>

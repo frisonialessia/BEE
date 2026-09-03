@@ -25,6 +25,12 @@ const TONE_ICON: Record<BriefTone, LucideIcon> = {
   info: Info,
 };
 
+const TONE_OUTLINE: Record<BriefTone, string> = {
+  hot: "bee-outline--magenta",
+  risk: "bee-outline--warm",
+  info: "bee-outline--blue",
+};
+
 const TONE_COLOR: Record<BriefTone, string> = {
   hot: "var(--color-chart-5)",
   risk: "var(--color-chart-1)",
@@ -35,10 +41,16 @@ const TONE_COLOR: Record<BriefTone, string> = {
  *  anomalías, priorización, cuotas, duplicados) en una sola fila de "esto
  *  necesita tu atención hoy", arriba del todo en Resumen. Si no hay nada
  *  real que decir, lo dice — nunca inventa urgencia para llenar el espacio. */
-export function DailyBrief() {
+/** `embedded`: rendered inside an OverviewCard (which owns the title), as a
+ *  two-column list of outlined rows that fills the box. */
+export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useTranslations("dashboardOverview.dailyBrief");
   const tItems = useTranslations("dashboardOverview.dailyBrief.items");
   const base = useDashboardBase();
+  // The sandbox has no Team page (quotas live there on the real dashboard);
+  // its quota-pace item points at Pronóstico instead of a 404.
+  const resolveHref = (href: string) =>
+    base === "/probar" && href.startsWith("/dashboard/team") ? "/probar/forecast" : href.replace(/^\/dashboard/, base);
   const { data: companiesResult, isLoading: companiesLoading } = useCompanies(300);
   const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 300);
   const { data: leadsResult, isLoading: leadsLoading } = useLeads(300);
@@ -84,14 +96,49 @@ export function DailyBrief() {
     successPatterns: patternsResult?.data ?? [],
   }, tItems);
 
+  if (embedded) {
+    if (loading) {
+      return (
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-14 rounded-[var(--radius-lg)]" />
+          ))}
+        </div>
+      );
+    }
+    if (items.length === 0) {
+      return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
+    }
+    return (
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {items.slice(0, 6).map((item) => {
+          const Icon = TONE_ICON[item.tone];
+          return (
+            <Link
+              key={item.id}
+              href={resolveHref(item.href)}
+              className={`bee-bento flex items-start gap-3 px-3 py-3 transition-colors hover:bg-[var(--color-primary)]/20 ${TONE_OUTLINE[item.tone]}`}
+            >
+              <Icon className="mt-1 size-4 shrink-0" style={{ color: TONE_COLOR[item.tone] }} />
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold">{item.title}</p>
+                <p className="mt-1 line-clamp-2 bee-micro">{item.description}</p>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <section className="mb-4">
-      <div className="mb-2 flex items-center gap-1.5">
+      <div className="mb-2 flex items-center gap-2">
         <Sparkles className="size-3.5 text-[var(--color-chart-4)]" />
         <p className="bee-eyebrow">{t("title")}</p>
       </div>
       {loading ? (
-        <div className="flex gap-2.5 overflow-x-auto pb-1">
+        <div className="flex gap-3 overflow-x-auto pb-1">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-[70px] w-64 shrink-0 rounded-[var(--radius-lg)]" />
           ))}
@@ -101,19 +148,19 @@ export function DailyBrief() {
           <p className="text-xs text-muted-foreground">{t("empty")}</p>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-3">
           {items.map((item) => {
             const Icon = TONE_ICON[item.tone];
             return (
               <Link
                 key={item.id}
-                href={item.href.replace(/^\/dashboard/, base)}
-                className="bee-glass bee-glass--hover flex w-64 shrink-0 items-start gap-2.5 rounded-[var(--radius-lg)] px-4 py-3"
+                href={resolveHref(item.href)}
+                className="bee-glass bee-glass--hover flex w-64 shrink-0 items-start gap-3 rounded-[var(--radius-lg)] px-4 py-3"
               >
-                <Icon className="mt-0.5 size-4 shrink-0" style={{ color: TONE_COLOR[item.tone] }} />
+                <Icon className="mt-1 size-4 shrink-0" style={{ color: TONE_COLOR[item.tone] }} />
                 <div className="min-w-0">
                   <p className="truncate text-xs font-semibold">{item.title}</p>
-                  <p className="mt-0.5 line-clamp-2 bee-micro">{item.description}</p>
+                  <p className="mt-1 line-clamp-2 bee-micro">{item.description}</p>
                 </div>
               </Link>
             );

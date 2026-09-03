@@ -45,7 +45,7 @@ export function AssistantPage() {
   return (
     <div className="flex h-full flex-col">
       {!hasMessages ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6 px-4 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
           <span className="bee-assistant-gradient bee-assistant-halo flex size-14 items-center justify-center rounded-full">
             {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, mismo asset que el FAB (ask-bee-fab.tsx) */}
             <img src="/assistant-bee.svg" alt="" className="size-6" aria-hidden="true" />
@@ -59,7 +59,7 @@ export function AssistantPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="w-full max-w-xl">
-            <div className="flex items-center gap-2 rounded-[var(--radius-xl)] border border-border bg-[var(--color-card)] px-4 py-3">
+            <div className="flex items-center gap-2 rounded-[var(--radius-lg)] border border-border bg-[var(--color-card)] px-4 py-3">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -109,7 +109,7 @@ export function AssistantPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="shrink-0 border-t border-border pt-3">
-            <div className="flex items-center gap-2 rounded-[var(--radius-xl)] border border-border bg-[var(--color-card)] px-4 py-2.5">
+            <div className="flex items-center gap-2 rounded-[var(--radius-lg)] border border-border bg-[var(--color-card)] px-4 py-3">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}

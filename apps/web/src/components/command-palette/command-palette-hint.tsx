@@ -15,7 +15,7 @@ export function CommandPaletteHint() {
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="hidden shrink-0 items-center gap-1 rounded-[var(--radius-sm)] border border-border px-1.5 py-1 bee-micro transition-colors hover:bg-[var(--color-primary)] hover:text-foreground sm:flex"
+      className="hidden shrink-0 items-center gap-1 rounded-[var(--radius-sm)] border border-border px-2 py-1 bee-micro transition-colors hover:bg-[var(--color-primary)] hover:text-foreground sm:flex"
       aria-label={t("openAria")}
       title={t("hintTitle")}
     >

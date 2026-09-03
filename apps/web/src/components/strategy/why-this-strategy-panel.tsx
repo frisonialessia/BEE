@@ -62,8 +62,8 @@ export function WhyThisStrategyPanel({
       </div>
 
       {card.manual_review_required && (
-        <div className="flex items-start gap-1.5 border border-border bg-background px-2.5 py-1.5 text-xs">
-          <AlertTriangle className="mt-0.5 size-3 shrink-0" />
+        <div className="flex items-start gap-2 border border-border bg-background px-3 py-2 text-xs">
+          <AlertTriangle className="mt-1 size-3 shrink-0" />
           <span>{t("manualReviewExplainer")}</span>
         </div>
       )}
@@ -73,11 +73,11 @@ export function WhyThisStrategyPanel({
       {hasAuditReasoning && (
         <div className="border-l-2 border-[var(--color-chart-4)] pl-3">
           <p className="bee-caption font-medium">{t("generatorReasoning")}</p>
-          <p className="mt-0.5 text-sm text-muted-foreground">{auditEntry?.strategy_reasoning}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{auditEntry?.strategy_reasoning}</p>
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Badge variant="outline">
           {strategy.generator} v{strategy.generator_version}
         </Badge>

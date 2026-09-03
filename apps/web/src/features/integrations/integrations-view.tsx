@@ -224,7 +224,7 @@ function CrmImportButtonBody({
         type="button"
         onClick={onImport}
         disabled={isPending}
-        className="bee-btn-ghost inline-flex items-center gap-1.5 text-xs"
+        className="bee-btn-ghost inline-flex items-center gap-2 text-xs"
       >
         <Download className="size-3.5" />
         {isPending ? t("import.importing") : t("import.button")}
@@ -312,7 +312,7 @@ function JiraConfigForm({ status }: { status: IntegrationStatus }) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={t("projectKeyPlaceholder")}
-        className="w-40 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+        className="w-40 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
       />
       <button
         type="submit"
@@ -331,7 +331,7 @@ function ServerChannelRow({ status }: { status: IntegrationStatus }) {
   const detailOf = useIntegrationDetail();
   return (
     <div className="flex items-center justify-between gap-3 border-b border-[var(--color-divider)] py-3 last:border-b-0">
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         {status.connected ? (
           <CheckCircle2 className="size-4 shrink-0 text-[var(--color-chart-3)]" />
         ) : (
@@ -384,7 +384,7 @@ export function IntegrationsView() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-4">
         <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1">
           <h1 className="bee-display">{t("title")}</h1>
@@ -400,7 +400,7 @@ export function IntegrationsView() {
           <Skeleton className="h-40" />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {[...categorized, ...(uncategorized.length > 0 ? [{ category: null, providers: uncategorized }] : [])].map(
             ({ category, providers }) => (
               <section key={category ?? "other"} className="space-y-3">

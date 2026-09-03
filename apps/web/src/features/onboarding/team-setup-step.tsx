@@ -32,7 +32,7 @@ export function TeamSetupStep({ onDone }: { onDone: () => void }) {
         <DialogDescription>{t("description")}</DialogDescription>
       </DialogHeader>
 
-      <div className="mt-4 space-y-1.5">
+      <div className="mt-4 space-y-2">
         <label htmlFor="teamName" className="bee-caption block">
           {t("nameLabel")}
         </label>

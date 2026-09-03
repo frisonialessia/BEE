@@ -29,7 +29,7 @@ function TourTriggerButton() {
     <button
       type="button"
       onClick={() => start(buildTourSteps("probar", (key) => t(`steps.${key}` as "steps.signals.title")))}
-      className="bee-btn-ghost ml-auto hidden items-center gap-1.5 px-3 py-1.5 text-xs sm:inline-flex"
+      className="bee-btn-ghost ml-auto hidden items-center gap-2 px-3 py-2 text-xs sm:inline-flex"
     >
       <Compass className="size-3.5" />
       {t("overlay.badge")}
@@ -62,7 +62,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
             <DashboardRail groups={PROBAR_NAV_GROUPS} homeHref="/probar" />
             <div className="bee-main">
               <div className="shrink-0 border-b border-border bg-[var(--color-chart-4)] text-white">
-                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                   <p className="min-w-0 text-xs">
                     <strong className="font-semibold">{t("title")}</strong>
                     <span className="hidden sm:inline">{t("subtitle")}</span>
@@ -73,11 +73,11 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
                       // Tour target — the guided tour's closing step for
                       // /probar (see tour-steps.ts) points here.
                       data-tour="tour-create-account"
-                      className="bee-btn bee-btn--primary !bg-white !text-[var(--color-chart-4)] px-3 py-1.5 text-xs"
+                      className="bee-btn bee-btn--primary !bg-white !text-[var(--color-chart-4)] px-3 py-2 text-xs"
                     >
                       {t("createAccount")}
                     </Link>
-                    <Link href="/contacto" className="bee-btn-ghost !border-white !text-white px-3 py-1.5 text-xs">
+                    <Link href="/contacto" className="bee-btn-ghost !border-white !text-white px-3 py-2 text-xs">
                       {t("contactUs")}
                     </Link>
                   </div>
@@ -86,7 +86,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
 
               <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 sm:px-5">
                 <MobileNavToggle />
-                <Link href="/probar" aria-label={t("homeAria")} className="flex items-center gap-2.5">
+                <Link href="/probar" aria-label={t("homeAria")} className="flex items-center gap-3">
                   <Logo />
                 </Link>
                 <span className="bee-caption hidden sm:inline">{t("sandboxLabel")}</span>

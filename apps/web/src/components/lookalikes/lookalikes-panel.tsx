@@ -39,7 +39,7 @@ export function LookalikesPanel() {
           >
             <div className="flex items-start justify-between gap-2">
               <p className="truncate text-sm font-medium">{c.name}</p>
-              <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-4)]/20 px-1.5 py-0.5 text-micro font-medium text-[var(--color-chart-4)]">
+              <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-4)]/20 px-2 py-1 text-micro font-medium text-[var(--color-chart-4)]">
                 {Math.round(c.similarity * 100)}%
               </span>
             </div>

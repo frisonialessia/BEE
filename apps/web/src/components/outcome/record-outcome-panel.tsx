@@ -133,7 +133,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
               <select
                 value={lossReason}
                 onChange={(e) => setLossReason(e.target.value as LossReason)}
-                className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+                className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
               >
                 <option value="">{t("reasonPlaceholder")}</option>
                 {LOSS_REASONS.map((r) => (
@@ -151,7 +151,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
               value={competitor}
               onChange={(e) => setCompetitor(e.target.value)}
               placeholder={t("competitorPlaceholder")}
-              className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+              className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
             />
           </label>
 
@@ -162,7 +162,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder={t("notesPlaceholder")}
-              className="mt-1 w-full resize-none rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+              className="mt-1 w-full resize-none rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
             />
           </label>
 

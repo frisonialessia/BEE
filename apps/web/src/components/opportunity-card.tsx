@@ -48,7 +48,7 @@ export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
       </h3>
 
       {strategy?.rationale && (
-        <p className="mt-1.5 line-clamp-2 text-sm text-muted-foreground">
+        <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
           {strategy.rationale}
         </p>
       )}

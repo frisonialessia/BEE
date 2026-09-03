@@ -115,7 +115,7 @@ export function AutopilotSection() {
   }
 
   return (
-    <section className="bee-bento bee-bento-pad-lg space-y-4">
+    <section className="bee-bento bee-bento-pad space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="bee-eyebrow">{t("eyebrow")}</p>
@@ -135,7 +135,7 @@ export function AutopilotSection() {
         </button>
       ) : (
         <div className="space-y-4">
-          <div className="bee-inset flex items-start gap-2 p-3">
+          <div className="bee-bento flex items-start gap-2 p-3">
             <span className="text-sm">⚠</span>
             <p className="bee-caption">{t("warning")}</p>
           </div>
@@ -165,7 +165,7 @@ export function AutopilotSection() {
             <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("forbiddenLabel")}</label>
             <p className="bee-caption mb-2">{t("forbiddenHint")}</p>
             {forbiddenWords.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-1.5">
+              <div className="mb-2 flex flex-wrap gap-2">
                 {forbiddenWords.map((word) => (
                   <Badge key={word} variant="outline" className="gap-1">
                     {word}
@@ -206,7 +206,7 @@ export function AutopilotSection() {
             />
           </div>
 
-          <div className="bee-inset space-y-3 p-3">
+          <div className="bee-bento space-y-3 p-3">
             <p className="bee-eyebrow">{t("simulation.eyebrow")}</p>
             <p className="bee-caption">{t("simulation.hint")}</p>
             <div className="flex flex-wrap items-end gap-2">
@@ -234,7 +234,7 @@ export function AutopilotSection() {
             </div>
 
             {report && (
-              <div className="space-y-1.5 border-t border-border pt-3 text-sm">
+              <div className="space-y-2 border-t border-border pt-3 text-sm">
                 <p className="font-medium">{t("simulation.reportTitle", { days: report.lookback_days })}</p>
                 {report.evaluated_count === 0 ? (
                   <p className="bee-caption">{t("simulation.noHistory")}</p>

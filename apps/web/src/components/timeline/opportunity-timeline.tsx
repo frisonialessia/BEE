@@ -68,7 +68,7 @@ export function OpportunityTimeline({ opportunityId }: { opportunityId: string }
             <span className="absolute left-[5px] top-3 h-full w-px bg-border" aria-hidden />
           )}
           <span
-            className="relative mt-1.5 size-[11px] shrink-0 rounded-full ring-4 ring-background"
+            className="relative mt-2 size-[11px] shrink-0 rounded-full ring-4 ring-background"
             style={{ background: AGENT_DOT_COLOR[entry.agent_type] ?? "var(--color-text-muted)" }}
           />
           <div className="min-w-0 flex-1 pb-1">

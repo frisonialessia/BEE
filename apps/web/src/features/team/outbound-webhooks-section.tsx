@@ -62,7 +62,7 @@ function NewWebhookForm({ eventTypes, onDone }: { eventTypes: string[]; onDone: 
         {eventTypes.map((type) => (
           <Label
             key={type}
-            className="cursor-pointer rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2.5 py-1.5 text-xs font-normal"
+            className="cursor-pointer rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs font-normal"
           >
             <Checkbox checked={selected.includes(type)} onCheckedChange={() => toggle(type)} />
             {eventTypeLabels[type] ?? type}
@@ -117,7 +117,7 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
   const webhooks = webhooksResult?.data ?? [];
 
   return (
-    <section className="bee-bento bee-bento-pad-lg space-y-4">
+    <section className="bee-bento bee-bento-pad space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <p className="bee-eyebrow">{t("eyebrow")}</p>
@@ -170,17 +170,17 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
       ) : webhooks.length === 0 ? (
         <p className="bee-caption">{canManage ? t("emptyManage") : t("emptyView")}</p>
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {webhooks.map((w) => (
             <div key={w.id} className="bee-bento p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{w.url}</p>
-                  <div className="mt-1 flex flex-wrap gap-1.5">
+                  <div className="mt-1 flex flex-wrap gap-2">
                     {w.event_types.map((et) => (
                       <span
                         key={et}
-                        className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/25 px-1.5 py-0.5 bee-micro"
+                        className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/25 px-2 py-1 bee-micro"
                       >
                         {eventTypeLabels[et] ?? et}
                       </span>

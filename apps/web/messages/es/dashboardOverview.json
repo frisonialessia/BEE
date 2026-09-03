@@ -45,6 +45,12 @@
         "title": "Todas las señales",
         "total": "{count} total",
         "empty": "Aún no hay señales. Aparecen automáticamente al conectar tus fuentes de mercado."
+      },
+      "brief": {
+        "caption": "Lo que necesita tu atención hoy"
+      },
+      "critical": {
+        "caption": "Listas para actuar · últimas 24 h"
       }
     }
   },
@@ -139,7 +145,8 @@
     "sequenceStarted": "Secuencia iniciada — primer paso pendiente de tu aprobación en Control",
     "triggering": "Iniciando…",
     "triggerSequence": "Disparar \"{name}\"",
-    "viewBattlecard": "Ver battlecard"
+    "viewBattlecard": "Ver battlecard",
+    "empty": "Ninguna cuenta crítica en las últimas 24 h."
   },
   "decisionFeed": {
     "eyebrow": "BANDEJA DE DECISIONES",

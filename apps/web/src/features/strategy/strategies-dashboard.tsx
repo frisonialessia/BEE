@@ -38,7 +38,7 @@ export function StrategiesDashboard() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-4">
         <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -78,9 +78,9 @@ export function StrategiesDashboard() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="battlecards" className="mt-6 space-y-4">
+          <TabsContent value="battlecards" className="mt-4 space-y-4">
             {battlecards.length === 0 ? (
-              <div className="bee-bento bee-bento-pad py-12 text-center">
+              <div className="bee-bento bee-bento-pad py-8 text-center">
                 <p className="text-sm text-muted-foreground">
                   {t("battlecardsEmptyTitle")}
                 </p>
@@ -88,18 +88,18 @@ export function StrategiesDashboard() {
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Bot className="size-3.5" />
                   {t("battlecardsHint")}
                 </div>
                 <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                  {battlecardPagination.pageItems.map((card, i) => (
+                  {battlecardPagination.pageItems.map((card) => (
                     <button
                       key={card.opportunity_id}
                       type="button"
                       onClick={() => openOpportunity(card.opportunity_id)}
-                      className={`bee-bento bee-bento-pad-lg text-left hover:border-[var(--color-chart-4)] ${
-                        i % 2 === 0 ? "bee-bento--primary" : ""
+                      className={`bee-bento bee-bento-pad text-left hover:border-[var(--color-chart-4)] ${
+                        ""
                       }`}
                     >
                       <BattlecardView card={card} />
@@ -119,7 +119,7 @@ export function StrategiesDashboard() {
             )}
           </TabsContent>
 
-          <TabsContent value="pipeline" className="mt-6 space-y-4">
+          <TabsContent value="pipeline" className="mt-4 space-y-4">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
               {pipelinePagination.pageItems.map((opp) => (
                 <button
@@ -143,7 +143,7 @@ export function StrategiesDashboard() {
             />
           </TabsContent>
 
-          <TabsContent value="learning" className="mt-6 space-y-4">
+          <TabsContent value="learning" className="mt-4 space-y-4">
             <p className="bee-caption">
               {t("learningCaption")}
             </p>
@@ -154,7 +154,7 @@ export function StrategiesDashboard() {
             )}
           </TabsContent>
 
-          <TabsContent value="marketInsights" className="mt-6 space-y-4">
+          <TabsContent value="marketInsights" className="mt-4 space-y-4">
             <p className="bee-caption">{t("marketInsightsCaption")}</p>
             {loadingInsights ? (
               <Skeleton className="h-40" />

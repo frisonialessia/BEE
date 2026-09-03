@@ -6,19 +6,25 @@
 /*
  * BEE — Editorial Bento Grid · Soft Rounded · Glass
  * Background #f7f7f7 · Text #222222 · Cards #dbdeff · Primary #c8d7f8
- * Containers: rounded-lg · Inputs/buttons/badges: rounded-md
+ * Radii: boxes --radius-box (16px) · controls --radius-control (12px)
+ * Type: four sizes only (--bee-fs-title/subtitle/body/body-2)
  * Metric surfaces (.bee-glass): translucent + blurred, depth on hover.
  * Every glass value below is the existing palette run through color-mix —
  * no new hues, only transparency/blur, per the "no cambies los colores".
  */
 
 :root {
+  /* Two radii in the whole app: boxes (cards, panels, tiles) and controls
+     (buttons, inputs, badges, chips). Every Tailwind rounded-* utility maps
+     onto one of the two below, so no component can introduce a third. */
+  --radius-box: 16px;
+  --radius-control: 12px;
   --radius-none: 0px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 28px;
+  --radius-sm: var(--radius-control);
+  --radius-md: var(--radius-control);
+  --radius-lg: var(--radius-box);
+  --radius-xl: var(--radius-box);
+  --radius-2xl: var(--radius-box);
 
   --color-background: #f7f7f7;
   --color-text: #222222;
@@ -71,21 +77,29 @@
   --bee-accent-warm: var(--color-chart-1);
   --bee-accent-hot: var(--color-chart-5);
 
-  --bee-text-display: clamp(1.5rem, 2.5vw, 2rem);
-  --bee-text-kpi: clamp(1.75rem, 2.5vw, 2.25rem);
-  --bee-text-kpi-sm: clamp(1.25rem, 2vw, 1.75rem);
-  --bee-text-title: 0.6875rem;
-  /* Antes 0.8125rem (13px) — imperceptiblemente distinto de text-xs (12px),
-     el tamaño más usado en todo el sitio para texto secundario. Un tamaño
-     menos en el sistema; .bee-caption y .bee-metric-bar__label ahora
-     coinciden exactamente con text-xs en vez de flotar 1px aparte. */
-  --bee-text-caption: 0.75rem;
+  /* Four text sizes in the whole app — title (page titles and KPI numbers),
+     subtitle (card/section titles), body, body-2 (captions, labels, badges,
+     table cells). Every legacy token and every Tailwind text-* utility below
+     resolves to one of these four; nothing else exists. */
+  --bee-fs-title: 1.5rem;
+  --bee-fs-subtitle: 1rem;
+  --bee-fs-body: 0.875rem;
+  --bee-fs-body-2: 0.75rem;
 
-  --bee-gap-sm: 0.75rem;
-  --bee-gap-md: 1rem;
-  --bee-gap-lg: 1.25rem;
-  --bee-pad-surface: 1.25rem;
-  --bee-pad-surface-lg: 1.5rem;
+  --bee-text-display: var(--bee-fs-title);
+  --bee-text-kpi: var(--bee-fs-title);
+  --bee-text-kpi-sm: var(--bee-fs-title);
+  --bee-text-title: var(--bee-fs-body-2);
+  --bee-text-caption: var(--bee-fs-body-2);
+
+  /* Spacing: one grid gap, one container padding, one row/tile padding. */
+  --bee-gap: 0.75rem;
+  --bee-gap-sm: var(--bee-gap);
+  --bee-gap-md: var(--bee-gap);
+  --bee-gap-lg: var(--bee-gap);
+  --bee-pad-surface: 1rem;
+  --bee-pad-surface-lg: var(--bee-pad-surface);
+  --bee-pad-item: 0.75rem;
 
   /* Shared drawing-area height for every hand-built bar chart (Volumen de
    * señales, Pronóstico por mes, Creadas vs. tasa de cierre, MEDDIC vs.
@@ -95,6 +109,8 @@
    * content above its bars (a win-rate % line) still fits inside it, it's
    * not the tightest of the four. */
   --bee-chart-h: 160px;
+  /* Floor height of one Resumen grid row — see .bee-overview. */
+  --bee-overview-row: 18rem;
 
   --background: var(--color-background);
   --foreground: var(--color-text);
@@ -127,11 +143,12 @@
 }
 
 @theme inline {
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-2xl: 28px;
+  --radius-sm: var(--radius-control);
+  --radius-md: var(--radius-control);
+  --radius-lg: var(--radius-box);
+  --radius-xl: var(--radius-box);
+  --radius-2xl: var(--radius-box);
+  --radius-3xl: var(--radius-box);
 
   --color-background: var(--color-background);
   --color-foreground: var(--color-text);
@@ -158,11 +175,25 @@
   --color-chart-4: var(--color-chart-4);
   --color-chart-5: var(--color-chart-5);
   --font-sans: var(--bee-font);
+  /* Tailwind text-* utilities resolve to the four sizes: xs → body-2,
+     sm → body, base/lg → subtitle, xl/2xl/3xl → title. (4xl and up are
+     only used by the marketing landing's hero and are left alone.) */
+  --text-xs: var(--bee-fs-body-2);
+  --text-sm: var(--bee-fs-body);
+  --text-base: var(--bee-fs-subtitle);
+  --text-lg: var(--bee-fs-subtitle);
+  --text-lg--line-height: 1.5;
+  --text-xl: var(--bee-fs-title);
+  --text-xl--line-height: 1.25;
+  --text-2xl: var(--bee-fs-title);
+  --text-2xl--line-height: 1.25;
+  --text-3xl: var(--bee-fs-title);
+  --text-3xl--line-height: 1.2;
   /* `text-micro` utility — the 11px compact size (.bee-micro's font-size,
      without its muted color) for badges, table headers and inline metadata
      that carry their own color. Replaces the text-[10px]/text-[11px]
      arbitrary values that kept reappearing in components. */
-  --text-micro: var(--bee-text-title);
+  --text-micro: var(--bee-fs-body-2);
   --text-micro--line-height: 1.4;
 }
 
@@ -210,7 +241,7 @@
  * a deliberate exception (single combined .bee-eyebrow line, no separate
  * title) to keep that page free of scroll — not an oversight. */
 .bee-card-title {
-  font-size: 0.875rem;
+  font-size: var(--bee-fs-subtitle);
   font-weight: 600;
   margin-bottom: 0.25rem;
 }
@@ -321,7 +352,7 @@
 }
 
 .bee-panel__title {
-  font-size: 0.875rem;
+  font-size: var(--bee-fs-subtitle);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -329,7 +360,7 @@
 }
 
 .bee-panel__subtitle {
-  font-size: 0.75rem;
+  font-size: var(--bee-fs-body-2);
   color: var(--color-text-muted);
   margin-top: 0.125rem;
 }
@@ -348,6 +379,55 @@
   box-shadow: none;
   color: var(--color-text);
 }
+
+/* ── Outline tones ─────────────────────────────────────────────────────────
+   The only boxes that carry a colored fill are the signal cards. Every
+   other box is white and, when it needs a tone (urgency, brief severity,
+   a highlighted step), says so with its contour: one of the BEE hues mixed
+   into the border. Replaces the .bee-bento--warm/--violet/--muted fills the
+   dashboard used for decision cards, briefs and setup checklists. */
+.bee-outline--blue { border-color: color-mix(in srgb, var(--color-chart-4) 60%, var(--bee-card-border)); }
+.bee-outline--warm { border-color: color-mix(in srgb, var(--color-accent-warm) 70%, var(--bee-card-border)); }
+.bee-outline--violet { border-color: color-mix(in srgb, var(--color-chart-6) 65%, var(--bee-card-border)); }
+.bee-outline--magenta { border-color: color-mix(in srgb, var(--color-chart-5) 60%, var(--bee-card-border)); }
+
+/* ── Overview grid ──────────────────────────────────────────────────────────
+   Resumen (dashboard and sandbox alike): a 12-column bento where every box
+   in a row is the same height (grid items stretch) and every box shares
+   one card shell (.bee-card, see OverviewCard). Rows have a floor height so
+   a sparsely-filled box doesn't collapse next to a full one. */
+.bee-overview {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: stretch;
+  grid-auto-rows: minmax(var(--bee-overview-row), auto);
+}
+@media (max-width: 1023px) {
+  .bee-overview { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
+  .bee-overview > * { grid-column: span 1 !important; }
+}
+
+.bee-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  background: var(--color-card);
+  border: 1px solid var(--bee-card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+  color: var(--color-text);
+  padding: var(--bee-pad-surface);
+}
+.bee-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.bee-card__body { min-height: 0; flex: 1 1 auto; }
 
 /* ── CRM shell (labelled sidebar) ─────────────────────────────────────── */
 
@@ -671,8 +751,13 @@
 
 .bee-kpi-card {
   display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
+  /* column-reverse + centered: the markup says label then value, the
+     rendered tile shows the number on top and the label under it — the
+     same silhouette as every other stat tile in the app. */
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  text-align: center;
+  gap: 0.25rem;
   /* Vive siempre en la columna angosta de Control (~300px) en un grid 2×2 —
      el padding generoso original (1.25rem horizontal) + letter-spacing
      amplio en el label de abajo partían "PROCESADOS"/"INGESTA" a mitad de
@@ -745,6 +830,17 @@
 :root {
   --bee-control-h-compact: 2rem;
   --bee-control-h-primary: 2.25rem;
+  /* Floor width for every button — a row of actions reads as a row of
+     equal controls; longer labels grow past it, never wrap. */
+  --bee-control-min-w: 6.5rem;
+}
+
+/* Icon-only button (a close "×", a pagination arrow) — square, opts out of
+   the floor width that text buttons share. */
+.bee-btn--icon {
+  min-width: 0;
+  width: var(--bee-control-h-primary);
+  padding: 0;
 }
 
 .bee-input {
@@ -754,7 +850,7 @@
   border: 1px solid var(--color-divider);
   border-radius: var(--radius-sm);
   padding: 0 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--bee-fs-body-2);
   color: var(--color-text);
   font-family: var(--bee-font);
 }
@@ -787,8 +883,11 @@
   justify-content: center;
   gap: 0.375rem;
   height: var(--bee-control-h-primary);
+  min-width: var(--bee-control-min-w);
   padding: 0 1rem;
-  font-size: 0.75rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: var(--bee-fs-body-2);
   font-weight: 600;
   font-family: var(--bee-font);
   color: var(--color-text);
@@ -816,13 +915,21 @@
 .bee-btn-ghost {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.375rem;
-  height: var(--bee-control-h-compact);
-  padding: 0 0.75rem;
+  /* Same height and floor width as .bee-btn — a primary and a ghost action
+     sitting in the same row used to differ by 4px and by whatever their
+     label happened to measure. A label never wraps to a second line; the
+     button grows wider instead. */
+  height: var(--bee-control-h-primary);
+  min-width: var(--bee-control-min-w);
+  padding: 0 0.875rem;
+  white-space: nowrap;
+  flex-shrink: 0;
   border-radius: var(--radius-sm);
   background: transparent;
   border: 1px solid var(--color-divider);
-  font-size: 0.75rem;
+  font-size: var(--bee-fs-body-2);
   font-weight: 500;
   color: var(--color-text);
 }
@@ -888,7 +995,7 @@
   height: var(--bee-control-h-compact);
   padding: 0 0.75rem;
   white-space: nowrap;
-  font-size: 0.75rem;
+  font-size: var(--bee-fs-body-2);
   font-weight: 500;
   border-radius: var(--radius-sm);
   border: 1px solid var(--color-divider);
@@ -926,13 +1033,13 @@
  * misma tarjeta compacta (ver .bee-bento usages en esas páginas) — subir
  * el tamaño acá se ve reflejado en las 5 a la vez. */
 .bee-stat__val, .bee-stat__value {
-  font-size: 1.125rem;
+  font-size: var(--bee-fs-title);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .bee-stat__lbl, .bee-stat__label {
-  font-size: 0.625rem;
+  font-size: var(--bee-fs-body-2);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-muted);
@@ -975,7 +1082,7 @@
 .bee-metric-bar--violet { border-left-color: var(--color-chart-6); }
 
 .bee-metric-bar__value {
-  font-size: 1.25rem;
+  font-size: var(--bee-fs-title);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -1040,7 +1147,7 @@
   min-width: 2rem;
   height: var(--bee-control-h-compact);
   padding: 0 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--bee-fs-body-2);
   font-weight: 500;
   border: 1px solid var(--color-divider);
   border-radius: var(--radius-sm);
@@ -1062,7 +1169,7 @@
   border-radius: var(--radius-sm);
   background: var(--color-background);
   padding: 0 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--bee-fs-body-2);
   color: var(--color-text);
   font-family: var(--bee-font);
 }
@@ -1133,7 +1240,7 @@
 }
 
 @media (max-width: 1100px) {
-  .bee-crm-control__row { grid-template-columns: 1fr; }
+  .bee-crm-control__row { grid-template-columns: minmax(0, 1fr); }
   /* The 3 bottom-row cards stack in one column here — the row's own fixed
    * 28rem (sized for 3 cards side by side) would squash all three into a
    * third of that each. Let the row grow to fit its stacked cards, and

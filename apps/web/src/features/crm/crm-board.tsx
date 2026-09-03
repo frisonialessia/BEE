@@ -129,7 +129,7 @@ function CrmCard({
           value={opportunity.status}
           onChange={(e) => onMove(opportunity.id, e.target.value as CrmStage)}
           aria-label={t("moveToStage")}
-          className="w-full rounded-sm border border-border bg-background px-1.5 py-1 text-micro text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+          className="w-full rounded-sm border border-border bg-background px-2 py-1 text-micro text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         >
           {CRM_STAGES.map((s) => (
             <option key={s.id} value={s.id}>
@@ -227,12 +227,12 @@ function CrmColumn({
           // instead of being locked to viewport height with its own
           // internal scrollbar. min-h keeps an empty column's "Sin
           // oportunidades aquí" message from collapsing to nothing.
-          "flex min-h-[160px] flex-col gap-2.5 rounded-[var(--radius-lg)] border-2 border-dashed border-transparent bg-[var(--color-primary)]/25 p-2.5 transition-colors",
+          "flex min-h-[160px] flex-col gap-3 rounded-[var(--radius-lg)] border border-[var(--bee-card-border)] bg-[var(--color-card)] p-3 transition-colors",
           over && "border-[var(--color-chart-4)] bg-[var(--color-chart-4)]/10",
         )}
       >
         {cards.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-2 py-8 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 px-2 py-8 text-center">
             <Inbox className="size-4 text-muted-foreground" />
             <p className="bee-micro">{t("emptyColumn.title")}</p>
             <p className="bee-micro">{t("emptyColumn.hint")}</p>
@@ -333,7 +333,7 @@ export function CrmBoard() {
       <div>
         {header}
         {newForm}
-        <div className="bee-bento bee-bento-pad py-12 text-center">
+        <div className="bee-bento bee-bento-pad py-8 text-center">
           <Inbox className="mx-auto mb-2 size-5 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">{t("emptyState.title")}</p>
           <p className="bee-caption mt-1">{t("emptyState.hint")}</p>
@@ -375,9 +375,9 @@ export function CrmBoard() {
             <h3 className="bee-eyebrow">{t("stages.closed")}</h3>
             <span className="font-mono bee-micro">{closed.length}</span>
           </div>
-          <div className="flex h-full min-h-[220px] flex-1 flex-col gap-2.5 overflow-y-auto rounded-[var(--radius-lg)] bg-[var(--color-block-muted)] p-2.5">
+          <div className="flex h-full min-h-[220px] flex-1 flex-col gap-3 overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--bee-card-border)] bg-[var(--color-card)] p-3">
             {closed.length === 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-1.5 px-2 py-8 text-center">
+              <div className="flex flex-1 flex-col items-center justify-center gap-2 px-2 py-8 text-center">
                 <p className="bee-micro">{t("emptyClosed")}</p>
               </div>
             ) : (
@@ -394,7 +394,7 @@ export function CrmBoard() {
                   <p className="line-clamp-2 text-sm font-medium leading-snug tracking-tight">
                     {stripOpportunityTitlePrefix(opp.title)}
                   </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
                     <Badge
                       variant={opp.status === "won" ? "success" : "secondary"}
                       className="text-micro"

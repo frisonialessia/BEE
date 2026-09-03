@@ -50,7 +50,7 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
   return (
     <section className="bee-surface bee-bento-pad">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-1.5 bee-card-title">
+        <h3 className="flex items-center gap-2 bee-card-title">
           <Clock className="size-4 stroke-[1.5] text-muted-foreground" />
           {t("heading")}
         </h3>
@@ -123,11 +123,11 @@ function SignalRecalibrationNote({ recal }: { recal: CycleSignalRecalibration })
 
   return (
     <div className="rounded-md border border-border bg-muted/40 p-3 text-xs">
-      <p className="flex items-center gap-1.5 font-medium text-foreground">
+      <p className="flex items-center gap-2 font-medium text-foreground">
         <Radar className="size-3.5 stroke-[1.5]" />
         {t("title")}
       </p>
-      <p className="mt-1.5 text-muted-foreground">
+      <p className="mt-2 text-muted-foreground">
         {t.rich("summary", {
           direction: faster ? t("faster") : t("slower"),
           withDays: recal.with_signal_median_days ?? 0,
@@ -138,7 +138,7 @@ function SignalRecalibrationNote({ recal }: { recal: CycleSignalRecalibration })
         })}
       </p>
       {recal.target_has_new_signal && (
-        <p className="mt-1.5">
+        <p className="mt-2">
           <Badge variant="outline">
             {recal.target_new_signal_types.length > 0
               ? t("newSignalWithTypes", {

@@ -18,7 +18,7 @@ export function SuccessPatternsList({ patterns }: { patterns: SuccessPattern[] }
 
   if (patterns.length === 0) {
     return (
-      <div className="bee-bento bee-bento-pad py-12 text-center">
+      <div className="bee-bento bee-bento-pad py-8 text-center">
         <p className="text-sm text-muted-foreground">
           {t("emptyTitle")}
         </p>
@@ -30,7 +30,7 @@ export function SuccessPatternsList({ patterns }: { patterns: SuccessPattern[] }
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {patterns.map((p) => (
         <div
           key={`${p.signal_type}-${p.playbook}-${p.channel}-${p.generator}`}
@@ -40,7 +40,7 @@ export function SuccessPatternsList({ patterns }: { patterns: SuccessPattern[] }
             <p className="truncate text-xs font-semibold">
               {t("viaChannel", { playbook: p.playbook, channel: p.channel })}
             </p>
-            <p className="bee-caption mt-0.5">
+            <p className="bee-caption mt-1">
               {p.signal_type} · {t("dealsClosed", { count: p.sample_size })}
               {p.avg_days_to_close != null
                 ? ` · ${t("avgDaysToClose", { days: Math.round(p.avg_days_to_close) })}`

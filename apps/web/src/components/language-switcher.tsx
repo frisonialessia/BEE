@@ -48,7 +48,7 @@ export function LanguageSwitcher({
       role="group"
       aria-label={t("label")}
       className={cn(
-        "inline-flex items-center gap-0.5 rounded-[var(--radius-md)] border p-0.5 text-xs font-medium",
+        "inline-flex items-center gap-1 rounded-[var(--radius-md)] border p-0.5 text-xs font-medium",
         variant === "ghost"
           ? "border-[color-mix(in_srgb,var(--color-text)_12%,transparent)]"
           : "border-border",

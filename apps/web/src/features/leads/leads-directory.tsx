@@ -183,7 +183,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
 
   return (
     <div>
-      <header className={showHeader ? "mb-6" : "mb-4"}>
+      <header className={showHeader ? "mb-4" : "mb-4"}>
         {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
         <div className={`flex flex-wrap items-start justify-between gap-3 ${showHeader ? "mt-1" : ""}`}>
           {showHeader && (
@@ -195,8 +195,8 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
             </div>
           )}
           <div className="ml-auto flex items-center gap-2">
-            <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
-            <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost inline-flex items-center gap-1.5">
+            {showHeader && <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>}
+            <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost inline-flex items-center gap-2">
               <Upload className="size-3.5" />
               {t("importButton")}
             </button>
@@ -233,7 +233,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
           <Skeleton className="h-96" />
         </div>
       ) : leads.length === 0 ? (
-        <div className="bee-bento bee-bento-pad py-12 text-center">
+        <div className="bee-bento bee-bento-pad py-8 text-center">
           <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
           <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
         </div>
@@ -255,7 +255,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-full border border-border bg-[var(--color-card)]/60 px-3 py-1.5">
+            <div className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-full border border-border bg-[var(--color-card)]/60 px-3 py-2">
               <Search className="size-3.5 shrink-0 text-muted-foreground" />
               <input
                 value={query}
@@ -267,7 +267,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as LeadStatus | "all")}
-              className="rounded-full border border-border bg-[var(--color-card)] px-3 py-1.5 text-xs outline-none"
+              className="rounded-full border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
             >
               <option value="all">{t("filters.allStatuses")}</option>
               {STATUS_OPTIONS.map((s) => (
@@ -279,7 +279,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
             <select
               value={sortKey}
               onChange={(e) => setSortKey(e.target.value as SortKey)}
-              className="rounded-full border border-border bg-[var(--color-card)] px-3 py-1.5 text-xs outline-none"
+              className="rounded-full border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
             >
               <option value="score_desc">{t("filters.sortScoreDesc")}</option>
               <option value="score_asc">{t("filters.sortScoreAsc")}</option>
@@ -294,15 +294,15 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
           </div>
 
           {selected.size > 0 && (
-            <div className="flex flex-wrap items-center gap-2 rounded-[var(--radius-lg)] border border-[var(--color-chart-4)]/40 bg-[var(--color-chart-4)]/10 px-4 py-2.5">
+            <div className="flex flex-wrap items-center gap-2 rounded-[var(--radius-lg)] border border-[var(--color-chart-4)]/40 bg-[var(--color-chart-4)]/10 px-4 py-3">
               <p className="text-xs font-medium">
                 {t("bulk.selected", { count: selected.size })}
               </p>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <select
                   value={bulkStatus}
                   onChange={(e) => setBulkStatus(e.target.value as LeadStatus | "")}
-                  className="rounded-full border border-border bg-[var(--color-card)] px-2.5 py-1 text-xs outline-none"
+                  className="rounded-full border border-border bg-[var(--color-card)] px-3 py-1 text-xs outline-none"
                 >
                   <option value="">{t("bulk.changeStatusTo")}</option>
                   {STATUS_OPTIONS.map((s) => (
@@ -320,11 +320,11 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
                   {t("bulk.apply")}
                 </button>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <select
                   value={bulkAssignee}
                   onChange={(e) => setBulkAssignee(e.target.value)}
-                  className="rounded-full border border-border bg-[var(--color-card)] px-2.5 py-1 text-xs outline-none"
+                  className="rounded-full border border-border bg-[var(--color-card)] px-3 py-1 text-xs outline-none"
                 >
                   <option value="">{t("bulk.reassignTo")}</option>
                   {(users ?? []).map((u) => (
@@ -342,11 +342,11 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
                   {t("bulk.apply")}
                 </button>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <select
                   value={bulkSequence}
                   onChange={(e) => setBulkSequence(e.target.value)}
-                  className="rounded-full border border-border bg-[var(--color-card)] px-2.5 py-1 text-xs outline-none"
+                  className="rounded-full border border-border bg-[var(--color-card)] px-3 py-1 text-xs outline-none"
                 >
                   <option value="">{t("bulk.sendToSequence")}</option>
                   {(sequencesResult?.data ?? []).map((s) => (
@@ -379,7 +379,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
             <table className="w-full min-w-[720px] text-left text-xs">
               <thead>
                 <tr className="border-b border-border text-micro uppercase tracking-wide text-muted-foreground">
-                  <th className="w-8 px-4 py-2.5">
+                  <th className="w-8 px-4 py-3">
                     <input
                       type="checkbox"
                       checked={filtered.length > 0 && filtered.every((l) => selected.has(l.id))}
@@ -388,13 +388,13 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
                       aria-label={t("table.selectAllVisible")}
                     />
                   </th>
-                  <th className="px-4 py-2.5 font-medium">{t("table.headers.name")}</th>
-                  <th className="px-4 py-2.5 font-medium">{t("table.headers.company")}</th>
-                  <th className="px-4 py-2.5 font-medium">{t("table.headers.title")}</th>
-                  <th className="px-4 py-2.5 font-medium">{t("table.headers.status")}</th>
-                  <th className="px-4 py-2.5 font-medium">{t("table.headers.intentScore")}</th>
-                  <th className="px-4 py-2.5 font-medium">{t("table.headers.data")}</th>
-                  <th className="px-4 py-2.5 font-medium" />
+                  <th className="px-4 py-3 font-medium">{t("table.headers.name")}</th>
+                  <th className="px-4 py-3 font-medium">{t("table.headers.company")}</th>
+                  <th className="px-4 py-3 font-medium">{t("table.headers.title")}</th>
+                  <th className="px-4 py-3 font-medium">{t("table.headers.status")}</th>
+                  <th className="px-4 py-3 font-medium">{t("table.headers.intentScore")}</th>
+                  <th className="px-4 py-3 font-medium">{t("table.headers.data")}</th>
+                  <th className="px-4 py-3 font-medium" />
                 </tr>
               </thead>
               <tbody>
@@ -410,7 +410,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
                     const hasIssues = lead.validation_flags.length > 0 || lead.stale_risk;
                     return (
                       <tr key={lead.id} className="border-b border-border last:border-b-0 hover:bg-[var(--color-primary)]/10">
-                        <td className="px-4 py-2.5">
+                        <td className="px-4 py-3">
                           <input
                             type="checkbox"
                             checked={selected.has(lead.id)}
@@ -419,11 +419,11 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
                             aria-label={t("table.selectRow", { name: lead.full_name })}
                           />
                         </td>
-                        <td className="px-4 py-2.5">
+                        <td className="px-4 py-3">
                           <p className="font-medium text-foreground">{lead.full_name}</p>
                           {lead.email && <p className="bee-micro">{lead.email}</p>}
                         </td>
-                        <td className="px-4 py-2.5 text-muted-foreground">
+                        <td className="px-4 py-3 text-muted-foreground">
                           {company ? (
                             <Link
                               href={`/dashboard/companies/${company.id}`}
@@ -435,16 +435,16 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
                             "—"
                           )}
                         </td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{lead.title ?? "—"}</td>
-                        <td className="px-4 py-2.5">
+                        <td className="px-4 py-3 text-muted-foreground">{lead.title ?? "—"}</td>
+                        <td className="px-4 py-3">
                           <Badge variant="outline">{leadStatusLabels[lead.status]}</Badge>
                         </td>
-                        <td className="px-4 py-2.5">
+                        <td className="px-4 py-3">
                           <Badge variant={scoreVariant(lead.score)} className="font-mono">
                             {Math.round(lead.score)}
                           </Badge>
                         </td>
-                        <td className="px-4 py-2.5">
+                        <td className="px-4 py-3">
                           {hasIssues ? (
                             <span
                               title={[
@@ -465,7 +465,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-2.5 text-right">
+                        <td className="px-4 py-3 text-right">
                           <button
                             type="button"
                             onClick={() => validateLead.mutate(lead.id)}

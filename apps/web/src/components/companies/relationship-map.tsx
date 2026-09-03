@@ -46,7 +46,7 @@ export function RelationshipMap({
     <div className="space-y-3">
       {groups.map((group) => (
         <div key={group.tier} className="flex items-start gap-3">
-          <p className="w-28 shrink-0 pt-1.5 bee-eyebrow">
+          <p className="w-28 shrink-0 pt-2 bee-eyebrow">
             {TIER_LABELS[group.tier]}
           </p>
           <div className="flex flex-1 flex-wrap gap-2">
@@ -65,7 +65,7 @@ export function RelationshipMap({
                       : t(`statusHint.${node.opportunityStatus}`)
                   }
                   className={cn(
-                    "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-left text-xs transition-colors",
+                    "flex items-center gap-2 rounded-full border px-3 py-1 text-left text-xs transition-colors",
                     STATUS_STYLE[node.opportunityStatus],
                     clickable ? "cursor-pointer hover:brightness-110" : "cursor-default",
                   )}

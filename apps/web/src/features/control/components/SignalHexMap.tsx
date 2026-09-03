@@ -26,6 +26,8 @@ const HOVER_LERP_MS = 180;
 
 interface SignalHexMapProps {
   className?: string;
+  /** Inline style for the outer section — Resumen uses it for its grid span. */
+  style?: React.CSSProperties;
   /** Canvas height in CSS pixels. */
   height?: number;
   maxLeads?: number;
@@ -58,16 +60,16 @@ function HiveTooltip({
       <p className="bee-eyebrow text-[var(--color-chart-5)]">
         {t("tooltip.closingTemperature", { temp: Math.round(cell.temperature) })}
       </p>
-      <p className="mt-1.5 text-sm font-light leading-snug">
+      <p className="mt-2 text-sm font-light leading-snug">
         {lead.company_name ?? lead.company_domain}
       </p>
       <p className="bee-micro">{lead.company_domain}</p>
-      <div className="mt-2 flex flex-wrap gap-1.5 bee-micro">
-        <span className="rounded-lg bg-muted px-2 py-0.5">
+      <div className="mt-2 flex flex-wrap gap-2 bee-micro">
+        <span className="rounded-lg bg-muted px-2 py-1">
           {stageLabel(t, lead.buying_stage)}
         </span>
         {lead.is_hot && (
-          <span className="rounded-lg bg-[var(--color-primary)] px-2 py-0.5 text-[var(--color-chart-5)]">
+          <span className="rounded-lg bg-[var(--color-primary)] px-2 py-1 text-[var(--color-chart-5)]">
             {t("tooltip.hot")}
           </span>
         )}
@@ -78,7 +80,7 @@ function HiveTooltip({
         </p>
       )}
       {extra > 0 && (
-        <p className="mt-1.5 bee-micro">{t("tooltip.more", { count: extra })}</p>
+        <p className="mt-2 bee-micro">{t("tooltip.more", { count: extra })}</p>
       )}
     </div>
   );
@@ -102,6 +104,7 @@ function stageLabel(t: ReturnType<typeof useTranslations>, stage: string): strin
  */
 export function SignalHexMap({
   className,
+  style,
   height = 360,
   maxLeads = 200,
 }: SignalHexMapProps) {
@@ -234,6 +237,11 @@ export function SignalHexMap({
     redraw(renderHover, hoverStrength);
   }, [redraw, renderHover, hoverStrength]);
 
+  // Re-attached when the canvas container appears: it only renders once
+  // there are leads, and with `[]` deps the observer was set up while the
+  // ref was still null on pages where leads load after mount (Control),
+  // leaving the canvas at its 600px initial size — cut off on a phone.
+  const hasLeads = leads.length > 0;
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -252,7 +260,7 @@ export function SignalHexMap({
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [hasLeads]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -302,6 +310,7 @@ export function SignalHexMap({
   return (
     <section
       className={cn("bee-glass relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] bee-bento-pad", className)}
+      style={style}
       aria-label={t("sectionAriaLabel")}
     >
       {/* Hexágonos flotantes decorativos — puro CSS, no interactúan. */}
@@ -315,7 +324,7 @@ export function SignalHexMap({
               this used to run a 3rd bee-caption line above the title,
               heavier than any sibling section on the page. */}
           <h2 className="bee-card-title">{t("heading")}</h2>
-          <p className="bee-caption mt-0.5">
+          <p className="bee-caption mt-1">
             {t("caption", { count: leads.length })}
           </p>
         </div>
@@ -353,9 +362,9 @@ export function SignalHexMap({
           the hive stayed 600px wide on a 375px phone (see /probar). */}
       <div className="relative z-[1] min-h-0 w-full min-w-0 flex-1 overflow-hidden" style={{ minHeight: height }}>
         {isLoading ? (
-          <Skeleton className="h-full w-full rounded-2xl" />
+          <Skeleton className="h-full w-full rounded-lg" />
         ) : leads.length === 0 ? (
-          <div className="absolute inset-0 flex items-center justify-center rounded-2xl border-2 border-dashed border-border px-4 text-center text-sm font-light text-[var(--color-text-muted)]">
+          <div className="absolute inset-0 flex items-center justify-center rounded-lg border-2 border-dashed border-border px-4 text-center text-sm font-light text-[var(--color-text-muted)]">
             {t("empty")}
           </div>
         ) : (
@@ -391,7 +400,7 @@ export function SignalHexMap({
       {stageStats.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-border pt-3">
           {stageStats.map((s) => (
-            <div key={s.stage} className="flex items-center gap-2.5">
+            <div key={s.stage} className="flex items-center gap-3">
               <span className="h-7 w-[3px] shrink-0 rounded-full" style={{ background: s.color }} />
               <div>
                 <p className="text-base font-bold leading-none tabular-nums">{s.pct}%</p>

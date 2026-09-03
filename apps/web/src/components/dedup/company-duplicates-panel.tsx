@@ -30,7 +30,7 @@ function GroupRow({ groupKey, companies }: { groupKey: string; companies: Compan
       <p className="mb-2 text-xs font-medium text-muted-foreground">
         {companies[0].domain ? t("sameDomain") : t("sameName")} <span className="font-mono">{groupKey}</span>
       </p>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {companies.map((c) => (
           <label key={c.id} className="flex items-center gap-2 text-xs">
             <input

@@ -43,3 +43,45 @@ export const BENTO_TONES = [
   "#ede4f7",
   BEE_COLORS.chart.gold,
 ] as const;
+
+/** One color per signal type, used everywhere a signal is drawn (SignalCard
+ * fill, badges, chart series) so the same kind of signal always looks the
+ * same across the app. Fills are the palette mixed toward the card white;
+ * borders use the pure hue. Anything not listed falls back to blue. */
+export type SignalTone = "amber" | "orange" | "gold" | "blue" | "magenta" | "violet";
+
+export const SIGNAL_TYPE_TONE: Record<string, SignalTone> = {
+  funding_round: "amber",
+  funding_grant: "amber",
+  hiring: "blue",
+  leadership_change: "magenta",
+  tech_adoption: "violet",
+  product_launch: "orange",
+  engagement: "gold",
+  news_mention: "gold",
+  expansion: "blue",
+  franchise_expansion: "blue",
+  merger_acquisition: "magenta",
+  public_tender: "violet",
+  regulatory_change: "orange",
+  other: "blue",
+};
+
+export function signalTone(signalType: string | null | undefined): SignalTone {
+  return (signalType && SIGNAL_TYPE_TONE[signalType]) || "blue";
+}
+
+/** CSS custom property (var(--color-chart-N)) for a tone. */
+export const TONE_CSS_VAR: Record<SignalTone, string> = {
+  amber: "var(--color-chart-1)",
+  orange: "var(--color-chart-2)",
+  gold: "var(--color-chart-3)",
+  blue: "var(--color-chart-4)",
+  magenta: "var(--color-chart-5)",
+  violet: "var(--color-chart-6)",
+};
+
+/** Card fill for a signal of this type — the hue washed toward white. */
+export function signalFill(signalType: string | null | undefined): string {
+  return `color-mix(in srgb, ${TONE_CSS_VAR[signalTone(signalType)]} 22%, var(--color-card))`;
+}

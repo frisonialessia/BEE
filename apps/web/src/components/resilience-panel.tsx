@@ -60,7 +60,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
       }
     >
       <div className="flex items-center gap-2">
-        <span className="text-xs px-2 py-0.5 rounded-sm border font-medium" style={statusChipStyle(varColor)}>
+        <span className="text-xs px-2 py-1 rounded-sm border font-medium" style={statusChipStyle(varColor)}>
           {statusLabel}
         </span>
         <span className="text-sm font-medium text-foreground truncate flex-1">{event.event_name}</span>
@@ -114,7 +114,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
           {event.error_history.length > 0 && (
             <div>
               <p className="font-medium">{t("errorHistory")}</p>
-              <ul className="ml-2 space-y-0.5">
+              <ul className="ml-2 space-y-1">
                 {event.error_history.map((h, i) => (
                   <li key={i} className="text-muted-foreground">#{h.attempt}: {h.error}</li>
                 ))}
@@ -173,7 +173,7 @@ function DLQPanel() {
     <div className="space-y-4">
       {summary && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {/* Misma tarjeta compacta que Dark Funnel/Resumen (p-3.5, no p-2) —
+          {/* Misma tarjeta compacta que Dark Funnel/Resumen (p-4, no p-2) —
            * "Total" es la suma de las otras 4, no una cuenta accionable por sí
            * sola, así que se oculta solo en móvil (mismo criterio que "Score
            * medio" en Resumen) para que la fila quede en 2×2. */}
@@ -186,7 +186,7 @@ function DLQPanel() {
           ].map(({ label, value, color, hideOnMobile }) => (
             <div
               key={label}
-              className={`bee-bento p-3.5 text-center ${hideOnMobile ? "hidden sm:block" : ""}`}
+              className={`bee-bento p-4 text-center ${hideOnMobile ? "hidden sm:block" : ""}`}
             >
               <p className="bee-stat__val" style={{ color }}>{value}</p>
               <p className="bee-stat__lbl mt-1">{label}</p>
@@ -241,7 +241,7 @@ function ConfidenceBadge({ score }: { score: number }) {
   // implying an error.
   const varColor = score >= 0.75 ? "var(--success)" : score >= 0.5 ? "var(--warning)" : "var(--color-text-muted)";
   return (
-    <span className="text-xs px-2 py-0.5 rounded-sm border font-mono" style={statusChipStyle(varColor)}>
+    <span className="text-xs px-2 py-1 rounded-sm border font-mono" style={statusChipStyle(varColor)}>
       {(score * 100).toFixed(0)}%
     </span>
   );
@@ -271,7 +271,7 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
       }
     >
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs bg-[var(--color-primary)] text-muted-foreground px-2 py-0.5 rounded-md">
+        <span className="text-xs bg-[var(--color-primary)] text-muted-foreground px-2 py-1 rounded-md">
           {agentLabels[entry.agent_type] ?? entry.agent_type}
         </span>
         <span className="text-sm font-medium text-foreground truncate flex-1">
@@ -348,18 +348,18 @@ function AuditPanel() {
     <div className="space-y-4">
       {summary && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="bee-bento p-3.5 text-center">
+          <div className="bee-bento p-4 text-center">
             <p className="bee-stat__val">{summary.total_entries}</p>
             <p className="bee-stat__lbl mt-1">{t("stats.total")}</p>
           </div>
           <div
-            className="bee-bento p-3.5 text-center"
+            className="bee-bento p-4 text-center"
             style={{ borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 12%, var(--color-background))" }}
           >
             <p className="bee-stat__val" style={{ color: "var(--color-chart-2)" }}>{summary.manual_review_count}</p>
             <p className="bee-stat__lbl mt-1">{t("stats.reviewRequired")}</p>
           </div>
-          <div className="bee-bento p-3.5 text-center">
+          <div className="bee-bento p-4 text-center">
             <p className="bee-stat__val" style={{ color: "var(--success)" }}>{(summary.avg_confidence_score * 100).toFixed(0)}%</p>
             <p className="bee-stat__lbl mt-1">{t("stats.avgConfidence")}</p>
           </div>

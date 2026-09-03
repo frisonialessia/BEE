@@ -31,7 +31,7 @@ export function LeadWorkspace() {
       <div className="mb-4 flex shrink-0 items-start justify-between gap-3">
         <div>
           <p className="bee-eyebrow">{t("eyebrow")}</p>
-          <h2 className="mt-0.5 bee-card-title">{t("title")}</h2>
+          <h2 className="mt-1 bee-card-title">{t("title")}</h2>
         </div>
         {result?.live === false && (
           <span className="bee-micro">{t("demoOffline")}</span>
@@ -39,7 +39,7 @@ export function LeadWorkspace() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-10 rounded-[var(--radius-md)]" />
           ))}
@@ -56,7 +56,7 @@ export function LeadWorkspace() {
             return (
               <div
                 key={col.id}
-                className="bee-bento flex items-center justify-between gap-3 px-3 py-2.5"
+                className="bee-bento flex items-center justify-between gap-3 px-3 py-3"
               >
                 <span className="text-xs font-medium">{t(`stages.${col.id}`)}</span>
                 <span className="font-mono text-xs tabular-nums text-muted-foreground">{count}</span>
@@ -64,7 +64,7 @@ export function LeadWorkspace() {
             );
           })}
           {hotCount > 0 && (
-            <p className="flex items-center gap-1.5 pt-1 text-micro text-[var(--color-chart-5)]">
+            <p className="flex items-center gap-2 pt-1 text-micro text-[var(--color-chart-5)]">
               <Flame className="size-3" />
               {t("hotLeads", { count: hotCount })}
             </p>

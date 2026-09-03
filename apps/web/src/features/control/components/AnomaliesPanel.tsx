@@ -31,7 +31,7 @@ function AlertRow({ alert }: { alert: AnomalyAlert }) {
             {t(`severity.${alert.severity}`)}
           </span>
         </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">{alert.description}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{alert.description}</p>
         <p className="mt-1 text-xs text-[var(--color-chart-4)]">{alert.recommendation}</p>
       </div>
     </div>
@@ -51,7 +51,7 @@ export function AnomaliesPanel() {
   const alerts = result?.data ?? [];
 
   if (isLoading) {
-    return <Skeleton className="h-full min-h-[200px] rounded-2xl" />;
+    return <Skeleton className="h-full min-h-[200px] rounded-lg" />;
   }
 
   return (
@@ -66,7 +66,7 @@ export function AnomaliesPanel() {
         <p className="bee-eyebrow">{t("eyebrow")}</p>
       </div>
       {alerts.length === 0 ? (
-        <p className="flex items-center gap-1.5 py-2 text-xs text-muted-foreground">
+        <p className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
           <ShieldCheck className="size-3.5" />
           {t("empty")}
         </p>

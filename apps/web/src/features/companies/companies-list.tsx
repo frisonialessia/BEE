@@ -133,7 +133,7 @@ export function CompaniesList() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-4">
         <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -144,20 +144,6 @@ export function CompaniesList() {
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
-            <ExportCsvButton
-              rows={exportRows}
-              filename="bee-empresas.csv"
-              columns={[
-                { key: "nombre", header: t("export.columns.name") },
-                { key: "dominio", header: t("export.columns.domain") },
-                { key: "industria", header: t("export.columns.industry") },
-                { key: "tamano", header: t("export.columns.size") },
-                { key: "pais", header: t("export.columns.country") },
-                { key: "sitio_web", header: t("export.columns.website") },
-                { key: "contactos", header: t("export.columns.contacts") },
-                { key: "oportunidades", header: t("export.columns.opportunities") },
-              ]}
-            />
             {!demo && (
               <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary">
                 {t("newCompanyButton")}
@@ -175,6 +161,24 @@ export function CompaniesList() {
             label: t("outerTabs.companies"),
             content: (
               <>
+                {/* The export is this tab's — the Leads tab has its own — so
+                    a page never shows two "Exportar CSV" buttons at once. */}
+                <div className="mb-3 flex justify-end">
+                  <ExportCsvButton
+                    rows={exportRows}
+                    filename="bee-empresas.csv"
+                    columns={[
+                      { key: "nombre", header: t("export.columns.name") },
+                      { key: "dominio", header: t("export.columns.domain") },
+                      { key: "industria", header: t("export.columns.industry") },
+                      { key: "tamano", header: t("export.columns.size") },
+                      { key: "pais", header: t("export.columns.country") },
+                      { key: "sitio_web", header: t("export.columns.website") },
+                      { key: "contactos", header: t("export.columns.contacts") },
+                      { key: "oportunidades", header: t("export.columns.opportunities") },
+                    ]}
+                  />
+                </div>
                 {showNew && <NewCompanyForm onDone={() => setShowNew(false)} />}
 
                 <LookalikesPanel />
@@ -187,7 +191,7 @@ export function CompaniesList() {
                     ))}
                   </div>
                 ) : companies.length === 0 ? (
-                  <div className="bee-bento bee-bento-pad py-12 text-center">
+                  <div className="bee-bento bee-bento-pad py-8 text-center">
                     <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
                     <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
                   </div>
@@ -196,7 +200,7 @@ export function CompaniesList() {
                     {companies.map((company) => {
             const cardContent = (
               <>
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]">
                     <Building2 className="size-4 text-[var(--color-chart-4)]" />
                   </span>
@@ -211,20 +215,20 @@ export function CompaniesList() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
                   {company.industry && (
-                    <span className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/60 px-2 py-0.5 text-muted-foreground">
+                    <span className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/60 px-2 py-1 text-muted-foreground">
                       {company.industry}
                     </span>
                   )}
                   {company.country && (
-                    <span className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/60 px-2 py-0.5 text-muted-foreground">
+                    <span className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/60 px-2 py-1 text-muted-foreground">
                       {company.country}
                     </span>
                   )}
                 </div>
 
-                <div className="mt-3 flex items-center gap-4 border-t border-border pt-2.5 text-xs text-muted-foreground">
+                <div className="mt-3 flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
                   <span>{leadCountByCompany.get(company.id) ?? 0} {t("card.contacts")}</span>
                   <span>{oppCountByCompany.get(company.id) ?? 0} {t("card.opportunities")}</span>
                 </div>

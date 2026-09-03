@@ -94,19 +94,19 @@ export function DashboardRail({
         className={cn("bee-rail", open && "bee-rail--open", collapsed && "bee-rail--collapsed")}
         aria-label={t("mainNavigation")}
       >
-        <Link href={homeHref} className="mb-4 px-1.5" aria-label="Inicio BEE" onClick={close}>
+        <Link href={homeHref} className="mb-4 px-2" aria-label="Inicio BEE" onClick={close}>
           <Logo withText={!collapsed} />
         </Link>
 
-        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto overscroll-contain">
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto overscroll-contain">
           {groups.map((group, gi) => (
             <div key={group.groupKey ?? `group-${gi}`} className={gi > 0 ? "mt-3" : undefined}>
               {group.groupKey && !collapsed && (
-                <p className="mb-1 px-2.5 bee-eyebrow">
+                <p className="mb-1 px-3 bee-eyebrow">
                   {t(`groups.${group.groupKey}`)}
                 </p>
               )}
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-1">
                 {group.items.map(({ href, icon: Icon, labelKey, ...rest }) => {
                   const exact = "exact" in rest && rest.exact;
                   const active = exact ? pathname === href : pathname.startsWith(href);

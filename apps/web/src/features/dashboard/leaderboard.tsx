@@ -92,7 +92,7 @@ export function Leaderboard({
       </div>
 
       {ranked.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border px-4 py-10 text-center">
+        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-8 text-center">
           <Trophy className="size-6 text-muted-foreground/40" />
           <p className="text-sm font-light text-muted-foreground">{t("empty")}</p>
         </div>
@@ -101,7 +101,7 @@ export function Leaderboard({
           {ranked.map((row, i) => {
             const pct = Math.round((row.won / ranked[0].won) * 100);
             return (
-              <li key={row.user.id} className="bee-bento flex items-center gap-3 p-2.5">
+              <li key={row.user.id} className="bee-bento flex items-center gap-3 p-3">
                 <span
                   className="flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
                   style={{ background: RANK_COLOR[i] ?? "var(--color-text-muted)" }}

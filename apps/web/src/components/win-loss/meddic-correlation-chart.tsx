@@ -13,7 +13,7 @@ export function MeddicCorrelationChart({ stats }: { stats: MeddicBucketStat[] })
   const t = useTranslations("forecastWinLoss.meddicChart");
   const anyData = stats.some((s) => s.won + s.lost > 0);
   if (!anyData) {
-    return <p className="py-6 text-center text-xs text-muted-foreground">{t("empty")}</p>;
+    return <p className="py-8 text-center text-xs text-muted-foreground">{t("empty")}</p>;
   }
 
   const maxTotal = Math.max(1, ...stats.map((s) => s.won + s.lost));
@@ -24,7 +24,7 @@ export function MeddicCorrelationChart({ stats }: { stats: MeddicBucketStat[] })
         const total = s.won + s.lost;
         const pct = (total / maxTotal) * 100;
         return (
-          <div key={s.bucketLabel} className="flex h-full flex-1 flex-col items-center gap-1.5">
+          <div key={s.bucketLabel} className="flex h-full flex-1 flex-col items-center gap-2">
             <p className="h-4 bee-micro font-medium">
               {s.winRate !== null ? `${Math.round(s.winRate * 100)}%` : "—"}
             </p>

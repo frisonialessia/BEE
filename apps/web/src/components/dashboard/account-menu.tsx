@@ -58,7 +58,7 @@ export function AccountMenu() {
           <Link
             href="/dashboard/team"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-medium transition-colors hover:bg-[var(--color-primary)]/40"
+            className="flex items-center gap-2 px-4 py-3 text-xs font-medium transition-colors hover:bg-[var(--color-primary)]/40"
           >
             <Users className="size-3.5" />
             {tNav("items.team")}
@@ -66,7 +66,7 @@ export function AccountMenu() {
           <button
             type="button"
             onClick={logout}
-            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs font-medium transition-colors hover:bg-[var(--color-primary)]/40"
+            className="flex w-full items-center gap-2 px-4 py-3 text-left text-xs font-medium transition-colors hover:bg-[var(--color-primary)]/40"
           >
             <LogOut className="size-3.5" />
             {t("logout")}

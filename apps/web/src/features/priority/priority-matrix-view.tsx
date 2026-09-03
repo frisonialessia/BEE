@@ -70,7 +70,7 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
 
   return (
     <div>
-      <header className={showHeader ? "mb-6" : "mb-4"}>
+      <header className={showHeader ? "mb-4" : "mb-4"}>
         {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
         <div className={`flex flex-wrap items-start justify-between gap-3 ${showHeader ? "mt-1" : ""}`}>
           {showHeader && (
@@ -80,11 +80,11 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
             </div>
           )}
           <div className="ml-auto flex items-center gap-2">
-            <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
+            {showHeader && <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>}
             <button
               type="button"
               onClick={() => setEditingIcp((v) => !v)}
-              className="bee-btn-ghost inline-flex items-center gap-1.5 text-xs"
+              className="bee-btn-ghost inline-flex items-center gap-2 text-xs"
             >
               <Settings2 className="size-3.5" />
               {configured ? t("editIcp") : t("configureIcp")}
@@ -99,13 +99,13 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
           <Skeleton className="h-96" />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {editingIcp && (
             <IcpSettingsForm initial={criteria} suggestions={suggestions} onDone={() => setEditingIcp(false)} />
           )}
 
           {!configured ? (
-            <div className="bee-bento bee-bento-pad py-12 text-center">
+            <div className="bee-bento bee-bento-pad py-8 text-center">
               <p className="text-sm font-medium">{t("emptyIcp.title")}</p>
               <p className="bee-caption mx-auto mt-1 max-w-md">{t("emptyIcp.subtitle")}</p>
               <button
@@ -117,7 +117,7 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
               </button>
             </div>
           ) : companies.length === 0 ? (
-            <div className="bee-bento bee-bento-pad py-12 text-center">
+            <div className="bee-bento bee-bento-pad py-8 text-center">
               <p className="text-sm text-muted-foreground">{t("emptyCompanies")}</p>
             </div>
           ) : (
@@ -128,7 +128,7 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
                * era mucho más alta (bee-bento-pad + número clamp 28-36px). */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {QUADRANT_ORDER.map((q) => (
-                  <div key={q} className="bee-bento p-3.5 text-center">
+                  <div key={q} className="bee-bento p-4 text-center">
                     <p className="bee-stat__val">{byQuadrant[q].length}</p>
                     <p className="bee-stat__lbl mt-1">{t(`quadrants.${q}.label`)}</p>
                   </div>
@@ -144,7 +144,7 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
                  * width the card actually has, on a wide desktop and on
                  * mobile alike. Doubles as the "what does each color mean"
                  * key the dots' hover-only tooltips don't provide. */}
-                <div className="flex flex-col items-center gap-6 lg:flex-row lg:items-center">
+                <div className="flex flex-col items-center gap-4 lg:flex-row lg:items-center">
                   <PriorityMatrixChart priorities={priorities} />
                   <div className="w-full flex-1 space-y-3">
                     <p className="bee-caption">{t("matrixSection.description")}</p>
@@ -152,7 +152,7 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
                       {QUADRANT_ORDER.map((q) => (
                         <li
                           key={q}
-                          className="flex items-start gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-primary)]/15 p-2.5"
+                          className="flex items-start gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-primary)]/15 p-3"
                         >
                           <span
                             className="mt-1 size-2.5 shrink-0 rounded-full"
@@ -162,7 +162,7 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
                             <p className="text-xs font-medium">
                               {t(`quadrants.${q}.label`)} · {byQuadrant[q].length}
                             </p>
-                            <p className="mt-0.5 bee-micro">{t(`quadrants.${q}.hint`)}</p>
+                            <p className="mt-1 bee-micro">{t(`quadrants.${q}.hint`)}</p>
                           </div>
                         </li>
                       ))}
@@ -182,11 +182,11 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
                   <div key={q} className="flex flex-col">
                     <div className="mb-2 px-1">
                       <h3 className="bee-eyebrow">{t(`quadrants.${q}.label`)}</h3>
-                      <p className="mt-0.5 bee-micro">{t(`quadrants.${q}.hint`)}</p>
+                      <p className="mt-1 bee-micro">{t(`quadrants.${q}.hint`)}</p>
                     </div>
-                    <div className="flex min-h-[100px] max-h-[65vh] flex-col gap-2 overflow-y-auto rounded-[var(--radius-lg)] bg-[var(--color-primary)]/20 p-2.5">
+                    <div className="flex min-h-[100px] max-h-[65vh] flex-col gap-2 overflow-y-auto rounded-[var(--radius-lg)] bg-[var(--color-primary)]/20 p-3">
                       {byQuadrant[q].length === 0 ? (
-                        <p className="px-2 py-6 text-center bee-micro">{t("emptyQuadrant")}</p>
+                        <p className="px-2 py-8 text-center bee-micro">{t("emptyQuadrant")}</p>
                       ) : (
                         byQuadrant[q].map((p) => (
                           <Link

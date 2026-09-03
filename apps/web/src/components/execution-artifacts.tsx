@@ -74,7 +74,7 @@ function CollapsibleSection({
           <Icon className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-semibold text-foreground">{title}</span>
           {badge && (
-            <span className="text-xs bg-[color-mix(in_srgb,var(--color-chart-6)_20%,var(--color-background))] text-[var(--color-chart-6)] px-2 py-0.5 rounded-sm font-medium">
+            <span className="text-xs bg-[color-mix(in_srgb,var(--color-chart-6)_20%,var(--color-background))] text-[var(--color-chart-6)] px-2 py-1 rounded-sm font-medium">
               {badge}
             </span>
           )}
@@ -144,7 +144,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
           </div>
 
           {email_draft.recommended_send_time && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock className="w-3.5 h-3.5" />
               {t("emailDraft.bestSendTime", { time: email_draft.recommended_send_time })}
             </div>
@@ -169,13 +169,13 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
             <div className="space-y-2">
               {meeting_structure.agenda_items.map((item, i) => (
                 <div key={i} className="flex items-start gap-3 text-sm">
-                  <span className="min-w-[40px] text-xs text-muted-foreground pt-0.5">
+                  <span className="min-w-[40px] text-xs text-muted-foreground pt-1">
                     {item.duration_minutes}m
                   </span>
                   <div>
                     <p className="font-medium text-foreground">{item.title}</p>
                     {item.notes && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.notes}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{item.notes}</p>
                     )}
                   </div>
                 </div>
@@ -189,7 +189,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
               <ul className="space-y-1">
                 {meeting_structure.pre_meeting_prep.map((item, i) => (
                   <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                    <CheckCircle2 className="w-3 h-3 text-[var(--success)] mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-3 h-3 text-[var(--success)] mt-1 flex-shrink-0" />
                     {item}
                   </li>
                 ))}
@@ -197,7 +197,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
             </div>
           )}
 
-          <div className="text-xs text-muted-foreground rounded-sm p-2.5 border border-[var(--success)] bg-[color-mix(in_srgb,var(--success)_10%,var(--color-background))]">
+          <div className="text-xs text-muted-foreground rounded-sm p-3 border border-[var(--success)] bg-[color-mix(in_srgb,var(--success)_10%,var(--color-background))]">
             <span className="font-medium text-[var(--success)]">{t("meeting.successCriteria")} </span>
             {meeting_structure.success_criteria}
           </div>
@@ -219,7 +219,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
               >
                 <div className="flex-1">
                   <p className="font-medium">{action.action}</p>
-                  <div className="flex items-center gap-2 mt-0.5 opacity-75">
+                  <div className="flex items-center gap-2 mt-1 opacity-75">
                     <span>{t(`owner.${action.owner}`)}</span>
                     <span>·</span>
                     <Clock className="w-3 h-3" />
@@ -232,8 +232,8 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
           </div>
 
           {next_steps.key_risk && (
-            <div className="flex items-start gap-2 text-xs text-[var(--color-text)] bg-[color-mix(in_srgb,var(--warning)_15%,var(--color-background))] border border-[var(--warning)] rounded-sm p-2.5">
-              <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 text-xs text-[var(--color-text)] bg-[color-mix(in_srgb,var(--warning)_15%,var(--color-background))] border border-[var(--warning)] rounded-sm p-3">
+              <AlertTriangle className="w-3.5 h-3.5 mt-1 shrink-0" />
               <div>
                 <span className="font-medium">{t("nextSteps.keyRisk")} </span>
                 {next_steps.key_risk}
@@ -242,8 +242,8 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
           )}
 
           {next_steps.success_milestone && (
-            <div className="flex items-start gap-2 text-xs text-[var(--color-text)] bg-[color-mix(in_srgb,var(--success)_15%,var(--color-background))] border border-[var(--success)] rounded-sm p-2.5">
-              <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+            <div className="flex items-start gap-2 text-xs text-[var(--color-text)] bg-[color-mix(in_srgb,var(--success)_15%,var(--color-background))] border border-[var(--success)] rounded-sm p-3">
+              <CheckCircle2 className="w-3.5 h-3.5 mt-1 shrink-0" />
               <div>
                 <span className="font-medium">{t("nextSteps.successMilestone")} </span>
                 {next_steps.success_milestone}

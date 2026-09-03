@@ -46,18 +46,18 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
   }
 
   return (
-    <div className="bee-bento bee-bento-pad space-y-2.5 transition-colors hover:border-[var(--color-chart-4)]">
+    <div className="bee-bento bee-bento-pad space-y-3 transition-colors hover:border-[var(--color-chart-4)]">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate text-xs font-semibold">
             {battlecard.company.name ?? battlecard.lead.full_name ?? t("unnamedAccount")}
           </p>
-          <p className="bee-caption mt-0.5">
+          <p className="bee-caption mt-1">
             {signalLabel} · score {Math.round(battlecard.signal.score)}
           </p>
         </div>
         {battlecard.hot_lead && (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-chart-5)]/20 px-2 py-0.5 text-micro font-medium text-[var(--color-chart-5)]">
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-chart-5)]/20 px-2 py-1 text-micro font-medium text-[var(--color-chart-5)]">
             <Zap className="size-2.5" />
             {t("hotBadge")}
           </span>
@@ -68,7 +68,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
         <p className="bee-eyebrow">
           {t("whyItMatters")}
         </p>
-        <p className="mt-0.5 bee-micro leading-relaxed">
+        <p className="mt-1 bee-micro leading-relaxed">
           {battlecard.signal.description || battlecard.signal.title}
         </p>
       </div>
@@ -77,7 +77,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
         <p className="bee-eyebrow">
           {t("recommendedAngle")}
         </p>
-        <p className="mt-0.5 line-clamp-2 text-micro leading-relaxed">{battlecard.strategy.closing_argument}</p>
+        <p className="mt-1 line-clamp-2 text-micro leading-relaxed">{battlecard.strategy.closing_argument}</p>
         <p className="mt-1 bee-micro">
           {t("viaChannel", { playbook: battlecard.strategy.playbook, channel: battlecard.strategy.channel })}
         </p>
@@ -85,7 +85,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
 
       <div className="flex items-center gap-2 pt-1">
         {triggered ? (
-          <span className="flex items-center gap-1.5 text-micro text-[var(--success)]">
+          <span className="flex items-center gap-2 text-micro text-[var(--success)]">
             <CheckCircle2 className="size-3.5" />
             {t("sequenceStarted")}
           </span>
@@ -128,12 +128,51 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
  *  automatización correspondiente (DynamicSequenceEngine, Módulo de
  *  Automatizaciones). Sin automatización que calce con el tipo de señal, cae
  *  a "ver battlecard" — nunca un botón que no hace nada. */
+/** One compact row per account for the Resumen box: who, which signal and
+ *  score, and the same two actions the full card has — the "why it matters /
+ *  recommended angle" detail is one click away in the battlecard itself. */
+function CriticalAccountRow({ battlecard }: { battlecard: Battlecard }) {
+  const locale = useLocale() as Locale;
+  const t = useTranslations("dashboardOverview.criticalAccounts");
+  const { openOpportunity } = useOpportunityDrawer();
+  const signalLabel =
+    getSignalTypeLabels(locale)[battlecard.signal.signal_type as SignalType] ??
+    battlecard.signal.signal_type;
+
+  return (
+    <button
+      type="button"
+      onClick={() => openOpportunity(battlecard.opportunity_id)}
+      className={`bee-bento flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:border-[var(--color-chart-4)] ${battlecard.hot_lead ? "bee-outline--magenta" : ""}`}
+    >
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-semibold">
+          {battlecard.company.name ?? battlecard.lead.full_name ?? t("unnamedAccount")}
+        </p>
+        <p className="bee-micro truncate">
+          {signalLabel} · score {Math.round(battlecard.signal.score)}
+        </p>
+      </div>
+      {battlecard.hot_lead && (
+        <span className="flex shrink-0 items-center gap-1 text-micro font-medium text-[var(--color-chart-5)]">
+          <Zap className="size-3" />
+          {t("hotBadge")}
+        </span>
+      )}
+      <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" />
+    </button>
+  );
+}
+
 export function CriticalAccountsDigest({
   battlecards,
   today,
+  embedded = false,
 }: {
   battlecards: Battlecard[];
   today: Date;
+  /** Inside an OverviewCard: compact rows, no section header of its own. */
+  embedded?: boolean;
 }) {
   const t = useTranslations("dashboardOverview.criticalAccounts");
   const critical = battlecards
@@ -143,15 +182,28 @@ export function CriticalAccountsDigest({
     .sort((a, b) => b.score - a.score)
     .slice(0, 4);
 
+  if (embedded) {
+    if (critical.length === 0) {
+      return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
+    }
+    return (
+      <div className="grid grid-cols-1 gap-2">
+        {critical.map((b) => (
+          <CriticalAccountRow key={b.opportunity_id} battlecard={b} />
+        ))}
+      </div>
+    );
+  }
+
   if (critical.length === 0) return null;
 
   return (
     <section className="mb-4">
-      <div className="mb-2 flex items-center gap-1.5">
+      <div className="mb-2 flex items-center gap-2">
         <Rocket className="size-3.5 text-[var(--color-chart-5)]" />
         <p className="bee-eyebrow">{t("title")}</p>
       </div>
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {critical.map((b) => (
           <CriticalAccountCard key={b.opportunity_id} battlecard={b} />
         ))}

@@ -78,7 +78,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
     : action.status.replace(/_/g, " ");
 
   return (
-    <div className="bee-bento bee-bento--primary bee-bento-pad space-y-3">
+    <div className="bee-bento bee-outline--blue bee-bento-pad space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <span className="shrink-0 text-muted-foreground">
@@ -89,14 +89,14 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{action.title}</p>
             {action.description && (
-              <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
                 {action.description}
               </p>
             )}
           </div>
         </div>
         <span
-          className={`shrink-0 rounded-sm border border-border px-2 py-0.5 text-micro font-medium uppercase tracking-wide ${STATUS_STYLES[action.status] ?? "bg-background"}`}
+          className={`shrink-0 rounded-sm border border-border px-2 py-1 text-micro font-medium uppercase tracking-wide ${STATUS_STYLES[action.status] ?? "bg-background"}`}
         >
           {statusLabel}
         </span>
@@ -188,17 +188,17 @@ export function PendingActionsPanel() {
     <div className="bee-bento bee-bento-pad space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="flex items-center gap-1.5 bee-card-title">
+          <h3 className="flex items-center gap-2 bee-card-title">
             <ShieldCheck className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-5)" }} />
             {t("title")}
           </h3>
-          <p className="bee-caption mt-0.5">{t("caption")}</p>
+          <p className="bee-caption mt-1">{t("caption")}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
           {pendingCount > 0 && (
             <span
-              className="rounded-sm border border-border px-2 py-0.5 text-xs font-semibold"
+              className="rounded-sm border border-border px-2 py-1 text-xs font-semibold"
               style={{
                 background: "color-mix(in srgb, var(--color-chart-1) 25%, var(--color-background))",
               }}
@@ -216,7 +216,7 @@ export function PendingActionsPanel() {
           ))}
         </div>
       ) : actions.length === 0 ? (
-        <div className="py-6 text-center">
+        <div className="py-8 text-center">
           <CheckCircle
             className="mx-auto mb-2 size-6 stroke-[1.25]"
             style={{ color: "var(--color-chart-5)" }}
@@ -237,7 +237,7 @@ export function PendingActionsPanel() {
         </div>
       )}
 
-      <p className="flex items-center gap-1.5 bee-micro">
+      <p className="flex items-center gap-2 bee-micro">
         <span
           className="inline-block size-1.5"
           style={{ background: "var(--color-chart-1)" }}

@@ -28,7 +28,7 @@ export default function ControlPage() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-4">
         <p className="bee-eyebrow">{tNav("groups.operations")}</p>
         <h1 className="bee-display mt-1">{tNav("items.control")}</h1>
         <p className="bee-caption mt-1">{t("caption")}</p>

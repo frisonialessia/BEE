@@ -37,7 +37,7 @@ export function CompanyProfileStep({ onDone }: { onDone: () => void }) {
       </DialogHeader>
 
       <div className="mt-4 flex flex-col gap-4">
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <label htmlFor="employeeRange" className="bee-caption block">
             {t("employeeRangeLabel")}
           </label>
@@ -59,7 +59,7 @@ export function CompanyProfileStep({ onDone }: { onDone: () => void }) {
           </select>
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <label htmlFor="industry" className="bee-caption block">
             {t("industryLabel")} <span className="text-muted-foreground">{t("optional")}</span>
           </label>

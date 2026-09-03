@@ -76,7 +76,7 @@ export function IcpSettingsForm({
       </p>
       <p className="bee-caption mb-3">{t("subtitle")}</p>
 
-      <div className="space-y-2.5">
+      <div className="space-y-3">
         <div>
           <label className="text-xs font-medium text-muted-foreground">{t("industries.label")}</label>
           <input
@@ -137,7 +137,7 @@ export function IcpSettingsForm({
         {/* Buyer persona: no longer just "which accounts", also "who at
          * that account" — cargo/seniority se validan contra los Leads
          * reales de la cuenta, no contra la Company (ver computeFitScore). */}
-        <div className="border-t border-dashed border-border pt-2.5">
+        <div className="border-t border-dashed border-border pt-3">
           <p className="bee-micro font-medium uppercase tracking-wide text-muted-foreground">
             {t("buyerPersonaLabel")}
           </p>

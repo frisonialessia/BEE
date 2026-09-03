@@ -150,13 +150,13 @@ function TourTooltip({ box }: { box: Rect }) {
 
   return (
     <div
-      className="pointer-events-auto fixed w-[min(320px,calc(100vw-2.5rem))] space-y-3 rounded-[var(--radius-xl)] border border-border bg-[var(--color-background)] p-4 shadow-[0_12px_40px_color-mix(in_srgb,var(--color-text)_20%,transparent)]"
+      className="pointer-events-auto fixed w-[min(320px,calc(100vw-2.5rem))] space-y-3 rounded-[var(--radius-lg)] border border-border bg-[var(--color-background)] p-4 shadow-[0_12px_40px_color-mix(in_srgb,var(--color-text)_20%,transparent)]"
       style={style}
       role="dialog"
       aria-label={t("dialogAriaLabel")}
     >
       <div className="flex items-start justify-between gap-3">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--color-chart-4)] px-2.5 py-1 text-micro font-semibold uppercase tracking-wide text-white">
+        <span className="inline-flex items-center gap-2 rounded-full bg-[var(--color-chart-4)] px-3 py-1 text-micro font-semibold uppercase tracking-wide text-white">
           {t("badge")}
           <span className="opacity-80">
             {stepIndex + 1}/{totalSteps}
@@ -187,14 +187,14 @@ function TourTooltip({ box }: { box: Rect }) {
         </button>
         <div className="flex gap-2">
           {!isFirst && (
-            <button type="button" onClick={back} className="bee-btn-ghost px-3 py-1.5 text-xs">
+            <button type="button" onClick={back} className="bee-btn-ghost px-3 py-2 text-xs">
               {t("back")}
             </button>
           )}
           <button
             type="button"
             onClick={next}
-            className="bee-btn bee-btn--primary px-3 py-1.5 text-xs"
+            className="bee-btn bee-btn--primary px-3 py-2 text-xs"
           >
             {isLast ? t("done") : t("next")}
           </button>

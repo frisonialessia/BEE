@@ -76,16 +76,16 @@ export function AccountBriefPanel({ companyId }: { companyId: string }) {
           {Object.keys(brief.findings).length > 0 && (
             <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {Object.entries(brief.findings).map(([key, value]) => (
-                <div key={key} className="bee-inset p-2.5">
+                <div key={key} className="bee-bento p-3">
                   <dt className="bee-caption font-medium">{humanizeKey(key)}</dt>
-                  <dd className="mt-0.5 text-xs text-muted-foreground">{String(value)}</dd>
+                  <dd className="mt-1 text-xs text-muted-foreground">{String(value)}</dd>
                 </div>
               ))}
             </dl>
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-            <div className="flex flex-wrap items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-2">
               {brief.sources.map((source) => (
                 <Badge key={source} variant="outline">
                   {source}

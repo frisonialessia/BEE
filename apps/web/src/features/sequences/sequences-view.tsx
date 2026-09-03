@@ -15,7 +15,7 @@ export function SequencesView() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-4">
         <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1">
           <h1 className="bee-display">{t("title")}</h1>
@@ -36,18 +36,18 @@ export function SequencesView() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="estado" className="mt-6">
+        <TabsContent value="estado" className="mt-4">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <WorkflowStatusPanel />
             <EngagementInboxPanel />
           </div>
         </TabsContent>
 
-        <TabsContent value="biblioteca" className="mt-6">
+        <TabsContent value="biblioteca" className="mt-4">
           <MessageLibrary />
         </TabsContent>
 
-        <TabsContent value="automatizaciones" className="mt-6">
+        <TabsContent value="automatizaciones" className="mt-4">
           <AutomationBuilder />
         </TabsContent>
       </Tabs>

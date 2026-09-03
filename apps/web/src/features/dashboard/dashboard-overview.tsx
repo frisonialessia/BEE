@@ -1,33 +1,25 @@
 "use client";
 
-import { Bot } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-import { BattlecardView } from "@/components/battlecard";
-import { PaginationBar } from "@/components/dashboard/pagination-bar";
 import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-heatmap";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
 import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-heatmap";
-import { TodayImpactCard } from "@/components/dashboard/today-impact-card";
-import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
-import { SignalCard } from "@/components/signal-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { SignalHexMap } from "@/features/control/components/SignalHexMap";
 import { CriticalAccountsDigest } from "@/features/dashboard/critical-accounts-digest";
 import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { DecisionFeed } from "@/features/dashboard/decision-feed";
 import { GettingStartedCard } from "@/features/dashboard/getting-started-card";
-import { Leaderboard } from "@/features/dashboard/leaderboard";
 import { MyCalendarWidget } from "@/features/calendar/my-calendar-widget";
-import { usePagination } from "@/hooks/use-pagination";
 import { useCompanies } from "@/hooks/queries/use-companies";
+import { useDashboardBase } from "@/lib/demo/mode";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
-import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
-import { computeTodayImpact } from "@/lib/today-impact";
 
 /**
  * Resumen — the analytics tool: KPI strip, enriched battlecards, and the
@@ -48,13 +40,16 @@ export function DashboardOverview({
   statusLabel?: string;
 } = {}) {
   const t = useTranslations("dashboardOverview.overview");
+  const tFeed = useTranslations("dashboardOverview.decisionFeed");
+  const tBrief = useTranslations("dashboardOverview.dailyBrief");
+  const tCritical = useTranslations("dashboardOverview.criticalAccounts");
+  const tCalendar = useTranslations("calendar");
+  const base = useDashboardBase();
   const { data: signalsResult, isLoading: signalsLoading } = useSignals();
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
   const { data: allOppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 200);
   const { data: usersResult, isLoading: usersLoading } = useUsers();
-  const { data: teamsResult } = useTeams();
   const { data: companiesResult } = useCompanies(200);
-  const { openOpportunity } = useOpportunityDrawer();
 
   const signals = signalsResult?.data ?? [];
   const battlecards = battlecardsResult?.data ?? [];
@@ -64,8 +59,6 @@ export function DashboardOverview({
   // un vacío que parece confirmado sin serlo.
   const loading = signalsLoading || battlecardsLoading || oppsLoading || usersLoading;
 
-  const battlecardPagination = usePagination(battlecards);
-  const signalPagination = usePagination(signals);
 
   const avgScore =
     signals.length > 0
@@ -74,11 +67,10 @@ export function DashboardOverview({
   const hotSignals = signals.filter((s) => s.score >= 75).length;
   const readyCount = battlecards.filter((b) => b.ready_to_action).length;
   const hotLeads = battlecards.filter((b) => b.hot_lead).length;
-  const todayImpact = computeTodayImpact(signals, allOppsResult?.data ?? [], new Date());
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-72" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -106,30 +98,27 @@ export function DashboardOverview({
           </div>
         </div>
 
-        {/* Misma tarjeta compacta que Dark Funnel — antes MetricCard (ícono +
-         * número + tendencia + hint), sin columna base para móvil. "Score
-         * medio" es un promedio derivado de las otras 4, no una cuenta
-         * accionable — se oculta solo en móvil (mismo criterio que "Total"
-         * en el panel de Resiliencia) para que la fila quede en 2×2 en vez
-         * de 2×2 + 1 sola arrastrada; de sm en adelante se ven las 5. */}
+        {/* Five KPIs, one row: the "Score medio" tile hides on a phone so
+            the row stays 2×2 instead of 2×2+1 — same rule every KPI strip
+            in the app follows. */}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <div className="bee-bento p-3.5 text-center">
+          <div className="bee-bento p-4 text-center">
             <p className="bee-stat__val">{signals.length}</p>
             <p className="bee-stat__lbl mt-1">{t("kpis.signals")}</p>
           </div>
-          <div className="bee-bento p-3.5 text-center">
+          <div className="bee-bento p-4 text-center">
             <p className="bee-stat__val">{hotSignals}</p>
             <p className="bee-stat__lbl mt-1">{t("kpis.hotSignals")}</p>
           </div>
-          <div className="bee-bento p-3.5 text-center">
+          <div className="bee-bento p-4 text-center">
             <p className="bee-stat__val">{readyCount}</p>
             <p className="bee-stat__lbl mt-1">{t("kpis.ready")}</p>
           </div>
-          <div className="bee-bento p-3.5 text-center">
+          <div className="bee-bento p-4 text-center">
             <p className="bee-stat__val">{hotLeads}</p>
             <p className="bee-stat__lbl mt-1">{t("kpis.hotLeads")}</p>
           </div>
-          <div className="bee-bento hidden p-3.5 text-center sm:block">
+          <div className="bee-bento hidden p-4 text-center sm:block">
             <p className="bee-stat__val">{avgScore}</p>
             <p className="bee-stat__lbl mt-1">{t("kpis.avgScore")}</p>
           </div>
@@ -141,138 +130,62 @@ export function DashboardOverview({
         opportunityCount={allOppsResult?.data.length ?? 0}
         userCount={usersResult?.length ?? 0}
       />
-      <DecisionFeed />
-      <TodayImpactCard impact={todayImpact} />
-      <CriticalAccountsDigest battlecards={battlecards} today={new Date()} />
-      <DailyBrief />
 
-      {/* Colmena (inteligencia de mercado) como pieza hero a 2/3 de ancho —
-          a 1/3 quedaba tan angosta que los hexágonos se veían apretados y
-          hasta recortados contra el borde de la tarjeta. Mi calendario y el
-          Leaderboard van apilados en la columna restante. items-start (no
-          el items-stretch por default de grid) para que cada columna mida
-          según su propio contenido — con items-stretch, Mi calendario y el
-          Leaderboard se estiraban a la altura de la Colmena y dejaban un
-          bloque de espacio en blanco debajo de su contenido real. */}
-      <div className="mb-4 grid grid-cols-1 items-start gap-3 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          <SignalHexMap height={280} />
-        </div>
-        <div className="flex flex-col gap-3">
-          <MyCalendarWidget />
-          <Leaderboard
+      {/* Nine boxes, three rows, one shell (OverviewCard). Every box in a
+          row is the same height; the only colored fills on the page are the
+          signal-tone accents inside cards, never the cards themselves. What
+          used to sit below this grid (battlecards, revenue simulator, every
+          signal) lives on its own page — Estrategias, Pronóstico, Señales —
+          so this stays a summary, not the whole product on one screen. */}
+      <div className="bee-overview">
+        <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")}>
+          <DecisionFeed embedded />
+        </OverviewCard>
+
+        <OverviewCard span={5} title={tBrief("title")} caption={t("sections.brief.caption")}>
+          <DailyBrief embedded />
+        </OverviewCard>
+
+        <OverviewCard span={3} title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
+          <PipelineFunnel
             opportunities={allOppsResult?.data ?? []}
-            users={usersResult ?? []}
-            teams={teamsResult ?? []}
+            className="grid grid-cols-2 content-start gap-2"
+            compact
           />
-        </div>
-      </div>
+        </OverviewCard>
 
-      <div className="mb-4 grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
-        <section className="bee-surface bee-bento-pad space-y-3">
-          <div>
-            <h3 className="bee-card-title">{t("sections.industryHeatmap.title")}</h3>
-            <p className="bee-caption">{t("sections.industryHeatmap.caption")}</p>
-          </div>
+        <OverviewCard span={3} title={tCritical("title")} caption={t("sections.critical.caption")}>
+          <CriticalAccountsDigest battlecards={battlecards} today={new Date()} embedded />
+        </OverviewCard>
+
+        <SignalHexMap height={240} className="h-full" style={{ gridColumn: "span 6" }} />
+
+        <OverviewCard
+          span={3}
+          title={tCalendar("widget.title")}
+          action={
+            <Link
+              href={`${base}/calendar`}
+              className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline"
+            >
+              {tCalendar("widget.viewAll")}
+            </Link>
+          }
+        >
+          <MyCalendarWidget embedded />
+        </OverviewCard>
+
+        <OverviewCard span={6} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
           <IndustrySignalHeatmap
             opportunities={allOppsResult?.data ?? []}
             signals={signals}
             companies={companiesResult?.data ?? []}
           />
-        </section>
+        </OverviewCard>
 
-        <section className="bee-surface bee-bento-pad space-y-3">
-          <div>
-            <h3 className="bee-card-title">{t("sections.activityHeatmap.title")}</h3>
-            <p className="bee-caption">{t("sections.activityHeatmap.caption")}</p>
-          </div>
+        <OverviewCard span={6} title={t("sections.activityHeatmap.title")} caption={t("sections.activityHeatmap.caption")}>
           <SignalActivityHeatmap signals={signals} />
-        </section>
-      </div>
-
-      <section className="mb-4 space-y-3">
-        <div>
-          <h3 className="bee-card-title">{t("sections.funnel.title")}</h3>
-          <p className="bee-caption">{t("sections.funnel.caption")}</p>
-        </div>
-        <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
-      </section>
-
-      <div className="bee-bento-grid">
-        {battlecards.length > 0 && (
-          <section className="bee-span-8 space-y-3">
-            <div className="flex items-end justify-between gap-3">
-              <div>
-                <h3 className="bee-card-title">{t("sections.battlecards.title")}</h3>
-                <p className="bee-caption">{t("sections.battlecards.caption")}</p>
-              </div>
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Bot className="size-3.5" />
-                {t("sections.battlecards.strategyBadge")}
-              </span>
-            </div>
-
-            <div className="grid gap-3">
-              {battlecardPagination.pageItems.map((card, i) => (
-                <button
-                  key={card.opportunity_id}
-                  type="button"
-                  onClick={() => openOpportunity(card.opportunity_id)}
-                  className={`bee-bento bee-bento-pad-lg text-left transition-colors hover:border-[var(--color-chart-4)] ${
-                    i % 2 === 0 ? "bee-bento--primary" : ""
-                  }`}
-                >
-                  <BattlecardView card={card} />
-                </button>
-              ))}
-            </div>
-
-            <PaginationBar
-              page={battlecardPagination.page}
-              pageSize={battlecardPagination.pageSize}
-              totalPages={battlecardPagination.totalPages}
-              totalItems={battlecardPagination.totalItems}
-              onPageChange={battlecardPagination.goToPage}
-              onPageSizeChange={battlecardPagination.changePageSize}
-              itemLabel={t("itemLabels.battlecards")}
-            />
-          </section>
-        )}
-
-        <section className={`${battlecards.length > 0 ? "bee-span-4" : "bee-span-12"} space-y-3`}>
-          <div>
-            <h3 className="bee-card-title">{t("sections.revenueSimulator.title")}</h3>
-            <p className="bee-caption">{t("sections.revenueSimulator.caption")}</p>
-          </div>
-          <RevenueSimulatorWidget />
-        </section>
-
-        <section className="bee-span-12 space-y-3">
-          <div className="flex items-end justify-between gap-3">
-            <h3 className="bee-card-title">{t("sections.allSignals.title")}</h3>
-            <span className="bee-caption">{t("sections.allSignals.total", { count: signals.length })}</span>
-          </div>
-
-          {signals.length === 0 ? (
-            <p className="bee-caption py-6 text-center">{t("sections.allSignals.empty")}</p>
-          ) : (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {signalPagination.pageItems.map((signal, i) => (
-                <SignalCard key={signal.id} signal={signal} toneIndex={i} />
-              ))}
-            </div>
-          )}
-
-          <PaginationBar
-            page={signalPagination.page}
-            pageSize={signalPagination.pageSize}
-            totalPages={signalPagination.totalPages}
-            totalItems={signalPagination.totalItems}
-            onPageChange={signalPagination.goToPage}
-            onPageSizeChange={signalPagination.changePageSize}
-            itemLabel={t("itemLabels.signals")}
-          />
-        </section>
+        </OverviewCard>
       </div>
     </>
   );

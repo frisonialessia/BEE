@@ -145,7 +145,7 @@ export function MessageLibrary() {
           ))}
         </div>
       ) : templates.length === 0 ? (
-        <div className="bee-bento bee-bento-pad py-12 text-center">
+        <div className="bee-bento bee-bento-pad py-8 text-center">
           <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
           <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
         </div>
@@ -164,7 +164,7 @@ export function MessageLibrary() {
                 <p className="mt-2 truncate text-xs font-medium text-muted-foreground">{tpl.subject}</p>
               )}
               <p className="mt-1 line-clamp-3 text-xs text-muted-foreground">{tpl.body}</p>
-              <div className="mt-3 flex items-center gap-1.5 border-t border-border pt-2.5">
+              <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
                 <button
                   type="button"
                   onClick={() => {

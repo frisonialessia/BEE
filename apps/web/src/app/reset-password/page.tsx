@@ -49,13 +49,13 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-background px-4 py-16">
+    <div className="flex min-h-full items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex justify-center">
+        <div className="mb-4 flex justify-center">
           <Logo />
         </div>
 
-        <div className="bee-bento bee-bento-pad-lg">
+        <div className="bee-bento bee-bento-pad">
           <p className="bee-eyebrow">{t("eyebrow")}</p>
           <h1 className="mt-1 text-lg font-semibold">{t("title")}</h1>
 
@@ -66,14 +66,14 @@ function ResetPasswordForm() {
               <p className="bee-caption mt-4">{t("success")}</p>
               <button
                 onClick={() => router.push("/login")}
-                className="bee-btn bee-btn--primary mt-6 w-full"
+                className="bee-btn bee-btn--primary mt-4 w-full"
               >
                 {t("goToLogin")}
               </button>
             </>
           ) : (
-            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-              <div className="space-y-1.5">
+            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
+              <div className="space-y-2">
                 <label htmlFor="newPassword" className="bee-caption block">
                   {t("newPasswordLabel")}
                 </label>
@@ -90,7 +90,7 @@ function ResetPasswordForm() {
                 />
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <label htmlFor="confirmPassword" className="bee-caption block">
                   {t("confirmPasswordLabel")}
                 </label>
@@ -124,7 +124,7 @@ function ResetPasswordForm() {
           )}
         </div>
 
-        <p className="bee-caption mt-6 text-center">
+        <p className="bee-caption mt-4 text-center">
           <Link href="/login" className="font-medium text-foreground underline underline-offset-4">
             {t("backToLogin")}
           </Link>

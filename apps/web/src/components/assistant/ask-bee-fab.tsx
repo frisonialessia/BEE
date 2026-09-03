@@ -41,8 +41,8 @@ export function AskBeeFab() {
   return (
     <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end">
       {open && (
-        <div className="bee-fab-panel mb-3 flex h-[420px] w-[min(340px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-[var(--radius-xl)] border border-border bg-[var(--color-background)] shadow-[0_8px_32px_color-mix(in_srgb,var(--color-text)_16%,transparent)]">
-          <div className="bee-assistant-gradient flex shrink-0 items-center gap-2.5 px-4 py-3">
+        <div className="bee-fab-panel mb-3 flex h-[420px] w-[min(340px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-[var(--radius-lg)] border border-border bg-[var(--color-background)] shadow-[0_8px_32px_color-mix(in_srgb,var(--color-text)_16%,transparent)]">
+          <div className="bee-assistant-gradient flex shrink-0 items-center gap-3 px-4 py-3">
             <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-white/20 shadow-[0_0_0_5px_rgba(255,255,255,0.12)]">
               {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, no una foto */}
               <img src="/assistant-bee.svg" alt="" className="size-4" aria-hidden="true" />
@@ -74,13 +74,13 @@ export function AskBeeFab() {
             <div ref={bottomRef} />
           </div>
 
-          <div className="shrink-0 border-t border-border p-2.5">
-            <form onSubmit={handleSubmit} className="flex items-center gap-1.5">
+          <div className="shrink-0 border-t border-border p-3">
+            <form onSubmit={handleSubmit} className="flex items-center gap-2">
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={t("fab.quickPlaceholder")}
-                className="flex-1 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-xs outline-none placeholder:text-muted-foreground"
+                className="flex-1 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none placeholder:text-muted-foreground"
               />
               <button
                 type="submit"
@@ -93,7 +93,7 @@ export function AskBeeFab() {
             </form>
             <Link
               href={assistantHref}
-              className="mt-1.5 block text-center bee-micro hover:text-[var(--color-cta)]"
+              className="mt-2 block text-center bee-micro hover:text-[var(--color-cta)]"
             >
               {t("fab.openFull")}
             </Link>

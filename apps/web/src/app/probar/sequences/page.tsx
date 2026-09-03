@@ -26,7 +26,7 @@ export default function ProbarSequencesPage() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-4">
         <p className="bee-eyebrow">{t("view.eyebrow")}</p>
         <div className="mt-1">
           <h1 className="bee-display">{t("view.title")}</h1>
@@ -47,15 +47,15 @@ export default function ProbarSequencesPage() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="estado" className="mt-6">
+        <TabsContent value="estado" className="mt-4">
           <ProbarComingSoon label={t("view.tabs.status")} icon={Activity} />
         </TabsContent>
 
-        <TabsContent value="biblioteca" className="mt-6">
+        <TabsContent value="biblioteca" className="mt-4">
           <MessageLibrary />
         </TabsContent>
 
-        <TabsContent value="automatizaciones" className="mt-6">
+        <TabsContent value="automatizaciones" className="mt-4">
           <AutomationBuilder />
         </TabsContent>
       </Tabs>

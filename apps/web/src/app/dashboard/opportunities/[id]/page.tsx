@@ -29,7 +29,7 @@ export default function OpportunityDetailPage() {
   const artifacts = artifactsResult?.data;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <div className="flex items-center gap-3">
         <Button asChild variant="ghost" size="sm">
           <Link href="/dashboard/strategies">
@@ -45,10 +45,10 @@ export default function OpportunityDetailPage() {
       {opportunity && <OpportunityCard opportunity={opportunity} />}
 
       {loadingBattlecard ? (
-        <Skeleton className="h-96 rounded-xl" />
+        <Skeleton className="h-96 rounded-lg" />
       ) : battlecard ? (
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <BattlecardView card={battlecard} />
           </CardContent>
         </Card>
@@ -61,7 +61,7 @@ export default function OpportunityDetailPage() {
       <section>
         <h2 className="mb-4 text-lg font-semibold">{t("executionArtifacts")}</h2>
         {loadingArtifacts ? (
-          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-lg" />
         ) : artifacts ? (
           <ExecutionArtifacts bundle={artifacts} opportunityId={id} />
         ) : (

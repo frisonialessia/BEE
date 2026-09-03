@@ -23,12 +23,12 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
     // side it ate ~90px of a 335px card and pushed the first bar's label
     // off the left edge.
     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
-      <div className="flex w-full min-w-0 items-end gap-1.5 pb-1 sm:flex-1 sm:gap-3" style={{ height: "var(--bee-chart-h)" }}>
+      <div className="flex w-full min-w-0 items-end gap-2 pb-1 sm:flex-1 sm:gap-3" style={{ height: "var(--bee-chart-h)" }}>
       {buckets.map((b, i) => {
         const totalPct = (b.total / maxValue) * 100;
         const weightedPct = (b.weighted / maxValue) * 100;
         return (
-          <div key={b.key} className="flex h-full min-w-5 flex-1 flex-col items-center gap-1.5 sm:min-w-12">
+          <div key={b.key} className="flex h-full min-w-5 flex-1 flex-col items-center gap-2 sm:min-w-12">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="relative flex w-full flex-1 items-end justify-center rounded-t-[var(--radius-sm)] bg-[var(--color-primary)]/40">
@@ -61,12 +61,12 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
         );
       })}
       </div>
-      <div className="flex shrink-0 flex-wrap gap-x-4 gap-y-1.5 bee-micro sm:ml-2 sm:flex-col sm:justify-end sm:pb-4">
-        <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-[2px] bg-[var(--color-chart-2)]" /> {t("legendWeighted")}
+      <div className="flex shrink-0 flex-wrap gap-x-4 gap-y-2 bee-micro sm:ml-2 sm:flex-col sm:justify-end sm:pb-4">
+        <span className="flex items-center gap-2">
+          <span className="size-2 rounded-sm bg-[var(--color-chart-2)]" /> {t("legendWeighted")}
         </span>
-        <span className="flex items-center gap-1.5">
-          <span className="size-2 rounded-[2px] bg-[var(--color-chart-4)]" /> {t("legendTotal")}
+        <span className="flex items-center gap-2">
+          <span className="size-2 rounded-sm bg-[var(--color-chart-4)]" /> {t("legendTotal")}
         </span>
       </div>
     </div>

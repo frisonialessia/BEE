@@ -14,7 +14,7 @@ export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
   const anyData = points.some((p) => p.count > 0);
   if (!anyData) {
     return (
-      <p className="py-6 text-center text-xs text-muted-foreground">
+      <p className="py-8 text-center text-xs text-muted-foreground">
         {t("empty")}
       </p>
     );
@@ -23,7 +23,7 @@ export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
   const maxCount = Math.max(1, ...points.map((p) => p.count));
 
   return (
-    <div className="flex items-end gap-1.5 overflow-x-auto pb-1" style={{ height: "var(--bee-chart-h)" }}>
+    <div className="flex items-end gap-2 overflow-x-auto pb-1" style={{ height: "var(--bee-chart-h)" }}>
       {points.map((p, i) => {
         const totalPct = (p.count / maxCount) * 100;
         const hotPct = (p.hotCount / maxCount) * 100;

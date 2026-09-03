@@ -35,7 +35,7 @@ export function MergedPageTabs({
 
   return (
     <Tabs value={value} onValueChange={handleChange}>
-      <TabsList className="mb-4 border border-border bg-background">
+      <TabsList className="mb-4 h-auto max-w-full flex-wrap border border-border bg-background group-data-[orientation=horizontal]/tabs:h-auto">
         {tabs.map((tab) => (
           <TabsTrigger key={tab.value} value={tab.value} className="rounded-sm">
             {tab.label}

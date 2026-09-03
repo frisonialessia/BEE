@@ -149,7 +149,7 @@ export function NewOpportunityForm({
       )}
 
       <div className="mb-2 flex items-start gap-3">
-        <div className="flex shrink-0 flex-col items-center gap-1.5">
+        <div className="flex shrink-0 flex-col items-center gap-2">
           {photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- a client-resized data: URI, not an optimizable remote asset
             <img src={photoUrl} alt="" className="size-14 rounded-full object-cover" />

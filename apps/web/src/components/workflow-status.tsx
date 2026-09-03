@@ -33,7 +33,7 @@ function HandlerIcon({ name }: { name: string }) {
     ready_to_action_notify: "NTF",
   };
   return (
-    <span className="rounded-sm border border-border bg-background px-1 py-0.5 text-micro font-medium text-muted-foreground">
+    <span className="rounded-sm border border-border bg-background px-1 py-1 text-micro font-medium text-muted-foreground">
       {map[name] ?? name.slice(0, 3).toUpperCase()}
     </span>
   );
@@ -42,7 +42,7 @@ function HandlerIcon({ name }: { name: string }) {
 function TaskRow({ task }: { task: WorkflowTask }) {
   const t = useTranslations("workspace.sequences.workflowStatus");
   return (
-    <div className="flex items-center justify-between border-b border-border py-1.5 last:border-0">
+    <div className="flex items-center justify-between border-b border-border py-2 last:border-0">
       <div className="flex min-w-0 items-center gap-2">
         {STATUS_ICON[task.status] ?? (
           <Clock className="size-3 stroke-[1.25] text-muted-foreground" />
@@ -98,11 +98,11 @@ export function WorkflowStatusPanel() {
     <div className="bee-bento bee-bento-pad space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="flex items-center gap-1.5 bee-card-title">
+          <h3 className="flex items-center gap-2 bee-card-title">
             <Zap className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-1)" }} />
             {t("title")}
           </h3>
-          <p className="bee-caption mt-0.5">{t("subtitle")}</p>
+          <p className="bee-caption mt-1">{t("subtitle")}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
@@ -132,7 +132,7 @@ export function WorkflowStatusPanel() {
 
       {status && status.mock_dispatched > 0 && status.dispatched === 0 && (
         <div className="flex items-start gap-2 border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
-          <Layers className="mt-0.5 size-3.5 shrink-0 stroke-[1.25]" />
+          <Layers className="mt-1 size-3.5 shrink-0 stroke-[1.25]" />
           <span>
             {t("mockNoticePrefix")}{" "}
             <span className="font-medium text-foreground">{t("mockNoticeHighlight")}</span>{" "}

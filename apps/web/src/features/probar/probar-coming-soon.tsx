@@ -13,7 +13,7 @@ export function ProbarComingSoon({ label, icon: Icon }: { label: string; icon: L
   const t = useTranslations("workspace.sequences.comingSoon");
 
   return (
-    <div className="bee-bento bee-bento-pad flex flex-col items-center gap-3 py-16 text-center">
+    <div className="bee-bento bee-bento-pad flex flex-col items-center gap-3 py-8 text-center">
       <div className="flex size-12 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
         <Icon className="size-5 stroke-[1.5] text-[var(--color-chart-4)]" />
       </div>

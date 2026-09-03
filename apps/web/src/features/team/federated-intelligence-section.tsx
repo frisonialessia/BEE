@@ -48,7 +48,7 @@ export function FederatedIntelligenceSection() {
   }
 
   return (
-    <section className="bee-bento bee-bento-pad-lg space-y-4">
+    <section className="bee-bento bee-bento-pad space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="bee-eyebrow">{t("eyebrow")}</p>
@@ -66,7 +66,7 @@ export function FederatedIntelligenceSection() {
         <Skeleton className="h-16" />
       ) : (
         <div className="space-y-3">
-          <div className="bee-inset flex items-start gap-2 p-3">
+          <div className="bee-bento flex items-start gap-2 p-3">
             <span className="text-sm">ⓘ</span>
             <p className="bee-caption">{t("explainer")}</p>
           </div>

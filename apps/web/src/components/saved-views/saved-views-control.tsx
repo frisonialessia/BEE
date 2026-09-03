@@ -63,7 +63,7 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1.5 rounded-full border border-border bg-[var(--color-card)] px-3 py-1.5 text-xs outline-none"
+        className="flex items-center gap-2 rounded-full border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
       >
         <Bookmark className="size-3.5" />
         {t("trigger")}
@@ -71,15 +71,15 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
       </button>
 
       {open && (
-        <div className="bee-glass absolute right-0 top-full z-20 mt-1.5 w-72 rounded-[var(--radius-lg)] p-2">
+        <div className="bee-glass absolute right-0 top-full z-20 mt-2 w-72 rounded-[var(--radius-lg)] p-2">
           {views.length === 0 ? (
             <p className="px-2 py-2 text-xs text-muted-foreground">{t("empty")}</p>
           ) : (
-            <div className="max-h-56 space-y-0.5 overflow-y-auto overscroll-contain">
+            <div className="max-h-56 space-y-1 overflow-y-auto overscroll-contain">
               {views.map((v) => (
                 <div
                   key={v.id}
-                  className="group flex items-center gap-1.5 rounded-[var(--radius-md)] px-2 py-1.5 hover:bg-[var(--color-primary)]/25"
+                  className="group flex items-center gap-2 rounded-[var(--radius-md)] px-2 py-2 hover:bg-[var(--color-primary)]/25"
                 >
                   <button
                     type="button"
@@ -107,7 +107,7 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
 
           <div className="mt-2 border-t border-border pt-2">
             {showSaveForm ? (
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -118,7 +118,7 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
                   // rule exists for.
                   // eslint-disable-next-line jsx-a11y/no-autofocus
                   autoFocus
-                  className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+                  className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
                 />
                 <Label className="bee-micro font-normal">
                   <Checkbox
@@ -128,7 +128,7 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
                   />
                   {t("shareWithTeam")}
                 </Label>
-                <div className="flex gap-1.5">
+                <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={saveCurrent}
@@ -150,7 +150,7 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
               <button
                 type="button"
                 onClick={() => setShowSaveForm(true)}
-                className="w-full rounded-[var(--radius-md)] px-2 py-1.5 text-left text-xs text-[var(--color-chart-4)] hover:bg-[var(--color-primary)]/25"
+                className="w-full rounded-[var(--radius-md)] px-2 py-2 text-left text-xs text-[var(--color-chart-4)] hover:bg-[var(--color-primary)]/25"
               >
                 {t("saveCurrent")}
               </button>

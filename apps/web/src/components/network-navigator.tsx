@@ -27,7 +27,7 @@ const INTRO_TYPE_VAR: Record<string, string | null> = {
 
 function StrengthDots({ strength }: { strength: number }) {
   return (
-    <span className="flex gap-0.5">
+    <span className="flex gap-1">
       {[...Array(10)].map((_, i) => (
         <span
           key={i}
@@ -49,7 +49,7 @@ function PathCard({ path }: { path: IntroPath }) {
     <div className="bee-bento bee-bento-pad space-y-3">
       <div className="flex items-center justify-between">
         <span
-          className="text-xs px-2 py-0.5 rounded-sm border font-medium"
+          className="text-xs px-2 py-1 rounded-sm border font-medium"
           style={
             introVarColor
               ? {
@@ -71,7 +71,7 @@ function PathCard({ path }: { path: IntroPath }) {
       <div className="flex items-center gap-1 text-xs text-muted-foreground flex-wrap">
         {path.steps.map((step, i) => (
           <span key={i} className="flex items-center gap-1">
-            <span className="bg-[var(--color-primary)] rounded-md px-2 py-0.5 font-medium">{step.person}</span>
+            <span className="bg-[var(--color-primary)] rounded-md px-2 py-1 font-medium">{step.person}</span>
             {i < path.steps.length - 1 && <span className="text-muted-foreground">→</span>}
           </span>
         ))}
@@ -292,7 +292,7 @@ export function NetworkNavigatorPanel() {
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-12 rounded-lg" />)}
         </div>
       ) : connections.length === 0 ? (
-        <div className="bee-bento bee-bento-pad py-12 text-center">
+        <div className="bee-bento bee-bento-pad py-8 text-center">
           <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
           <p className="bee-caption mt-1">{t("empty.hint")}</p>
         </div>

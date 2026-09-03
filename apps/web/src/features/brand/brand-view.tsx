@@ -12,7 +12,7 @@ export function BrandView() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-4">
         <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1">
           <h1 className="bee-display">{tNav("brand")}</h1>
@@ -26,7 +26,7 @@ export function BrandView() {
          viewport and read as cramped. Full width lets each section breathe
          and stays naturally responsive (no breakpoint math to keep in sync
          as either panel grows). */}
-      <div className="space-y-6">
+      <div className="space-y-4">
         <BrandVoicePanel />
         <DeepLearningPanel />
       </div>

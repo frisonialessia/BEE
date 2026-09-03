@@ -28,7 +28,7 @@ export function ExportCsvButton<T extends Record<string, unknown>>({
       type="button"
       onClick={handleClick}
       disabled={rows.length === 0}
-      className="bee-btn-ghost inline-flex items-center gap-1.5"
+      className="bee-btn-ghost inline-flex items-center gap-2"
     >
       <Download className="size-3.5" />
       {t("button")}

@@ -77,7 +77,7 @@ function HealthSkeleton() {
     <section className="bee-surface flex h-full flex-col bee-bento-pad">
       <div className="grid flex-1 grid-cols-2 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-full rounded-2xl" />
+          <Skeleton key={i} className="h-full rounded-lg" />
         ))}
       </div>
     </section>
@@ -130,12 +130,12 @@ export function SystemHealth() {
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="bee-eyebrow">{t("eyebrow")}</p>
-          <h2 className="mt-0.5 bee-card-title">
+          <h2 className="mt-1 bee-card-title">
             {live ? t("connected") : t("disconnected")}
           </h2>
         </div>
         <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-2">
             {live ? (
               <Wifi className="size-3.5 text-[var(--color-chart-4)]" />
             ) : (
@@ -143,11 +143,11 @@ export function SystemHealth() {
             )}
             {snapshot.connectivity.environment ?? t("unknownEnvironment")}
           </span>
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-2">
             <Database className="size-3.5" />
             {snapshot.connectivity.db_ready ? t("dbReady") : t("dbNotReady")}
           </span>
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-2">
             <Activity className="size-3.5" />
             {t("updated", { time: updatedLabel })}
           </span>
@@ -178,8 +178,8 @@ export function SystemHealth() {
       {!live && (
         <p className="mt-4 text-xs text-muted-foreground">
           {t("fallbackNoticePrefix")}{" "}
-          <code className="rounded bg-muted px-1 py-0.5">NEXT_PUBLIC_API_URL</code> {t("fallbackNoticeMiddle")}{" "}
-          <code className="rounded bg-muted px-1 py-0.5">.env.local</code>
+          <code className="rounded bg-muted px-1 py-1">NEXT_PUBLIC_API_URL</code> {t("fallbackNoticeMiddle")}{" "}
+          <code className="rounded bg-muted px-1 py-1">.env.local</code>
         </p>
       )}
     </section>

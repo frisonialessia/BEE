@@ -22,6 +22,7 @@ import { AutopilotSection } from "@/features/team/autopilot-section";
 import { FederatedIntelligenceSection } from "@/features/team/federated-intelligence-section";
 import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
 import { QuotasSection } from "@/features/team/quotas-section";
+import { TeamLeaderboardSection } from "@/features/team/team-leaderboard-section";
 import { TeamProfilesSection } from "@/features/team/team-profiles-section";
 import { resizeImageToDataUrl } from "@/lib/image";
 import { availableTimezones, detectedTimezone } from "@/lib/timezone";
@@ -87,7 +88,7 @@ function CreateTeamForm({ teams }: { teams: TeamOut[] }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-2">
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <label htmlFor="team-name" className="bee-caption block">
           {t("form.newTeamLabel")}
         </label>
@@ -100,7 +101,7 @@ function CreateTeamForm({ teams }: { teams: TeamOut[] }) {
           placeholder={t("form.namePlaceholder")}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <label htmlFor="team-parent" className="bee-caption block">
           {t("form.reportsToLabel")}
         </label>
@@ -271,14 +272,14 @@ function UserRow({
 
   return (
     <tr className="border-b border-border last:border-0">
-      <td className="py-2.5 pr-3">
+      <td className="py-3 pr-3">
         <div className="font-medium">
           {user.full_name}
           {isSelf && <span className="bee-caption ml-1.5">{t("you")}</span>}
         </div>
         <div className="bee-caption">{user.email}</div>
       </td>
-      <td className="py-2.5 pr-3">
+      <td className="py-3 pr-3">
         {canEditRole ? (
           <select
             value={user.role}
@@ -298,7 +299,7 @@ function UserRow({
           </Badge>
         )}
       </td>
-      <td className="py-2.5 pr-3">
+      <td className="py-3 pr-3">
         {canManage && user.role !== "owner" ? (
           <select
             value={user.team_id ?? ""}
@@ -317,13 +318,13 @@ function UserRow({
           teamName
         )}
       </td>
-      <td className="py-2.5 pr-3">
+      <td className="py-3 pr-3">
         <Badge variant={user.is_active ? "success" : "warning"}>
           {user.is_active ? t("active") : t("inactive")}
         </Badge>
       </td>
       {canManage && (
-        <td className="py-2.5 text-right">
+        <td className="py-3 text-right">
           {canRemove && (
             <button
               type="button"
@@ -448,7 +449,7 @@ function MyProfileSection() {
   }
 
   return (
-    <section className="bee-bento bee-bento-pad-lg space-y-4">
+    <section className="bee-bento bee-bento-pad space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <p className="bee-eyebrow">{t("eyebrow")}</p>
@@ -617,7 +618,7 @@ function DeleteAccountSection() {
     // Same guard as the backend (DELETE /users/me returns 403 for OWNER) —
     // shown up front instead of letting them click through to a failure.
     return (
-      <section className="bee-bento bee-bento-pad-lg space-y-2">
+      <section className="bee-bento bee-bento-pad space-y-2">
         <h2 className="text-base font-semibold">{t("title")}</h2>
         <p className="bee-caption">{t("ownerBlocked")}</p>
       </section>
@@ -625,7 +626,7 @@ function DeleteAccountSection() {
   }
 
   return (
-    <section className="bee-bento bee-bento-pad-lg space-y-3">
+    <section className="bee-bento bee-bento-pad space-y-3">
       <h2 className="text-base font-semibold">{t("title")}</h2>
       <p className="bee-caption">{t("body")}</p>
 
@@ -684,7 +685,7 @@ function ChangePasswordSection() {
   }
 
   return (
-    <section className="bee-bento bee-bento-pad-lg space-y-4">
+    <section className="bee-bento bee-bento-pad space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <p className="bee-eyebrow">{t("eyebrow")}</p>
@@ -766,7 +767,7 @@ export function TeamAdminView() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-4">
         <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1">
           <h1 className="bee-display">{t("title")}</h1>
@@ -782,12 +783,12 @@ export function TeamAdminView() {
       ) : hasError ? (
         <p className="bee-caption">{t("loadError")}</p>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <MyProfileSection />
 
           <ChangePasswordSection />
 
-          <section className="bee-bento bee-bento-pad-lg space-y-4">
+          <section className="bee-bento bee-bento-pad space-y-4">
             <div>
               <p className="bee-eyebrow">{t("teams.eyebrow")}</p>
               <h2 className="mt-1 text-base font-semibold">{t("teams.title")}</h2>
@@ -796,7 +797,7 @@ export function TeamAdminView() {
             {ordered.length === 0 ? (
               <p className="bee-caption">{t("teams.empty")}</p>
             ) : (
-              <ul className="space-y-1.5">
+              <ul className="space-y-2">
                 {ordered.map((team) => (
                   <li
                     key={team.id}
@@ -815,7 +816,7 @@ export function TeamAdminView() {
             {canManage && <CreateTeamForm teams={teams ?? []} />}
           </section>
 
-          <section className="bee-bento bee-bento-pad-lg space-y-4">
+          <section className="bee-bento bee-bento-pad space-y-4">
             <div>
               <p className="bee-eyebrow">{t("people.eyebrow")}</p>
               <h2 className="mt-1 text-base font-semibold">
@@ -858,6 +859,7 @@ export function TeamAdminView() {
           <FederatedIntelligenceSection />
 
           <QuotasSection users={users ?? []} teams={teams ?? []} canManage={canManage} />
+          <TeamLeaderboardSection users={users ?? []} teams={teams ?? []} />
 
           <OutboundWebhooksSection canManage={canManage} />
 

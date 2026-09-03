@@ -27,11 +27,11 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="bee-bento bee-bento-pad-lg mx-auto mt-8 max-w-md text-center">
+    <div className="bee-bento bee-bento-pad mx-auto mt-4 max-w-md text-center">
       <p className="bee-eyebrow">{t("eyebrow")}</p>
       <h2 className="mt-1 text-lg font-semibold">{t("title")}</h2>
       <p className="bee-caption mt-2">{t("subtitle")}</p>
-      <button type="button" onClick={reset} className="bee-btn bee-btn--primary mt-6">
+      <button type="button" onClick={reset} className="bee-btn bee-btn--primary mt-4">
         {t("retry")}
       </button>
     </div>

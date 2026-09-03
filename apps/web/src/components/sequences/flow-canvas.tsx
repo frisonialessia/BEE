@@ -35,7 +35,7 @@ export function FlowCanvas({
 
   if (steps.length === 0) {
     return (
-      <div className="bee-bento bee-bento-pad py-12 text-center">
+      <div className="bee-bento bee-bento-pad py-8 text-center">
         <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
         <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
       </div>
@@ -81,11 +81,11 @@ export function FlowCanvas({
               <div className="min-w-0 flex-1 pb-7">
                 <div className="bee-bento bee-bento-pad flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       {ChannelIcon && <ChannelIcon className="size-3 shrink-0 text-muted-foreground" />}
                       <p className="truncate text-xs font-semibold">{step.name}</p>
                     </div>
-                    <p className="bee-caption mt-0.5">
+                    <p className="bee-caption mt-1">
                       {def ? tActions(`${step.action}.description`) : step.action}
                     </p>
                     {step.notes && <p className="mt-1 bee-micro">{step.notes}</p>}
@@ -103,7 +103,7 @@ export function FlowCanvas({
                 </div>
 
                 {!isLast && primaryTransition && (
-                  <p className="mt-1.5 pl-1 bee-micro">
+                  <p className="mt-2 pl-1 bee-micro">
                     → {t("advance", { condition: describeCondition(t, primaryTransition.condition) })}
                   </p>
                 )}

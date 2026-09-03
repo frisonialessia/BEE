@@ -52,7 +52,7 @@ export function OpportunitiesDashboard({ showHeader = true }: { showHeader?: boo
 
   return (
     <div>
-      <header className={showHeader ? "mb-6" : "mb-4"}>
+      <header className={showHeader ? "mb-4" : "mb-4"}>
         {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
         <div className={`flex flex-wrap items-start justify-between gap-3 ${showHeader ? "mt-1" : ""}`}>
           {showHeader && (
@@ -62,7 +62,7 @@ export function OpportunitiesDashboard({ showHeader = true }: { showHeader?: boo
             </div>
           )}
           <div className="ml-auto flex items-center gap-2">
-            <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>
+            {showHeader && <Badge variant={live ? "success" : "warning"}>{live ? t("live") : t("demoData")}</Badge>}
             <ExportCsvButton
               rows={exportRows}
               filename={t("exportFilename")}
@@ -94,26 +94,26 @@ export function OpportunitiesDashboard({ showHeader = true }: { showHeader?: boo
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="battlecards" className="mt-6 space-y-4">
+          <TabsContent value="battlecards" className="mt-4 space-y-4">
             {battlecards.length === 0 ? (
-              <div className="bee-bento bee-bento-pad py-12 text-center">
+              <div className="bee-bento bee-bento-pad py-8 text-center">
                 <p className="text-sm text-muted-foreground">{t("emptyBattlecards.title")}</p>
                 <p className="bee-caption mt-1">{t("emptyBattlecards.subtitle")}</p>
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Bot className="size-3.5" />
                   {t("battlecardsHint")}
                 </div>
                 <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-                  {battlecardPagination.pageItems.map((card, i) => (
+                  {battlecardPagination.pageItems.map((card) => (
                     <button
                       key={card.opportunity_id}
                       type="button"
                       onClick={() => openOpportunity(card.opportunity_id)}
-                      className={`bee-bento bee-bento-pad-lg text-left hover:border-[var(--color-chart-4)] ${
-                        i % 2 === 0 ? "bee-bento--primary" : ""
+                      className={`bee-bento bee-bento-pad text-left hover:border-[var(--color-chart-4)] ${
+                        ""
                       }`}
                     >
                       <BattlecardView card={card} />
@@ -133,7 +133,7 @@ export function OpportunitiesDashboard({ showHeader = true }: { showHeader?: boo
             )}
           </TabsContent>
 
-          <TabsContent value="flujo" className="mt-6">
+          <TabsContent value="flujo" className="mt-4">
             <PipelineFlow opportunities={opportunities} />
           </TabsContent>
         </Tabs>

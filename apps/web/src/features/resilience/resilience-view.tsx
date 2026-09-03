@@ -17,7 +17,7 @@ export function ResilienceView({ showHeader = true }: { showHeader?: boolean }) 
   return (
     <div>
       {showHeader && (
-        <header className="mb-6">
+        <header className="mb-4">
           <p className="bee-eyebrow">{t("eyebrow")}</p>
           <div className="mt-1">
             <h1 className="bee-display">{tNav("resilience")}</h1>

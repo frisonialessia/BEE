@@ -101,7 +101,7 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
 
   if (total === 0) {
     return (
-      <div className="bee-bento bee-bento-pad py-12 text-center">
+      <div className="bee-bento bee-bento-pad py-8 text-center">
         <p className="text-sm text-muted-foreground">{t("empty")}</p>
       </div>
     );
@@ -121,7 +121,7 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
           cap below is still needed (see its own comment) so the diagram
           can't fill a wide card on its own; the breakdown is what actually
           uses the rest of the width now. */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
         {/* maxWidth caps this SVG at its own natural size (1 viewBox unit =
             1px by design) — width="100%"/w-full alone stretches it to fill
             whatever the card's width happens to be, and every fontSize below
@@ -198,15 +198,15 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
 
           <div className="flex flex-wrap items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
             <span className="font-medium text-foreground">{t("closedBreakdown.label")}</span>
-            <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-2">
               <span className="size-2 rounded-full" style={{ background: "var(--success)" }} />
               {t("closedBreakdown.won", { count: closedBreakdown.won })}
             </span>
-            <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-2">
               <span className="size-2 rounded-full" style={{ background: "var(--destructive)" }} />
               {t("closedBreakdown.lost", { count: closedBreakdown.lost })}
             </span>
-            <span className="inline-flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-2">
               <span className="size-2 rounded-full bg-muted-foreground/40" />
               {t("closedBreakdown.dismissed", { count: closedBreakdown.dismissed })}
             </span>

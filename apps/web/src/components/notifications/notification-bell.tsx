@@ -78,9 +78,9 @@ export function NotificationBell() {
             <p className="text-sm font-semibold">{t("title")}</p>
           </div>
           {isLoading ? (
-            <p className="px-4 py-6 text-center text-xs text-muted-foreground">{t("loading")}</p>
+            <p className="px-4 py-8 text-center text-xs text-muted-foreground">{t("loading")}</p>
           ) : notifications.length === 0 ? (
-            <p className="px-4 py-6 text-center text-xs text-muted-foreground">
+            <p className="px-4 py-8 text-center text-xs text-muted-foreground">
               {t("empty")}
             </p>
           ) : (
@@ -93,13 +93,13 @@ export function NotificationBell() {
                       href={n.href}
                       onClick={() => setOpen(false)}
                       className={cn(
-                        "flex items-start gap-2.5 px-4 py-3 text-left transition-colors hover:bg-[var(--color-primary)]/30",
+                        "flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--color-primary)]/30",
                       )}
                     >
-                      <Icon className="mt-0.5 size-4 shrink-0" style={{ color: KIND_COLOR[n.kind] }} />
+                      <Icon className="mt-1 size-4 shrink-0" style={{ color: KIND_COLOR[n.kind] }} />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-medium">{n.title}</p>
-                        <p className="mt-0.5 line-clamp-2 bee-micro">
+                        <p className="mt-1 line-clamp-2 bee-micro">
                           {n.description}
                         </p>
                         <p className="mt-1 bee-micro">{formatRelativeTime(n.timestamp, locale)}</p>

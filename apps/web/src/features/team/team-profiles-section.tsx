@@ -70,7 +70,7 @@ function TeamProfileEditor({ team }: { team: TeamOut }) {
         <div className="min-w-0">
           <p className="text-sm font-medium">{team.name}</p>
           {!isLoading && !open && (
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <div className="mt-1 flex flex-wrap items-center gap-2">
               {Object.entries(currentWeights).length > 0 ? (
                 Object.entries(currentWeights).map(([key, weight]) => (
                   <Badge key={key} variant="outline">
@@ -96,9 +96,9 @@ function TeamProfileEditor({ team }: { team: TeamOut }) {
             <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("weightsLabel")}</label>
             <p className="bee-caption mb-2">{t("weightsHint")}</p>
             {Object.keys(weights).length > 0 && (
-              <div className="mb-2 space-y-1.5">
+              <div className="mb-2 space-y-2">
                 {Object.entries(weights).map(([key, weight]) => (
-                  <div key={key} className="bee-inset flex items-center justify-between gap-2 px-2.5 py-1.5">
+                  <div key={key} className="bee-bento flex items-center justify-between gap-2 px-3 py-2">
                     <span className="text-sm">
                       {signalLabels[key as SignalType] ?? key} <span className="text-muted-foreground">×{weight}</span>
                     </span>
@@ -181,7 +181,7 @@ export function TeamProfilesSection({ teams, canManage }: { teams: TeamOut[]; ca
   if (!canManage || teams.length === 0) return null;
 
   return (
-    <section className="bee-bento bee-bento-pad-lg space-y-4">
+    <section className="bee-bento bee-bento-pad space-y-4">
       <div>
         <p className="bee-eyebrow">{t("eyebrow")}</p>
         <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>

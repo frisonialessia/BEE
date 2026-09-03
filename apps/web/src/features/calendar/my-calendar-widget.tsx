@@ -32,7 +32,9 @@ const UPCOMING_LIMIT = 5;
  * to showing the next few meetings overall — still a real personal-
  * calendar preview, just not filtered by a fake "logged in as" identity.
  */
-export function MyCalendarWidget() {
+/** `embedded`: inside an OverviewCard, which renders the title and the
+ *  "Ver todo" link itself — only the list comes from here. */
+export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useTranslations("calendar");
   const locale = useLocale() as Locale;
   const pathname = usePathname();
@@ -51,6 +53,38 @@ export function MyCalendarWidget() {
     return mine.slice(0, UPCOMING_LIMIT);
   }, [meetings, user]);
 
+  const list = isLoading ? (
+    <p className="bee-caption">{t("page.loading")}</p>
+  ) : upcoming.length === 0 ? (
+    <div className="flex h-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-8 text-center">
+      <CalendarDays className="size-6 text-muted-foreground/40" />
+      <p className="bee-caption">{t("widget.empty")}</p>
+    </div>
+  ) : (
+    <ul className="space-y-2">
+      {upcoming.map((m) => {
+        const dotColor = m.color ? `var(--color-${m.color})` : CLIENT_CONTEXT_DOT[m.client_context ?? "new_contact"];
+        return (
+          <li key={m.id} className="bee-bento flex items-center gap-3 p-2">
+            <span className="size-2 shrink-0 rounded-full" style={{ background: dotColor }} />
+            <span className="bee-micro shrink-0 font-mono text-muted-foreground">
+              {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", {
+                weekday: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZone: tz,
+              }).format(new Date(m.starts_at))}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-xs font-medium">{m.title}</span>
+            {m.meeting_url && <Video className="size-3 shrink-0 text-muted-foreground" />}
+          </li>
+        );
+      })}
+    </ul>
+  );
+
+  if (embedded) return list;
+
   return (
     <div className="bee-surface bee-bento-pad space-y-3">
       <div className="flex items-center justify-between gap-2">
@@ -63,35 +97,7 @@ export function MyCalendarWidget() {
         </Link>
       </div>
 
-      {isLoading ? (
-        <p className="bee-caption">{t("page.loading")}</p>
-      ) : upcoming.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border px-4 py-8 text-center">
-          <CalendarDays className="size-6 text-muted-foreground/40" />
-          <p className="bee-caption">{t("widget.empty")}</p>
-        </div>
-      ) : (
-        <ul className="space-y-1.5">
-          {upcoming.map((m) => {
-            const dotColor = m.color ? `var(--color-${m.color})` : CLIENT_CONTEXT_DOT[m.client_context ?? "new_contact"];
-            return (
-              <li key={m.id} className="bee-bento flex items-center gap-2.5 p-2">
-                <span className="size-2 shrink-0 rounded-full" style={{ background: dotColor }} />
-                <span className="bee-micro shrink-0 font-mono text-muted-foreground">
-                  {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", {
-                    weekday: "short",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone: tz,
-                  }).format(new Date(m.starts_at))}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-xs font-medium">{m.title}</span>
-                {m.meeting_url && <Video className="size-3 shrink-0 text-muted-foreground" />}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      {list}
     </div>
   );
 }

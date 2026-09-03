@@ -84,8 +84,8 @@ export function BattlecardView({ card }: { card: Battlecard }) {
             )}
           </p>
           {card.manual_review_required && (
-            <div className="mt-1.5 flex items-start gap-1.5 border border-border bg-background px-2.5 py-1.5 text-xs">
-              <AlertTriangle className="mt-0.5 size-3 shrink-0" />
+            <div className="mt-2 flex items-start gap-2 border border-border bg-background px-3 py-2 text-xs">
+              <AlertTriangle className="mt-1 size-3 shrink-0" />
               <span>{t("manualReviewNotice")}</span>
             </div>
           )}
@@ -94,7 +94,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div className="border border-dashed border-border bg-background p-3">
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+          <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <Building2 className="size-3 stroke-[1.25]" />
             {t("sections.company")}
           </div>
@@ -105,7 +105,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
           )}
         </div>
         <div className="border border-dashed border-border bg-background p-3">
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+          <div className="mb-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
             <User className="size-3 stroke-[1.25]" />
             {t("sections.lead")}
           </div>
@@ -144,7 +144,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
         <p className="mt-2 text-sm leading-relaxed">{strategy.pain_point}</p>
       </div>
 
-      <div className="border border-border bg-primary/40 p-4">
+      <div className="bee-bento bee-outline--blue p-4">
         <h3 className="flex items-center gap-2 bee-card-title">
           <Zap className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-4)" }} />
           {t("sections.closingArgument")}
@@ -174,7 +174,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
         </h3>
         <p className="mt-2 text-sm leading-relaxed">{strategy.timing_window.reason}</p>
         {strategy.timing_window.expires_at && (
-          <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <Calendar className="size-3 stroke-[1.25]" />
             {t("expires", { date: strategy.timing_window.expires_at })}
           </div>
@@ -182,7 +182,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
       </div>
 
       <div className="flex flex-wrap gap-2 pt-1">
-        <span className="inline-flex items-center gap-1.5 border border-border bg-background px-3 py-1.5 text-xs font-medium">
+        <span className="inline-flex items-center gap-2 border border-border bg-background px-3 py-2 text-xs font-medium">
           {strategy.next_best_action === "reach_out" ? (
             <Phone className="size-3 stroke-[1.25]" />
           ) : (
@@ -190,13 +190,13 @@ export function BattlecardView({ card }: { card: Battlecard }) {
           )}
           {String(strategy.next_best_action).replace(/_/g, " ")}
         </span>
-        <span className="inline-flex items-center gap-1.5 border border-border bg-primary px-3 py-1.5 text-xs">
+        <span className="inline-flex items-center gap-2 border border-border bg-primary px-3 py-2 text-xs">
           {String(strategy.channel)}
         </span>
-        <span className="inline-flex items-center gap-1.5 border border-border bg-primary px-3 py-1.5 text-xs">
+        <span className="inline-flex items-center gap-2 border border-border bg-primary px-3 py-2 text-xs">
           {String(strategy.playbook).replace(/_/g, " ")}
         </span>
-        <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="ml-auto inline-flex items-center gap-2 text-xs text-muted-foreground">
           <Bot className="size-3 stroke-[1.25]" />
           {strategy.generator} v{strategy.generator_version}
         </span>

@@ -50,7 +50,7 @@ export function AddCompanyForm() {
 
   return (
     <form onSubmit={handleSubmit} className="bee-bento bee-bento-pad flex flex-wrap items-end gap-3">
-      <div className="min-w-[10rem] flex-1 space-y-1.5">
+      <div className="min-w-[10rem] flex-1 space-y-2">
         <label htmlFor="demoCompanyName" className="bee-caption block">
           {t("companyNameLabel")}
         </label>
@@ -67,7 +67,7 @@ export function AddCompanyForm() {
           placeholder={t("companyNamePlaceholder")}
         />
       </div>
-      <div className="min-w-[10rem] space-y-1.5">
+      <div className="min-w-[10rem] space-y-2">
         <label htmlFor="demoEmployeeRange" className="bee-caption block">
           {t("employeesLabel")}
         </label>

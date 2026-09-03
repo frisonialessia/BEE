@@ -56,7 +56,7 @@ function ProviderRow({ provider }: { provider: ProviderStatus }) {
         <p className="font-mono text-xs tabular-nums text-muted-foreground">
           {provider.tokens_remaining}/{provider.tokens_capacity}
         </p>
-        <div className="mt-1.5 h-1 w-16 overflow-hidden rounded-full bg-muted">
+        <div className="mt-2 h-1 w-16 overflow-hidden rounded-full bg-muted">
           <div
             className="h-full rounded-full bg-[var(--color-primary)] transition-all duration-500"
             style={{ width: `${pct}%` }}
@@ -81,7 +81,7 @@ export function ApiStatusPanel() {
   const snapshot = result?.data;
 
   if (isLoading) {
-    return <Skeleton className="h-full min-h-[200px] rounded-2xl" />;
+    return <Skeleton className="h-full min-h-[200px] rounded-lg" />;
   }
 
   if (isError || !snapshot) {

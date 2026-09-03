@@ -64,13 +64,13 @@ function CompanyOwner({ companyId, ownerUserId }: { companyId: string; ownerUser
   }
 
   return (
-    <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+    <label className="flex items-center gap-2 text-xs text-muted-foreground">
       {t("label")}:
       <select
         value={ownerUserId ?? ""}
         onChange={(e) => handleChange(e.target.value)}
         disabled={updateCompany.isPending}
-        className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-1.5 py-0.5 text-xs outline-none"
+        className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2 py-1 text-xs outline-none"
       >
         <option value="">{t("unassigned")}</option>
         {(users ?? []).map((u) => (
@@ -98,7 +98,7 @@ function CompanyActivityFeed({ companyId }: { companyId: string }) {
       {events.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("empty")}</p>
       ) : (
-        <ul className="space-y-1.5">
+        <ul className="space-y-2">
           {events.map((event) => (
             <li key={event.id} className="bee-caption flex items-center justify-between gap-3">
               <span>{t(event.event_type, { name: event.user_full_name })}</span>
@@ -252,7 +252,7 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
       className="mb-3 space-y-3 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-3"
     >
       <div className="flex items-start gap-3">
-        <div className="flex shrink-0 flex-col items-center gap-1.5">
+        <div className="flex shrink-0 flex-col items-center gap-2">
           {photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- a client-resized data: URI, not an optimizable remote asset
             <img src={photoUrl} alt="" className="size-14 rounded-full object-cover" />
@@ -344,7 +344,7 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
         </select>
         <p className="mt-1 bee-micro">{t("pipelineStageHint")}</p>
         {pipelineStage && (
-          <p className="mt-0.5 bee-micro text-muted-foreground">
+          <p className="mt-1 bee-micro text-muted-foreground">
             {tStage(`stageSubtitles.${pipelineStage}`)}
           </p>
         )}
@@ -412,14 +412,14 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
 
   if (!company) {
     return (
-      <div className="bee-bento bee-bento-pad py-12 text-center">
+      <div className="bee-bento bee-bento-pad py-8 text-center">
         <p className="text-sm text-muted-foreground">{t("notFound")}</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]">
@@ -438,7 +438,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
               {company.country && <span>{company.country}</span>}
               {company.size && <span>{company.size} {t("employeesSuffix")}</span>}
             </div>
-            <div className="mt-1.5">
+            <div className="mt-2">
               <CompanyOwner companyId={companyId} ownerUserId={company.owner_user_id} />
             </div>
           </div>
@@ -458,18 +458,19 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
 
       {company.description && <p className="text-sm text-muted-foreground">{company.description}</p>}
 
-      <div className="bee-kpi-strip !mt-0">
-        <div className="bee-kpi-tile">
-          <p className="bee-kpi-tile__label">{t("kpi.contacts")}</p>
-          <p className="bee-kpi-tile__value">{leads.length}</p>
+      {/* Same centered value-over-label tile every KPI strip in the app uses. */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bee-bento p-4 text-center">
+          <p className="bee-stat__val">{leads.length}</p>
+          <p className="bee-stat__lbl mt-1">{t("kpi.contacts")}</p>
         </div>
-        <div className="bee-kpi-tile">
-          <p className="bee-kpi-tile__label">{t("kpi.opportunities")}</p>
-          <p className="bee-kpi-tile__value">{opportunities.length}</p>
+        <div className="bee-bento p-4 text-center">
+          <p className="bee-stat__val">{opportunities.length}</p>
+          <p className="bee-stat__lbl mt-1">{t("kpi.opportunities")}</p>
         </div>
-        <div className="bee-kpi-tile">
-          <p className="bee-kpi-tile__label">{t("kpi.signals")}</p>
-          <p className="bee-kpi-tile__value">{signals.length}</p>
+        <div className="bee-bento p-4 text-center">
+          <p className="bee-stat__val">{signals.length}</p>
+          <p className="bee-stat__lbl mt-1">{t("kpi.signals")}</p>
         </div>
       </div>
 
@@ -513,13 +514,13 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
                         ].join(" · ")}
                       >
                         <AlertTriangle
-                          className="mt-0.5 size-3.5 shrink-0 text-[var(--color-chart-1)]"
+                          className="mt-1 size-3.5 shrink-0 text-[var(--color-chart-1)]"
                           aria-label={t("contacts.incompleteAria")}
                         />
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {[lead.title, lead.seniority].filter(Boolean).join(" · ") || t("contacts.noTitle")}
                   </p>
                   {lead.email && <p className="mt-1 text-xs text-muted-foreground">{lead.email}</p>}
@@ -580,7 +581,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
                 <span className="min-w-0 truncate text-sm font-medium">
                   {stripOpportunityTitlePrefix(opp.title)}
                 </span>
-                <div className="flex shrink-0 items-center gap-1.5">
+                <div className="flex shrink-0 items-center gap-2">
                   {(opp.opportunity_type ?? "new_logo") !== "new_logo" && (
                     <Badge variant={opportunityTypeVariant(opp.opportunity_type ?? "new_logo")}>
                       {opportunityTypeLabels[opp.opportunity_type ?? "new_logo"]}
@@ -606,7 +607,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
             {signals.map((signal) => (
               <div key={signal.id} className="bee-bento bee-bento-pad">
                 <p className="text-sm font-medium">{signal.title}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {t("signals.score", { score: Math.round(signal.score) })} · {formatDate(signal.detected_at, locale)}
                 </p>
               </div>

@@ -75,7 +75,7 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
           <div className="flex items-center gap-2">
             {lead.is_hot && (
               <span
-                className="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-bold"
+                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-bold"
                 style={{
                   color: "var(--color-chart-2)",
                   borderColor: "var(--color-chart-2)",
@@ -93,10 +93,10 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
               {lead.company_name ?? lead.company_domain}
             </span>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">{lead.company_domain}</p>
+          <p className="text-xs text-muted-foreground mt-1">{lead.company_domain}</p>
         </div>
         <span
-          className="shrink-0 rounded-sm border px-2 py-0.5 text-xs font-medium"
+          className="shrink-0 rounded-sm border px-2 py-1 text-xs font-medium"
           style={{
             color: stage.varColor,
             borderColor: stage.varColor,
@@ -111,7 +111,7 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
 
       <div className="flex flex-wrap gap-1">
         {lead.signal_types_seen.slice(0, 4).map((signalType) => (
-          <span key={signalType} className="text-xs bg-[var(--color-primary)] text-muted-foreground px-2 py-0.5 rounded-md">
+          <span key={signalType} className="text-xs bg-[var(--color-primary)] text-muted-foreground px-2 py-1 rounded-md">
             {signalType.replace(/_/g, " ")}
           </span>
         ))}
@@ -213,7 +213,7 @@ export function DarkFunnelDashboard() {
             { label: t("summaryDecisionStage"), value: summary.decision_stage_count, accent: "var(--color-chart-1)" },
             { label: t("summarySignalsToday"), value: summary.total_signals_today, accent: "var(--color-chart-4)" },
           ].map(({ label, value, accent }) => (
-            <div key={label} className="bee-bento p-3.5 text-center">
+            <div key={label} className="bee-bento p-4 text-center">
               <p className="bee-stat__val" style={{ color: accent }}>{value}</p>
               <p className="bee-stat__lbl mt-1">{label}</p>
             </div>
@@ -287,7 +287,7 @@ export function DarkFunnelDashboard() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bee-bento bee-bento-pad py-12 text-center">
+        <div className="bee-bento bee-bento-pad py-8 text-center">
           <p className="text-sm text-muted-foreground">{t("emptyTitle")}</p>
           <p className="bee-caption mt-1">{t("emptySubtitle")}</p>
         </div>

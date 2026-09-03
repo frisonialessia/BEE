@@ -20,7 +20,18 @@ const STAGE_ICONS: Record<FunnelStage["key"], typeof Radar> = {
 /** Embudo con % del pipeline por etapa — conecta los 4 números sueltos del
  * KPI strip en una sola narrativa: dónde se concentra el pipeline hoy, no
  * solo cuánto hay en cada bucket. Ver lib/pipeline-funnel.ts. */
-export function PipelineFunnel({ opportunities }: { opportunities: Opportunity[] }) {
+export function PipelineFunnel({
+  opportunities,
+  className = "grid grid-cols-2 gap-3 sm:grid-cols-4",
+  compact = false,
+}: {
+  opportunities: Opportunity[];
+  /** Narrow tiles (Resumen's 2×2): sentence-case labels instead of the
+   *  letter-spaced eyebrow, which clipped inside a 3-column box. */
+  compact?: boolean;
+  /** Grid classes for the four tiles — 2×2 inside a narrow Resumen box, one row elsewhere. */
+  className?: string;
+}) {
   const t = useTranslations("dashboardOverview.pipelineFunnel");
   // Reuses crm.board's own stage/status labels — same words a rep already
   // sees on the CRM board itself for "detected"/"ready_to_action"/
@@ -39,13 +50,13 @@ export function PipelineFunnel({ opportunities }: { opportunities: Opportunity[]
   const maxCount = Math.max(...stages.map((s) => s.count), 1);
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className={className}>
       {stages.map((stage) => {
         const Icon = STAGE_ICONS[stage.key];
         return (
-          <div key={stage.key} className="bee-bento space-y-1.5 p-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="bee-eyebrow">{STAGE_LABELS[stage.key]}</p>
+          <div key={stage.key} className="bee-bento flex flex-col justify-between gap-2 p-3">
+            <div className="flex items-start justify-between gap-2">
+              <p className={compact ? "bee-caption line-clamp-2 font-medium" : "bee-eyebrow line-clamp-2"}>{STAGE_LABELS[stage.key]}</p>
               <Icon className="size-3.5 shrink-0 text-muted-foreground stroke-[1.25]" />
             </div>
             <div className="flex items-baseline gap-2">

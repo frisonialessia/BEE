@@ -238,7 +238,7 @@ export function BrandVoicePanel() {
 
       {/* Create profile form */}
       {showCreate && (
-        <div className="bee-inset space-y-4 p-5">
+        <div className="bee-bento space-y-4 p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="bee-eyebrow">{t("createForm.title")}</p>
             <div className="flex gap-1">
@@ -366,7 +366,7 @@ export function BrandVoicePanel() {
       {profile && (
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="bee-bento--primary flex h-9 w-9 items-center justify-center border border-[var(--color-divider)]">
+            <div className="bee-chip--primary flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)]">
               <span className="text-lg">{profile.display_name[0]}</span>
             </div>
             <div>
@@ -377,7 +377,7 @@ export function BrandVoicePanel() {
 
           {/* Tone pills */}
           {profile.tone_descriptors.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {profile.tone_descriptors.map((t) => (
                 <Badge key={t} variant="outline">
                   {t}
@@ -389,8 +389,8 @@ export function BrandVoicePanel() {
           {/* Authority topics */}
           {profile.authority_topics.length > 0 && (
             <div>
-              <p className="bee-caption mb-1.5">{t("authorityTopics")}</p>
-              <div className="flex flex-wrap gap-1.5">
+              <p className="bee-caption mb-2">{t("authorityTopics")}</p>
+              <div className="flex flex-wrap gap-2">
                 {profile.authority_topics.map((topic) => (
                   <Badge key={topic} variant="warning">
                     {topic}
@@ -409,7 +409,7 @@ export function BrandVoicePanel() {
 
       {/* Live voice preview */}
       {profile && (
-        <div className="bee-inset space-y-3 p-5">
+        <div className="bee-bento space-y-3 p-4">
           <p className="bee-eyebrow">{t("preview.title")}</p>
           <p className="bee-caption">{t("preview.hint")}</p>
           <div className="flex flex-wrap gap-2">
@@ -429,11 +429,11 @@ export function BrandVoicePanel() {
           </div>
           {preview && (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="bee-panel space-y-1.5 p-3">
+              <div className="bee-panel space-y-2 p-3">
                 <p className="bee-caption font-medium">{t("preview.genericLabel")}</p>
                 <p className="text-sm text-muted-foreground">{preview.generic_version}</p>
               </div>
-              <div className="bee-panel space-y-1.5 border-l-2 border-[var(--color-chart-4)] p-3">
+              <div className="bee-panel space-y-2 border-l-2 border-[var(--color-chart-4)] p-3">
                 <p className="bee-caption font-medium" style={{ color: "var(--color-chart-4)" }}>
                   {t("preview.brandedLabel")}
                 </p>
@@ -446,7 +446,7 @@ export function BrandVoicePanel() {
 
       {/* Add/edit fragment form */}
       {showAddFragment && profile && (
-        <div className="bee-inset space-y-4 p-5">
+        <div className="bee-bento space-y-4 p-4">
           <p className="bee-eyebrow">
             {editingFragmentId ? t("library.editFormTitle") : t("addFragmentForm.title")}
           </p>
@@ -515,9 +515,9 @@ export function BrandVoicePanel() {
           ) : (
             <div className="space-y-2">
               {fragments.map((fragment) => (
-                <div key={fragment.id} className="bee-inset flex flex-col gap-2 p-3 sm:flex-row sm:items-start sm:justify-between">
+                <div key={fragment.id} className="bee-bento flex flex-col gap-2 p-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline">
                         {FRAGMENT_CATEGORIES.find((c) => c.value === fragment.category)?.label ?? fragment.category}
                       </Badge>
@@ -527,7 +527,7 @@ export function BrandVoicePanel() {
                         </Badge>
                       ))}
                     </div>
-                    <p className="mt-1.5 text-sm leading-relaxed break-words">{fragment.content}</p>
+                    <p className="mt-2 text-sm leading-relaxed break-words">{fragment.content}</p>
                     <p className="bee-caption mt-1">
                       {fragment.performance_score != null
                         ? t("library.scoreLabel", { score: Math.round(fragment.performance_score * 100) })
@@ -565,15 +565,15 @@ export function BrandVoicePanel() {
             {channels.map((ch) => (
               <div
                 key={ch.channel}
-                className={`p-3 text-center ${ch.mock ? "bee-inset" : "bee-bento--warm bee-bento"}`}
+                className={`p-3 text-center bee-bento ${ch.mock ? "" : "bee-outline--warm"}`}
               >
                 <p className="text-sm font-bold">{CHANNEL_ICONS[ch.channel] ?? ch.channel}</p>
-                <p className="bee-caption mt-0.5">{CHANNEL_LABELS[ch.channel] ?? ch.channel}</p>
+                <p className="bee-caption mt-1">{CHANNEL_LABELS[ch.channel] ?? ch.channel}</p>
                 <p className="bee-caption mt-1">
                   {ch.mock ? t("notConnected") : t("active")}
                 </p>
                 {ch.tokens_remaining != null && (
-                  <p className="bee-caption mt-0.5">{t("tokensRemaining", { count: ch.tokens_remaining })}</p>
+                  <p className="bee-caption mt-1">{t("tokensRemaining", { count: ch.tokens_remaining })}</p>
                 )}
               </div>
             ))}

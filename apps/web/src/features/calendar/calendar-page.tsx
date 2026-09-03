@@ -35,13 +35,13 @@ const CLIENT_CONTEXT_VARIANT: Record<MeetingClientContext, "success" | "warning"
   new_contact: "secondary",
 };
 // Same pastel-fill tokens the marketing page's module tiles use
-// (bee-bento--primary/--warm/--violet/--muted) — BEE's own palette, not a
+// (bee-outline--blue/--warm/--violet/--muted) — BEE's own palette, not a
 // calendar-specific color scheme invented on the side.
 const CLIENT_CONTEXT_TONE: Record<MeetingClientContext, string> = {
-  active_client: "bee-bento--primary",
-  hot_lead: "bee-bento--warm",
-  prospect: "bee-bento--violet",
-  new_contact: "bee-bento--muted",
+  active_client: "bee-outline--blue",
+  hot_lead: "bee-outline--warm",
+  prospect: "bee-outline--violet",
+  new_contact: "bee-outline--magenta",
 };
 
 // Hour-grid — business hours only (not a full 24h day) so a week's worth of
@@ -283,18 +283,18 @@ function MiniMonthCalendar({
             new Intl.DateTimeFormat(intlLocale, { month: "long", year: "numeric" }).format(monthCursor),
           )}
         </p>
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           <button
             type="button"
             onClick={() => onMonthChange(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))}
-            className="bee-btn-ghost px-1.5"
+            className="bee-btn-ghost bee-btn--icon"
           >
             <ChevronLeft className="size-3.5" />
           </button>
           <button
             type="button"
             onClick={() => onMonthChange(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))}
-            className="bee-btn-ghost px-1.5"
+            className="bee-btn-ghost bee-btn--icon"
           >
             <ChevronRight className="size-3.5" />
           </button>
@@ -382,7 +382,7 @@ function MonthGridView({
               key={day.toISOString()}
               type="button"
               onClick={() => onSelectDay(day)}
-              className={`min-h-24 border-b border-l border-border p-1.5 text-left align-top transition-colors hover:bg-[var(--color-primary)]/20 ${inMonth ? "" : "bg-muted/30"}`}
+              className={`min-h-24 border-b border-l border-border p-2 text-left align-top transition-colors hover:bg-[var(--color-primary)]/20 ${inMonth ? "" : "bg-muted/30"}`}
             >
               <span
                 className={`inline-flex size-5 items-center justify-center rounded-full text-xs ${
@@ -395,11 +395,11 @@ function MonthGridView({
               >
                 {day.getDate()}
               </span>
-              <div className="mt-1 space-y-0.5">
+              <div className="mt-1 space-y-1">
                 {shown.map((m) => (
                   <p
                     key={m.id}
-                    className={`truncate rounded-[3px] px-1 py-0.5 text-micro font-medium ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
+                    className={`truncate rounded-sm border bg-[var(--color-card)] px-1 py-1 text-micro font-medium ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
                     style={
                       m.color
                         ? { background: `color-mix(in srgb, var(--color-${m.color}) 35%, var(--color-background))` }
@@ -422,7 +422,7 @@ function MonthGridView({
 
 function SidebarProfileCard({ name, role, onQuickAdd }: { name: string; role: string; onQuickAdd: () => void }) {
   return (
-    <div className="bee-surface flex items-center gap-2.5 bee-bento-pad">
+    <div className="bee-surface flex items-center gap-3 bee-bento-pad">
       <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-cta)] text-xs font-bold text-white">
         {initials(name)}
       </span>
@@ -471,7 +471,7 @@ function UpcomingEventCard({
       className="bee-surface block w-full bee-bento-pad text-left transition-colors hover:bg-[var(--color-primary)]/15"
     >
       <p className="bee-eyebrow">{t("sidebar.upcomingEvent")}</p>
-      <div className="mt-1.5 flex items-center gap-2">
+      <div className="mt-2 flex items-center gap-2">
         {meeting.meeting_url ? (
           <Video className="size-4 shrink-0 text-[var(--color-chart-4)]" />
         ) : (
@@ -511,11 +511,11 @@ function RsvpWidget({
 }) {
   const t = useTranslations("calendar");
   return (
-    <div className="bee-surface space-y-2.5 bee-bento-pad">
+    <div className="bee-surface space-y-3 bee-bento-pad">
       <p className="bee-eyebrow">{t("sidebar.rsvpLabel")}</p>
       <p className="text-sm font-medium">{t("sidebar.rsvpQuestion", { title: meeting.title })}</p>
       <p className="bee-micro">{timeLabel(meeting.starts_at, locale, tz)}</p>
-      <div className="flex gap-1.5">
+      <div className="flex gap-2">
         <button
           type="button"
           onClick={() => onRespond("accepted")}
@@ -548,7 +548,7 @@ function TimeBreakdownBars({
   if (grandTotal === 0) return null;
 
   return (
-    <div className="bee-surface bee-bento-pad space-y-2.5">
+    <div className="bee-surface bee-bento-pad space-y-3">
       <p className="bee-eyebrow">{t("sidebar.timeBreakdown")}</p>
       {CLIENT_CONTEXT_ORDER.filter((key) => totals[key] > 0).map((key) => {
         const pct = Math.round((totals[key] / grandTotal) * 100);
@@ -850,7 +850,7 @@ export function CalendarPage() {
 
   return (
     <div>
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="bee-eyebrow">{t("page.eyebrow")}</p>
           <div className="mt-1">
@@ -944,7 +944,7 @@ export function CalendarPage() {
               : setMonthOverride(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))
           }
           aria-label={t("page.prevWeek")}
-          className="bee-btn-ghost px-2"
+          className="bee-btn-ghost bee-btn--icon"
         >
           <ChevronLeft className="size-4" />
         </button>
@@ -956,7 +956,7 @@ export function CalendarPage() {
               : setMonthOverride(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))
           }
           aria-label={t("page.nextWeek")}
-          className="bee-btn-ghost px-2"
+          className="bee-btn-ghost bee-btn--icon"
         >
           <ChevronRight className="size-4" />
         </button>
@@ -1035,7 +1035,7 @@ export function CalendarPage() {
               {GRID_HOURS.map((h) => (
                 <div
                   key={h}
-                  className="absolute inset-x-0 border-t border-border/60 pr-1.5 text-right"
+                  className="absolute inset-x-0 border-t border-border/60 pr-2 text-right"
                   style={{ top: (h - GRID_START_HOUR) * HOUR_HEIGHT }}
                 >
                   <span className="bee-micro relative -top-2 text-muted-foreground">{String(h).padStart(2, "0")}:00</span>
@@ -1074,7 +1074,7 @@ export function CalendarPage() {
                         key={m.id}
                         type="button"
                         onClick={() => setDetail(m)}
-                        className={`bee-bento absolute flex flex-col gap-0.5 overflow-hidden rounded-lg p-1.5 text-left ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
+                        className={`bee-bento absolute flex flex-col gap-1 overflow-hidden rounded-lg p-2 text-left ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
                         style={{
                           top: pos.top,
                           height: pos.height,
@@ -1087,9 +1087,9 @@ export function CalendarPage() {
                       >
                         <p className="bee-micro font-mono">{timeLabel(m.starts_at, locale, tz)}</p>
                         <p className="line-clamp-2 text-xs font-medium leading-snug">{m.title}</p>
-                        <div className="mt-auto flex items-center gap-1.5 text-muted-foreground">
+                        <div className="mt-auto flex items-center gap-2 text-muted-foreground">
                           {m.attendee_user_ids.length > 0 && (
-                            <span className="flex items-center gap-0.5">
+                            <span className="flex items-center gap-1">
                               <Users className="size-3" />
                               <span className="bee-micro">{m.attendee_user_ids.length}</span>
                             </span>
@@ -1123,7 +1123,7 @@ export function CalendarPage() {
                 <p className="bee-caption">
                   {timeLabel(detail.starts_at, locale, tz)} · {detail.duration_minutes} min
                 </p>
-                <div className="flex flex-wrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
                   {detail.client_context && (
                     <Badge variant={CLIENT_CONTEXT_VARIANT[detail.client_context]} className="w-fit">
                       {t(`clientContext.${detail.client_context}`)}
@@ -1148,14 +1148,14 @@ export function CalendarPage() {
                     href={detail.meeting_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex w-fit items-center gap-1.5 text-sm font-medium text-[var(--color-chart-4)] hover:underline"
+                    className="flex w-fit items-center gap-2 text-sm font-medium text-[var(--color-chart-4)] hover:underline"
                   >
                     <Link2 className="size-3.5" />
                     {t("card.joinMeeting")}
                   </a>
                 )}
                 {detail.attendee_user_ids.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-2">
                     {detail.attendee_user_ids.map((uid) => {
                       const u = usersById.get(uid);
                       return (
@@ -1180,7 +1180,7 @@ export function CalendarPage() {
                     type="button"
                     onClick={() => handleComplete(detail)}
                     disabled={completeMeeting.isPending}
-                    className="bee-btn-ghost gap-1.5"
+                    className="bee-btn-ghost gap-2"
                   >
                     <CheckCircle2 className="size-3.5" />
                     {completeMeeting.isPending ? t("detail.completing") : t("detail.markComplete")}
@@ -1311,7 +1311,7 @@ export function CalendarPage() {
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
                 {t("form.attendeesLabel")}
               </label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {(users ?? []).map((u) => {
                   const active = form.attendeeUserIds.includes(u.id);
                   return (
@@ -1329,7 +1329,7 @@ export function CalendarPage() {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("form.colorLabel")}</label>
-              <div className="flex flex-wrap items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, color: "" }))}

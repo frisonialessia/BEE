@@ -45,6 +45,12 @@
         "title": "All signals",
         "total": "{count} total",
         "empty": "No signals yet. They appear automatically once you connect your market sources."
+      },
+      "brief": {
+        "caption": "What needs your attention today"
+      },
+      "critical": {
+        "caption": "Ready to action · last 24h"
       }
     }
   },
@@ -139,7 +145,8 @@
     "sequenceStarted": "Sequence started — first step awaiting your approval in Control",
     "triggering": "Starting…",
     "triggerSequence": "Trigger \"{name}\"",
-    "viewBattlecard": "View battlecard"
+    "viewBattlecard": "View battlecard",
+    "empty": "No critical accounts in the last 24h."
   },
   "decisionFeed": {
     "eyebrow": "DECISION FEED",

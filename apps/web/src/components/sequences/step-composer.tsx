@@ -79,7 +79,7 @@ export function StepComposer({ onAdd }: { onAdd: (step: NewStepInput) => void })
         />
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <div className="flex items-center gap-2">
           <select
             value={useCustom ? "__custom" : condition}

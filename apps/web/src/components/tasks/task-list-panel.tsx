@@ -31,13 +31,13 @@ function TaskRow({
   const t = useTranslations("sharedB.tasks");
   const overdue = isOverdue(task);
   return (
-    <div className="group flex items-start gap-2 rounded-[var(--radius-md)] px-2 py-1.5 hover:bg-[var(--color-primary)]/20">
+    <div className="group flex items-start gap-2 rounded-[var(--radius-md)] px-2 py-2 hover:bg-[var(--color-primary)]/20">
       <Checkbox
         checked={Boolean(task.completed_at)}
         disabled={toggling}
         onCheckedChange={(checked) => onToggle(checked === true)}
         aria-label={t("toggleComplete", { title: task.title })}
-        className="mt-0.5 shrink-0"
+        className="mt-1 shrink-0"
       />
       <div className="min-w-0 flex-1">
         <p className={cn("text-xs", task.completed_at ? "text-muted-foreground line-through" : "text-foreground")}>
@@ -117,7 +117,7 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
       {isLoading ? (
         <p className="text-xs text-muted-foreground">{t("loading")}</p>
       ) : (
-        <div className="space-y-0.5">
+        <div className="space-y-1">
           {open.length === 0 && completed.length === 0 && (
             <p className="py-2 text-xs text-muted-foreground">{t("empty")}</p>
           )}
@@ -135,7 +135,7 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
               <summary className="cursor-pointer bee-micro">
                 {t("completedCount", { count: completed.length })}
               </summary>
-              <div className="mt-1 space-y-0.5">
+              <div className="mt-1 space-y-1">
                 {completed.map((task) => (
                   <TaskRow
                     key={task.id}
@@ -157,19 +157,19 @@ export function TaskListPanel({ opportunityId }: { opportunityId: string }) {
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && submit()}
           placeholder={t("newTaskPlaceholder")}
-          className="min-w-0 flex-1 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+          className="min-w-0 flex-1 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         />
         <input
           type="date"
           value={dueAt}
           onChange={(e) => setDueAt(e.target.value)}
-          className="w-32 shrink-0 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2 py-1.5 text-xs text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+          className="w-32 shrink-0 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2 py-2 text-xs text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
         />
         <button
           type="button"
           onClick={submit}
           disabled={title.trim() === "" || createTask.isPending}
-          className="shrink-0 rounded-[var(--radius-md)] bg-[var(--color-chart-4)] p-1.5 text-background disabled:opacity-50"
+          className="shrink-0 rounded-[var(--radius-md)] bg-[var(--color-chart-4)] p-2 text-background disabled:opacity-50"
           aria-label={t("addTask")}
         >
           <Plus className="size-3.5" />

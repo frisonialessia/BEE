@@ -64,7 +64,7 @@ export function GlobalSearch({ className }: { className?: string }) {
 
   return (
     <div ref={ref} className={cn("relative w-full min-w-0 max-w-sm", className)}>
-      <div className="flex items-center gap-2 rounded-full border border-border bg-[var(--color-card)]/60 px-3 py-1.5">
+      <div className="flex items-center gap-2 rounded-full border border-border bg-[var(--color-card)]/60 px-3 py-2">
         <Search className="size-3.5 shrink-0 text-muted-foreground" />
         <input
           value={query}
@@ -98,7 +98,7 @@ export function GlobalSearch({ className }: { className?: string }) {
                         setOpen(false);
                         setQuery("");
                       }}
-                      className="flex items-center gap-2.5 px-4 py-2.5 transition-colors hover:bg-[var(--color-primary)]/30"
+                      className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--color-primary)]/30"
                     >
                       <Icon className="size-4 shrink-0 text-[var(--color-chart-4)]" />
                       <div className="min-w-0 flex-1">

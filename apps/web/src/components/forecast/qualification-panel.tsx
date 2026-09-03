@@ -81,12 +81,12 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
             <Label
               key={c.key}
               title={t(`meddic.${c.key}.hint`)}
-              className="cursor-pointer items-start rounded-[var(--radius-md)] px-2 py-1.5 text-xs font-normal transition-colors hover:bg-[var(--color-primary)]/25"
+              className="cursor-pointer items-start rounded-[var(--radius-md)] px-2 py-2 text-xs font-normal transition-colors hover:bg-[var(--color-primary)]/25"
             >
               <Checkbox
                 checked={checked}
                 onCheckedChange={() => toggleCriterion(c.key)}
-                className="mt-0.5 shrink-0"
+                className="mt-1 shrink-0"
               />
               <span className={checked ? "text-foreground" : "text-muted-foreground"}>{t(`meddic.${c.key}.label`)}</span>
             </Label>
@@ -103,7 +103,7 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
             onBlur={commitAmount}
             inputMode="decimal"
             placeholder={t("amountPlaceholder")}
-            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
         </label>
         <label className="text-xs text-muted-foreground">
@@ -112,7 +112,7 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
             type="date"
             value={closeDate}
             onChange={(e) => commitCloseDate(e.target.value)}
-            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
           />
         </label>
       </div>

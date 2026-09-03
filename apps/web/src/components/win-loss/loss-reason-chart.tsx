@@ -18,13 +18,13 @@ export function LossReasonChart({ stats }: { stats: LossReasonStat[] }) {
   const lossReasonLabels = getLossReasonLabels(locale);
 
   if (stats.length === 0) {
-    return <p className="py-6 text-center text-xs text-muted-foreground">{t("empty")}</p>;
+    return <p className="py-8 text-center text-xs text-muted-foreground">{t("empty")}</p>;
   }
 
   const maxCount = Math.max(1, ...stats.map((s) => s.count));
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {stats.map((s) => {
         const label = s.reason === "unspecified" ? t("unspecified") : lossReasonLabels[s.reason];
         return (

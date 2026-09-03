@@ -33,7 +33,7 @@ export function InboundSignalsSection() {
   return (
     <section className="bee-surface bee-bento-pad space-y-4">
       <div className="flex items-start gap-2">
-        <Radio className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        <Radio className="mt-1 size-4 shrink-0 text-muted-foreground" />
         <div>
           <p className="text-sm font-semibold">{t("title")}</p>
           <p className="bee-caption mt-1">{t("subtitle")}</p>
@@ -43,13 +43,13 @@ export function InboundSignalsSection() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="min-w-0">
           <p className="bee-micro font-medium">{t("endpointLabel")}</p>
-          <code className="mt-0.5 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">
+          <code className="mt-1 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">
             POST {endpoint}
           </code>
         </div>
         <div className="min-w-0">
           <p className="bee-micro font-medium">{t("headerLabel")}</p>
-          <code className="mt-0.5 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">
+          <code className="mt-1 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">
             X-BEE-Org-Key: &lt;api-key&gt;
           </code>
         </div>
@@ -57,7 +57,7 @@ export function InboundSignalsSection() {
 
       <div className="min-w-0">
         <p className="bee-micro font-medium">{t("exampleLabel")}</p>
-        <pre className="mt-0.5 overflow-x-auto rounded-[var(--radius-md)] bg-[var(--color-primary)]/15 px-3 py-2 text-micro leading-relaxed">
+        <pre className="mt-1 overflow-x-auto rounded-[var(--radius-md)] bg-[var(--color-primary)]/15 px-3 py-2 text-micro leading-relaxed">
           {example}
         </pre>
       </div>

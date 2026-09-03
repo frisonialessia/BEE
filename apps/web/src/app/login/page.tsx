@@ -78,27 +78,27 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-background px-4 py-16">
+    <div className="flex min-h-full items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex justify-center">
+        <div className="mb-4 flex justify-center">
           <Logo />
         </div>
 
-        <div className="bee-bento bee-bento-pad-lg">
+        <div className="bee-bento bee-bento-pad">
           <p className="bee-eyebrow">{t("eyebrow")}</p>
           <h1 className="mt-1 text-lg font-semibold">{t("title")}</h1>
 
           {isSsoCompleting && (
-            <p className="mt-6 text-sm text-muted-foreground" role="status">
+            <p className="mt-4 text-sm text-muted-foreground" role="status">
               {t("ssoSigningIn")}
             </p>
           )}
 
           <form
             onSubmit={handleSubmit}
-            className={isSsoCompleting ? "hidden" : "mt-6 space-y-4"}
+            className={isSsoCompleting ? "hidden" : "mt-4 space-y-4"}
           >
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <label htmlFor="email" className="bee-caption block">
                 {t("emailLabel")}
               </label>
@@ -114,7 +114,7 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label htmlFor="password" className="bee-caption block">
                   {t("passwordLabel")}
@@ -151,7 +151,7 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="bee-caption mt-6 text-center">
+        <p className="bee-caption mt-4 text-center">
           {t("noOrgYet")}{" "}
           <Link href="/register" className="font-medium text-foreground underline underline-offset-4">
             {t("createOne")}

@@ -114,7 +114,7 @@ export function OpportunityDrawer() {
                 value={opportunity.status}
                 onChange={(e) => handleMoveStage(e.target.value as CrmStage)}
                 aria-label={t("moveToStage")}
-                className="rounded-sm border border-border bg-background px-2 py-1.5 text-xs text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+                className="rounded-sm border border-border bg-background px-2 py-2 text-xs text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
               >
                 {CRM_STAGES.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -134,7 +134,7 @@ export function OpportunityDrawer() {
           </div>
         </div>
 
-        <div className="flex-1 space-y-6 overflow-y-auto px-6 py-5">
+        <div className="flex-1 space-y-4 overflow-y-auto px-6 py-4">
           {battlecardResult?.live === false && (
             <Badge variant="warning">{t("demo")}</Badge>
           )}
@@ -171,7 +171,7 @@ export function OpportunityDrawer() {
               ) : disc ? (
                 <div className="flex flex-wrap items-center gap-4">
                   <DiscRadar d={disc.d_score} i={disc.i_score} s={disc.s_score} c={disc.c_score} className="w-full max-w-[240px]" />
-                  <div className="min-w-0 flex-1 space-y-1.5 text-xs">
+                  <div className="min-w-0 flex-1 space-y-2 text-xs">
                     <p>
                       <span className="font-medium text-foreground">{t("disc.dominantStyle")}</span>{" "}
                       <span className="text-muted-foreground">{DISC_LABELS[disc.dominant_style] ?? disc.dominant_style}</span>

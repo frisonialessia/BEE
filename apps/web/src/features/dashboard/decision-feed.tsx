@@ -42,10 +42,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { DecisionCard, DecisionUrgency } from "@/types/extended";
 import { useDashboardBase } from "@/lib/demo/mode";
 
+// Tone lives in the contour, not the fill — only signal cards are colored.
 const URGENCY_TONE: Record<DecisionUrgency, string> = {
-  high: "bee-bento--warm",
-  medium: "bee-bento--violet",
-  low: "bee-bento--muted",
+  high: "bee-outline--warm",
+  medium: "bee-outline--violet",
+  low: "bee-outline--blue",
 };
 
 function Card({ card }: { card: DecisionCard }) {
@@ -77,13 +78,11 @@ function Card({ card }: { card: DecisionCard }) {
   }
 
   return (
-    <div className={`bee-bento bee-bento-pad flex h-full flex-col gap-3 ${URGENCY_TONE[card.urgency]}`}>
-      <div>
-        <div className="flex items-center justify-between gap-2">
-          <span className="bee-eyebrow">{t(`urgency.${card.urgency}`)}</span>
-        </div>
-        <h4 className="mt-1 text-sm font-semibold tracking-tight">{card.headline}</h4>
-        <p className="bee-caption mt-1.5">{card.reasoning}</p>
+    <div className={`bee-bento flex flex-col gap-2 p-3 ${URGENCY_TONE[card.urgency]}`}>
+      <div className="min-w-0">
+        <span className="bee-eyebrow">{t(`urgency.${card.urgency}`)}</span>
+        <h4 className="mt-1 line-clamp-1 text-sm font-semibold tracking-tight">{card.headline}</h4>
+        <p className="bee-caption mt-1 line-clamp-1">{card.reasoning}</p>
       </div>
 
       {card.kind === "opportunity" && (
@@ -135,16 +134,31 @@ function Card({ card }: { card: DecisionCard }) {
   );
 }
 
-export function DecisionFeed() {
+/** `embedded`: rendered inside an OverviewCard (which owns the title), as a
+ *  vertical stack of up to three cards that fills the box. */
+export function DecisionFeed({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useTranslations("dashboardOverview.decisionFeed");
   const { data, isLoading } = useTodayFeed();
   const cards = data?.data.cards ?? [];
 
   if (isLoading) {
     return (
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className={embedded ? "grid gap-2" : "mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3"}>
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-32" />
+          <Skeleton key={i} className={embedded ? "h-20" : "h-32"} />
+        ))}
+      </div>
+    );
+  }
+
+  if (embedded) {
+    if (cards.length === 0) {
+      return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
+    }
+    return (
+      <div className="grid grid-cols-1 content-start gap-2">
+        {cards.slice(0, 3).map((card) => (
+          <Card key={card.id} card={card} />
         ))}
       </div>
     );

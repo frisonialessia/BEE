@@ -100,14 +100,14 @@ export function RevenueSimulatorWidget() {
   const realistic = result?.scenarios.find((s) => s.label === "Realistic");
 
   return (
-    <div className="bee-bento bee-bento--warm bee-bento-pad space-y-4">
+    <div className="bee-bento bee-outline--warm bee-bento-pad space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="bee-card-title flex items-center gap-1.5">
+          <h3 className="bee-card-title flex items-center gap-2">
             <BarChart3 className="size-4 stroke-[1.25]" style={{ color: CHART_PALETTE[3] }} />
             {t("heading")}
           </h3>
-          <p className="bee-caption mt-0.5">
+          <p className="bee-caption mt-1">
             {t("caption")}
           </p>
         </div>
@@ -180,7 +180,7 @@ export function RevenueSimulatorWidget() {
 
       {result && (
         <div className="space-y-4 border-t border-border pt-4">
-          <div className="bee-bento bee-bento--primary bee-bento-pad space-y-2">
+          <div className="bee-bento bee-outline--blue bee-bento-pad space-y-2">
             <div className="flex items-center justify-between">
               <span className="bee-kpi-tile__label">{t("realisticProjection")}</span>
               <span className="bee-kpi">

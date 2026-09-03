@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 
 import { ForecastBarChart } from "@/components/forecast/forecast-bar-chart";
+import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
 import { ScenarioSimulatorPanel } from "@/components/forecast/scenario-simulator-panel";
 import { TrendsChart } from "@/components/forecast/trends-chart";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +45,7 @@ export function ForecastView() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-4">
         <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -71,30 +72,30 @@ export function ForecastView() {
                 <Skeleton className="h-56" />
               </div>
             ) : !withAmount ? (
-              <div className="bee-bento bee-bento-pad py-12 text-center">
+              <div className="bee-bento bee-bento-pad py-8 text-center">
                 <p className="text-sm text-muted-foreground">{t("forecast.emptyState.title")}</p>
                 <p className="bee-caption mt-1">{t("forecast.emptyState.subtitle")}</p>
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {/* Misma tarjeta compacta que Dark Funnel — antes era
                  * MetricCard (ícono + número + línea de ayuda), sin columna
                  * base para móvil. El ícono y el hint de cada KPI se van de
                  * esta fila puntual; el resto de la página no cambia. */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <div className="bee-bento p-3.5 text-center">
+                  <div className="bee-bento p-4 text-center">
                     <p className="bee-stat__val">{formatCurrencyUSD(forecast.pipelineValue, locale)}</p>
                     <p className="bee-stat__lbl mt-1">{t("forecast.kpis.pipeline.label")}</p>
                   </div>
-                  <div className="bee-bento p-3.5 text-center">
+                  <div className="bee-bento p-4 text-center">
                     <p className="bee-stat__val">{formatCurrencyUSD(forecast.weightedForecast, locale)}</p>
                     <p className="bee-stat__lbl mt-1">{t("forecast.kpis.weighted.label")}</p>
                   </div>
-                  <div className="bee-bento p-3.5 text-center">
+                  <div className="bee-bento p-4 text-center">
                     <p className="bee-stat__val">{formatCurrencyUSD(forecast.wonValue, locale)}</p>
                     <p className="bee-stat__lbl mt-1">{t("forecast.kpis.won.label")}</p>
                   </div>
-                  <div className="bee-bento p-3.5 text-center">
+                  <div className="bee-bento p-4 text-center">
                     <p className="bee-stat__val" style={forecast.atRisk.length > 0 ? { color: "var(--color-chart-1)" } : undefined}>
                       {forecast.atRisk.length}
                     </p>
@@ -108,6 +109,10 @@ export function ForecastView() {
                   <ForecastBarChart buckets={forecast.byMonth} />
                 </section>
 
+                {/* Moved here from Resumen — "what if we prospect more" is a
+                    forecasting question, and Resumen is now a summary only. */}
+                <RevenueSimulatorWidget />
+
                 {hasClosedHistory && (
                   <section className="bee-surface bee-bento-pad">
                     <h3 className="bee-card-title">{t("forecast.trend.title")}</h3>
@@ -120,7 +125,7 @@ export function ForecastView() {
                   <section className="bee-surface bee-bento-pad">
                     <h3 className="bee-card-title">{t("forecast.accuracy.title")}</h3>
                     <p className="bee-caption mb-4">{t("forecast.accuracy.caption")}</p>
-                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                       {forecast.scoreBucketStats.map((s) => (
                         <div key={s.bucketStart} className="bee-bento p-3 text-center">
                           <p className="bee-kpi-tile__label">
@@ -145,7 +150,7 @@ export function ForecastView() {
                   {forecast.atRisk.length === 0 ? (
                     <p className="text-sm text-muted-foreground">{t("forecast.atRiskSection.empty")}</p>
                   ) : (
-                    <ul className="space-y-1.5">
+                    <ul className="space-y-2">
                       {forecast.atRisk.map(({ opportunity, reason }) => {
                         const company = opportunity.company_id
                           ? companyById.get(opportunity.company_id)
@@ -155,7 +160,7 @@ export function ForecastView() {
                             <button
                               type="button"
                               onClick={() => openOpportunity(opportunity.id)}
-                              className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-left transition-colors hover:bg-[var(--color-primary)]/30"
+                              className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-md)] px-3 py-3 text-left transition-colors hover:bg-[var(--color-primary)]/30"
                             >
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-medium">
@@ -170,7 +175,7 @@ export function ForecastView() {
                                   })}
                                 </p>
                               </div>
-                              <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-1)]/20 px-2 py-0.5 text-micro font-medium text-[var(--color-chart-1)]">
+                              <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-1)]/20 px-2 py-1 text-micro font-medium text-[var(--color-chart-1)]">
                                 {t(`forecast.atRiskSection.riskLabels.${reason}`)}
                               </span>
                             </button>

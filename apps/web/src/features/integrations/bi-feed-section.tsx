@@ -86,11 +86,11 @@ export function BiFeedSection({ canManage }: { canManage: boolean }) {
         </div>
       )}
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {FEEDS.map((feed) => (
           <div key={feed} className="min-w-0">
             <p className="bee-micro font-medium text-muted-foreground">{t(`feeds.${feed}`)}</p>
-            <code className="mt-0.5 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">
+            <code className="mt-1 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">
               {feedUrl(feed, justCreated?.api_key ?? null)}
             </code>
           </div>
@@ -101,10 +101,10 @@ export function BiFeedSection({ canManage }: { canManage: boolean }) {
       {canManage && (
         <div className="space-y-2 border-t border-[var(--color-divider)] pt-3">
           {isLoading ? null : keys.length > 0 ? (
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {keys.map((k) => (
                 <div key={k.id} className="flex items-center justify-between gap-2 bee-micro">
-                  <span className="inline-flex min-w-0 items-center gap-1.5">
+                  <span className="inline-flex min-w-0 items-center gap-2">
                     <KeyRound className="size-3 shrink-0 text-muted-foreground" />
                     <span className="truncate">
                       {k.name} — {k.key_prefix}…

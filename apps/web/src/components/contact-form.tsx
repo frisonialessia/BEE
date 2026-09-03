@@ -56,7 +56,7 @@ export function ContactForm({ source }: ContactFormProps) {
 
   if (status === "success") {
     return (
-      <div className="flex flex-col items-center gap-3 py-10 text-center" role="status">
+      <div className="flex flex-col items-center gap-3 py-8 text-center" role="status">
         <CheckCircle2 className="size-10 text-[var(--color-chart-4)]" />
         <h2 className="text-lg font-semibold">{t("successTitle")}</h2>
         <p className="bee-caption max-w-xs">{t("successBody")}</p>
@@ -67,7 +67,7 @@ export function ContactForm({ source }: ContactFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <label htmlFor="fullName" className="bee-caption block">
             {t("fullNameLabel")}
           </label>
@@ -80,7 +80,7 @@ export function ContactForm({ source }: ContactFormProps) {
             placeholder={t("fullNamePlaceholder")}
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <label htmlFor="email" className="bee-caption block">
             {t("emailLabel")}
           </label>
@@ -98,7 +98,7 @@ export function ContactForm({ source }: ContactFormProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <label htmlFor="companyName" className="bee-caption block">
             {t("companyLabel")} <span className="text-muted-foreground">{t("optional")}</span>
           </label>
@@ -110,7 +110,7 @@ export function ContactForm({ source }: ContactFormProps) {
             placeholder={t("companyPlaceholder")}
           />
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <label htmlFor="phone" className="bee-caption block">
             {t("phoneLabel")} <span className="text-muted-foreground">{t("optional")}</span>
           </label>
@@ -125,7 +125,7 @@ export function ContactForm({ source }: ContactFormProps) {
         </div>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <label htmlFor="message" className="bee-caption block">
           {t("messageLabel")}
         </label>

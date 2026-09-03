@@ -12,11 +12,11 @@ export function CompetitorBreakdown({ stats }: { stats: CompetitorStat[] }) {
   const t = useTranslations("forecastWinLoss.competitorBreakdown");
 
   if (stats.length === 0) {
-    return <p className="py-6 text-center text-xs text-muted-foreground">{t("empty")}</p>;
+    return <p className="py-8 text-center text-xs text-muted-foreground">{t("empty")}</p>;
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {stats.map((s) => {
         const total = s.wins + s.losses;
         const winPct = total > 0 ? (s.wins / total) * 100 : 0;

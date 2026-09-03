@@ -28,7 +28,7 @@ function GroupRow({ groupKey, leads }: { groupKey: string; leads: Lead[] }) {
       <p className="mb-2 text-xs font-medium text-muted-foreground">
         {t("sameEmail")} <span className="font-mono">{groupKey}</span>
       </p>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {leads.map((l) => (
           <label key={l.id} className="flex items-center gap-2 text-xs">
             <input

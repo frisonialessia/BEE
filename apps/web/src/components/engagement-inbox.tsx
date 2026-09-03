@@ -61,7 +61,7 @@ function EventCard({ event }: { event: EngagementEvent }) {
             {event.author_name ?? event.author_handle ?? t("anonymous")}
           </span>
         </div>
-        <div className="flex flex-shrink-0 items-center gap-1.5">
+        <div className="flex flex-shrink-0 items-center gap-2">
           <Badge variant={SENTIMENT_VARIANT[event.sentiment] ?? "outline"}>
             {t.has(`sentiment.${event.sentiment}`) ? t(`sentiment.${event.sentiment}`) : event.sentiment}
           </Badge>
@@ -85,10 +85,10 @@ function EventCard({ event }: { event: EngagementEvent }) {
       )}
 
       {expanded && event.response_draft && (
-        <div className="bee-inset p-2.5">
+        <div className="bee-bento p-3">
           <p className="whitespace-pre-wrap text-xs">{event.response_draft}</p>
           {event.pending_action_id && (
-            <p className="mt-1.5 text-xs font-medium text-[var(--color-chart-2)]">
+            <p className="mt-2 text-xs font-medium text-[var(--color-chart-2)]">
               {t("waitingApproval")}
             </p>
           )}
@@ -154,15 +154,15 @@ export function EngagementInboxPanel() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
-        <div className="bee-inset p-2">
+        <div className="bee-bento p-2">
           <p className="bee-stat__val">{events.length}</p>
           <p className="bee-stat__lbl">{t("stats.total")}</p>
         </div>
-        <div className="bee-bento bee-bento--warm p-2">
+        <div className="bee-bento bee-outline--warm p-2">
           <p className="bee-stat__val">{actionable.length}</p>
           <p className="bee-stat__lbl">{t("stats.needsApproval")}</p>
         </div>
-        <div className="bee-bento bee-bento--primary p-2">
+        <div className="bee-bento bee-outline--blue p-2">
           <p className="bee-stat__val">
             {events.filter((e) => e.intent === "sales_interest").length}
           </p>
@@ -172,7 +172,7 @@ export function EngagementInboxPanel() {
 
       {/* Submit form */}
       {showSubmit && (
-        <div className="bee-inset space-y-3 p-4">
+        <div className="bee-bento space-y-3 p-4">
           <p className="bee-eyebrow">{t("form.title")}</p>
           <select value={source} onChange={(e) => setSource(e.target.value)} className="bee-input">
             <option value="linkedin">{t("form.sources.linkedin")}</option>

@@ -45,7 +45,7 @@ export function OnboardingTourStep({ onDone }: { onDone: () => void }) {
         {PREVIEW.map(({ icon: Icon, key }) => (
           <li
             key={key}
-            className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-divider)] px-2.5 py-2"
+            className="flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-divider)] px-3 py-2"
           >
             <Icon className="size-3.5 shrink-0 stroke-[1.5] text-[var(--color-chart-4)]" />
             <span className="truncate text-xs font-medium">{t(`preview.${key}` as "preview.signals")}</span>

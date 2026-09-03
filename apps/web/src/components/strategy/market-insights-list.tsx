@@ -27,7 +27,7 @@ export function MarketInsightsList({ insights }: { insights: MarketInsight[] }) 
 
   if (insights.length === 0) {
     return (
-      <div className="bee-bento bee-bento-pad py-12 text-center">
+      <div className="bee-bento bee-bento-pad py-8 text-center">
         <p className="text-sm text-muted-foreground">{t("emptyTitle")}</p>
         <p className="bee-caption mt-1">{t("emptySubtitle")}</p>
       </div>
@@ -35,7 +35,7 @@ export function MarketInsightsList({ insights }: { insights: MarketInsight[] }) 
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {insights.map((insight) => {
         const Icon = INSIGHT_ICONS[insight.insight_type] ?? TrendingUp;
         return (
@@ -61,7 +61,7 @@ export function MarketInsightsList({ insights }: { insights: MarketInsight[] }) 
               </p>
             )}
 
-            <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {insight.industry && <Badge variant="outline">{insight.industry}</Badge>}
               {insight.signal_type && <Badge variant="outline">{insight.signal_type}</Badge>}
               <span>{t("evidenceCount", { count: insight.evidence_count })}</span>

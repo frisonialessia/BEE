@@ -31,7 +31,7 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
 
   return (
     <div>
-      <header className={showHeader ? "mb-6" : "mb-4"}>
+      <header className={showHeader ? "mb-4" : "mb-4"}>
         {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
         <div className={`flex flex-wrap items-start justify-between gap-3 ${showHeader ? "mt-1" : ""}`}>
           {showHeader && (
@@ -40,9 +40,11 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
               <p className="bee-caption mt-1">{t("winLoss.subtitle")}</p>
             </div>
           )}
-          <Badge className="ml-auto" variant={live ? "success" : "warning"}>
-            {live ? t("liveBadge") : t("demoBadge")}
-          </Badge>
+          {showHeader && (
+            <Badge className="ml-auto" variant={live ? "success" : "warning"}>
+              {live ? t("liveBadge") : t("demoBadge")}
+            </Badge>
+          )}
         </div>
       </header>
 
@@ -56,30 +58,30 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
           <Skeleton className="h-56" />
         </div>
       ) : summary.totalClosed === 0 ? (
-        <div className="bee-bento bee-bento-pad py-12 text-center">
+        <div className="bee-bento bee-bento-pad py-8 text-center">
           <p className="text-sm text-muted-foreground">{t("winLoss.emptyState.title")}</p>
           <p className="bee-caption mt-1">{t("winLoss.emptyState.subtitle")}</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Misma tarjeta compacta que Dark Funnel — ver forecast-view.tsx's
            * propio comentario, mismo cambio acá. */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="bee-bento p-3.5 text-center">
+            <div className="bee-bento p-4 text-center">
               <p className="bee-stat__val">
                 {summary.winRate !== null ? `${Math.round(summary.winRate * 100)}%` : "—"}
               </p>
               <p className="bee-stat__lbl mt-1">{t("winLoss.kpis.winRate.label")}</p>
             </div>
-            <div className="bee-bento p-3.5 text-center">
+            <div className="bee-bento p-4 text-center">
               <p className="bee-stat__val">{formatCurrencyUSD(summary.wonValue, locale)}</p>
               <p className="bee-stat__lbl mt-1">{t("winLoss.kpis.wonValue.label")}</p>
             </div>
-            <div className="bee-bento p-3.5 text-center">
+            <div className="bee-bento p-4 text-center">
               <p className="bee-stat__val">{formatCurrencyUSD(summary.lostValue, locale)}</p>
               <p className="bee-stat__lbl mt-1">{t("winLoss.kpis.lostValue.label")}</p>
             </div>
-            <div className="bee-bento p-3.5 text-center">
+            <div className="bee-bento p-4 text-center">
               <p className="bee-stat__val">
                 {summary.avgDaysToCloseWon !== null ? `${Math.round(summary.avgDaysToCloseWon)}d` : "—"}
               </p>

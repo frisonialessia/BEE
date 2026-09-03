@@ -57,7 +57,7 @@ function ChannelStatusBadges() {
   if (statuses.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-2">
       {statuses.map((s) => (
         <Badge key={s.channel} variant={s.mock ? "outline" : "success"} className="text-micro">
           {s.channel}: {s.mock ? t("mock") : t("connected")}
@@ -201,7 +201,7 @@ function SequenceViewer({ sequenceId, onBack }: { sequenceId: string; onBack: ()
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <div>
               <h3 className="text-sm font-semibold">{seq.name}</h3>
-              {seq.description && <p className="bee-caption mt-0.5">{seq.description}</p>}
+              {seq.description && <p className="bee-caption mt-1">{seq.description}</p>}
             </div>
             <Badge variant={seq.status === "active" ? "success" : "outline"}>{seq.status}</Badge>
           </div>
@@ -235,13 +235,13 @@ function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onN
           <Skeleton className="h-16" />
         </div>
       ) : sequences.length === 0 ? (
-        <div className="bee-bento bee-bento-pad py-12 text-center">
+        <div className="bee-bento bee-bento-pad py-8 text-center">
           <Zap className="mx-auto mb-2 size-5 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
           <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {sequences.map((seq) => (
             <button
               key={seq.id}

@@ -143,7 +143,7 @@ export function QuotasSection({
   }
 
   return (
-    <section className="bee-bento bee-bento-pad-lg space-y-4">
+    <section className="bee-bento bee-bento-pad space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <p className="bee-eyebrow">{t("eyebrow")}</p>
@@ -163,7 +163,7 @@ export function QuotasSection({
       ) : quotas.length === 0 ? (
         <p className="bee-caption">{canManage ? t("emptyManage") : t("emptyView")}</p>
       ) : (
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {quotas.map((q) => {
             const owner = q.user_id ? userById.get(q.user_id)?.full_name : teamById.get(q.team_id ?? "")?.name;
             const actual = actualFor(q);

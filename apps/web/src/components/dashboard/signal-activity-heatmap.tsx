@@ -73,11 +73,11 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
               t("noActivity")
             )}
           </span>
-          <span className="flex items-center gap-1.5">
+          <span className="flex items-center gap-2">
             {t("less")}
-            <span className="flex gap-0.5">
+            <span className="flex gap-1">
               {[0.1, 0.35, 0.6, 0.85, 1].map((o) => (
-                <span key={o} className="size-2.5 rounded-[2px]" style={{ background: "var(--color-chart-4)", opacity: o }} />
+                <span key={o} className="size-2.5 rounded-sm" style={{ background: "var(--color-chart-4)", opacity: o }} />
               ))}
             </span>
             {t("more")}

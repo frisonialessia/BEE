@@ -171,12 +171,12 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
             <p className="bee-eyebrow">{t("eyebrow")}</p>
             <h2 className="mt-1 text-lg font-semibold tracking-tight">{t("heading")}</h2>
           </div>
-          <button type="button" onClick={onClose} className="bee-btn-ghost" aria-label={t("closeButtonAria")}>
+          <button type="button" onClick={onClose} className="bee-btn-ghost bee-btn--icon" aria-label={t("closeButtonAria")}>
             <X className="size-4" />
           </button>
         </div>
 
-        <div className="space-y-5 overflow-y-auto overscroll-contain px-6 py-5">
+        <div className="space-y-4 overflow-y-auto overscroll-contain px-6 py-4">
           <section className="bee-bento bee-bento-pad space-y-2">
             <p className="text-xs font-semibold">{t("step1.title")}</p>
             <p className="bee-caption">
@@ -224,7 +224,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
               </p>
             )}
             {parseError && (
-              <p className="flex items-center gap-1.5 text-micro text-[var(--color-chart-2)]">
+              <p className="flex items-center gap-2 text-micro text-[var(--color-chart-2)]">
                 <AlertCircle className="size-3.5 shrink-0" />
                 {parseError}
               </p>
@@ -238,19 +238,19 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
                 <table className="w-full text-micro">
                   <thead className="bg-[var(--color-muted)]/40 text-left text-muted-foreground">
                     <tr>
-                      <th className="px-2 py-1.5 font-medium">{t("step3.headers.name")}</th>
-                      <th className="px-2 py-1.5 font-medium">{t("step3.headers.email")}</th>
-                      <th className="px-2 py-1.5 font-medium">{t("step3.headers.company")}</th>
-                      <th className="px-2 py-1.5 font-medium"></th>
+                      <th className="px-2 py-2 font-medium">{t("step3.headers.name")}</th>
+                      <th className="px-2 py-2 font-medium">{t("step3.headers.email")}</th>
+                      <th className="px-2 py-2 font-medium">{t("step3.headers.company")}</th>
+                      <th className="px-2 py-2 font-medium"></th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.slice(0, 8).map((row, i) => (
                       <tr key={i} className="border-t border-border">
-                        <td className="px-2 py-1.5">{row.full_name || "—"}</td>
-                        <td className="px-2 py-1.5">{row.email || "—"}</td>
-                        <td className="px-2 py-1.5">{row.company_name || "—"}</td>
-                        <td className="px-2 py-1.5">
+                        <td className="px-2 py-2">{row.full_name || "—"}</td>
+                        <td className="px-2 py-2">{row.email || "—"}</td>
+                        <td className="px-2 py-2">{row.company_name || "—"}</td>
+                        <td className="px-2 py-2">
                           {isImportable(row) ? (
                             <CheckCircle2 className="size-3.5 text-[var(--success)]" />
                           ) : (
@@ -269,7 +269,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
           )}
 
           {result && (
-            <section className="bee-bento bee-bento-pad space-y-1.5">
+            <section className="bee-bento bee-bento-pad space-y-2">
               <p className="text-xs font-semibold">{t("result.title")}</p>
               <p className="bee-micro">
                 {t("result.newLeads", { count: result.leads_created })} · {t("result.matchedLeads", { count: result.leads_matched })} · {t("result.newCompanies", { count: result.companies_created })}
@@ -277,7 +277,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
                 {result.skipped > 0 && ` · ${t("result.skippedRows", { count: result.skipped })}`}
               </p>
               {result.rows.some((r) => r.status === "error") && (
-                <ul className="mt-1 space-y-0.5 text-micro text-[var(--color-chart-2)]">
+                <ul className="mt-1 space-y-1 text-micro text-[var(--color-chart-2)]">
                   {result.rows
                     .filter((r) => r.status === "error")
                     .slice(0, 10)
@@ -292,7 +292,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
           )}
 
           {importMutation.isError && (
-            <p className="flex items-center gap-1.5 text-micro text-[var(--color-chart-2)]">
+            <p className="flex items-center gap-2 text-micro text-[var(--color-chart-2)]">
               <AlertCircle className="size-3.5 shrink-0" />
               {t("importError")}
             </p>

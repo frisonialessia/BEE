@@ -217,7 +217,7 @@ export function CommandPalette() {
         aria-label={t("dialogAria")}
         className="bee-glass fixed left-1/2 top-24 z-[60] w-[min(560px,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-[var(--radius-lg)]"
       >
-        <div className="flex items-center gap-2.5 border-b border-border px-4 py-3">
+        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
           <Search className="size-4 shrink-0 text-muted-foreground" />
           <input
             ref={inputRef}
@@ -230,17 +230,17 @@ export function CommandPalette() {
           {brainSearching && debouncedQuery.trim().length >= 3 && (
             <Sparkles className="size-3.5 shrink-0 animate-pulse text-[var(--color-chart-4)]" aria-hidden />
           )}
-          <kbd className="shrink-0 rounded-[var(--radius-sm)] border border-border px-1.5 py-0.5 bee-micro">
+          <kbd className="shrink-0 rounded-[var(--radius-sm)] border border-border px-2 py-1 bee-micro">
             Esc
           </kbd>
         </div>
 
         <div ref={listRef} className="max-h-[60vh] overflow-y-auto py-2">
           {entries.length === 0 ? (
-            <p className="px-4 py-6 text-center text-xs text-muted-foreground">{t("noResults")}</p>
+            <p className="px-4 py-8 text-center text-xs text-muted-foreground">{t("noResults")}</p>
           ) : (
             [...groups.entries()].map(([groupLabel, items]) => (
-              <div key={groupLabel} className="mb-1.5 last:mb-0">
+              <div key={groupLabel} className="mb-2 last:mb-0">
                 <p className="px-4 py-1 text-micro font-semibold uppercase tracking-wide text-muted-foreground/70">
                   {groupLabel}
                 </p>
@@ -253,7 +253,7 @@ export function CommandPalette() {
                       type="button"
                       onMouseEnter={() => setActiveIndex(index)}
                       onClick={() => activate(entry)}
-                      className={`flex w-full items-center gap-2.5 px-4 py-2 text-left transition-colors ${
+                      className={`flex w-full items-center gap-3 px-4 py-2 text-left transition-colors ${
                         active ? "bg-[var(--color-primary)]/40" : "hover:bg-[var(--color-primary)]/20"
                       }`}
                     >

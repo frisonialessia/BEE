@@ -15,7 +15,7 @@ export default function ProbarCompanyDetailPage() {
     <div className="space-y-4">
       <Link
         href="/probar/companies"
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-3.5" />
         {t("backToCompanies")}

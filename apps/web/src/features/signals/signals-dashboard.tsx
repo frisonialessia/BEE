@@ -32,7 +32,7 @@ export function SignalsDashboard() {
 
   return (
     <div>
-      <header className="mb-6">
+      <header className="mb-4">
         <p className="bee-eyebrow">{t("eyebrow")}</p>
         <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -67,7 +67,7 @@ export function SignalsDashboard() {
             ) : isError ? (
               <p className="text-sm text-destructive">{t("loadError")}</p>
             ) : signals.length === 0 ? (
-              <div className="bee-bento bee-bento-pad py-12 text-center">
+              <div className="bee-bento bee-bento-pad py-8 text-center">
                 <p className="text-sm text-muted-foreground">{t("emptyTitle")}</p>
                 <p className="bee-caption mt-2">{t("emptySubtitle")}</p>
               </div>
@@ -86,8 +86,8 @@ export function SignalsDashboard() {
                  * una tarjeta angosta de scroll horizontal que apilado a lo
                  * ancho de la pantalla. */}
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                  {pagination.pageItems.map((signal, i) => (
-                    <SignalCard key={signal.id} signal={signal} toneIndex={i} />
+                  {pagination.pageItems.map((signal) => (
+                    <SignalCard key={signal.id} signal={signal} />
                   ))}
                 </div>
 
