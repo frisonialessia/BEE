@@ -117,6 +117,10 @@ export const queryKeys = {
     list: () => [...queryKeys.outboundWebhooks.all, "list"] as const,
     eventTypes: () => [...queryKeys.outboundWebhooks.all, "event-types"] as const,
   },
+  orgApiKeys: {
+    all: ["org-api-keys"] as const,
+    list: () => [...queryKeys.orgApiKeys.all, "list"] as const,
+  },
   sequences: {
     all: ["dynamic-sequences"] as const,
     list: () => [...queryKeys.sequences.all, "list"] as const,

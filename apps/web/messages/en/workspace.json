@@ -254,6 +254,26 @@
     "automation": {
       "hint": "n8n, Zapier, Make, or your own system connect here — create an outbound webhook and point its \"Webhook\" node (or equivalent trigger) at the URL we give you. No shared credentials involved: every event arrives signed with X-BEE-Signature so you can verify it actually came from BEE."
     },
+    "biFeed": {
+      "title": "Power BI, Tableau, Looker Studio…",
+      "subtitle": "Generate an API key and paste it into your BI tool's \"Web\" connector — three read-only, paginated feeds, ready to model as related tables (companies, leads, opportunities).",
+      "feeds": {
+        "companies": "Companies",
+        "leads": "Leads",
+        "opportunities": "Opportunities"
+      },
+      "noKeyYetHint": "Generate an API key below to fill in ?org_key=… — without it, your BI tool won't know which organization to pull data from.",
+      "keyNamePlaceholder": "Key name (e.g. \"Power BI production\")",
+      "generateKey": "Generate key",
+      "generating": "Generating…",
+      "newKey": "+ New API key",
+      "revokeAria": "Revoke this API key",
+      "secretReveal": {
+        "title": "Save this key now — it won't be shown again.",
+        "help": "Paste it into your BI tool's Web connector as an ?org_key= URL parameter, or as an X-BEE-Org-Key header if the tool supports one.",
+        "confirm": "I've saved it"
+      }
+    },
     "genericConnectedCopy": "{label} connected as {account}.",
     "genericDisconnectedCopy": "Connect your {label} account.",
     "gmail": {

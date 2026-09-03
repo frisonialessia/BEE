@@ -15,6 +15,7 @@ from app.api.v1.endpoints import (
     audit,
     auth,
     autopilot,
+    bi_feed,
     brand,
     companies,
     contact,
@@ -77,6 +78,7 @@ api_router.include_router(priority.router)
 api_router.include_router(insights.router)
 api_router.include_router(feedback.router)
 api_router.include_router(analytics.router)
+api_router.include_router(bi_feed.router)
 api_router.include_router(brand.router)
 api_router.include_router(engagement.router)
 api_router.include_router(sequences.router)

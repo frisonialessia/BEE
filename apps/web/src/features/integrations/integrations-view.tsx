@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BiFeedSection } from "@/features/integrations/bi-feed-section";
 import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
 import { useIsDemoMode } from "@/lib/demo/mode";
 import { useAuth } from "@/providers/auth-provider";
@@ -376,6 +377,15 @@ export function IntegrationsView() {
             <p className="bee-eyebrow">{t("categories.automation")}</p>
             <p className="bee-caption">{t("automation.hint")}</p>
             <OutboundWebhooksSection canManage={canManage} />
+          </section>
+
+          {/* Reportes y BI — same reasoning as Automatización right above:
+             Power BI/Tableau/Looker Studio don't do OAuth either, they take
+             a URL + a key pasted into their own "Web" data source dialog.
+             See BiFeedSection's own docstring. */}
+          <section className="space-y-3">
+            <p className="bee-eyebrow">{t("categories.bi")}</p>
+            <BiFeedSection canManage={canManage} />
           </section>
 
           <section className="bee-surface bee-bento-pad">

@@ -151,6 +151,28 @@ def get_organization_from_webhook_key(
     return _resolve_org_api_key(x_bee_org_key or org_key, session)
 
 
+def require_organization_from_webhook_key(
+    organization_id: uuid.UUID | None = Depends(get_organization_from_webhook_key),
+) -> uuid.UUID:
+    """Require a resolvable tenant identity from an org API key presented as
+    either the ``X-BEE-Org-Key`` header or an ``?org_key=`` query parameter
+    — see :func:`get_organization_from_webhook_key`.
+
+    For endpoints meant to be pasted as a bare URL into a third-party tool
+    that won't set custom headers (Power BI's "Web" data source, a plain
+    ``curl``) — see ``app.api.v1.endpoints.bi_feed``. Unlike
+    :func:`require_organization_id`, there is no JWT fallback: a BI feed
+    URL is handed to a tool, not typed in by a logged-in user, so the only
+    identity it can ever carry is the key baked into the URL itself.
+    """
+    if organization_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid API key (X-BEE-Org-Key header or ?org_key= query parameter).",
+        )
+    return organization_id
+
+
 def get_organization_id(
     current_user: User | None = Depends(get_current_user_optional),
     api_key_org_id: uuid.UUID | None = Depends(get_organization_from_api_key),
