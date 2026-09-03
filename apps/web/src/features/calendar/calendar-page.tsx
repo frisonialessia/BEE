@@ -34,15 +34,24 @@ const CLIENT_CONTEXT_VARIANT: Record<MeetingClientContext, "success" | "warning"
   prospect: "outline",
   new_contact: "secondary",
 };
-// Same pastel-fill tokens the marketing page's module tiles use
-// (bee-outline--blue/--warm/--violet/--muted) — BEE's own palette, not a
-// calendar-specific color scheme invented on the side.
-const CLIENT_CONTEXT_TONE: Record<MeetingClientContext, string> = {
-  active_client: "bee-outline--blue",
-  hot_lead: "bee-outline--warm",
-  prospect: "bee-outline--violet",
-  new_contact: "bee-outline--magenta",
+// Calendar events are the one kind of box besides signal cards that carries a
+// BEE fill: a personal color (Meeting.color) or, by default, the hue of the
+// client context. Same 35% mix toward the background for both, so a
+// default-colored event and a hand-colored one read as the same family.
+const CLIENT_CONTEXT_HUE: Record<MeetingClientContext, string> = {
+  active_client: "var(--color-chart-4)",
+  hot_lead: "var(--color-chart-1)",
+  prospect: "var(--color-chart-6)",
+  new_contact: "var(--color-chart-5)",
 };
+
+function eventFill(m: { color?: string | null; client_context?: MeetingClientContext | null }): React.CSSProperties {
+  const hue = m.color ? `var(--color-${m.color})` : CLIENT_CONTEXT_HUE[m.client_context ?? "new_contact"];
+  return {
+    background: `color-mix(in srgb, ${hue} 35%, var(--color-background))`,
+    borderColor: `color-mix(in srgb, ${hue} 60%, var(--bee-card-border))`,
+  };
+}
 
 // Hour-grid — business hours only (not a full 24h day) so a week's worth of
 // meetings reads at a glance without scrolling past mostly-empty rows.
@@ -399,12 +408,8 @@ function MonthGridView({
                 {shown.map((m) => (
                   <p
                     key={m.id}
-                    className={`truncate rounded-sm border bg-[var(--color-card)] px-1 py-1 text-micro font-medium ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
-                    style={
-                      m.color
-                        ? { background: `color-mix(in srgb, var(--color-${m.color}) 35%, var(--color-background))` }
-                        : undefined
-                    }
+                    className="truncate rounded-md border px-2 py-1 text-xs font-medium"
+                    style={eventFill(m)}
                   >
                     {m.title}
                   </p>
@@ -556,7 +561,7 @@ function TimeBreakdownBars({
           <div key={key} className="space-y-1">
             <div className="flex items-center justify-between">
               <span className="bee-micro">{t(`clientContext.${key}`)}</span>
-              <span className="bee-micro font-mono">{pct}%</span>
+              <span className="bee-micro">{pct}%</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-[var(--color-card)]">
               <div
@@ -709,7 +714,7 @@ export function CalendarPage() {
 
   // Minutes of this week's meetings by client_context — the sidebar's
   // "time breakdown" bars, same categories/colors the hour grid's blocks
-  // already use (see CLIENT_CONTEXT_TONE), not a calendar-specific
+  // already use (see CLIENT_CONTEXT_HUE), not a calendar-specific
   // taxonomy invented on the side.
   const timeBreakdown = useMemo(() => {
     const totals: Record<MeetingClientContext, number> = {
@@ -988,7 +993,7 @@ export function CalendarPage() {
             a stale/drifting value, so there's no "right" SSR answer to
             match; rendering nothing until mount is what actually avoids
             the hydration mismatch, not just hides it. */}
-        <span className="bee-caption ml-auto font-mono text-muted-foreground">
+        <span className="bee-caption ml-auto text-muted-foreground">
           {mounted ? tzOffsetLabel(tz) : null}
         </span>
       </div>
@@ -1074,18 +1079,16 @@ export function CalendarPage() {
                         key={m.id}
                         type="button"
                         onClick={() => setDetail(m)}
-                        className={`bee-bento absolute flex flex-col gap-1 overflow-hidden rounded-lg p-2 text-left ${m.color ? "" : CLIENT_CONTEXT_TONE[m.client_context ?? "new_contact"]}`}
+                        className="absolute flex flex-col gap-1 overflow-hidden rounded-md border p-2 text-left"
                         style={{
                           top: pos.top,
                           height: pos.height,
                           left: `calc(${(column / columns) * 100}% + 2px)`,
                           width: `calc(${100 / columns}% - 4px)`,
-                          ...(m.color
-                            ? { background: `color-mix(in srgb, var(--color-${m.color}) 35%, var(--color-background))` }
-                            : {}),
+                          ...eventFill(m),
                         }}
                       >
-                        <p className="bee-micro font-mono">{timeLabel(m.starts_at, locale, tz)}</p>
+                        <p className="text-xs text-muted-foreground">{timeLabel(m.starts_at, locale, tz)}</p>
                         <p className="line-clamp-2 text-xs font-medium leading-snug">{m.title}</p>
                         <div className="mt-auto flex items-center gap-2 text-muted-foreground">
                           {m.attendee_user_ids.length > 0 && (
