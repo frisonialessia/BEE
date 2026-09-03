@@ -18,6 +18,7 @@ import {
 } from "@/lib/visualization/honeycomb-hexbin";
 import { cn } from "@/lib/utils";
 import type { HotLeadScore } from "@/types/extended";
+import { useDashboardBase } from "@/lib/demo/mode";
 
 const STAGE_KEYS = ["awareness", "consideration", "decision", "ready_to_buy"] as const;
 
@@ -105,6 +106,7 @@ export function SignalHexMap({
   maxLeads = 200,
 }: SignalHexMapProps) {
   const t = useTranslations("shared.signalHexMap");
+  const base = useDashboardBase();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const hoverStrengthRef = useRef(0);
@@ -319,7 +321,7 @@ export function SignalHexMap({
         </div>
         <div className="flex flex-col items-end gap-2">
           <Link
-            href="/dashboard/dark-funnel"
+            href={`${base}/dark-funnel`}
             className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
           >
             {t("viewMore")}

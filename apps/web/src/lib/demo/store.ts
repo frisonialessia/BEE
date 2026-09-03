@@ -92,7 +92,7 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * a returning visitor on an older snapshot has every opportunity's
  * `assigned_to_user_id` still `null`, which reads as "no one on the team
  * has ever won a deal" instead of the sandbox just never having stamped it. */
-const SEED_VERSION = "6";
+const SEED_VERSION = "7";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Which language the currently-stored seed was written in — separate from
@@ -358,7 +358,11 @@ export function demoCreateOpportunity(input: ManualOpportunityInput): Opportunit
 /** Wipes this visitor's local edits and restores the original seed data. */
 export function resetDemoData(): void {
   const locale = getDemoLocale();
-  save(structuredClone(getSampleOpportunities(locale)));
+  // Through seedOpportunitiesWithReps, not getSampleOpportunities directly:
+  // the reseed on version/locale change used to write the raw sample rows,
+  // so no opportunity ever carried assigned_to_user_id and the Ranking and
+  // quota pace stayed empty in the sandbox for every visitor.
+  save(structuredClone(seedOpportunitiesWithReps(locale)));
   saveJSON(SIGNALS_KEY, structuredClone(getSampleSignals(locale)));
   saveJSON(BATTLECARDS_KEY, []);
   saveJSON(ARTIFACTS_KEY, []);

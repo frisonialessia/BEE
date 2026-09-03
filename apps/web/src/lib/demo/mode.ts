@@ -36,3 +36,10 @@ export function isDemoMode(): boolean {
 export function useIsDemoMode(): boolean {
   return (usePathname() ?? "").startsWith("/probar");
 }
+
+/** Base path for in-app links rendered by components shared between the real
+ *  dashboard and the sandbox — `/probar` there, `/dashboard` everywhere else —
+ *  so a "Ver más" inside the sandbox never bounces a visitor to the login. */
+export function useDashboardBase(): "/probar" | "/dashboard" {
+  return useIsDemoMode() ? "/probar" : "/dashboard";
+}

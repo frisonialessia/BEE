@@ -17,6 +17,7 @@ import { useQuotas } from "@/hooks/queries/use-quotas";
 import { useOverdueTasks } from "@/hooks/queries/use-tasks";
 import { useUsers } from "@/hooks/queries/use-users";
 import { computeDailyBrief, type BriefTone } from "@/lib/daily-brief";
+import { useDashboardBase } from "@/lib/demo/mode";
 
 const TONE_ICON: Record<BriefTone, LucideIcon> = {
   hot: Flame,
@@ -37,6 +38,7 @@ const TONE_COLOR: Record<BriefTone, string> = {
 export function DailyBrief() {
   const t = useTranslations("dashboardOverview.dailyBrief");
   const tItems = useTranslations("dashboardOverview.dailyBrief.items");
+  const base = useDashboardBase();
   const { data: companiesResult, isLoading: companiesLoading } = useCompanies(300);
   const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 300);
   const { data: leadsResult, isLoading: leadsLoading } = useLeads(300);
@@ -99,13 +101,13 @@ export function DailyBrief() {
           <p className="text-xs text-muted-foreground">{t("empty")}</p>
         </div>
       ) : (
-        <div className="flex gap-2.5 overflow-x-auto pb-1">
+        <div className="flex flex-wrap gap-2.5">
           {items.map((item) => {
             const Icon = TONE_ICON[item.tone];
             return (
               <Link
                 key={item.id}
-                href={item.href}
+                href={item.href.replace(/^\/dashboard/, base)}
                 className="bee-glass bee-glass--hover flex w-64 shrink-0 items-start gap-2.5 rounded-[var(--radius-lg)] px-4 py-3"
               >
                 <Icon className="mt-0.5 size-4 shrink-0" style={{ color: TONE_COLOR[item.tone] }} />

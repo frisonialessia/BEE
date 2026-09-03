@@ -75,6 +75,7 @@ import type { FetchResult } from "@/types/api";
 import type { Opportunity, OpportunityStatus } from "@/types/domain";
 import { getSampleArtifacts, getSampleHotLeads } from "@/lib/sample-data";
 import { getDemoLocale } from "@/lib/demo/locale";
+import { demoDismissFromFeed, demoRevenueSimulation, demoTodayFeed } from "@/lib/demo/overview";
 
 /**
  * Thin client for the BEE API.
@@ -208,11 +209,11 @@ export async function rejectAction(actionId: string, reason?: string): Promise<P
 // ── PriorityFeedService (Bandeja de Decisiones) ──────────────────────────────
 
 /** Today's ranked decisions — fuses DarkFunnel/CyclePredictor/AnomalyDetector
- *  into a small "what to act on today" feed. No demo-mode fallback: this
- *  endpoint only exists on the real dashboard (see DashboardOverview), not
- *  the /probar sandbox — same scope as PendingAction's other read-only
- *  siblings that live only in the authenticated app. */
+ *  into a small "what to act on today" feed. The sandbox derives the same
+ *  shape locally from its own dataset (lib/demo/overview.ts) so /probar's
+ *  Resumen is the real Resumen, not a trimmed copy. */
 export async function getTodayFeed(): Promise<FetchResult<TodayFeedOut>> {
+  if (isDemoMode()) return { data: demoTodayFeed(), live: false };
   try {
     const res = await beeFetch(`${API_URL}/api/v1/priority/today`, { cache: "no-store" });
     if (!res.ok) throw new Error(`API responded ${res.status}`);
@@ -224,6 +225,10 @@ export async function getTodayFeed(): Promise<FetchResult<TodayFeedOut>> {
 
 /** "Descartar" — hide one opportunity from today's feed for a few days. */
 export async function dismissFromTodayFeed(opportunityId: string): Promise<void> {
+  if (isDemoMode()) {
+    demoDismissFromFeed(opportunityId);
+    return;
+  }
   const res = await beeFetch(`${API_URL}/api/v1/priority/today/${opportunityId}/dismiss`, {
     method: "POST",
   });
@@ -274,6 +279,7 @@ export async function runRevenueSimulation(params: {
   industry?: string;
   increase_factor?: number;
 }): Promise<FetchResult<RevenueSimulation>> {
+  if (isDemoMode()) return { data: demoRevenueSimulation(params), live: false };
   try {
     const query = new URLSearchParams({ signal_type: params.signal_type });
     if (params.industry) query.set("industry", params.industry);

@@ -36,7 +36,17 @@ import { computeTodayImpact } from "@/lib/today-impact";
  * rail nav — so this page stays a focused overview rather than a
  * kitchen-sink dashboard.
  */
-export function DashboardOverview() {
+export function DashboardOverview({
+  headerAction,
+  statusLabel,
+}: {
+  /** Extra control rendered next to the status badge — the sandbox puts its
+   *  "Simula tu empresa" form here so /probar is this exact page, not a copy. */
+  headerAction?: React.ReactNode;
+  /** Overrides the live/demo badge text (the sandbox says "datos de ejemplo",
+   *  not "API desconectada", which would read as a failure there). */
+  statusLabel?: string;
+} = {}) {
   const t = useTranslations("dashboardOverview.overview");
   const { data: signalsResult, isLoading: signalsLoading } = useSignals();
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
@@ -88,9 +98,12 @@ export function DashboardOverview() {
             <h1 className="bee-display mt-1">{t("title")}</h1>
             <p className="bee-caption mt-1">{t("subtitle")}</p>
           </div>
-          <Badge variant={live ? "success" : "warning"}>
-            {live ? t("statusLive") : t("statusDemo")}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={live ? "success" : "warning"}>
+              {statusLabel ?? (live ? t("statusLive") : t("statusDemo"))}
+            </Badge>
+            {headerAction}
+          </div>
         </div>
 
         {/* Misma tarjeta compacta que Dark Funnel — antes MetricCard (ícono +

@@ -1,4 +1,6 @@
 import { apiFetch } from "@/lib/api/client";
+import { isDemoMode } from "@/lib/demo/mode";
+import { demoFetchQuotas } from "@/lib/demo/overview";
 import type { FetchResult } from "@/types/api";
 
 export interface Quota {
@@ -19,6 +21,7 @@ export interface QuotaCreateIn {
 }
 
 export async function fetchQuotas(): Promise<FetchResult<Quota[]>> {
+  if (isDemoMode()) return { data: demoFetchQuotas(), live: false };
   try {
     const data = await apiFetch<Quota[]>("/api/v1/quotas", { cache: "no-store" });
     return { data, live: true };

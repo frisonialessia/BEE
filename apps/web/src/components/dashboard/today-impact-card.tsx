@@ -7,6 +7,7 @@ import Link from "next/link";
 import type { Locale } from "@/i18n/locales";
 import { formatCurrencyUSDCompact } from "@/lib/i18n/format";
 import type { TodayImpact } from "@/lib/today-impact";
+import { useDashboardBase } from "@/lib/demo/mode";
 
 /** "Si actúas hoy…" — el número que abre la mañana. Nunca inventa una
  *  cifra: si no hay suficiente histórico de cierre o ningún monto cargado
@@ -15,6 +16,7 @@ import type { TodayImpact } from "@/lib/today-impact";
 export function TodayImpactCard({ impact }: { impact: TodayImpact }) {
   const locale = useLocale() as Locale;
   const t = useTranslations("dashboardOverview.todayImpact");
+  const base = useDashboardBase();
   const { hotSignalsToday, projectedUplift, winRate, avgDealValue, winRateSampleSize } = impact;
 
   if (hotSignalsToday.length === 0) {
@@ -63,7 +65,7 @@ export function TodayImpactCard({ impact }: { impact: TodayImpact }) {
             )}
           </div>
         </div>
-        <Link href="/dashboard/priority" className="bee-btn-ghost shrink-0 text-xs">
+        <Link href={`${base}/signals?tab=priority`} className="bee-btn-ghost shrink-0 text-xs">
           {t("cta")}
         </Link>
       </div>

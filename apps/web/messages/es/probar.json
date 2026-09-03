@@ -2,7 +2,8 @@
   "overview": {
     "title": "Así ve BEE tu mercado",
     "subtitle": "Señales detectadas → pipeline priorizado → estrategia lista para ejecutar.",
-    "funnelEyebrow": "Todas las etapas · Embudo de cierre"
+    "funnelEyebrow": "Todas las etapas · Embudo de cierre",
+    "badge": "Sandbox · datos de ejemplo"
   },
   "addCompanyForm": {
     "trigger": "Simula tu empresa",

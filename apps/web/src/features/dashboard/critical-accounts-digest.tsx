@@ -96,10 +96,12 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
                 type="button"
                 onClick={handleTrigger}
                 disabled={startExecution.isPending}
-                className="bee-btn bee-btn--primary text-xs"
+                className="bee-btn bee-btn--primary min-w-0 max-w-full text-xs"
               >
-                <Rocket className="size-3.5" />
-                {startExecution.isPending ? t("triggering") : t("triggerSequence", { name: matchingSequence.name })}
+                <Rocket className="size-3.5 shrink-0" />
+                <span className="truncate">
+                  {startExecution.isPending ? t("triggering") : t("triggerSequence", { name: matchingSequence.name })}
+                </span>
               </button>
             )}
             {/* Siempre visible — disparar una secuencia no debe ser la única

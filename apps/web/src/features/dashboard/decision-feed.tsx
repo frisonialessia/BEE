@@ -40,6 +40,7 @@ import { useDismissFromFeed, useTodayFeed } from "@/hooks/queries/use-priority-f
 import { useApproveAction } from "@/hooks/queries/use-pending-actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DecisionCard, DecisionUrgency } from "@/types/extended";
+import { useDashboardBase } from "@/lib/demo/mode";
 
 const URGENCY_TONE: Record<DecisionUrgency, string> = {
   high: "bee-bento--warm",
@@ -49,6 +50,7 @@ const URGENCY_TONE: Record<DecisionUrgency, string> = {
 
 function Card({ card }: { card: DecisionCard }) {
   const t = useTranslations("dashboardOverview.decisionFeed");
+  const base = useDashboardBase();
   const { openOpportunity } = useOpportunityDrawer();
   const approveAction = useApproveAction();
   const dismiss = useDismissFromFeed();
@@ -124,7 +126,7 @@ function Card({ card }: { card: DecisionCard }) {
 
       {card.kind === "anomaly" && (
         <div className="mt-auto pt-1">
-          <Link href="/dashboard/resilience" className="bee-btn-ghost text-xs">
+          <Link href={`${base}/control?tab=resilience`} className="bee-btn-ghost text-xs">
             {t("viewAlerts")}
           </Link>
         </div>

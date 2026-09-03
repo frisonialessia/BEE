@@ -2,7 +2,8 @@
   "overview": {
     "title": "This is how BEE sees your market",
     "subtitle": "Signals detected → prioritized pipeline → strategy ready to execute.",
-    "funnelEyebrow": "All stages · Closing funnel"
+    "funnelEyebrow": "All stages · Closing funnel",
+    "badge": "Sandbox · sample data"
   },
   "addCompanyForm": {
     "trigger": "Simulate your company",
