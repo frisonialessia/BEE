@@ -265,12 +265,16 @@
       "disconnectedCopy": "Connect your Salesforce org to bring your CRM into BEE — companies, contacts, and opportunities, read-only.",
       "connectedCopy": "Connected to {account}. Pulls Accounts, Contacts, Leads, and Opportunities whenever you want — never writes back to Salesforce."
     },
+    "hubspot": {
+      "disconnectedCopy": "Connect your HubSpot account to bring your CRM into BEE — companies, contacts, and deals, read-only.",
+      "connectedCopy": "Connected to {account}. Pulls Companies, Contacts, and Deals whenever you want — never writes back to HubSpot."
+    },
     "import": {
       "noNew": "There was nothing new to import.",
-      "summary": "{companies, plural, one {# company} other {# companies}}, {leads, plural, one {# lead} other {# leads}}, {opportunities, plural, one {# opportunity} other {# opportunities}} from Salesforce.",
+      "summary": "{companies, plural, one {# company} other {# companies}}, {leads, plural, one {# lead} other {# leads}}, {opportunities, plural, one {# opportunity} other {# opportunities}} from {label}.",
       "withErrorsPrefix": "With errors:",
-      "genericError": "Couldn't import from Salesforce.",
-      "button": "Import Accounts, Contacts, Leads, and Opportunities",
+      "genericError": "Couldn't import from {label}.",
+      "button": "Import CRM",
       "importing": "Importing…"
     },
     "manageNotice": "Only the organization's owner or an admin can connect or disconnect accounts.",

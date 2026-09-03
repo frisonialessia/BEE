@@ -52,3 +52,9 @@ class SalesforceImportSummaryOut(BaseModel):
     leads: ImportCountsOut = Field(default_factory=ImportCountsOut)
     opportunities: ImportCountsOut = Field(default_factory=ImportCountsOut)
     errors: list[str] = Field(default_factory=list)
+
+
+# POST /integrations/hubspot/import's result is the exact same shape —
+# a distinct name for the response_model/OpenAPI schema rather than
+# reusing "Salesforce"'s, without duplicating the class.
+HubSpotImportSummaryOut = SalesforceImportSummaryOut

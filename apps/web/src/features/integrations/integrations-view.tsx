@@ -14,19 +14,25 @@ import { useAuth } from "@/providers/auth-provider";
 import {
   useConnectOAuthProvider,
   useDisconnectOAuthProvider,
+  useImportFromHubSpot,
   useImportFromSalesforce,
   useIntegrations,
 } from "@/hooks/queries/use-integrations";
 import type { IntegrationStatus, OAuthProvider, SalesforceImportSummary } from "@/lib/api/integrations";
 
-const CONNECTED_LABELS: Record<string, string> = { gmail: "Gmail", linkedin: "LinkedIn", salesforce: "Salesforce" };
+const CONNECTED_LABELS: Record<string, string> = {
+  gmail: "Gmail",
+  linkedin: "LinkedIn",
+  salesforce: "Salesforce",
+  hubspot: "HubSpot",
+};
 
 // One icon per provider, a generic fallback for whatever's added next
 // (see the Integrations view's own comment on why this stays a lookup
 // instead of a per-provider hardcoded JSX block). Categories drive the
 // section a provider's card lands under — see IntegrationStatus.category
 // on the backend (app.api.v1.endpoints.integrations.list_integrations).
-const PROVIDER_ICONS: Record<string, LucideIcon> = { gmail: Mail, linkedin: Users, salesforce: Cloud };
+const PROVIDER_ICONS: Record<string, LucideIcon> = { gmail: Mail, linkedin: Users, salesforce: Cloud, hubspot: Cloud };
 const DEFAULT_PROVIDER_ICON: LucideIcon = Plug;
 const CATEGORY_ORDER = ["crm", "email", "social", "automation", "bi"] as const;
 
@@ -161,17 +167,46 @@ function OAuthProviderRow({
   );
 }
 
-function summarizeImport(t: ReturnType<typeof useTranslations>, summary: SalesforceImportSummary): string {
+function summarizeImport(t: ReturnType<typeof useTranslations>, summary: SalesforceImportSummary, label: string): string {
   const total =
     summary.companies.created + summary.companies.updated +
     summary.leads.created + summary.leads.updated +
     summary.opportunities.created + summary.opportunities.updated;
   if (total === 0) return t("import.noNew");
   return t("import.summary", {
+    label,
     companies: summary.companies.created + summary.companies.updated,
     leads: summary.leads.created + summary.leads.updated,
     opportunities: summary.opportunities.created + summary.opportunities.updated,
   });
+}
+
+/** Shared body for the "importar CRM" button — Salesforce's and
+ * HubSpot's importers return the exact same summary shape (see
+ * SalesforceImportSummary / HubSpotImportSummary), so only the mutation
+ * hook underneath differs; each provider gets a one-line wrapper below
+ * that calls its own hook and hands the result here. */
+function CrmImportButtonBody({
+  isPending,
+  onImport,
+}: {
+  isPending: boolean;
+  onImport: () => Promise<void>;
+}) {
+  const t = useTranslations("workspace.integrations");
+  return (
+    <div className="mt-3 flex items-center gap-2 border-t border-[var(--color-divider)] pt-3">
+      <button
+        type="button"
+        onClick={onImport}
+        disabled={isPending}
+        className="bee-btn-ghost inline-flex items-center gap-1.5 text-xs"
+      >
+        <Download className="size-3.5" />
+        {isPending ? t("import.importing") : t("import.button")}
+      </button>
+    </div>
+  );
 }
 
 function SalesforceImportButton() {
@@ -182,28 +217,40 @@ function SalesforceImportButton() {
     try {
       const summary = await importFromSalesforce.mutateAsync();
       if (summary.errors.length > 0) {
-        toast.warning(`${summarizeImport(t, summary)} ${t("import.withErrorsPrefix")} ${summary.errors.join(" · ")}`);
+        toast.warning(
+          `${summarizeImport(t, summary, "Salesforce")} ${t("import.withErrorsPrefix")} ${summary.errors.join(" · ")}`,
+        );
       } else {
-        toast.success(summarizeImport(t, summary));
+        toast.success(summarizeImport(t, summary, "Salesforce"));
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : t("import.genericError"));
+      toast.error(err instanceof Error ? err.message : t("import.genericError", { label: "Salesforce" }));
     }
   }
 
-  return (
-    <div className="mt-3 flex items-center gap-2 border-t border-[var(--color-divider)] pt-3">
-      <button
-        type="button"
-        onClick={handleImport}
-        disabled={importFromSalesforce.isPending}
-        className="bee-btn-ghost inline-flex items-center gap-1.5 text-xs"
-      >
-        <Download className="size-3.5" />
-        {importFromSalesforce.isPending ? t("import.importing") : t("import.button")}
-      </button>
-    </div>
-  );
+  return <CrmImportButtonBody isPending={importFromSalesforce.isPending} onImport={handleImport} />;
+}
+
+function HubSpotImportButton() {
+  const t = useTranslations("workspace.integrations");
+  const importFromHubSpot = useImportFromHubSpot();
+
+  async function handleImport() {
+    try {
+      const summary = await importFromHubSpot.mutateAsync();
+      if (summary.errors.length > 0) {
+        toast.warning(
+          `${summarizeImport(t, summary, "HubSpot")} ${t("import.withErrorsPrefix")} ${summary.errors.join(" · ")}`,
+        );
+      } else {
+        toast.success(summarizeImport(t, summary, "HubSpot"));
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t("import.genericError", { label: "HubSpot" }));
+    }
+  }
+
+  return <CrmImportButtonBody isPending={importFromHubSpot.isPending} onImport={handleImport} />;
 }
 
 function ServerChannelRow({ status }: { status: IntegrationStatus }) {
@@ -309,6 +356,7 @@ export function IntegrationsView() {
                       }
                     >
                       {status.provider === "salesforce" && canManage && <SalesforceImportButton />}
+                      {status.provider === "hubspot" && canManage && <HubSpotImportButton />}
                     </OAuthProviderRow>
                   );
                 })}

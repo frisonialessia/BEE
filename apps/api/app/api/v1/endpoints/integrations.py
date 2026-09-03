@@ -4,13 +4,14 @@ Two different kinds of "connected" live on the same page, and the response
 is explicit about which is which (see IntegrationStatusOut.scope):
 
 * **organization-scoped** (real OAuth, one row per org): Gmail, LinkedIn,
-  Salesforce. Each org connects (or not) its own account via a genuine
-  Connect/Disconnect button — see gmail_oauth.py/linkedin_oauth.py/
-  salesforce_oauth.py and IntegrationsService. Salesforce additionally
-  gets POST /salesforce/import — a one-way, explicit, re-runnable pull of
-  standard Accounts/Contacts/Leads/Opportunities into BEE's own Company/
-  Lead/Opportunity tables. See salesforce_import.py's module docstring for
-  why it's one-way (BEE never writes back) and standard-fields-only.
+  Salesforce, HubSpot. Each org connects (or not) its own account via a
+  genuine Connect/Disconnect button — see gmail_oauth.py/linkedin_oauth.py/
+  salesforce_oauth.py/hubspot_oauth.py and IntegrationsService. Salesforce
+  and HubSpot additionally get POST /salesforce/import and
+  POST /hubspot/import — a one-way, explicit, re-runnable pull of each
+  CRM's standard objects into BEE's own Company/Lead/Opportunity tables.
+  See salesforce_import.py's/hubspot_import.py's module docstrings for why
+  it's one-way (BEE never writes back) and standard-fields-only.
 * **server-scoped** (a single shared credential the whole deployment uses):
   Email/SMTP fallback, X — status reused as-is from
   OmnichannelGateway.get_channel_status(), read-only here. LinkedIn's
@@ -46,11 +47,14 @@ from app.models.base import UserRole
 from app.models.user import User
 from app.schemas.integrations import (
     AuthorizeUrlOut,
+    HubSpotImportSummaryOut,
     IntegrationStatusOut,
     SalesforceImportSummaryOut,
 )
-from app.services.integrations import gmail_oauth, linkedin_oauth, salesforce_oauth
+from app.services.integrations import gmail_oauth, hubspot_oauth, linkedin_oauth, salesforce_oauth
 from app.services.integrations.gmail_oauth import GmailOAuthError
+from app.services.integrations.hubspot_import import HubSpotImportService
+from app.services.integrations.hubspot_oauth import HubSpotOAuthError
 from app.services.integrations.linkedin_oauth import LinkedInOAuthError
 from app.services.integrations.salesforce_import import SalesforceImportService
 from app.services.integrations.salesforce_oauth import SalesforceOAuthError
@@ -64,6 +68,7 @@ router = APIRouter(prefix="/integrations", tags=["Integrations"])
 _GMAIL_STATE_PURPOSE = "gmail_connect"
 _LINKEDIN_STATE_PURPOSE = "linkedin_connect"
 _SALESFORCE_STATE_PURPOSE = "salesforce_connect"
+_HUBSPOT_STATE_PURPOSE = "hubspot_connect"
 
 # Server-scoped channels are shown as-is except "linkedin", which now has
 # its own organization-scoped row above (see module docstring).
@@ -124,6 +129,25 @@ def list_integrations(
                 "Importa Accounts/Contacts/Leads/Opportunities cuando quieras — solo lectura, nunca escribe en Salesforce."
                 if salesforce
                 else (None if salesforce_oauth.is_configured() else "No configurado en el servidor todavía.")
+            ),
+        )
+    )
+
+    hubspot = integrations.get_connection(current_user.organization_id, "hubspot")
+    result.append(
+        IntegrationStatusOut(
+            provider="hubspot",
+            label="HubSpot",
+            connected=hubspot is not None,
+            scope="organization",
+            category="crm",
+            account_email=hubspot.external_account_email if hubspot else None,
+            connected_at=hubspot.created_at if hubspot else None,
+            last_error=hubspot.last_error if hubspot else None,
+            detail=(
+                "Importa Companies/Contacts/Deals cuando quieras — solo lectura, nunca escribe en HubSpot."
+                if hubspot
+                else (None if hubspot_oauth.is_configured() else "No configurado en el servidor todavía.")
             ),
         )
     )
@@ -391,3 +415,102 @@ def salesforce_import(
     summary = importer.import_all(current_user.organization_id)
     session.commit()
     return SalesforceImportSummaryOut.model_validate(summary, from_attributes=True)
+
+
+# ── HubSpot ──────────────────────────────────────────────────────────────
+
+
+@router.get(
+    "/hubspot/authorize",
+    response_model=AuthorizeUrlOut,
+    summary="Get the HubSpot consent URL to connect this organization's HubSpot account",
+)
+def hubspot_authorize(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+) -> AuthorizeUrlOut:
+    if not hubspot_oauth.is_configured():
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="HubSpot todavía no está configurado en el servidor (falta la app registrada).",
+        )
+    state = create_oauth_state_token(current_user.organization_id, purpose=_HUBSPOT_STATE_PURPOSE)
+    return AuthorizeUrlOut(authorize_url=hubspot_oauth.build_authorize_url(state))
+
+
+@router.get(
+    "/hubspot/callback",
+    summary="HubSpot redirects here after the user grants (or denies) consent",
+    include_in_schema=False,
+)
+def hubspot_callback(
+    session: Session = Depends(get_session),
+    code: str | None = Query(default=None),
+    state: str | None = Query(default=None),
+    error: str | None = Query(default=None),
+) -> RedirectResponse:
+    redirect_base = f"{settings.FRONTEND_URL}/dashboard/integrations"
+
+    if error:
+        logger.info("HubSpot OAuth denied by user: %s", error)
+        return RedirectResponse(f"{redirect_base}?integration_error=denied")
+
+    if not code or not state:
+        return RedirectResponse(f"{redirect_base}?integration_error=invalid_request")
+
+    try:
+        organization_id = decode_oauth_state_token(state, expected_purpose=_HUBSPOT_STATE_PURPOSE)
+    except InvalidTokenError:
+        logger.warning("HubSpot OAuth callback with invalid/expired state token")
+        return RedirectResponse(f"{redirect_base}?integration_error=invalid_state")
+
+    try:
+        tokens = hubspot_oauth.exchange_code_for_tokens(code)
+        account_label = hubspot_oauth.fetch_account_label(tokens.access_token)
+    except HubSpotOAuthError as exc:
+        logger.warning("HubSpot OAuth exchange failed: %s", exc)
+        return RedirectResponse(f"{redirect_base}?integration_error=exchange_failed")
+
+    IntegrationsService(session).save_hubspot_connection(
+        organization_id=organization_id,
+        connected_by_user_id=None,  # the callback carries no session — see module docstring
+        tokens=tokens,
+        account_label=account_label,
+    )
+    session.commit()
+
+    return RedirectResponse(f"{redirect_base}?connected=hubspot")
+
+
+@router.post("/hubspot/disconnect", summary="Disconnect this organization's HubSpot account")
+def hubspot_disconnect(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> dict[str, bool]:
+    disconnected = IntegrationsService(session).disconnect(current_user.organization_id, "hubspot")
+    session.commit()
+    return {"disconnected": disconnected}
+
+
+@router.post(
+    "/hubspot/import",
+    response_model=HubSpotImportSummaryOut,
+    summary="Pull Companies/Contacts/Deals from HubSpot into BEE",
+)
+def hubspot_import(
+    current_user: User = Depends(require_roles(UserRole.OWNER, UserRole.ADMIN)),
+    session: Session = Depends(get_session),
+) -> HubSpotImportSummaryOut:
+    """One-way pull, safe to re-run — see hubspot_import.py's module
+    docstring. Requires an active HubSpot connection; 400s with a clear
+    message otherwise rather than a confusing empty result."""
+    access_token = IntegrationsService(session).get_valid_hubspot_access_token(current_user.organization_id)
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Conecta HubSpot primero desde Integraciones.",
+        )
+
+    importer = HubSpotImportService(session, access_token=access_token)
+    summary = importer.import_all(current_user.organization_id)
+    session.commit()
+    return HubSpotImportSummaryOut.model_validate(summary, from_attributes=True)

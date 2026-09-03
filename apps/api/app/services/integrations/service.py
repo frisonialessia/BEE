@@ -28,8 +28,9 @@ from sqlmodel import Session, select
 from app.core.logging import get_logger
 from app.core.token_crypto import TokenDecryptionError, decrypt_token, encrypt_token
 from app.models.integration_connection import IntegrationConnection
-from app.services.integrations import gmail_oauth, linkedin_oauth, salesforce_oauth
+from app.services.integrations import gmail_oauth, hubspot_oauth, linkedin_oauth, salesforce_oauth
 from app.services.integrations.gmail_oauth import GmailOAuthError, GmailTokens
+from app.services.integrations.hubspot_oauth import HubSpotOAuthError, HubSpotTokens
 from app.services.integrations.linkedin_oauth import LinkedInOAuthError, LinkedInTokens
 from app.services.integrations.salesforce_oauth import SalesforceOAuthError, SalesforceTokens
 
@@ -39,7 +40,7 @@ logger = get_logger(__name__)
 # expires mid-request.
 _REFRESH_SKEW = timedelta(minutes=2)
 
-_OAuthTokens = GmailTokens | LinkedInTokens | SalesforceTokens
+_OAuthTokens = GmailTokens | LinkedInTokens | SalesforceTokens | HubSpotTokens
 
 
 class IntegrationsService:
@@ -144,6 +145,22 @@ class IntegrationsService:
             connected_by_user_id=connected_by_user_id,
             tokens=tokens,
             account_label=salesforce_oauth.org_label(tokens.instance_url),
+        )
+
+    def save_hubspot_connection(
+        self,
+        *,
+        organization_id: uuid.UUID,
+        connected_by_user_id: uuid.UUID | None,
+        tokens: HubSpotTokens,
+        account_label: str | None,
+    ) -> IntegrationConnection:
+        return self._save_connection(
+            provider="hubspot",
+            organization_id=organization_id,
+            connected_by_user_id=connected_by_user_id,
+            tokens=tokens,
+            account_label=account_label,
         )
 
     def disconnect(self, organization_id: uuid.UUID, provider: str) -> bool:
@@ -266,3 +283,11 @@ class IntegrationsService:
         if not row.instance_url:
             return None
         return access_token, row.instance_url
+
+    def get_valid_hubspot_access_token(self, organization_id: uuid.UUID) -> str | None:
+        """HubSpot has one fixed API host (api.hubapi.com) — unlike
+        Salesforce there's no per-org instance_url to also return."""
+        result = self._get_valid_connection(
+            "hubspot", organization_id, hubspot_oauth.refresh_access_token, HubSpotOAuthError
+        )
+        return result[0] if result else None

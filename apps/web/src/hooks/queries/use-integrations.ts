@@ -6,6 +6,7 @@ import {
   disconnectOAuthProvider,
   fetchIntegrations,
   getOAuthAuthorizeUrl,
+  importFromHubSpot,
   importFromSalesforce,
   type OAuthProvider,
 } from "@/lib/api/integrations";
@@ -44,5 +45,11 @@ export function useDisconnectOAuthProvider(provider: OAuthProvider) {
 export function useImportFromSalesforce() {
   return useMutation({
     mutationFn: importFromSalesforce,
+  });
+}
+
+export function useImportFromHubSpot() {
+  return useMutation({
+    mutationFn: importFromHubSpot,
   });
 }

@@ -20,7 +20,7 @@ export interface IntegrationStatus {
   last_error: string | null;
 }
 
-export type OAuthProvider = "gmail" | "linkedin" | "salesforce";
+export type OAuthProvider = "gmail" | "linkedin" | "salesforce" | "hubspot";
 
 const READ_ONLY_MESSAGE = "Integraciones no está disponible en el sandbox — conecta una cuenta real desde el Dashboard.";
 
@@ -34,6 +34,7 @@ const DEMO_INTEGRATIONS: IntegrationStatus[] = [
   { provider: "gmail", label: "Gmail", connected: false, scope: "organization", category: "email", account_email: null, connected_at: null, detail: null, last_error: null },
   { provider: "linkedin", label: "LinkedIn", connected: false, scope: "organization", category: "social", account_email: null, connected_at: null, detail: null, last_error: null },
   { provider: "salesforce", label: "Salesforce", connected: false, scope: "organization", category: "crm", account_email: null, connected_at: null, detail: null, last_error: null },
+  { provider: "hubspot", label: "HubSpot", connected: false, scope: "organization", category: "crm", account_email: null, connected_at: null, detail: null, last_error: null },
   {
     provider: "email",
     label: "Email (SMTP)",
@@ -102,6 +103,19 @@ export interface SalesforceImportSummary {
 export async function importFromSalesforce(): Promise<SalesforceImportSummary> {
   if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
   return apiFetch<SalesforceImportSummary>("/api/v1/integrations/salesforce/import", {
+    method: "POST",
+  });
+}
+
+/** Same shape as Salesforce's summary — a distinct alias rather than a
+ * duplicated interface, matching the backend's HubSpotImportSummaryOut. */
+export type HubSpotImportSummary = SalesforceImportSummary;
+
+/** Trae Companies/Contacts/Deals de HubSpot a BEE — solo lectura, nunca
+ * escribe en HubSpot. Seguro de correr varias veces. */
+export async function importFromHubSpot(): Promise<HubSpotImportSummary> {
+  if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
+  return apiFetch<HubSpotImportSummary>("/api/v1/integrations/hubspot/import", {
     method: "POST",
   });
 }

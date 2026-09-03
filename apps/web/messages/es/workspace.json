@@ -265,12 +265,16 @@
       "disconnectedCopy": "Conecta tu org de Salesforce para traer tu CRM a BEE — empresas, contactos y oportunidades, de solo lectura.",
       "connectedCopy": "Conectado a {account}. Trae Accounts, Contacts, Leads y Opportunities cuando quieras — nunca escribe de vuelta en Salesforce."
     },
+    "hubspot": {
+      "disconnectedCopy": "Conecta tu cuenta de HubSpot para traer tu CRM a BEE — empresas, contactos y deals, de solo lectura.",
+      "connectedCopy": "Conectado a {account}. Trae Companies, Contacts y Deals cuando quieras — nunca escribe de vuelta en HubSpot."
+    },
     "import": {
       "noNew": "No había nada nuevo que importar.",
-      "summary": "{companies, plural, one {# empresa} other {# empresas}}, {leads, plural, one {# lead} other {# leads}}, {opportunities, plural, one {# oportunidad} other {# oportunidades}} desde Salesforce.",
+      "summary": "{companies, plural, one {# empresa} other {# empresas}}, {leads, plural, one {# lead} other {# leads}}, {opportunities, plural, one {# oportunidad} other {# oportunidades}} desde {label}.",
       "withErrorsPrefix": "Con errores:",
-      "genericError": "No se pudo importar de Salesforce.",
-      "button": "Importar Accounts, Contacts, Leads y Opportunities",
+      "genericError": "No se pudo importar de {label}.",
+      "button": "Importar CRM",
       "importing": "Importando…"
     },
     "manageNotice": "Solo el dueño o un administrador de la organización puede conectar o desconectar cuentas.",

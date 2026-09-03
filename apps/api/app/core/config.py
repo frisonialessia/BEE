@@ -311,6 +311,21 @@ class Settings(BaseSettings):
     # fixed OAuth host the way Google/LinkedIn do.
     SALESFORCE_LOGIN_URL: str = "https://login.salesforce.com"
 
+    # ----- HubSpot OAuth (HubSpot integration) -----------------------------------
+    # Powers "Connect HubSpot" at /dashboard/integrations — a per-org
+    # connection to a real HubSpot account, from a public app created in the
+    # HubSpot Developer account (developers.hubspot.com → Apps → Create app
+    # → Auth tab for the client id/secret/redirect URL, Scopes tab for
+    # crm.objects.companies.read/crm.objects.contacts.read/
+    # crm.objects.deals.read). Same "connect + one-way read import" shape as
+    # Salesforce, not a two-way sync — see
+    # app.services.integrations.hubspot_import's module docstring.
+    HUBSPOT_OAUTH_CLIENT_ID: str | None = None
+    HUBSPOT_OAUTH_CLIENT_SECRET: str | None = None
+    # Must exactly match a Redirect URL on that app, e.g.:
+    #   https://api.yourdomain.com/api/v1/integrations/hubspot/callback
+    HUBSPOT_OAUTH_REDIRECT_URI: str | None = None
+
     # ----- ExecutiveAgent webhook (n8n / Zapier / Make) -------------------------
     # When set, BEE fires a POST to this URL every time execution artifacts are
     # generated. The receiving workflow can then send the email, create a CRM
@@ -579,6 +594,8 @@ class Settings(BaseSettings):
             or self.LINKEDIN_OAUTH_CLIENT_SECRET
             or self.SALESFORCE_OAUTH_CLIENT_ID
             or self.SALESFORCE_OAUTH_CLIENT_SECRET
+            or self.HUBSPOT_OAUTH_CLIENT_ID
+            or self.HUBSPOT_OAUTH_CLIENT_SECRET
         ) and not self.TOKEN_ENCRYPTION_KEY:
             problems.append(
                 "A *_OAUTH_CLIENT_ID/SECRET pair is set but TOKEN_ENCRYPTION_KEY is not — "

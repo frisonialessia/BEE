@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import pytest
 
+from app.services.events import dispatcher
 from app.services.events.dispatcher import clear_listeners, publish, subscribe
 
 
@@ -15,10 +16,22 @@ from app.services.events.dispatcher import clear_listeners, publish, subscribe
 def _isolated_listeners():
     """Every test gets a clean listener registry — without this, a
     listener subscribed in one test would still fire (and could leak
-    state) in the next."""
+    state) in the next.
+
+    Snapshots and restores the real registry rather than just clearing it
+    on the way out: ``register_listeners()`` (app.main, called once at
+    import time) is guarded to run only once per process, so a bare
+    ``clear_listeners()`` left standing here would permanently wipe out
+    every real app listener (ICP fit-score recompute, meeting-completion
+    feedback, ...) for the rest of the test session the moment this file
+    happens to run before theirs alphabetically — which is exactly what
+    broke test_icp_fit_score.py/test_meeting_completion.py when run as
+    part of the full suite."""
+    snapshot = dict(dispatcher._listeners)
     clear_listeners()
     yield
     clear_listeners()
+    dispatcher._listeners.update(snapshot)
 
 
 class TestEventDispatcher:
