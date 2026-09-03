@@ -1,6 +1,53 @@
 import { ApiError } from "@/types/api";
+import { getClientLocale } from "@/i18n/client-locale";
+import type { Locale } from "@/i18n/locales";
 import { getPublicEnv } from "@/lib/env";
 import { getStoredToken } from "@/lib/auth-storage";
+
+/** User-facing transport errors. This module is plain TypeScript (no React
+ * tree, no `useTranslations`), so the two strings it can surface live here,
+ * keyed by the same locale cookie every component resolves — mirrored in
+ * messages/{locale}/common.json's `apiErrors` for reference. */
+const TRANSPORT_MESSAGES: Record<Locale, { network: string; validation: string; generic: string }> = {
+  es: {
+    network: "No se pudo conectar con el servidor. Intenta de nuevo en un momento.",
+    validation: "Revisa los datos ingresados.",
+    generic: "Error del servidor ({status}).",
+  },
+  en: {
+    network: "Could not reach the server. Try again in a moment.",
+    validation: "Check the data you entered.",
+    generic: "Server error ({status}).",
+  },
+};
+
+/** Turn a FastAPI error body into one readable sentence.
+ *
+ * `detail` is a plain string for every error this codebase raises itself
+ * (`HTTPException(detail="...")`), but a *list* of `{loc, msg, type}` items
+ * for request-validation failures (422) — e.g. an email whose domain is a
+ * reserved name, a password under the minimum length. Before this, that
+ * list collapsed to the opaque "API error 422" on the register/login forms,
+ * with the actual reason only visible in the Network tab. */
+function messageFromDetail(detail: unknown, status: number): string {
+  const messages = TRANSPORT_MESSAGES[getClientLocale()];
+  if (typeof detail === "object" && detail !== null && "detail" in detail) {
+    const inner = (detail as { detail: unknown }).detail;
+    if (typeof inner === "string") return inner;
+    if (Array.isArray(inner)) {
+      const parts = inner
+        .map((item) =>
+          typeof item === "object" && item !== null && typeof (item as { msg?: unknown }).msg === "string"
+            ? (item as { msg: string }).msg.replace(/^Value error,\s*/i, "")
+            : null,
+        )
+        .filter((m): m is string => Boolean(m));
+      if (parts.length) return parts.join(" ");
+      return messages.validation;
+    }
+  }
+  return messages.generic.replace("{status}", String(status));
+}
 
 export function getApiBaseUrl(): string {
   return getPublicEnv().NEXT_PUBLIC_API_URL.replace(/\/$/, "");
@@ -130,22 +177,12 @@ export async function apiFetch<T>(
         `or the API being unreachable. Underlying error:`,
       err,
     );
-    throw new ApiError(
-      "No se pudo conectar con el servidor. Intenta de nuevo en un momento.",
-      0,
-      err,
-    );
+    throw new ApiError(TRANSPORT_MESSAGES[getClientLocale()].network, 0, err);
   }
 
   if (!res.ok) {
     const detail = await res.json().catch(() => undefined);
-    const message =
-      typeof detail === "object" &&
-      detail !== null &&
-      "detail" in detail &&
-      typeof (detail as { detail: unknown }).detail === "string"
-        ? (detail as { detail: string }).detail
-        : `API error ${res.status}`;
+    const message = messageFromDetail(detail, res.status);
 
     // A 401 while a session token was actually being sent means that
     // specific token is dead (expired, or the user got deactivated

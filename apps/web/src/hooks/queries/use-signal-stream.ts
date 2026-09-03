@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { fetchSignalStream } from "@/lib/api/control";
@@ -12,6 +13,7 @@ import { queryKeys } from "@/lib/query-keys";
 export function useSignalStream(limit = 40, pollMs = 8_000) {
   const seenReadyRef = useRef<Set<string>>(new Set());
   const initializedRef = useRef(false);
+  const t = useTranslations("common.toasts");
 
   const query = useQuery({
     queryKey: queryKeys.control.signalStream(limit),
@@ -21,7 +23,7 @@ export function useSignalStream(limit = 40, pollMs = 8_000) {
     staleTime: 4_000,
   });
 
-  const events = query.data?.data.events ?? [];
+  const events = useMemo(() => query.data?.data.events ?? [], [query.data?.data.events]);
 
   useEffect(() => {
     if (!query.data?.data) return;
@@ -37,12 +39,12 @@ export function useSignalStream(limit = 40, pollMs = 8_000) {
     const fresh = findNewReadyEvents(events, seenReadyRef.current);
     for (const event of fresh) {
       seenReadyRef.current.add(event.id);
-      toast.success("Estrategia de cierre lista", {
+      toast.success(t("strategyReady"), {
         description: event.title,
         duration: 8_000,
       });
     }
-  }, [events, query.data?.data]);
+  }, [events, query.data?.data, t]);
 
   return query;
 }

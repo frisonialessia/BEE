@@ -250,7 +250,8 @@
       "automation": "Automation",
       "bi": "Reporting & BI",
       "pm": "Project management",
-      "other": "Other"
+      "other": "Other",
+      "signals": "Inbound signals"
     },
     "automation": {
       "hint": "n8n, Zapier, Make, or your own system connect here — create an outbound webhook and point its \"Webhook\" node (or equivalent trigger) at the URL we give you. No shared credentials involved: every event arrives signed with X-BEE-Signature so you can verify it actually came from BEE."
@@ -316,6 +317,24 @@
       "caption": "Configured once for the whole BEE deployment, not per account — see the backend's environment variables if you need to change them.",
       "connected": "connected",
       "mock": "simulated mode"
+    },
+    "inbound": {
+      "title": "Inbound signals (webhook)",
+      "subtitle": "Anything that can POST — your CRM, Zapier/Make, your own script, a data provider — can push signals into BEE. Every signal is classified, scored against your ICP and, when it qualifies, becomes an opportunity with a strategy attached.",
+      "endpointLabel": "Endpoint",
+      "headerLabel": "Auth header",
+      "exampleLabel": "Example",
+      "noKeyHint": "Generate an API key (below, under Reporting & BI — it's the same key) to authenticate your requests. Without it, signals arrive unscoped and won't show up in your account.",
+      "keyReady": "You already have {count, plural, one {# active API key} other {# active API keys}} — use any of them in the header.",
+      "docsLink": "Full contract at /docs"
+    },
+    "detailCodes": {
+      "not_configured": "Not configured on the server yet.",
+      "crm_import_readonly": "Import {objects} whenever you want — read-only, never writes to {provider}.",
+      "jira_synced": "Syncs opportunities with project {project} — opens an issue on Ready to action, comments on won/lost.",
+      "jira_project_missing": "Connected — pick a Jira project to turn on the sync.",
+      "server_shared_credential": "Shared server credential, not per account — configured once for the whole deployment.",
+      "server_mock_mode": "Simulated mode — no server credential configured."
     }
   },
   "team": {

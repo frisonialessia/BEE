@@ -1,5 +1,6 @@
-import { defaultLocale, isLocale, type Locale } from "@/i18n/locales";
+import { getClientLocale } from "@/i18n/client-locale";
 import { LOCALE_COOKIE } from "@/i18n/cookie";
+import type { Locale } from "@/i18n/locales";
 
 /**
  * Reads the visitor's current language directly from the `NEXT_LOCALE`
@@ -24,10 +25,7 @@ import { LOCALE_COOKIE } from "@/i18n/cookie";
  * `localStorage` would if this were ever imported on the server by mistake.
  */
 export function getDemoLocale(): Locale {
-  if (typeof document === "undefined") return defaultLocale;
-  const match = document.cookie.match(/(?:^|; )NEXT_LOCALE=([^;]*)/);
-  const value = match ? decodeURIComponent(match[1]) : null;
-  return value && isLocale(value) ? value : defaultLocale;
+  return getClientLocale();
 }
 
 export { LOCALE_COOKIE };

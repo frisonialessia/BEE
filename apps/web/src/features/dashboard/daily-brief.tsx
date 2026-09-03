@@ -36,6 +36,7 @@ const TONE_COLOR: Record<BriefTone, string> = {
  *  real que decir, lo dice — nunca inventa urgencia para llenar el espacio. */
 export function DailyBrief() {
   const t = useTranslations("dashboardOverview.dailyBrief");
+  const tItems = useTranslations("dashboardOverview.dailyBrief.items");
   const { data: companiesResult, isLoading: companiesLoading } = useCompanies(300);
   const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 300);
   const { data: leadsResult, isLoading: leadsLoading } = useLeads(300);
@@ -79,7 +80,7 @@ export function DailyBrief() {
     anomalies: anomaliesResult?.data ?? [],
     overdueTasks: overdueTasksResult?.data ?? [],
     successPatterns: patternsResult?.data ?? [],
-  });
+  }, tItems);
 
   return (
     <section className="mb-4">

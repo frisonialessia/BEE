@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import {
   createContext,
   useCallback,
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const t = useTranslations("common.toasts");
 
   useEffect(() => {
     const token = getStoredToken();
@@ -108,12 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // reinventing the check.
     function handleSessionExpired() {
       logout();
-      toast.error("Tu sesión expiró — inicia sesión de nuevo.");
+      toast.error(t("sessionExpired"));
       router.replace("/login");
     }
     window.addEventListener("bee:session-expired", handleSessionExpired);
     return () => window.removeEventListener("bee:session-expired", handleSessionExpired);
-  }, [logout, router]);
+  }, [logout, router, t]);
 
   return (
     <AuthContext.Provider

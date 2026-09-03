@@ -88,7 +88,38 @@
   },
   "dailyBrief": {
     "title": "Daily brief",
-    "empty": "Nothing urgent right now — pipeline, quotas and data look on track."
+    "empty": "Nothing urgent right now — pipeline, quotas and data look on track.",
+    "items": {
+      "hotLeads": {
+        "title": "{count, plural, one {# new hot lead} other {# new hot leads}}"
+      },
+      "overdueTasks": {
+        "title": "{count, plural, one {# overdue task} other {# overdue tasks}}"
+      },
+      "atRisk": {
+        "title": "{count, plural, one {# opportunity at risk} other {# opportunities at risk}}",
+        "description": "No close date, past due, or under-qualified for their stage"
+      },
+      "anomalies": {
+        "title": "{count, plural, one {# conversion anomaly} other {# conversion anomalies}}"
+      },
+      "priority": {
+        "title": "{count, plural, one {# top-priority account} other {# top-priority accounts}}",
+        "description": "They fit your ideal customer and are showing real intent right now"
+      },
+      "quotaPace": {
+        "title": "{count, plural, one {# quota behind pace} other {# quotas behind pace}}",
+        "description": "Moving slower than the period has already advanced"
+      },
+      "learning": {
+        "title": "{count, plural, one {# success pattern learned} other {# success patterns learned}}",
+        "description": "{playbook} via {channel}: {winRate}% close rate across {sampleSize} deals"
+      },
+      "duplicates": {
+        "title": "{count, plural, one {# possible duplicate} other {# possible duplicates}}",
+        "description": "Across companies and contacts — worth merging"
+      }
+    }
   },
   "leaderboard": {
     "title": "Leaderboard",
@@ -125,6 +156,34 @@
       "low": "Low",
       "medium": "Medium",
       "high": "High"
+    }
+  },
+  "gettingStarted": {
+    "eyebrow": "Getting started",
+    "title": "Get BEE running in 4 steps",
+    "subtitle": "Your account is still empty — this is the minimum for signals to turn into prioritized opportunities.",
+    "done": "Done",
+    "steps": {
+      "icp": {
+        "title": "Define your ideal customer",
+        "description": "Industries, sizes, titles: this is how BEE scores every signal and account.",
+        "cta": "Set up ICP"
+      },
+      "signals": {
+        "title": "Connect a signal source",
+        "description": "Generate an API key and point your CRM, Zapier or a script at the signals webhook.",
+        "cta": "Go to Integrations"
+      },
+      "opportunity": {
+        "title": "Create your first opportunity",
+        "description": "Or let the first signal create it — the CRM fills up from there.",
+        "cta": "Open CRM"
+      },
+      "team": {
+        "title": "Invite your team",
+        "description": "Assign opportunities per person and team; everyone sees only their own.",
+        "cta": "Manage team"
+      }
     }
   }
 }

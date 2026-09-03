@@ -53,7 +53,8 @@
   "globalSearch": {
     "placeholder": "Buscar empresas, oportunidades, contactos…",
     "loading": "Buscando…",
-    "noResults": "Sin resultados para \"{query}\"."
+    "noResults": "Sin resultados para \"{query}\".",
+    "placeholderShort": "Buscar…"
   },
   "notificationBell": {
     "ariaLabel": "Notificaciones",
@@ -61,5 +62,17 @@
     "title": "Notificaciones",
     "loading": "Cargando…",
     "empty": "No hay novedades por ahora."
+  },
+  "toasts": {
+    "sessionExpired": "Tu sesión expiró — inicia sesión de nuevo.",
+    "strategyReady": "Estrategia de cierre lista"
+  },
+  "apiErrors": {
+    "network": "No se pudo conectar con el servidor. Intenta de nuevo en un momento.",
+    "validation": "Revisa los datos ingresados.",
+    "generic": "Error del servidor ({status})."
+  },
+  "teamStrip": {
+    "members": "{count, plural, one {# en el equipo} other {# en el equipo}}"
   }
 }

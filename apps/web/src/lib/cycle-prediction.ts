@@ -14,6 +14,7 @@
  * populated on the demo's Opportunity/Signal records — see
  * lib/demo/seed-history.ts.
  */
+import { getClientLocale } from "@/i18n/client-locale";
 import type { Battlecard, Opportunity, Signal } from "@/types/domain";
 import type { CyclePrediction, CycleSignalRecalibration } from "@/types/extended";
 
@@ -62,6 +63,35 @@ function median(values: number[]): number {
   return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
 }
 
+
+/** Sandbox copy for the prediction's explanations, in the UI language
+ *  (the real endpoint's CyclePredictorService writes these server-side). */
+const COPY = {
+  es: {
+    basisTypeIndustry: "deals cerrados similares por tipo de señal e industria",
+    basisType: "deals cerrados similares por tipo de señal",
+    basisIndustry: "deals cerrados similares por industria",
+    basisAll: "todos los deals cerrados de la cuenta",
+    notEnoughSignalCohort:
+      "Todavía no hay suficientes deals cerrados con y sin una señal nueva de mercado durante el ciclo para comparar.",
+    alreadyClosed: "Esta oportunidad ya está cerrada — no hay nada que predecir.",
+    notEnoughDeals: "Todavía no hay suficientes deals cerrados en esta cuenta para predecir un ciclo.",
+    noSimilar: "No encontramos deals cerrados lo bastante parecidos todavía.",
+  },
+  en: {
+    basisTypeIndustry: "similar closed deals by signal type and industry",
+    basisType: "similar closed deals by signal type",
+    basisIndustry: "similar closed deals by industry",
+    basisAll: "every closed deal in the account",
+    notEnoughSignalCohort:
+      "Not enough closed deals with and without a new market signal during the cycle to compare yet.",
+    alreadyClosed: "This opportunity is already closed — nothing left to predict.",
+    notEnoughDeals: "Not enough closed deals in this account yet to predict a cycle.",
+    noSimilar: "No closed deals similar enough yet.",
+  },
+} as const;
+const copy = () => COPY[getClientLocale()];
+
 function bestCohort(
   deals: ClosedDeal[],
   signalType: string | null,
@@ -71,22 +101,22 @@ function bestCohort(
   if (signalType && industry) {
     tiers.push({
       cohort: deals.filter((d) => d.signalType === signalType && d.industry === industry),
-      basis: "deals cerrados similares por tipo de señal e industria",
+      basis: copy().basisTypeIndustry,
     });
   }
   if (signalType) {
     tiers.push({
       cohort: deals.filter((d) => d.signalType === signalType),
-      basis: "deals cerrados similares por tipo de señal",
+      basis: copy().basisType,
     });
   }
   if (industry) {
     tiers.push({
       cohort: deals.filter((d) => d.industry === industry),
-      basis: "deals cerrados similares por industria",
+      basis: copy().basisIndustry,
     });
   }
-  tiers.push({ cohort: deals, basis: "todos los deals cerrados de la cuenta" });
+  tiers.push({ cohort: deals, basis: copy().basisAll });
 
   return tiers.find((t) => t.cohort.length >= MIN_COHORT) ?? null;
 }
@@ -141,8 +171,7 @@ function signalRecalibration(
   if (withGroup.length < MIN_SIGNAL_COHORT || withoutGroup.length < MIN_SIGNAL_COHORT) {
     return {
       available: false,
-      reason:
-        "Todavía no hay suficientes deals cerrados con y sin una señal nueva de mercado durante el ciclo para comparar.",
+      reason: copy().notEnoughSignalCohort,
       with_signal_median_days: null,
       with_signal_count: withGroup.length,
       without_signal_median_days: null,
@@ -192,12 +221,12 @@ export function predictCycle(
   battlecards: Battlecard[],
 ): CyclePrediction {
   if (CLOSED_STATUSES.has(target.status) || target.status === "dismissed") {
-    return NOT_AVAILABLE("Esta oportunidad ya está cerrada — no hay nada que predecir.");
+    return NOT_AVAILABLE(copy().alreadyClosed);
   }
 
   const deals = closedDeals(opportunities, signals, battlecards);
   if (deals.length < MIN_COHORT) {
-    return NOT_AVAILABLE("Todavía no hay suficientes deals cerrados en esta cuenta para predecir un ciclo.");
+    return NOT_AVAILABLE(copy().notEnoughDeals);
   }
 
   const targetSignalType = signalTypeFor(target, signals);
@@ -205,7 +234,7 @@ export function predictCycle(
 
   const best = bestCohort(deals, targetSignalType, targetIndustry);
   if (!best) {
-    return NOT_AVAILABLE("No encontramos deals cerrados lo bastante parecidos todavía.");
+    return NOT_AVAILABLE(copy().noSimilar);
   }
 
   const predictedCycle = median(best.cohort.map((d) => d.cycleDays));

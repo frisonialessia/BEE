@@ -88,7 +88,38 @@
   },
   "dailyBrief": {
     "title": "Brief del día",
-    "empty": "Nada urgente por ahora — pipeline, cuotas y datos se ven en orden."
+    "empty": "Nada urgente por ahora — pipeline, cuotas y datos se ven en orden.",
+    "items": {
+      "hotLeads": {
+        "title": "{count, plural, one {# lead caliente nuevo} other {# leads calientes nuevos}}"
+      },
+      "overdueTasks": {
+        "title": "{count, plural, one {# tarea vencida} other {# tareas vencidas}}"
+      },
+      "atRisk": {
+        "title": "{count, plural, one {# oportunidad en riesgo} other {# oportunidades en riesgo}}",
+        "description": "Sin fecha de cierre, vencidas, o poco calificadas para su etapa"
+      },
+      "anomalies": {
+        "title": "{count, plural, one {# anomalía de conversión} other {# anomalías de conversión}}"
+      },
+      "priority": {
+        "title": "{count, plural, one {# cuenta en prioridad máxima} other {# cuentas en prioridad máxima}}",
+        "description": "Encajan con tu cliente ideal y están mostrando intención real ahora"
+      },
+      "quotaPace": {
+        "title": "{count, plural, one {# cuota atrasada} other {# cuotas atrasadas}}",
+        "description": "Van más lento de lo que el período ya avanzó"
+      },
+      "learning": {
+        "title": "{count, plural, one {# patrón de éxito aprendido} other {# patrones de éxito aprendidos}}",
+        "description": "{playbook} vía {channel}: {winRate}% de cierre en {sampleSize} deals"
+      },
+      "duplicates": {
+        "title": "{count, plural, one {# posible duplicado} other {# posibles duplicados}}",
+        "description": "Entre empresas y contactos — vale la pena fusionarlos"
+      }
+    }
   },
   "leaderboard": {
     "title": "Ranking",
@@ -125,6 +156,34 @@
       "low": "Baja",
       "medium": "Media",
       "high": "Alta"
+    }
+  },
+  "gettingStarted": {
+    "eyebrow": "Primeros pasos",
+    "title": "Deja BEE listo en 4 pasos",
+    "subtitle": "Tu cuenta está vacía todavía — esto es lo mínimo para que las señales se conviertan en oportunidades priorizadas.",
+    "done": "Listo",
+    "steps": {
+      "icp": {
+        "title": "Define tu cliente ideal",
+        "description": "Industrias, tamaños, cargos: así BEE puntúa cada señal y cada cuenta.",
+        "cta": "Configurar ICP"
+      },
+      "signals": {
+        "title": "Conecta una fuente de señales",
+        "description": "Genera una API key y apunta tu CRM, Zapier o un script al webhook de señales.",
+        "cta": "Ir a Integraciones"
+      },
+      "opportunity": {
+        "title": "Crea tu primera oportunidad",
+        "description": "O deja que llegue sola con la primera señal — el CRM se llena desde ahí.",
+        "cta": "Abrir CRM"
+      },
+      "team": {
+        "title": "Invita a tu equipo",
+        "description": "Asigna oportunidades por persona y equipo; cada quien ve solo lo suyo.",
+        "cta": "Gestionar equipo"
+      }
     }
   }
 }

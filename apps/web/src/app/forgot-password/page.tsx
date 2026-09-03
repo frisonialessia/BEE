@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="bee-input"
-                    placeholder="tu@empresa.com"
+                    placeholder={t("emailPlaceholder")}
                   />
                 </div>
 

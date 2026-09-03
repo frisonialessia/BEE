@@ -70,7 +70,33 @@
     "title": "Qualification (MEDDIC)",
     "amountLabel": "Estimated amount",
     "amountPlaceholder": "USD",
-    "closeDateLabel": "Expected close"
+    "closeDateLabel": "Expected close",
+    "meddic": {
+      "metric": {
+        "label": "Metrics",
+        "hint": "Is there a clear business number the account wants to move?"
+      },
+      "economic_buyer": {
+        "label": "Economic buyer",
+        "hint": "Have we identified who signs off on the spend?"
+      },
+      "decision_criteria": {
+        "label": "Decision criteria",
+        "hint": "Do we know how they evaluate the options?"
+      },
+      "decision_process": {
+        "label": "Decision process",
+        "hint": "Do we know the steps and timing to decide?"
+      },
+      "identify_pain": {
+        "label": "Identified pain",
+        "hint": "Have we confirmed the urgency or the real pain?"
+      },
+      "champion": {
+        "label": "Internal champion",
+        "hint": "Is someone inside pushing the purchase for us?"
+      }
+    }
   },
   "barChart": {
     "tooltip": "{label}: {weighted} weighted out of {total} in pipeline ({count, plural, one {# opportunity} other {# opportunities}})",

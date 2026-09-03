@@ -53,7 +53,8 @@
   "globalSearch": {
     "placeholder": "Search companies, opportunities, contacts…",
     "loading": "Searching…",
-    "noResults": "No results for \"{query}\"."
+    "noResults": "No results for \"{query}\".",
+    "placeholderShort": "Search…"
   },
   "notificationBell": {
     "ariaLabel": "Notifications",
@@ -61,5 +62,17 @@
     "title": "Notifications",
     "loading": "Loading…",
     "empty": "No updates for now."
+  },
+  "toasts": {
+    "sessionExpired": "Your session expired — sign in again.",
+    "strategyReady": "Closing strategy ready"
+  },
+  "apiErrors": {
+    "network": "Could not reach the server. Try again in a moment.",
+    "validation": "Check the data you entered.",
+    "generic": "Server error ({status})."
+  },
+  "teamStrip": {
+    "members": "{count, plural, one {# on the team} other {# on the team}}"
   }
 }

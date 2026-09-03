@@ -12,6 +12,13 @@ import type { Company, Lead, Opportunity, OpportunityTask } from "@/types/domain
 
 export type BriefTone = "hot" | "risk" | "info";
 
+/** Translator for the brief's own copy — `useTranslations(
+ *  "dashboardOverview.dailyBrief.items")` in the component. Passed in (not
+ *  imported) so this stays plain TypeScript, testable without React, and the
+ *  strings live in messages/{locale}/dashboardOverview.json like everything
+ *  else — they used to be Spanish literals regardless of UI language. */
+export type BriefTranslator = (key: string, values?: Record<string, string | number>) => string;
+
 export interface BriefItem {
   id: string;
   tone: BriefTone;
@@ -40,7 +47,7 @@ export function computeDailyBrief(input: {
   anomalies: AnomalyAlert[];
   overdueTasks: OpportunityTask[];
   successPatterns: SuccessPattern[];
-}): BriefItem[] {
+}, t: BriefTranslator): BriefItem[] {
   const items: BriefItem[] = [];
 
   // ── Leads calientes nuevos (últimas 48h) ────────────────────────────────
@@ -51,12 +58,12 @@ export function computeDailyBrief(input: {
     items.push({
       id: "hot-leads",
       tone: "hot",
-      title: `${newHotLeads.length} lead${newHotLeads.length === 1 ? "" : "s"} caliente${newHotLeads.length === 1 ? "" : "s"} nuevo${newHotLeads.length === 1 ? "" : "s"}`,
+      title: t("hotLeads.title", { count: newHotLeads.length }),
       description: newHotLeads
         .slice(0, 3)
         .map((l) => l.full_name)
         .join(", "),
-      href: "/dashboard/leads",
+      href: "/dashboard/companies?tab=leads",
     });
   }
 
@@ -65,12 +72,12 @@ export function computeDailyBrief(input: {
     items.push({
       id: "overdue-tasks",
       tone: "risk",
-      title: `${input.overdueTasks.length} tarea${input.overdueTasks.length === 1 ? "" : "s"} vencida${input.overdueTasks.length === 1 ? "" : "s"}`,
+      title: t("overdueTasks.title", { count: input.overdueTasks.length }),
       description: input.overdueTasks
         .slice(0, 3)
         .map((t) => t.title)
         .join(", "),
-      href: "/dashboard/opportunities",
+      href: "/dashboard/crm",
     });
   }
 
@@ -80,8 +87,8 @@ export function computeDailyBrief(input: {
     items.push({
       id: "at-risk",
       tone: "risk",
-      title: `${forecast.atRisk.length} oportunidad${forecast.atRisk.length === 1 ? "" : "es"} en riesgo`,
-      description: "Sin fecha de cierre, vencidas, o poco calificadas para su etapa",
+      title: t("atRisk.title", { count: forecast.atRisk.length }),
+      description: t("atRisk.description"),
       href: "/dashboard/forecast",
     });
   }
@@ -96,7 +103,7 @@ export function computeDailyBrief(input: {
     items.push({
       id: "anomalies",
       tone: "risk",
-      title: `${severeAnomalies.length} anomalía${severeAnomalies.length === 1 ? "" : "s"} de conversión`,
+      title: t("anomalies.title", { count: severeAnomalies.length }),
       description: severeAnomalies[0].title,
       href: "/dashboard/control",
     });
@@ -114,9 +121,9 @@ export function computeDailyBrief(input: {
       items.push({
         id: "priority",
         tone: "hot",
-        title: `${topPriority.length} cuenta${topPriority.length === 1 ? "" : "s"} en prioridad máxima`,
-        description: "Encajan con tu cliente ideal y están mostrando intención real ahora",
-        href: "/dashboard/priority",
+        title: t("priority.title", { count: topPriority.length }),
+        description: t("priority.description"),
+        href: "/dashboard/signals?tab=priority",
       });
     }
   }
@@ -130,8 +137,8 @@ export function computeDailyBrief(input: {
     items.push({
       id: "quota-pace",
       tone: "risk",
-      title: `${behindQuotas.length} cuota${behindQuotas.length === 1 ? "" : "s"} atrasada${behindQuotas.length === 1 ? "" : "s"}`,
-      description: "Van más lento de lo que el período ya avanzó",
+      title: t("quotaPace.title", { count: behindQuotas.length }),
+      description: t("quotaPace.description"),
       href: "/dashboard/team",
     });
   }
@@ -147,8 +154,13 @@ export function computeDailyBrief(input: {
     items.push({
       id: "learning",
       tone: "info",
-      title: `${actionablePatterns.length} patrón${actionablePatterns.length === 1 ? "" : "es"} de éxito aprendido${actionablePatterns.length === 1 ? "" : "s"}`,
-      description: `${top.playbook} vía ${top.channel}: ${Math.round(top.win_rate * 100)}% de cierre en ${top.sample_size} deals`,
+      title: t("learning.title", { count: actionablePatterns.length }),
+      description: t("learning.description", {
+        playbook: top.playbook,
+        channel: top.channel,
+        winRate: Math.round(top.win_rate * 100),
+        sampleSize: top.sample_size,
+      }),
       href: "/dashboard/strategies",
     });
   }
@@ -159,8 +171,8 @@ export function computeDailyBrief(input: {
     items.push({
       id: "duplicates",
       tone: "info",
-      title: `${duplicateGroups} posible${duplicateGroups === 1 ? "" : "s"} duplicado${duplicateGroups === 1 ? "" : "s"}`,
-      description: "Entre empresas y contactos — vale la pena fusionarlos",
+      title: t("duplicates.title", { count: duplicateGroups }),
+      description: t("duplicates.description"),
       href: "/dashboard/companies",
     });
   }

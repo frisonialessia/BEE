@@ -27,7 +27,7 @@ export function buildSearchIndex({
     id: `company-${c.id}`,
     kind: "company",
     title: c.name,
-    subtitle: [c.industry, c.country].filter(Boolean).join(" · ") || "Empresa",
+    subtitle: [c.industry, c.country].filter(Boolean).join(" · "),
     href: `/dashboard/companies/${c.id}`,
   }));
 
@@ -48,7 +48,7 @@ export function buildSearchIndex({
       id: `contact-${l.id}`,
       kind: "contact",
       title: l.full_name,
-      subtitle: [l.title, company?.name].filter(Boolean).join(" · ") || "Contacto",
+      subtitle: [l.title, company?.name].filter(Boolean).join(" · "),
       // Los contactos no tienen ficha propia todavía — se ven dentro de su empresa.
       href: company ? `/dashboard/companies/${company.id}` : "/dashboard/companies",
     };

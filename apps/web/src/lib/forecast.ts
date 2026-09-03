@@ -171,7 +171,15 @@ export function computeForecast(
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     bucketsByKey.set(key, { key, label: monthLabel.format(d), weighted: 0, total: 0, count: 0 });
   }
-  const sinFecha: ForecastMonthBucket = { key: "sin_fecha", label: "Sin fecha", weighted: 0, total: 0, count: 0 };
+  // Bucket label follows the same locale as the month labels — this used
+  // to be Spanish regardless of the UI language.
+  const sinFecha: ForecastMonthBucket = {
+    key: "sin_fecha",
+    label: locale === "en" ? "No date" : "Sin fecha",
+    weighted: 0,
+    total: 0,
+    count: 0,
+  };
 
   const atRisk: AtRiskOpportunity[] = [];
 

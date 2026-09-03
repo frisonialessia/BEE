@@ -250,7 +250,8 @@
       "automation": "Automatización",
       "bi": "Reportes y BI",
       "pm": "Gestión de proyectos",
-      "other": "Otras"
+      "other": "Otras",
+      "signals": "Señales entrantes"
     },
     "automation": {
       "hint": "n8n, Zapier, Make o tu propio sistema se conectan aquí — crea un webhook saliente y apunta el nodo \"Webhook\" (o el trigger equivalente) a la URL que te damos. No hay credenciales de por medio: cada evento llega firmado con X-BEE-Signature para que puedas verificar que viene de BEE."
@@ -316,6 +317,24 @@
       "caption": "Configurados una sola vez para todo el despliegue de BEE, no por cuenta — ver variables de entorno del backend si necesitas cambiarlos.",
       "connected": "conectado",
       "mock": "modo simulado"
+    },
+    "inbound": {
+      "title": "Señales entrantes (webhook)",
+      "subtitle": "Cualquier fuente que pueda hacer un POST — tu CRM, Zapier/Make, un script propio, un proveedor de datos — puede enviar señales a BEE. Cada señal se clasifica, se puntúa contra tu ICP y, si califica, se convierte en oportunidad con estrategia.",
+      "endpointLabel": "Endpoint",
+      "headerLabel": "Header de autenticación",
+      "exampleLabel": "Ejemplo",
+      "noKeyHint": "Genera una API key (abajo, en Reportes y BI — es la misma key) para autenticar tus envíos. Sin ella las señales llegan sin organización y no aparecen en tu cuenta.",
+      "keyReady": "Ya tienes {count, plural, one {# API key activa} other {# API keys activas}} — usa cualquiera de ellas en el header.",
+      "docsLink": "Ver el contrato completo en /docs"
+    },
+    "detailCodes": {
+      "not_configured": "No configurado en el servidor todavía.",
+      "crm_import_readonly": "Importa {objects} cuando quieras — solo lectura, nunca escribe en {provider}.",
+      "jira_synced": "Sincroniza oportunidades con el proyecto {project} — crea un issue al llegar a Lista para acción, comenta al ganar/perder.",
+      "jira_project_missing": "Conectado — falta configurar un proyecto de Jira para activar la sincronización.",
+      "server_shared_credential": "Credencial compartida del servidor, no por cuenta — se configura una sola vez para todo el despliegue.",
+      "server_mock_mode": "Modo simulado — no hay credencial del servidor configurada."
     }
   },
   "team": {

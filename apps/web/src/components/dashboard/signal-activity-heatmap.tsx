@@ -1,10 +1,11 @@
 "use client";
 
 import { Tooltip as TooltipPrimitive } from "radix-ui";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { TooltipContent } from "@/components/ui/tooltip";
-import { computeActivityGrid, DAY_LABELS, mostActiveCell } from "@/lib/signal-activity-grid";
+import type { Locale } from "@/i18n/locales";
+import { computeActivityGrid, getDayLabels, mostActiveCell } from "@/lib/signal-activity-grid";
 import type { Signal } from "@/types/domain";
 
 const CELL = 16;
@@ -24,6 +25,8 @@ const HOUR_MARKS = [0, 6, 12, 18];
  * flotando chico con espacio en blanco alrededor. */
 export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
   const t = useTranslations("dashboardOverview.activityHeatmap");
+  const locale = useLocale() as Locale;
+  const dayLabels = getDayLabels(locale);
 
   if (signals.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("empty")}</p>;
@@ -50,7 +53,7 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
               {h}h
             </text>
           ))}
-          {DAY_LABELS.map((label, day) => (
+          {dayLabels.map((label, day) => (
             <text key={label} x={LABEL_W - 8} y={HEADER_H + day * STEP + CELL / 2 + 4} textAnchor="end" fontSize={11} fill="var(--color-muted-foreground)">
               {label}
             </text>
@@ -64,7 +67,7 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
           <span>
             {peak ? (
               <>
-                {t("peakActivity")} <span className="font-medium text-foreground">{DAY_LABELS[peak.day]} ~{peak.hour}h</span>
+                {t("peakActivity")} <span className="font-medium text-foreground">{dayLabels[peak.day]} ~{peak.hour}h</span>
               </>
             ) : (
               t("noActivity")
@@ -97,6 +100,7 @@ function ActivitySquare({
   y: number;
 }) {
   const t = useTranslations("dashboardOverview.activityHeatmap");
+  const dayLabels = getDayLabels(useLocale() as Locale);
   const opacity = cell.count === 0 ? 0.08 : 0.18 + 0.82 * (cell.count / maxCount);
   return (
     <TooltipPrimitive.Root>
@@ -113,7 +117,7 @@ function ActivitySquare({
       </TooltipPrimitive.Trigger>
       <TooltipContent>
         <p className="font-medium">
-          {DAY_LABELS[cell.day]} · {cell.hour}:00–{cell.hour}:59
+          {dayLabels[cell.day]} · {cell.hour}:00–{cell.hour}:59
         </p>
         <p className="text-muted-foreground">{t("signalsDetected", { count: cell.count })}</p>
       </TooltipContent>

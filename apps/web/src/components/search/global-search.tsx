@@ -10,6 +10,7 @@ import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { buildSearchIndex, searchIndex, type SearchResult } from "@/lib/search/build-search-index";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 const KIND_ICON: Record<SearchResult["kind"], typeof Building2> = {
   company: Building2,
@@ -24,6 +25,9 @@ export function GlobalSearch({ className }: { className?: string }) {
   // inside a component/hook.
   const t = useTranslations("common.commandPalette.kinds");
   const tSearch = useTranslations("common.globalSearch");
+  // The full placeholder ("Buscar empresas, oportunidades, contactos…") gets
+  // clipped to two words inside the 10rem the phone header can spare.
+  const isNarrow = useMediaQuery("(max-width: 639px)");
   const KIND_LABEL: Record<SearchResult["kind"], string> = {
     company: t("company"),
     opportunity: t("opportunity"),
@@ -69,7 +73,7 @@ export function GlobalSearch({ className }: { className?: string }) {
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder={tSearch("placeholder")}
+          placeholder={isNarrow ? tSearch("placeholderShort") : tSearch("placeholder")}
           className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground"
         />
       </div>
@@ -99,9 +103,9 @@ export function GlobalSearch({ className }: { className?: string }) {
                       <Icon className="size-4 shrink-0 text-[var(--color-chart-4)]" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-medium">{r.title}</p>
-                        <p className="truncate bee-micro">{r.subtitle}</p>
+                        {r.subtitle && <p className="truncate bee-micro">{r.subtitle}</p>}
                       </div>
-                      <span className="shrink-0 text-[11px] uppercase tracking-wide text-muted-foreground">
+                      <span className="shrink-0 text-micro uppercase tracking-wide text-muted-foreground">
                         {KIND_LABEL[r.kind]}
                       </span>
                     </Link>

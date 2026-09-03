@@ -6,7 +6,17 @@
  */
 import type { Signal } from "@/types/domain";
 
-export const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+import { defaultLocale, localeTags, type Locale } from "@/i18n/locales";
+
+/** Short weekday labels, Monday-first, in the UI language — was a fixed
+ *  Spanish array regardless of locale. 2024-01-01 is a Monday. */
+export function getDayLabels(locale: Locale = defaultLocale): string[] {
+  const fmt = new Intl.DateTimeFormat(localeTags[locale], { weekday: "short" });
+  return Array.from({ length: 7 }, (_, i) => {
+    const label = fmt.format(new Date(2024, 0, 1 + i)).replace(/\.$/, "");
+    return label.charAt(0).toUpperCase() + label.slice(1);
+  });
+}
 
 export interface ActivityCell {
   day: number; // 0 = lunes .. 6 = domingo

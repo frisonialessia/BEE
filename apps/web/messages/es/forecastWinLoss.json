@@ -70,7 +70,33 @@
     "title": "Calificación (MEDDIC)",
     "amountLabel": "Monto estimado",
     "amountPlaceholder": "USD",
-    "closeDateLabel": "Cierre esperado"
+    "closeDateLabel": "Cierre esperado",
+    "meddic": {
+      "metric": {
+        "label": "Métrica",
+        "hint": "¿Hay un número de negocio claro que la cuenta quiere mejorar?"
+      },
+      "economic_buyer": {
+        "label": "Comprador económico",
+        "hint": "¿Identificamos a quién firma el gasto?"
+      },
+      "decision_criteria": {
+        "label": "Criterios de decisión",
+        "hint": "¿Sabemos con qué evalúan las opciones?"
+      },
+      "decision_process": {
+        "label": "Proceso de decisión",
+        "hint": "¿Conocemos los pasos y tiempos para decidir?"
+      },
+      "identify_pain": {
+        "label": "Dolor identificado",
+        "hint": "¿Confirmamos la urgencia o el dolor real?"
+      },
+      "champion": {
+        "label": "Champion interno",
+        "hint": "¿Hay alguien adentro empujando la compra por nosotros?"
+      }
+    }
   },
   "barChart": {
     "tooltip": "{label}: {weighted} ponderado de {total} en pipeline ({count, plural, one {# oportunidad} other {# oportunidades}})",

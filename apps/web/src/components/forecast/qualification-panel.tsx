@@ -80,7 +80,7 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
           return (
             <Label
               key={c.key}
-              title={c.hint}
+              title={t(`meddic.${c.key}.hint`)}
               className="cursor-pointer items-start rounded-[var(--radius-md)] px-2 py-1.5 text-xs font-normal transition-colors hover:bg-[var(--color-primary)]/25"
             >
               <Checkbox
@@ -88,7 +88,7 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
                 onCheckedChange={() => toggleCriterion(c.key)}
                 className="mt-0.5 shrink-0"
               />
-              <span className={checked ? "text-foreground" : "text-muted-foreground"}>{c.label}</span>
+              <span className={checked ? "text-foreground" : "text-muted-foreground"}>{t(`meddic.${c.key}.label`)}</span>
             </Label>
           );
         })}

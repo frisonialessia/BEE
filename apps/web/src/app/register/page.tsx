@@ -65,7 +65,7 @@ export default function RegisterPage() {
                 value={organizationName}
                 onChange={(e) => setOrganizationName(e.target.value)}
                 className="bee-input"
-                placeholder="Acme Inc"
+                placeholder={t("orgNamePlaceholder")}
               />
             </div>
 
@@ -79,7 +79,7 @@ export default function RegisterPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="bee-input"
-                placeholder="Alice Owner"
+                placeholder={t("fullNamePlaceholder")}
               />
             </div>
 
@@ -95,7 +95,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="bee-input"
-                placeholder="tu@empresa.com"
+                placeholder={t("emailPlaceholder")}
               />
             </div>
 
