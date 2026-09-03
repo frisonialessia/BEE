@@ -79,7 +79,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
 
   return (
     <div className="bee-bento bee-outline--blue bee-bento-pad space-y-3">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-2">
           <span className="shrink-0 text-muted-foreground">
             {ACTION_TYPE_ICONS[action.action_type] ?? (
@@ -126,7 +126,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
             type="button"
             onClick={handleApprove}
             disabled={!!loading}
-            className="bee-btn flex-1"
+            className="bee-btn bee-btn--primary"
           >
             <CheckCircle className="size-3.5" />
             {loading === "approve" ? t("approving") : t("approve")}
@@ -135,7 +135,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
             type="button"
             onClick={handleReject}
             disabled={!!loading}
-            className="bee-btn flex-1 bg-background"
+            className="bee-btn-text"
           >
             <XCircle className="size-3.5" />
             {loading === "reject" ? t("rejecting") : t("reject")}
@@ -186,7 +186,7 @@ export function PendingActionsPanel() {
 
   return (
     <div className="bee-bento bee-bento-pad space-y-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="flex items-center gap-2 bee-card-title">
             <ShieldCheck className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-5)" }} />

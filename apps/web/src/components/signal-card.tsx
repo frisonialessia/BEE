@@ -29,7 +29,7 @@ export function SignalCard({ signal }: { signal: Signal }) {
       className="bee-bento bee-bento-pad transition-colors hover:border-[var(--color-chart-4)]"
       style={{ background: bg }}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-4">
         <div
           className="mt-1 flex size-8 shrink-0 items-center justify-center border border-border bg-background"
           style={{ borderRadius: "var(--radius-md)" }}

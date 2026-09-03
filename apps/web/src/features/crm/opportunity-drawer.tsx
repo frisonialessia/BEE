@@ -101,7 +101,7 @@ export function OpportunityDrawer() {
         aria-modal="true"
         aria-label={t("dialogLabel")}
       >
-        <div className="flex items-center justify-between gap-3 border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
           <div>
             <p className="bee-eyebrow">{t("eyebrow")}</p>
             <h2 className="mt-1 text-lg font-semibold tracking-tight">

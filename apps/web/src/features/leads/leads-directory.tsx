@@ -186,7 +186,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
     <div>
       <header className={showHeader ? "mb-4" : "mb-4"}>
         {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
-        <div className={`flex flex-wrap items-start justify-between gap-3 ${showHeader ? "mt-1" : ""}`}>
+        <div className={`flex flex-wrap items-start justify-between gap-4 ${showHeader ? "mt-1" : ""}`}>
           {showHeader && (
             <div>
               <h1 className="bee-display">{t("title")}</h1>
@@ -226,7 +226,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
 
       {loading ? (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-24" />
             ))}
@@ -240,7 +240,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard label={t("metrics.total")} value={leads.length} />
             <MetricCard
               label={t("metrics.avgScore")}

@@ -24,7 +24,7 @@ export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
 
   return (
     <article className="bee-bento bee-bento-pad transition-colors hover:border-[var(--color-chart-4)]">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex size-8 shrink-0 items-center justify-center border border-border bg-background">
             <Target className="size-3.5 stroke-[1.25]" />

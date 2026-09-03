@@ -63,7 +63,7 @@ export function OpportunityTimeline({ opportunityId }: { opportunityId: string }
   return (
     <ol className="space-y-0">
       {sorted.map((entry, i) => (
-        <li key={entry.id} className="relative flex gap-3 pb-4 last:pb-0">
+        <li key={entry.id} className="relative flex gap-4 pb-4 last:pb-0">
           {i < sorted.length - 1 && (
             <span className="absolute left-[5px] top-3 h-full w-px bg-border" aria-hidden />
           )}

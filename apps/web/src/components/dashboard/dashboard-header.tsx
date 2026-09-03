@@ -16,18 +16,18 @@ import { GlobalSearch } from "@/components/search/global-search";
  *  que quepa todo sin desbordar. */
 export function DashboardHeader() {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 sm:gap-3 sm:px-5">
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 sm:gap-4 sm:px-5">
       <MobileNavToggle />
       <GlobalSearch className="max-w-[10rem] sm:max-w-xs md:max-w-sm" />
       <CommandPaletteHint />
-      <div className="ml-auto flex items-center gap-2 sm:gap-3">
+      <div className="ml-auto flex items-center gap-2 sm:gap-4">
         <OnboardingHeaderButton />
         <AssistantHeaderLink />
         <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
         {/* lg, not md: at tablet width (768–1023px) the team strip plus the
             language switcher pushed the account menu ~50px past the right
             edge of the header. */}
-        <div className="hidden items-center gap-3 lg:flex">
+        <div className="hidden items-center gap-4 lg:flex">
           <TeamPresence />
           <div className="h-6 w-px bg-border" aria-hidden />
         </div>

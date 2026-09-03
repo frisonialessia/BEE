@@ -180,7 +180,7 @@ function CrmColumn({
               <button
                 type="button"
                 aria-label={t("stageHelpAria")}
-                className="text-muted-foreground/70 transition-colors hover:text-foreground"
+                className="text-muted-foreground transition-colors hover:text-foreground"
               >
                 <CircleHelp className="size-3" />
               </button>
@@ -222,7 +222,7 @@ function CrmColumn({
           // instead of being locked to viewport height with its own
           // internal scrollbar. min-h keeps an empty column's "Sin
           // oportunidades aquí" message from collapsing to nothing.
-          "flex min-h-[160px] flex-col gap-3 rounded-[var(--radius-lg)] border border-[var(--bee-card-border)] bg-[var(--color-card)] p-3 transition-colors",
+          "flex min-h-[160px] flex-col gap-4 rounded-[var(--radius-lg)] border border-[var(--bee-card-border)] bg-[var(--color-card)] p-3 transition-colors",
           over && "border-[var(--color-chart-4)] bg-[var(--color-chart-4)]/10",
         )}
       >
@@ -376,7 +376,7 @@ export function CrmBoard() {
           <div className="mb-2.5 flex shrink-0 items-center px-1">
             <p className="bee-micro text-muted-foreground">{t("stageSubtitles.closed")}</p>
           </div>
-          <div className="flex h-full min-h-[220px] flex-1 flex-col gap-3 overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--bee-card-border)] bg-[var(--color-card)] p-3">
+          <div className="flex h-full min-h-[220px] flex-1 flex-col gap-4 overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--bee-card-border)] bg-[var(--color-card)] p-4">
             {closed.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-2 px-2 py-8 text-center">
                 <p className="bee-micro">{t("emptyClosed")}</p>

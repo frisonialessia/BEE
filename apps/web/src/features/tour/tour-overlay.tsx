@@ -155,7 +155,7 @@ function TourTooltip({ box }: { box: Rect }) {
       role="dialog"
       aria-label={t("dialogAriaLabel")}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-4">
         <span className="inline-flex items-center gap-2 rounded-full bg-[var(--color-chart-4)] px-3 py-1 text-micro font-semibold uppercase tracking-wide text-white">
           {t("badge")}
           <span className="opacity-80">

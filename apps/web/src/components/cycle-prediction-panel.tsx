@@ -74,7 +74,7 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-xs text-muted-foreground">{t("estimatedClose")}</p>
               <p className="font-medium">

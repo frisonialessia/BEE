@@ -67,7 +67,7 @@ export function GettingStartedCard({
         {steps.map((step) => (
           <li
             key={step.key}
-            className="bee-surface flex items-start gap-3 p-3"
+            className="bee-surface flex items-start gap-4 p-4"
             aria-current={step.done ? undefined : "step"}
           >
             {step.done ? (

@@ -67,13 +67,6 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
         </span>
       </div>
 
-      <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-primary)]/40">
-        <div
-          className="h-full rounded-full bg-[var(--color-chart-4)] transition-[width]"
-          style={{ width: `${score * 100}%` }}
-        />
-      </div>
-
       <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {MEDDIC_CRITERIA.map((c) => {
           const checked = Boolean(qualification[c.key]);

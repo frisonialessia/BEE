@@ -41,8 +41,8 @@ function ProviderRow({ provider }: { provider: ProviderStatus }) {
       : 100;
 
   return (
-    <div className="flex items-center justify-between gap-3 py-3">
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex items-center justify-between gap-4 py-3">
+      <div className="flex min-w-0 items-center gap-4">
         <StatusDot className={HEALTH_DOT[provider.health]} />
         <div className="min-w-0">
           <p className="truncate text-sm font-medium tracking-tight">{label}</p>

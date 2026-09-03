@@ -169,7 +169,7 @@ export function QuotasSection({
             const actual = actualFor(q);
             const pct = Math.min(100, Math.round((actual / q.target_amount) * 100));
             return (
-              <div key={q.id} className="bee-bento p-3">
+              <div key={q.id} className="bee-bento p-4">
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <p className="text-sm font-medium">{owner ?? t("ownerFallback")}</p>

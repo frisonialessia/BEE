@@ -45,7 +45,7 @@ export function RelationshipMap({
   return (
     <div className="space-y-3">
       {groups.map((group) => (
-        <div key={group.tier} className="flex items-start gap-3">
+        <div key={group.tier} className="flex items-start gap-4">
           <p className="w-28 shrink-0 pt-2 bee-eyebrow">
             {TIER_LABELS[group.tier]}
           </p>

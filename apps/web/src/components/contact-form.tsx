@@ -56,7 +56,7 @@ export function ContactForm({ source }: ContactFormProps) {
 
   if (status === "success") {
     return (
-      <div className="flex flex-col items-center gap-3 py-8 text-center" role="status">
+      <div className="flex flex-col items-center gap-4 py-8 text-center" role="status">
         <CheckCircle2 className="size-10 text-[var(--color-chart-4)]" />
         <h2 className="text-lg font-semibold">{t("successTitle")}</h2>
         <p className="bee-caption max-w-xs">{t("successBody")}</p>

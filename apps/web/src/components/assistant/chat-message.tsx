@@ -35,7 +35,7 @@ export function ChatMessage({ message }: { message: AssistantMessage }) {
   const isUser = message.role === "user";
 
   return (
-    <div className={cn("flex items-start gap-3", isUser && "flex-row-reverse")}>
+    <div className={cn("flex items-start gap-4", isUser && "flex-row-reverse")}>
       {!isUser && (
         <span className="bee-assistant-gradient mt-1 flex size-[17px] shrink-0 items-center justify-center rounded-full">
           {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, mismo asset que el FAB (ask-bee-fab.tsx) */}

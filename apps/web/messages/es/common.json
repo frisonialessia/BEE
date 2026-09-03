@@ -78,5 +78,8 @@
   "liveBadge": {
     "live": "En vivo",
     "demo": "Datos demo"
+  },
+  "kpi": {
+    "allZero": "Sin actividad todavía — los indicadores aparecen en cuanto haya datos."
   }
 }

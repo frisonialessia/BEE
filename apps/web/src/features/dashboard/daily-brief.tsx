@@ -117,7 +117,7 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
             <Link
               key={item.id}
               href={resolveHref(item.href)}
-              className={`bee-bento flex items-start gap-3 px-3 py-3 transition-colors hover:bg-[var(--color-primary)]/20 ${TONE_OUTLINE[item.tone]}`}
+              className={`bee-bento flex items-start gap-4 px-3 py-3 transition-colors hover:bg-[var(--color-primary)]/20 ${TONE_OUTLINE[item.tone]}`}
             >
               <Icon className="mt-1 size-4 shrink-0" style={{ color: TONE_COLOR[item.tone] }} />
               <div className="min-w-0">
@@ -138,7 +138,7 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
         <p className="bee-eyebrow">{t("title")}</p>
       </div>
       {loading ? (
-        <div className="flex gap-3 overflow-x-auto pb-1">
+        <div className="flex gap-4 overflow-x-auto pb-1">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-[70px] w-64 shrink-0 rounded-[var(--radius-lg)]" />
           ))}
@@ -148,14 +148,14 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
           <p className="text-xs text-muted-foreground">{t("empty")}</p>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-4">
           {items.map((item) => {
             const Icon = TONE_ICON[item.tone];
             return (
               <Link
                 key={item.id}
                 href={resolveHref(item.href)}
-                className="bee-glass bee-glass--hover flex w-64 shrink-0 items-start gap-3 rounded-[var(--radius-lg)] px-4 py-3"
+                className="bee-glass bee-glass--hover flex w-64 shrink-0 items-start gap-4 rounded-[var(--radius-lg)] px-4 py-3"
               >
                 <Icon className="mt-1 size-4 shrink-0" style={{ color: TONE_COLOR[item.tone] }} />
                 <div className="min-w-0">

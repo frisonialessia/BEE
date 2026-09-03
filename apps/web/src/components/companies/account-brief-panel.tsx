@@ -76,7 +76,7 @@ export function AccountBriefPanel({ companyId }: { companyId: string }) {
           {Object.keys(brief.findings).length > 0 && (
             <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {Object.entries(brief.findings).map(([key, value]) => (
-                <div key={key} className="bee-bento p-3">
+                <div key={key} className="bee-bento p-4">
                   <dt className="bee-caption font-medium">{humanizeKey(key)}</dt>
                   <dd className="mt-1 text-xs text-muted-foreground">{String(value)}</dd>
                 </div>

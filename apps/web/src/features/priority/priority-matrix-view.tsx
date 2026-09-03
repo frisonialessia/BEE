@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { PriorityMatrixChart, QUADRANT_COLOR } from "@/components/priority/priority-matrix-chart";
+import { KpiStrip } from "@/components/metric-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { IcpSettingsForm } from "@/features/priority/icp-settings-form";
 import { useCompanies } from "@/hooks/queries/use-companies";
@@ -72,7 +73,7 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
     <div>
       <header className={showHeader ? "mb-4" : "mb-4"}>
         {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
-        <div className={`flex flex-wrap items-start justify-between gap-3 ${showHeader ? "mt-1" : ""}`}>
+        <div className={`flex flex-wrap items-start justify-between gap-4 ${showHeader ? "mt-1" : ""}`}>
           {showHeader && (
             <div>
               <h1 className="bee-display">{t("title")}</h1>
@@ -126,14 +127,15 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
                * vez de bee-kpi — antes esta fila no tenía columna base para
                * móvil (antes de sm caía a 1 sola por fila) y cada tarjeta
                * era mucho más alta (bee-bento-pad + número clamp 28-36px). */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {QUADRANT_ORDER.map((q) => (
-                  <div key={q} className="bee-bento p-4 text-center">
-                    <p className="bee-stat__val">{byQuadrant[q].length}</p>
-                    <p className="bee-stat__lbl mt-1">{t(`quadrants.${q}.label`)}</p>
-                  </div>
-                ))}
-              </div>
+              <KpiStrip
+                cols={4}
+                hideZero
+                items={QUADRANT_ORDER.map((q) => ({
+                  label: t(`quadrants.${q}.label`),
+                  value: byQuadrant[q].length,
+                  accent: QUADRANT_COLOR[q],
+                }))}
+              />
 
               <section className="bee-surface bee-bento-pad">
                 <h3 className="bee-card-title">{t("matrixSection.title")}</h3>
@@ -148,8 +150,11 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
                   <PriorityMatrixChart priorities={priorities} />
                   <div className="w-full flex-1 space-y-3">
                     <p className="bee-caption">{t("matrixSection.description")}</p>
+                    {/* Legend entries only for quadrants with accounts — a
+                        "Cultivar · 0" card is dead space; the zeros are the
+                        one line below the columns. */}
                     <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                      {QUADRANT_ORDER.map((q) => (
+                      {QUADRANT_ORDER.filter((q) => byQuadrant[q].length > 0).map((q) => (
                         <li
                           key={q}
                           className="flex items-start gap-2 rounded-[var(--radius-md)] border border-border bg-[var(--color-primary)]/15 p-3"
@@ -177,9 +182,11 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
                   many companies stretches every sibling to match, so an
                   empty quadrant ends up padded with dead whitespace instead
                   of sitting at its own compact height. */}
-              <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {QUADRANT_ORDER.map((q) => (
-                  <div key={q} className="flex flex-col">
+              {/* Only quadrants with accounts get a column; the empty ones
+                  are one line below, so the grid never pads dead space. */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {QUADRANT_ORDER.filter((q) => byQuadrant[q].length > 0).map((q) => (
+                  <div key={q} className="flex h-full flex-col">
                     <div className="mb-2 px-1">
                       <h3 className="bee-eyebrow">{t(`quadrants.${q}.label`)}</h3>
                       <p className="mt-1 bee-micro">{t(`quadrants.${q}.hint`)}</p>
@@ -205,6 +212,15 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
                   </div>
                 ))}
               </div>
+              {QUADRANT_ORDER.some((q) => byQuadrant[q].length === 0) && (
+                <p className="bee-caption">
+                  {t("emptyQuadrantsLine", {
+                    quadrants: QUADRANT_ORDER.filter((q) => byQuadrant[q].length === 0)
+                      .map((q) => t(`quadrants.${q}.label`))
+                      .join(" · "),
+                  })}
+                </p>
+              )}
             </>
           )}
         </div>

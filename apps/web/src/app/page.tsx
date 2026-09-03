@@ -181,7 +181,7 @@ export default async function Home() {
               {t("heroTitle")}
             </h1>
             <p className="bee-caption mx-auto mt-6 max-w-xl text-base sm:text-lg">{t("heroSubtitle")}</p>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
               <Link href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary">
                 {t("ctaStart")} <ArrowRight className="size-4" />
               </Link>
@@ -268,7 +268,7 @@ export default async function Home() {
             <p className="bee-caption mt-3">{t("guaranteesSubtitle")}</p>
           </div>
 
-          <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {GUARANTEE_KEYS.map((key, i) => {
               const Icon = GUARANTEE_ICONS[key];
               return (

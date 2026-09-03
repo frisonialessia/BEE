@@ -42,7 +42,7 @@ export function AskBeeFab() {
     <div className="fixed bottom-5 right-5 z-40 flex flex-col items-end">
       {open && (
         <div className="bee-fab-panel mb-3 flex h-[420px] w-[min(340px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-[var(--radius-lg)] border border-border bg-[var(--color-background)] shadow-[0_8px_32px_color-mix(in_srgb,var(--color-text)_16%,transparent)]">
-          <div className="bee-assistant-gradient flex shrink-0 items-center gap-3 px-4 py-3">
+          <div className="bee-assistant-gradient flex shrink-0 items-center gap-4 px-4 py-3">
             <span className="flex size-[30px] shrink-0 items-center justify-center rounded-full bg-white/20 shadow-[0_0_0_5px_rgba(255,255,255,0.12)]">
               {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, no una foto */}
               <img src="/assistant-bee.svg" alt="" className="size-4" aria-hidden="true" />

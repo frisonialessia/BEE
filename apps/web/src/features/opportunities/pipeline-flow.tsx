@@ -109,7 +109,7 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
 
   return (
     <div className="bee-surface bee-bento-pad">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="bee-eyebrow">{t("eyebrow")}</p>
           <h2 className="mt-1 bee-card-title">{t("title", { count: total })}</h2>
@@ -184,7 +184,7 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
         <div className="w-full flex-1 space-y-4">
           <ul className="space-y-2">
             {segments.map((seg) => (
-              <li key={seg.id} className="flex items-center justify-between gap-3">
+              <li key={seg.id} className="flex items-center justify-between gap-4">
                 <span className="inline-flex items-center gap-2 text-xs">
                   <span className="size-2.5 shrink-0 rounded-full" style={{ background: COLUMN_COLOR[seg.id] }} />
                   {t(`columns.${seg.id}`)}

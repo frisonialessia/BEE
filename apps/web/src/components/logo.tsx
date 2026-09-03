@@ -14,7 +14,7 @@ export function Logo({
   withText?: boolean;
 }) {
   return (
-    <div className={cn("flex items-center gap-3", className)}>
+    <div className={cn("flex items-center gap-4", className)}>
       {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, no una foto que se beneficie de next/image */}
       <img src="/icon.svg" alt="" className="h-8 w-8 shrink-0" aria-hidden="true" />
       {withText && (

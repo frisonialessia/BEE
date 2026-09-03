@@ -77,7 +77,7 @@ export function IndustrySignalHeatmap({
 
   return (
     <TooltipPrimitive.Provider delayDuration={100}>
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           width="100%"

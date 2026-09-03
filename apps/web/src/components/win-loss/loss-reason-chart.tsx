@@ -28,7 +28,7 @@ export function LossReasonChart({ stats }: { stats: LossReasonStat[] }) {
       {stats.map((s) => {
         const label = s.reason === "unspecified" ? t("unspecified") : lossReasonLabels[s.reason];
         return (
-          <div key={s.reason} className="flex items-center gap-3">
+          <div key={s.reason} className="flex items-center gap-4">
             <p className="w-40 shrink-0 truncate text-xs text-muted-foreground">{label}</p>
             <Tooltip>
               <TooltipTrigger asChild>

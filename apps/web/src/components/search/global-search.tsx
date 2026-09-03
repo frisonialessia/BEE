@@ -98,7 +98,7 @@ export function GlobalSearch({ className }: { className?: string }) {
                         setOpen(false);
                         setQuery("");
                       }}
-                      className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--color-primary)]/30"
+                      className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-[var(--color-primary)]/30"
                     >
                       <Icon className="size-4 shrink-0 text-[var(--color-chart-4)]" />
                       <div className="min-w-0 flex-1">

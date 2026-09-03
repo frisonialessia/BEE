@@ -57,7 +57,7 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
     <p className="bee-caption">{t("page.loading")}</p>
   ) : upcoming.length === 0 ? (
     <div className="flex h-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-8 text-center">
-      <CalendarDays className="size-6 text-muted-foreground/40" />
+      <CalendarDays className="size-6 text-muted-foreground" />
       <p className="bee-caption">{t("widget.empty")}</p>
     </div>
   ) : (
@@ -65,7 +65,7 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
       {upcoming.map((m) => {
         const dotColor = m.color ? `var(--color-${m.color})` : CLIENT_CONTEXT_DOT[m.client_context ?? "new_contact"];
         return (
-          <li key={m.id} className="bee-bento flex items-center gap-3 p-2">
+          <li key={m.id} className="bee-bento flex items-center gap-4 p-2">
             <span className="size-2 shrink-0 rounded-full" style={{ background: dotColor }} />
             <span className="bee-micro shrink-0 font-mono text-muted-foreground">
               {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", {

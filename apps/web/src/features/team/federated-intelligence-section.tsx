@@ -66,7 +66,7 @@ export function FederatedIntelligenceSection() {
         <Skeleton className="h-16" />
       ) : (
         <div className="space-y-3">
-          <div className="bee-bento flex items-start gap-2 p-3">
+          <div className="bee-bento flex items-start gap-2 p-4">
             <span className="text-sm">ⓘ</span>
             <p className="bee-caption">{t("explainer")}</p>
           </div>

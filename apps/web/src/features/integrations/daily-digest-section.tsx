@@ -75,7 +75,7 @@ function DigestForm({ data, canManage }: { data: DigestSettings; canManage: bool
         </Badge>
       </div>
 
-      <form onSubmit={handleSave} className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_auto]">
+      <form onSubmit={handleSave} className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto_auto]">
         <div className="min-w-0">
           <label className="bee-micro font-medium" htmlFor="digest-webhook">
             {t("webhookLabel")}

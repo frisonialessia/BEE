@@ -16,6 +16,7 @@ import {
 } from "@/lib/api";
 import { formatDateTime } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
+import { KpiStrip } from "@/components/metric-card";
 
 // ── DLQ Panel ─────────────────────────────────────────────────────────────────
 
@@ -52,7 +53,7 @@ function DLQEventRow({ event, onRetry, onResolve }: {
 
   return (
     <div
-      className="bee-bento p-3 space-y-2"
+      className="bee-bento p-4 space-y-2"
       style={
         isFailed
           ? { borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 8%, var(--color-card))" }
@@ -171,28 +172,19 @@ function DLQPanel() {
 
   return (
     <div className="space-y-4">
+      {/* "Total" es la suma de las otras 4 — se oculta en móvil para que
+          la fila quede en 2×2, mismo criterio que "Score medio" en Resumen. */}
       {summary && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {/* Misma tarjeta compacta que Dark Funnel/Resumen (p-4, no p-2) —
-           * "Total" es la suma de las otras 4, no una cuenta accionable por sí
-           * sola, así que se oculta solo en móvil (mismo criterio que "Score
-           * medio" en Resumen) para que la fila quede en 2×2. */}
-          {[
-            { label: t("stats.total"), value: summary.total_events, color: "var(--color-text)", hideOnMobile: true },
-            { label: t("stats.pending"), value: summary.pending_count, color: "var(--warning)" },
-            { label: t("stats.resolved"), value: summary.resolved_count, color: "var(--success)" },
-            { label: t("stats.failed"), value: summary.permanently_failed_count, color: "var(--color-chart-2)" },
-            { label: t("stats.dueNow"), value: summary.due_for_retry_count, color: "var(--color-chart-4)" },
-          ].map(({ label, value, color, hideOnMobile }) => (
-            <div
-              key={label}
-              className={`bee-bento p-4 text-center ${hideOnMobile ? "hidden sm:block" : ""}`}
-            >
-              <p className="bee-stat__val" style={{ color }}>{value}</p>
-              <p className="bee-stat__lbl mt-1">{label}</p>
-            </div>
-          ))}
-        </div>
+        <KpiStrip
+          cols={5}
+          items={[
+            { label: t("stats.total"), value: summary.total_events, hideOnMobile: true },
+            { label: t("stats.pending"), value: summary.pending_count, accent: "var(--warning)" },
+            { label: t("stats.resolved"), value: summary.resolved_count, accent: "var(--success)" },
+            { label: t("stats.failed"), value: summary.permanently_failed_count, accent: "var(--color-chart-2)" },
+            { label: t("stats.dueNow"), value: summary.due_for_retry_count, accent: "var(--color-chart-4)" },
+          ]}
+        />
       )}
 
       <div className="bee-filter-tabs">
@@ -263,7 +255,7 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
 
   return (
     <div
-      className="bee-bento p-3 space-y-2"
+      className="bee-bento p-4 space-y-2"
       style={
         entry.manual_review_required
           ? { borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 8%, var(--color-card))" }
@@ -347,23 +339,14 @@ function AuditPanel() {
   return (
     <div className="space-y-4">
       {summary && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <div className="bee-bento p-4 text-center">
-            <p className="bee-stat__val">{summary.total_entries}</p>
-            <p className="bee-stat__lbl mt-1">{t("stats.total")}</p>
-          </div>
-          <div
-            className="bee-bento p-4 text-center"
-            style={{ borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 12%, var(--color-background))" }}
-          >
-            <p className="bee-stat__val" style={{ color: "var(--color-chart-2)" }}>{summary.manual_review_count}</p>
-            <p className="bee-stat__lbl mt-1">{t("stats.reviewRequired")}</p>
-          </div>
-          <div className="bee-bento p-4 text-center">
-            <p className="bee-stat__val" style={{ color: "var(--success)" }}>{(summary.avg_confidence_score * 100).toFixed(0)}%</p>
-            <p className="bee-stat__lbl mt-1">{t("stats.avgConfidence")}</p>
-          </div>
-        </div>
+        <KpiStrip
+          cols={3}
+          items={[
+            { label: t("stats.total"), value: summary.total_entries },
+            { label: t("stats.reviewRequired"), value: summary.manual_review_count, accent: "var(--color-chart-2)", tone: "warm" },
+            { label: t("stats.avgConfidence"), value: `${(summary.avg_confidence_score * 100).toFixed(0)}%`, accent: "var(--success)" },
+          ]}
+        />
       )}
 
       <div className="flex items-center gap-2">

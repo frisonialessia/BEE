@@ -6,6 +6,7 @@ import type { IntroPath, NetworkConnection, NetworkQueryResult, NetworkStats } f
 import { addNetworkConnection, findIntroPaths, getNetworkConnections, getNetworkStats } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LiveBadge } from "@/components/live-badge";
+import { KpiStrip } from "@/components/metric-card";
 
 // BEE has no green/blue/purple scales of its own — success maps to
 // var(--success) (chart-5, magenta), caution to var(--warning) (chart-1,
@@ -185,19 +186,15 @@ export function NetworkNavigatorPanel() {
     <div className="space-y-4">
       {/* Stats row */}
       {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
+        <KpiStrip
+          cols={4}
+          items={[
             { label: t("stats.totalConnections"), value: stats.total_connections },
             { label: t("stats.firstDegree"), value: stats.first_degree_count },
             { label: t("stats.companiesCovered"), value: stats.companies_covered },
             { label: t("stats.avgStrength"), value: `${stats.avg_relationship_strength}/10` },
-          ].map(({ label, value }) => (
-            <div key={label} className="bee-bento p-3 text-center">
-              <p className="bee-stat__val">{value}</p>
-              <p className="bee-stat__lbl">{label}</p>
-            </div>
-          ))}
-        </div>
+          ]}
+        />
       )}
 
       {/* Path finder */}
@@ -244,7 +241,7 @@ export function NetworkNavigatorPanel() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {pathResult.paths_found.map((path, i) => (
                 <PathCard key={i} path={path} />
               ))}
@@ -269,13 +266,13 @@ export function NetworkNavigatorPanel() {
 
       {showAdd && (
         <form onSubmit={handleAddConnection} className="rounded-lg border border-dashed border-border bg-[var(--color-primary)] p-4 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input value={addName} onChange={(e) => setAddName(e.target.value)} placeholder={t("form.contactNamePlaceholder")} required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
             <input value={addCompany} onChange={(e) => setAddCompany(e.target.value)} placeholder={t("form.companyNamePlaceholder")} required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
             <input value={addDomain} onChange={(e) => setAddDomain(e.target.value)} placeholder={t("form.domainPlaceholder")} required className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
             <input value={addTitle} onChange={(e) => setAddTitle(e.target.value)} placeholder={t("form.titlePlaceholder")} className="rounded-sm border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]" />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <label className="text-xs text-muted-foreground shrink-0">{t("form.relationshipStrength")} <span className="font-bold text-foreground">{addStrength}/10</span></label>
             <input type="range" min={1} max={10} value={addStrength} onChange={(e) => setAddStrength(Number(e.target.value))} className="flex-1 accent-[var(--color-chart-4)]" />
           </div>
@@ -298,7 +295,7 @@ export function NetworkNavigatorPanel() {
       ) : (
         <div className="space-y-2">
           {connections.slice(0, 15).map((conn) => (
-            <div key={conn.id} className="flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-[var(--color-card)] hover:border-border transition-colors">
+            <div key={conn.id} className="flex items-center gap-4 px-4 py-3 rounded-lg border border-border bg-[var(--color-card)] hover:border-border transition-colors">
               <div className="w-8 h-8 rounded-sm bg-[var(--color-primary)] flex items-center justify-center text-xs font-bold text-muted-foreground shrink-0">
                 {conn.contact_name.slice(0, 2).toUpperCase()}
               </div>

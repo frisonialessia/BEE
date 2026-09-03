@@ -93,7 +93,7 @@ export function NotificationBell() {
                       href={n.href}
                       onClick={() => setOpen(false)}
                       className={cn(
-                        "flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--color-primary)]/30",
+                        "flex items-start gap-4 px-4 py-3 text-left transition-colors hover:bg-[var(--color-primary)]/30",
                       )}
                     >
                       <Icon className="mt-1 size-4 shrink-0" style={{ color: KIND_COLOR[n.kind] }} />

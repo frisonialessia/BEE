@@ -105,7 +105,8 @@
       }
     },
     "emptyQuadrant": "No accounts in this zone yet",
-    "fitIntent": "Fit {fit} · Intent {intent}"
+    "fitIntent": "Fit {fit} · Intent {intent}",
+    "emptyQuadrantsLine": "No accounts in: {quadrants}"
   },
   "icpForm": {
     "title": "Ideal Customer Profile (ICP)",

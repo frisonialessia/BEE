@@ -97,7 +97,7 @@ function Card({ card }: { card: DecisionCard }) {
   }
 
   return (
-    <div className={`bee-bento flex flex-col gap-2 p-3 ${URGENCY_TONE[card.urgency]}`}>
+    <div className={`bee-bento flex flex-col gap-2 p-4 ${URGENCY_TONE[card.urgency]}`}>
       <div className="min-w-0">
         <span className="bee-eyebrow">{t(`urgency.${card.urgency}`)}</span>
         <h4 className="mt-1 line-clamp-1 text-sm font-semibold tracking-tight">{headline}</h4>
@@ -133,7 +133,7 @@ function Card({ card }: { card: DecisionCard }) {
               type="button"
               onClick={() => void handleDismiss()}
               disabled={busy !== null}
-              className="bee-btn-ghost text-xs"
+              className="bee-btn-text"
             >
               <X className="size-3.5" />
               {busy === "dismiss" ? t("dismissing") : t("dismiss")}
@@ -162,7 +162,7 @@ export function DecisionFeed({ embedded = false }: { embedded?: boolean } = {}) 
 
   if (isLoading) {
     return (
-      <div className={embedded ? "grid gap-2" : "mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3"}>
+      <div className={embedded ? "grid gap-2" : "mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3"}>
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className={embedded ? "h-20" : "h-32"} />
         ))}
@@ -193,7 +193,7 @@ export function DecisionFeed({ embedded = false }: { embedded?: boolean } = {}) 
         <h3 className="bee-card-title">{t("title")}</h3>
         <p className="bee-caption">{t("subtitle")}</p>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {cards.slice(0, 3).map((card) => (
           <Card key={card.id} card={card} />
         ))}

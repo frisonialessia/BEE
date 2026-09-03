@@ -49,7 +49,7 @@ function StreamItem({
       disabled={!clickable}
       onClick={() => event.opportunity_id && onOpen(event.opportunity_id)}
       className={cn(
-        "group relative flex w-full gap-3 py-3 pl-1 text-left transition-opacity duration-200",
+        "group relative flex w-full gap-4 py-3 pl-1 text-left transition-opacity duration-200",
         isReady && "rounded-lg bg-[var(--color-primary)]/60 px-2 -mx-2",
         clickable && "cursor-pointer hover:opacity-90",
         !clickable && "cursor-default",

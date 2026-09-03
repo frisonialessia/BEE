@@ -365,7 +365,7 @@ export function BrandVoicePanel() {
       {/* Active profile */}
       {profile && (
         <div className="space-y-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="bee-chip--primary flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)]">
               <span className="text-lg">{profile.display_name[0]}</span>
             </div>
@@ -428,7 +428,7 @@ export function BrandVoicePanel() {
             </button>
           </div>
           {preview && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="bee-panel space-y-2 p-3">
                 <p className="bee-caption font-medium">{t("preview.genericLabel")}</p>
                 <p className="text-sm text-muted-foreground">{preview.generic_version}</p>
@@ -515,7 +515,7 @@ export function BrandVoicePanel() {
           ) : (
             <div className="space-y-2">
               {fragments.map((fragment) => (
-                <div key={fragment.id} className="bee-bento flex flex-col gap-2 p-3 sm:flex-row sm:items-start sm:justify-between">
+                <div key={fragment.id} className="bee-bento flex flex-col gap-2 p-4 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge variant="outline">

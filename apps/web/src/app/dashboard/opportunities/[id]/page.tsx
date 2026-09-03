@@ -30,7 +30,7 @@ export default function OpportunityDetailPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <Button asChild variant="ghost" size="sm">
           <Link href="/dashboard/strategies">
             <ArrowLeft className="mr-1 size-4" />

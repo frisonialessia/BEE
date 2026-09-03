@@ -15,6 +15,7 @@ import { getWorkflowStatus, getWorkflowTasks } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { WorkflowStatus, WorkflowTask } from "@/lib/types";
 import { LiveBadge } from "@/components/live-badge";
+import { KpiStrip } from "@/components/metric-card";
 
 const STATUS_ICON: Record<string, React.ReactNode> = {
   mock_dispatched: <Layers className="size-3 stroke-[1.25] text-muted-foreground" />,
@@ -96,7 +97,7 @@ export function WorkflowStatusPanel() {
 
   return (
     <div className="bee-bento bee-bento-pad space-y-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="flex items-center gap-2 bee-card-title">
             <Zap className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-1)" }} />
@@ -115,19 +116,15 @@ export function WorkflowStatusPanel() {
       </div>
 
       {status && (
-        <div className="bee-stat-grid">
-          {[
+        <KpiStrip
+          cols={4}
+          items={[
             { label: t("stats.mock"), value: status.mock_dispatched },
             { label: t("stats.live"), value: status.dispatched + status.completed },
             { label: t("stats.failed"), value: status.failed },
             { label: t("stats.pending"), value: status.pending },
-          ].map((stat) => (
-            <div key={stat.label} className="bee-stat">
-              <div className="bee-stat__val">{stat.value}</div>
-              <div className="bee-stat__lbl">{stat.label}</div>
-            </div>
-          ))}
-        </div>
+          ]}
+        />
       )}
 
       {status && status.mock_dispatched > 0 && status.dispatched === 0 && (

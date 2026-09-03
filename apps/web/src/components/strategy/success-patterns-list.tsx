@@ -34,7 +34,7 @@ export function SuccessPatternsList({ patterns }: { patterns: SuccessPattern[] }
       {patterns.map((p) => (
         <div
           key={`${p.signal_type}-${p.playbook}-${p.channel}-${p.generator}`}
-          className="bee-bento bee-bento-pad flex items-center justify-between gap-3"
+          className="bee-bento bee-bento-pad flex items-center justify-between gap-4"
         >
           <div className="min-w-0">
             <p className="truncate text-xs font-semibold">

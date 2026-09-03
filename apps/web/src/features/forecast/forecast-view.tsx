@@ -18,6 +18,7 @@ import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeForecast, qualificationScore } from "@/lib/forecast";
 import { computeMonthlyTrends } from "@/lib/trends";
 import { LiveBadge } from "@/components/live-badge";
+import { KpiStrip } from "@/components/metric-card";
 
 /** Pronóstico de ingresos — pipeline ponderado por probabilidad de cierre,
  *  deals en riesgo, el simulador de escenarios "qué pasaría si", y
@@ -47,7 +48,7 @@ export function ForecastView() {
     <div>
       <header className="mb-4">
         <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
+        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="bee-display">{t("forecast.title")}</h1>
             <p className="bee-caption mt-1">{t("forecast.subtitle")}</p>
@@ -64,7 +65,7 @@ export function ForecastView() {
             label: t("forecast.tabs.overview"),
             content: isLoading ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                   {Array.from({ length: 4 }).map((_, i) => (
                     <Skeleton key={i} className="h-20" />
                   ))}
@@ -82,26 +83,19 @@ export function ForecastView() {
                  * MetricCard (ícono + número + línea de ayuda), sin columna
                  * base para móvil. El ícono y el hint de cada KPI se van de
                  * esta fila puntual; el resto de la página no cambia. */}
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <div className="bee-bento p-4 text-center">
-                    <p className="bee-stat__val">{formatCurrencyUSD(forecast.pipelineValue, locale)}</p>
-                    <p className="bee-stat__lbl mt-1">{t("forecast.kpis.pipeline.label")}</p>
-                  </div>
-                  <div className="bee-bento p-4 text-center">
-                    <p className="bee-stat__val">{formatCurrencyUSD(forecast.weightedForecast, locale)}</p>
-                    <p className="bee-stat__lbl mt-1">{t("forecast.kpis.weighted.label")}</p>
-                  </div>
-                  <div className="bee-bento p-4 text-center">
-                    <p className="bee-stat__val">{formatCurrencyUSD(forecast.wonValue, locale)}</p>
-                    <p className="bee-stat__lbl mt-1">{t("forecast.kpis.won.label")}</p>
-                  </div>
-                  <div className="bee-bento p-4 text-center">
-                    <p className="bee-stat__val" style={forecast.atRisk.length > 0 ? { color: "var(--color-chart-1)" } : undefined}>
-                      {forecast.atRisk.length}
-                    </p>
-                    <p className="bee-stat__lbl mt-1">{t("forecast.kpis.atRisk.label")}</p>
-                  </div>
-                </div>
+                <KpiStrip
+                  cols={4}
+                  items={[
+                    { label: t("forecast.kpis.pipeline.label"), value: formatCurrencyUSD(forecast.pipelineValue, locale) },
+                    { label: t("forecast.kpis.weighted.label"), value: formatCurrencyUSD(forecast.weightedForecast, locale) },
+                    { label: t("forecast.kpis.won.label"), value: formatCurrencyUSD(forecast.wonValue, locale) },
+                    {
+                      label: t("forecast.kpis.atRisk.label"),
+                      value: forecast.atRisk.length,
+                      accent: forecast.atRisk.length > 0 ? "var(--color-chart-1)" : undefined,
+                    },
+                  ]}
+                />
 
                 <section className="bee-surface bee-bento-pad">
                   <h3 className="bee-card-title">{t("forecast.byMonth.title")}</h3>
@@ -125,9 +119,9 @@ export function ForecastView() {
                   <section className="bee-surface bee-bento-pad">
                     <h3 className="bee-card-title">{t("forecast.accuracy.title")}</h3>
                     <p className="bee-caption mb-4">{t("forecast.accuracy.caption")}</p>
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
                       {forecast.scoreBucketStats.map((s) => (
-                        <div key={s.bucketStart} className="bee-bento p-3 text-center">
+                        <div key={s.bucketStart} className="bee-bento p-4 text-center">
                           <p className="bee-kpi-tile__label">
                             {t("forecast.accuracy.scoreLabel", {
                               start: s.bucketStart,
@@ -160,7 +154,7 @@ export function ForecastView() {
                             <button
                               type="button"
                               onClick={() => openOpportunity(opportunity.id)}
-                              className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-md)] px-3 py-3 text-left transition-colors hover:bg-[var(--color-primary)]/30"
+                              className="flex w-full items-center justify-between gap-4 rounded-[var(--radius-md)] px-3 py-3 text-left transition-colors hover:bg-[var(--color-primary)]/30"
                             >
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-medium">

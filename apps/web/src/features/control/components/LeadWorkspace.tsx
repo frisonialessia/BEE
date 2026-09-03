@@ -29,7 +29,7 @@ export function LeadWorkspace() {
     // list below already carries flex-1, so the extra room this card gains
     // pushes "Abrir CRM" to the bottom instead of leaving a gap past it.
     <section className="bee-surface flex h-full min-h-0 flex-col bee-bento-pad" aria-label={t("ariaLabel")}>
-      <div className="mb-4 flex shrink-0 items-start justify-between gap-3">
+      <div className="mb-4 flex shrink-0 items-start justify-between gap-4">
         <div>
           <p className="bee-eyebrow">{t("eyebrow")}</p>
           <h2 className="mt-1 bee-card-title">{t("title")}</h2>
@@ -55,7 +55,7 @@ export function LeadWorkspace() {
             return (
               <div
                 key={col.id}
-                className="bee-bento flex items-center justify-between gap-3 px-3 py-3"
+                className="bee-bento flex items-center justify-between gap-4 px-3 py-3"
               >
                 <span className="text-xs font-medium">{t(`stages.${col.id}`)}</span>
                 <span className="font-mono text-xs tabular-nums text-muted-foreground">{count}</span>

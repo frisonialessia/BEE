@@ -19,7 +19,7 @@ function AlertRow({ alert }: { alert: AnomalyAlert }) {
   const t = useTranslations("probarNetworkBrandControl.control.anomalies");
 
   return (
-    <div className="flex items-start gap-3 py-3">
+    <div className="flex items-start gap-4 py-3">
       <span
         className={cn("mt-1 inline-block size-2 shrink-0 rounded-full", SEVERITY_DOT[alert.severity])}
         aria-hidden

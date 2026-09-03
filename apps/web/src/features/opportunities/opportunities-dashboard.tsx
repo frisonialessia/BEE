@@ -205,7 +205,7 @@ export function BattlecardsGallery() {
         <Bot className="size-3.5" />
         {t("battlecardsHint")}
       </div>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {pagination.pageItems.map((card) => (
           <button
             key={card.opportunity_id}

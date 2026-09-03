@@ -139,7 +139,7 @@ export function MessageLibrary() {
       {editing && <TemplateForm initial={editing} onDone={() => setEditing(null)} />}
 
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
             <Skeleton key={i} className="h-32" />
           ))}
@@ -150,7 +150,7 @@ export function MessageLibrary() {
           <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {templates.map((tpl) => (
             <div key={tpl.id} className="bee-bento bee-bento-pad">
               <div className="flex items-start justify-between gap-2">

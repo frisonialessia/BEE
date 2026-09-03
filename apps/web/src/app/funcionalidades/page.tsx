@@ -88,7 +88,7 @@ export default async function FuncionalidadesPage() {
             <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
               {t("closingTitle")}
             </h2>
-            <div className="flex flex-wrap items-center justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-4">
               <Link href="/contacto?source=funcionalidades" className="bee-btn bee-btn--primary">
                 {t("ctaStart")} <ArrowRight className="size-4" />
               </Link>

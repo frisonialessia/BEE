@@ -143,7 +143,7 @@ function CriticalAccountRow({ battlecard }: { battlecard: Battlecard }) {
     <button
       type="button"
       onClick={() => openOpportunity(battlecard.opportunity_id)}
-      className={`bee-bento flex w-full items-center gap-3 px-3 py-3 text-left transition-colors hover:border-[var(--color-chart-4)] ${battlecard.hot_lead ? "bee-outline--magenta" : ""}`}
+      className={`bee-bento flex w-full items-center gap-4 px-3 py-3 text-left transition-colors hover:border-[var(--color-chart-4)] ${battlecard.hot_lead ? "bee-outline--magenta" : ""}`}
     >
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-semibold">
@@ -203,7 +203,7 @@ export function CriticalAccountsDigest({
         <Rocket className="size-3.5 text-[var(--color-chart-5)]" />
         <p className="bee-eyebrow">{t("title")}</p>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {critical.map((b) => (
           <CriticalAccountCard key={b.opportunity_id} battlecard={b} />
         ))}

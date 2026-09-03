@@ -64,7 +64,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
             <DashboardRail groups={PROBAR_NAV_GROUPS} homeHref="/probar" />
             <div className="bee-main">
               <div className="shrink-0 border-b border-border bg-[var(--color-chart-4)] text-white">
-                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3">
                   <p className="min-w-0 text-xs">
                     <strong className="font-semibold">{t("title")}</strong>
                     <span className="hidden sm:inline">{t("subtitle")}</span>
@@ -88,7 +88,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
 
               <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 sm:px-5">
                 <MobileNavToggle />
-                <Link href="/probar" aria-label={t("homeAria")} className="flex items-center gap-3">
+                <Link href="/probar" aria-label={t("homeAria")} className="flex items-center gap-4">
                   <Logo />
                 </Link>
                 <Badge variant="warning" className="hidden sm:inline-flex">{tBadge("demo")}</Badge>

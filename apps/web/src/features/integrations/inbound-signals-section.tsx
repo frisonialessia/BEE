@@ -40,7 +40,7 @@ export function InboundSignalsSection() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="min-w-0">
           <p className="bee-micro font-medium">{t("endpointLabel")}</p>
           <code className="mt-1 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">

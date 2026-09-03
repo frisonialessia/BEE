@@ -71,7 +71,9 @@
     "tooltipDeals": "{won} de {closed} deals cerrados ganados ({pct}%)"
   },
   "pipelineFunnel": {
-    "shareOfPipeline": "{pct}% del pipeline"
+    "shareOfPipeline": "{pct}% del pipeline",
+    "noneIn": "Sin oportunidades en: {stages}",
+    "allEmpty": "Todavía no hay oportunidades en el embudo."
   },
   "activityHeatmap": {
     "empty": "Todavía no hay señales para mapear por horario.",

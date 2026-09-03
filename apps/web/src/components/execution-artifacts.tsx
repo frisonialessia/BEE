@@ -168,7 +168,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
             <p className="text-xs text-muted-foreground mb-2">{t("meeting.agenda")}</p>
             <div className="space-y-2">
               {meeting_structure.agenda_items.map((item, i) => (
-                <div key={i} className="flex items-start gap-3 text-sm">
+                <div key={i} className="flex items-start gap-4 text-sm">
                   <span className="min-w-[40px] text-xs text-muted-foreground pt-1">
                     {item.duration_minutes}m
                   </span>
@@ -215,7 +215,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
             {next_steps.actions.map((action, i) => (
               <div
                 key={i}
-                className={`flex items-start gap-3 text-xs rounded-sm border px-3 py-2 ${priorityColors[action.priority]}`}
+                className={`flex items-start gap-4 text-xs rounded-sm border px-3 py-2 ${priorityColors[action.priority]}`}
               >
                 <div className="flex-1">
                   <p className="font-medium">{action.action}</p>

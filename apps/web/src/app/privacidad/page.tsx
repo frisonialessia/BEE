@@ -37,7 +37,7 @@ export default async function PrivacidadPage() {
             {t("title")}
           </h1>
 
-          <div className="mt-8 flex items-start gap-3 rounded-[var(--radius-md)] border border-dashed border-[var(--color-divider)] bg-[var(--color-primary)]/20 p-4">
+          <div className="mt-8 flex items-start gap-4 rounded-[var(--radius-md)] border border-dashed border-[var(--color-divider)] bg-[var(--color-primary)]/20 p-4">
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--color-chart-2)]" />
             <p className="bee-caption">{t("draftNotice")}</p>
           </div>

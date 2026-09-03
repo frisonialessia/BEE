@@ -37,7 +37,7 @@ export default async function QuienesSomosPage() {
                 {t("howWeThinkTitle")}
               </h2>
             </div>
-            <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
               {PRINCIPLE_KEYS.map((key) => {
                 const Icon = PRINCIPLE_ICONS[key];
                 return (
@@ -56,7 +56,7 @@ export default async function QuienesSomosPage() {
 
         <section className="mx-auto w-full max-w-3xl space-y-4 px-6 py-16 sm:py-20">
           <div className="bee-bento bee-bento-pad-lg">
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-4">
               <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[var(--color-chart-4)]" />
               <div>
                 <h3 className="text-sm font-semibold">{t("smallTeamTitle")}</h3>
@@ -77,7 +77,7 @@ export default async function QuienesSomosPage() {
           </div>
 
           <div className="bee-bento bee-bento-pad-lg">
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-4">
               <Code2 className="mt-0.5 size-5 shrink-0 text-[var(--color-chart-4)]" />
               <div>
                 <h3 className="text-sm font-semibold">{t("openSourceTitle")}</h3>

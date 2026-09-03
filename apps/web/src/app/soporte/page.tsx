@@ -53,7 +53,7 @@ export default async function SoportePage() {
             <div className="space-y-4">
               <a
                 href="#formulario"
-                className="bee-bento bee-bento-pad flex items-start gap-3 transition-colors hover:border-[var(--color-chart-4)]"
+                className="bee-bento bee-bento-pad flex items-start gap-4 transition-colors hover:border-[var(--color-chart-4)]"
               >
                 <HelpCircle className="mt-0.5 size-5 shrink-0 text-[var(--color-chart-4)]" />
                 <div>
@@ -65,7 +65,7 @@ export default async function SoportePage() {
                 href={`${getApiBaseUrl()}/docs`}
                 target="_blank"
                 rel="noreferrer"
-                className="bee-bento bee-bento-pad flex items-start gap-3 transition-colors hover:border-[var(--color-chart-4)]"
+                className="bee-bento bee-bento-pad flex items-start gap-4 transition-colors hover:border-[var(--color-chart-4)]"
               >
                 <BookOpen className="mt-0.5 size-5 shrink-0 text-[var(--color-chart-4)]" />
                 <div>

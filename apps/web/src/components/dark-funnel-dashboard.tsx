@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { DarkFunnelSummary, HotLeadScore } from "@/lib/types";
 import { getDarkFunnelHotLeads, getDarkFunnelSummary, ingestDarkFunnelSignal } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { KpiStrip } from "@/components/metric-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { scoreVariant } from "@/lib/format";
 import { formatDate } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
 import { LiveBadge } from "@/components/live-badge";
@@ -33,28 +36,6 @@ const SIGNAL_TYPES = [
   "search",
   "repeat_visit",
 ];
-
-function ScoreBar({ score }: { score: number }) {
-  const varColor =
-    score >= 80
-      ? "var(--color-chart-5)"
-      : score >= 55
-        ? "var(--color-chart-1)"
-        : score >= 30
-          ? "var(--color-chart-3)"
-          : "var(--color-chart-4)";
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-2 bg-[var(--color-primary)] rounded-sm overflow-hidden">
-        <div
-          className="h-2 rounded-sm transition-all"
-          style={{ width: `${Math.min(100, score)}%`, background: varColor }}
-        />
-      </div>
-      <span className="text-xs font-mono font-bold text-foreground w-8 text-right">{score.toFixed(0)}</span>
-    </div>
-  );
-}
 
 function HotLeadCard({ lead }: { lead: HotLeadScore }) {
   const locale = useLocale() as Locale;
@@ -95,19 +76,24 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
           </div>
           <p className="text-xs text-muted-foreground mt-1">{lead.company_domain}</p>
         </div>
-        <span
-          className="shrink-0 rounded-sm border px-2 py-1 text-xs font-medium"
-          style={{
-            color: stage.varColor,
-            borderColor: stage.varColor,
-            background: `color-mix(in srgb, ${stage.varColor} 15%, var(--color-background))`,
-          }}
-        >
-          {t(stage.labelKey)}
-        </span>
+        {/* The score is the one urgency indicator — a number, not a number
+            plus a bar saying the same thing. */}
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <Badge variant={scoreVariant(lead.research_intensity_score)} className="font-mono">
+            {Math.round(lead.research_intensity_score)}
+          </Badge>
+          <span
+            className="rounded-sm border px-2 py-0.5 text-xs font-medium"
+            style={{
+              color: stage.varColor,
+              borderColor: stage.varColor,
+              background: `color-mix(in srgb, ${stage.varColor} 15%, var(--color-background))`,
+            }}
+          >
+            {t(stage.labelKey)}
+          </span>
+        </div>
       </div>
-
-      <ScoreBar score={lead.research_intensity_score} />
 
       <div className="flex flex-wrap gap-1">
         {lead.signal_types_seen.slice(0, 4).map((signalType) => (
@@ -201,24 +187,15 @@ export function DarkFunnelDashboard() {
     <div className="space-y-4">
       {/* Summary cards */}
       {summary && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {/* Same stage colors as STAGE_CONFIG above — this tile row used to
-              paint 'Leads calientes' orange (== --destructive) and 'Etapa
-              de decisión' gold instead of STAGE_CONFIG's amber, so the same
-              stage read as a different color depending on which part of
-              this dashboard you looked at. */}
-          {[
+        <KpiStrip
+          cols={4}
+          items={[
             { label: t("summaryHotLeads"), value: summary.total_hot_leads, accent: "var(--color-chart-5)" },
             { label: t("summaryReadyToBuy"), value: summary.ready_to_buy_count, accent: "var(--color-chart-5)" },
             { label: t("summaryDecisionStage"), value: summary.decision_stage_count, accent: "var(--color-chart-1)" },
             { label: t("summarySignalsToday"), value: summary.total_signals_today, accent: "var(--color-chart-4)" },
-          ].map(({ label, value, accent }) => (
-            <div key={label} className="bee-bento p-4 text-center">
-              <p className="bee-stat__val" style={{ color: accent }}>{value}</p>
-              <p className="bee-stat__lbl mt-1">{label}</p>
-            </div>
-          ))}
-        </div>
+          ]}
+        />
       )}
 
       {/* Controls */}
@@ -249,7 +226,7 @@ export function DarkFunnelDashboard() {
       {showSimulate && (
         <form onSubmit={handleSimulate} className="rounded-lg border border-dashed border-border bg-[var(--color-primary)] p-4 space-y-3">
           <p className="bee-eyebrow">{t("simulateFormTitle")}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <input
               value={simDomain}
               onChange={(e) => setSimDomain(e.target.value)}
@@ -281,7 +258,7 @@ export function DarkFunnelDashboard() {
 
       {/* Grilla de leads calientes */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
             <Skeleton key={i} className="h-36 rounded-lg" />
           ))}
@@ -292,7 +269,7 @@ export function DarkFunnelDashboard() {
           <p className="bee-caption mt-1">{t("emptySubtitle")}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((lead) => (
             <HotLeadCard key={lead.id} lead={lead} />
           ))}

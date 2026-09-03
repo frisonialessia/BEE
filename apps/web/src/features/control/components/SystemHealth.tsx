@@ -55,7 +55,7 @@ function WorkerKpis({ worker }: { worker: WorkerHealth }) {
     // el ancho exacto del viewport — mismo componente, layout distinto en
     // cada resolución. Acá siempre son 4 tarjetas en un contenedor angosto,
     // así que fijamos 2×2 para que sea predecible.
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-4">
       <KpiCard label={t("worker.ingestLabel")} value={worker.running ? stateLabel : t("worker.offValue")} text />
       <KpiCard label={t("worker.queueLabel")} value={String(worker.queue_depth)} mono />
       {/* "Procesados" partía a mitad de palabra en la columna angosta de
@@ -127,7 +127,7 @@ export function SystemHealth() {
     // that row stretches to the row's height by design, unlike the old
     // single-column stack where a stretched card meant a lopsided one.
     <section className="bee-surface flex h-full flex-col bee-bento-pad" aria-label={t("ariaLabel")}>
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="bee-eyebrow">{t("eyebrow")}</p>
           <h2 className="mt-1 bee-card-title">

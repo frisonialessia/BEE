@@ -40,7 +40,7 @@ export function StrategiesDashboard() {
     <div>
       <header className="mb-4">
         <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1 flex flex-wrap items-start justify-between gap-3">
+        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="bee-display">{t("title")}</h1>
             <p className="bee-caption mt-1">
@@ -90,7 +90,7 @@ export function StrategiesDashboard() {
                   <Bot className="size-3.5" />
                   {t("battlecardsHint")}
                 </div>
-                <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   {battlecardPagination.pageItems.map((card) => (
                     <button
                       key={card.opportunity_id}
@@ -118,7 +118,7 @@ export function StrategiesDashboard() {
           </TabsContent>
 
           <TabsContent value="pipeline" className="mt-4 space-y-4">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {pipelinePagination.pageItems.map((opp) => (
                 <button
                   key={opp.id}

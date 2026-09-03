@@ -140,8 +140,8 @@ function OAuthProviderRow({
 
   return (
     <div className="bee-surface bee-bento-pad">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-4">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
             <Icon className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
           </div>
@@ -332,8 +332,8 @@ function ServerChannelRow({ status }: { status: IntegrationStatus }) {
   const t = useTranslations("workspace.integrations.serverChannels");
   const detailOf = useIntegrationDetail();
   return (
-    <div className="flex items-center justify-between gap-3 border-b border-[var(--color-divider)] py-3 last:border-b-0">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between gap-4 border-b border-[var(--color-divider)] py-3 last:border-b-0">
+      <div className="flex items-center gap-4">
         {status.connected ? (
           <CheckCircle2 className="size-4 shrink-0 text-[var(--color-chart-3)]" />
         ) : (

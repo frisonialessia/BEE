@@ -55,7 +55,7 @@ export function FlowCanvas({
 
         return (
           <div key={step.id} className="relative">
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-4">
               <div className="flex flex-col items-center">
                 <span
                   className="flex size-9 shrink-0 items-center justify-center rounded-full border"
@@ -113,7 +113,7 @@ export function FlowCanvas({
         );
       })}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         <span className="flex size-9 shrink-0 items-center justify-center rounded-full border border-dashed border-border">
           <Flag className="size-4 text-muted-foreground" />
         </span>

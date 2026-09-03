@@ -32,6 +32,7 @@ import type { Locale } from "@/i18n/locales";
 import { parseCsv, pickColumn as pick } from "@/lib/csv";
 import { resizeImageToDataUrl } from "@/lib/image";
 import { computeRelationshipMap } from "@/lib/relationship-map";
+import { KpiStrip } from "@/components/metric-card";
 
 /** Owner display + reassign — visible to everyone, editable only by
  * OWNER/ADMIN/MANAGER (the roles that can already reassign a teammate's
@@ -101,7 +102,7 @@ function CompanyActivityFeed({ companyId }: { companyId: string }) {
       ) : (
         <ul className="space-y-2">
           {events.map((event) => (
-            <li key={event.id} className="bee-caption flex items-center justify-between gap-3">
+            <li key={event.id} className="bee-caption flex items-center justify-between gap-4">
               <span>{t(event.event_type, { name: event.user_full_name })}</span>
               <span className="shrink-0 text-muted-foreground">
                 {formatRelativeTime(event.created_at, locale)}
@@ -278,7 +279,7 @@ function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () =
       onSubmit={handleSubmit}
       className="mb-3 space-y-3 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-3"
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-4">
         <div className="flex shrink-0 flex-col items-center gap-2">
           {photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- a client-resized data: URI, not an optimizable remote asset
@@ -447,8 +448,8 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
 
   return (
     <div className="space-y-4">
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]">
             <Building2 className="size-5 text-[var(--color-chart-4)]" />
           </span>
@@ -489,20 +490,14 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
       {company.description && <p className="text-sm text-muted-foreground">{company.description}</p>}
 
       {/* Same centered value-over-label tile every KPI strip in the app uses. */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bee-bento p-4 text-center">
-          <p className="bee-stat__val">{leads.length}</p>
-          <p className="bee-stat__lbl mt-1">{t("kpi.contacts")}</p>
-        </div>
-        <div className="bee-bento p-4 text-center">
-          <p className="bee-stat__val">{opportunities.length}</p>
-          <p className="bee-stat__lbl mt-1">{t("kpi.opportunities")}</p>
-        </div>
-        <div className="bee-bento p-4 text-center">
-          <p className="bee-stat__val">{signals.length}</p>
-          <p className="bee-stat__lbl mt-1">{t("kpi.signals")}</p>
-        </div>
-      </div>
+      <KpiStrip
+        cols={3}
+        items={[
+          { label: t("kpi.contacts"), value: leads.length },
+          { label: t("kpi.opportunities"), value: opportunities.length },
+          { label: t("kpi.signals"), value: signals.length },
+        ]}
+      />
 
       <AccountBriefPanel companyId={companyId} />
 
@@ -605,7 +600,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
                 key={opp.id}
                 type="button"
                 onClick={() => openOpportunity(opp.id)}
-                className="bee-bento bee-bento-pad flex w-full items-center justify-between gap-3 text-left transition-colors hover:border-[var(--color-chart-4)]"
+                className="bee-bento bee-bento-pad flex w-full items-center justify-between gap-4 text-left transition-colors hover:border-[var(--color-chart-4)]"
               >
                 <span className="min-w-0 truncate text-sm font-medium">
                   {stripOpportunityTitlePrefix(opp.title)}

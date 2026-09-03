@@ -40,18 +40,18 @@ export function MarketSourcesSection() {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-24" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {(data?.sources ?? []).map((source) => {
             const Icon = SOURCE_ICONS[source.name] ?? Radar;
             const live = source.configured;
             return (
-              <div key={source.name} className="bee-bento flex flex-col gap-2 p-3">
+              <div key={source.name} className="bee-bento flex flex-col gap-2 p-4">
                 <div className="flex items-center justify-between gap-2">
                   <span className="flex items-center gap-2 text-sm font-semibold">
                     <Icon className="size-4 text-muted-foreground" />

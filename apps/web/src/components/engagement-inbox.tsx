@@ -16,6 +16,7 @@ import { getEngagementEvents, submitEngagementEvent } from "@/lib/api";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { EngagementEvent } from "@/lib/types";
+import { KpiStrip } from "@/components/metric-card";
 
 const SENTIMENT_VARIANT: Record<string, BadgeProps["variant"]> = {
   positive: "success",
@@ -50,7 +51,7 @@ function EventCard({ event }: { event: EngagementEvent }) {
   if (event.ignored) return null;
 
   return (
-    <div className="bee-surface space-y-2 p-3">
+    <div className="bee-surface space-y-2 p-4">
       {/* Header row */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -85,7 +86,7 @@ function EventCard({ event }: { event: EngagementEvent }) {
       )}
 
       {expanded && event.response_draft && (
-        <div className="bee-bento p-3">
+        <div className="bee-bento p-4">
           <p className="whitespace-pre-wrap text-xs">{event.response_draft}</p>
           {event.pending_action_id && (
             <p className="mt-2 text-xs font-medium text-[var(--color-chart-2)]">
@@ -153,22 +154,14 @@ export function EngagementInboxPanel() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
-        <div className="bee-bento p-2">
-          <p className="bee-stat__val">{events.length}</p>
-          <p className="bee-stat__lbl">{t("stats.total")}</p>
-        </div>
-        <div className="bee-bento bee-outline--warm p-2">
-          <p className="bee-stat__val">{actionable.length}</p>
-          <p className="bee-stat__lbl">{t("stats.needsApproval")}</p>
-        </div>
-        <div className="bee-bento bee-outline--blue p-2">
-          <p className="bee-stat__val">
-            {events.filter((e) => e.intent === "sales_interest").length}
-          </p>
-          <p className="bee-stat__lbl">{t("stats.salesLeads")}</p>
-        </div>
-      </div>
+      <KpiStrip
+        cols={3}
+        items={[
+          { label: t("stats.total"), value: events.length },
+          { label: t("stats.needsApproval"), value: actionable.length, tone: "warm" },
+          { label: t("stats.salesLeads"), value: events.filter((e) => e.intent === "sales_interest").length, tone: "blue" },
+        ]}
+      />
 
       {/* Submit form */}
       {showSubmit && (

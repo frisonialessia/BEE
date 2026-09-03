@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
+import { KpiStrip } from "@/components/metric-card";
 import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-heatmap";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
@@ -67,9 +68,9 @@ export function DashboardOverview({
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-72" />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className={`h-20 ${i === 4 ? "hidden sm:block" : ""}`} />
+            <Skeleton key={i} className={`h-14 ${i === 4 ? "hidden md:block" : ""}`} />
           ))}
         </div>
       </div>
@@ -79,7 +80,7 @@ export function DashboardOverview({
   return (
     <>
       <header className="bee-topbar -mx-5 -mt-4 mb-4 px-5 pt-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="bee-eyebrow">{t("eyebrow")}</p>
             <h1 className="bee-display mt-1">{t("title")}</h1>
@@ -91,31 +92,18 @@ export function DashboardOverview({
           </div>
         </div>
 
-        {/* Five KPIs, one row: the "Score medio" tile hides on a phone so
-            the row stays 2×2 instead of 2×2+1 — same rule every KPI strip
-            in the app follows. */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-          <div className="bee-bento p-4 text-center">
-            <p className="bee-stat__val">{signals.length}</p>
-            <p className="bee-stat__lbl mt-1">{t("kpis.signals")}</p>
-          </div>
-          <div className="bee-bento p-4 text-center">
-            <p className="bee-stat__val">{hotSignals}</p>
-            <p className="bee-stat__lbl mt-1">{t("kpis.hotSignals")}</p>
-          </div>
-          <div className="bee-bento p-4 text-center">
-            <p className="bee-stat__val">{readyCount}</p>
-            <p className="bee-stat__lbl mt-1">{t("kpis.ready")}</p>
-          </div>
-          <div className="bee-bento p-4 text-center">
-            <p className="bee-stat__val">{hotLeads}</p>
-            <p className="bee-stat__lbl mt-1">{t("kpis.hotLeads")}</p>
-          </div>
-          <div className="bee-bento hidden p-4 text-center sm:block">
-            <p className="bee-stat__val">{avgScore}</p>
-            <p className="bee-stat__lbl mt-1">{t("kpis.avgScore")}</p>
-          </div>
-        </div>
+        {/* Five compact KPIs in one row; "Score medio" hides on a phone so
+            the row stays 2×2 — the same strip every page opens with. */}
+        <KpiStrip
+          cols={5}
+          items={[
+            { label: t("kpis.signals"), value: signals.length },
+            { label: t("kpis.hotSignals"), value: hotSignals },
+            { label: t("kpis.ready"), value: readyCount },
+            { label: t("kpis.hotLeads"), value: hotLeads },
+            { label: t("kpis.avgScore"), value: avgScore, hideOnMobile: true },
+          ]}
+        />
       </header>
 
       <GettingStartedCard
@@ -131,22 +119,8 @@ export function DashboardOverview({
           signal) lives on its own page — Estrategias, Pronóstico, Señales —
           so this stays a summary, not the whole product on one screen. */}
       <div className="bee-overview">
-        <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")}>
-          <DecisionFeed embedded />
-        </OverviewCard>
-
-        <OverviewCard span={5} title={tBrief("title")} caption={t("sections.brief.caption")}>
-          <DailyBrief embedded />
-        </OverviewCard>
-
-        <OverviewCard span={3} title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
-          <PipelineFunnel
-            opportunities={allOppsResult?.data ?? []}
-            className="grid grid-cols-2 content-start gap-2"
-            compact
-          />
-        </OverviewCard>
-
+        {/* Row 1 — what needs you now: the accounts closing today, the hive
+            of live signals, and your calendar. */}
         <OverviewCard span={3} title={tCritical("title")} caption={t("sections.critical.caption")}>
           <CriticalAccountsDigest battlecards={battlecards} today={new Date()} embedded />
         </OverviewCard>
@@ -168,6 +142,24 @@ export function DashboardOverview({
           <MyCalendarWidget embedded />
         </OverviewCard>
 
+        {/* Row 2 — the decisions: today's play, the daily brief, the funnel. */}
+        <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")}>
+          <DecisionFeed embedded />
+        </OverviewCard>
+
+        <OverviewCard span={5} title={tBrief("title")} caption={t("sections.brief.caption")}>
+          <DailyBrief embedded />
+        </OverviewCard>
+
+        <OverviewCard span={3} title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
+          <PipelineFunnel
+            opportunities={allOppsResult?.data ?? []}
+            className="grid grid-cols-2 content-start gap-4"
+            compact
+          />
+        </OverviewCard>
+
+        {/* Row 3 — the patterns. */}
         <OverviewCard span={6} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
           <IndustrySignalHeatmap
             opportunities={allOppsResult?.data ?? []}

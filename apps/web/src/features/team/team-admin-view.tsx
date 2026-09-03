@@ -464,7 +464,7 @@ function MyProfileSection() {
 
       {open ? (
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
@@ -502,7 +502,7 @@ function MyProfileSection() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="space-y-1 text-xs">
               <span className="bee-caption">{t("nameLabel")}</span>
               <input
@@ -559,7 +559,7 @@ function MyProfileSection() {
           </div>
         </form>
       ) : (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <AvatarCircle src={currentUser?.avatar_url} size={48} />
           <dl className="grid grid-cols-1 flex-1 gap-2 text-sm sm:grid-cols-2">
             <div>

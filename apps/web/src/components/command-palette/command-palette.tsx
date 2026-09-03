@@ -217,7 +217,7 @@ export function CommandPalette() {
         aria-label={t("dialogAria")}
         className="bee-glass fixed left-1/2 top-24 z-[60] w-[min(560px,calc(100vw-2rem))] -translate-x-1/2 overflow-hidden rounded-[var(--radius-lg)]"
       >
-        <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+        <div className="flex items-center gap-4 border-b border-border px-4 py-3">
           <Search className="size-4 shrink-0 text-muted-foreground" />
           <input
             ref={inputRef}
@@ -241,7 +241,7 @@ export function CommandPalette() {
           ) : (
             [...groups.entries()].map(([groupLabel, items]) => (
               <div key={groupLabel} className="mb-2 last:mb-0">
-                <p className="px-4 py-1 text-micro font-semibold uppercase tracking-wide text-muted-foreground/70">
+                <p className="px-4 py-1 text-micro font-semibold uppercase tracking-wide text-muted-foreground">
                   {groupLabel}
                 </p>
                 {items.map(({ entry, index }) => {
@@ -253,7 +253,7 @@ export function CommandPalette() {
                       type="button"
                       onMouseEnter={() => setActiveIndex(index)}
                       onClick={() => activate(entry)}
-                      className={`flex w-full items-center gap-3 px-4 py-2 text-left transition-colors ${
+                      className={`flex w-full items-center gap-4 px-4 py-2 text-left transition-colors ${
                         active ? "bg-[var(--color-primary)]/40" : "hover:bg-[var(--color-primary)]/20"
                       }`}
                     >

@@ -22,7 +22,7 @@ const STAGE_ICONS: Record<FunnelStage["key"], typeof Radar> = {
  * solo cuánto hay en cada bucket. Ver lib/pipeline-funnel.ts. */
 export function PipelineFunnel({
   opportunities,
-  className = "grid grid-cols-2 gap-3 sm:grid-cols-4",
+  className = "grid grid-cols-2 gap-4 sm:grid-cols-4",
   compact = false,
 }: {
   opportunities: Opportunity[];
@@ -47,14 +47,22 @@ export function PipelineFunnel({
     won: tClosedStatus("won"),
   };
   const stages = computeFunnelStages(opportunities);
-  const maxCount = Math.max(...stages.map((s) => s.count), 1);
+  // A stage at 0 is not a tile — it's one line under the tiles that says
+  // which stages are empty, so the box never shows a row of dead zeros.
+  const active = stages.filter((s) => s.count > 0);
+  const empty = stages.filter((s) => s.count === 0);
+
+  if (active.length === 0) {
+    return <p className="bee-caption py-6 text-center">{t("allEmpty")}</p>;
+  }
 
   return (
+    <div className="flex h-full flex-col gap-3">
     <div className={className}>
-      {stages.map((stage) => {
+      {active.map((stage) => {
         const Icon = STAGE_ICONS[stage.key];
         return (
-          <div key={stage.key} className="bee-bento flex flex-col justify-between gap-2 p-3">
+          <div key={stage.key} className="bee-bento flex flex-col justify-between gap-2 p-4">
             <div className="flex items-start justify-between gap-2">
               <p className={compact ? "bee-caption line-clamp-2 font-medium" : "bee-eyebrow line-clamp-2"}>{STAGE_LABELS[stage.key]}</p>
               <Icon className="size-3.5 shrink-0 text-muted-foreground stroke-[1.25]" />
@@ -67,15 +75,15 @@ export function PipelineFunnel({
                 </span>
               )}
             </div>
-            <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-[var(--color-chart-4)]"
-                style={{ width: `${Math.max((stage.count / maxCount) * 100, stage.count > 0 ? 4 : 0)}%` }}
-              />
-            </div>
           </div>
         );
       })}
+    </div>
+    {empty.length > 0 && (
+      <p className="bee-caption mt-auto">
+        {t("noneIn", { stages: empty.map((s) => STAGE_LABELS[s.key]).join(" · ") })}
+      </p>
+    )}
     </div>
   );
 }

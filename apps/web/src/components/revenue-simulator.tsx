@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { runRevenueSimulation } from "@/lib/api";
 import { CHART_PALETTE } from "@/lib/brand/colors";
 import type { RevenueSimulation, SimulatorScenario } from "@/lib/types";
+import { KpiStrip } from "@/components/metric-card";
 
 const SIGNAL_TYPE_VALUES = [
   "funding_round",
@@ -101,7 +102,7 @@ export function RevenueSimulatorWidget() {
 
   return (
     <div className="bee-bento bee-outline--warm bee-bento-pad space-y-4">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className="bee-card-title flex items-center gap-2">
             <BarChart3 className="size-4 stroke-[1.25]" style={{ color: CHART_PALETTE[3] }} />
@@ -211,22 +212,14 @@ export function RevenueSimulatorWidget() {
             ))}
           </div>
 
-          <div className="bee-stat-grid">
-            <div className="bee-stat">
-              <div className="bee-stat__val">
-                {Math.round(result.historical_win_rate * 100)}%
-              </div>
-              <div className="bee-stat__lbl">{t("stats.winRate")}</div>
-            </div>
-            <div className="bee-stat">
-              <div className="bee-stat__val">{result.current_pipeline_count}</div>
-              <div className="bee-stat__lbl">{t("stats.pipeline")}</div>
-            </div>
-            <div className="bee-stat">
-              <div className="bee-stat__val">{result.sample_size}</div>
-              <div className="bee-stat__lbl">{t("stats.dataPoints")}</div>
-            </div>
-          </div>
+          <KpiStrip
+            cols={3}
+            items={[
+              { label: t("stats.winRate"), value: `${Math.round(result.historical_win_rate * 100)}%` },
+              { label: t("stats.pipeline"), value: result.current_pipeline_count },
+              { label: t("stats.dataPoints"), value: result.sample_size },
+            ]}
+          />
 
           <button
             type="button"

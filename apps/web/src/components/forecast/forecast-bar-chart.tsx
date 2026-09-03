@@ -22,8 +22,8 @@ export function ForecastBarChart({ buckets }: { buckets: ForecastMonthBucket[] }
     // Legend below the bars on a phone, beside them from sm up — side by
     // side it ate ~90px of a 335px card and pushed the first bar's label
     // off the left edge.
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
-      <div className="flex w-full min-w-0 items-end gap-2 pb-1 sm:flex-1 sm:gap-3" style={{ height: "var(--bee-chart-h)" }}>
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-4">
+      <div className="flex w-full min-w-0 items-end gap-2 pb-1 sm:flex-1 sm:gap-4" style={{ height: "var(--bee-chart-h)" }}>
       {buckets.map((b, i) => {
         const totalPct = (b.total / maxValue) * 100;
         const weightedPct = (b.weighted / maxValue) * 100;

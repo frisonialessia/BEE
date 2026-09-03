@@ -93,7 +93,7 @@
   --bee-text-caption: var(--bee-fs-body-2);
 
   /* Spacing: one grid gap, one container padding, one row/tile padding. */
-  --bee-gap: 0.75rem;
+  --bee-gap: 1rem;
   --bee-gap-sm: var(--bee-gap);
   --bee-gap-md: var(--bee-gap);
   --bee-gap-lg: var(--bee-gap);
@@ -399,7 +399,7 @@
 .bee-overview {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 1rem;
   align-items: stretch;
   grid-auto-rows: minmax(var(--bee-overview-row), auto);
 }
@@ -428,6 +428,15 @@
   margin-bottom: 0.75rem;
 }
 .bee-card__body { min-height: 0; flex: 1 1 auto; }
+
+/* ── Equal heights in every card grid ─────────────────────────────────────
+   A grid already stretches its cells; what breaks the row is a card that
+   doesn't fill its cell (a card inside a link/button/li wrapper) or a grid
+   opting out with items-start. Every card shell fills its cell, and the
+   wrapper — when there is one — passes the height through. */
+.grid > :is(.bee-bento, .bee-surface, .bee-card, .bee-kanban-card) { height: 100%; }
+.grid > :is(a, button, li, article) > :is(.bee-bento, .bee-surface, .bee-card) { height: 100%; }
+.grid > :is(a, button, li) { display: block; height: 100%; min-width: 0; }
 
 /* ── CRM shell (labelled sidebar) ─────────────────────────────────────── */
 
@@ -714,13 +723,13 @@
 .bee-kpi-strip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 0.75rem;
+  gap: 1rem;
   margin-top: 1rem;
 }
 
 .bee-kpi-tile {
   min-width: 0;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   background: var(--color-card);
   border: 1px solid var(--bee-card-border);
   border-radius: var(--radius-lg);
@@ -762,7 +771,7 @@
      el padding generoso original (1.25rem horizontal) + letter-spacing
      amplio en el label de abajo partían "PROCESADOS"/"INGESTA" a mitad de
      palabra en esa columna. */
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
   border-radius: var(--radius-lg);
   /* Missed in the Phase 0 white-card pass — this class predates
      .bee-kpi-tile and never got the same background: var(--color-card) +
@@ -771,7 +780,7 @@
      cards. */
   background: var(--color-card);
   border: 1px solid var(--bee-card-border);
-  min-height: 5rem;
+  min-height: 3.5rem;
   /* A grid item's default min-width is auto, not 0 — without this its
      content refuses to shrink below its intrinsic width and instead
      overflows into the next column, visually overlapping it. This is
@@ -799,7 +808,7 @@
 /* Bento grid */
 .bee-bento-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: 1rem;
   grid-template-columns: repeat(12, 1fr);
   grid-auto-rows: minmax(72px, auto);
 }
@@ -814,6 +823,31 @@
 @media (max-width: 1024px) {
   .bee-span-8, .bee-span-6, .bee-span-4, .bee-span-3 { grid-column: span 12; }
 }
+
+/* Text button — the secondary action next to a primary one (Descartar
+   next to Aprobar/Ejecutar, Rechazar next to Aprobar). Same height as the
+   primary so the row aligns, but no fill, no border and no minimum width:
+   it reads as a link, not as a second button of the same weight, so an
+   accidental click lands on the safe action. */
+.bee-btn-text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  height: var(--bee-control-h-primary);
+  padding: 0 0.5rem;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--color-text-muted);
+  font-size: var(--bee-fs-body-2);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+.bee-btn-text:hover, .bee-btn-text:focus-visible { color: var(--color-text); text-decoration: underline; outline: none; }
+.bee-btn-text:disabled { opacity: 0.5; cursor: default; text-decoration: none; }
 
 /* Controls — micro-radius only
  *
@@ -1016,16 +1050,20 @@
 
 .bee-stat-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
+@media (min-width: 768px) {
+  .bee-stat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.bee-stat-grid > .bee-stat { height: 100%; }
 
 .bee-stat {
   min-width: 0;
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   text-align: center;
-  background: var(--color-background);
-  border: 1px solid var(--color-divider);
+  background: var(--color-card);
+  border: 1px solid var(--bee-card-border);
   border-radius: var(--radius-lg);
 }
 

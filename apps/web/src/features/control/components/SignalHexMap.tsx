@@ -317,7 +317,7 @@ export function SignalHexMap({
       <span className="bee-hex-float" style={{ width: 90, height: 104, top: -30, right: -20, animationDelay: "0s" }} aria-hidden />
       <span className="bee-hex-float" style={{ width: 56, height: 64, bottom: -16, left: 12, animationDelay: "1.4s" }} aria-hidden />
       <span className="bee-hex-float" style={{ width: 40, height: 46, top: "40%", right: 24, animationDelay: "2.6s" }} aria-hidden />
-      <div className="relative z-[1] mb-4 flex flex-wrap items-start justify-between gap-3">
+      <div className="relative z-[1] mb-4 flex flex-wrap items-start justify-between gap-4">
         <div>
           {/* Two lines (title + caption), same as every other Resumen
               section header (Embudo de cierre, Dónde eres más fuerte, …) —
@@ -400,7 +400,7 @@ export function SignalHexMap({
       {stageStats.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-border pt-3">
           {stageStats.map((s) => (
-            <div key={s.stage} className="flex items-center gap-3">
+            <div key={s.stage} className="flex items-center gap-4">
               <span className="h-7 w-[3px] shrink-0 rounded-full" style={{ background: s.color }} />
               <div>
                 <p className="text-base font-bold leading-none tabular-nums">{s.pct}%</p>

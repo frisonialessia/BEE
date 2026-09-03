@@ -135,7 +135,7 @@ export function AutopilotSection() {
         </button>
       ) : (
         <div className="space-y-4">
-          <div className="bee-bento flex items-start gap-2 p-3">
+          <div className="bee-bento flex items-start gap-2 p-4">
             <span className="text-sm">⚠</span>
             <p className="bee-caption">{t("warning")}</p>
           </div>
@@ -206,7 +206,7 @@ export function AutopilotSection() {
             />
           </div>
 
-          <div className="bee-bento space-y-3 p-3">
+          <div className="bee-bento space-y-3 p-4">
             <p className="bee-eyebrow">{t("simulation.eyebrow")}</p>
             <p className="bee-caption">{t("simulation.hint")}</p>
             <div className="flex flex-wrap items-end gap-2">

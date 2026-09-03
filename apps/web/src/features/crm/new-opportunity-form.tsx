@@ -231,7 +231,7 @@ function NewOpportunityBody({
       </DialogHeader>
 
       {/* ── 1. Empresa ─────────────────────────────────────────────── */}
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <p className="bee-eyebrow">{t("steps.company")}</p>
         {activeCompany ? (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-md)] border border-[var(--color-chart-4)] bg-[var(--color-card)] px-3 py-2">
@@ -298,7 +298,7 @@ function NewOpportunityBody({
           </div>
         )}
         {creatingCompany && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label={t("companyDomain")}>
               <input
                 value={companyDomain}
@@ -316,7 +316,7 @@ function NewOpportunityBody({
       </section>
 
       {/* ── 2. Contacto ────────────────────────────────────────────── */}
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <p className="bee-eyebrow">{t("steps.contact")}</p>
         {activeCompany && companyLeads.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -358,7 +358,7 @@ function NewOpportunityBody({
           </div>
         )}
         {showNewLeadFields && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field label={t("contactName")}>
               <input value={leadFullName} onChange={(e) => setLeadFullName(e.target.value)} className="bee-input" />
             </Field>
@@ -374,7 +374,7 @@ function NewOpportunityBody({
       </section>
 
       {/* ── 3. Oportunidad ─────────────────────────────────────────── */}
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <p className="bee-eyebrow">{t("steps.deal")}</p>
         <Field label={t("dealTitle")}>
           <input
@@ -384,7 +384,7 @@ function NewOpportunityBody({
             className="bee-input"
           />
         </Field>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label={t("ownerLabel")}>
             <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} className="bee-input">
               {(users ?? []).map((u) => (
@@ -464,7 +464,7 @@ function NewOpportunityBody({
             className="bee-input resize-none"
           />
         </Field>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- a client-resized data: URI, not an optimizable remote asset
             <img src={photoUrl} alt="" className="size-10 rounded-full object-cover" />

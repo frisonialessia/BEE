@@ -41,7 +41,7 @@ export function MarketInsightsList({ insights }: { insights: MarketInsight[] }) 
         return (
           <div key={insight.id} className="bee-bento bee-bento-pad">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="flex min-w-0 items-start gap-3">
+              <div className="flex min-w-0 items-start gap-4">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
                   <Icon className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
                 </div>

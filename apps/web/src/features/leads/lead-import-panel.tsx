@@ -166,7 +166,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
         onClick={onClose}
       />
       <aside className="bee-drawer" role="dialog" aria-modal="true" aria-label={t("panelAria")}>
-        <div className="flex items-center justify-between gap-3 border-b border-border px-6 py-4">
+        <div className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
           <div>
             <p className="bee-eyebrow">{t("eyebrow")}</p>
             <h2 className="mt-1 text-lg font-semibold tracking-tight">{t("heading")}</h2>

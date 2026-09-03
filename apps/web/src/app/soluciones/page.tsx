@@ -39,7 +39,7 @@ export default async function SolucionesPage() {
         </section>
 
         <section className="mx-auto w-full max-w-5xl px-6 pb-16 sm:pb-20">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {USE_CASE_KEYS.map((key) => {
               const Icon = USE_CASE_ICONS[key];
               return (

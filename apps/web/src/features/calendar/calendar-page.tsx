@@ -327,7 +327,7 @@ function MiniMonthCalendar({
               onClick={() => onSelectDay(day)}
               className={`relative rounded-[var(--radius-sm)] py-1 text-xs transition-colors ${
                 isSelectedWeek ? "bg-[var(--color-chart-4)]/15" : "hover:bg-[var(--color-primary)]/30"
-              } ${inMonth ? "" : "text-muted-foreground/40"} ${isToday ? "font-bold text-[var(--color-chart-4)]" : ""}`}
+              } ${inMonth ? "" : "text-muted-foreground"} ${isToday ? "font-bold text-[var(--color-chart-4)]" : ""}`}
             >
               {day.getDate()}
               {hasMeeting && (
@@ -399,7 +399,7 @@ function MonthGridView({
                     ? "bg-[var(--color-chart-4)] font-bold text-white"
                     : inMonth
                       ? "font-medium"
-                      : "text-muted-foreground/50"
+                      : "text-muted-foreground"
                 }`}
               >
                 {day.getDate()}
@@ -427,7 +427,7 @@ function MonthGridView({
 
 function SidebarProfileCard({ name, role, onQuickAdd }: { name: string; role: string; onQuickAdd: () => void }) {
   return (
-    <div className="bee-surface flex items-center gap-3 bee-bento-pad">
+    <div className="bee-surface flex items-center gap-4 bee-bento-pad">
       <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-cta)] text-xs font-bold text-white">
         {initials(name)}
       </span>
@@ -855,7 +855,7 @@ export function CalendarPage() {
 
   return (
     <div>
-      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="bee-eyebrow">{t("page.eyebrow")}</p>
           <div className="mt-1">

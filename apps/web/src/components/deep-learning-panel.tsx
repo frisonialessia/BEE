@@ -54,7 +54,7 @@ function CorrectionLearningPanel() {
     <div className="space-y-4">
       <p className="text-xs text-muted-foreground">{t("description")}</p>
 
-      <div className="grid gap-3">
+      <div className="grid gap-4">
         <div>
           <label className="block text-xs font-medium text-muted-foreground mb-1">{t("artifactTypeLabel")}</label>
           <select
@@ -97,7 +97,7 @@ function CorrectionLearningPanel() {
 
       {result && (
         <div
-          className="bee-bento p-3 space-y-2"
+          className="bee-bento p-4 space-y-2"
           style={{ borderColor: "var(--color-chart-6)", background: "color-mix(in srgb, var(--color-chart-6) 10%, var(--color-background))" }}
         >
           <div className="flex items-center gap-2">
@@ -133,7 +133,7 @@ function CorrectionLearningPanel() {
       </button>
 
       {profile && profile.total_corrections > 0 && (
-        <div className="bee-bento p-3 space-y-2">
+        <div className="bee-bento p-4 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-foreground">{t("currentProfileTitle")}</span>
             <span className="text-xs text-muted-foreground">
@@ -183,7 +183,7 @@ function AnomalyAlertCard({ alert, onAcknowledge }: { alert: AnomalyAlert; onAck
     : { color: "var(--color-text)", borderColor: "var(--color-divider)" };
 
   return (
-    <div className="bee-bento p-3 space-y-2" style={cardStyle}>
+    <div className="bee-bento p-4 space-y-2" style={cardStyle}>
       <div className="flex items-start gap-2">
         <div className="flex-1">
           <p className="text-xs font-semibold leading-tight">{alert.title}</p>

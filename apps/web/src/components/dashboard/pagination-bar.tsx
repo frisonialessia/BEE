@@ -42,7 +42,7 @@ export function PaginationBar({
         })}
       </p>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-4">
         <label className="flex items-center gap-2 text-xs text-muted-foreground">
           {t("density")}
           <select

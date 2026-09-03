@@ -241,7 +241,7 @@ function SequenceList({ onSelect, onNew }: { onSelect: (id: string) => void; onN
           <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {sequences.map((seq) => (
             <button
               key={seq.id}
