@@ -480,3 +480,55 @@ class TestWebhookReplayProtection:
             app_settings.WEBHOOK_REPLAY_WINDOW_SECONDS = original_window
             app_settings.WEBHOOK_SIGNATURE_REQUIRED = original_required
             reset_replay_guard()
+
+
+# ---------------------------------------------------------------------------
+# 6. POST /signals/webhook — an org API key is a credential in its own right
+# ---------------------------------------------------------------------------
+
+
+class TestOrgKeyAuthenticatesSignalWebhook:
+    """With ``WEBHOOK_SIGNATURE_REQUIRED=True`` (production), a customer's
+    integration has no way to produce ``X-BEE-Signature`` — the HMAC secret
+    is one server-wide value shared by every tenant. Their own org API key
+    must be enough; a missing key *and* missing signature still 401s, and a
+    wrong signature is never waved through just because a key is present."""
+
+    @pytest.fixture(autouse=True)
+    def _require_signature(self, client: TestClient):  # noqa: ARG002 — ordering: runs after `client` flips the flag off
+        from app.core.config import settings as app_settings
+
+        original = app_settings.WEBHOOK_SIGNATURE_REQUIRED
+        app_settings.WEBHOOK_SIGNATURE_REQUIRED = True
+        try:
+            yield
+        finally:
+            app_settings.WEBHOOK_SIGNATURE_REQUIRED = original
+
+    _BODY = {
+        "title": "Signed-by-key signal",
+        "event": "funding.round.announced",
+        "company": {"name": "KeyOnlyCo", "domain": "keyonlyco.com"},
+    }
+
+    def test_org_key_alone_is_accepted_when_signature_is_required(self, client: TestClient, session: Session):
+        org = _make_org(session, "Key Only Org")
+        plaintext = _make_active_key(session, org)
+        resp = client.post("/api/v1/signals/webhook", json=self._BODY, headers={"X-BEE-Org-Key": plaintext})
+        assert resp.status_code == 201, resp.text
+        company = session.exec(select(Company).where(Company.domain == "keyonlyco.com")).first()
+        assert company is not None and company.organization_id == org.id
+
+    def test_no_key_and_no_signature_is_rejected(self, client: TestClient):
+        resp = client.post("/api/v1/signals/webhook", json=self._BODY)
+        assert resp.status_code == 401
+
+    def test_valid_key_with_wrong_signature_is_rejected(self, client: TestClient, session: Session):
+        org = _make_org(session, "Bad Sig Org")
+        plaintext = _make_active_key(session, org)
+        resp = client.post(
+            "/api/v1/signals/webhook",
+            json=self._BODY,
+            headers={"X-BEE-Org-Key": plaintext, "X-BEE-Signature": "sha256=deadbeef"},
+        )
+        assert resp.status_code == 401

@@ -162,6 +162,20 @@ X-BEE-Signature: sha256=<hex digest>
 Signature enforcement is controlled by `WEBHOOK_SIGNATURE_REQUIRED` (off locally,
 **on in production**).
 
+A customer integration never holds that server-wide secret, so the endpoint
+also accepts an **organization API key** as the credential on its own:
+
+```
+X-BEE-Org-Key: bee_org_...
+```
+
+Keys are minted per organization from the dashboard (Integrations → Señales
+entrantes / Reportes y BI) or via `POST /api/v1/organizations/api-keys`. A
+request carrying a valid key is both authenticated *and* scoped to that
+organization; a presented-but-invalid `X-BEE-Signature` is still rejected
+even alongside a valid key. Requests with neither credential are rejected
+whenever signature enforcement is on.
+
 ## Multi-tenant auth (Organization / Team / User)
 
 Distinct from the `X-API-Key`/HMAC auth above — those gate *service-to-service*

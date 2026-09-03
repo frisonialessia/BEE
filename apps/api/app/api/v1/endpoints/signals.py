@@ -81,12 +81,29 @@ async def ingest_signal_webhook(
     """
     raw_body = await request.body()
 
-    # 1. Authenticate the sender.
-    if not verify_webhook_signature(raw_body, x_bee_signature):
-        logger.warning("Rejected webhook with invalid or missing signature.")
+    # 1. Authenticate the sender. Two credentials are accepted:
+    #    - a valid per-organization API key (``X-BEE-Org-Key``, resolved by
+    #      the dependency above — an invalid/revoked key already 401'd), or
+    #    - the server-wide HMAC signature (``X-BEE-Signature``).
+    #    The org key is the one a *customer* can actually hold: the HMAC
+    #    secret is a single server-wide value shared by every tenant, so
+    #    requiring it of a customer's CRM/Zapier meant either handing out
+    #    the global secret or, in practice, nobody outside the BEE team being
+    #    able to push signals in production at all. A presented-but-wrong
+    #    signature is still rejected even alongside a valid key — never
+    #    silently accept a bad credential.
+    if organization_id is None:
+        if not verify_webhook_signature(raw_body, x_bee_signature):
+            logger.warning("Rejected webhook with invalid or missing signature.")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or missing webhook signature (or X-BEE-Org-Key).",
+            )
+    elif x_bee_signature is not None and not verify_webhook_signature(raw_body, x_bee_signature):
+        logger.warning("Rejected webhook with a valid org key but an invalid signature.")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing webhook signature.",
+            detail="Invalid webhook signature.",
         )
 
     # 2. Parse + validate the envelope.
