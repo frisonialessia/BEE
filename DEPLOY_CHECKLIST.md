@@ -51,8 +51,12 @@ CREATE EXTENSION IF NOT EXISTS vector;
 | `ACCOUNT_RESEARCH_ENABLED=true` | Deep per-account research (AccountResearchAgent) — see §3.9 below |
 | `SENDGRID_WEBHOOK_SECRET` / `RESEND_WEBHOOK_SECRET` | Email open/click/reply → DarkFunnel signals — see §3.9 below |
 | `SENTRY_DSN` (backend, `apps/api/.env.example`) + `NEXT_PUBLIC_SENTRY_DSN` (frontend, `apps/web/.env.example`) | Error monitoring — unset means zero error visibility in production, not a crash; set both before real traffic if you want to know when something breaks |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Distributed tracing — unset means `setup_tracing()` is a no-op, no collector needed to run this app |
+| `WORKOS_API_KEY` + `WORKOS_CLIENT_ID` + `WORKOS_REDIRECT_URI` | Enterprise SSO (SAML/OIDC via WorkOS) — unset means the `/auth/sso/*` endpoints 404; each customer organization also needs `sso_enabled`/`sso_connection_id`/`sso_domain` set via `PATCH /organizations/me/sso` (OWNER only) even once these are configured |
+| `STRIPE_API_KEY` + `STRIPE_WEBHOOK_SECRET` | Billing scaffolding — unset means the `/billing/*` endpoints fail gracefully; scaffolding only, nothing in this codebase gates access on subscription status (see `app.services.billing`'s module docstring) |
+| `NEXT_PUBLIC_POSTHOG_KEY` (frontend, `apps/web/.env.example`) | Product analytics — unset means `posthog-js` is never initialized, no PostHog account needed to run this app |
 
-Full reference: `apps/api/.env.example`
+Full reference: `apps/api/.env.example` and `apps/web/.env.example`
 
 ---
 
