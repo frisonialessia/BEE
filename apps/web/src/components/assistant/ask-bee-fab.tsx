@@ -47,10 +47,21 @@ export function AskBeeFab() {
               {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, no una foto */}
               <img src="/assistant-bee.svg" alt="" className="size-4" aria-hidden="true" />
             </span>
-            <div className="min-w-0 text-white">
+            <div className="min-w-0 flex-1 text-white">
               <p className="text-sm font-semibold leading-tight">{t("fab.title")}</p>
               <p className="text-[11px] leading-tight text-white/85">{t("fab.subtitle")}</p>
             </div>
+            {/* X explícita del lado derecho del panel — antes cerrar dependía
+             * únicamente del botón flotante de abajo cambiando de ícono, que
+             * vive fuera del panel mismo. */}
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label={t("fab.toggleCloseAria")}
+              className="flex size-6 shrink-0 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/15 hover:text-white"
+            >
+              <X className="size-3.5" />
+            </button>
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3">
@@ -93,15 +104,14 @@ export function AskBeeFab() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="bee-assistant-fab flex size-12 items-center justify-center rounded-full text-[var(--color-chart-5)] transition-transform hover:scale-105"
+        className="bee-assistant-fab flex size-12 items-center justify-center rounded-full transition-transform hover:scale-105"
         aria-label={open ? t("fab.toggleCloseAria") : t("fab.toggleOpenAria")}
       >
-        {open ? (
-          <X className="size-4" />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, sin fondo propio (a diferencia de icon.svg, que trae su hexágono claro). Ícono chico (20px sobre un botón de 48px) a propósito: a todo color se pierde si ocupa el botón entero — con aire alrededor se lee limpio.
-          <img src="/assistant-bee.svg" alt="" className="size-5" aria-hidden="true" />
-        )}
+        {/* Siempre la mascota, abierto o cerrado — cerrar ahora tiene su
+         * propia X explícita en el header del panel (lado derecho), así
+         * que este botón no necesita cambiar de ícono para comunicarlo. */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- SVG estático de marca, sin fondo propio (a diferencia de icon.svg, que trae su hexágono claro). Ícono chico (20px sobre un botón de 48px) a propósito: a todo color se pierde si ocupa el botón entero — con aire alrededor se lee limpio. */}
+        <img src="/assistant-bee.svg" alt="" className="size-5" aria-hidden="true" />
       </button>
     </div>
   );

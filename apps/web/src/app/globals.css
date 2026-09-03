@@ -613,15 +613,15 @@
   box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-chart-5) 15%, transparent);
 }
 
-/* The floating launcher itself — a light fill (the site's own background,
- * not a filled brand color) with a thick colored contour instead of the
- * gradient fill: the button was carrying more visual weight than a
- * launcher should, competing with the actual tools instead of just
- * pointing at them. The mascot stays full-color and is now the only
- * saturated thing in the button. */
+/* The floating launcher itself — a solid fill in the same blue every
+ * primary CTA in the app uses (--color-cta), no border. Used to be a
+ * light fill with a thick colored contour instead (the mascot at full
+ * color got lost against an earlier flat-violet fill, so the button
+ * stayed unfilled) — --color-cta is a different-enough hue from the
+ * mascot's own amber/dark palette that it reads clean on its own,
+ * without needing the header panel's translucent icon-chip trick. */
 .bee-assistant-fab {
-  background: var(--color-background);
-  border: 3px solid var(--color-chart-5);
+  background: var(--color-cta);
   box-shadow: 0 6px 20px color-mix(in srgb, var(--color-text) 14%, transparent);
 }
 
