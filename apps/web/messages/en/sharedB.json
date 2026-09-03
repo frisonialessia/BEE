@@ -86,6 +86,11 @@
     "mergeButton": "Merge into selected",
     "heading": "{count, plural, one {# possible company duplicate} other {# possible company duplicates}}"
   },
+  "lookalikes": {
+    "heading": "{count, plural, one {# company that looks like your best customers} other {# companies that look like your best customers}}",
+    "subtitle": "BEE found these by comparing your closed-won book against companies it's already tracking but nobody's working yet",
+    "noProfile": "No profile data"
+  },
   "leadDuplicates": {
     "sameEmail": "Same email:",
     "createdOn": "created on {date}",

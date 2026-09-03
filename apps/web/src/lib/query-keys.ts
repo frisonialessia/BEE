@@ -49,6 +49,7 @@ export const queryKeys = {
     list: (limit?: number) => [...queryKeys.companies.all, "list", limit] as const,
     detail: (id: string) => [...queryKeys.companies.all, "detail", id] as const,
     duplicates: () => [...queryKeys.companies.all, "duplicates"] as const,
+    lookalikes: () => [...queryKeys.companies.all, "lookalikes"] as const,
     activity: (id: string) => [...queryKeys.companies.all, "activity", id] as const,
     brief: (id: string) => [...queryKeys.companies.all, "brief", id] as const,
   },

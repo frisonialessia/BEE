@@ -86,6 +86,11 @@
     "mergeButton": "Fusionar en la seleccionada",
     "heading": "{count, plural, one {# posible duplicado de empresa} other {# posibles duplicados de empresa}}"
   },
+  "lookalikes": {
+    "heading": "{count, plural, one {# empresa parecida a tus mejores clientes} other {# empresas parecidas a tus mejores clientes}}",
+    "subtitle": "BEE las encontró comparando tu cartera de negocios ganados con las empresas que ya está siguiendo, sin trabajar todavía",
+    "noProfile": "Sin datos de perfil"
+  },
   "leadDuplicates": {
     "sameEmail": "Mismo email:",
     "createdOn": "creado el {date}",

@@ -9,6 +9,7 @@ import {
   fetchCompanyActivity,
   fetchCompanyBrief,
   fetchCompanyDuplicates,
+  fetchLookalikeCompanies,
   mergeCompanies,
   researchCompany,
   updateCompany,
@@ -28,6 +29,19 @@ export function useCompanyDuplicates() {
   return useQuery({
     queryKey: queryKeys.companies.duplicates(),
     queryFn: async () => fetchCompanyDuplicates(),
+  });
+}
+
+/** Untapped companies BEE's vector store ranked as resembling this org's
+ * closed-won book — see LookalikeService's docstring on the backend. Empty
+ * in demo mode (see fetchLookalikeCompanies) and for any org still short a
+ * won deal or an untapped prospect to compare against — both honest, not
+ * an error, so this never needs its own loading/error UI beyond "show
+ * nothing when there's nothing to show." */
+export function useLookalikeCompanies(limit = 8) {
+  return useQuery({
+    queryKey: queryKeys.companies.lookalikes(),
+    queryFn: async () => fetchLookalikeCompanies(limit),
   });
 }
 

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
 import { CompanyDuplicatesPanel } from "@/components/dedup/company-duplicates-panel";
+import { LookalikesPanel } from "@/components/lookalikes/lookalikes-panel";
 import { MergedPageTabs } from "@/components/merged-page-tabs";
 import { LeadsDirectory } from "@/features/leads/leads-directory";
 import { useCompanies, useCreateCompany } from "@/hooks/queries/use-companies";
@@ -176,6 +177,7 @@ export function CompaniesList() {
               <>
                 {showNew && <NewCompanyForm onDone={() => setShowNew(false)} />}
 
+                <LookalikesPanel />
                 <CompanyDuplicatesPanel />
 
                 {isLoading ? (

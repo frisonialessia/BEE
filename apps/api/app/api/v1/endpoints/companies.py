@@ -29,10 +29,12 @@ from app.schemas.company import (
     CompanyUpdateIn,
 )
 from app.schemas.dedup import CompanyDuplicateGroup, MergeIn
+from app.schemas.lookalike import LookalikeCompanyOut
 from app.services.account_activity import list_events_for_company, record_event
 from app.services.account_research import AccountResearchAgent
 from app.services.events import publish
 from app.services.external_api.orchestrator import ExternalAPIOrchestrator
+from app.services.lookalike.service import LookalikeService
 from app.services.market_scan.orchestrator import MarketScanOrchestrator
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
 from app.services.team_profile import TeamProfileService
@@ -227,6 +229,39 @@ def merge_companies(
     session.commit()
     session.refresh(merged)
     return CompanyOut.model_validate(merged)
+
+
+@router.get(
+    "/lookalikes",
+    response_model=list[LookalikeCompanyOut],
+    summary="Untapped companies that resemble this org's closed-won accounts",
+)
+def list_lookalike_companies(
+    limit: int = 8,
+    session: Session = Depends(get_session),
+    current_user: User | None = Depends(get_current_user_optional),
+) -> list[LookalikeCompanyOut]:
+    """Registered before ``/{company_id}`` on purpose — same static-before-
+    dynamic ordering as ``/duplicates`` above.
+
+    Honesty guardrail: an organization with no won deals yet has nothing to
+    learn from and gets an empty list, not a guess — see
+    ``LookalikeService``'s docstring.
+    """
+    organization_id = current_user.organization_id if current_user else None
+    svc = LookalikeService(session)
+    results = svc.find(organization_id, limit=limit)
+    return [
+        LookalikeCompanyOut(
+            company_id=r.company_id,
+            name=r.name,
+            industry=r.industry,
+            size=r.size,
+            country=r.country,
+            similarity=r.similarity,
+        )
+        for r in results
+    ]
 
 
 @router.get(
