@@ -16,6 +16,7 @@ from app.api.v1.endpoints import (
     auth,
     autopilot,
     bi_feed,
+    billing,
     brand,
     companies,
     contact,
@@ -100,3 +101,4 @@ api_router.include_router(corrections.router)
 api_router.include_router(scenarios.router)
 api_router.include_router(anomalies.router)
 api_router.include_router(webhooks.router)
+api_router.include_router(billing.router)

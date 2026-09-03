@@ -166,7 +166,8 @@ class Settings(BaseSettings):
         "/api/v1/integrations/gmail/callback,/api/v1/integrations/linkedin/callback,"
         "/api/v1/integrations/salesforce/callback,/api/v1/integrations/hubspot/callback,"
         "/api/v1/integrations/jira/callback,/api/v1/notifications/stream,"
-        "/api/v1/internal/market-scan/tick,/api/v1/internal/jobs/tick"
+        "/api/v1/internal/market-scan/tick,/api/v1/internal/jobs/tick,"
+        "/api/v1/billing/webhook"
     )
 
     # ----- Multi-tenant user auth (Organization / Team / User) ------------------
@@ -259,6 +260,16 @@ class Settings(BaseSettings):
     # Must exactly match the redirect URI registered in the WorkOS dashboard,
     # e.g. https://api.bee.example.com/api/v1/auth/sso/callback.
     WORKOS_REDIRECT_URI: str | None = None
+
+    # ----- Billing (see app.services.billing) -------------------------------------
+    # Scaffolding, not enforcement — see Organization.stripe_* fields'
+    # comment for what that means in practice. Both unset (the default)
+    # means the billing endpoints 404 rather than existing as a live
+    # surface, same "off by default, no extra surface" convention as
+    # WORKOS_* above. Get these from a Stripe dashboard (dashboard.stripe.com
+    # → Developers → API keys / Webhooks) once BEE actually charges anyone.
+    STRIPE_API_KEY: str | None = None
+    STRIPE_WEBHOOK_SECRET: str | None = None
 
     # ----- Error monitoring (see app.main's lifespan) ---------------------------
     # None (the default) means sentry_sdk.init() is never called — zero error

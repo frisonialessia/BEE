@@ -107,6 +107,24 @@ class Organization(TimestampMixin, table=True):
     # organization's SSO connection before they ever type a password.
     sso_domain: str | None = Field(default=None, index=True)
 
+    # ----- Billing (see app.services.billing) -----------------------------------
+    # Scaffolding, not enforcement: nothing anywhere in this codebase reads
+    # these three to gate a feature or block access — `plan` above (still
+    # a free-text label an admin sets by hand today) remains the only
+    # thing that would ever do that, and it isn't wired to any of this
+    # either. These exist so Stripe checkout/portal/webhook can round-trip
+    # real subscription state into BEE for future use (dunning, a plan
+    # picker, usage-based limits) without every future feature having to
+    # first invent its own place to store it. All null = "no paid
+    # subscription on record", the state every organization is in today.
+    stripe_customer_id: str | None = Field(default=None, index=True)
+    stripe_subscription_id: str | None = Field(default=None)
+    # Stripe's own subscription.status values verbatim (e.g. "active",
+    # "trialing", "past_due", "canceled") — not an enum BEE defines,
+    # deliberately: re-deriving Stripe's own state machine here would be
+    # one more place for it to drift out of sync with what Stripe reports.
+    stripe_subscription_status: str | None = Field(default=None)
+
     # ----- Relationships -------------------------------------------------------
     teams: list["Team"] = Relationship(back_populates="organization")
     users: list["User"] = Relationship(back_populates="organization")
