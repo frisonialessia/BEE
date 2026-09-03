@@ -537,10 +537,12 @@ const MANUAL_COPY: Record<
 };
 
 export interface ManualOpportunityInput {
+  company_id?: string;
   company_name: string;
   company_domain?: string;
   company_industry?: string;
   company_country?: string;
+  lead_id?: string;
   lead_full_name?: string;
   lead_email?: string;
   lead_title?: string;
@@ -556,6 +558,10 @@ export interface ManualOpportunityInput {
   next_meeting_at?: string;
   meetings_held_count?: number;
   photo_url?: string;
+  assigned_to_user_id?: string;
+  status?: "detected" | "prioritized" | "in_progress";
+  expected_close_date?: string;
+  opportunity_type?: Opportunity["opportunity_type"];
 }
 
 /** Local counterpart to the real backend's `POST /opportunities`: resolves
@@ -576,8 +582,13 @@ export function buildManualOpportunitySet(
   const opportunityId = randomId();
   const companyName = input.company_name.trim();
   const leadName = input.lead_full_name?.trim() || null;
-  const companyId = `demo-company-${slug(companyName)}`;
-  const leadId = leadName ? `demo-lead-${slug(leadName)}` : null;
+  const companyId = input.company_id ?? `demo-company-${slug(companyName)}`;
+  const leadId = input.lead_id ?? (leadName ? `demo-lead-${slug(leadName)}` : null);
+  // The demo always writes a complete strategy, so a deal starts at
+  // ready_to_action unless the rep placed it further along — same override
+  // rule as the real endpoint.
+  const status: Opportunity["status"] =
+    input.status === "prioritized" || input.status === "in_progress" ? input.status : "ready_to_action";
   const flavor = SIGNAL_FLAVOR[locale][input.signal_type] ?? SIGNAL_FLAVOR[locale].other;
   const description = input.description.trim();
   const title = input.title?.trim() || t.defaultTitle(companyName);
@@ -625,16 +636,16 @@ export function buildManualOpportunitySet(
   const opportunity: Opportunity = {
     id: opportunityId,
     title,
-    status: "ready_to_action",
-    opportunity_type: "new_logo",
+    status,
+    opportunity_type: input.opportunity_type ?? "new_logo",
     score: input.score,
     strategy,
     signal_id: signalId,
     lead_id: leadId,
     company_id: companyId,
-    assigned_to_user_id: null,
+    assigned_to_user_id: input.assigned_to_user_id ?? null,
     amount: input.amount ?? null,
-    expected_close_date: null,
+    expected_close_date: input.expected_close_date ?? null,
     qualification: {},
     source: input.source ?? null,
     next_meeting_at: input.next_meeting_at ?? null,
@@ -650,7 +661,7 @@ export function buildManualOpportunitySet(
   const battlecard: Battlecard = {
     opportunity_id: opportunityId,
     title,
-    status: "ready_to_action",
+    status,
     opportunity_type: opportunity.opportunity_type,
     score: input.score,
     ready_to_action: true,

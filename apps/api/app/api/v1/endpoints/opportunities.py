@@ -20,7 +20,10 @@ from sqlmodel import Session
 
 from app.api.deps import get_current_user, get_current_user_optional
 from app.core.database import get_session
-from app.models.base import OpportunityStatus, SignalSource
+from app.core.logging import get_logger
+from app.models.base import NEW_LOGO, OpportunityStatus, SignalSource
+from app.models.company import Company
+from app.models.lead import Lead
 from app.models.opportunity import Opportunity
 from app.models.signal import Signal
 from app.models.user import User
@@ -48,7 +51,9 @@ from app.schemas.strategy import (
 )
 from app.services.cycle_predictor import CyclePredictorService
 from app.services.executive_agent.service import ExecutiveAgent
+from app.services.external_api.orchestrator import ExternalAPIOrchestrator
 from app.services.feedback_loop.service import FeedbackLoopService
+from app.services.market_scan.orchestrator import MarketScanOrchestrator
 from app.services.permissions import get_visible_user_ids, user_can_view_assignment
 from app.services.resource_predictor import ResourcePredictorService, resolve_context
 from app.services.strategy_generator import StrategyGeneratorService
@@ -109,18 +114,46 @@ def create_opportunity(
     """
     org_id = current_user.organization_id
 
-    company = CompanyRepository(session).get_or_create_from_ref(
-        CompanyRef(
-            name=data.company_name,
-            domain=data.company_domain,
-            industry=data.company_industry,
-            country=data.company_country,
-        ),
-        org_id,
-    )
+    # ── 1. Company: an existing account by id, or resolve-or-create ────────
+    company_repo = CompanyRepository(session)
+    company_created = False
+    if data.company_id is not None:
+        company = session.get(Company, data.company_id)
+        if company is None or (company.organization_id is not None and company.organization_id != org_id):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found.")
+    else:
+        domain = (data.company_domain or "").strip().lower().removeprefix("https://").removeprefix("http://").rstrip("/") or None
+        existing = company_repo.get_by_domain(domain, org_id) if domain else None
+        if existing is None and data.company_name:
+            existing = company_repo.get_by_name(data.company_name, org_id)
+        company = company_repo.get_or_create_from_ref(
+            CompanyRef(
+                name=data.company_name,
+                domain=domain,
+                industry=data.company_industry,
+                country=data.company_country,
+            ),
+            org_id,
+        )
+        company_created = existing is None and company is not None
 
+    # A brand-new account with a domain gets the same treatment as
+    # POST /companies/from-domain: homepage enrichment for name/description
+    # and an immediate market scan so its first signals don't wait for the
+    # cron. Both best-effort — the opportunity is the primary action here.
+    if company_created and company is not None and company.domain:
+        _enrich_new_company(session, company)
+
+    # ── 2. Contact: an existing lead by id, or resolve-or-create ────────────
     lead = None
-    if data.lead_full_name or data.lead_email:
+    if data.lead_id is not None:
+        lead = session.get(Lead, data.lead_id)
+        if lead is None or (lead.organization_id is not None and lead.organization_id != org_id):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found.")
+        if company is not None and lead.company_id is None:
+            lead.company_id = company.id
+            session.add(lead)
+    elif data.lead_full_name or data.lead_email:
         lead = LeadRepository(session).get_or_create_from_ref(
             LeadRef(
                 full_name=data.lead_full_name,
@@ -133,7 +166,15 @@ def create_opportunity(
             org_id,
         )
 
-    company_name = company.name if company else data.company_name
+    # ── 3. Owner: defaults to the caller; anyone else must share the tenant ─
+    assigned_to = current_user.id
+    if data.assigned_to_user_id is not None and data.assigned_to_user_id != current_user.id:
+        owner = session.get(User, data.assigned_to_user_id)
+        if owner is None or owner.organization_id != org_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="assigned_to_user_id is not a member of this organization.")
+        assigned_to = owner.id
+
+    company_name = company.name if company else (data.company_name or "")
 
     signal = Signal(
         organization_id=org_id,
@@ -147,18 +188,18 @@ def create_opportunity(
         confidence=1.0,
         raw_payload={
             "company": {
-                "name": data.company_name,
-                "domain": data.company_domain,
-                "industry": data.company_industry,
-                "country": data.company_country,
+                "name": company.name if company else data.company_name,
+                "domain": company.domain if company else data.company_domain,
+                "industry": company.industry if company else data.company_industry,
+                "country": company.country if company else data.company_country,
             },
             "lead": (
                 {
-                    "full_name": data.lead_full_name,
-                    "email": data.lead_email,
-                    "title": data.lead_title,
-                    "seniority": data.lead_seniority,
-                    "linkedin_url": data.lead_linkedin_url,
+                    "full_name": lead.full_name,
+                    "email": lead.email,
+                    "title": lead.title,
+                    "seniority": lead.seniority,
+                    "linkedin_url": lead.linkedin_url,
                 }
                 if lead is not None
                 else {}
@@ -173,10 +214,12 @@ def create_opportunity(
         signal_id=signal.id,
         lead_id=lead.id if lead else None,
         company_id=company.id if company else None,
-        assigned_to_user_id=current_user.id,
+        assigned_to_user_id=assigned_to,
         title=data.title or f"Oportunidad: {company_name}",
         score=data.score,
         strategy={},
+        opportunity_type=data.opportunity_type or NEW_LOGO,
+        expected_close_date=data.expected_close_date,
         amount=data.amount,
         source=data.source,
         next_meeting_at=data.next_meeting_at,
@@ -205,7 +248,40 @@ def create_opportunity(
         )
     session.refresh(opportunity)
 
+    # A starting stage the rep chose ("Tu prioridad", "En conversación")
+    # wins over the generator's DETECTED→READY promotion: they already know
+    # where this deal is. READY_TO_ACTION itself is never settable here —
+    # see OpportunityCreateIn.status.
+    if data.status in ("prioritized", "in_progress"):
+        opportunity.status = OpportunityStatus(data.status)
+        session.add(opportunity)
+        session.commit()
+        session.refresh(opportunity)
+
     return OpportunityOut.model_validate(opportunity)
+
+
+def _enrich_new_company(session: Session, company: Company) -> None:
+    """Homepage enrichment + first market scan for an account that was just
+    created from the opportunity form — the same two steps
+    ``create_company_from_domain`` runs, each swallowed on failure."""
+    try:
+        enrichment = ExternalAPIOrchestrator(session).enrich_company_from_domain(company_domain=company.domain or "")
+        if enrichment.success:
+            if not company.description and enrichment.company_description:
+                company.description = enrichment.company_description
+            if not company.industry and enrichment.company_industry:
+                company.industry = enrichment.company_industry
+            session.add(company)
+            session.commit()
+    except Exception:  # noqa: BLE001
+        session.rollback()
+        get_logger(__name__).exception("create_opportunity: website enrichment failed for company_id=%s", company.id)
+    try:
+        MarketScanOrchestrator(session).scan_company_now(company)
+    except Exception:  # noqa: BLE001
+        session.rollback()
+        get_logger(__name__).exception("create_opportunity: immediate scan failed for company_id=%s", company.id)
 
 
 @router.get(

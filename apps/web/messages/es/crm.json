@@ -4,7 +4,9 @@
     "title": "CRM",
     "description": "El pipeline real, etapa por etapa — arrastra una tarjeta para moverla",
     "pipelineTab": "Pipeline",
-    "opportunitiesTab": "Oportunidades"
+    "opportunitiesTab": "Oportunidades",
+    "battlecardsTab": "Battlecards",
+    "flowTab": "Flujo"
   },
   "board": {
     "live": "En vivo",
@@ -27,7 +29,7 @@
       "ready_to_action": "Con estrategia de venta lista",
       "prioritized": "Marcada a mano por el equipo",
       "in_progress": "Ya hablaste con el cliente",
-      "closed": "Ganada, perdida o descartada"
+      "closed": "Clientes ganados · perdidas · descartadas"
     },
     "stageHelp": {
       "detected": "Equivale a \"Nuevo\" en un CRM tradicional. BEE ya detectó la señal (una ronda, una contratación clave, un cambio de stack) — todavía nadie del equipo actuó sobre esta oportunidad.",
@@ -43,7 +45,7 @@
     },
     "emptyClosed": "Nada cerrado todavía",
     "closedStatus": {
-      "won": "Ganada",
+      "won": "Cliente",
       "lost": "Perdida",
       "dismissed": "Descartada"
     },
@@ -86,20 +88,33 @@
   },
   "form": {
     "title": "Nueva oportunidad",
-    "companyName": "Empresa *",
-    "companyDomain": "dominio.com",
+    "subtitle": "Elige o crea la empresa y el contacto, define el deal y BEE genera la estrategia. Todo queda guardado en Empresas y Leads.",
+    "steps": {
+      "company": "1 · Empresa",
+      "contact": "2 · Contacto",
+      "deal": "3 · Oportunidad"
+    },
+    "companySearchLabel": "Empresa *",
+    "companySearchPlaceholder": "Busca una cuenta existente o escribe una nueva…",
+    "companyExisting": "Ya en Empresas",
+    "companyChange": "Cambiar",
+    "companyCreate": "Crear «{name}»",
+    "companyCreateHint": "Con dominio, BEE completa la ficha desde su web y lanza el primer escaneo de mercado al guardar.",
+    "companyDomain": "Dominio",
     "companyIndustry": "Industria",
-    "contactName": "Contacto (opcional)",
+    "contactNew": "Nuevo contacto",
+    "contactName": "Nombre",
     "contactTitle": "Cargo",
     "contactEmail": "Correo",
-    "signalType": "Tipo de señal",
-    "priority": "Prioridad",
-    "descriptionPlaceholder": "¿Por qué es una oportunidad? Este contexto alimenta la estrategia que genera la IA. *",
-    "photoLabel": "Foto",
-    "photoUpload": "Subir foto",
-    "photoChange": "Cambiar",
+    "contactPickCompanyFirst": "Primero elige o crea la empresa.",
+    "dealTitle": "Título",
+    "dealTitlePlaceholder": "Oportunidad: {company}",
+    "ownerLabel": "Responsable",
+    "stageLabel": "Etapa inicial",
+    "typeLabel": "Tipo",
     "estimatedValueLabel": "Monto estimado",
     "estimatedValuePlaceholder": "USD",
+    "expectedCloseLabel": "Cierre estimado",
     "sourceLabel": "Origen",
     "sourcePlaceholder": "¿De dónde salió?",
     "sourceOptions": {
@@ -110,13 +125,20 @@
       "cold_call": "Llamada en frío",
       "other": "Otro"
     },
+    "signalType": "Tipo de señal",
     "nextMeetingLabel": "Próxima cita",
-    "meetingsHeldLabel": "Reuniones previas con este cliente",
-    "meetingsHeldPlaceholder": "0",
-    "save": "Guardar",
-    "saving": "Guardando…",
+    "meetingsHeldLabel": "Reuniones previas",
+    "priority": "Prioridad",
+    "descriptionLabel": "¿Por qué es una oportunidad? *",
+    "descriptionPlaceholder": "Contexto real: qué cambió, qué necesitan, quién decide. Alimenta la estrategia que genera la IA.",
+    "photoLabel": "Foto",
+    "photoUpload": "Subir foto",
+    "photoChange": "Cambiar foto",
+    "save": "Crear oportunidad",
+    "saving": "Creando…",
     "cancel": "Cancelar",
-    "successToast": "Oportunidad agregada — estrategia generada.",
+    "successToast": "Oportunidad creada en {company} — estrategia lista.",
+    "successToastNewCompany": "{company} creada en Empresas y oportunidad lista.",
     "errorToast": "No se pudo crear la oportunidad — intenta de nuevo."
   }
 }

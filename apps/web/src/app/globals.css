@@ -1125,6 +1125,51 @@
   border-color: var(--color-chart-4);
 }
 
+/* CRM column fills — every stage carries its own BEE tone (see
+   STAGE_TONE in lib/crm-board.ts). A filled card drops the left accent
+   bar: the fill *is* the stage marker. "Cliente" (won) stays white with
+   the brand outline — a closed deal is a customer, not a colored stage —
+   and lost/dismissed go quiet in a neutral grey. */
+.bee-kanban-card[class*="bee-kanban-card--fill-"],
+.bee-kanban-card--client,
+.bee-kanban-card--muted {
+  padding-left: 1rem;
+}
+.bee-kanban-card[class*="bee-kanban-card--fill-"]::before,
+.bee-kanban-card--client::before,
+.bee-kanban-card--muted::before {
+  display: none;
+}
+.bee-kanban-card--fill-1 {
+  background: color-mix(in srgb, var(--color-chart-1) 34%, var(--color-card));
+  border-color: color-mix(in srgb, var(--color-chart-1) 60%, var(--color-card));
+}
+.bee-kanban-card--fill-3 {
+  background: color-mix(in srgb, var(--color-chart-3) 30%, var(--color-card));
+  border-color: color-mix(in srgb, var(--color-chart-3) 60%, var(--color-card));
+}
+.bee-kanban-card--fill-4 {
+  background: color-mix(in srgb, var(--color-chart-4) 26%, var(--color-card));
+  border-color: color-mix(in srgb, var(--color-chart-4) 55%, var(--color-card));
+}
+.bee-kanban-card--fill-6 {
+  background: color-mix(in srgb, var(--color-chart-6) 30%, var(--color-card));
+  border-color: color-mix(in srgb, var(--color-chart-6) 60%, var(--color-card));
+}
+.bee-kanban-card--client {
+  background: var(--color-card);
+  border-color: var(--color-chart-4);
+}
+.bee-kanban-card--muted {
+  background: color-mix(in srgb, var(--color-text) 5%, var(--color-card));
+  border-color: color-mix(in srgb, var(--color-text) 12%, var(--color-card));
+}
+.bee-kanban-col__bar {
+  height: 4px;
+  border-radius: 999px;
+  margin: 0 0.25rem 0.5rem;
+}
+
 /* Pagination */
 .bee-pagination {
   display: flex;

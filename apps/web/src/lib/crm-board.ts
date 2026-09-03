@@ -1,5 +1,19 @@
 import type { CrmStage } from "@/lib/api/opportunities";
-import { CLOSED_OPPORTUNITY_STATUSES, type Opportunity } from "@/types/domain";
+import { CLOSED_OPPORTUNITY_STATUSES, type Opportunity, type OpportunityStatus } from "@/types/domain";
+
+/** One BEE tone per stage — the board's card fills and column bars, the
+ *  opportunities list's stage dots, all read from here so a stage looks
+ *  the same everywhere. Won is deliberately the brand blue on white ("a
+ *  client", not a colored stage); lost/dismissed are neutral. */
+export const STAGE_TONE: Record<OpportunityStatus, { fill: string; bar: string }> = {
+  detected: { fill: "bee-kanban-card--fill-3", bar: "var(--color-chart-3)" },
+  ready_to_action: { fill: "bee-kanban-card--fill-6", bar: "var(--color-chart-6)" },
+  prioritized: { fill: "bee-kanban-card--fill-1", bar: "var(--color-chart-1)" },
+  in_progress: { fill: "bee-kanban-card--fill-4", bar: "var(--color-chart-4)" },
+  won: { fill: "bee-kanban-card--client", bar: "var(--color-chart-4)" },
+  lost: { fill: "bee-kanban-card--muted", bar: "var(--color-divider)" },
+  dismissed: { fill: "bee-kanban-card--muted", bar: "var(--color-divider)" },
+};
 
 // `label` below is a fallback only — every render site pulls the real,
 // localized copy via t(`stages.${id}`) (see messages/{es,en}/crm.json's

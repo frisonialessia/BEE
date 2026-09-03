@@ -4,7 +4,9 @@
     "title": "CRM",
     "description": "The real pipeline, stage by stage — drag a card to move it",
     "pipelineTab": "Pipeline",
-    "opportunitiesTab": "Opportunities"
+    "opportunitiesTab": "Opportunities",
+    "battlecardsTab": "Battlecards",
+    "flowTab": "Flow"
   },
   "board": {
     "live": "Live",
@@ -27,7 +29,7 @@
       "ready_to_action": "Sales strategy ready to go",
       "prioritized": "Set by hand by your team",
       "in_progress": "You've already talked to them",
-      "closed": "Won, lost, or dismissed"
+      "closed": "Won clients · lost · dismissed"
     },
     "stageHelp": {
       "detected": "Same as \"New\" in a traditional CRM. BEE already detected the signal (a funding round, a key hire, a stack change) — nobody on the team has acted on it yet.",
@@ -43,7 +45,7 @@
     },
     "emptyClosed": "Nothing closed yet",
     "closedStatus": {
-      "won": "Won",
+      "won": "Client",
       "lost": "Lost",
       "dismissed": "Dismissed"
     },
@@ -86,20 +88,33 @@
   },
   "form": {
     "title": "New opportunity",
-    "companyName": "Company *",
-    "companyDomain": "domain.com",
+    "subtitle": "Pick or create the company and contact, shape the deal, and BEE writes the strategy. Everything lands in Companies and Leads.",
+    "steps": {
+      "company": "1 · Company",
+      "contact": "2 · Contact",
+      "deal": "3 · Opportunity"
+    },
+    "companySearchLabel": "Company *",
+    "companySearchPlaceholder": "Search an existing account or type a new one…",
+    "companyExisting": "Already in Companies",
+    "companyChange": "Change",
+    "companyCreate": "Create “{name}”",
+    "companyCreateHint": "With a domain, BEE fills the profile from its website and runs the first market scan on save.",
+    "companyDomain": "Domain",
     "companyIndustry": "Industry",
-    "contactName": "Contact (optional)",
+    "contactNew": "New contact",
+    "contactName": "Name",
     "contactTitle": "Title",
     "contactEmail": "Email",
-    "signalType": "Signal type",
-    "priority": "Priority",
-    "descriptionPlaceholder": "Why is this an opportunity? This context feeds the AI-generated strategy. *",
-    "photoLabel": "Photo",
-    "photoUpload": "Upload photo",
-    "photoChange": "Change",
+    "contactPickCompanyFirst": "Pick or create the company first.",
+    "dealTitle": "Title",
+    "dealTitlePlaceholder": "Opportunity: {company}",
+    "ownerLabel": "Owner",
+    "stageLabel": "Starting stage",
+    "typeLabel": "Type",
     "estimatedValueLabel": "Estimated value",
     "estimatedValuePlaceholder": "USD",
+    "expectedCloseLabel": "Expected close",
     "sourceLabel": "Source",
     "sourcePlaceholder": "Where did it come from?",
     "sourceOptions": {
@@ -110,13 +125,20 @@
       "cold_call": "Cold call",
       "other": "Other"
     },
+    "signalType": "Signal type",
     "nextMeetingLabel": "Next meeting",
-    "meetingsHeldLabel": "Prior meetings with this client",
-    "meetingsHeldPlaceholder": "0",
-    "save": "Save",
-    "saving": "Saving…",
+    "meetingsHeldLabel": "Previous meetings",
+    "priority": "Priority",
+    "descriptionLabel": "Why is this an opportunity? *",
+    "descriptionPlaceholder": "Real context: what changed, what they need, who decides. It feeds the AI-generated strategy.",
+    "photoLabel": "Photo",
+    "photoUpload": "Upload photo",
+    "photoChange": "Change photo",
+    "save": "Create opportunity",
+    "saving": "Creating…",
     "cancel": "Cancel",
-    "successToast": "Opportunity added — strategy generated.",
-    "errorToast": "Couldn't create the opportunity — try again."
+    "successToast": "Opportunity created at {company} — strategy ready.",
+    "successToastNewCompany": "{company} added to Companies and opportunity ready.",
+    "errorToast": "Could not create the opportunity — try again."
   }
 }

@@ -19,6 +19,7 @@ import type {
   Battlecard,
   Opportunity,
   OpportunityStatus,
+  OpportunityType,
   OutcomeIn,
   SignalType,
 } from "@/types/domain";
@@ -26,10 +27,14 @@ import type { CyclePrediction, OutcomeWithPrediction } from "@/types/extended";
 import { getSampleArtifacts, getSampleBattlecards } from "@/lib/sample-data";
 
 export interface OpportunityCreateIn {
-  company_name: string;
+  /** Pick an existing account — the form's first choice; name/domain are
+   *  for creating one. Same for `lead_id` vs the lead_* fields. */
+  company_id?: string;
+  company_name?: string;
   company_domain?: string;
   company_industry?: string;
   company_country?: string;
+  lead_id?: string;
   lead_full_name?: string;
   lead_email?: string;
   lead_title?: string;
@@ -45,6 +50,11 @@ export interface OpportunityCreateIn {
   next_meeting_at?: string;
   meetings_held_count?: number;
   photo_url?: string;
+  // Deal shape — owner, starting stage, close date, revenue type.
+  assigned_to_user_id?: string;
+  status?: "detected" | "prioritized" | "in_progress";
+  expected_close_date?: string;
+  opportunity_type?: OpportunityType;
 }
 
 /** Carga manual de una oportunidad — el "+ Nueva oportunidad" del CRM y de
@@ -59,6 +69,7 @@ export async function createOpportunity(body: OpportunityCreateIn): Promise<Oppo
   if (isDemoMode()) {
     return demoCreateOpportunity({
       ...body,
+      company_name: body.company_name ?? "",
       signal_type: body.signal_type ?? "other",
       score: body.score ?? 50,
     });

@@ -12,9 +12,10 @@ import uuid
 from datetime import date, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.models.base import (
+    OPPORTUNITY_TYPES,
     OpportunityStatus,
     SignalSource,
     SignalType,
@@ -180,11 +181,16 @@ class OpportunityCreateIn(BaseModel):
     would be.
     """
 
-    company_name: str = Field(min_length=1, max_length=255)
+    # Either an existing account (``company_id``, picked from Empresas) or
+    # the fields to resolve-or-create one — the form offers both, so a rep
+    # never types a company BEE already tracks. Same for the contact below.
+    company_id: uuid.UUID | None = None
+    company_name: str | None = Field(default=None, max_length=255)
     company_domain: str | None = Field(default=None, max_length=255)
     company_industry: str | None = Field(default=None, max_length=255)
     company_country: str | None = Field(default=None, max_length=255)
 
+    lead_id: uuid.UUID | None = None
     lead_full_name: str | None = Field(default=None, max_length=255)
     lead_email: str | None = Field(default=None, max_length=255)
     lead_title: str | None = Field(default=None, max_length=255)
@@ -205,6 +211,31 @@ class OpportunityCreateIn(BaseModel):
     next_meeting_at: datetime | None = None
     meetings_held_count: int | None = Field(default=None, ge=0)
     photo_url: str | None = Field(default=None, max_length=300_000)
+
+    # ----- Deal shape (optional) ---------------------------------------------
+    # Who works it (defaults to the caller), where it starts, when it should
+    # close and what kind of revenue it is — the fields a CRM asks for up
+    # front so Forecast, Ranking and the Bandeja have something to rank on
+    # from day one instead of after a later edit.
+    assigned_to_user_id: uuid.UUID | None = None
+    # Only the stages a person can legitimately *start* a deal in. READY_TO_
+    # ACTION is BEE's own gate (a complete battlecard) and never set by hand.
+    status: Literal["detected", "prioritized", "in_progress"] | None = None
+    expected_close_date: date | None = None
+    opportunity_type: str | None = Field(default=None, max_length=32)
+
+    @field_validator("opportunity_type")
+    @classmethod
+    def _known_opportunity_type(cls, value: str | None) -> str | None:
+        if value is not None and value not in OPPORTUNITY_TYPES:
+            raise ValueError(f"opportunity_type must be one of {sorted(OPPORTUNITY_TYPES)}")
+        return value
+
+    @model_validator(mode="after")
+    def _company_identified(self) -> OpportunityCreateIn:
+        if self.company_id is None and not (self.company_name or "").strip():
+            raise ValueError("Either company_id or company_name is required.")
+        return self
 
 
 class SignalIngestResult(BaseModel):

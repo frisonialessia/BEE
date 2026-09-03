@@ -591,12 +591,11 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
             {t("opportunities.addOpportunity")}
           </button>
         </div>
-        {showNewOpportunity && (
-          <NewOpportunityForm
-            company={{ name: company.name, domain: company.domain }}
-            onDone={() => setShowNewOpportunity(false)}
-          />
-        )}
+        <NewOpportunityForm
+          open={showNewOpportunity}
+          onClose={() => setShowNewOpportunity(false)}
+          company={{ id: company.id, name: company.name, domain: company.domain }}
+        />
         {opportunities.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("opportunities.empty")}</p>
         ) : (

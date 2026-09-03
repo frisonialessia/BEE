@@ -15,7 +15,7 @@ import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
 import { useMoveOpportunityStage, useOpportunities } from "@/hooks/queries/use-opportunities";
 import type { Locale } from "@/i18n/locales";
 import type { CrmStage } from "@/lib/api/opportunities";
-import { CRM_STAGES, groupByCrmStage } from "@/lib/crm-board";
+import { CRM_STAGES, STAGE_TONE, groupByCrmStage } from "@/lib/crm-board";
 import {
   getOpportunityTypeLabels,
   opportunityTypeVariant,
@@ -26,13 +26,6 @@ import { cn } from "@/lib/utils";
 import { ApiError } from "@/types/api";
 import type { Opportunity } from "@/types/domain";
 import { LiveBadge } from "@/components/live-badge";
-
-const CHART_ACCENT: Record<CrmStage, string> = {
-  detected: "bee-kanban-card--chart-3",
-  ready_to_action: "bee-kanban-card--chart-6",
-  prioritized: "bee-kanban-card--chart-1",
-  in_progress: "bee-kanban-card--chart-4",
-};
 
 function CrmCard({
   opportunity,
@@ -56,7 +49,7 @@ function CrmCard({
   const nextAction = strategy?.next_best_action;
   const isHot = Boolean((strategy as Record<string, unknown> | undefined)?.hot_lead);
   const reviewRequired = Boolean(strategy?.manual_review_required);
-  const accent = CHART_ACCENT[opportunity.status as CrmStage] ?? "";
+  const accent = STAGE_TONE[opportunity.status]?.fill ?? "";
   const opportunityType = opportunity.opportunity_type ?? "new_logo";
   const opportunityTypeLabels = getOpportunityTypeLabels(locale);
 
@@ -178,6 +171,7 @@ function CrmColumn({
 
   return (
     <div className="flex w-[min(100%,280px)] shrink-0 flex-col">
+      <div className="bee-kanban-col__bar" style={{ background: STAGE_TONE[stage].bar }} aria-hidden="true" />
       <div className="mb-1 flex shrink-0 items-baseline justify-between px-1">
         <div className="flex items-center gap-1">
           <h3 className="bee-eyebrow">{label}</h3>
@@ -317,7 +311,7 @@ export function CrmBoard() {
       </button>
     </div>
   );
-  const newForm = showNew && <NewOpportunityForm onDone={() => setShowNew(false)} />;
+  const newForm = <NewOpportunityForm open={showNew} onClose={() => setShowNew(false)} />;
 
   if (isLoading) {
     return (
@@ -370,11 +364,17 @@ export function CrmBoard() {
           />
         ))}
 
-        {/* Cerradas — solo lectura, ganar/perder es una acción dedicada, no un drop. */}
+        {/* Cerradas — solo lectura, ganar/perder es una acción dedicada, no un
+            drop. Ganadas son clientes: blanco con el contorno de marca;
+            perdidas y descartadas quedan en gris neutro. */}
         <div className="flex h-full w-[min(100%,280px)] shrink-0 flex-col">
-          <div className="mb-3 flex shrink-0 items-baseline justify-between px-1">
+          <div className="bee-kanban-col__bar" style={{ background: STAGE_TONE.won.bar }} aria-hidden="true" />
+          <div className="mb-1 flex shrink-0 items-baseline justify-between px-1">
             <h3 className="bee-eyebrow">{t("stages.closed")}</h3>
             <span className="font-mono bee-micro">{closed.length}</span>
+          </div>
+          <div className="mb-2.5 flex shrink-0 items-center px-1">
+            <p className="bee-micro text-muted-foreground">{t("stageSubtitles.closed")}</p>
           </div>
           <div className="flex h-full min-h-[220px] flex-1 flex-col gap-3 overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--bee-card-border)] bg-[var(--color-card)] p-3">
             {closed.length === 0 ? (
@@ -387,10 +387,7 @@ export function CrmBoard() {
                   key={opp.id}
                   type="button"
                   onClick={() => openOpportunity(opp.id)}
-                  className={cn(
-                    "bee-kanban-card group w-full text-left opacity-70 transition-opacity hover:opacity-100",
-                    opp.status === "won" ? "bee-kanban-card--chart-6" : "",
-                  )}
+                  className={cn("bee-kanban-card group w-full text-left", STAGE_TONE[opp.status].fill)}
                 >
                   <p className="line-clamp-2 text-sm font-medium leading-snug tracking-tight">
                     {stripOpportunityTitlePrefix(opp.title)}

@@ -10,7 +10,9 @@ the same way an inbound webhook signal does.
 from __future__ import annotations
 
 import uuid
+from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
@@ -22,6 +24,19 @@ from app.models.opportunity import Opportunity
 from app.models.organization import Organization
 from app.models.signal import Signal
 from app.models.user import User
+
+
+@pytest.fixture(autouse=True)
+def _no_network_for_new_companies():
+    """A brand-new company with a domain now triggers homepage enrichment and
+    an immediate market scan (best-effort, see _enrich_new_company) — both
+    would hit the network; keep this suite hermetic."""
+    with (
+        patch("app.api.v1.endpoints.opportunities.ExternalAPIOrchestrator.enrich_company_from_domain") as enrich,
+        patch("app.api.v1.endpoints.opportunities.MarketScanOrchestrator.scan_company_now", return_value=0),
+    ):
+        enrich.return_value.success = False
+        yield
 
 
 def _make_org_and_owner(session: Session, name: str) -> tuple[Organization, User]:
