@@ -13,6 +13,7 @@ globally visible — a deliberate, narrow exception, not the general rule.
 """
 
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import JSON, Column
@@ -65,6 +66,28 @@ class Organization(TimestampMixin, table=True):
     # app.services.federated_intelligence's module docstring for the full
     # privacy model (k-anonymity floor, what is and isn't ever exposed).
     federated_intelligence_opt_in: bool = Field(default=False, nullable=False)
+
+    # ----- GDPR / data-erasure request ------------------------------------------
+    # Set by POST /organizations/me/deletion-request (OWNER only, requires
+    # re-typing the organization's name to confirm) — see
+    # app.api.v1.endpoints.organizations's module docstring for why this
+    # records a REQUEST rather than performing the erasure itself: cascading
+    # a hard delete safely across every table an organization's data touches
+    # is a reviewed, audited support-team action, not something a single API
+    # call should trigger automatically. Both null = no pending request.
+    #
+    # deletion_requested_by_user_id is deliberately NOT a real foreign_key
+    # (unlike every other *_user_id in this codebase) — Organization
+    # already has a Relationship to User (`users` below) through
+    # User.organization_id; a second FK column from organizations to users
+    # makes that relationship's join ambiguous (SQLAlchemy can no longer
+    # infer which FK path `Organization.users` should use) and every query
+    # touching it starts raising AmbiguousForeignKeysError. A plain
+    # unenforced UUID reference (same as AdminAuditLog.actor_user_id's
+    # semantics, just without the constraint) avoids that entirely — this
+    # is an audit-style pointer, not a relationship BEE ever navigates.
+    deletion_requested_at: datetime | None = Field(default=None)
+    deletion_requested_by_user_id: uuid.UUID | None = Field(default=None)
 
     # ----- Relationships -------------------------------------------------------
     teams: list["Team"] = Relationship(back_populates="organization")

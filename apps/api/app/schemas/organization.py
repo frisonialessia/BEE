@@ -1,11 +1,20 @@
-"""Schemas for organization-level settings — ICP criteria and the org's own
-company profile (industry / employee range / website)."""
+"""Schemas for organization-level settings — ICP criteria, the org's own
+company profile (industry / employee range / website), the GDPR data
+export, and the deletion-request flow."""
 
 from __future__ import annotations
+
+import uuid
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
 from app.models.base import EmployeeRange
+from app.schemas.auth import UserOut
+from app.schemas.company import CompanyOut
+from app.schemas.lead import LeadOut
+from app.schemas.meeting import MeetingOut
+from app.schemas.signal import OpportunityOut
 
 
 class ICPCriteriaIn(BaseModel):
@@ -55,3 +64,44 @@ class OrganizationProfileOut(BaseModel):
     industry: str | None
     employee_range: EmployeeRange | None
     website: str | None
+
+
+# ── GDPR data export ─────────────────────────────────────────────────────
+
+
+class OrganizationDataExport(BaseModel):
+    """GET /organizations/me/export's response — see that endpoint's own
+    docstring for scope (core entities, capped per-entity, not literally
+    every table this organization's data touches)."""
+
+    organization_id: uuid.UUID
+    organization_name: str
+    exported_at: datetime
+    users: list[UserOut]
+    leads: list[LeadOut]
+    companies: list[CompanyOut]
+    opportunities: list[OpportunityOut]
+    meetings: list[MeetingOut]
+    truncated: list[str] = Field(
+        default_factory=list,
+        description="Entity types that hit the per-entity cap — contact support for a complete export.",
+    )
+
+
+# ── GDPR deletion request ────────────────────────────────────────────────
+
+
+class DeletionRequestIn(BaseModel):
+    """Re-typing the organization's exact name is the confirmation step —
+    same "type to confirm" pattern a destructive action in any real SaaS
+    dashboard uses, cheap insurance against a stray click doing something
+    this consequential."""
+
+    confirm_organization_name: str = Field(min_length=1, max_length=255)
+
+
+class DeletionRequestOut(BaseModel):
+    requested: bool
+    requested_at: datetime | None
+    requested_by_user_id: uuid.UUID | None
+    detail: str
