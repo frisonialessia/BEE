@@ -10,7 +10,6 @@
       "simulator": "Simulador de escenarios"
     },
     "outerTabs": {
-      "forecast": "Pronóstico",
       "winLoss": "Ganado/Perdido"
     },
     "emptyState": {
