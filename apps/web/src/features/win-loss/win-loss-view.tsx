@@ -1,13 +1,10 @@
 "use client";
 
-import { CalendarClock, DollarSign, Percent, Trophy } from "lucide-react";
-
 import { useLocale, useTranslations } from "next-intl";
 
 import { CompetitorBreakdown } from "@/components/win-loss/competitor-breakdown";
 import { LossReasonChart } from "@/components/win-loss/loss-reason-chart";
 import { MeddicCorrelationChart } from "@/components/win-loss/meddic-correlation-chart";
-import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -51,9 +48,9 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
 
       {isLoading ? (
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24" />
+              <Skeleton key={i} className="h-20" />
             ))}
           </div>
           <Skeleton className="h-56" />
@@ -65,45 +62,29 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard
-              label={t("winLoss.kpis.winRate.label")}
-              value={summary.winRate !== null ? `${Math.round(summary.winRate * 100)}%` : "—"}
-              hint={t("winLoss.kpis.winRate.hint", { won: summary.won, total: summary.totalClosed })}
-              icon={Percent}
-            />
-            <MetricCard
-              label={t("winLoss.kpis.wonValue.label")}
-              value={formatCurrencyUSD(summary.wonValue, locale)}
-              hint={t("winLoss.kpis.wonValue.hint")}
-              icon={Trophy}
-            />
-            <MetricCard
-              label={t("winLoss.kpis.lostValue.label")}
-              value={formatCurrencyUSD(summary.lostValue, locale)}
-              hint={t("winLoss.kpis.lostValue.hint")}
-              icon={DollarSign}
-            />
-            <MetricCard
-              label={t("winLoss.kpis.daysToClose.label")}
-              value={
-                summary.avgDaysToCloseWon !== null ? `${Math.round(summary.avgDaysToCloseWon)}d` : "—"
-              }
-              hint={
-                summary.avgDaysToCloseWon === null
-                  ? summary.avgDaysToCloseLost !== null
-                    ? t("winLoss.kpis.daysToClose.hintNoWonHasLost", {
-                        days: Math.round(summary.avgDaysToCloseLost),
-                      })
-                    : t("winLoss.kpis.daysToClose.hintNoWonNoLost")
-                  : summary.avgDaysToCloseLost !== null
-                    ? t("winLoss.kpis.daysToClose.hintHasWonHasLost", {
-                        days: Math.round(summary.avgDaysToCloseLost),
-                      })
-                    : t("winLoss.kpis.daysToClose.hintHasWonNoLost")
-              }
-              icon={CalendarClock}
-            />
+          {/* Misma tarjeta compacta que Dark Funnel — ver forecast-view.tsx's
+           * propio comentario, mismo cambio acá. */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="bee-bento p-3.5 text-center">
+              <p className="bee-stat__val">
+                {summary.winRate !== null ? `${Math.round(summary.winRate * 100)}%` : "—"}
+              </p>
+              <p className="bee-stat__lbl mt-1">{t("winLoss.kpis.winRate.label")}</p>
+            </div>
+            <div className="bee-bento p-3.5 text-center">
+              <p className="bee-stat__val">{formatCurrencyUSD(summary.wonValue, locale)}</p>
+              <p className="bee-stat__lbl mt-1">{t("winLoss.kpis.wonValue.label")}</p>
+            </div>
+            <div className="bee-bento p-3.5 text-center">
+              <p className="bee-stat__val">{formatCurrencyUSD(summary.lostValue, locale)}</p>
+              <p className="bee-stat__lbl mt-1">{t("winLoss.kpis.lostValue.label")}</p>
+            </div>
+            <div className="bee-bento p-3.5 text-center">
+              <p className="bee-stat__val">
+                {summary.avgDaysToCloseWon !== null ? `${Math.round(summary.avgDaysToCloseWon)}d` : "—"}
+              </p>
+              <p className="bee-stat__lbl mt-1">{t("winLoss.kpis.daysToClose.label")}</p>
+            </div>
           </div>
 
           {/* items-start: Razones de pérdida y Competidores are variable-length

@@ -122,11 +122,15 @@ export function PriorityMatrixView({ showHeader = true }: { showHeader?: boolean
             </div>
           ) : (
             <>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {/* Misma tarjeta compacta que Dark Funnel (bee-stat__val/__lbl) en
+               * vez de bee-kpi — antes esta fila no tenía columna base para
+               * móvil (antes de sm caía a 1 sola por fila) y cada tarjeta
+               * era mucho más alta (bee-bento-pad + número clamp 28-36px). */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {QUADRANT_ORDER.map((q) => (
-                  <div key={q} className="bee-bento bee-bento-pad">
-                    <p className="bee-kpi-tile__label">{t(`quadrants.${q}.label`)}</p>
-                    <p className="bee-kpi mt-2">{byQuadrant[q].length}</p>
+                  <div key={q} className="bee-bento p-3.5 text-center">
+                    <p className="bee-stat__val">{byQuadrant[q].length}</p>
+                    <p className="bee-stat__lbl mt-1">{t(`quadrants.${q}.label`)}</p>
                   </div>
                 ))}
               </div>

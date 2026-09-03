@@ -26,7 +26,11 @@ export function ResilienceView({ showHeader = true }: { showHeader?: boolean }) 
         </header>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/* grid-cols-1 explícito: sin columna base, esta grilla usaba un track
+       * implícito "auto" en vez de minmax(0,1fr) — no se achicaba para caber
+       * en el viewport, así que el panel de Resiliencia (con la fila de 5
+       * tarjetas) se desbordaba por la derecha en móvil sin scroll visible. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <PendingActionsPanel />
         <ResiliencePanel />
       </div>

@@ -172,17 +172,24 @@ function DLQPanel() {
   return (
     <div className="space-y-4">
       {summary && (
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          {/* Misma tarjeta compacta que Dark Funnel/Resumen (p-3.5, no p-2) —
+           * "Total" es la suma de las otras 4, no una cuenta accionable por sí
+           * sola, así que se oculta solo en móvil (mismo criterio que "Score
+           * medio" en Resumen) para que la fila quede en 2×2. */}
           {[
-            { label: t("stats.total"), value: summary.total_events, color: "var(--color-text)" },
+            { label: t("stats.total"), value: summary.total_events, color: "var(--color-text)", hideOnMobile: true },
             { label: t("stats.pending"), value: summary.pending_count, color: "var(--warning)" },
             { label: t("stats.resolved"), value: summary.resolved_count, color: "var(--success)" },
             { label: t("stats.failed"), value: summary.permanently_failed_count, color: "var(--color-chart-2)" },
             { label: t("stats.dueNow"), value: summary.due_for_retry_count, color: "var(--color-chart-4)" },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="bee-bento p-2 text-center">
+          ].map(({ label, value, color, hideOnMobile }) => (
+            <div
+              key={label}
+              className={`bee-bento p-3.5 text-center ${hideOnMobile ? "hidden sm:block" : ""}`}
+            >
               <p className="bee-stat__val" style={{ color }}>{value}</p>
-              <p className="bee-stat__lbl">{label}</p>
+              <p className="bee-stat__lbl mt-1">{label}</p>
             </div>
           ))}
         </div>
@@ -340,21 +347,21 @@ function AuditPanel() {
   return (
     <div className="space-y-4">
       {summary && (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          <div className="bee-bento p-2 text-center">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <div className="bee-bento p-3.5 text-center">
             <p className="bee-stat__val">{summary.total_entries}</p>
-            <p className="bee-stat__lbl">{t("stats.total")}</p>
+            <p className="bee-stat__lbl mt-1">{t("stats.total")}</p>
           </div>
           <div
-            className="bee-bento p-2 text-center"
+            className="bee-bento p-3.5 text-center"
             style={{ borderColor: "var(--color-chart-2)", background: "color-mix(in srgb, var(--color-chart-2) 12%, var(--color-background))" }}
           >
             <p className="bee-stat__val" style={{ color: "var(--color-chart-2)" }}>{summary.manual_review_count}</p>
-            <p className="bee-stat__lbl">{t("stats.reviewRequired")}</p>
+            <p className="bee-stat__lbl mt-1">{t("stats.reviewRequired")}</p>
           </div>
-          <div className="bee-bento p-2 text-center">
+          <div className="bee-bento p-3.5 text-center">
             <p className="bee-stat__val" style={{ color: "var(--success)" }}>{(summary.avg_confidence_score * 100).toFixed(0)}%</p>
-            <p className="bee-stat__lbl">{t("stats.avgConfidence")}</p>
+            <p className="bee-stat__lbl mt-1">{t("stats.avgConfidence")}</p>
           </div>
         </div>
       )}

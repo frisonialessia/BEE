@@ -914,14 +914,19 @@
   border-radius: var(--radius-lg);
 }
 
+/* Antes 14px/9px — el número más chico de cualquier tile de la app, apenas
+ * legible en un vistazo rápido de celular. Ahora comparte tratamiento con
+ * Priorización/Pronóstico/Ganado-Perdido/Resumen, que se pasaron a esta
+ * misma tarjeta compacta (ver .bee-bento usages en esas páginas) — subir
+ * el tamaño acá se ve reflejado en las 5 a la vez. */
 .bee-stat__val, .bee-stat__value {
-  font-size: 0.875rem;
+  font-size: 1.125rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .bee-stat__lbl, .bee-stat__label {
-  font-size: 0.5625rem;
+  font-size: 0.625rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-muted);

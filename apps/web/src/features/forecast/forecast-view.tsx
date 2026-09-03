@@ -1,12 +1,10 @@
 "use client";
 
-import { AlertTriangle, DollarSign, TrendingUp, Trophy } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { ForecastBarChart } from "@/components/forecast/forecast-bar-chart";
 import { ScenarioSimulatorPanel } from "@/components/forecast/scenario-simulator-panel";
 import { TrendsChart } from "@/components/forecast/trends-chart";
-import { MetricCard } from "@/components/metric-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MergedPageTabs } from "@/components/merged-page-tabs";
@@ -65,9 +63,9 @@ export function ForecastView() {
             label: t("forecast.tabs.overview"),
             content: isLoading ? (
               <div className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="h-24" />
+                    <Skeleton key={i} className="h-20" />
                   ))}
                 </div>
                 <Skeleton className="h-56" />
@@ -79,36 +77,29 @@ export function ForecastView() {
               </div>
             ) : (
               <div className="space-y-6">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <MetricCard
-                    label={t("forecast.kpis.pipeline.label")}
-                    value={formatCurrencyUSD(forecast.pipelineValue, locale)}
-                    hint={t("forecast.kpis.pipeline.hint", { count: forecast.openCount })}
-                    icon={DollarSign}
-                  />
-                  <MetricCard
-                    label={t("forecast.kpis.weighted.label")}
-                    value={formatCurrencyUSD(forecast.weightedForecast, locale)}
-                    hint={
-                      forecast.scoreBucketStats.length > 0
-                        ? t("forecast.kpis.weighted.hintHistorical")
-                        : t("forecast.kpis.weighted.hintDefault")
-                    }
-                    icon={TrendingUp}
-                  />
-                  <MetricCard
-                    label={t("forecast.kpis.won.label")}
-                    value={formatCurrencyUSD(forecast.wonValue, locale)}
-                    hint={t("forecast.kpis.won.hint")}
-                    icon={Trophy}
-                  />
-                  <MetricCard
-                    label={t("forecast.kpis.atRisk.label")}
-                    value={forecast.atRisk.length}
-                    hint={t("forecast.kpis.atRisk.hint")}
-                    icon={AlertTriangle}
-                    tone={forecast.atRisk.length > 0 ? "warm" : "default"}
-                  />
+                {/* Misma tarjeta compacta que Dark Funnel — antes era
+                 * MetricCard (ícono + número + línea de ayuda), sin columna
+                 * base para móvil. El ícono y el hint de cada KPI se van de
+                 * esta fila puntual; el resto de la página no cambia. */}
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div className="bee-bento p-3.5 text-center">
+                    <p className="bee-stat__val">{formatCurrencyUSD(forecast.pipelineValue, locale)}</p>
+                    <p className="bee-stat__lbl mt-1">{t("forecast.kpis.pipeline.label")}</p>
+                  </div>
+                  <div className="bee-bento p-3.5 text-center">
+                    <p className="bee-stat__val">{formatCurrencyUSD(forecast.weightedForecast, locale)}</p>
+                    <p className="bee-stat__lbl mt-1">{t("forecast.kpis.weighted.label")}</p>
+                  </div>
+                  <div className="bee-bento p-3.5 text-center">
+                    <p className="bee-stat__val">{formatCurrencyUSD(forecast.wonValue, locale)}</p>
+                    <p className="bee-stat__lbl mt-1">{t("forecast.kpis.won.label")}</p>
+                  </div>
+                  <div className="bee-bento p-3.5 text-center">
+                    <p className="bee-stat__val" style={forecast.atRisk.length > 0 ? { color: "var(--color-chart-1)" } : undefined}>
+                      {forecast.atRisk.length}
+                    </p>
+                    <p className="bee-stat__lbl mt-1">{t("forecast.kpis.atRisk.label")}</p>
+                  </div>
                 </div>
 
                 <section className="bee-surface bee-bento-pad">

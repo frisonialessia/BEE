@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Bot, Flame, ShieldCheck, TrendingUp } from "lucide-react";
+import { Bot } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { BattlecardView } from "@/components/battlecard";
@@ -9,7 +9,6 @@ import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-he
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
 import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-heatmap";
 import { TodayImpactCard } from "@/components/dashboard/today-impact-card";
-import { MetricCard } from "@/components/metric-card";
 import { RevenueSimulatorWidget } from "@/components/revenue-simulator";
 import { SignalCard } from "@/components/signal-card";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +27,6 @@ import { useSignals } from "@/hooks/queries/use-signals";
 import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
 import { computeTodayImpact } from "@/lib/today-impact";
-import { bucketAverageByDay, bucketByDay } from "@/lib/trend";
 
 /**
  * Resumen — the analytics tool: KPI strip, enriched battlecards, and the
@@ -62,42 +60,18 @@ export function DashboardOverview() {
     signals.length > 0
       ? Math.round(signals.reduce((sum, s) => sum + s.score, 0) / signals.length)
       : 0;
-  const hotSignalsList = signals.filter((s) => s.score >= 75);
-  const hotSignals = hotSignalsList.length;
+  const hotSignals = signals.filter((s) => s.score >= 75).length;
   const readyCount = battlecards.filter((b) => b.ready_to_action).length;
   const hotLeads = battlecards.filter((b) => b.hot_lead).length;
-
-  // Tendencia de 7 días — calculada a partir de las señales/battlecards ya
-  // obtenidas (detected_at/created_at real), no inventada. readyCount y
-  // hotLeads usan created_at del battlecard como proxy honesto de "cuándo
-  // pasó esto" — BEE no guarda por separado el momento exacto en que un
-  // battlecard cruzó a ready/hot, así que created_at es lo más cercano sin
-  // fabricar un dato que no existe.
-  const signalsTrend = bucketByDay(signals.map((s) => s.detected_at), 7);
-  const hotSignalsTrend = bucketByDay(hotSignalsList.map((s) => s.detected_at), 7);
-  const readyTrend = bucketByDay(
-    battlecards.filter((b) => b.ready_to_action).map((b) => b.created_at),
-    7,
-  );
-  const hotLeadsTrend = bucketByDay(
-    battlecards.filter((b) => b.hot_lead).map((b) => b.created_at),
-    7,
-  );
-  // Promedio, no conteo — un día sin señales se omite en vez de mostrar un
-  // score de 0 que se leería como "se desplomó".
-  const avgScoreTrend = bucketAverageByDay(
-    signals.map((s) => ({ date: s.detected_at, value: s.score })),
-    7,
-  ).filter((v): v is number => v !== null);
   const todayImpact = computeTodayImpact(signals, allOppsResult?.data ?? [], new Date());
 
   if (loading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-72" />
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
           {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-24" />
+            <Skeleton key={i} className={`h-20 ${i === 4 ? "hidden sm:block" : ""}`} />
           ))}
         </div>
       </div>
@@ -118,30 +92,33 @@ export function DashboardOverview() {
           </Badge>
         </div>
 
-        <div className="bee-kpi-strip">
-          <MetricCard label={t("kpis.signals")} value={signals.length} icon={Activity} trend={signalsTrend} />
-          <MetricCard
-            label={t("kpis.hotSignals")}
-            value={hotSignals}
-            hint={t("kpis.hotSignalsHint")}
-            icon={TrendingUp}
-            trend={hotSignalsTrend}
-          />
-          <MetricCard
-            label={t("kpis.ready")}
-            value={readyCount}
-            hint={t("kpis.readyHint")}
-            icon={ShieldCheck}
-            trend={readyTrend}
-          />
-          <MetricCard
-            label={t("kpis.hotLeads")}
-            value={hotLeads}
-            hint={t("kpis.hotLeadsHint")}
-            icon={Flame}
-            trend={hotLeadsTrend}
-          />
-          <MetricCard label={t("kpis.avgScore")} value={avgScore} icon={Activity} trend={avgScoreTrend} />
+        {/* Misma tarjeta compacta que Dark Funnel — antes MetricCard (ícono +
+         * número + tendencia + hint), sin columna base para móvil. "Score
+         * medio" es un promedio derivado de las otras 4, no una cuenta
+         * accionable — se oculta solo en móvil (mismo criterio que "Total"
+         * en el panel de Resiliencia) para que la fila quede en 2×2 en vez
+         * de 2×2 + 1 sola arrastrada; de sm en adelante se ven las 5. */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="bee-bento p-3.5 text-center">
+            <p className="bee-stat__val">{signals.length}</p>
+            <p className="bee-stat__lbl mt-1">{t("kpis.signals")}</p>
+          </div>
+          <div className="bee-bento p-3.5 text-center">
+            <p className="bee-stat__val">{hotSignals}</p>
+            <p className="bee-stat__lbl mt-1">{t("kpis.hotSignals")}</p>
+          </div>
+          <div className="bee-bento p-3.5 text-center">
+            <p className="bee-stat__val">{readyCount}</p>
+            <p className="bee-stat__lbl mt-1">{t("kpis.ready")}</p>
+          </div>
+          <div className="bee-bento p-3.5 text-center">
+            <p className="bee-stat__val">{hotLeads}</p>
+            <p className="bee-stat__lbl mt-1">{t("kpis.hotLeads")}</p>
+          </div>
+          <div className="bee-bento hidden p-3.5 text-center sm:block">
+            <p className="bee-stat__val">{avgScore}</p>
+            <p className="bee-stat__lbl mt-1">{t("kpis.avgScore")}</p>
+          </div>
         </div>
       </header>
 
