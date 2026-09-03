@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 import { useCreateSavedView, useDeleteSavedView, useSavedViews } from "@/hooks/queries/use-saved-views";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 /** Vistas guardadas — un nombre para una combinación de filtro/orden que ya
@@ -118,15 +120,14 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
                   autoFocus
                   className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2.5 py-1.5 text-xs outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
                 />
-                <label className="flex items-center gap-1.5 bee-micro">
-                  <input
-                    type="checkbox"
+                <Label className="bee-micro font-normal">
+                  <Checkbox
                     checked={shared}
-                    onChange={(e) => setShared(e.target.checked)}
-                    className="size-3 accent-[var(--color-chart-4)]"
+                    onCheckedChange={(checked) => setShared(checked === true)}
+                    className="size-3"
                   />
                   {t("shareWithTeam")}
-                </label>
+                </Label>
                 <div className="flex gap-1.5">
                   <button
                     type="button"

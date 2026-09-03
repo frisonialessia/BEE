@@ -44,6 +44,7 @@
     "overdue": "vencida",
     "completedCount": "{count, plural, one {# completada} other {# completadas}}",
     "deleteTask": "Eliminar tarea",
+    "toggleComplete": "Marcar \"{title}\" como completada",
     "newTaskPlaceholder": "Nueva tarea…",
     "addTask": "Agregar tarea",
     "error": "No se pudo guardar la tarea."

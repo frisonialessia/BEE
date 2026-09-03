@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useAutopilotConfig,
@@ -138,10 +140,10 @@ export function AutopilotSection() {
             <p className="bee-caption">{t("warning")}</p>
           </div>
 
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+          <Label className="text-sm font-normal">
+            <Checkbox checked={enabled} onCheckedChange={(checked) => setEnabled(checked === true)} />
             {t("enableLabel")}
-          </label>
+          </Label>
 
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">

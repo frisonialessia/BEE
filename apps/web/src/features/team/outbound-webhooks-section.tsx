@@ -11,6 +11,8 @@ import {
   useOutboundWebhooks,
   useUpdateOutboundWebhook,
 } from "@/hooks/queries/use-outbound-webhooks";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import type { OutboundWebhookCreated } from "@/lib/api/outbound-webhooks";
 
 /** Event type values use dots (`opportunity.won`) which next-intl reads as
@@ -58,18 +60,13 @@ function NewWebhookForm({ eventTypes, onDone }: { eventTypes: string[]; onDone: 
       />
       <div className="mt-3 flex flex-wrap gap-2">
         {eventTypes.map((type) => (
-          <label
+          <Label
             key={type}
-            className="flex cursor-pointer items-center gap-1.5 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2.5 py-1.5 text-xs"
+            className="cursor-pointer rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2.5 py-1.5 text-xs font-normal"
           >
-            <input
-              type="checkbox"
-              checked={selected.includes(type)}
-              onChange={() => toggle(type)}
-              className="size-3.5 accent-[var(--color-chart-4)]"
-            />
+            <Checkbox checked={selected.includes(type)} onCheckedChange={() => toggle(type)} />
             {eventTypeLabels[type] ?? type}
-          </label>
+          </Label>
         ))}
       </div>
       <div className="mt-3 flex items-center gap-2">
@@ -195,17 +192,15 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
                 </div>
                 {canManage && (
                   <div className="flex shrink-0 items-center gap-2">
-                    <label className="flex items-center gap-1.5 bee-micro">
-                      <input
-                        type="checkbox"
+                    <Label className="bee-micro font-normal">
+                      <Checkbox
                         checked={w.is_active}
-                        onChange={(e) =>
-                          updateWebhook.mutate({ id: w.id, body: { is_active: e.target.checked } })
+                        onCheckedChange={(checked) =>
+                          updateWebhook.mutate({ id: w.id, body: { is_active: checked === true } })
                         }
-                        className="size-3.5 accent-[var(--color-chart-4)]"
                       />
                       {t("active")}
-                    </label>
+                    </Label>
                     <button
                       type="button"
                       onClick={() => deleteWebhook.mutate(w.id)}

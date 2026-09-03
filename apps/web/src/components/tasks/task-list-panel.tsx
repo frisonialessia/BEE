@@ -6,6 +6,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useCreateTask, useDeleteTask, useOpportunityTasks, useUpdateTask } from "@/hooks/queries/use-tasks";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
@@ -31,12 +32,12 @@ function TaskRow({
   const overdue = isOverdue(task);
   return (
     <div className="group flex items-start gap-2 rounded-[var(--radius-md)] px-2 py-1.5 hover:bg-[var(--color-primary)]/20">
-      <input
-        type="checkbox"
+      <Checkbox
         checked={Boolean(task.completed_at)}
         disabled={toggling}
-        onChange={(e) => onToggle(e.target.checked)}
-        className="mt-0.5 size-3.5 shrink-0 accent-[var(--color-chart-4)] disabled:opacity-50"
+        onCheckedChange={(checked) => onToggle(checked === true)}
+        aria-label={t("toggleComplete", { title: task.title })}
+        className="mt-0.5 shrink-0"
       />
       <div className="min-w-0 flex-1">
         <p className={cn("text-xs", task.completed_at ? "text-muted-foreground line-through" : "text-foreground")}>

@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useFederatedIntelligenceConfig,
@@ -68,15 +70,14 @@ export function FederatedIntelligenceSection() {
             <span className="text-sm">ⓘ</span>
             <p className="bee-caption">{t("explainer")}</p>
           </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
+          <Label className="text-sm font-normal">
+            <Checkbox
               checked={config?.opt_in ?? false}
               disabled={pending}
-              onChange={(e) => void handleToggle(e.target.checked)}
+              onCheckedChange={(checked) => void handleToggle(checked === true)}
             />
             {t("toggleLabel")}
-          </label>
+          </Label>
         </div>
       )}
     </section>

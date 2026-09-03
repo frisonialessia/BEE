@@ -11,6 +11,8 @@ import { ExportCsvButton } from "@/components/export/export-csv-button";
 import { MetricCard } from "@/components/metric-card";
 import { SavedViewsControl } from "@/components/saved-views/saved-views-control";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeadImportPanel } from "@/features/leads/lead-import-panel";
 import { useCompanies } from "@/hooks/queries/use-companies";
@@ -279,15 +281,10 @@ export function LeadsDirectory() {
               <option value="recent">{t("filters.sortRecent")}</option>
               <option value="name">{t("filters.sortName")}</option>
             </select>
-            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={staleOnly}
-                onChange={(e) => setStaleOnly(e.target.checked)}
-                className="accent-[var(--color-chart-4)]"
-              />
+            <Label className="text-xs font-normal text-muted-foreground">
+              <Checkbox checked={staleOnly} onCheckedChange={(checked) => setStaleOnly(checked === true)} />
               {t("filters.staleOnlyLabel")}
-            </label>
+            </Label>
             <SavedViewsControl page="leads" currentConfig={currentViewConfig} onApply={applyViewConfig} />
           </div>
 

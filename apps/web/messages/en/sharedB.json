@@ -44,6 +44,7 @@
     "overdue": "overdue",
     "completedCount": "{count, plural, one {# completed} other {# completed}}",
     "deleteTask": "Delete task",
+    "toggleComplete": "Mark \"{title}\" complete",
     "newTaskPlaceholder": "New task…",
     "addTask": "Add task",
     "error": "Couldn't save the task."

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AuditEntry, AuditSummary, DLQSummary, FailedEvent } from "@/lib/types";
 import {
@@ -349,15 +351,10 @@ function AuditPanel() {
       )}
 
       <div className="flex items-center gap-2">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={reviewOnly}
-            onChange={(e) => setReviewOnly(e.target.checked)}
-            className="rounded border-border"
-          />
+        <Label className="cursor-pointer font-normal">
+          <Checkbox checked={reviewOnly} onCheckedChange={(checked) => setReviewOnly(checked === true)} />
           <span className="text-xs text-muted-foreground">Mostrar solo decisiones de baja confianza</span>
-        </label>
+        </Label>
       </div>
 
       {loading ? (

@@ -4,6 +4,8 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { useUpdateOpportunity } from "@/hooks/queries/use-opportunities";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { MEDDIC_CRITERIA, qualificationScore } from "@/lib/forecast";
 import type { Opportunity } from "@/types/domain";
 
@@ -76,19 +78,18 @@ export function QualificationPanel({ opportunity }: { opportunity: Opportunity }
         {MEDDIC_CRITERIA.map((c) => {
           const checked = Boolean(qualification[c.key]);
           return (
-            <label
+            <Label
               key={c.key}
               title={c.hint}
-              className="flex cursor-pointer items-start gap-2 rounded-[var(--radius-md)] px-2 py-1.5 text-xs transition-colors hover:bg-[var(--color-primary)]/25"
+              className="cursor-pointer items-start rounded-[var(--radius-md)] px-2 py-1.5 text-xs font-normal transition-colors hover:bg-[var(--color-primary)]/25"
             >
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={checked}
-                onChange={() => toggleCriterion(c.key)}
-                className="mt-0.5 size-3.5 shrink-0 accent-[var(--color-chart-4)]"
+                onCheckedChange={() => toggleCriterion(c.key)}
+                className="mt-0.5 shrink-0"
               />
               <span className={checked ? "text-foreground" : "text-muted-foreground"}>{c.label}</span>
-            </label>
+            </Label>
           );
         })}
       </div>
