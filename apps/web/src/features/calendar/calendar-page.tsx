@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Link2, Trash2, Users, Video } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Link2, Trash2, Users, Video } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -8,7 +8,13 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCreateMeeting, useDeleteMeeting, useMeetings, useUpdateMeeting } from "@/hooks/queries/use-meetings";
+import {
+  useCompleteMeeting,
+  useCreateMeeting,
+  useDeleteMeeting,
+  useMeetings,
+  useUpdateMeeting,
+} from "@/hooks/queries/use-meetings";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useUsers } from "@/hooks/queries/use-users";
@@ -360,6 +366,7 @@ export function CalendarPage() {
   const createMeeting = useCreateMeeting();
   const updateMeeting = useUpdateMeeting();
   const deleteMeeting = useDeleteMeeting();
+  const completeMeeting = useCompleteMeeting();
 
   const usersById = useMemo(() => new Map((users ?? []).map((u) => [u.id, u])), [users]);
 
@@ -468,6 +475,16 @@ export function CalendarPage() {
       toast.error(err instanceof ApiError ? err.message : t("form.deleteError"));
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function handleComplete(meeting: Meeting) {
+    try {
+      const updated = await completeMeeting.mutateAsync(meeting.id);
+      setDetail(updated);
+      toast.success(t("detail.completeSuccess"));
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : t("detail.completeError"));
     }
   }
 
@@ -660,11 +677,19 @@ export function CalendarPage() {
                 <p className="bee-caption">
                   {timeLabel(detail.starts_at, locale, tz)} · {detail.duration_minutes} min
                 </p>
-                {detail.client_context && (
-                  <Badge variant={CLIENT_CONTEXT_VARIANT[detail.client_context]} className="w-fit">
-                    {t(`clientContext.${detail.client_context}`)}
-                  </Badge>
-                )}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {detail.client_context && (
+                    <Badge variant={CLIENT_CONTEXT_VARIANT[detail.client_context]} className="w-fit">
+                      {t(`clientContext.${detail.client_context}`)}
+                    </Badge>
+                  )}
+                  {detail.completed_at && (
+                    <Badge variant="success" className="w-fit gap-1">
+                      <CheckCircle2 className="size-3" />
+                      {t("detail.completed")}
+                    </Badge>
+                  )}
+                </div>
                 {(detail.company_name || detail.contact_name) && (
                   <p className="text-sm">
                     <span className="text-muted-foreground">{t("detail.with")}: </span>
@@ -700,10 +725,21 @@ export function CalendarPage() {
                   </div>
                 )}
               </div>
-              <DialogFooter className="mt-2">
+              <DialogFooter className="mt-2 flex-wrap gap-2">
                 <button type="button" onClick={() => setDetail(null)} className="bee-btn-ghost">
                   {t("detail.close")}
                 </button>
+                {!detail.completed_at && (
+                  <button
+                    type="button"
+                    onClick={() => handleComplete(detail)}
+                    disabled={completeMeeting.isPending}
+                    className="bee-btn-ghost gap-1.5"
+                  >
+                    <CheckCircle2 className="size-3.5" />
+                    {completeMeeting.isPending ? t("detail.completing") : t("detail.markComplete")}
+                  </button>
+                )}
                 <button type="button" onClick={() => openEdit(detail)} className="bee-btn bee-btn--primary">
                   {t("detail.edit")}
                 </button>

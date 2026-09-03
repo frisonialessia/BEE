@@ -23,6 +23,7 @@ from sqlmodel import Session
 
 from app.services.events.dispatcher import subscribe
 from app.services.icp import recompute_company_fit_score, recompute_org_fit_scores
+from app.services.meeting_engagement import record_meeting_engagement
 
 # ----- ICP fit-score persistence --------------------------------------------
 # See app/services/icp/recompute.py for what these actually do; this file
@@ -43,4 +44,13 @@ def _on_icp_criteria_updated(*, session: Session, organization_id: uuid.UUID) ->
 subscribe("company.updated", _on_company_updated)
 subscribe("icp_criteria.updated", _on_icp_criteria_updated)
 
-# Phase 4 (meetings -> engagement feedback) adds its subscribe() calls here.
+
+# ----- Meetings -> engagement feedback ---------------------------------------
+# See app/services/meeting_engagement.py for what this actually does.
+
+
+def _on_meeting_completed(*, session: Session, meeting_id: uuid.UUID) -> None:
+    record_meeting_engagement(session, meeting_id)
+
+
+subscribe("meeting.completed", _on_meeting_completed)

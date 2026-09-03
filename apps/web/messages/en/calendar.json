@@ -62,6 +62,11 @@
     "with": "With",
     "purposeEmpty": "No description",
     "edit": "Edit",
-    "close": "Close"
+    "close": "Close",
+    "completed": "Completed",
+    "markComplete": "Mark as completed",
+    "completing": "Saving…",
+    "completeSuccess": "Meeting marked as completed.",
+    "completeError": "Couldn't mark the meeting as completed — try again."
   }
 }

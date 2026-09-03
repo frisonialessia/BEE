@@ -1,6 +1,12 @@
 import { apiFetch } from "@/lib/api/client";
 import { isDemoMode } from "@/lib/demo/mode";
-import { demoCreateMeeting, demoDeleteMeeting, demoFetchMeetings, demoUpdateMeeting } from "@/lib/demo/store";
+import {
+  demoCompleteMeeting,
+  demoCreateMeeting,
+  demoDeleteMeeting,
+  demoFetchMeetings,
+  demoUpdateMeeting,
+} from "@/lib/demo/store";
 import type { Meeting, MeetingColor } from "@/types/domain";
 
 /** Calendario — fully interactive in the sandbox too (see lib/demo/store.ts's
@@ -60,6 +66,16 @@ export async function updateMeeting(meetingId: string, body: MeetingUpdateIn): P
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+}
+
+/** Marks a meeting as having actually happened — the one action that
+ * feeds it back into the rest of BEE (meetings_held_count, an engagement
+ * signal on the linked account). Scheduling/editing/deleting a meeting
+ * never does this on their own; see POST /meetings/{id}/complete's own
+ * docstring on the backend. */
+export async function completeMeeting(meetingId: string): Promise<Meeting> {
+  if (isDemoMode()) return demoCompleteMeeting(meetingId);
+  return apiFetch<Meeting>(`/api/v1/meetings/${meetingId}/complete`, { method: "POST" });
 }
 
 export async function deleteMeeting(meetingId: string): Promise<void> {

@@ -16,13 +16,14 @@ from sqlmodel import Session, select
 
 from app.api.deps import get_current_user, get_current_user_optional
 from app.core.database import get_session
-from app.models.base import EXPANSION, RENEWAL_RISK, OpportunityStatus
+from app.models.base import EXPANSION, RENEWAL_RISK, OpportunityStatus, utcnow
 from app.models.company import Company
 from app.models.lead import Lead
 from app.models.meeting import Meeting
 from app.models.opportunity import Opportunity
 from app.models.user import User
 from app.schemas.meeting import ClientContext, MeetingCreateIn, MeetingOut, MeetingUpdateIn
+from app.services.events import publish
 from app.services.permissions import get_visible_user_ids, scope_by_organization_id
 
 router = APIRouter(prefix="/meetings", tags=["Meetings"])
@@ -219,6 +220,40 @@ def update_meeting(
     session.add(meeting)
     session.commit()
     session.refresh(meeting)
+    return _to_out(session, meeting)
+
+
+@router.post(
+    "/{meeting_id}/complete",
+    response_model=MeetingOut,
+    summary="Mark a meeting as having actually happened",
+)
+def complete_meeting(
+    meeting_id: uuid.UUID,
+    session: Session = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+) -> MeetingOut:
+    """Idempotent — completing an already-completed meeting just returns
+    it unchanged, rather than bumping meetings_held_count a second time
+    or erroring on a double-click. This is the one place a meeting
+    actually feeds back into the rest of BEE (see the meeting.completed
+    listener in app/services/events/listeners.py) — scheduling one alone
+    never did and still doesn't, since a meeting still in the future
+    hasn't told BEE anything real about the account yet."""
+    meeting = session.get(Meeting, meeting_id)
+    if meeting is None or _hidden_from(session, current_user, meeting):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Meeting not found.")
+
+    if meeting.completed_at is None:
+        meeting.completed_at = utcnow()
+        session.add(meeting)
+        session.commit()
+        session.refresh(meeting)
+
+        publish("meeting.completed", session=session, meeting_id=meeting.id)
+        session.commit()
+        session.refresh(meeting)
+
     return _to_out(session, meeting)
 
 

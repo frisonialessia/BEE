@@ -62,6 +62,11 @@
     "with": "Con",
     "purposeEmpty": "Sin descripción",
     "edit": "Editar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "completed": "Completada",
+    "markComplete": "Marcar como completada",
+    "completing": "Guardando…",
+    "completeSuccess": "Reunión marcada como completada.",
+    "completeError": "No se pudo marcar la reunión como completada — intenta de nuevo."
   }
 }

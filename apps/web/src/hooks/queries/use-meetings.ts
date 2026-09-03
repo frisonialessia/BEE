@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  completeMeeting,
   createMeeting,
   deleteMeeting,
   fetchMeetings,
@@ -33,6 +34,16 @@ export function useUpdateMeeting() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, body }: { id: string; body: MeetingUpdateIn }) => updateMeeting(id, body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all });
+    },
+  });
+}
+
+export function useCompleteMeeting() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (meetingId: string) => completeMeeting(meetingId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.meetings.all });
     },

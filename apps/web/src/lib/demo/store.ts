@@ -729,6 +729,7 @@ function buildMeeting(partial: {
     meeting_url: partial.meetingUrl ?? null,
     attendee_user_ids: partial.attendeeUserIds ?? [],
     color: partial.color ?? null,
+    completed_at: null,
     created_at: new Date().toISOString(),
     company_name: null,
     contact_name: lead?.full_name ?? null,
@@ -846,6 +847,7 @@ export function demoCreateMeeting(body: MeetingCreateIn): Meeting {
     meeting_url: body.meeting_url ?? null,
     attendee_user_ids: body.attendee_user_ids ?? [],
     color: body.color ?? null,
+    completed_at: null,
     created_at: new Date().toISOString(),
     company_name: company?.name ?? null,
     contact_name: lead?.full_name ?? null,
@@ -879,6 +881,21 @@ export function demoUpdateMeeting(meetingId: string, body: MeetingUpdateIn): Mee
     ...(body.color !== undefined ? { color: body.color } : {}),
   };
   saveMeetings(list);
+  return list[idx];
+}
+
+export function demoCompleteMeeting(meetingId: string): Meeting {
+  const list = loadMeetings();
+  const idx = findMeetingOrThrow(list, meetingId);
+  if (list[idx].completed_at === null) {
+    // Demo-only simplification: marks the meeting completed same as the
+    // real backend, but doesn't also bump a linked lead/opportunity's
+    // meetings_held_count — those aren't their own mutable local list in
+    // the sandbox (see this file's own note on companies/leads being
+    // derived, not stored), so there's nothing to increment here.
+    list[idx] = { ...list[idx], completed_at: new Date().toISOString() };
+    saveMeetings(list);
+  }
   return list[idx];
 }
 

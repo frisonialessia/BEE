@@ -62,6 +62,7 @@ class MeetingOut(BaseModel):
     meeting_url: str | None
     attendee_user_ids: list[str]
     color: str | None
+    completed_at: datetime | None = None
     created_at: datetime
 
     # Denormalized at read time (see the endpoint) so the calendar can

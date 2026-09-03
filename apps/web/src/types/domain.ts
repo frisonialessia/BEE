@@ -412,6 +412,11 @@ export interface Meeting {
   meeting_url: string | null;
   attendee_user_ids: string[];
   color: MeetingColor | null;
+  // Set once via POST /meetings/{id}/complete — a scheduled meeting alone
+  // never sets this. See that endpoint's own docstring for why the
+  // distinction matters (this is what feeds the meeting back into
+  // meetings_held_count and an engagement signal, nothing else does).
+  completed_at: string | null;
   created_at: string;
   company_name: string | null;
   contact_name: string | null;

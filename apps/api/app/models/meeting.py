@@ -63,5 +63,14 @@ class Meeting(TimestampMixin, table=True):
     # client_context-based tone the calendar already had.
     color: str | None = Field(default=None, max_length=20)
 
+    # Set once, by POST /meetings/{id}/complete — NULL means "hasn't
+    # happened yet (or nobody's said it did)", never inferred from
+    # starts_at + duration having passed: a rep confirming it actually
+    # took place is what's meaningful here, not just the clock. This is
+    # the trigger for feeding a meeting back into the rest of BEE's data
+    # (Lead/Opportunity.meetings_held_count, an "engagement" Signal) — see
+    # app/services/events/listeners.py's meeting.completed handler.
+    completed_at: datetime | None = Field(default=None)
+
     opportunity: "Opportunity" = Relationship()
     lead: "Lead" = Relationship()
