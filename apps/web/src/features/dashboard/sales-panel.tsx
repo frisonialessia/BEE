@@ -259,13 +259,13 @@ export function SalesPanel() {
                   {initials(rep.name)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-1 truncate text-sm font-medium">
-                    {i === 0 && <Trophy className="size-3.5 text-[var(--color-chart-1)]" />}
-                    {rep.name}
+                  <p className="flex min-w-0 items-center gap-1 text-sm font-medium">
+                    {i === 0 && <Trophy className="size-3.5 shrink-0 text-[var(--color-chart-1)]" />}
+                    <span className="truncate">{rep.name}</span>
                   </p>
                   <p className="bee-micro">{t("ranking.deals", { count: rep.deals })}</p>
                 </div>
-                <span className="text-sm font-bold tabular-nums">{money(rep.value)}</span>
+                <span className="shrink-0 text-sm font-bold tabular-nums">{money(rep.value)}</span>
               </li>
             ))}
           </ol>
