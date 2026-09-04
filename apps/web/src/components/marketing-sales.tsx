@@ -6,7 +6,7 @@ import { useState } from "react";
 
 import { AreaChart } from "@/components/charts/area-chart";
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { TONE, tint } from "@/components/charts/palette";
+import { SALES, TONE } from "@/components/charts/palette";
 import { Reveal } from "@/components/marketing-motion";
 
 /**
@@ -16,14 +16,16 @@ import { Reveal } from "@/components/marketing-motion";
  * cards side by side (not a table), four one-line facts each: where the
  * lead comes from, the next step, prioritization, the close. The BEE card
  * is slightly elevated (shadow, honey hairline on top) and carries a small
- * BarsVsTarget of won per month. Under it, the simulator on white: a
- * segmented control (×1 · ×1.5 · ×2 prospecting) and the projection.
+ * BarsVsTarget of won per month — the one place in the section the greens
+ * appear, the same three-by-strength read the real Ventas page uses,
+ * because this chart is that page's own number (won revenue), not
+ * decoration. Under it, the simulator on white: a segmented control
+ * (×1 · ×1.5 · ×2 prospecting) and the projection, in honey — a forecast,
+ * not closed revenue, so it stays out of the greens.
  *
- * Color: honey only for the marks in this section (the dashboard's greens
- * belong to the Ventas page, not the landing); the segmented control's
- * active state is the lavender selection wash with ink text; blue is the
- * primary button, nothing else. Every figure is illustrative and the copy
- * says so.
+ * Color: the segmented control's active state is the lavender selection
+ * wash with ink text; blue is the primary button, nothing else. Every
+ * figure is illustrative and the copy says so.
  */
 
 const COLUMNS = ["crm", "intent", "bee"] as const;
@@ -96,7 +98,8 @@ export function MarketingSales() {
                         targetLabel={t("chart.target")}
                         minHeight={130}
                         formatValue={(v) => `${Math.round(v)} k`}
-                        colorFor={(p) => (p.value >= TARGET ? TONE.market : tint(TONE.market, 45))}
+                        // Same reading as the real Ventas page: three greens by strength.
+                        colorFor={(p, _i, max) => (p.value >= max * 0.66 ? SALES.won : p.value >= max * 0.33 ? SALES.lime : SALES.mint)}
                       />
                     </div>
                   </div>

@@ -56,7 +56,10 @@ Encabezado con pestañas en la misma fila (`MergedPageTabs`).
 2. **Verde solo en Ventas** (y en las tarjetas cerradas del CRM, como opción
    de color de cita en Calendario, y en el Resumen en la caja Ventas, el
    paso "Cliente" del embudo y el Ranking del equipo, que es dinero ganado).
-   En ninguna otra página.
+   En ninguna otra página, con una excepción: la gráfica "Ganado por mes"
+   de la columna BEE en la landing (`marketing-sales.tsx`) es literalmente
+   ese mismo dato de Ventas, así que lee igual — tres verdes por fuerza. El
+   simulador de la misma sección no es dinero cerrado y se queda en miel.
 3. **Azul solo en botones**. El primario (`bee-btn--primary`) es azul con
    letra blanca; el secundario (`bee-btn-ghost` / `bee-btn--secondary`) es
    blanco con contorno y letra en el mismo azul. Nunca un botón sin fondo.
