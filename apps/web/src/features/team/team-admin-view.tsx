@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/providers/auth-provider";
 import { useChangePassword } from "@/hooks/queries/use-auth";
+import { useCreateQuota } from "@/hooks/queries/use-quotas";
 import { useCreateTeam, useTeams } from "@/hooks/queries/use-teams";
 import {
   useCreateUser,
@@ -22,7 +23,7 @@ import {
 import { AutopilotSection } from "@/features/team/autopilot-section";
 import { FederatedIntelligenceSection } from "@/features/team/federated-intelligence-section";
 import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
-import { QuotasSection } from "@/features/team/quotas-section";
+import { monthBounds, QuotasSection } from "@/features/team/quotas-section";
 import { TeamLeaderboardSection } from "@/features/team/team-leaderboard-section";
 import { TeamProfilesSection } from "@/features/team/team-profiles-section";
 import { resizeImageToDataUrl } from "@/lib/image";
@@ -129,28 +130,61 @@ function CreateTeamForm({ teams }: { teams: TeamOut[] }) {
 
 function InviteUserForm({ teams }: { teams: TeamOut[] }) {
   const t = useTranslations("workspace.team.people");
+  // Reuses QuotasSection's own copy verbatim (amount/count placeholders,
+  // the "monto o clientes o ambos" hint) rather than a second, easily
+  // drifting translation of the same idea.
+  const tQuota = useTranslations("workspace.team.quotas.form");
   const createUser = useCreateUser();
+  const createQuota = useCreateQuota();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("member");
   const [teamId, setTeamId] = useState("");
+  const [goalAmount, setGoalAmount] = useState("");
+  const [goalCount, setGoalCount] = useState("");
+  const currency = teams.find((team) => team.id === teamId)?.currency ?? teams[0]?.currency ?? "USD";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     try {
-      await createUser.mutateAsync({
+      const created = await createUser.mutateAsync({
         email,
         full_name: fullName,
         password,
         role,
         team_id: teamId || null,
       });
+      // A goal is optional and manager-set right here, at the moment the
+      // person joins — see workspace.team.people.form.goalSectionLabel.
+      // Reuses the exact same createQuota the standalone Cuotas form
+      // uses (QuotasSection): no new backend endpoint, no new model.
+      const amount = Number(goalAmount);
+      const count = Number(goalCount);
+      if (amount > 0 || count > 0) {
+        const period = monthBounds();
+        try {
+          await createQuota.mutateAsync({
+            user_id: created.id,
+            period_start: period.start,
+            period_end: period.end,
+            target_amount: amount > 0 ? amount : undefined,
+            target_count: count > 0 ? count : undefined,
+          });
+        } catch {
+          // The teammate is already created — a failed goal is a smaller,
+          // separately-fixable problem (Cuotas below), not worth undoing
+          // the invite over.
+          toast.error(tQuota("goalError"));
+        }
+      }
       setEmail("");
       setFullName("");
       setPassword("");
       setRole("member");
       setTeamId("");
+      setGoalAmount("");
+      setGoalCount("");
       toast.success(t("form.added"));
     } catch (err) {
       toast.error(err instanceof ApiError ? err.message : t("form.addError"));
@@ -158,55 +192,83 @@ function InviteUserForm({ teams }: { teams: TeamOut[] }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
-      <input
-        required
-        type="text"
-        value={fullName}
-        onChange={(e) => setFullName(e.target.value)}
-        className="bee-input"
-        placeholder={t("form.fullNamePlaceholder")}
-      />
-      <input
-        required
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="bee-input"
-        placeholder={t("form.emailPlaceholder")}
-      />
-      <input
-        required
-        type="password"
-        minLength={8}
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="bee-input"
-        placeholder={t("form.passwordPlaceholder")}
-      />
-      <select
-        value={role}
-        onChange={(e) => setRole(e.target.value as UserRole)}
-        className="bee-input"
-      >
-        {ROLE_OPTIONS.map((r) => (
-          <option key={r} value={r}>
-            {ROLE_LABELS[r]}
-          </option>
-        ))}
-      </select>
-      <select value={teamId} onChange={(e) => setTeamId(e.target.value)} className="bee-input">
-        <option value="">{t("noTeam")}</option>
-        {teams.map((team) => (
-          <option key={team.id} value={team.id}>
-            {team.name}
-          </option>
-        ))}
-      </select>
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
+        <input
+          required
+          type="text"
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          className="bee-input"
+          placeholder={t("form.fullNamePlaceholder")}
+        />
+        <input
+          required
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="bee-input"
+          placeholder={t("form.emailPlaceholder")}
+        />
+        <input
+          required
+          type="password"
+          minLength={8}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="bee-input"
+          placeholder={t("form.passwordPlaceholder")}
+        />
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value as UserRole)}
+          className="bee-input"
+        >
+          {ROLE_OPTIONS.map((r) => (
+            <option key={r} value={r}>
+              {ROLE_LABELS[r]}
+            </option>
+          ))}
+        </select>
+        <select value={teamId} onChange={(e) => setTeamId(e.target.value)} className="bee-input">
+          <option value="">{t("noTeam")}</option>
+          {teams.map((team) => (
+            <option key={team.id} value={team.id}>
+              {team.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="rounded-[var(--radius-md)] border border-dashed border-border p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("form.goalSectionLabel")}</p>
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <input
+            type="number"
+            min="0"
+            step="any"
+            value={goalAmount}
+            onChange={(e) => setGoalAmount(e.target.value)}
+            placeholder={tQuota("amountPlaceholder", { currency })}
+            className="bee-input"
+          />
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={goalCount}
+            onChange={(e) => setGoalCount(e.target.value)}
+            placeholder={tQuota("countPlaceholder")}
+            className="bee-input"
+          />
+        </div>
+        <p className="bee-caption mt-1.5">{t("form.goalHint")}</p>
+      </div>
+
       <button
         type="submit"
-        disabled={createUser.isPending}
-        className="bee-btn bee-btn--primary sm:col-span-2 lg:col-span-5"
+        disabled={createUser.isPending || createQuota.isPending}
+        className="bee-btn bee-btn--primary w-full"
       >
         {createUser.isPending ? t("form.adding") : t("form.add")}
       </button>

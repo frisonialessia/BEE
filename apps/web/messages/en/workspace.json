@@ -672,7 +672,9 @@
         "adding": "Adding…",
         "add": "Add team member",
         "added": "Team member added",
-        "addError": "Couldn't add the team member."
+        "addError": "Couldn't add the team member.",
+        "goalSectionLabel": "First-month goal (optional)",
+        "goalHint": "Can be adjusted later in Quotas."
       }
     },
     "quotas": {
@@ -697,7 +699,8 @@
         "hint": "Amount, clients, or both. The currency is the team's; the current month is preselected.",
         "saving": "Saving…",
         "save": "Save goal",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "goalError": "Could not save the goal — the teammate was already added; adjust it in Quotas."
       }
     },
     "webhooks": {

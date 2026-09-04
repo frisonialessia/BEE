@@ -14,7 +14,10 @@ import { formatMoney } from "@/lib/i18n/format";
 import { computeQuotaActual, computeQuotaAttainment, computeQuotaClients } from "@/lib/quotas";
 import type { TeamOut, UserOut } from "@/types/auth";
 
-function monthBounds(offset = 0): { start: string; end: string } {
+/** Exported for InviteUserForm (team-admin-view.tsx), which offers the
+ * same "current month" default when setting a new teammate's first goal
+ * right at invite time. */
+export function monthBounds(offset = 0): { start: string; end: string } {
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
   const end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);

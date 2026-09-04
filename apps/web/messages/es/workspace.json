@@ -672,7 +672,9 @@
         "adding": "Agregando…",
         "add": "Agregar miembro del equipo",
         "added": "Miembro del equipo agregado",
-        "addError": "No se pudo agregar al miembro del equipo."
+        "addError": "No se pudo agregar al miembro del equipo.",
+        "goalSectionLabel": "Meta del primer mes (opcional)",
+        "goalHint": "Se puede ajustar después en Cuotas."
       }
     },
     "quotas": {
@@ -697,7 +699,8 @@
         "hint": "Monto, clientes o ambos. La divisa es la del equipo; el mes en curso viene preseleccionado.",
         "saving": "Guardando…",
         "save": "Guardar meta",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "goalError": "No se pudo guardar la meta — el miembro ya fue agregado; ajústala en Cuotas."
       }
     },
     "webhooks": {
