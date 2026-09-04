@@ -29,9 +29,9 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 
 const NOTES = [
-  { id: "afterSubmit", icon: Send, hue: "var(--color-chart-4)" },
-  { id: "haveAccount", icon: LogIn, hue: "var(--color-chart-1)" },
-  { id: "mvpNotice", icon: Code2, hue: "var(--color-chart-6)" },
+  { id: "afterSubmit", icon: Send },
+  { id: "haveAccount", icon: LogIn },
+  { id: "mvpNotice", icon: Code2 },
 ] as const;
 
 export default async function ContactoPage({
@@ -61,7 +61,7 @@ export default async function ContactoPage({
                   <li key={note.id} className="flex items-start gap-3 py-4">
                     <span
                       className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full"
-                      style={{ background: `color-mix(in srgb, ${note.hue} 20%, var(--color-card))`, color: "var(--color-text)" }}
+                      style={{ background: "var(--color-background)", color: "var(--color-text)" }}
                     >
                       <note.icon className="size-4 stroke-[1.5]" />
                     </span>
@@ -75,9 +75,9 @@ export default async function ContactoPage({
             </div>
 
             <div>
-              <div className="bee-contact-card bee-bento overflow-hidden p-0">
+              <div className="bee-contact-card bee-card !h-auto overflow-hidden !p-0">
                 <div className="px-6 py-4" style={{ background: "var(--color-primary)" }}>
-                  <p className="bee-eyebrow bee-eyebrow--blue">{t("formEyebrow")}</p>
+                  <p className="bee-eyebrow">{t("formEyebrow")}</p>
                   <p className="mt-1 text-sm font-medium">{t("formPromise")}</p>
                 </div>
                 <div className="bee-bento-pad-lg">

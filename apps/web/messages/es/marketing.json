@@ -37,11 +37,11 @@
   },
   "landing": {
     "eyebrow": "Sales Force Intelligence",
-    "heroTitle": "Inteligencia comercial que decide en tiempo real.",
-    "heroSubtitle": "BEE vigila el mercado, prioriza tu pipeline y prepara la próxima jugada mientras tú cierras.",
-    "ctaStart": "Comenzar ahora",
+    "heroTitle": "Vende cuando el mercado se mueve.",
+    "heroSubtitle": "BEE detecta las señales de compra, arma la jugada y te dice a quién llamar hoy.",
+    "ctaStart": "Probar con datos de ejemplo",
     "ctaTry": "Probar sin registrarte",
-    "demoCaption": "Vista ilustrativa con datos de ejemplo.",
+    "demoCaption": "La página Señales de BEE con datos de ejemplo. Lo mismo que verás al entrar.",
     "features": {
       "signal": {
         "title": "La señal llega.",
@@ -56,7 +56,28 @@
         "text": "Nada sale sin tu aprobación. Con ella, BEE agenda el siguiente paso, lo sigue y aprende del resultado."
       }
     },
-    "closingTitle": "Tu próximo cliente ya está mandando señales. La pregunta es si las estás viendo.",
-    "closingCta": "Comenzar ahora"
+    "closingTitle": "Tu próximo cliente ya está mandando señales.",
+    "closingCta": "Probar con datos de ejemplo",
+    "ctaHow": "Ver cómo funciona",
+    "steps": {
+      "eyebrow": "Cómo funciona",
+      "signal": {
+        "n": "01",
+        "title": "Llega la señal",
+        "text": "Una ronda, una contratación clave, un cambio de stack. BEE la detecta, la puntúa y la pone en la colmena antes de que exista el lead."
+      },
+      "play": {
+        "n": "02",
+        "title": "BEE arma la jugada",
+        "text": "Argumento, objeción probable, canal y momento, listos en una tarjeta. El vendedor lee y decide; no investiga desde cero."
+      },
+      "decide": {
+        "n": "03",
+        "title": "Tú decides",
+        "text": "Nada sale sin tu aprobación. Con ella, BEE agenda el siguiente paso, lo sigue y aprende de cada cierre."
+      }
+    },
+    "closingText": "La pregunta es si las estás viendo.",
+    "closingSecondary": "Hablar con nosotros"
   }
 }

@@ -2,14 +2,18 @@
 
 import { useTranslations } from "next-intl";
 
+import { useLocale } from "next-intl";
+import { useMemo } from "react";
+
 import { AreaChart } from "@/components/charts/area-chart";
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { Donut } from "@/components/charts/donut";
+import { Honeycomb, type HiveItem } from "@/components/charts/honeycomb";
 import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
-import { DATA, mix } from "@/components/charts/palette";
+import { REST, TONE, level, tint } from "@/components/charts/palette";
 import { ProgressRing } from "@/components/charts/progress-ring";
 import { StageTiles } from "@/components/charts/stage-tiles";
-import { MarketingHoneycomb } from "@/components/marketing-honeycomb";
+import type { Locale } from "@/i18n/locales";
+import { getSampleHotLeads } from "@/lib/sample-data";
 
 /**
  * FeatureChart — the illustrative chart on the right of each band in
@@ -26,16 +30,26 @@ import { MarketingHoneycomb } from "@/components/marketing-honeycomb";
 
 export type FeatureId = "senales" | "crm" | "estrategias" | "pronostico" | "ventas" | "calendario" | "control";
 
-/** Band hue by id — indigo → honey → lilac → magenta (greens stay on the Ventas page). */
+/** Band hue by id — the hue each module wears in the product. */
 export const FEATURE_HUE: Record<FeatureId, string> = {
-  senales: DATA.indigo,
-  crm: DATA.honey,
-  estrategias: DATA.violet,
-  pronostico: DATA.magenta,
-  ventas: DATA.honey,
-  calendario: DATA.indigo,
-  control: DATA.honey,
+  senales: TONE.market,
+  crm: TONE.prepared,
+  estrategias: TONE.prepared,
+  pronostico: TONE.forecast,
+  ventas: TONE.market,
+  calendario: TONE.calm,
+  control: TONE.forecast,
 };
+
+/** The sandbox's sample accounts, as the product's own honeycomb. */
+function SampleHive() {
+  const locale = useLocale() as Locale;
+  const items = useMemo<HiveItem[]>(
+    () => getSampleHotLeads(locale).map((l) => ({ id: l.id, heat: l.research_intensity_score, label: l.company_name ?? l.company_domain })),
+    [locale],
+  );
+  return <Honeycomb items={items} maxRadius={22} minHeight={220} />;
+}
 
 const MONTH_KEYS = ["m1", "m2", "m3", "m4", "m5", "m6"] as const;
 
@@ -48,8 +62,8 @@ export function FeatureChart({ id }: { id: FeatureId }) {
   switch (id) {
     case "senales":
       return (
-        <div className="flex h-full items-center justify-center">
-          <MarketingHoneycomb />
+        <div className="flex h-full min-h-56 flex-col">
+          <SampleHive />
         </div>
       );
     case "crm":
@@ -57,10 +71,10 @@ export function FeatureChart({ id }: { id: FeatureId }) {
         <div className="flex h-full flex-col justify-center">
           <HorizontalFunnel
             rows={[
-              { label: t("new"), value: 24, color: hue },
-              { label: t("qualified"), value: 15, color: hue },
-              { label: t("proposal"), value: 8, color: hue },
-              { label: t("closing"), value: 4, color: hue },
+              { label: t("new"), value: 24, color: level(hue, 2) },
+              { label: t("qualified"), value: 15, color: level(hue, 1) },
+              { label: t("proposal"), value: 8, color: level(hue, 0) },
+              { label: t("closing"), value: 4, color: REST },
             ]}
           />
         </div>
@@ -68,14 +82,13 @@ export function FeatureChart({ id }: { id: FeatureId }) {
     case "estrategias":
       return (
         <div className="flex h-full flex-col justify-center">
-          <Donut
-            slices={[
-              { label: t("email"), value: 45, color: hue },
-              { label: t("linkedin"), value: 35, color: mix(hue, 60) },
-              { label: t("call"), value: 20, color: mix(hue, 30) },
+          <HorizontalFunnel
+            rows={[
+              { label: t("email"), value: 45, color: level(hue, 0) },
+              { label: t("linkedin"), value: 35, color: level(hue, 1) },
+              { label: t("call"), value: 20, color: level(hue, 2) },
             ]}
-            size={120}
-            centerLabel="100%"
+            formatValue={(v) => `${v}%`}
           />
         </div>
       );
@@ -98,7 +111,7 @@ export function FeatureChart({ id }: { id: FeatureId }) {
             target={50}
             minHeight={160}
             formatValue={(v) => `${Math.round(v)} k`}
-            colorFor={(p) => (p.value >= 50 ? DATA.honey : mix(DATA.honey, 45))}
+            colorFor={(p) => (p.value >= 50 ? TONE.market : tint(TONE.market, 45))}
           />
         </div>
       );
@@ -107,9 +120,9 @@ export function FeatureChart({ id }: { id: FeatureId }) {
         <div className="flex h-full flex-col justify-center gap-4">
           <StageTiles
             tiles={[
-              { label: t("today"), value: "3", color: hue },
-              { label: t("week"), value: "11", color: mix(hue, 60) },
-              { label: t("overdue"), value: "0", color: mix(hue, 30) },
+              { label: t("today"), value: "3", color: level(hue, 0) },
+              { label: t("week"), value: "11", color: level(hue, 1) },
+              { label: t("overdue"), value: "0", color: level(hue, 2) },
             ]}
           />
           <div className="flex items-center gap-3">
@@ -127,9 +140,9 @@ export function FeatureChart({ id }: { id: FeatureId }) {
           </div>
           <StageTiles
             tiles={[
-              { label: t("queue"), value: "3", color: hue },
-              { label: t("facts"), value: "128", color: mix(hue, 60) },
-              { label: t("errors"), value: "0", color: mix(hue, 30) },
+              { label: t("queue"), value: "3", color: level(hue, 0) },
+              { label: t("facts"), value: "128", color: level(hue, 1) },
+              { label: t("errors"), value: "0", color: level(hue, 2) },
             ]}
           />
         </div>

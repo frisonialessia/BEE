@@ -37,11 +37,11 @@
   },
   "landing": {
     "eyebrow": "Sales Force Intelligence",
-    "heroTitle": "Sales intelligence that decides in real time.",
-    "heroSubtitle": "BEE watches the market, prioritizes your pipeline and prepares the next play while you close.",
-    "ctaStart": "Get started",
+    "heroTitle": "Sell when the market moves.",
+    "heroSubtitle": "BEE detects buying signals, prepares the play and tells you who to call today.",
+    "ctaStart": "Try with sample data",
     "ctaTry": "Try without signing up",
-    "demoCaption": "Illustrative view with sample data.",
+    "demoCaption": "BEE's Signals page with sample data. Exactly what you see when you sign in.",
     "features": {
       "signal": {
         "title": "The signal arrives.",
@@ -56,7 +56,28 @@
         "text": "Nothing goes out without your approval. With it, BEE schedules the next step, follows it up and learns from the outcome."
       }
     },
-    "closingTitle": "Your next customer is already sending signals. The question is whether you're seeing them.",
-    "closingCta": "Get started"
+    "closingTitle": "Your next customer is already sending signals.",
+    "closingCta": "Try with sample data",
+    "ctaHow": "See how it works",
+    "steps": {
+      "eyebrow": "How it works",
+      "signal": {
+        "n": "01",
+        "title": "The signal arrives",
+        "text": "A funding round, a key hire, a stack change. BEE detects it, scores it and places it in the hive before the lead exists."
+      },
+      "play": {
+        "n": "02",
+        "title": "BEE prepares the play",
+        "text": "Argument, likely objection, channel and timing, ready on one card. The rep reads and decides; no research from scratch."
+      },
+      "decide": {
+        "n": "03",
+        "title": "You decide",
+        "text": "Nothing goes out without your approval. With it, BEE schedules the next step, follows it up and learns from every close."
+      }
+    },
+    "closingText": "The question is whether you are seeing them.",
+    "closingSecondary": "Talk to us"
   }
 }

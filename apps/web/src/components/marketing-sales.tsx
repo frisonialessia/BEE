@@ -1,13 +1,12 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 
 import { AreaChart } from "@/components/charts/area-chart";
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { DATA, mix } from "@/components/charts/palette";
+import { TONE, tint } from "@/components/charts/palette";
 import { Reveal } from "@/components/marketing-motion";
 
 /**
@@ -72,9 +71,7 @@ export function MarketingSales() {
             return (
               <div
                 key={col}
-                className={`flex flex-col rounded-2xl border bg-[var(--color-card)] p-6 ${
-                  isBee ? "border-[var(--color-border)] border-t-2 border-t-[var(--color-chart-2)] shadow-2xl lg:-mt-4" : "border-[var(--color-border)]"
-                }`}
+                className="bee-card !h-auto"
               >
                 <p className="text-lg font-semibold">{t(`columns.${col}.title`)}</p>
                 <p className="bee-caption mt-1">{t(`columns.${col}.subtitle`)}</p>
@@ -99,7 +96,7 @@ export function MarketingSales() {
                         targetLabel={t("chart.target")}
                         minHeight={130}
                         formatValue={(v) => `${Math.round(v)} k`}
-                        colorFor={(p) => (p.value >= TARGET ? DATA.honey : mix(DATA.honey, 45))}
+                        colorFor={(p) => (p.value >= TARGET ? TONE.market : tint(TONE.market, 45))}
                       />
                     </div>
                   </div>
@@ -110,7 +107,7 @@ export function MarketingSales() {
         </Reveal>
 
         {/* Simulator — on white; the active factor takes the lavender selection wash. */}
-        <Reveal className="mt-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6" delay={80}>
+        <Reveal className="bee-card mt-6 !h-auto" delay={80}>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-lg font-semibold">{t("simulator.title")}</p>
@@ -136,7 +133,7 @@ export function MarketingSales() {
             <div className="min-h-44">
               <AreaChart
                 points={points.map((value, i) => ({ label: months[i], value }))}
-                color={DATA.honey}
+                color={TONE.market}
                 minHeight={176}
                 formatValue={(v) => t("simulator.deals", { count: Math.round(v) })}
               />
@@ -158,9 +155,9 @@ export function MarketingSales() {
 
         <Reveal className="mt-10 flex flex-wrap items-center gap-3" delay={120}>
           <Link href="/probar/sales" className="bee-btn bee-btn--primary bee-cta-lift">
-            {t("cta")} <ArrowRight className="size-4" />
+            {t("cta")}
           </Link>
-          <Link href="/register" className="bee-btn-ghost bee-cta-lift">
+          <Link href="/register" className="bee-btn-text text-sm">
             {t("ctaSecondary")}
           </Link>
         </Reveal>

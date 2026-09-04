@@ -971,7 +971,9 @@
 
 .bee-btn--primary {
   background: var(--color-cta);
-  color: #ffffff;
+  /* Ink on the blue, like every other letter in BEE: no text ever carries
+     a color, and white on this indigo read as a second color. */
+  color: var(--color-text);
   border-color: var(--color-cta);
 }
 
@@ -1032,9 +1034,10 @@
  * filled with the CTA color instead of transparent so the current choice
  * reads at a glance. */
 .bee-btn-ghost--active {
-  background: var(--color-cta);
-  border-color: var(--color-cta);
-  color: #ffffff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  font-weight: 600;
 }
 
 .bee-btn-ghost--active:hover { background: var(--color-cta-hover); }
@@ -1085,9 +1088,10 @@
 .bee-filter-tab:hover { border-color: var(--color-text-muted); }
 
 .bee-filter-tab--active {
-  background: var(--color-cta);
-  color: #ffffff;
-  border-color: var(--color-cta);
+  background: var(--color-primary);
+  color: var(--color-text);
+  border-color: var(--color-primary);
+  font-weight: 600;
 }
 
 .bee-stat-grid {

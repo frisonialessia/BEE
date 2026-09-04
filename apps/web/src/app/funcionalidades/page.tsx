@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Activity, ArrowRight, Briefcase, CalendarDays, Radio, Target, TrendingUp, Trophy } from "lucide-react";
 
-import { FeatureChart, FEATURE_HUE, type FeatureId } from "@/components/marketing-feature-charts";
+import { FeatureChart, type FeatureId } from "@/components/marketing-feature-charts";
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
 import { Reveal } from "@/components/marketing-motion";
@@ -51,7 +51,6 @@ export default async function FuncionalidadesPage() {
 
         <section className="mx-auto w-full max-w-6xl px-6 pb-12 lg:pb-14">
           {SECTIONS.map(({ id, icon: Icon }, i) => {
-            const hue = FEATURE_HUE[id];
             const ink = "var(--color-text)";
             const chips = t.raw(`sections.${id}.chips`) as string[];
             const flip = i % 2 === 1;
@@ -61,7 +60,7 @@ export default async function FuncionalidadesPage() {
                   <div className="flex items-center gap-3">
                     <span
                       className="flex size-9 shrink-0 items-center justify-center rounded-full"
-                      style={{ background: `color-mix(in srgb, ${hue} 20%, var(--color-card))`, color: ink }}
+                      style={{ background: "var(--color-primary)", color: ink }}
                     >
                       <Icon className="size-4 stroke-[1.5]" />
                     </span>
@@ -76,7 +75,7 @@ export default async function FuncionalidadesPage() {
                       <li
                         key={chip}
                         className="rounded-full px-3 py-1 text-xs font-medium text-[var(--color-text)]"
-                        style={{ background: `color-mix(in srgb, ${hue} 18%, var(--color-card))` }}
+                        style={{ background: "var(--color-background)" }}
                       >
                         {chip}
                       </li>

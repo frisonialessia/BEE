@@ -39,7 +39,26 @@
     "signalsCount": "{count} signals",
     "mixTitle": "Mix by type",
     "mixCaption": "Which kind of signal arrives most",
-    "other": "Other"
+    "other": "Other",
+    "eyebrow": "Signal engine",
+    "tabs": {
+      "feed": "Feed",
+      "priority": "Prioritization",
+      "intent": "Intent"
+    },
+    "kpis": {
+      "signals": "Signals 30 days",
+      "signalsHint": "detected and scored",
+      "hot": "High intent",
+      "hotHint": "score 75 or more",
+      "companies": "Accounts with a signal",
+      "companiesHint": "on the radar today",
+      "peak": "Peak hour",
+      "peakHint": "when the market arrives"
+    },
+    "hiveCaption": "Each cell is an account; the closer to the centre, the closer to buying",
+    "latestTitle": "Latest signals",
+    "latestCaption": "The most recent things BEE detected"
   },
   "features": {
     "play": {

@@ -39,7 +39,26 @@
     "signalsCount": "{count} señales",
     "mixTitle": "Mezcla por tipo",
     "mixCaption": "Qué clase de señal llega más",
-    "other": "Otros"
+    "other": "Otros",
+    "eyebrow": "Motor de señales",
+    "tabs": {
+      "feed": "Feed",
+      "priority": "Priorización",
+      "intent": "Intención"
+    },
+    "kpis": {
+      "signals": "Señales 30 días",
+      "signalsHint": "detectadas y puntuadas",
+      "hot": "Alta intención",
+      "hotHint": "score 75 o más",
+      "companies": "Cuentas con señal",
+      "companiesHint": "en el radar hoy",
+      "peak": "Hora pico",
+      "peakHint": "cuándo llega el mercado"
+    },
+    "hiveCaption": "Cada celda es una cuenta; cuanto más al centro, más cerca de comprar",
+    "latestTitle": "Últimas señales",
+    "latestCaption": "Lo más reciente que detectó BEE"
   },
   "features": {
     "play": {
