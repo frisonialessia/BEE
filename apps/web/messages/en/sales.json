@@ -5,12 +5,12 @@
   "kpis": {
     "total": "Won all-time",
     "since": "{count, plural, =1 {1 deal} other {# deals}} in total",
-    "month": "Won this month",
+    "month": "This month",
     "vsLastMonth": "vs. last month",
-    "clients": "Clients this month",
-    "goal": "Month goal",
+    "clients": "Clients",
+    "goal": "Goal",
     "goalOf": "of {goal}",
-    "ticket": "Average ticket",
+    "ticket": "Ticket",
     "cycle": "avg. cycle {days}d",
     "noCycle": "no cycle yet"
   },
@@ -29,7 +29,7 @@
   },
   "ranking": {
     "title": "Team ranking",
-    "caption": "Won this month · green when the goal is beaten"
+    "caption": "Closed in 90 days · ring = progress to goal"
   },
   "ledger": {
     "title": "Every closed deal",

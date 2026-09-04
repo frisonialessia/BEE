@@ -162,13 +162,21 @@ sección 2:
   (StatStrip, StatTile), `components/dashboard/overview-card.tsx`
   (OverviewCard, CardLink), `.bee-page*`, `.bee-tile*`, `.bee-tabs*`,
   `.bee-row`, `.bee-dot` en `globals.css`.
-- **Letra de color solo en botones**: blanca en el primario, azul en el
-  secundario; las píldoras activas (lavanda) llevan texto en tinta.
+- **Letra de color solo en botones**: blanca en el primario y en toda
+  píldora pulsada cuyo relleno sea un azul o morado fuerte (índigo, lila,
+  magenta); azul en el secundario; las píldoras activas en lavanda o miel
+  llevan texto en tinta.
+- **KPIs cortos**: título de una a tres palabras ("Señales", "Calientes",
+  "Pipeline", "Trimestre") y descripción de pocas palabras; la cifra es la
+  protagonista y nunca lleva divisa (la divisa del equipo vive en ajustes y
+  aparece solo en tablas y al pasar el cursor).
 - **Verdes en el Resumen, solo en tres cajas**: la caja Ventas (los tres
   verdes por monto, como la página Ventas), el paso "Cliente" del embudo,
   que lleva los colores de las columnas del CRM, y el Ranking del equipo
   (el #1 en el verde principal, el #2 en lima, el resto en menta; el mismo
-  ranking, con todo el equipo, vive en Ventas junto a Ventas por sector).
+  ranking es exactamente el mismo componente y configuración en Ventas,
+  junto a Ventas por sector: cierres de 90 días, todo el equipo, anillo de
+  meta y barras).
 - **Todos los cierres** cierra la página Ventas a todo lo ancho, con
   filtros por año, responsable, sector y fechas, y el total de lo filtrado
   en la propia caja.

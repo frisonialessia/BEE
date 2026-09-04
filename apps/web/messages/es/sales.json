@@ -5,12 +5,12 @@
   "kpis": {
     "total": "Ganado histórico",
     "since": "{count, plural, =1 {1 cierre} other {# cierres}} en total",
-    "month": "Ganado este mes",
+    "month": "Este mes",
     "vsLastMonth": "vs. mes anterior",
-    "clients": "Clientes este mes",
-    "goal": "Meta del mes",
+    "clients": "Clientes",
+    "goal": "Meta",
     "goalOf": "de {goal}",
-    "ticket": "Ticket medio",
+    "ticket": "Ticket",
     "cycle": "ciclo medio {days} d",
     "noCycle": "sin ciclo todavía"
   },
@@ -29,7 +29,7 @@
   },
   "ranking": {
     "title": "Ranking del equipo",
-    "caption": "Ganado este mes · verde al superar la meta"
+    "caption": "Cierres de 90 días · anillo = avance a la meta"
   },
   "ledger": {
     "title": "Todos los cierres",

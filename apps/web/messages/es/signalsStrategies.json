@@ -15,15 +15,15 @@
       "intent": "Intención"
     },
     "kpis": {
-      "recent": "Señales en 30 días",
-      "weekly": "vs. semana anterior",
-      "hot": "Señales calientes",
-      "hotHint": "score ≥ 75 de {count} cargadas",
-      "companies": "Empresas con señal",
-      "companiesHint": "con una señal en los últimos 30 días",
+      "recent": "Señales",
+      "weekly": "vs. semana",
+      "hot": "Calientes",
+      "hotHint": "score ≥ 75",
+      "companies": "Empresas",
+      "companiesHint": "con señal · 30 d",
       "peak": "Hora pico",
       "peakValue": "{day} {hour} h",
-      "peakHint": "{count, plural, one {# señal} other {# señales}} en esa hora",
+      "peakHint": "{count, plural, one {# señal} other {# señales}}",
       "peakEmpty": "sin actividad todavía"
     },
     "feed": {
@@ -101,16 +101,16 @@
       "listTitle": "Patrones y su señal de mercado"
     },
     "kpis": {
-      "ready": "Battlecards listas",
-      "readyHint": "de {count} en total",
-      "coverage": "Deals con battlecard",
+      "ready": "Listas",
+      "readyHint": "de {count} battlecards",
+      "coverage": "Cobertura",
       "coverageHint": "{covered} de {open} abiertas",
       "bestArgument": "Mejor argumento",
-      "bestArgumentHint": "{playbook} vía {channel} · {count, plural, one {# deal} other {# deals}}",
+      "bestArgumentHint": "{playbook} · {channel}",
       "bestArgumentEmpty": "sin patrones todavía",
-      "topStage": "Etapa con más deals",
-      "topStageHint": "en {stage}",
-      "topStageEmpty": "sin oportunidades abiertas"
+      "topStage": "Etapa líder",
+      "topStageHint": "{stage}",
+      "topStageEmpty": "sin abiertas"
     }
   },
   "darkFunnel": {

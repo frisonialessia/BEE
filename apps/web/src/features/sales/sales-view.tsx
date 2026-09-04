@@ -102,7 +102,7 @@ export function SalesView() {
         <OverviewCard span={8} title={t("cumulative.title")} caption={t("cumulative.captionRange", { months })}>
           <AreaChart points={model.cumulative} color={SALES.won} minHeight={200} formatValue={(v) => money(v)} />
         </OverviewCard>
-        <OverviewCard span={4} title={t("monthly.title")} caption={model.goal ? t("monthly.captionGoalRange", { months, goal: money(model.goal) }) : t("monthly.captionRange", { months })}>
+        <OverviewCard span={4} title={t("monthly.title")} caption={model.goal ? t("monthly.captionGoalRange", { months, goal: amount(model.goal) }) : t("monthly.captionRange", { months })}>
           <BarsVsTarget
             points={model.months}
             target={model.goal}
@@ -117,7 +117,7 @@ export function SalesView() {
           <SectorBars sectors={model.sectors} />
         </OverviewCard>
         <OverviewCard span={4} title={t("ranking.title")} caption={t("ranking.caption")}>
-          <TeamGoalRanking month sales />
+          <TeamGoalRanking days={90} bars />
         </OverviewCard>
 
         <OverviewCard span={12} title={t("ledger.title")} caption={t("ledger.caption", { count: model.won.length })}>

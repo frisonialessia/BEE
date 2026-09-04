@@ -14,13 +14,13 @@
       "hotLeads": "Hot leads",
       "hotLeadsHint": "buying intent",
       "avgScore": "Average score",
-      "weeklySignals": "signals/week",
-      "wonMonth": "Won this month",
+      "weeklySignals": "per week",
+      "wonMonth": "Won",
       "goalHint": "goal {goal}",
-      "openPipeline": "Open pipeline",
-      "openPipelineHint": "{count, plural, one {# open opportunity} other {# open opportunities}}",
-      "buyingWindow": "In a buying window",
-      "buyingWindowHint": "accounts ready or hot"
+      "openPipeline": "Pipeline",
+      "openPipelineHint": "{count, plural, one {# open} other {# open}}",
+      "buyingWindow": "Hot",
+      "buyingWindowHint": "ready or hot"
     },
     "itemLabels": {
       "battlecards": "battlecards",

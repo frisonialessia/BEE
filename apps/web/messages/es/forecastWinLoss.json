@@ -17,22 +17,22 @@
     },
     "kpis": {
       "quarter": {
-        "label": "Pronóstico del trimestre",
-        "hintHistorical": "{quarter} · con tasa de cierre real",
-        "hintDefault": "{quarter} · por probabilidad de etapa"
+        "label": "Trimestre",
+        "hintHistorical": "{quarter} · tasa real",
+        "hintDefault": "{quarter} · por etapa"
       },
       "pipeline": {
-        "label": "Pipeline abierto",
-        "hint": "{count, plural, one {# oportunidad sin cerrar} other {# oportunidades sin cerrar}}"
+        "label": "Pipeline",
+        "hint": "{count, plural, one {# abierta} other {# abiertas}}"
       },
       "won": {
         "label": "Ganado",
-        "hint": "Total cerrado como ganado",
-        "goalHint": "de {goal} de meta del equipo este mes"
+        "hint": "total ganado",
+        "goalHint": "meta {goal}"
       },
       "atRisk": {
         "label": "En riesgo",
-        "hint": "{amount} sin fecha, vencidos o poco calificados"
+        "hint": "{amount} en juego"
       }
     },
     "projection": {

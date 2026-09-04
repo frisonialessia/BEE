@@ -17,22 +17,22 @@
     },
     "kpis": {
       "quarter": {
-        "label": "Quarter forecast",
-        "hintHistorical": "{quarter} · at the real close rate",
-        "hintDefault": "{quarter} · by stage probability"
+        "label": "Quarter",
+        "hintHistorical": "{quarter} · real rate",
+        "hintDefault": "{quarter} · by stage"
       },
       "pipeline": {
-        "label": "Open pipeline",
-        "hint": "{count, plural, one {# open opportunity} other {# open opportunities}}"
+        "label": "Pipeline",
+        "hint": "{count, plural, one {# open} other {# open}}"
       },
       "won": {
         "label": "Won",
-        "hint": "Total closed as won",
-        "goalHint": "of the team's {goal} goal this month"
+        "hint": "won total",
+        "goalHint": "goal {goal}"
       },
       "atRisk": {
         "label": "At risk",
-        "hint": "{amount} with no date, overdue or poorly qualified"
+        "hint": "{amount} at stake"
       }
     },
     "projection": {

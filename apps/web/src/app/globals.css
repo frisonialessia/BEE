@@ -1620,6 +1620,10 @@
 .bee-drawer-pill[aria-pressed="true"] {
   background: var(--bee-pill-fill, var(--color-primary));
   border-color: var(--bee-pill-fill, var(--color-primary));
+  /* Ink on the light fills; white when the fill is a strong blue or
+     purple (indigo, lilac, magenta), like the primary button — the caller
+     says which through --bee-pill-text. */
+  color: var(--bee-pill-text, var(--color-text));
   font-weight: 600;
 }
 .bee-drawer-pill[aria-pressed="true"]:hover {

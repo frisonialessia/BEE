@@ -236,7 +236,7 @@ export function DashboardOverview({
           <MyCalendarWidget embedded />
         </OverviewCard>
         <OverviewCard span={4} title={t("sections.ranking.title")} caption={t("sections.ranking.caption")} className="lg:min-h-[24rem]!" action={<CardLink href={`${base}/sales`}>{t("sections.ranking.link")}</CardLink>}>
-          <TeamGoalRanking days={90} limit={4} bars />
+          <TeamGoalRanking days={90} bars />
         </OverviewCard>
 
         {/* Dinero — closed by month, the funnel; Apuntar — where we close best. */}

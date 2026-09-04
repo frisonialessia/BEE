@@ -15,15 +15,15 @@
       "intent": "Intent"
     },
     "kpis": {
-      "recent": "Signals in 30 days",
-      "weekly": "vs. previous week",
-      "hot": "Hot signals",
-      "hotHint": "score ≥ 75 of {count} loaded",
-      "companies": "Companies with a signal",
-      "companiesHint": "with a signal in the last 30 days",
+      "recent": "Signals",
+      "weekly": "vs. last week",
+      "hot": "Hot",
+      "hotHint": "score ≥ 75",
+      "companies": "Companies",
+      "companiesHint": "with a signal · 30 d",
       "peak": "Peak hour",
       "peakValue": "{day} {hour} h",
-      "peakHint": "{count, plural, one {# signal} other {# signals}} in that hour",
+      "peakHint": "{count, plural, one {# signal} other {# signals}}",
       "peakEmpty": "no activity yet"
     },
     "feed": {
@@ -101,16 +101,16 @@
       "listTitle": "Patterns and their market signal"
     },
     "kpis": {
-      "ready": "Battlecards ready",
-      "readyHint": "of {count} in total",
-      "coverage": "Deals with a battlecard",
+      "ready": "Ready",
+      "readyHint": "of {count} battlecards",
+      "coverage": "Coverage",
       "coverageHint": "{covered} of {open} open",
       "bestArgument": "Best argument",
-      "bestArgumentHint": "{playbook} via {channel} · {count, plural, one {# deal} other {# deals}}",
+      "bestArgumentHint": "{playbook} · {channel}",
       "bestArgumentEmpty": "no patterns yet",
-      "topStage": "Stage with most deals",
-      "topStageHint": "in {stage}",
-      "topStageEmpty": "no open opportunities"
+      "topStage": "Top stage",
+      "topStageHint": "{stage}",
+      "topStageEmpty": "none open"
     }
   },
   "darkFunnel": {

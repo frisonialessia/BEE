@@ -135,6 +135,10 @@ export function Field({ label, required, hint, className, children }: { label: s
 /** Toggle pill — the dialog's "Invitar a tu equipo" chip. The fill it
  *  takes when pressed is the caller's (a stage hue, lavender for a person)
  *  and animates in (see .bee-drawer-pill). */
+/** The strong blues and purples: a pressed pill in one of these wears
+ *  white letters, like the primary button; every other fill keeps ink. */
+const STRONG_FILLS = new Set(["var(--color-chart-4)", "var(--color-chart-5)", "var(--color-chart-6)"]);
+
 export function Pill({
   pressed,
   fill,
@@ -158,7 +162,7 @@ export function Pill({
       title={title}
       onClick={onClick}
       className="bee-btn-ghost bee-drawer-pill text-xs"
-      style={{ "--bee-pill-fill": fill ?? "var(--color-primary)" } as CSSProperties}
+      style={{ "--bee-pill-fill": fill ?? "var(--color-primary)", "--bee-pill-text": fill && STRONG_FILLS.has(fill) ? "#fff" : undefined } as CSSProperties}
     >
       {children}
     </button>
