@@ -106,11 +106,16 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * of the sweep stopping short — but `"16"` itself shipped with a bug
  * (resetDemoData's own seeding call hadn't been updated to include them,
  * so it silently kept seeding the old, filler-less set); `"17"` is the
- * actual fix; `"18"` raises the filler count so the same rep clears 2000,
- * not just 500 — the path's honey-to-green sweep now reaches 500/1000
- * reached and 2000 as the newest green node before the sequence keeps
- * going into ungrounded territory (5000, 10000…). */
-const SEED_VERSION = "18";
+ * actual fix; `"18"` raised the filler count so the same rep cleared 2000
+ * — reverted in `"19"`: the ask was never a bigger total, it was that the
+ * path's *coloring* looked cut short. `"19"` drops the filler-wins
+ * mechanism entirely — demo-user-1's lifetime total goes back to just
+ * past the "5" milestone (this week's closes + her plain round-robin
+ * share) — and MilestonePath now colors every visible node except the
+ * very last one regardless of totalWon, so the row still reads as
+ * "almost all underway" at a small, honest total instead of needing a
+ * padded one to look that way. */
+const SEED_VERSION = "19";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Which language the currently-stored seed was written in — separate from
@@ -192,18 +197,24 @@ const DEMO_TEAMS: Omit<TeamOut, "currency">[] = [
   { id: "demo-team-south", organization_id: "demo-org", parent_team_id: null, name: "Equipo Sur", description: null },
 ];
 
+// Each of the 4 gets a distinct BEE chart tone (avatar_color) — the same
+// real profile field a real user sets from Equipo → Perfil (see
+// team-admin-view.tsx's color picker); no photo, so this is what actually
+// tells them apart wherever only initials show (presence bar, leaderboard,
+// calendar attendees), instead of every teammate reading as the exact same
+// flat color the way this used to render.
 const DEMO_USERS_ES: UserOut[] = [
-  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@demo.bee", full_name: "Ana García", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@demo.bee", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@demo.bee", full_name: "Sofía Méndez", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@demo.bee", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@beedemo.xyz", full_name: "Ana García", role: "manager", is_active: true, avatar_url: null, avatar_color: "chart-1", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@beedemo.xyz", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, avatar_color: "chart-6", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@beedemo.xyz", full_name: "Sofía Méndez", role: "manager", is_active: true, avatar_url: null, avatar_color: "chart-4", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@beedemo.xyz", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, avatar_color: "chart-3", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
 ];
 
 const DEMO_USERS_EN: UserOut[] = [
-  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@demo.bee", full_name: "Ana Garcia", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@demo.bee", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@demo.bee", full_name: "Sofia Mendez", role: "manager", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@demo.bee", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@beedemo.xyz", full_name: "Ana Garcia", role: "manager", is_active: true, avatar_url: null, avatar_color: "chart-1", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@beedemo.xyz", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, avatar_color: "chart-6", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@beedemo.xyz", full_name: "Sofia Mendez", role: "manager", is_active: true, avatar_url: null, avatar_color: "chart-4", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@beedemo.xyz", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, avatar_color: "chart-3", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
 ];
 
 export function demoFetchUsers(): UserOut[] {
@@ -235,99 +246,24 @@ function seedOpportunitiesWithReps(locale: Locale): Opportunity[] {
   return getSampleOpportunities(locale).map((opp, i) => {
     if (opp.assigned_to_user_id) return opp;
     if (THIS_WEEK_OPP_IDS.has(opp.id)) return { ...opp, assigned_to_user_id: reps[0].id };
-    // The 48 monthly bulk-history wins (historySeeds() in seed-history.ts,
-    // ids "hw1".."hw48") go to demo-user-1 as a block, not the round robin
-    // — her lifetime total needs to clear 50 for "Tu semana en BEE"'s
-    // milestone path to show 3 real reached nodes (10, 20, 50) and the
-    // full honey-to-green sweep across them, not just the one dot a
-    // quarter-share rotation left her with. The ~9 named, curated wins
-    // (Vantage Studio, Cumbre Salud…) keep the plain rotation below, so
-    // the other three reps still have real, visible wins of their own —
-    // this only concentrates the anonymous bulk history, not everything.
-    if (opp.status === "won" && opp.id.startsWith("demo-opp-hw")) return { ...opp, assigned_to_user_id: reps[0].id };
     const rep = opp.status === "won" ? reps[wonIdx++ % reps.length] : reps[i % reps.length];
     return { ...opp, assigned_to_user_id: rep.id };
-  });
-}
-
-// Padding for the milestone path's completeness (see WeeklyRecapCard /
-// MilestonePath): with only the curated wins + the 48 monthly bulk-history
-// ones, demo-user-1's lifetime total cleared 50 but never reached 500, so
-// the path's higher milestones (200, 500) never showed as reached — the
-// sweep always looked cut short. These are ordinary won Opportunity
-// records like any other (real amounts, real companies — the same ones
-// already seeded above, cycled), just generated by a loop instead of
-// hand-written one at a time, spread realistically over the same ~4-year
-// window the rest of the history uses. Always demo-user-1's directly (set
-// at creation, not through the id-prefix rotation above) — same reasoning
-// as THIS_WEEK_OPP_IDS.
-const FILLER_WIN_COUNT = 1960;
-
-// Deliberately NOT demoFetchCompanies() — that goes through allBattlecards()
-// → loadJSON(BATTLECARDS_KEY, …), and this function is itself called from
-// inside resetDemoData() (the seeding path loadJSON's ensureCurrentSeed()
-// runs on every read). Re-entering ensureCurrentSeed() before the version
-// key it's about to write has landed made every nested loadJSON think the
-// reseed was still pending, so it reset *again* — a silent, hard-to-spot
-// bug that just fell back to structuredClone's own empty default rather
-// than actually crash. Reading getSampleBattlecards() straight (pure, no
-// storage) sidesteps that entirely; the ids match demoFetchCompanies'own
-// scheme via the same slugify(), so a filler win points at the exact
-// company its "real" counterpart resolves to.
-function fillerCompanies(locale: Locale): { name: string; id: string }[] {
-  const seen = new Map<string, string>();
-  for (const card of getSampleBattlecards(locale)) {
-    const name = card.company.name;
-    if (name && !seen.has(name)) seen.set(name, `demo-company-${slugify(name)}`);
-  }
-  return [...seen.entries()].map(([name, id]) => ({ name, id }));
-}
-
-function bulkMilestoneFillerWins(locale: Locale): Opportunity[] {
-  const companies = fillerCompanies(locale);
-  if (companies.length === 0) return [];
-  const repId = demoFetchUsers()[0].id;
-  return Array.from({ length: FILLER_WIN_COUNT }, (_, i) => {
-    const company = companies[i % companies.length];
-    const monthsAgo = 13 + (i % 48);
-    const cycleDays = 20 + ((i * 13) % 35);
-    const daysAgoCreated = monthsAgo * 30 + cycleDays + ((i * 7) % 11);
-    const closedAt = new Date(Date.now() - (daysAgoCreated - cycleDays) * 86_400_000).toISOString();
-    return {
-      id: `demo-opp-filler-${i}`,
-      title: `${company.name} — closed`,
-      status: "won" as const,
-      opportunity_type: "expansion" as const,
-      score: 60 + (i % 35),
-      strategy: {},
-      signal_id: null,
-      lead_id: null,
-      company_id: company.id,
-      assigned_to_user_id: repId,
-      amount: Math.round((15000 + ((i * 6151) % 40000)) / 500) * 500,
-      expected_close_date: null,
-      qualification: {},
-      source: null,
-      next_meeting_at: null,
-      meetings_held_count: 0,
-      photo_url: null,
-      color: null,
-      created_at: new Date(Date.now() - daysAgoCreated * 86_400_000).toISOString(),
-      updated_at: closedAt,
-      loss_reason: null,
-      competitor: null,
-      closed_at: closedAt,
-    };
   });
 }
 
 // The one function both resetDemoData() (the actual seeding path on a
 // fresh visit or a SEED_VERSION bump — see its own docstring) and this
 // file's loadJSON fallback call, so the two can never drift into seeding
-// two different opportunity sets the way an early version of this change
-// briefly did.
+// two different opportunity sets.
+//
+// demo-user-1's lifetime total is deliberately modest — just past the
+// milestone path's early "5" (this week's 4 THIS_WEEK_OPP_IDS closes plus
+// her plain share of the round-robin wins), not padded up to 500/2000: a
+// brand-new rep's path is more motivating climbing from near the start
+// than parked at a maxed-out number. See MilestonePath's own coloring for
+// how the row still reads as "mostly underway" despite the low total.
 function seedOpportunities(locale: Locale): Opportunity[] {
-  return [...seedOpportunitiesWithReps(locale), ...bulkMilestoneFillerWins(locale)];
+  return seedOpportunitiesWithReps(locale);
 }
 
 const load = () => loadJSON<Opportunity[]>(OPPORTUNITIES_KEY, seedOpportunities(getDemoLocale()));

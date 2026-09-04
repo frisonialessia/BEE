@@ -2,14 +2,8 @@
 
 import { useTranslations } from "next-intl";
 
+import { Avatar } from "@/components/avatar";
 import { useUsers } from "@/hooks/queries/use-users";
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? "";
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
-  return (first + last).toUpperCase();
-}
 
 /**
  * Team strip in the header — the organization's real members as avatars.
@@ -30,9 +24,16 @@ export function TeamPresence() {
     <div className="flex items-center gap-2">
       <div className="flex -space-x-2">
         {team.map((user) => (
-          <span key={user.id} className="bee-presence-avatar" title={user.full_name}>
-            {initials(user.full_name)}
-          </span>
+          <Avatar
+            key={user.id}
+            id={user.id}
+            name={user.full_name}
+            avatarUrl={user.avatar_url}
+            avatarColor={user.avatar_color}
+            size={30}
+            title={user.full_name}
+            className="text-micro border-2 border-[var(--color-background)]"
+          />
         ))}
       </div>
       {team.length > 1 && (

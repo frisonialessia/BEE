@@ -55,6 +55,13 @@ class User(TimestampMixin, table=True):
     # column itself is unbounded VARCHAR (see migration 024), this is only
     # the application-level sanity cap.
     avatar_url: str | None = Field(default=None, max_length=300_000)
+    # One of the 6 BEE chart tokens (see AvatarColor in schemas/auth.py) —
+    # the enum restriction lives at the schema layer only, same convention
+    # as Opportunity.color/Meeting.color; this column is a plain string.
+    # NULL means "hasn't picked one yet" — the frontend falls back to a
+    # deterministic per-id tone rather than showing every unset avatar the
+    # same color.
+    avatar_color: str | None = Field(default=None, max_length=20)
     phone: str | None = Field(default=None, max_length=32)
     bio: str | None = Field(default=None, max_length=500)
     # IANA timezone name (e.g. "America/Mexico_City"), not a UTC offset — an

@@ -518,6 +518,7 @@
       "avatarProcessing": "Processing…",
       "avatarRemove": "Remove photo",
       "avatarError": "Couldn't use that file as an image.",
+      "avatarColorLabel": "Profile color",
       "phoneLabel": "Phone",
       "phonePlaceholder": "+1 555 0100",
       "bioLabel": "Bio",

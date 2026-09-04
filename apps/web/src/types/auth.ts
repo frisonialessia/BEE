@@ -6,6 +6,11 @@
 
 export type UserRole = "owner" | "admin" | "manager" | "member";
 
+/** The 6 BEE chart tones a person can pick for their own avatar — same
+ *  set as PickableColor in charts/palette.ts minus the 3 sales greens
+ *  (those mean "closed/won" everywhere else, not "this is your color"). */
+export type AvatarColor = "chart-1" | "chart-2" | "chart-3" | "chart-4" | "chart-5" | "chart-6";
+
 export interface UserOut {
   id: string;
   organization_id: string;
@@ -15,6 +20,7 @@ export interface UserOut {
   role: UserRole;
   is_active: boolean;
   avatar_url: string | null;
+  avatar_color: AvatarColor | null;
   phone: string | null;
   bio: string | null;
   timezone: string | null;
@@ -24,6 +30,7 @@ export interface UserOut {
 export interface UserProfileUpdateIn {
   full_name?: string;
   avatar_url?: string | null;
+  avatar_color?: AvatarColor | null;
   phone?: string | null;
   bio?: string | null;
   timezone?: string | null;

@@ -4,10 +4,17 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.base import UserRole
+
+# A user's own profile color — the 6 BEE chart tones only, deliberately
+# not the sales greens (MeetingColor/OpportunityColor's extra 3): those
+# mean "closed/won" everywhere else in the app, a meaning a person's own
+# avatar color has nothing to do with.
+AvatarColor = Literal["chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6"]
 
 
 class OrganizationRegister(BaseModel):
@@ -79,6 +86,7 @@ class UserOut(BaseModel):
     role: UserRole
     is_active: bool
     avatar_url: str | None
+    avatar_color: str | None
     phone: str | None
     bio: str | None
     timezone: str | None
@@ -150,6 +158,10 @@ class UserProfileUpdateIn(BaseModel):
     full_name: str | None = Field(default=None, min_length=1, max_length=200)
     # A client-resized data: URI, not a link — see User.avatar_url's docstring.
     avatar_url: str | None = Field(default=None, max_length=300_000)
+    # Rejected with a 422 for anything outside the 6 BEE chart tones —
+    # unlike avatar_url/timezone above, there's no "best-effort, fall back
+    # quietly" case for a color: the picker only ever sends one of these 6.
+    avatar_color: AvatarColor | None = None
     phone: str | None = Field(default=None, max_length=32)
     bio: str | None = Field(default=None, max_length=500)
     # IANA name, e.g. "America/Mexico_City" — see User.timezone's docstring.

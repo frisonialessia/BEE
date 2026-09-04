@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { OverviewCard } from "@/components/dashboard/overview-card";
+import { PICKABLE_BEE, pickedColor } from "@/components/charts/palette";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/providers/auth-provider";
@@ -29,7 +30,7 @@ import { TeamProfilesSection } from "@/features/team/team-profiles-section";
 import { resizeImageToDataUrl } from "@/lib/image";
 import { availableTimezones, detectedTimezone } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
-import { ROLE_LABELS, type TeamOut, type UserOut, type UserRole } from "@/types/auth";
+import { ROLE_LABELS, type AvatarColor, type TeamOut, type UserOut, type UserRole } from "@/types/auth";
 import { ApiError } from "@/types/api";
 
 const ROLE_OPTIONS: UserRole[] = ["admin", "manager", "member"];
@@ -459,6 +460,7 @@ function MyProfileSection() {
   const [open, setOpen] = useState(false);
   const [fullName, setFullName] = useState(currentUser?.full_name ?? "");
   const [avatarUrl, setAvatarUrl] = useState(currentUser?.avatar_url ?? "");
+  const [avatarColor, setAvatarColor] = useState<AvatarColor | null>(currentUser?.avatar_color ?? null);
   const [phone, setPhone] = useState(currentUser?.phone ?? "");
   const [bio, setBio] = useState(currentUser?.bio ?? "");
   // Pre-filled with the browser's own detected zone when the user hasn't
@@ -473,6 +475,7 @@ function MyProfileSection() {
   function openForm() {
     setFullName(currentUser?.full_name ?? "");
     setAvatarUrl(currentUser?.avatar_url ?? "");
+    setAvatarColor(currentUser?.avatar_color ?? null);
     setPhone(currentUser?.phone ?? "");
     setBio(currentUser?.bio ?? "");
     setTimezone(currentUser?.timezone ?? detectedTimezone());
@@ -499,6 +502,7 @@ function MyProfileSection() {
       const updated = await updateProfile.mutateAsync({
         full_name: fullName.trim() || undefined,
         avatar_url: avatarUrl || null,
+        avatar_color: avatarColor,
         phone: phone.trim() || null,
         bio: bio.trim() || null,
         timezone: timezone || null,
@@ -562,6 +566,31 @@ function MyProfileSection() {
               )}
             </div>
           </div>
+
+          {/* Only shown until a photo is picked — once there's a real photo,
+              initials-on-a-color everywhere else in the app never renders
+              anyway, so the color choice would be dead weight. */}
+          {!avatarUrl && (
+            <div className="space-y-1.5">
+              <span className="bee-caption">{t("avatarColorLabel")}</span>
+              <div className="flex flex-wrap gap-2">
+                {PICKABLE_BEE.map((token) => (
+                  <button
+                    key={token}
+                    type="button"
+                    onClick={() => setAvatarColor(token as AvatarColor)}
+                    aria-label={token}
+                    aria-pressed={avatarColor === token}
+                    className={cn(
+                      "size-7 rounded-full ring-offset-2 ring-offset-[var(--color-card)] transition-shadow",
+                      avatarColor === token ? "ring-2 ring-[var(--color-text)]" : "hover:ring-2 hover:ring-[var(--color-divider)]",
+                    )}
+                    style={{ background: pickedColor(token) ?? undefined }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <label className="space-y-1 text-xs">

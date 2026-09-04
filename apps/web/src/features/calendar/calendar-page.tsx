@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { Avatar } from "@/components/avatar";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -27,6 +28,7 @@ import { stripOpportunityTitlePrefix } from "@/lib/format";
 import { resolveTimezone, zonedFakeLocalDate, zonedWallClockToUtc } from "@/lib/timezone";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/types/api";
+import type { AvatarColor } from "@/types/auth";
 import type { Meeting, MeetingClientContext, MeetingColor } from "@/types/domain";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -194,12 +196,6 @@ function tzOffsetLabel(tz: string): string {
   }
 }
 
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? "";
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
-  return (first + last).toUpperCase();
-}
 
 function startOfWeek(date: Date): Date {
   const d = new Date(date);
@@ -626,12 +622,24 @@ function MonthGridView({
   );
 }
 
-function SidebarProfileCard({ name, role, onQuickAdd }: { name: string; role: string; onQuickAdd: () => void }) {
+function SidebarProfileCard({
+  id,
+  name,
+  role,
+  avatarUrl,
+  avatarColor,
+  onQuickAdd,
+}: {
+  id: string;
+  name: string;
+  role: string;
+  avatarUrl: string | null;
+  avatarColor: AvatarColor | null;
+  onQuickAdd: () => void;
+}) {
   return (
     <div className="bee-surface flex items-center gap-4 bee-bento-pad">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-cta)] text-xs font-bold text-white">
-        {initials(name)}
-      </span>
+      <Avatar id={id} name={name} avatarUrl={avatarUrl} avatarColor={avatarColor} size={36} className="text-xs" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{name}</p>
         <p className="truncate bee-micro capitalize">{role}</p>
@@ -1171,8 +1179,11 @@ export function CalendarPage() {
         <aside className="space-y-4 lg:order-1">
           {user && (
             <SidebarProfileCard
+              id={user.id}
               name={user.full_name}
               role={user.role}
+              avatarUrl={user.avatar_url}
+              avatarColor={user.avatar_color}
               onQuickAdd={() => openCreateFor(zonedFakeLocalDate(new Date(), tz))}
             />
           )}
@@ -1527,13 +1538,11 @@ export function CalendarPage() {
                   <div className="flex flex-wrap gap-2">
                     {detail.attendee_user_ids.map((uid) => {
                       const u = usersById.get(uid);
-                      return (
-                        <span
-                          key={uid}
-                          className="flex size-7 items-center justify-center rounded-full bg-[var(--color-chart-4)]/20 text-micro font-semibold text-[var(--color-text)]"
-                          title={u?.full_name}
-                        >
-                          {u ? initials(u.full_name) : "?"}
+                      return u ? (
+                        <Avatar key={uid} id={u.id} name={u.full_name} avatarUrl={u.avatar_url} avatarColor={u.avatar_color} size={28} title={u.full_name} className="text-micro" />
+                      ) : (
+                        <span key={uid} className="flex size-7 items-center justify-center rounded-full bg-[var(--color-chart-4)]/20 text-micro font-semibold text-[var(--color-text)]">
+                          ?
                         </span>
                       );
                     })}

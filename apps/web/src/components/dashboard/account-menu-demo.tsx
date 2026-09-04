@@ -5,14 +5,8 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
+import { Avatar } from "@/components/avatar";
 import { useUsers } from "@/hooks/queries/use-users";
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? "";
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
-  return (first + last).toUpperCase();
-}
 
 /**
  * The sandbox's account menu — same shape as the real `AccountMenu`
@@ -50,9 +44,7 @@ export function AccountMenuDemo() {
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 transition-colors hover:bg-[var(--color-primary)]"
       >
-        <span className="flex size-7 items-center justify-center rounded-full bg-[var(--color-cta)] text-micro font-bold text-white">
-          {initials(me.full_name)}
-        </span>
+        <Avatar id={me.id} name={me.full_name} avatarUrl={me.avatar_url} avatarColor={me.avatar_color} size={28} className="text-micro" />
         <span className="hidden text-xs font-medium lg:inline">{me.full_name.split(" ")[0]}</span>
         <ChevronDown className="size-3.5 text-muted-foreground" />
       </button>

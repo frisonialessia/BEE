@@ -106,33 +106,41 @@ export function MilestonePath({
     const span = Math.max(1, values.length - 1);
     const list = values.map((value, k) => ({
       value,
+      // Honest — drives the hover tooltip's wording, never the styling.
       reached: value <= totalWon,
       isCurrent: value === current,
+      // Styling only: every node colors in except the very last one,
+      // regardless of totalWon — a rep who just started (a handful of
+      // real closes) still gets a road that reads as "underway", not one
+      // where 4 of 6 dots sit flat grey because the honest count is
+      // still low. The dashed "you are here" ring on isCurrent still
+      // marks the real next target either way.
+      colored: k < values.length - 1,
       x: values.length === 1 ? viewW / 2 : pad + (k / span) * (viewW - pad * 2),
     }));
 
-    const rampDenom = Math.max(1, behindShown.length - 1);
+    const rampDenom = Math.max(1, list.length - 2);
     const colorFor = (idx: number) => RAMP[Math.round((idx / rampDenom) * (RAMP.length - 1))];
 
     let all = "";
-    let reachedD = "";
+    let coloredD = "";
     for (let k = 0; k < list.length; k++) {
       const n = list[k];
       if (k === 0) {
         all = `M${n.x},${CY}`;
       } else {
         all += ` L${n.x},${CY}`;
-        if (n.reached) {
-          if (!reachedD) reachedD = `M${list[k - 1].x},${CY}`;
-          reachedD += ` L${n.x},${CY}`;
+        if (n.colored) {
+          if (!coloredD) coloredD = `M${list[k - 1].x},${CY}`;
+          coloredD += ` L${n.x},${CY}`;
         }
       }
     }
 
     return {
-      nodes: list.map((n, k) => ({ ...n, fill: n.reached ? colorFor(k) : null })),
+      nodes: list.map((n, k) => ({ ...n, fill: n.colored ? colorFor(k) : null })),
       allPath: all,
-      reachedPath: reachedD,
+      reachedPath: coloredD,
       nextMilestone: current,
     };
   }, [totalWon, viewW]);
@@ -250,12 +258,12 @@ export function MilestonePath({
                 cy={CY}
                 r={hover === i ? NODE_R + 3 : n.isCurrent ? NODE_R + 2 : NODE_R}
                 fill={n.fill ?? "var(--color-card)"}
-                stroke={n.reached ? "var(--color-card)" : "var(--color-border)"}
-                strokeWidth={n.reached ? 2.5 : 2}
-                strokeDasharray={n.reached ? undefined : "3 3"}
+                stroke={n.colored ? "var(--color-card)" : "var(--color-border)"}
+                strokeWidth={n.colored ? 2.5 : 2}
+                strokeDasharray={n.colored ? undefined : "3 3"}
                 style={{ transition: "r 120ms ease" }}
               />
-              <text x={n.x} y={CY + 3.5} textAnchor="middle" fontSize={9.5} fontWeight={700} fill={n.reached ? "#fff" : "var(--color-text-muted)"} className="pointer-events-none">
+              <text x={n.x} y={CY + 3.5} textAnchor="middle" fontSize={9.5} fontWeight={700} fill={n.colored ? "#fff" : "var(--color-text-muted)"} className="pointer-events-none">
                 {n.value}
               </text>
             </g>

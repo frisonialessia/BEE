@@ -4,6 +4,7 @@ import { Trophy } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
+import { Avatar } from "@/components/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { TeamOut, UserOut } from "@/types/auth";
 import type { Opportunity } from "@/types/domain";
@@ -12,13 +13,6 @@ import type { Locale } from "@/i18n/locales";
 
 const RANK_COLOR = ["var(--color-chart-1)", "var(--color-text-muted)", "var(--color-chart-2)"] as const;
 const ALL_TEAMS = "__all__";
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? "";
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
-  return (first + last).toUpperCase();
-}
 
 /**
  * Leaderboard — ranking real de vendedores por oportunidades ganadas +
@@ -108,9 +102,7 @@ export function Leaderboard({
                 >
                   {i + 1}
                 </span>
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-chart-4)]/20 text-xs font-semibold text-[var(--color-text)]">
-                  {initials(row.user.full_name)}
-                </span>
+                <Avatar id={row.user.id} name={row.user.full_name} avatarUrl={row.user.avatar_url} avatarColor={row.user.avatar_color} size={32} className="text-xs" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium leading-tight">{row.user.full_name}</p>
                   <Tooltip>

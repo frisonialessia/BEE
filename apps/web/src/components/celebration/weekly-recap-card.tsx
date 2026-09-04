@@ -24,14 +24,14 @@ function StreakChip({ days }: { days: number }) {
   );
 }
 
-function StatMini({ label, value, delta, tone }: { label: string; value: number; delta: number | null; tone?: string }) {
+function StatMini({ label, value, delta, tone }: { label: string; value: number; delta?: number | null; tone?: string }) {
   return (
     <div className="flex shrink-0 items-baseline gap-2">
       <div>
         <p className="text-base font-bold leading-tight tabular-nums">{value}</p>
         <p className="bee-micro">{label}</p>
       </div>
-      {delta !== null && <DeltaChip value={delta} tone={tone} />}
+      {delta != null && <DeltaChip value={delta} tone={tone} />}
     </div>
   );
 }
@@ -79,10 +79,20 @@ export function WeeklyRecapCard({
   const caption = teamRank ? t("captionRank", { rank: teamRank.rank }) : t("caption");
 
   return (
-    <OverviewCard span={12} title={t("title")} caption={caption} className="lg:min-h-0!">
+    <OverviewCard
+      span={12}
+      title={t("title")}
+      caption={caption}
+      // The signals delta reads better as a corner accent (top-right, over
+      // where the path's own fraction sits at the end of the body row)
+      // than buried inline next to a small number — same OverviewCard
+      // "action" slot every other card's top-right control already uses.
+      action={signalsDelta != null ? <DeltaChip value={signalsDelta} tone={TONE.market} /> : undefined}
+      className="lg:min-h-0!"
+    >
       <div className="flex flex-wrap items-center gap-4">
         <StreakChip days={streakDays} />
-        <StatMini label={t("signals")} value={signalsThisWeek} delta={signalsDelta} tone={TONE.market} />
+        <StatMini label={t("signals")} value={signalsThisWeek} />
         <StatMini label={t("won")} value={wonThisWeek} delta={wonDelta} tone="sales" />
         <div className="hidden h-8 w-px shrink-0 bg-[var(--color-divider)] sm:block" />
         <MilestonePath totalWon={totalWon} monthlyGoal={monthlyGoal} weeklyEvents={weeklyEvents} />

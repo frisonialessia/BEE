@@ -243,6 +243,34 @@ class TestSelfServiceProfile:
         session.refresh(user)
         assert user.timezone == "America/Mexico_City"
 
+    def test_user_can_set_avatar_color(self, client: TestClient, session: Session):
+        org = _make_org(session, "Acme Avatar Color")
+        user = _make_user(session, org, UserRole.MEMBER)
+        assert user.avatar_color is None
+
+        resp = client.patch(
+            "/api/v1/users/me",
+            json={"avatar_color": "chart-3"},
+            headers=_headers(user),
+        )
+        assert resp.status_code == 200
+        assert resp.json()["avatar_color"] == "chart-3"
+        session.refresh(user)
+        assert user.avatar_color == "chart-3"
+
+    def test_avatar_color_rejects_values_outside_the_six_tones(self, client: TestClient, session: Session):
+        org = _make_org(session, "Acme Avatar Color Reject")
+        user = _make_user(session, org, UserRole.MEMBER)
+
+        resp = client.patch(
+            "/api/v1/users/me",
+            # green-1 is a real BEE token, just not one of the 6 an avatar
+            # may use — greens mean "closed/won" everywhere else.
+            json={"avatar_color": "green-1"},
+            headers=_headers(user),
+        )
+        assert resp.status_code == 422
+
     def test_profile_update_cannot_change_role(self, client: TestClient, session: Session):
         """UserProfileUpdateIn has no `role` field at all — a MEMBER sending
         one is simply ignored by FastAPI request validation (extra fields
