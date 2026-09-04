@@ -55,20 +55,16 @@ export function PipelineFunnel({
             />
           ))}
       </div>
-      <div className="grid grid-cols-2 gap-2">
+      <ul className="flex flex-col gap-1.5">
         {stages.map((s) => (
-          <div key={s.key} className="rounded-[var(--radius-md)] px-3 py-2" style={{ background: mix(STAGE_COLORS[s.key], 18) }}>
-            <p className="flex items-center gap-1.5 bee-micro text-[var(--color-text)]">
-              <span className="size-1.5 shrink-0 rounded-full" style={{ background: STAGE_COLORS[s.key] }} />
-              <span className="truncate">{STAGE_LABELS[s.key]}</span>
-            </p>
-            <p className="mt-0.5 text-sm font-bold tabular-nums">
-              {s.count}
-              <span className="ml-1.5 bee-micro font-medium">{total ? Math.round((s.count / total) * 100) : 0}%</span>
-            </p>
-          </div>
+          <li key={s.key} className="flex items-center gap-2 rounded-[var(--radius-md)] px-3 py-1.5 text-sm" style={{ background: mix(STAGE_COLORS[s.key], 18) }}>
+            <span className="size-1.5 shrink-0 rounded-full" style={{ background: STAGE_COLORS[s.key] }} />
+            <span className="min-w-0 flex-1 truncate">{STAGE_LABELS[s.key]}</span>
+            <span className="shrink-0 font-bold tabular-nums">{s.count}</span>
+            <span className="w-9 shrink-0 text-right bee-micro tabular-nums">{total ? Math.round((s.count / total) * 100) : 0}%</span>
+          </li>
         ))}
-      </div>
+      </ul>
       <p className="bee-caption">{t("shareOfPipeline", { pct: total })}</p>
     </div>
   );

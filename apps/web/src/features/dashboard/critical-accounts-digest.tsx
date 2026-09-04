@@ -53,7 +53,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
     <div
       className="bee-bento bee-bento-pad space-y-3 transition-opacity hover:opacity-90"
       style={{
-        background: signalFill(battlecard.signal.signal_type),
+        background: signalFill(battlecard.signal.signal_type, battlecard.signal.score),
         borderColor: TONE_CSS_VAR[signalTone(battlecard.signal.signal_type)],
       }}
     >
@@ -155,7 +155,7 @@ function CriticalAccountRow({ battlecard }: { battlecard: Battlecard }) {
       onClick={() => openOpportunity(battlecard.opportunity_id)}
       className="bee-bento relative flex w-full items-center gap-3 px-3 py-2.5 text-left transition-opacity hover:opacity-90"
       style={{
-        background: signalFill(battlecard.signal.signal_type),
+        background: signalFill(battlecard.signal.signal_type, battlecard.signal.score),
         borderColor: TONE_CSS_VAR[signalTone(battlecard.signal.signal_type)],
       }}
     >

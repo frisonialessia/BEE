@@ -177,22 +177,18 @@ export function DashboardOverview({
         userCount={usersResult?.length ?? 0}
       />
 
-      {/* One shell (OverviewCard), rows paired by natural height so nothing
-          has to stretch: three charts of the same aspect on top, the hive
-          full width, then four columns of "today", then calendar, ranking
-          and the close-rate map. What used to
+      {/* One shell (OverviewCard), rows ordered by what a seller needs first:
+          sales, then today's work, then the market, then the hive and the
+          calendar, then the pattern behind the closes. Every chart gets a
+          box wide enough to read at the standard type size. What used to
           sit below this grid (battlecards, revenue simulator, every
           signal) lives on its own page — Estrategias, Pronóstico, Señales —
           so this stays a summary, not the whole product on one screen. */}
       <div className="bee-overview">
-        {/* Row 1 — three charts, same height, same aspect. Ventas is the one
-            green box on this page: closed revenue, the Ventas page's colors. */}
-        <OverviewCard span={4} title={t("sections.signalsWeekly.title")} caption={t("sections.signalsWeekly.caption")}>
-          <AreaChart points={weekly.map((w) => ({ label: w.label, value: w.count }))} color={DATA.indigo} />
-        </OverviewCard>
-
+        {/* Row 1 — sales first: what we closed, who closed it, where the
+            pipeline stands. */}
         <OverviewCard
-          span={4}
+          span={5}
           title={t("sections.sales.title")}
           caption={sales.goal ? t("sections.sales.captionGoal", { goal: money(sales.goal) }) : t("sections.sales.caption")}
           action={
@@ -215,51 +211,6 @@ export function DashboardOverview({
           )}
         </OverviewCard>
 
-        <OverviewCard span={4} title={t("sections.signalMix.title")} caption={t("sections.signalMix.caption")}>
-          <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
-        </OverviewCard>
-
-        {/* Row 2 — the hive, full width. */}
-        <SignalHexMap height={240} className="h-full" style={{ gridColumn: "span 12" }} />
-
-        {/* Row 3 — four columns of "today": the brief, the five plays, the
-            funnel stacked over the critical accounts (the funnel is always
-            four stages, so it gets exactly the height it needs and the
-            accounts take the rest), and when the market shows up. */}
-        <OverviewCard span={3} title={tBrief("title")} caption={t("sections.brief.caption")}>
-          <DailyBrief embedded />
-        </OverviewCard>
-
-        <OverviewCard span={3} title={tFeed("title")} caption={tFeed("eyebrow")}>
-          <DecisionFeed embedded />
-        </OverviewCard>
-
-        <div className="grid min-w-0 grid-cols-12 grid-rows-[auto_minmax(0,1fr)] gap-4" style={{ gridColumn: "span 3" }}>
-          <OverviewCard span={12} className="!h-auto" title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
-            <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
-          </OverviewCard>
-          <OverviewCard span={12} title={tCritical("title")} caption={t("sections.critical.caption")}>
-            <CriticalAccountsDigest battlecards={battlecards} today={new Date()} embedded />
-          </OverviewCard>
-        </div>
-
-        <OverviewCard span={3} title={t("sections.activityHeatmap.title")} caption={t("sections.activityHeatmap.caption")}>
-          <SignalActivityHeatmap signals={signals} />
-        </OverviewCard>
-
-        {/* Row 4 — people and patterns: calendar, ranking, where you win. */}
-        <OverviewCard
-          span={3}
-          title={tCalendar("widget.title")}
-          action={
-            <Link href={`${base}/calendar`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
-              {tCalendar("widget.viewAll")}
-            </Link>
-          }
-        >
-          <MyCalendarWidget embedded />
-        </OverviewCard>
-
         <OverviewCard
           span={4}
           title={t("sections.ranking.title")}
@@ -273,7 +224,53 @@ export function DashboardOverview({
           <TeamGoalRanking days={90} />
         </OverviewCard>
 
-        <OverviewCard span={5} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
+        <OverviewCard span={3} title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
+          <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
+        </OverviewCard>
+
+        {/* Row 2 — today's work: the plays, the brief, the critical accounts. */}
+        <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")}>
+          <DecisionFeed embedded />
+        </OverviewCard>
+
+        <OverviewCard span={4} title={tBrief("title")} caption={t("sections.brief.caption")}>
+          <DailyBrief embedded />
+        </OverviewCard>
+
+        <OverviewCard span={4} title={tCritical("title")} caption={t("sections.critical.caption")}>
+          <CriticalAccountsDigest battlecards={battlecards} today={new Date()} embedded />
+        </OverviewCard>
+
+        {/* Row 3 — the market: volume, mix and timing, three charts of one size. */}
+        <OverviewCard span={4} title={t("sections.signalsWeekly.title")} caption={t("sections.signalsWeekly.caption")}>
+          <AreaChart points={weekly.map((w) => ({ label: w.label, value: w.count }))} color={DATA.indigo} />
+        </OverviewCard>
+
+        <OverviewCard span={4} title={t("sections.signalMix.title")} caption={t("sections.signalMix.caption")}>
+          <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
+        </OverviewCard>
+
+        <OverviewCard span={4} title={t("sections.activityHeatmap.title")} caption={t("sections.activityHeatmap.caption")}>
+          <SignalActivityHeatmap signals={signals} />
+        </OverviewCard>
+
+        {/* Row 4 — the hive, smaller, next to the calendar. */}
+        <SignalHexMap height={200} className="h-full" style={{ gridColumn: "span 8" }} />
+
+        <OverviewCard
+          span={4}
+          title={tCalendar("widget.title")}
+          action={
+            <Link href={`${base}/calendar`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
+              {tCalendar("widget.viewAll")}
+            </Link>
+          }
+        >
+          <MyCalendarWidget embedded />
+        </OverviewCard>
+
+        {/* Row 5 — the pattern behind the closes. */}
+        <OverviewCard span={12} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
           <IndustrySignalHeatmap
             opportunities={allOppsResult?.data ?? []}
             signals={signals}

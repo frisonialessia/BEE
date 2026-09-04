@@ -82,6 +82,11 @@ export const TONE_CSS_VAR: Record<SignalTone, string> = {
 };
 
 /** Card fill for a signal of this type — the hue washed toward white. */
-export function signalFill(signalType: string | null | undefined): string {
-  return `color-mix(in srgb, ${TONE_CSS_VAR[signalTone(signalType)]} 22%, var(--color-card))`;
+/** Card fill for a signal: its type's BEE color at the same three strengths
+ *  the CRM cards use by score (100 % hot · 70 % · 45 %) — never a pale wash
+ *  that reads as a different yellow or pink than the brand's. */
+export function signalFill(signalType: string | null | undefined, score?: number | null): string {
+  const pct = score == null ? 70 : score >= 75 ? 100 : score >= 50 ? 70 : 45;
+  const tone = TONE_CSS_VAR[signalTone(signalType)];
+  return pct === 100 ? tone : `color-mix(in srgb, ${tone} ${pct}%, var(--color-card))`;
 }

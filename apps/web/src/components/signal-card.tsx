@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Locale } from "@/i18n/locales";
 import { formatRelativeTime } from "@/lib/i18n/format";
 import { signalFill, signalTone, TONE_CSS_VAR } from "@/lib/brand/colors";
-import { formatSignalSource, getSignalTagLabels, getSignalTypeLabels, scoreVariant } from "@/lib/format";
+import { formatSignalSource, getSignalTagLabels, getSignalTypeLabels } from "@/lib/format";
 import type { Signal } from "@/lib/types";
 
 /** A single detected market signal in the Bento grid. */
@@ -20,7 +20,7 @@ export function SignalCard({ signal }: { signal: Signal }) {
   const signalTypeLabels = getSignalTypeLabels(locale);
   const signalTagLabels = getSignalTagLabels(locale);
   const tags = signal.analysis?.tags ?? [];
-  const bg = signalFill(signal.signal_type);
+  const bg = signalFill(signal.signal_type, signal.score);
   const accent = TONE_CSS_VAR[signalTone(signal.signal_type)];
 
   return (
@@ -59,7 +59,7 @@ export function SignalCard({ signal }: { signal: Signal }) {
                   className="border border-border bg-background px-2 py-1 bee-micro"
                   style={{ borderRadius: "var(--radius-sm)" }}
                 >
-                  {signalTagLabels[tag] ?? tag}
+                  {signalTagLabels[tag] ?? signalTypeLabels[tag as keyof typeof signalTypeLabels] ?? tag.replace(/_/g, " ")}
                 </span>
               ))}
             </div>
@@ -69,7 +69,11 @@ export function SignalCard({ signal }: { signal: Signal }) {
         {/* Score only — the analyzer id that used to sit under it repeated
             the type badge in raw snake_case. */}
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <Badge variant={scoreVariant(signal.score)}>{Math.round(signal.score)}</Badge>
+          {/* White pill with ink: the card already wears the signal's color,
+              a second hue for the score would fight it. */}
+          <span className="rounded-full bg-[var(--color-card)] px-2 py-0.5 text-xs font-semibold tabular-nums text-[var(--color-text)]">
+            {Math.round(signal.score)}
+          </span>
         </div>
       </div>
     </article>
