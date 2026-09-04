@@ -3,12 +3,12 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { TONE, tint } from "@/components/charts/palette";
 import { HeroAtmosphere } from "@/components/marketing/hero-atmosphere";
-import { HeroCards } from "@/components/marketing/hero-cards";
+import { HeroPanel } from "@/components/marketing/hero-panel";
 import { LandingDemo } from "@/components/marketing/landing-demo";
 import { MarketingFAQ } from "@/components/marketing-faq";
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
-import { CountUp, Reveal } from "@/components/marketing-motion";
+import { Reveal } from "@/components/marketing-motion";
 import { MarketingSales } from "@/components/marketing-sales";
 import { getSignalTypeLabels } from "@/lib/format";
 import type { Locale } from "@/i18n/locales";
@@ -16,9 +16,11 @@ import type { Locale } from "@/i18n/locales";
 /**
  * Landing pública — six blocks, one image:
  *   1. floating nav;
- *   2. hero — headline in ink, a fan of real product cards around it on
- *      desktop (HeroCards, over HeroAtmosphere's hex watermark), three
- *      true figures right under the buttons (CountUp);
+ *   2. hero — headline in ink, then one real, legible panel (HeroPanel:
+ *      the hive + two counts, with two small badges anchored to its
+ *      corners — never a fan of scattered cards) over HeroAtmosphere's hex
+ *      watermark, then three mechanism differentiators (no numbers — what
+ *      sets BEE apart from a CRM or an intent tool, not a vanity stat);
  *   3. the product — the Señales page drawn with BEE's own components over
  *      the sandbox's sample data (LandingDemo), appearing on scroll;
  *   4. three steps — the signal arrives · BEE prepares the play · you
@@ -31,14 +33,12 @@ import type { Locale } from "@/i18n/locales";
  * Color: text and icons are ink; blue only on buttons; brand hues only on
  * chart marks and chip backgrounds; every ground is the page background or
  * a white card, except the hero's faint lavender wash. Nothing names where
- * signals come from and no number is invented: the hero cards and the demo
- * read the same sample data the sandbox uses, and the three stats under
- * the hero (200 accounts, 5 years, 24h) are true product facts, not
- * simulated ones — no "illustrative" note needed on any of them.
+ * signals come from and no number is invented: HeroPanel and the demo read
+ * the same sample data the sandbox uses.
  */
 
 const STEPS = ["signal", "play", "decide"] as const;
-const HERO_STATS = ["hive", "history", "reply"] as const;
+const HERO_DIFFERENTIATORS = ["lead", "play", "learn"] as const;
 // Three signal types the "signal" step's chip row shows — a sample, not
 // the full taxonomy (see lib/format.ts for the rest).
 const STEP_SIGNAL_TYPES = ["funding_round", "hiring", "tech_adoption"] as const;
@@ -50,7 +50,7 @@ const STEP_FUNNEL_WIDTHS = [100, 62, 34];
 
 export default async function Home() {
   const t = await getTranslations("marketing.landing");
-  const tHero = await getTranslations("landing.hero");
+  const tHero = await getTranslations("landing.hero.differentiators");
   const locale = (await getLocale()) as Locale;
   const signalTypeLabels = getSignalTypeLabels(locale);
 
@@ -63,7 +63,6 @@ export default async function Home() {
         <section className="relative -mt-[4.25rem] overflow-hidden pt-[4.25rem]">
           <HeroAtmosphere />
           <div className="relative mx-auto w-full max-w-3xl px-6 pb-4 pt-16 text-center sm:pt-24 lg:pb-8">
-            <HeroCards locale={locale} />
             <div className="bee-hero-in relative">
               <p className="bee-eyebrow">{t("eyebrow")}</p>
               <h1 className="bee-headline mx-auto mt-5 text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-[var(--color-text)] sm:text-5xl lg:text-6xl">
@@ -80,13 +79,15 @@ export default async function Home() {
               </div>
             </div>
 
-            <Reveal className="relative mt-12 flex items-start justify-center gap-8 sm:gap-14" delay={60}>
-              {HERO_STATS.map((key) => (
-                <div key={key} className="w-24 sm:w-32">
-                  <p className="text-3xl font-bold tabular-nums sm:text-4xl">
-                    <CountUp text={tHero(`stats.items.${key}.value`)} />
-                  </p>
-                  <p className="bee-caption mt-1 leading-snug">{tHero(`stats.items.${key}.label`)}</p>
+            <Reveal delay={80}>
+              <HeroPanel locale={locale} />
+            </Reveal>
+
+            <Reveal className="relative mt-12 grid grid-cols-1 gap-6 text-left sm:grid-cols-3 sm:gap-8 sm:text-center" delay={140}>
+              {HERO_DIFFERENTIATORS.map((key) => (
+                <div key={key}>
+                  <p className="text-base font-semibold leading-snug">{tHero(`${key}.title`)}</p>
+                  <p className="bee-caption mt-1 leading-snug">{tHero(`${key}.text`)}</p>
                 </div>
               ))}
             </Reveal>

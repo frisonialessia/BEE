@@ -215,20 +215,18 @@
         "eyebrow": "Jugada lista"
       }
     },
-    "stats": {
-      "items": {
-        "hive": {
-          "value": "200",
-          "label": "cuentas por colmena"
-        },
-        "history": {
-          "value": "5",
-          "label": "años de historial en Ventas"
-        },
-        "reply": {
-          "value": "24 h",
-          "label": "para responder tu mensaje"
-        }
+    "differentiators": {
+      "lead": {
+        "title": "Antes de que exista el lead",
+        "text": "BEE actúa sobre la señal, no sobre el formulario."
+      },
+      "play": {
+        "title": "Jugada lista, no una lista",
+        "text": "Argumento, canal y momento, listos para leer."
+      },
+      "learn": {
+        "title": "Aprende de cada cierre",
+        "text": "Cada ganado o perdido ajusta la siguiente jugada."
       }
     }
   }

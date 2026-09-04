@@ -215,20 +215,18 @@
         "eyebrow": "Play ready"
       }
     },
-    "stats": {
-      "items": {
-        "hive": {
-          "value": "200",
-          "label": "accounts per hive"
-        },
-        "history": {
-          "value": "5",
-          "label": "years of history in Sales"
-        },
-        "reply": {
-          "value": "24 h",
-          "label": "to reply to your message"
-        }
+    "differentiators": {
+      "lead": {
+        "title": "Before the lead exists",
+        "text": "BEE acts on the signal, not on the form fill."
+      },
+      "play": {
+        "title": "A play ready, not a list",
+        "text": "Argument, channel and timing, ready to read."
+      },
+      "learn": {
+        "title": "Learns from every close",
+        "text": "Every deal won or lost sharpens the next play."
       }
     }
   }
