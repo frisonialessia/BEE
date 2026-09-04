@@ -164,7 +164,7 @@
       "notConnected": "not connected",
       "active": "active",
       "tokensRemaining": "{count} tokens remaining",
-      "allChannelsSimulated": "Every channel is in simulated mode — connect them in <integrations>Integrations</integrations> to activate.",
+      "allChannelsSimulated": "Every channel is in simulated mode — connect them in <connections>Connections</connections> to activate.",
       "noProfile": "No voice profile — create it below in “Paste & extract”",
       "library": {
         "title": "Saved fragments ({count})",

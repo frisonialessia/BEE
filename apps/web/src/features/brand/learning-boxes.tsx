@@ -1,6 +1,9 @@
 "use client";
 
+import { Briefcase, Mail, X as XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -216,13 +219,25 @@ export function AnomalyMonitorBox() {
 // ── Channels ─────────────────────────────────────────────────────────────────
 
 const CHANNEL_KEYS = ["email", "linkedin", "twitter"] as const;
+// A plain, generic mark per channel — never a brand's own logo (BEE draws
+// no icon in color; see palette rules) and lucide ships no LinkedIn glyph
+// at all, so this reads as "a professional network", "mail", "X" rather
+// than pretending to be an official mark.
+const CHANNEL_ICON: Record<(typeof CHANNEL_KEYS)[number], typeof Mail> = {
+  email: Mail,
+  linkedin: Briefcase,
+  twitter: XIcon,
+};
 
 /** Where BEE can send in your voice: one row per channel, the state as a
  *  lavender dot (100 live, page grey simulated) + word. */
 export function ChannelsBox({ channels }: { channels: ChannelStatus[] }) {
   const t = useTranslations("probarNetworkBrandControl.brand.panel");
   const tp = useTranslations("probarNetworkBrandControl.brand.page.channels");
+  const pathname = usePathname();
+  const connectionsHref = pathname?.startsWith("/probar") ? "/probar/control?tab=connections" : "/dashboard/control?tab=connections";
   const label = (channel: string) => ((CHANNEL_KEYS as readonly string[]).includes(channel) ? t(`channelLabels.${channel as (typeof CHANNEL_KEYS)[number]}`) : channel);
+  const icon = (channel: string) => ((CHANNEL_KEYS as readonly string[]).includes(channel) ? CHANNEL_ICON[channel as (typeof CHANNEL_KEYS)[number]] : null);
 
   return (
     <OverviewCard span={4} title={tp("title")} caption={tp("caption")}>
@@ -230,23 +245,33 @@ export function ChannelsBox({ channels }: { channels: ChannelStatus[] }) {
         <EmptyLine>{tp("empty")}</EmptyLine>
       ) : (
         <ul className="bee-fill flex min-h-0 flex-col justify-around">
-          {channels.map((ch) => (
-            <li key={ch.channel} className="bee-row justify-between">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{label(ch.channel)}</p>
-                <p className="truncate bee-micro">{ch.tokens_remaining != null ? t("tokensRemaining", { count: ch.tokens_remaining }) : tp("rateLimit", { count: ch.rate_limit.requests_per_day })}</p>
-              </div>
-              <StateWord hue={TONE.calm} level={ch.mock ? "rest" : 100}>
-                {ch.mock ? t("notConnected") : t("active")}
-              </StateWord>
-            </li>
-          ))}
+          {channels.map((ch) => {
+            const Icon = icon(ch.channel);
+            return (
+              <li key={ch.channel} className="bee-row justify-between">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  {Icon && <Icon className="size-4 shrink-0 text-[var(--color-text-muted)]" aria-hidden />}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{label(ch.channel)}</p>
+                    <p className="truncate bee-micro">{ch.tokens_remaining != null ? t("tokensRemaining", { count: ch.tokens_remaining }) : tp("rateLimit", { count: ch.rate_limit.requests_per_day })}</p>
+                  </div>
+                </div>
+                <StateWord hue={TONE.calm} level={ch.mock ? "rest" : 100}>
+                  {ch.mock ? t("notConnected") : t("active")}
+                </StateWord>
+              </li>
+            );
+          })}
         </ul>
       )}
       {channels.length > 0 && channels.every((c) => c.mock) && (
         <p className="mt-2 shrink-0 bee-micro">
           {t.rich("allChannelsSimulated", {
-            integrations: (chunks) => <span className="font-medium text-[var(--color-text)]">{chunks}</span>,
+            connections: (chunks) => (
+              <Link href={connectionsHref} className="font-medium text-[var(--color-text)] underline underline-offset-2">
+                {chunks}
+              </Link>
+            ),
           })}
         </p>
       )}

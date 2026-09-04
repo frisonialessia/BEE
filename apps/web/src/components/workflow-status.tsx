@@ -1,6 +1,8 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   AlertTriangle,
@@ -68,6 +70,8 @@ function TaskRow({ task }: { task: WorkflowTask }) {
 
 export function WorkflowStatusPanel() {
   const t = useTranslations("workspace.sequences.workflowStatus");
+  const pathname = usePathname();
+  const connectionsHref = pathname?.startsWith("/probar") ? "/probar/control?tab=connections" : "/dashboard/control?tab=connections";
   const [status, setStatus] = useState<WorkflowStatus | null>(null);
   const [tasks, setTasks] = useState<WorkflowTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -129,7 +133,9 @@ export function WorkflowStatusPanel() {
             <Layers className="mt-1 size-3.5 shrink-0 stroke-[1.25]" />
             <span>
               {t("mockNoticePrefix")}{" "}
-              <span className="font-medium text-foreground">{t("mockNoticeHighlight")}</span>{" "}
+              <Link href={connectionsHref} className="font-medium text-foreground underline underline-offset-2">
+                {t("mockNoticeHighlight")}
+              </Link>{" "}
               {t("mockNoticeSuffix")}
             </span>
           </div>

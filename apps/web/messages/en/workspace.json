@@ -234,7 +234,7 @@
         "pending": "Pending"
       },
       "mockNoticePrefix": "All tasks run in simulated mode — connect your integrations in",
-      "mockNoticeHighlight": "Integrations",
+      "mockNoticeHighlight": "Connections",
       "mockNoticeSuffix": "to dispatch them live.",
       "recentTasks": "Recent tasks",
       "empty": {

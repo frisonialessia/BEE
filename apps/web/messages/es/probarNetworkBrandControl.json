@@ -164,7 +164,7 @@
       "notConnected": "sin conectar",
       "active": "activo",
       "tokensRemaining": "{count} tokens restantes",
-      "allChannelsSimulated": "Todos los canales están en modo simulado — conéctalos en <integrations>Integraciones</integrations> para activarlos.",
+      "allChannelsSimulated": "Todos los canales están en modo simulado — conéctalos en <connections>Conexiones</connections> para activarlos.",
       "noProfile": "Sin perfil de voz — créalo abajo en «Pegar y extraer»",
       "library": {
         "title": "Fragmentos guardados ({count})",

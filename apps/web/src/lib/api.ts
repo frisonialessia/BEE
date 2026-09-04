@@ -443,7 +443,10 @@ export async function getBrandContext(query: string, top_k = 5): Promise<FetchRe
 
 /** Same "never invent 'conectado'" rule as everywhere else — in demo mode
  * every channel honestly reports mock/unauthenticated, matching what a
- * brand-new real org sees before connecting anything (see Integraciones). */
+ * brand-new real org sees before connecting anything (see Control ·
+ * Conexiones). All three channels the backend actually speaks through
+ * (see omnichannel/providers/) — a demo that only showed two used to read
+ * as if BEE could not post to X. */
 const DEMO_CHANNEL_STATUS: ChannelStatus[] = [
   {
     channel: "email",
@@ -454,6 +457,13 @@ const DEMO_CHANNEL_STATUS: ChannelStatus[] = [
   },
   {
     channel: "linkedin",
+    authenticated: false,
+    mock: true,
+    tokens_remaining: null,
+    rate_limit: { requests_per_day: 0, requests_per_hour: 0, min_interval_seconds: 0 },
+  },
+  {
+    channel: "twitter",
     authenticated: false,
     mock: true,
     tokens_remaining: null,

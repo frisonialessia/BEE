@@ -234,7 +234,7 @@
         "pending": "Pendiente"
       },
       "mockNoticePrefix": "Todas las tareas se ejecutan en modo simulado — conecta tus integraciones en",
-      "mockNoticeHighlight": "Integraciones",
+      "mockNoticeHighlight": "Conexiones",
       "mockNoticeSuffix": "para despacharlas en vivo.",
       "recentTasks": "Tareas recientes",
       "empty": {
