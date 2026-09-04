@@ -30,7 +30,7 @@ export function ResilienceView({ showHeader = true }: { showHeader?: boolean }) 
        * implícito "auto" en vez de minmax(0,1fr) — no se achicaba para caber
        * en el viewport, así que el panel de Resiliencia (con la fila de 5
        * tarjetas) se desbordaba por la derecha en móvil sin scroll visible. */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="bee-overview">
         <PendingActionsPanel />
         <ResiliencePanel />
       </div>

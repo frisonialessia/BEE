@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { TooltipContent } from "@/components/ui/tooltip";
 import type { Locale } from "@/i18n/locales";
-import { createTemperatureColorScale } from "@/lib/visualization/honeycomb-hexbin";
+import { DATA, SALES } from "@/components/charts/palette";
 import { computeIndustrySignalGrid, type IndustrySignalCell } from "@/lib/industry-signal-grid";
 import { getSignalTypeLabels } from "@/lib/format";
 import type { Company, Opportunity, Signal, SignalType } from "@/types/domain";
@@ -70,7 +70,22 @@ export function IndustrySignalHeatmap({
   const signalTypes = SIGNAL_ORDER.filter((t) => presentSignalTypes.has(t));
 
   const byKey = new Map(cells.map((c) => [`${c.industry}::${c.signalType}`, c]));
-  const color = createTemperatureColorScale();
+  // Close rate is a sales reading, so the scale is the sales family: honey at
+  // 0 % (nothing closed yet) warming through mint and lime to the won green
+  // at 100 %. No indigo/lilac here — those belong to signals, not to money.
+  const color = (pct: number) => {
+    const stops: [number, string][] = [[0, DATA.honeyFill], [34, SALES.mint], [67, SALES.lime], [100, SALES.won]];
+    const v = Math.max(0, Math.min(100, pct));
+    for (let i = 1; i < stops.length; i++) {
+      const [a, ca] = stops[i - 1];
+      const [b, cb] = stops[i];
+      if (v <= b) {
+        const k = Math.round(((v - a) / (b - a)) * 100);
+        return `color-mix(in srgb, ${cb} ${k}%, ${ca})`;
+      }
+    }
+    return SALES.won;
+  };
 
   const width = LABEL_W + signalTypes.length * HEX_W + HEX_W / 2 + PAD * 2;
   const height = HEADER_H + industries.length * ROW_STEP + HEX_H / 2 + PAD;
@@ -164,7 +179,7 @@ export function IndustrySignalHeatmap({
 
         <div className="flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <span>{t("legendLabel")}</span>
-          <span className="h-2.5 w-24 rounded-full" style={{ background: `linear-gradient(to right, ${color(0)}, ${color(50)}, ${color(100)})` }} />
+          <span className="h-2.5 w-24 rounded-full" style={{ background: `linear-gradient(to right, ${color(0)}, ${color(34)}, ${color(67)}, ${color(100)})` }} />
           <span>0%</span>
           <span className="ml-auto">100%</span>
         </div>
@@ -183,7 +198,7 @@ function HexCell({ x, y, cell, fill }: { x: number; y: number; cell: IndustrySig
       <TooltipPrimitive.Trigger asChild>
         <g>
           <polygon points={hexPoints(x, y, R - 1)} fill={fill} fillOpacity={0.85} stroke="var(--color-border)" strokeWidth={0.75} />
-          <text x={x} y={y + 4} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--color-background)">
+          <text x={x} y={y + 4} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--color-text)">
             {Math.round(cell.winRate * 100)}%
           </text>
         </g>

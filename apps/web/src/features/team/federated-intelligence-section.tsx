@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -48,24 +49,21 @@ export function FederatedIntelligenceSection() {
   }
 
   return (
-    <section className="bee-bento bee-bento-pad space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="bee-eyebrow">{t("eyebrow")}</p>
-          <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
-          <p className="bee-caption mt-1 max-w-2xl">{t("subtitle")}</p>
-        </div>
-        {isLoading ? null : (
+    <OverviewCard
+      title={t("title")}
+      caption={t("subtitle")}
+      action={
+        isLoading ? null : (
           <Badge variant={config?.opt_in ? "success" : "outline"}>
             {config?.opt_in ? t("statusOn") : t("statusOff")}
           </Badge>
-        )}
-      </div>
-
+        )
+      }
+    >
       {isLoading ? (
         <Skeleton className="h-16" />
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="bee-bento flex items-start gap-2 p-4">
             <span className="text-sm">ⓘ</span>
             <p className="bee-caption">{t("explainer")}</p>
@@ -80,6 +78,6 @@ export function FederatedIntelligenceSection() {
           </Label>
         </div>
       )}
-    </section>
+    </OverviewCard>
   );
 }

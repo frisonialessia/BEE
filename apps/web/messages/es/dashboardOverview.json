@@ -68,8 +68,8 @@
       },
       "sales": {
         "title": "Ventas",
-        "caption": "Ganado por mes · últimos 6 meses",
-        "captionGoal": "Ganado por mes · meta {goal}",
+        "caption": "Ganado por mes · últimos 12 meses",
+        "captionGoal": "Ganado por mes · 12 meses · meta {goal}",
         "goalLabel": "Meta",
         "link": "Ver Ventas →",
         "empty": "Todavía no hay cierres. El primero aparecerá aquí."

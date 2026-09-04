@@ -100,7 +100,7 @@ function NewCompanyForm({ onDone }: { onDone: () => void }) {
  * ?tab=leads, so no old link/bookmark breaks. */
 import { Donut } from "@/components/charts/donut";
 import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
-import { DATA } from "@/components/charts/palette";
+import { DATA, mix } from "@/components/charts/palette";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 
@@ -139,7 +139,8 @@ export function CompaniesList() {
     const withContacts = companies.filter((c) => (leadCountByCompany.get(c.id) ?? 0) > 0).length;
     return {
       industries: [...byIndustry.entries()].map(([label, value]) => ({ label, value })),
-      countries: countries.map(([label, value], i) => ({ label, value, color: [DATA.indigo, DATA.violet, DATA.magenta, DATA.honey, DATA.lavender][i] })),
+      // One color per box: indigo at three strengths by rank.
+      countries: countries.map(([label, value], i) => ({ label, value, color: i === 0 ? DATA.indigo : mix(DATA.indigo, i < 3 ? 75 : 50) })),
       withOpps,
       withContacts,
     };

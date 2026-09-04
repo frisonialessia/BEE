@@ -38,7 +38,7 @@ export function LeadWorkspace() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-10 rounded-[var(--radius-md)]" />
           ))}

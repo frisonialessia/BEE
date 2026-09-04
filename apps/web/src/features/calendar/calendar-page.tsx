@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -305,74 +306,71 @@ function TimeBreakdown({
   const fmtMinutes = (min: number) => (min >= 60 ? t("sidebar.hours", { hours: Math.round((min / 60) * 10) / 10 }) : t("sidebar.minutes", { minutes: min }));
 
   return (
-    <div className="bee-surface bee-bento-pad space-y-4">
-      <div>
-        <p className="bee-eyebrow">{t("sidebar.timeBreakdown")}</p>
-        <p className="mt-1 text-sm font-semibold tabular-nums">{t("sidebar.weekTotal", { hours, count: meetings.length })}</p>
-      </div>
+    <OverviewCard className="!h-auto" title={t("sidebar.timeBreakdown")} caption={t("sidebar.weekTotal", { hours, count: meetings.length })}>
+      <div className="space-y-4">
+        <div>
+          <p className="bee-micro mb-1.5">{t("sidebar.byDay")}</p>
+          <div className="flex items-end gap-1">
+            {byDay.map((min, i) => {
+              const isToday = days[i].toDateString() === todayStr;
+              return (
+                <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1" title={fmtMinutes(min)}>
+                  <div className="w-full rounded-[3px]" style={{ height: Math.max(4, Math.round((min / maxDay) * 40)), background: min === 0 ? "color-mix(in srgb, var(--color-text) 6%, transparent)" : isToday ? "var(--color-chart-1)" : "var(--color-chart-4)" }} />
+                  <span className={`bee-micro ${isToday ? "font-semibold text-[var(--color-text)]" : ""}`}>{WEEKDAY_INITIALS[locale][i]}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-      <div>
-        <p className="bee-micro mb-1.5">{t("sidebar.byDay")}</p>
-        <div className="flex items-end gap-1">
-          {byDay.map((min, i) => {
-            const isToday = days[i].toDateString() === todayStr;
+        <div className="space-y-2">
+          <p className="bee-micro">{t("sidebar.byContext")}</p>
+          {CLIENT_CONTEXT_ORDER.filter((key) => totals[key] > 0).map((key) => {
+            const pct = Math.round((totals[key] / grandTotal) * 100);
             return (
-              <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1" title={fmtMinutes(min)}>
-                <div className="w-full rounded-[3px]" style={{ height: Math.max(4, Math.round((min / maxDay) * 40)), background: min === 0 ? "color-mix(in srgb, var(--color-text) 6%, transparent)" : isToday ? "var(--color-chart-1)" : "var(--color-chart-4)" }} />
-                <span className={`bee-micro ${isToday ? "font-semibold text-[var(--color-text)]" : ""}`}>{WEEKDAY_INITIALS[locale][i]}</span>
+              <div key={key} className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate bee-micro text-[var(--color-text)]">{t(`clientContext.${key}`)}</span>
+                  <span className="shrink-0 bee-micro tabular-nums">{fmtMinutes(totals[key])} · {pct}%</span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--color-text)_6%,transparent)]">
+                  <div className="h-full rounded-full" style={{ width: `${pct}%`, background: CLIENT_CONTEXT_BAR_COLOR[key] }} />
+                </div>
               </div>
             );
           })}
         </div>
-      </div>
 
-      <div className="space-y-2">
-        <p className="bee-micro">{t("sidebar.byContext")}</p>
-        {CLIENT_CONTEXT_ORDER.filter((key) => totals[key] > 0).map((key) => {
-          const pct = Math.round((totals[key] / grandTotal) * 100);
-          return (
-            <div key={key} className="space-y-1">
-              <div className="flex items-center justify-between gap-2">
-                <span className="truncate bee-micro text-[var(--color-text)]">{t(`clientContext.${key}`)}</span>
-                <span className="shrink-0 bee-micro tabular-nums">{fmtMinutes(totals[key])} · {pct}%</span>
-              </div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--color-text)_6%,transparent)]">
-                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: CLIENT_CONTEXT_BAR_COLOR[key] }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {topAccounts.length > 0 && (
-        <div>
-          <p className="bee-micro mb-1.5">{t("sidebar.byAccount")}</p>
-          <ul className="space-y-1">
-            {topAccounts.map(([name, min]) => (
-              <li key={name} className="flex items-center justify-between gap-2 text-xs">
-                <span className="flex min-w-0 items-center gap-1.5">
-                  <Building2 className="size-3 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{name}</span>
-                </span>
-                <span className="shrink-0 bee-micro tabular-nums">{fmtMinutes(min)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div className="flex flex-wrap gap-1.5">
-        <span className="rounded-full bg-[color-mix(in_srgb,var(--color-chart-4)_18%,var(--color-card))] px-2 py-0.5 bee-micro text-[var(--color-text)]">
-          <Video className="mr-1 inline size-3 align-[-2px]" />
-          {t("sidebar.withLink", { count: withLink })}
-        </span>
-        {unlinked > 0 && (
-          <span className="rounded-full bg-[color-mix(in_srgb,var(--color-chart-1)_22%,var(--color-card))] px-2 py-0.5 bee-micro text-[var(--color-text)]">
-            {t("sidebar.unlinked", { count: unlinked })}
-          </span>
+        {topAccounts.length > 0 && (
+          <div>
+            <p className="bee-micro mb-1.5">{t("sidebar.byAccount")}</p>
+            <ul className="space-y-1">
+              {topAccounts.map(([name, min]) => (
+                <li key={name} className="flex items-center justify-between gap-2 text-xs">
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <Building2 className="size-3 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{name}</span>
+                  </span>
+                  <span className="shrink-0 bee-micro tabular-nums">{fmtMinutes(min)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
+
+        <div className="flex flex-wrap gap-1.5">
+          <span className="rounded-full bg-[color-mix(in_srgb,var(--color-chart-4)_18%,var(--color-card))] px-2 py-0.5 bee-micro text-[var(--color-text)]">
+            <Video className="mr-1 inline size-3 align-[-2px]" />
+            {t("sidebar.withLink", { count: withLink })}
+          </span>
+          {unlinked > 0 && (
+            <span className="rounded-full bg-[color-mix(in_srgb,var(--color-chart-1)_22%,var(--color-card))] px-2 py-0.5 bee-micro text-[var(--color-text)]">
+              {t("sidebar.unlinked", { count: unlinked })}
+            </span>
+          )}
+        </div>
       </div>
-    </div>
+    </OverviewCard>
   );
 }
 
@@ -413,13 +411,12 @@ function MiniMonthCalendar({
   const weekDayStrs = new Set(weekDays.map((d) => d.toDateString()));
 
   return (
-    <div className="bee-surface bee-bento-pad">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-sm font-semibold">
-          {sentenceCase(
-            new Intl.DateTimeFormat(intlLocale, { month: "long", year: "numeric" }).format(monthCursor),
-          )}
-        </p>
+    <OverviewCard
+      className="!h-auto"
+      title={sentenceCase(
+        new Intl.DateTimeFormat(intlLocale, { month: "long", year: "numeric" }).format(monthCursor),
+      )}
+      action={
         <div className="flex gap-1">
           <button
             type="button"
@@ -436,7 +433,8 @@ function MiniMonthCalendar({
             <ChevronRight className="size-3.5" />
           </button>
         </div>
-      </div>
+      }
+    >
       <div className="grid grid-cols-7 gap-y-0.5 text-center">
         {weekdayLabels.map((label, i) => (
           <span key={i} className="bee-micro text-muted-foreground">
@@ -467,7 +465,7 @@ function MiniMonthCalendar({
           );
         })}
       </div>
-    </div>
+    </OverviewCard>
   );
 }
 
@@ -644,29 +642,30 @@ function RsvpWidget({
 }) {
   const t = useTranslations("calendar");
   return (
-    <div className="bee-surface space-y-3 bee-bento-pad">
-      <p className="bee-eyebrow">{t("sidebar.rsvpLabel")}</p>
-      <p className="text-sm font-medium">{t("sidebar.rsvpQuestion", { title: meeting.title })}</p>
-      <p className="bee-micro">{timeLabel(meeting.starts_at, locale, tz)}</p>
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => onRespond("accepted")}
-          disabled={responding}
-          className="bee-btn bee-btn--primary flex-1 text-xs"
-        >
-          {t("sidebar.rsvpAccept")}
-        </button>
-        <button
-          type="button"
-          onClick={() => onRespond("declined")}
-          disabled={responding}
-          className="bee-btn-ghost flex-1 text-xs"
-        >
-          {t("sidebar.rsvpDecline")}
-        </button>
+    <OverviewCard className="!h-auto" title={t("sidebar.rsvpLabel")}>
+      <div className="space-y-2">
+        <p className="text-sm font-medium">{t("sidebar.rsvpQuestion", { title: meeting.title })}</p>
+        <p className="bee-micro">{timeLabel(meeting.starts_at, locale, tz)}</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => onRespond("accepted")}
+            disabled={responding}
+            className="bee-btn bee-btn--primary flex-1 text-xs"
+          >
+            {t("sidebar.rsvpAccept")}
+          </button>
+          <button
+            type="button"
+            onClick={() => onRespond("declined")}
+            disabled={responding}
+            className="bee-btn-ghost flex-1 text-xs"
+          >
+            {t("sidebar.rsvpDecline")}
+          </button>
+        </div>
       </div>
-    </div>
+    </OverviewCard>
   );
 }
 

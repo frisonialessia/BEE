@@ -68,8 +68,8 @@
       },
       "sales": {
         "title": "Sales",
-        "caption": "Won per month · last 6 months",
-        "captionGoal": "Won per month · goal {goal}",
+        "caption": "Won per month · last 12 months",
+        "captionGoal": "Won per month · 12 months · goal {goal}",
         "goalLabel": "Goal",
         "link": "See Sales →",
         "empty": "No closes yet. The first one will show up here."

@@ -107,7 +107,7 @@ export function DashboardOverview({
     }
     return [...counts.entries()].map(([type, value]) => ({ label: labels[type as keyof typeof labels] ?? type, value }));
   }, [signals, now, locale]);
-  // Six months of closed revenue against the active goal — the same model
+  // Twelve months of closed revenue against the active goal — the same model
   // the Ventas page uses, so the box and the page never disagree.
   const sales = useMemo(
     () =>
@@ -119,7 +119,7 @@ export function DashboardOverview({
         users: usersResult ?? [],
         locale,
         now,
-        months: 6,
+        months: 12,
       }),
     [allOppsResult, teamsData, quotasResult, companiesResult, usersResult, locale, now],
   );
@@ -207,10 +207,11 @@ export function DashboardOverview({
             <BarsVsTarget
               points={sales.months}
               target={sales.goal}
-              color={SALES.lime}
-              hitColor={SALES.won}
               targetLabel={sales.goal ? t("sections.sales.goalLabel") : undefined}
               formatValue={(v) => money(v)}
+              // The three greens by strength: the best months in won green,
+              // the middle in lime, the rest in mint — one family, one box.
+              colorFor={(p, _i, max) => (p.value >= max * 0.66 ? SALES.won : p.value >= max * 0.33 ? SALES.lime : SALES.mint)}
             />
           )}
         </OverviewCard>

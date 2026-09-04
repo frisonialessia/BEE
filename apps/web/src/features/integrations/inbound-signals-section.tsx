@@ -1,8 +1,8 @@
 "use client";
 
-import { Radio } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { useOrgApiKeys } from "@/hooks/queries/use-org-api-keys";
 import { getApiBaseUrl } from "@/lib/api/client";
 
@@ -31,48 +31,42 @@ export function InboundSignalsSection() {
   ].join("\n");
 
   return (
-    <section className="bee-surface bee-bento-pad space-y-4">
-      <div className="flex items-start gap-2">
-        <Radio className="mt-1 size-4 shrink-0 text-muted-foreground" />
-        <div>
-          <p className="text-sm font-semibold">{t("title")}</p>
-          <p className="bee-caption mt-1">{t("subtitle")}</p>
+    <OverviewCard title={t("title")} caption={t("subtitle")}>
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
+            <p className="bee-micro font-medium">{t("endpointLabel")}</p>
+            <code className="mt-1 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">
+              POST {endpoint}
+            </code>
+          </div>
+          <div className="min-w-0">
+            <p className="bee-micro font-medium">{t("headerLabel")}</p>
+            <code className="mt-1 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">
+              X-BEE-Org-Key: &lt;api-key&gt;
+            </code>
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="min-w-0">
-          <p className="bee-micro font-medium">{t("endpointLabel")}</p>
-          <code className="mt-1 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">
-            POST {endpoint}
-          </code>
+          <p className="bee-micro font-medium">{t("exampleLabel")}</p>
+          <pre className="mt-1 overflow-x-auto rounded-[var(--radius-md)] bg-[var(--color-primary)]/15 px-3 py-2 text-micro leading-relaxed">
+            {example}
+          </pre>
         </div>
-        <div className="min-w-0">
-          <p className="bee-micro font-medium">{t("headerLabel")}</p>
-          <code className="mt-1 block truncate rounded-[var(--radius-sm)] bg-[var(--color-primary)]/15 px-2 py-1 text-micro">
-            X-BEE-Org-Key: &lt;api-key&gt;
-          </code>
-        </div>
-      </div>
 
-      <div className="min-w-0">
-        <p className="bee-micro font-medium">{t("exampleLabel")}</p>
-        <pre className="mt-1 overflow-x-auto rounded-[var(--radius-md)] bg-[var(--color-primary)]/15 px-3 py-2 text-micro leading-relaxed">
-          {example}
-        </pre>
+        <p className="bee-micro">
+          {activeKeys.length > 0 ? t("keyReady", { count: activeKeys.length }) : t("noKeyHint")}{" "}
+          <a
+            href={`${getApiBaseUrl()}/docs`}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-[var(--color-chart-4)] hover:underline"
+          >
+            {t("docsLink")}
+          </a>
+        </p>
       </div>
-
-      <p className="bee-micro">
-        {activeKeys.length > 0 ? t("keyReady", { count: activeKeys.length }) : t("noKeyHint")}{" "}
-        <a
-          href={`${getApiBaseUrl()}/docs`}
-          target="_blank"
-          rel="noreferrer"
-          className="font-medium text-[var(--color-chart-4)] hover:underline"
-        >
-          {t("docsLink")}
-        </a>
-      </p>
-    </section>
+    </OverviewCard>
   );
 }

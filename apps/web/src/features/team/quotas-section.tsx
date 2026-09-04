@@ -4,8 +4,9 @@ import { Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { ProgressRing } from "@/components/charts/progress-ring";
 import { DATA } from "@/components/charts/palette";
+import { ProgressRing } from "@/components/charts/progress-ring";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { useCreateQuota, useDeleteQuota, useQuotas } from "@/hooks/queries/use-quotas";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import type { Locale } from "@/i18n/locales";
@@ -56,7 +57,7 @@ function GoalForm({ users, teams, onDone }: { users: UserOut[]; teams: TeamOut[]
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bee-bento space-y-3 p-4">
+    <form onSubmit={handleSubmit} className="bee-bento space-y-2 p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("newTitle")}</p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <select value={ownerType} onChange={(e) => { setOwnerType(e.target.value as "user" | "team"); setOwnerId(""); }} className="bee-input">
@@ -120,67 +121,67 @@ export function QuotasSection({ users, teams, canManage }: { users: UserOut[]; t
   const loading = quotasLoading || oppsLoading;
 
   return (
-    <section className="bee-bento bee-bento-pad space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="bee-eyebrow">{t("eyebrow")}</p>
-          <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
-        </div>
-        {canManage && (
+    <OverviewCard
+      title={t("title")}
+      caption={t("eyebrow")}
+      action={
+        canManage && (
           <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary text-xs">
             {t("newQuota")}
           </button>
+        )
+      }
+    >
+      <div className="space-y-4">
+        {showNew && <GoalForm users={users} teams={teams} onDone={() => setShowNew(false)} />}
+
+        {loading ? (
+          <p className="bee-caption">{t("loading")}</p>
+        ) : quotas.length === 0 ? (
+          <p className="bee-caption">{canManage ? t("emptyManage") : t("emptyView")}</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {quotas.map((q) => {
+              const owner = q.user_id ? userById.get(q.user_id)?.full_name : teamById.get(q.team_id ?? "")?.name;
+              const teamId = q.team_id ?? userById.get(q.user_id ?? "")?.team_id ?? null;
+              const currency = (teamId && teamById.get(teamId)?.currency) || teams[0]?.currency || "USD";
+              const actual = computeQuotaActual(q, users, opportunities);
+              const clients = computeQuotaClients(q, users, opportunities);
+              const attainment = computeQuotaAttainment(q, users, opportunities);
+              const reached = attainment >= 1;
+              return (
+                <div key={q.id} className="bee-bento flex items-center gap-4 p-4">
+                  <ProgressRing value={attainment} size={52} stroke={5} color={reached ? DATA.honey : DATA.indigo} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{owner ?? t("ownerFallback")}</p>
+                    <p className="bee-micro">
+                      {q.period_start} → {q.period_end}
+                    </p>
+                    <p className="mt-1 text-xs tabular-nums">
+                      {q.target_amount > 0 && (
+                        <span>{formatMoney(actual, currency, locale)} / {formatMoney(q.target_amount, currency, locale)}</span>
+                      )}
+                      {q.target_amount > 0 && q.target_count ? " · " : ""}
+                      {q.target_count ? <span>{t("clients", { actual: clients, target: q.target_count })}</span> : null}
+                    </p>
+                  </div>
+                  {canManage && (
+                    <button
+                      type="button"
+                      onClick={() => deleteQuota.mutate(q.id)}
+                      disabled={deleteQuota.isPending}
+                      className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:text-[var(--color-chart-2)]"
+                      aria-label={t("deleteAria")}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
-
-      {showNew && <GoalForm users={users} teams={teams} onDone={() => setShowNew(false)} />}
-
-      {loading ? (
-        <p className="bee-caption">{t("loading")}</p>
-      ) : quotas.length === 0 ? (
-        <p className="bee-caption">{canManage ? t("emptyManage") : t("emptyView")}</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          {quotas.map((q) => {
-            const owner = q.user_id ? userById.get(q.user_id)?.full_name : teamById.get(q.team_id ?? "")?.name;
-            const teamId = q.team_id ?? userById.get(q.user_id ?? "")?.team_id ?? null;
-            const currency = (teamId && teamById.get(teamId)?.currency) || teams[0]?.currency || "USD";
-            const actual = computeQuotaActual(q, users, opportunities);
-            const clients = computeQuotaClients(q, users, opportunities);
-            const attainment = computeQuotaAttainment(q, users, opportunities);
-            const reached = attainment >= 1;
-            return (
-              <div key={q.id} className="bee-bento flex items-center gap-4 p-4">
-                <ProgressRing value={attainment} size={52} stroke={5} color={reached ? DATA.honey : DATA.indigo} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{owner ?? t("ownerFallback")}</p>
-                  <p className="bee-micro">
-                    {q.period_start} → {q.period_end}
-                  </p>
-                  <p className="mt-1 text-xs tabular-nums">
-                    {q.target_amount > 0 && (
-                      <span>{formatMoney(actual, currency, locale)} / {formatMoney(q.target_amount, currency, locale)}</span>
-                    )}
-                    {q.target_amount > 0 && q.target_count ? " · " : ""}
-                    {q.target_count ? <span>{t("clients", { actual: clients, target: q.target_count })}</span> : null}
-                  </p>
-                </div>
-                {canManage && (
-                  <button
-                    type="button"
-                    onClick={() => deleteQuota.mutate(q.id)}
-                    disabled={deleteQuota.isPending}
-                    className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:text-[var(--color-chart-2)]"
-                    aria-label={t("deleteAria")}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
+    </OverviewCard>
   );
 }

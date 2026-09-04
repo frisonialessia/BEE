@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { getWorkflowStatus, getWorkflowTasks } from "@/lib/api";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { WorkflowStatus, WorkflowTask } from "@/lib/types";
 import { LiveBadge } from "@/components/live-badge";
@@ -88,23 +89,18 @@ export function WorkflowStatusPanel() {
 
   if (loading) {
     return (
-      <div className="bee-bento bee-bento-pad space-y-2">
-        <Skeleton className="h-4 w-32" />
+      <OverviewCard span={6} title={t("title")} caption={t("subtitle")}>
         <Skeleton className="h-20 w-full" />
-      </div>
+      </OverviewCard>
     );
   }
 
   return (
-    <div className="bee-bento bee-bento-pad space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="flex items-center gap-2 bee-card-title">
-            <Zap className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-1)" }} />
-            {t("title")}
-          </h3>
-          <p className="bee-caption mt-1">{t("subtitle")}</p>
-        </div>
+    <OverviewCard
+      span={6}
+      title={t("title")}
+      caption={t("subtitle")}
+      action={
         <div className="flex shrink-0 items-center gap-2">
           <LiveBadge live={live} />
           {status && (
@@ -113,44 +109,46 @@ export function WorkflowStatusPanel() {
             </span>
           )}
         </div>
+      }
+    >
+      <div className="space-y-4">
+        {status && (
+          <KpiStrip
+            cols={4}
+            items={[
+              { label: t("stats.mock"), value: status.mock_dispatched },
+              { label: t("stats.live"), value: status.dispatched + status.completed },
+              { label: t("stats.failed"), value: status.failed },
+              { label: t("stats.pending"), value: status.pending },
+            ]}
+          />
+        )}
+
+        {status && status.mock_dispatched > 0 && status.dispatched === 0 && (
+          <div className="flex items-start gap-2 border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
+            <Layers className="mt-1 size-3.5 shrink-0 stroke-[1.25]" />
+            <span>
+              {t("mockNoticePrefix")}{" "}
+              <span className="font-medium text-foreground">{t("mockNoticeHighlight")}</span>{" "}
+              {t("mockNoticeSuffix")}
+            </span>
+          </div>
+        )}
+
+        {tasks.length > 0 ? (
+          <div>
+            <p className="bee-micro mb-2">{t("recentTasks")}</p>
+            {tasks.map((task) => (
+              <TaskRow key={task.id} task={task} />
+            ))}
+          </div>
+        ) : (
+          <div className="py-4 text-center">
+            <p className="text-xs text-muted-foreground">{t("empty.title")}</p>
+            <p className="mt-1 bee-micro">{t("empty.subtitle")}</p>
+          </div>
+        )}
       </div>
-
-      {status && (
-        <KpiStrip
-          cols={4}
-          items={[
-            { label: t("stats.mock"), value: status.mock_dispatched },
-            { label: t("stats.live"), value: status.dispatched + status.completed },
-            { label: t("stats.failed"), value: status.failed },
-            { label: t("stats.pending"), value: status.pending },
-          ]}
-        />
-      )}
-
-      {status && status.mock_dispatched > 0 && status.dispatched === 0 && (
-        <div className="flex items-start gap-2 border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
-          <Layers className="mt-1 size-3.5 shrink-0 stroke-[1.25]" />
-          <span>
-            {t("mockNoticePrefix")}{" "}
-            <span className="font-medium text-foreground">{t("mockNoticeHighlight")}</span>{" "}
-            {t("mockNoticeSuffix")}
-          </span>
-        </div>
-      )}
-
-      {tasks.length > 0 ? (
-        <div>
-          <p className="bee-kpi-tile__label mb-2">{t("recentTasks")}</p>
-          {tasks.map((task) => (
-            <TaskRow key={task.id} task={task} />
-          ))}
-        </div>
-      ) : (
-        <div className="py-4 text-center">
-          <p className="text-xs text-muted-foreground">{t("empty.title")}</p>
-          <p className="mt-1 bee-micro">{t("empty.subtitle")}</p>
-        </div>
-      )}
-    </div>
+    </OverviewCard>
   );
 }

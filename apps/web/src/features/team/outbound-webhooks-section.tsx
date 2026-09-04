@@ -11,6 +11,7 @@ import {
   useOutboundWebhooks,
   useUpdateOutboundWebhook,
 } from "@/hooks/queries/use-outbound-webhooks";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import type { OutboundWebhookCreated } from "@/lib/api/outbound-webhooks";
@@ -117,14 +118,11 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
   const webhooks = webhooksResult?.data ?? [];
 
   return (
-    <section className="bee-bento bee-bento-pad space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="bee-eyebrow">{t("eyebrow")}</p>
-          <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
-          <p className="bee-caption mt-1">{t("subtitle")}</p>
-        </div>
-        {canManage && (
+    <OverviewCard
+      title={t("title")}
+      caption={t("subtitle")}
+      action={
+        canManage && (
           <button
             type="button"
             onClick={() => setShowNew((v) => !v)}
@@ -132,91 +130,93 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
           >
             {t("newWebhook")}
           </button>
+        )
+      }
+    >
+      <div className="space-y-4">
+        {justCreated && (
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-chart-4)]/40 bg-[var(--color-chart-4)]/10 p-4">
+            <p className="text-xs font-semibold">{t("secretReveal.title")}</p>
+            <code className="mt-2 block break-all rounded-[var(--radius-md)] bg-[var(--color-card)] px-3 py-2 text-xs">
+              {justCreated.secret}
+            </code>
+            <p className="mt-2 bee-micro">
+              {t("secretReveal.helpPrefix")} <code>X-BEE-Signature</code>
+              {t("secretReveal.helpSuffix")}
+            </p>
+            <button
+              type="button"
+              onClick={() => setJustCreated(null)}
+              className="bee-btn-ghost mt-2 text-xs"
+            >
+              {t("secretReveal.confirm")}
+            </button>
+          </div>
+        )}
+
+        {showNew && (
+          <NewWebhookForm
+            eventTypes={eventTypes ?? []}
+            onDone={(created) => {
+              setShowNew(false);
+              setJustCreated(created);
+            }}
+          />
+        )}
+
+        {isLoading ? (
+          <p className="bee-caption">{t("loading")}</p>
+        ) : webhooks.length === 0 ? (
+          <p className="bee-caption">{canManage ? t("emptyManage") : t("emptyView")}</p>
+        ) : (
+          <div className="space-y-4">
+            {webhooks.map((w) => (
+              <div key={w.id} className="bee-bento p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{w.url}</p>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {w.event_types.map((et) => (
+                        <span
+                          key={et}
+                          className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/25 px-2 py-1 bee-micro"
+                        >
+                          {eventTypeLabels[et] ?? et}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="mt-1 font-mono bee-micro">
+                      {t("secretPrefix")} {w.secret_preview}… · <StatusBadge status={w.last_status} />
+                    </p>
+                  </div>
+                  {canManage && (
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Label className="bee-micro font-normal">
+                        <Checkbox
+                          checked={w.is_active}
+                          onCheckedChange={(checked) =>
+                            updateWebhook.mutate({ id: w.id, body: { is_active: checked === true } })
+                          }
+                        />
+                        {t("active")}
+                      </Label>
+                      <button
+                        type="button"
+                        onClick={() => deleteWebhook.mutate(w.id)}
+                        disabled={deleteWebhook.isPending}
+                        className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-chart-2)]"
+                        aria-label={t("deleteAria")}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
-
-      {justCreated && (
-        <div className="rounded-[var(--radius-lg)] border border-[var(--color-chart-4)]/40 bg-[var(--color-chart-4)]/10 p-4">
-          <p className="text-xs font-semibold">{t("secretReveal.title")}</p>
-          <code className="mt-2 block break-all rounded-[var(--radius-md)] bg-[var(--color-card)] px-3 py-2 text-xs">
-            {justCreated.secret}
-          </code>
-          <p className="mt-2 bee-micro">
-            {t("secretReveal.helpPrefix")} <code>X-BEE-Signature</code>
-            {t("secretReveal.helpSuffix")}
-          </p>
-          <button
-            type="button"
-            onClick={() => setJustCreated(null)}
-            className="bee-btn-ghost mt-2 text-xs"
-          >
-            {t("secretReveal.confirm")}
-          </button>
-        </div>
-      )}
-
-      {showNew && (
-        <NewWebhookForm
-          eventTypes={eventTypes ?? []}
-          onDone={(created) => {
-            setShowNew(false);
-            setJustCreated(created);
-          }}
-        />
-      )}
-
-      {isLoading ? (
-        <p className="bee-caption">{t("loading")}</p>
-      ) : webhooks.length === 0 ? (
-        <p className="bee-caption">{canManage ? t("emptyManage") : t("emptyView")}</p>
-      ) : (
-        <div className="space-y-3">
-          {webhooks.map((w) => (
-            <div key={w.id} className="bee-bento p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{w.url}</p>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {w.event_types.map((et) => (
-                      <span
-                        key={et}
-                        className="rounded-[var(--radius-sm)] bg-[var(--color-primary)]/25 px-2 py-1 bee-micro"
-                      >
-                        {eventTypeLabels[et] ?? et}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="mt-1 font-mono bee-micro">
-                    {t("secretPrefix")} {w.secret_preview}… · <StatusBadge status={w.last_status} />
-                  </p>
-                </div>
-                {canManage && (
-                  <div className="flex shrink-0 items-center gap-2">
-                    <Label className="bee-micro font-normal">
-                      <Checkbox
-                        checked={w.is_active}
-                        onCheckedChange={(checked) =>
-                          updateWebhook.mutate({ id: w.id, body: { is_active: checked === true } })
-                        }
-                      />
-                      {t("active")}
-                    </Label>
-                    <button
-                      type="button"
-                      onClick={() => deleteWebhook.mutate(w.id)}
-                      disabled={deleteWebhook.isPending}
-                      className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-chart-2)]"
-                      aria-label={t("deleteAria")}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
+    </OverviewCard>
   );
 }

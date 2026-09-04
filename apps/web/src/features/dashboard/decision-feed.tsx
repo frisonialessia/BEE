@@ -43,9 +43,11 @@ import type { DecisionCard, DecisionUrgency } from "@/types/extended";
 import { useDashboardBase } from "@/lib/demo/mode";
 
 // Tone lives in the contour, not the fill — only signal cards are colored.
+// One color per box: every play card wears the same indigo; urgency is the
+// eyebrow word (ALTA / MEDIA / BAJA), never a second hue in the same box.
 const URGENCY_TONE: Record<DecisionUrgency, string> = {
-  high: "bee-outline--warm",
-  medium: "bee-outline--violet",
+  high: "bee-outline--blue",
+  medium: "bee-outline--blue",
   low: "bee-outline--blue",
 };
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -383,21 +384,25 @@ export function ResiliencePanel() {
   const [activeTab, setActiveTab] = useState<"dlq" | "audit">("dlq");
 
   return (
-    // bee-panel — this root used to be a bare <div>, the one card in its
-    // grid row (next to PendingActionsPanel, which is a real card) with no
-    // border or background of its own.
-    <div className="bee-panel space-y-4">
-      <div className="bee-filter-tabs">
-        {(["dlq", "audit"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`bee-filter-tab ${activeTab === tab ? "bee-filter-tab--active" : ""}`}
-          >
-            {t(`tabs.${tab}`)}
-          </button>
-        ))}
-      </div>
+    // Same card shell as PendingActionsPanel next to it (OverviewCard): the
+    // active tab's label is the card title, the tab switch is the action.
+    <OverviewCard
+      span={6}
+      title={t(`tabs.${activeTab}`)}
+      action={
+        <div className="bee-filter-tabs">
+          {(["dlq", "audit"] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`bee-filter-tab ${activeTab === tab ? "bee-filter-tab--active" : ""}`}
+            >
+              {t(`tabs.${tab}`)}
+            </button>
+          ))}
+        </div>
+      }
+    >
       {/* min-h: same layout-shift fix as DeepLearningPanel's tab wrapper —
        * DLQPanel (5-col stat grid + its own filter row + list) is taller
        * than AuditPanel (3-col stat grid + a single checkbox row + list);
@@ -406,6 +411,6 @@ export function ResiliencePanel() {
       <div className="min-h-[420px]">
         {activeTab === "dlq" ? <DLQPanel /> : <AuditPanel />}
       </div>
-    </div>
+    </OverviewCard>
   );
 }

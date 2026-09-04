@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
 
+import { StatStrip } from "@/components/charts/stat-tile";
 import { LeadDuplicatesPanel } from "@/components/dedup/lead-duplicates-panel";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
 import { MetricCard } from "@/components/metric-card";
@@ -226,7 +227,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
 
       {loading ? (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-24" />
             ))}
@@ -240,7 +241,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatStrip cols={4}>
             <MetricCard label={t("metrics.total")} value={leads.length} />
             <MetricCard
               label={t("metrics.avgScore")}
@@ -253,7 +254,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
               value={staleCount}
               tone={staleCount > 0 ? "warm" : "default"}
             />
-          </div>
+          </StatStrip>
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-full border border-border bg-[var(--color-card)]/60 px-3 py-2">

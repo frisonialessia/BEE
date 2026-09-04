@@ -4,6 +4,7 @@ import { Newspaper, Radar, Search, UserPlus } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMarketSources } from "@/hooks/queries/use-market-sources";
@@ -26,19 +27,10 @@ export function MarketSourcesSection() {
   const { data, isLoading } = useMarketSources();
 
   return (
-    <section className="bee-surface bee-bento-pad space-y-4">
-      <div className="flex items-start gap-2">
-        <Radar className="mt-1 size-4 shrink-0 text-muted-foreground" />
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">{t("title")}</p>
-          <p className="bee-caption mt-1">
-            {data?.scan_enabled
-              ? t("subtitleEnabled", { hours: data.interval_hours })
-              : t("subtitleDisabled")}
-          </p>
-        </div>
-      </div>
-
+    <OverviewCard
+      title={t("title")}
+      caption={data?.scan_enabled ? t("subtitleEnabled", { hours: data.interval_hours }) : t("subtitleDisabled")}
+    >
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
@@ -68,6 +60,6 @@ export function MarketSourcesSection() {
           })}
         </div>
       )}
-    </section>
+    </OverviewCard>
   );
 }

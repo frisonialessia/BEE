@@ -34,7 +34,7 @@ export function SuccessPatternsList({ patterns }: { patterns: SuccessPattern[] }
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {patterns.map((p) => (
         <div
           key={`${p.signal_type}-${p.playbook}-${p.channel}-${p.generator}`}

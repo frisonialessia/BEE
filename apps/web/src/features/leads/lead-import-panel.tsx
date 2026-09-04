@@ -169,7 +169,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
         <div className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
           <div>
             <p className="bee-eyebrow">{t("eyebrow")}</p>
-            <h2 className="mt-1 text-lg font-semibold tracking-tight">{t("heading")}</h2>
+            <h2 className="bee-card-title mt-1 !mb-0">{t("heading")}</h2>
           </div>
           <button type="button" onClick={onClose} className="bee-btn-ghost bee-btn--icon" aria-label={t("closeButtonAria")}>
             <X className="size-4" />

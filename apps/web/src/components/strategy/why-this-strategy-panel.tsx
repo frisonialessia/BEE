@@ -2,11 +2,12 @@
 
 import { formatGenerator } from "@/lib/format";
 
-import { AlertTriangle, Info } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import type { Locale } from "@/i18n/locales";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Badge } from "@/components/ui/badge";
 import { useStrategyReasoning } from "@/hooks/queries/use-audit";
 import type { Battlecard } from "@/lib/types";
@@ -55,43 +56,42 @@ export function WhyThisStrategyPanel({
   }
 
   return (
-    <section className="bee-surface bee-bento-pad space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 bee-card-title">
-          <Info className="size-4 text-muted-foreground" />
-          {t("heading")}
-        </h3>
+    <OverviewCard
+      title={t("heading")}
+      action={
         <Badge variant={confidenceVariant(strategy.confidence_score)}>
           {t("confidencePct", { pct: Math.round(strategy.confidence_score * 100) })}
         </Badge>
-      </div>
-
-      {card.manual_review_required && (
-        <div className="flex items-start gap-2 border border-border bg-background px-3 py-2 text-xs">
-          <AlertTriangle className="mt-1 size-3 shrink-0" />
-          <span>{t("manualReviewExplainer")}</span>
-        </div>
-      )}
-
-      {hasRationale && <p className="text-sm leading-relaxed">{strategy.rationale}</p>}
-
-      {hasAuditReasoning && (
-        <div className="border-l-2 border-[var(--color-chart-4)] pl-3">
-          <p className="bee-caption font-medium">{t("generatorReasoning")}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{auditEntry?.strategy_reasoning}</p>
-        </div>
-      )}
-
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <Badge variant="outline">
-          {formatGenerator(strategy.generator, locale)} v{strategy.generator_version}
-        </Badge>
-        {hasVariant && (
-          <Badge variant="outline">
-            {t("variant", { arm: strategy.variant_arm ?? strategy.variant_id ?? "" })}
-          </Badge>
+      }
+    >
+      <div className="space-y-4">
+        {card.manual_review_required && (
+          <div className="flex items-start gap-2 border border-border bg-background px-3 py-2 text-xs">
+            <AlertTriangle className="mt-1 size-3 shrink-0" />
+            <span>{t("manualReviewExplainer")}</span>
+          </div>
         )}
+
+        {hasRationale && <p className="text-sm leading-relaxed">{strategy.rationale}</p>}
+
+        {hasAuditReasoning && (
+          <div className="border-l-2 border-[var(--color-chart-4)] pl-3">
+            <p className="bee-caption font-medium">{t("generatorReasoning")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{auditEntry?.strategy_reasoning}</p>
+          </div>
+        )}
+
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <Badge variant="outline">
+            {formatGenerator(strategy.generator, locale)} v{strategy.generator_version}
+          </Badge>
+          {hasVariant && (
+            <Badge variant="outline">
+              {t("variant", { arm: strategy.variant_arm ?? strategy.variant_id ?? "" })}
+            </Badge>
+          )}
+        </div>
       </div>
-    </section>
+    </OverviewCard>
   );
 }

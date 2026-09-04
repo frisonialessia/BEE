@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDigestSettings, useSendDigestNow, useUpdateDigestSettings } from "@/hooks/queries/use-digest";
@@ -64,85 +65,85 @@ function DigestForm({ data, canManage }: { data: DigestSettings; canManage: bool
   }
 
   return (
-    <section className="bee-surface bee-bento-pad space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">{t("title")}</p>
-          <p className="bee-caption mt-1">{t("subtitle")}</p>
-        </div>
+    <OverviewCard
+      title={t("title")}
+      caption={t("subtitle")}
+      action={
         <Badge variant={data.enabled && data.webhook_configured ? "success" : "outline"}>
           {data.enabled && data.webhook_configured ? t("statusOn") : t("statusOff")}
         </Badge>
-      </div>
-
-      <form onSubmit={handleSave} className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto_auto]">
-        <div className="min-w-0">
-          <label className="bee-micro font-medium" htmlFor="digest-webhook">
-            {t("webhookLabel")}
-          </label>
-          <input
-            id="digest-webhook"
-            type="url"
-            value={webhookUrl}
-            onChange={(e) => setWebhookUrl(e.target.value)}
-            placeholder={data.webhook_configured ? t("webhookSetPlaceholder", { hint: data.webhook_url_hint ?? "" }) : "https://hooks.slack.com/services/…"}
-            disabled={!canManage}
-            className="bee-input mt-1 w-full"
-          />
-        </div>
-        <div>
-          <label className="bee-micro font-medium" htmlFor="digest-hour">
-            {t("hourLabel")}
-          </label>
-          <select
-            id="digest-hour"
-            value={hour}
-            onChange={(e) => setHour(Number(e.target.value))}
-            disabled={!canManage}
-            className="bee-input mt-1"
-          >
-            {HOURS.map((h) => (
-              <option key={h} value={h}>
-                {String(h).padStart(2, "0")}:00 UTC
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="flex items-end">
-          <label className="flex h-[var(--bee-control-h-primary)] items-center gap-2 text-sm">
+      }
+    >
+      <div className="space-y-4">
+        <form onSubmit={handleSave} className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto_auto]">
+          <div className="min-w-0">
+            <label className="bee-micro font-medium" htmlFor="digest-webhook">
+              {t("webhookLabel")}
+            </label>
             <input
-              type="checkbox"
-              checked={enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
+              id="digest-webhook"
+              type="url"
+              value={webhookUrl}
+              onChange={(e) => setWebhookUrl(e.target.value)}
+              placeholder={data.webhook_configured ? t("webhookSetPlaceholder", { hint: data.webhook_url_hint ?? "" }) : "https://hooks.slack.com/services/…"}
               disabled={!canManage}
-              className="size-4 accent-[var(--color-cta)]"
+              className="bee-input mt-1 w-full"
             />
-            {t("enabledLabel")}
-          </label>
-        </div>
-        {canManage && (
-          <div className="flex flex-wrap gap-2 sm:col-span-3">
-            <button type="submit" disabled={update.isPending} className="bee-btn bee-btn--primary">
-              {update.isPending ? t("saving") : t("save")}
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleSendNow()}
-              disabled={sendNow.isPending || !data.webhook_configured}
-              className="bee-btn-ghost"
-            >
-              <Send className="size-3.5" />
-              {sendNow.isPending ? t("sending") : t("sendNow")}
-            </button>
           </div>
-        )}
-      </form>
+          <div>
+            <label className="bee-micro font-medium" htmlFor="digest-hour">
+              {t("hourLabel")}
+            </label>
+            <select
+              id="digest-hour"
+              value={hour}
+              onChange={(e) => setHour(Number(e.target.value))}
+              disabled={!canManage}
+              className="bee-input mt-1"
+            >
+              {HOURS.map((h) => (
+                <option key={h} value={h}>
+                  {String(h).padStart(2, "0")}:00 UTC
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-end">
+            <label className="flex h-[var(--bee-control-h-primary)] items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={enabled}
+                onChange={(e) => setEnabled(e.target.checked)}
+                disabled={!canManage}
+                className="size-4 accent-[var(--color-cta)]"
+              />
+              {t("enabledLabel")}
+            </label>
+          </div>
+          {canManage && (
+            <div className="flex flex-wrap gap-2 sm:col-span-3">
+              <button type="submit" disabled={update.isPending} className="bee-btn bee-btn--primary">
+                {update.isPending ? t("saving") : t("save")}
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleSendNow()}
+                disabled={sendNow.isPending || !data.webhook_configured}
+                className="bee-btn-ghost"
+              >
+                <Send className="size-3.5" />
+                {sendNow.isPending ? t("sending") : t("sendNow")}
+              </button>
+            </div>
+          )}
+        </form>
 
-      <p className="bee-caption">
-        {data.last_sent_at
-          ? t("lastSent", { when: formatRelativeTime(data.last_sent_at, locale) })
-          : t("neverSent")}
-      </p>
-    </section>
+        <p className="bee-caption">
+          {data.last_sent_at
+            ? t("lastSent", { when: formatRelativeTime(data.last_sent_at, locale) })
+            : t("neverSent")}
+        </p>
+      </div>
+    </OverviewCard>
   );
 }

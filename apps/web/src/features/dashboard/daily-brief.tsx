@@ -34,9 +34,9 @@ const TONE_FILL: Record<BriefTone, React.CSSProperties> = {
   info: { background: "color-mix(in srgb, var(--color-chart-4) 22%, var(--color-card))", borderColor: "var(--color-chart-4)" },
 };
 
-/* Embedded on Resumen the brief is a list: the tone lives in a small
-   tinted disc behind the icon, never in a block of fill that would have to
-   stretch to the height of the box next to it. */
+/* Embedded on Resumen the brief is a list in one color (the box's indigo);
+   the icon — flame, warning, info — says what kind of item it is. The
+   severity tones below are for the standalone strip only. */
 const TONE_RING: Record<BriefTone, string> = {
   hot: "color-mix(in srgb, var(--color-chart-5) 18%, var(--color-card))",
   risk: "color-mix(in srgb, var(--color-chart-1) 26%, var(--color-card))",
@@ -133,7 +133,7 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
               >
                 <span
                   className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: TONE_RING[item.tone], color: TONE_COLOR[item.tone] }}
+                  style={{ background: TONE_RING.info, color: TONE_COLOR.info }}
                 >
                   <Icon className="size-3.5" />
                 </span>

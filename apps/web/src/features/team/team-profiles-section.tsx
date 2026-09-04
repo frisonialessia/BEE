@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Badge } from "@/components/ui/badge";
 import { useSetTeamProfile, useTeamProfile } from "@/hooks/queries/use-teams";
 import type { Locale } from "@/i18n/locales";
@@ -91,7 +92,7 @@ function TeamProfileEditor({ team }: { team: TeamOut }) {
       </div>
 
       {open && (
-        <div className="mt-3 space-y-3">
+        <div className="mt-4 space-y-2">
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("weightsLabel")}</label>
             <p className="bee-caption mb-2">{t("weightsHint")}</p>
@@ -181,17 +182,12 @@ export function TeamProfilesSection({ teams, canManage }: { teams: TeamOut[]; ca
   if (!canManage || teams.length === 0) return null;
 
   return (
-    <section className="bee-bento bee-bento-pad space-y-4">
-      <div>
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
-        <p className="bee-caption mt-1">{t("subtitle")}</p>
-      </div>
-      <div className="space-y-3">
+    <OverviewCard title={t("title")} caption={t("subtitle")}>
+      <div className="space-y-4">
         {teams.map((team) => (
           <TeamProfileEditor key={team.id} team={team} />
         ))}
       </div>
-    </section>
+    </OverviewCard>
   );
 }

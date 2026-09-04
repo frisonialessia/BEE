@@ -7,9 +7,10 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CheckCircle, Clock, Mail, ShieldCheck, XCircle } from "lucide-react";
+import { CheckCircle, Clock, Mail, XCircle } from "lucide-react";
 
 import { approveAction, getPendingActions, rejectAction } from "@/lib/api";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
@@ -78,7 +79,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
     : action.status.replace(/_/g, " ");
 
   return (
-    <div className="bee-bento bee-outline--blue bee-bento-pad space-y-3">
+    <div className="bee-bento bee-outline--blue bee-bento-pad space-y-2">
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-2">
           <span className="shrink-0 text-muted-foreground">
@@ -185,15 +186,11 @@ export function PendingActionsPanel() {
   const pendingCount = actions.filter((a) => a.status === "pending_approval").length;
 
   return (
-    <div className="bee-bento bee-bento-pad space-y-4">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h3 className="flex items-center gap-2 bee-card-title">
-            <ShieldCheck className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-5)" }} />
-            {t("title")}
-          </h3>
-          <p className="bee-caption mt-1">{t("caption")}</p>
-        </div>
+    <OverviewCard
+      span={6}
+      title={t("title")}
+      caption={t("caption")}
+      action={
         <div className="flex shrink-0 items-center gap-2">
           <LiveBadge live={live} />
           {pendingCount > 0 && (
@@ -207,43 +204,45 @@ export function PendingActionsPanel() {
             </span>
           )}
         </div>
-      </div>
-
-      {loading ? (
-        <div className="space-y-2">
-          {[1, 2].map((i) => (
-            <Skeleton key={i} className="h-12 rounded-sm" />
-          ))}
-        </div>
-      ) : actions.length === 0 ? (
-        <div className="py-8 text-center">
-          <CheckCircle
-            className="mx-auto mb-2 size-6 stroke-[1.25]"
-            style={{ color: "var(--color-chart-5)" }}
-          />
-          <p className="text-xs text-muted-foreground">{t("emptyTitle")}</p>
-          <p className="mt-1 bee-micro">{t("emptySubtitle")}</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {actions.map((action) => (
-            <PendingActionCard
-              key={action.id}
-              action={action}
-              onApprove={handleApprove}
-              onReject={handleReject}
+      }
+    >
+      <div className="space-y-4">
+        {loading ? (
+          <div className="space-y-2">
+            {[1, 2].map((i) => (
+              <Skeleton key={i} className="h-12 rounded-sm" />
+            ))}
+          </div>
+        ) : actions.length === 0 ? (
+          <div className="py-8 text-center">
+            <CheckCircle
+              className="mx-auto mb-2 size-6 stroke-[1.25]"
+              style={{ color: "var(--color-chart-5)" }}
             />
-          ))}
-        </div>
-      )}
+            <p className="text-xs text-muted-foreground">{t("emptyTitle")}</p>
+            <p className="mt-1 bee-micro">{t("emptySubtitle")}</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {actions.map((action) => (
+              <PendingActionCard
+                key={action.id}
+                action={action}
+                onApprove={handleApprove}
+                onReject={handleReject}
+              />
+            ))}
+          </div>
+        )}
 
-      <p className="flex items-center gap-2 bee-micro">
-        <span
-          className="inline-block size-1.5"
-          style={{ background: "var(--color-chart-1)" }}
-        />
-        {t("safetyGate")}
-      </p>
-    </div>
+        <p className="flex items-center gap-2 bee-micro">
+          <span
+            className="inline-block size-1.5"
+            style={{ background: "var(--color-chart-1)" }}
+          />
+          {t("safetyGate")}
+        </p>
+      </div>
+    </OverviewCard>
   );
 }

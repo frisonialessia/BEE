@@ -35,7 +35,7 @@ export function MarketInsightsList({ insights }: { insights: MarketInsight[] }) 
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {insights.map((insight) => {
         const Icon = INSIGHT_ICONS[insight.insight_type] ?? TrendingUp;
         return (

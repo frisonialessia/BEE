@@ -76,7 +76,7 @@ export function OpportunitiesList() {
 
   if (isLoading) {
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <Skeleton className="h-9 w-72" />
         <Skeleton className="h-64" />
       </div>
@@ -84,7 +84,7 @@ export function OpportunitiesList() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <label className="relative block w-full max-w-xs">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />

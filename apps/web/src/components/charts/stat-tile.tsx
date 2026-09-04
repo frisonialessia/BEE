@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
 /**
  * The stat tile that replaces every bare KPI box: a labelled chip, the
  * number, a delta chip, and on the right either an 8-point sparkline or a
- * progress ring. Tone is the chip/sparkline color from the data palette.
+ * progress ring. Tone is THE color of the box — chip, delta, sparkline and
+ * ring all wear it; a box never mixes two hues.
  */
 export function StatTile({
   label,
@@ -49,7 +50,7 @@ export function StatTile({
         <div className="min-w-0 flex-1">
           <p className="text-lg font-bold leading-none tabular-nums [overflow-wrap:anywhere] sm:text-xl">{value}</p>
           {delta !== undefined ? (
-            <DeltaChip value={delta} label={deltaLabel} tone={salesTone ? "sales" : "default"} className="mt-1.5" />
+            <DeltaChip value={delta} label={deltaLabel} tone={salesTone ? "sales" : tone} className="mt-1.5" />
           ) : hint ? (
             <p className="bee-micro mt-1.5 truncate">{hint}</p>
           ) : null}

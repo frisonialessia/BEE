@@ -9,7 +9,7 @@ import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Donut } from "@/components/charts/donut";
-import { DATA } from "@/components/charts/palette";
+import { DATA, mix } from "@/components/charts/palette";
 import { Skeleton } from "@/components/ui/skeleton";
 import { scoreVariant } from "@/lib/format";
 import { formatDate } from "@/lib/i18n/format";
@@ -168,7 +168,7 @@ export function DarkFunnelDashboard() {
     return [...counts.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 6)
-      .map(([label, value], i) => ({ label, value, color: [DATA.indigo, DATA.honey, DATA.magenta, DATA.violet, DATA.indigo, DATA.honey][i] }));
+      .map(([label, value], i) => ({ label, value, color: i === 0 ? DATA.indigo : mix(DATA.indigo, i < 3 ? 75 : 50) }));
   })();
 
   async function handleSimulate(e: React.FormEvent) {

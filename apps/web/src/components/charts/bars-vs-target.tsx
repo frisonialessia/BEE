@@ -22,6 +22,7 @@ export function BarsVsTarget({
   targetLabel,
   minHeight = 140,
   formatValue = (v) => String(Math.round(v)),
+  colorFor,
 }: {
   points: BarPoint[];
   target?: number | null;
@@ -30,6 +31,8 @@ export function BarsVsTarget({
   targetLabel?: string;
   minHeight?: number;
   formatValue?: (v: number) => string;
+  /** Per-bar color (e.g. three strengths of one hue); overrides color/hitColor. */
+  colorFor?: (point: BarPoint, index: number, max: number) => string;
 }) {
   const [ref, { width: W, height: H }] = useBoxSize<HTMLDivElement>({ width: 600, height: minHeight });
   const padBottom = 24;
@@ -50,7 +53,7 @@ export function BarsVsTarget({
           return (
             <g key={p.label}>
               <title>{`${p.label} · ${formatValue(p.value)}`}</title>
-              <rect x={x} y={y} width={bw} height={Math.max(h, p.value > 0 ? 4 : 1)} rx={4} fill={hit ? hitColor : color} opacity={p.current || hit ? 1 : 0.55} />
+              <rect x={x} y={y} width={bw} height={Math.max(h, p.value > 0 ? 4 : 1)} rx={4} fill={colorFor ? colorFor(p, i, max) : hit ? hitColor : color} opacity={colorFor || p.current || hit ? 1 : 0.55} />
               <text x={x + bw / 2} y={H - 7} fill="var(--color-text-muted)" textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }}>
                 {p.label}
               </text>

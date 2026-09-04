@@ -1,8 +1,9 @@
 "use client";
 
-import { Clock, Radar } from "lucide-react";
+import { Radar } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCyclePrediction } from "@/hooks/queries/use-artifacts";
@@ -49,21 +50,13 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
   if (!prediction) return null; // fetch failed outright — nothing honest to show
 
   return (
-    <section className="bee-surface bee-bento-pad">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 bee-card-title">
-          <Clock className="size-4 stroke-[1.5] text-muted-foreground" />
-          {t("heading")}
-        </h3>
-        <LiveBadge live={result?.live !== false} hideLive />
-      </div>
-
+    <OverviewCard title={t("heading")} action={<LiveBadge live={result?.live !== false} hideLive />}>
       {!prediction.available ? (
         <p className="text-sm text-muted-foreground">{prediction.reason}</p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <span className="text-2xl font-semibold tabular-nums">
+            <span className="text-sm font-bold tabular-nums">
               {t("days", { count: prediction.predicted_cycle_days ?? 0 })}
             </span>
             <span className="text-sm text-muted-foreground">{t("estimatedCycle")}</span>
@@ -107,7 +100,7 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
           )}
         </div>
       )}
-    </section>
+    </OverviewCard>
   );
 }
 

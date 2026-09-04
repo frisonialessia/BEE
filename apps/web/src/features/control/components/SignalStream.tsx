@@ -96,7 +96,7 @@ export function SignalStream() {
     // viewport height and this card stretches to match its APIs
     // externas/Anomalías siblings.
     <aside className="bee-surface flex h-full min-h-[200px] flex-col overflow-hidden bee-bento-pad" aria-label={t("ariaLabel")}>
-      <div className="mb-3 flex shrink-0 items-start justify-between gap-2">
+      <div className="mb-4 flex shrink-0 items-start justify-between gap-2">
         <div>
           <h2 className="bee-eyebrow">{t("title")}</h2>
           <p className="bee-caption mt-1">{t("caption")}</p>
@@ -119,7 +119,7 @@ export function SignalStream() {
 
       <div className="min-h-0 flex-1">
         {isLoading ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-14 rounded-lg" />
             ))}

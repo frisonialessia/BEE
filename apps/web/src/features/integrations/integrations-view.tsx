@@ -7,6 +7,7 @@ import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BiFeedSection } from "@/features/integrations/bi-feed-section";
@@ -405,7 +406,7 @@ export function IntegrationsView() {
         <div className="space-y-4">
           {[...categorized, ...(uncategorized.length > 0 ? [{ category: null, providers: uncategorized }] : [])].map(
             ({ category, providers }) => (
-              <section key={category ?? "other"} className="space-y-3">
+              <section key={category ?? "other"} className="space-y-4">
                 <p className="bee-eyebrow">
                   {category ? t(`categories.${category}`) : t("categories.other")}
                 </p>
@@ -446,7 +447,7 @@ export function IntegrationsView() {
              clasificación → oportunidad) no tenía ninguna superficie en la
              UI: la URL solo vivía en /docs. Va primero entre las secciones
              sin OAuth porque es lo primero que una cuenta nueva necesita. */}
-          <section className="space-y-3">
+          <section className="space-y-4">
             <p className="bee-eyebrow">{t("categories.signals")}</p>
             <InboundSignalsSection />
           </section>
@@ -457,7 +458,7 @@ export function IntegrationsView() {
              Conectar. Reutiliza el mismo componente que ya vive en Equipo
              (misma data en vivo) — este es el lugar donde alguien buscando
              "conectar n8n" en realidad tiene que aterrizar. */}
-          <section className="space-y-3">
+          <section className="space-y-4">
             <p className="bee-eyebrow">{t("categories.automation")}</p>
             <p className="bee-caption">{t("automation.hint")}</p>
             <OutboundWebhooksSection canManage={canManage} />
@@ -466,7 +467,7 @@ export function IntegrationsView() {
           {/* Fuentes de mercado — the proactive scan's senses. Read-only:
              sources are deployment-wide, but a person should see why press
              and hiring signals arrive with no key and what Google adds. */}
-          <section className="space-y-3">
+          <section className="space-y-4">
             <p className="bee-eyebrow">{t("categories.marketSources")}</p>
             <MarketSourcesSection />
           </section>
@@ -474,7 +475,7 @@ export function IntegrationsView() {
           {/* Resumen diario — La jugada de hoy pushed to Slack/Teams. Lives
              here, next to the other webhook-shaped integrations, not in
              Equipo: it's a channel, not a people setting. */}
-          <section className="space-y-3">
+          <section className="space-y-4">
             <p className="bee-eyebrow">{t("categories.digest")}</p>
             <DailyDigestSection canManage={canManage} />
           </section>
@@ -483,23 +484,18 @@ export function IntegrationsView() {
              Power BI/Tableau/Looker Studio don't do OAuth either, they take
              a URL + a key pasted into their own "Web" data source dialog.
              See BiFeedSection's own docstring. */}
-          <section className="space-y-3">
+          <section className="space-y-4">
             <p className="bee-eyebrow">{t("categories.bi")}</p>
             <BiFeedSection canManage={canManage} />
           </section>
 
-          <section className="bee-surface bee-bento-pad">
-            <div className="mb-3 flex items-center gap-2">
-              <Plug className="size-4 text-muted-foreground" />
-              <h3 className="text-sm font-semibold">{t("serverChannels.title")}</h3>
-            </div>
-            <p className="bee-caption mb-3">{t("serverChannels.caption")}</p>
+          <OverviewCard title={t("serverChannels.title")} caption={t("serverChannels.caption")}>
             <div>
               {serverChannels.map((s) => (
                 <ServerChannelRow key={s.provider} status={s} />
               ))}
             </div>
-          </section>
+          </OverviewCard>
         </div>
       )}
     </div>

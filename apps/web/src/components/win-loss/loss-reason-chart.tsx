@@ -24,7 +24,7 @@ export function LossReasonChart({ stats }: { stats: LossReasonStat[] }) {
   const maxCount = Math.max(1, ...stats.map((s) => s.count));
 
   return (
-    <div className="space-y-3">
+    <div className="bee-fill flex min-h-[160px] flex-col justify-evenly gap-2">
       {stats.map((s) => {
         const label = s.reason === "unspecified" ? t("unspecified") : lossReasonLabels[s.reason];
         return (

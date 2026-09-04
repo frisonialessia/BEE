@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/providers/auth-provider";
@@ -449,21 +450,19 @@ function MyProfileSection() {
   }
 
   return (
-    <section className="bee-bento bee-bento-pad space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="bee-eyebrow">{t("eyebrow")}</p>
-          <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
-        </div>
-        {!open && (
+    <OverviewCard
+      title={t("title")}
+      caption={t("eyebrow")}
+      action={
+        !open && (
           <button type="button" onClick={openForm} className="bee-btn-ghost">
             {t("edit")}
           </button>
-        )}
-      </div>
-
+        )
+      }
+    >
       {open ? (
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="flex items-center gap-4">
             <button
               type="button"
@@ -581,7 +580,7 @@ function MyProfileSection() {
           </dl>
         </div>
       )}
-    </section>
+    </OverviewCard>
   );
 }
 
@@ -618,43 +617,43 @@ function DeleteAccountSection() {
     // Same guard as the backend (DELETE /users/me returns 403 for OWNER) —
     // shown up front instead of letting them click through to a failure.
     return (
-      <section className="bee-bento bee-bento-pad space-y-2">
-        <h2 className="text-base font-semibold">{t("title")}</h2>
+      <OverviewCard title={t("title")}>
         <p className="bee-caption">{t("ownerBlocked")}</p>
-      </section>
+      </OverviewCard>
     );
   }
 
   return (
-    <section className="bee-bento bee-bento-pad space-y-3">
-      <h2 className="text-base font-semibold">{t("title")}</h2>
-      <p className="bee-caption">{t("body")}</p>
+    <OverviewCard title={t("title")}>
+      <div className="space-y-4">
+        <p className="bee-caption">{t("body")}</p>
 
-      {confirming ? (
-        <div className="space-y-2 rounded-[var(--radius-md)] border border-dashed border-[var(--color-chart-2)] bg-[var(--color-chart-2)]/10 p-3">
-          <p className="text-sm font-semibold">{t("confirmTitle")}</p>
-          <p className="bee-caption">{t("confirmBody")}</p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={handleDelete}
-              disabled={deleteAccount.isPending}
-              className="bee-btn bee-btn--primary"
-              style={{ "--bee-fill": "var(--color-chart-2)", "--bee-fill-text": "#fff" } as React.CSSProperties}
-            >
-              {t("confirmButton")}
-            </button>
-            <button type="button" onClick={() => setConfirming(false)} className="bee-btn-ghost">
-              {t("cancel")}
-            </button>
+        {confirming ? (
+          <div className="space-y-2 rounded-[var(--radius-md)] border border-dashed border-[var(--color-chart-2)] bg-[var(--color-chart-2)]/10 p-3">
+            <p className="text-sm font-semibold">{t("confirmTitle")}</p>
+            <p className="bee-caption">{t("confirmBody")}</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleteAccount.isPending}
+                className="bee-btn bee-btn--primary"
+                style={{ "--bee-fill": "var(--color-chart-2)", "--bee-fill-text": "#fff" } as React.CSSProperties}
+              >
+                {t("confirmButton")}
+              </button>
+              <button type="button" onClick={() => setConfirming(false)} className="bee-btn-ghost">
+                {t("cancel")}
+              </button>
+            </div>
           </div>
-        </div>
-      ) : (
-        <button type="button" onClick={() => setConfirming(true)} className="bee-btn-ghost">
-          {t("button")}
-        </button>
-      )}
-    </section>
+        ) : (
+          <button type="button" onClick={() => setConfirming(true)} className="bee-btn-ghost">
+            {t("button")}
+          </button>
+        )}
+      </div>
+    </OverviewCard>
   );
 }
 
@@ -685,19 +684,17 @@ function ChangePasswordSection() {
   }
 
   return (
-    <section className="bee-bento bee-bento-pad space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="bee-eyebrow">{t("eyebrow")}</p>
-          <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
-        </div>
-        {!open && (
+    <OverviewCard
+      title={t("title")}
+      caption={t("eyebrow")}
+      action={
+        !open && (
           <button type="button" onClick={() => setOpen(true)} className="bee-btn-ghost">
             {t("change")}
           </button>
-        )}
-      </div>
-
+        )
+      }
+    >
       {open && (
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <input
@@ -741,7 +738,7 @@ function ChangePasswordSection() {
           </div>
         </form>
       )}
-    </section>
+    </OverviewCard>
   );
 }
 
@@ -788,69 +785,61 @@ export function TeamAdminView() {
 
           <ChangePasswordSection />
 
-          <section className="bee-bento bee-bento-pad space-y-4">
-            <div>
-              <p className="bee-eyebrow">{t("teams.eyebrow")}</p>
-              <h2 className="mt-1 text-base font-semibold">{t("teams.title")}</h2>
-            </div>
-
-            {ordered.length === 0 ? (
-              <p className="bee-caption">{t("teams.empty")}</p>
-            ) : (
-              <ul className="space-y-2">
-                {ordered.map((team) => (
-                  <li
-                    key={team.id}
-                    className="bee-caption flex items-center gap-2 text-sm text-foreground"
-                    style={{ paddingLeft: `${(depthOf.get(team.id) ?? 0) * 1.25}rem` }}
-                  >
-                    <span className="text-muted-foreground">
-                      {(depthOf.get(team.id) ?? 0) > 0 ? "└─" : "▸"}
-                    </span>
-                    {team.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {canManage && <CreateTeamForm teams={teams ?? []} />}
-          </section>
-
-          <section className="bee-bento bee-bento-pad space-y-4">
-            <div>
-              <p className="bee-eyebrow">{t("people.eyebrow")}</p>
-              <h2 className="mt-1 text-base font-semibold">
-                {canManage ? t("people.allOrg") : t("people.youAndTeam")}
-              </h2>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-border text-xs text-muted-foreground">
-                    <th className="pb-2 pr-3 font-medium">{t("people.table.person")}</th>
-                    <th className="pb-2 pr-3 font-medium">{t("people.table.role")}</th>
-                    <th className="pb-2 pr-3 font-medium">{t("people.table.team")}</th>
-                    <th className="pb-2 pr-3 font-medium">{t("people.table.status")}</th>
-                    {canManage && <th className="pb-2 font-medium" />}
-                  </tr>
-                </thead>
-                <tbody>
-                  {(users ?? []).map((u) => (
-                    <UserRow
-                      key={u.id}
-                      user={u}
-                      teams={teams ?? []}
-                      canManage={canManage}
-                      isSelf={u.id === currentUser?.id}
-                    />
+          <OverviewCard title={t("teams.title")} caption={t("teams.eyebrow")}>
+            <div className="space-y-4">
+              {ordered.length === 0 ? (
+                <p className="bee-caption">{t("teams.empty")}</p>
+              ) : (
+                <ul className="space-y-2">
+                  {ordered.map((team) => (
+                    <li
+                      key={team.id}
+                      className="bee-caption flex items-center gap-2 text-sm text-foreground"
+                      style={{ paddingLeft: `${(depthOf.get(team.id) ?? 0) * 1.25}rem` }}
+                    >
+                      <span className="text-muted-foreground">
+                        {(depthOf.get(team.id) ?? 0) > 0 ? "└─" : "▸"}
+                      </span>
+                      {team.name}
+                    </li>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </ul>
+              )}
 
-            {canManage && <InviteUserForm teams={teams ?? []} />}
-          </section>
+              {canManage && <CreateTeamForm teams={teams ?? []} />}
+            </div>
+          </OverviewCard>
+
+          <OverviewCard title={canManage ? t("people.allOrg") : t("people.youAndTeam")} caption={t("people.eyebrow")}>
+            <div className="space-y-4">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-xs text-muted-foreground">
+                      <th className="pb-2 pr-3 font-medium">{t("people.table.person")}</th>
+                      <th className="pb-2 pr-3 font-medium">{t("people.table.role")}</th>
+                      <th className="pb-2 pr-3 font-medium">{t("people.table.team")}</th>
+                      <th className="pb-2 pr-3 font-medium">{t("people.table.status")}</th>
+                      {canManage && <th className="pb-2 font-medium" />}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(users ?? []).map((u) => (
+                      <UserRow
+                        key={u.id}
+                        user={u}
+                        teams={teams ?? []}
+                        canManage={canManage}
+                        isSelf={u.id === currentUser?.id}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {canManage && <InviteUserForm teams={teams ?? []} />}
+            </div>
+          </OverviewCard>
 
           <TeamProfilesSection teams={teams ?? []} canManage={canManage} />
 

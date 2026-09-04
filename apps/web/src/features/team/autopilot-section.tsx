@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -115,18 +116,15 @@ export function AutopilotSection() {
   }
 
   return (
-    <section className="bee-bento bee-bento-pad space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="bee-eyebrow">{t("eyebrow")}</p>
-          <h2 className="mt-1 text-base font-semibold">{t("title")}</h2>
-          <p className="bee-caption mt-1 max-w-2xl">{t("subtitle")}</p>
-        </div>
+    <OverviewCard
+      title={t("title")}
+      caption={t("subtitle")}
+      action={
         <Badge variant={config?.enabled ? "warning" : "outline"}>
           {config?.enabled ? t("statusOn") : t("statusOff")}
         </Badge>
-      </div>
-
+      }
+    >
       {isLoading ? (
         <Skeleton className="h-24" />
       ) : !open ? (
@@ -206,7 +204,7 @@ export function AutopilotSection() {
             />
           </div>
 
-          <div className="bee-bento space-y-3 p-4">
+          <div className="bee-bento space-y-2 p-4">
             <p className="bee-eyebrow">{t("simulation.eyebrow")}</p>
             <p className="bee-caption">{t("simulation.hint")}</p>
             <div className="flex flex-wrap items-end gap-2">
@@ -287,6 +285,6 @@ export function AutopilotSection() {
           </div>
         </div>
       )}
-    </section>
+    </OverviewCard>
   );
 }

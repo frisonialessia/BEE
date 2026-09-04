@@ -16,7 +16,7 @@ export function CompetitorBreakdown({ stats }: { stats: CompetitorStat[] }) {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="bee-fill flex min-h-[160px] flex-col justify-evenly gap-2">
       {stats.map((s) => {
         const total = s.wins + s.losses;
         const winPct = total > 0 ? (s.wins / total) * 100 : 0;
