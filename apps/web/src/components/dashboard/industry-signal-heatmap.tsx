@@ -28,7 +28,7 @@ const MAX_ROWS = 6; // signal types down
 const MAX_R = 30; // hex circumradius cap, px
 const PAD = 6;
 const LABEL_W = 150; // signal-type labels, one line each
-const HEADER_H = 24; // one line of industry labels
+const HEADER_H = 40; // two lines of industry labels
 
 function hexPoints(cx: number, cy: number, r: number): string {
   return Array.from({ length: 6 }, (_, i) => {
@@ -117,11 +117,21 @@ export function IndustrySignalHeatmap({
       <div className="bee-fill flex flex-col gap-3">
         <div ref={ref} className="min-h-0 w-full min-w-0 flex-1" style={{ minHeight: HEADER_H + 4 * 30 }}>
           <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="block" role="img" aria-label={t("ariaLabel")}>
-            {industries.map((industry, ci) => (
-              <text key={industry} x={cx(ci)} y={HEADER_H - 8} textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
-                {industry}
-              </text>
-            ))}
+            {industries.map((industry, ci) => {
+              // Two lines at most so neighbouring column labels never overlap
+              // ("Datos / Analytics" next to "Diseño de producto").
+              const words = industry.split(" ");
+              const lines = words.length > 1 && industry.length > 12 ? [words.slice(0, Math.ceil(words.length / 2)).join(" "), words.slice(Math.ceil(words.length / 2)).join(" ")] : [industry];
+              return (
+                <text key={industry} x={cx(ci)} y={HEADER_H - 8 - (lines.length - 1) * 13} textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
+                  {lines.map((line, i) => (
+                    <tspan key={i} x={cx(ci)} dy={i === 0 ? 0 : 13}>
+                      {line}
+                    </tspan>
+                  ))}
+                </text>
+              );
+            })}
             {signalTypes.map((signalType, ri) => (
               <text key={signalType} x={LABEL_W - 8} y={cy(ri) + 4} textAnchor="end" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-foreground)">
                 {signalTypeLabels[signalType]}

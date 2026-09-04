@@ -166,8 +166,7 @@ export function DashboardOverview({
           <StatTile label={t("kpis.hotSignals")} value={hotSignals} delta={weekDelta((w) => w.hot)} trend={weekly.map((w) => w.hot)} tone={DATA.honey} />
           <StatTile
             label={t("kpis.wonMonth")}
-            value={sales.thisMonth.value}
-            formatValue={(v) => money(v)}
+            value={money(sales.thisMonth.value)}
             delta={sales.monthDelta}
             hint={sales.goal ? t("kpis.goalHint", { goal: money(sales.goal) }) : undefined}
             progress={sales.attainment ?? undefined}
@@ -175,8 +174,7 @@ export function DashboardOverview({
           />
           <StatTile
             label={t("kpis.openPipeline")}
-            value={openPipeline.amount}
-            formatValue={(v) => money(v)}
+            value={money(openPipeline.amount)}
             hint={t("kpis.openPipelineHint", { count: openPipeline.count })}
             tone={DATA.violet}
           />
