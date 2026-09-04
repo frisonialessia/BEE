@@ -319,5 +319,77 @@
         ]
       }
     }
+  },
+  "sales": {
+    "eyebrow": "Cierres",
+    "heading": "Los CRM registran ventas. BEE las cierra.",
+    "subheading": "Hecho para que tu equipo cierre más que con cualquier CRM tradicional: BEE detecta la señal antes de que exista el lead, arma la jugada y aprende de cada cierre.",
+    "chart": {
+      "title": "Ingresos acumulados",
+      "caption": "Ganado sobre ganado, doce meses",
+      "badge": "Ventas",
+      "tiles": {
+        "month": {
+          "label": "Ganado este mes",
+          "value": "+46 k"
+        },
+        "clients": {
+          "label": "Clientes nuevos",
+          "value": "2"
+        },
+        "goal": {
+          "label": "Meta del mes",
+          "value": "110 %"
+        }
+      },
+      "note": "Vista ilustrativa con datos del demo. Los mismos verdes que verás en tu página de Ventas."
+    },
+    "reasons": {
+      "earlier": {
+        "title": "Llegas antes que nadie",
+        "description": "Una ronda, una contratación clave o un cambio de stack se convierten en oportunidad en minutos, no cuando el lead ya habló con tres competidores."
+      },
+      "play": {
+        "title": "Cada jugada viene armada",
+        "description": "Punto de dolor, argumento de cierre, canal y momento. El vendedor abre la tarjeta y actúa; no investiga desde cero."
+      },
+      "priority": {
+        "title": "Prioriza por intención, no por orden alfabético",
+        "description": "El score de BEE cruza señal, encaje con tu cliente ideal y actividad real. Lo caliente sube solo."
+      },
+      "learn": {
+        "title": "Aprende de cada cierre",
+        "description": "Cada deal ganado o perdido ajusta la siguiente estrategia: qué canal, qué playbook y qué señal cierran de verdad en tu mercado."
+      }
+    },
+    "compare": {
+      "dimension": "",
+      "crm": "CRM tradicional",
+      "bee": "BEE",
+      "rows": {
+        "signal": {
+          "dimension": "Origen del lead",
+          "crm": "Registra lo que el equipo ya encontró.",
+          "bee": "Detecta lo que está por pasar en el mercado."
+        },
+        "play": {
+          "dimension": "Siguiente paso",
+          "crm": "El vendedor decide qué hacer y qué decir.",
+          "bee": "BEE propone la jugada con argumento y canal."
+        },
+        "pipeline": {
+          "dimension": "Pipeline",
+          "crm": "Se llena a mano, tarjeta por tarjeta.",
+          "bee": "Se llena solo con señales calificadas."
+        },
+        "goals": {
+          "dimension": "Metas",
+          "crm": "Reporte al final del mes.",
+          "bee": "Metas por persona y avance en vivo, en verde cuando se superan."
+        }
+      }
+    },
+    "cta": "Ver Ventas en el demo",
+    "ctaSecondary": "Crear cuenta gratis"
   }
 }

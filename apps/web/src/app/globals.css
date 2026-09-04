@@ -237,6 +237,7 @@
 .bee-eyebrow--warm { color: color-mix(in srgb, var(--color-accent-warm) 70%, var(--color-text) 30%); }
 .bee-eyebrow--violet { color: color-mix(in srgb, var(--color-chart-6) 65%, var(--color-text) 35%); }
 .bee-eyebrow--muted { color: color-mix(in srgb, var(--color-chart-5) 70%, var(--color-text) 30%); }
+.bee-eyebrow--green { color: color-mix(in srgb, var(--color-green-1) 70%, var(--color-text) 30%); }
 
 .bee-display {
   font-size: var(--bee-text-display);

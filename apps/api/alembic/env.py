@@ -50,6 +50,25 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
+        # Alembic bootstraps `alembic_version.version_num` as VARCHAR(32).
+        # Our revision ids are descriptive ("032_federated_intelligence_opt_in"
+        # is 33 chars) and Postgres enforces the length — SQLite (the test
+        # suite) does not, which is how a too-long id reached production and
+        # made `alembic upgrade head` fail there with "value too long". Widen
+        # the column before running anything so every environment behaves
+        # like the ones that were bootstrapped wider. No-op on a fresh DB.
+        if connection.dialect.name == "postgresql":
+            from sqlalchemy import text
+
+            connection.execute(
+                text(
+                    "DO $$ BEGIN "
+                    "IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'alembic_version') THEN "
+                    "ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(128); "
+                    "END IF; END $$;"
+                )
+            )
+            connection.commit()
         context.configure(
             connection=connection,
             target_metadata=target_metadata,

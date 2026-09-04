@@ -34,6 +34,24 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 > Use `init_db()` for local dev only. In production, **always Alembic**.
 
+> **Vercel does not run migrations for you.** A `git push` redeploys the API
+> with the new models, but the database keeps the old schema until someone
+> runs `alembic upgrade head` against it — and every request that touches a
+> missing column then fails with a 500 (login included). This is exactly what
+> broke production on 2026-09-04: the code was at revision 047 while Supabase
+> sat at 028. After **every** deploy that adds a file under
+> `apps/api/alembic/versions/`, run, with `DATABASE_URL` pointing at
+> production:
+>
+> ```bash
+> cd apps/api && alembic upgrade head
+> ```
+>
+> No direct DB access? `alembic upgrade <current>:head --sql` emits the exact
+> SQL, which you can paste into the Supabase SQL editor. `env.py` widens
+> `alembic_version.version_num` automatically (Alembic bootstraps it as
+> VARCHAR(32) and some of our revision ids are longer).
+
 > On Vercel specifically, use your Postgres provider's **pooled**
 > connection string for `DATABASE_URL` — see gotcha §3.7 below before
 > opening traffic to more than one person at a time.

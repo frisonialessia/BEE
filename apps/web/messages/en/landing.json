@@ -319,5 +319,77 @@
         ]
       }
     }
+  },
+  "sales": {
+    "eyebrow": "Closes",
+    "heading": "CRMs record sales. BEE closes them.",
+    "subheading": "Built so your team closes more than with any traditional CRM: BEE detects the signal before the lead exists, prepares the play, and learns from every close.",
+    "chart": {
+      "title": "Cumulative revenue",
+      "caption": "Won on top of won, twelve months",
+      "badge": "Sales",
+      "tiles": {
+        "month": {
+          "label": "Won this month",
+          "value": "+46k"
+        },
+        "clients": {
+          "label": "New clients",
+          "value": "2"
+        },
+        "goal": {
+          "label": "Monthly goal",
+          "value": "110%"
+        }
+      },
+      "note": "Illustrative view with demo data. The same greens you will see on your Sales page."
+    },
+    "reasons": {
+      "earlier": {
+        "title": "You get there first",
+        "description": "A funding round, a key hire or a stack change becomes an opportunity in minutes, not after the lead has talked to three competitors."
+      },
+      "play": {
+        "title": "Every play comes ready",
+        "description": "Pain point, closing argument, channel and timing. The rep opens the card and acts; no research from scratch."
+      },
+      "priority": {
+        "title": "Prioritized by intent, not alphabetically",
+        "description": "BEE's score crosses the signal, fit with your ideal customer and real activity. Hot rises on its own."
+      },
+      "learn": {
+        "title": "Learns from every close",
+        "description": "Every won or lost deal tunes the next strategy: which channel, playbook and signal actually close in your market."
+      }
+    },
+    "compare": {
+      "dimension": "",
+      "crm": "Traditional CRM",
+      "bee": "BEE",
+      "rows": {
+        "signal": {
+          "dimension": "Where leads come from",
+          "crm": "Records what the team already found.",
+          "bee": "Detects what is about to happen in the market."
+        },
+        "play": {
+          "dimension": "Next step",
+          "crm": "The rep decides what to do and what to say.",
+          "bee": "BEE proposes the play with argument and channel."
+        },
+        "pipeline": {
+          "dimension": "Pipeline",
+          "crm": "Filled by hand, card by card.",
+          "bee": "Fills itself with qualified signals."
+        },
+        "goals": {
+          "dimension": "Goals",
+          "crm": "A report at the end of the month.",
+          "bee": "Per-person goals and live progress, green when beaten."
+        }
+      }
+    },
+    "cta": "See Sales in the demo",
+    "ctaSecondary": "Create a free account"
   }
 }

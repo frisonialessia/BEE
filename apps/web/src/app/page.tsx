@@ -20,6 +20,7 @@ import { MarketingHeader } from "@/components/marketing-header";
 import { MarketingHowItWorks } from "@/components/marketing-how-it-works";
 import { MarketingIntegrations } from "@/components/marketing-integrations";
 import { MarketingOrbit } from "@/components/marketing-orbit";
+import { MarketingSalesProof } from "@/components/marketing-sales-proof";
 import { MarketingSignalTicker } from "@/components/marketing-signal-ticker";
 
 /**
@@ -218,6 +219,8 @@ export default async function Home() {
         <MarketingHowItWorks />
 
         <MarketingBeforeAfter />
+
+        <MarketingSalesProof />
 
         {/* ── Módulos de valor ─────────────────────────────────────────────── */}
         <section id="modulos" className="border-t border-border bg-[var(--color-primary)]/15">
