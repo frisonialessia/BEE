@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useBoxSize } from "@/components/charts/use-box-size";
 import { TooltipContent } from "@/components/ui/tooltip";
 import type { Locale } from "@/i18n/locales";
-import { DATA, mix } from "@/components/charts/palette";
+import { TONE, heat } from "@/components/charts/palette";
 import { computeIndustrySignalGrid, type IndustrySignalCell } from "@/lib/industry-signal-grid";
 import { getSignalTypeLabels } from "@/lib/format";
 import type { Company, Opportunity, Signal, SignalType } from "@/types/domain";
@@ -23,7 +23,7 @@ const SIGNAL_ORDER: SignalType[] = [
   "other",
 ];
 
-const MAX_COLS = 5; // industries across
+const MAX_COLS = 4; // industries across
 const MAX_ROWS = 6; // signal types down
 const MAX_R = 30; // hex circumradius cap, px
 const PAD = 6;
@@ -71,7 +71,7 @@ export function IndustrySignalHeatmap({
   // Narrow boxes (span 4) take four columns so the last label is never clipped.
   const industries = [...totalByIndustry.entries()]
     .sort((a, b) => b[1] - a[1])
-    .slice(0, boxW < 560 ? 4 : MAX_COLS)
+    .slice(0, boxW < 420 ? 3 : MAX_COLS)
     .map(([industry]) => industry);
 
   // Only rows that have a cell in one of the shown columns, and at most
@@ -86,21 +86,9 @@ export function IndustrySignalHeatmap({
     .sort((a, b) => SIGNAL_ORDER.indexOf(a) - SIGNAL_ORDER.indexOf(b));
 
   const byKey = new Map(cells.map((c) => [`${c.industry}::${c.signalType}`, c]));
-  // Greens belong to the Ventas page only; here the close rate climbs through
-  // honey strengths, pale at 0 % to deep honey at 100 %.
-  const color = (pct: number) => {
-    const stops: [number, string][] = [[0, mix(DATA.honey, 18)], [34, mix(DATA.honey, 45)], [67, DATA.honey], [100, "var(--color-chart-2)"]];
-    const v = Math.max(0, Math.min(100, pct));
-    for (let i = 1; i < stops.length; i++) {
-      const [a, ca] = stops[i - 1];
-      const [b, cb] = stops[i];
-      if (v <= b) {
-        const k = Math.round(((v - a) / (b - a)) * 100);
-        return `color-mix(in srgb, ${cb} ${k}%, ${ca})`;
-      }
-    }
-    return "var(--color-chart-2)";
-  };
+  // One hue, lilac (what BEE prepares), three steps by close rate; an
+  // empty cell is the page grey.
+  const color = (pct: number) => heat(TONE.prepared, Math.max(0, Math.min(100, pct)) / 100);
 
   const cols = Math.max(1, industries.length);
   const rows = Math.max(1, signalTypes.length);
@@ -121,7 +109,7 @@ export function IndustrySignalHeatmap({
               // Two lines at most so neighbouring column labels never overlap
               // ("Datos / Analytics" next to "Diseño de producto").
               const words = industry.split(" ");
-              const lines = words.length > 1 && industry.length > 12 ? [words.slice(0, Math.ceil(words.length / 2)).join(" "), words.slice(Math.ceil(words.length / 2)).join(" ")] : [industry];
+              const lines = (words.length > 1 && industry.length > 12 ? [words.slice(0, Math.ceil(words.length / 2)).join(" "), words.slice(Math.ceil(words.length / 2)).join(" ")] : [industry]).map((l) => (l.length > 13 ? `${l.slice(0, 12)}…` : l));
               return (
                 <text key={industry} x={cx(ci)} y={HEADER_H - 8 - (lines.length - 1) * 13} textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
                   {lines.map((line, i) => (
@@ -160,9 +148,12 @@ export function IndustrySignalHeatmap({
 
         <div className="flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <span>{t("legendLabel")}</span>
-          <span className="h-2.5 w-24 rounded-full" style={{ background: `linear-gradient(to right, ${color(0)}, ${color(34)}, ${color(67)}, ${color(100)})` }} />
-          <span>0%</span>
-          <span className="ml-auto">100%</span>
+          {[[20, "0–33%"], [50, "34–66%"], [90, "67–100%"]].map(([v, label]) => (
+            <span key={label} className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-[3px]" style={{ background: color(v as number) }} />
+              {label}
+            </span>
+          ))}
         </div>
       </div>
     </TooltipPrimitive.Provider>
@@ -178,7 +169,7 @@ function HexCell({ x, y, r, cell, fill }: { x: number; y: number; r: number; cel
     <TooltipPrimitive.Root>
       <TooltipPrimitive.Trigger asChild>
         <g>
-          <polygon points={hexPoints(x, y, r - 1)} fill={fill} fillOpacity={0.85} stroke="var(--color-border)" strokeWidth={0.75} />
+          <polygon points={hexPoints(x, y, r - 1)} fill={fill} />
           {/* The rate only when the cell is big enough for it; smaller cells
               keep it for the hover tooltip. */}
           {r >= 16 && (

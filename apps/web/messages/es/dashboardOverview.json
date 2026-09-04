@@ -18,7 +18,9 @@
       "wonMonth": "Ganado este mes",
       "goalHint": "meta {goal}",
       "openPipeline": "Pipeline abierto",
-      "openPipelineHint": "{count, plural, one {# oportunidad abierta} other {# oportunidades abiertas}}"
+      "openPipelineHint": "{count, plural, one {# oportunidad abierta} other {# oportunidades abiertas}}",
+      "buyingWindow": "En ventana de compra",
+      "buyingWindowHint": "cuentas listas o calientes"
     },
     "itemLabels": {
       "battlecards": "battlecards",
@@ -68,23 +70,30 @@
       "ranking": {
         "title": "Ranking del equipo",
         "caption": "Cierres de 90 días · anillo = avance a la meta",
-        "link": "Ver Ventas →"
+        "link": "Ver Ventas"
       },
       "sales": {
         "title": "Ventas",
         "caption": "Ganado por mes · últimos 12 meses",
         "captionGoal": "Ganado por mes · 12 meses · meta {goal}",
         "goalLabel": "Meta",
-        "link": "Ver Ventas →",
+        "link": "Ver Ventas",
         "empty": "Todavía no hay cierres. El primero aparecerá aquí."
       },
       "market": {
         "title": "Mercado",
-        "caption": "Señales por semana y su mezcla por tipo, últimos 30 días"
+        "caption": "{count} señales en 84 días, por día y tipo",
+        "other": "Otras",
+        "link": "Ver Señales",
+        "empty": "Todavía no hay señales. Aparecen al conectar tus fuentes de mercado."
       },
       "hive": {
         "title": "Colmena de intención",
-        "caption": "Cada celda es una cuenta; cuanto más al centro, más cerca de comprar"
+        "caption": "Cada celda es una cuenta; cuanto más al centro, más cerca de comprar",
+        "link": "Ver Señales"
+      },
+      "calendar": {
+        "caption": "Tus próximas reuniones"
       }
     }
   },

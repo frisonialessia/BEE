@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Flame, Info, Sparkles } from "lucide-react";
+import { AlertTriangle, Flame, Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
@@ -28,37 +28,13 @@ const TONE_ICON: Record<BriefTone, LucideIcon> = {
   info: Info,
 };
 
-/* Brief cards are the one place on Resumen that carries a fill: each
-   severity gets its BEE tone mixed toward white, border in the pure hue,
-   so hot/risk/info read at a glance and text stays on a light ground. */
-const TONE_FILL: Record<BriefTone, React.CSSProperties> = {
-  hot: { background: "color-mix(in srgb, var(--color-chart-5) 22%, var(--color-card))", borderColor: "var(--color-chart-5)" },
-  risk: { background: "color-mix(in srgb, var(--color-accent-warm) 32%, var(--color-card))", borderColor: "var(--color-chart-1)" },
-  info: { background: "color-mix(in srgb, var(--color-chart-4) 22%, var(--color-card))", borderColor: "var(--color-chart-4)" },
-};
-
-/* Embedded on Resumen the brief is a list in one color (the box's indigo);
-   the icon — flame, warning, info — says what kind of item it is. The
-   severity tones below are for the standalone strip only. */
-const TONE_RING: Record<BriefTone, string> = {
-  hot: "color-mix(in srgb, var(--color-chart-5) 18%, var(--color-card))",
-  risk: "color-mix(in srgb, var(--color-chart-1) 26%, var(--color-card))",
-  info: "color-mix(in srgb, var(--color-chart-4) 20%, var(--color-card))",
-};
-
-const TONE_COLOR: Record<BriefTone, string> = {
-  hot: "var(--color-chart-5)",
-  risk: "var(--color-chart-1)",
-  info: "var(--color-chart-4)",
-};
-
 /** Brief del día — junta lo que ya calcula el resto de BEE (pronóstico,
  *  anomalías, priorización, cuotas, duplicados) en una sola fila de "esto
  *  necesita tu atención hoy", arriba del todo en Resumen. Si no hay nada
  *  real que decir, lo dice — nunca inventa urgencia para llenar el espacio. */
-/** `embedded`: rendered inside an OverviewCard (which owns the title), as a
- *  single column of compact rows — icon disc, title, one line of detail. */
-export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
+/** Rendered inside an OverviewCard (which owns the title), as a single
+ *  column of compact rows — icon disc, title, one line of detail. */
+export function DailyBrief() {
   const t = useTranslations("dashboardOverview.dailyBrief");
   const tItems = useTranslations("dashboardOverview.dailyBrief.items");
   const base = useDashboardBase();
@@ -79,8 +55,8 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
   const { data: patternsResult, isLoading: patternsLoading } = useSuccessPatterns();
   const { data: signalsResult } = useSignals(300);
   const { data: meetings } = useMeetings();
-  // Row = py-2 (16) + text-sm line (20) + mt-0.5 (2) + micro line (16) → 54; gap-1 → 4.
-  const [listRef, capacity] = useRowCapacity<HTMLUListElement>(54, 4, { min: 4, max: 12 });
+  // Row = py-2.5 (20) + text-sm line (20) + mt-0.5 (2) + caption line (16) + hairline 1 → 59.
+  const [listRef, capacity] = useRowCapacity<HTMLUListElement>(59, 0, { min: 4, max: 12 });
 
   // Este componente arma su propio set de queries (no comparte el gate de
   // loading de la página padre) — sin este chequeo, un usuario con conexión
@@ -117,85 +93,43 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
     meetings: meetings ?? [],
   }, tItems);
 
-  if (embedded) {
-    if (loading) {
-      return (
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 rounded-[var(--radius-lg)]" />
-          ))}
-        </div>
-      );
-    }
-    if (items.length === 0) {
-      return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
-    }
+  if (loading) {
     return (
-      <ul ref={listRef} className="bee-fill flex flex-col justify-evenly gap-1 overflow-hidden">
-        {items.slice(0, capacity).map((item) => {
-          const Icon = TONE_ICON[item.tone];
-          return (
-            <li key={item.id}>
-              <Link
-                href={resolveHref(item.href)}
-                className="flex items-start gap-3 rounded-[var(--radius-md)] px-2 py-2 transition-colors hover:bg-[var(--color-primary)]/30"
-              >
-                <span
-                  className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: TONE_RING.info, color: TONE_COLOR.info }}
-                >
-                  <Icon className="size-3.5" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-medium">{item.title}</span>
-                  {/* No `block` here: it would override line-clamp's -webkit-box and let the line wrap. */}
-                  <span className="mt-0.5 line-clamp-1 bee-micro">{item.description}</span>
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 rounded-[var(--radius-lg)]" />
+        ))}
+      </div>
     );
   }
-
+  if (items.length === 0) {
+    return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
+  }
   return (
-    <section className="mb-4">
-      <div className="mb-2 flex items-center gap-2">
-        <Sparkles className="size-3.5 text-[var(--color-text)]" />
-        <p className="bee-eyebrow">{t("title")}</p>
-      </div>
-      {loading ? (
-        <div className="flex gap-4 overflow-x-auto pb-1">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-[70px] w-64 shrink-0 rounded-[var(--radius-lg)]" />
-          ))}
-        </div>
-      ) : items.length === 0 ? (
-        <div className="bee-glass rounded-[var(--radius-lg)] px-4 py-3">
-          <p className="text-xs text-muted-foreground">{t("empty")}</p>
-        </div>
-      ) : (
-        <div className="flex flex-wrap gap-4">
-          {items.map((item) => {
-            const Icon = TONE_ICON[item.tone];
-            return (
-              <Link
-                key={item.id}
-                href={resolveHref(item.href)}
-                className="bee-bento flex w-64 shrink-0 items-start gap-4 px-4 py-3 transition-opacity hover:opacity-90"
-                style={TONE_FILL[item.tone]}
+    <ul ref={listRef} className="bee-fill flex flex-col overflow-hidden">
+      {items.slice(0, capacity).map((item) => {
+        const Icon = TONE_ICON[item.tone];
+        return (
+          <li key={item.id}>
+            <Link
+              href={resolveHref(item.href)}
+              className="bee-row items-start transition-colors hover:bg-[var(--color-background)]"
+            >
+              <span
+                className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full text-[var(--color-text)]"
+                style={{ background: "var(--color-background)" }}
               >
-                <Icon className="mt-1 size-4 shrink-0" style={{ color: TONE_COLOR[item.tone] }} />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold">{item.title}</p>
-                  <p className="mt-1 line-clamp-2 bee-micro">{item.description}</p>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-    </section>
+                <Icon className="size-3.5" />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-sm font-medium">{item.title}</span>
+                {/* No `block` here: it would override line-clamp's -webkit-box and let the line wrap. */}
+                <span className="mt-0.5 line-clamp-1 bee-caption">{item.description}</span>
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

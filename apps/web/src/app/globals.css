@@ -1737,9 +1737,10 @@
   letter-spacing: -0.02em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 @media (min-width: 1280px) { .bee-tile__value { font-size: 2rem; } }
+@media (max-width: 767px) { .bee-tile__value { font-size: 1.375rem; } }
 
 /* Row inside a list: hairline under each, the last one open. */
 .bee-row {

@@ -32,7 +32,7 @@
   },
   "widget": {
     "title": "Mi calendario",
-    "viewAll": "Ver todo →",
+    "viewAll": "Ver todo",
     "empty": "Sin reuniones próximas."
   },
   "clientContext": {

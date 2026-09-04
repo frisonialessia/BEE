@@ -18,7 +18,9 @@
       "wonMonth": "Won this month",
       "goalHint": "goal {goal}",
       "openPipeline": "Open pipeline",
-      "openPipelineHint": "{count, plural, one {# open opportunity} other {# open opportunities}}"
+      "openPipelineHint": "{count, plural, one {# open opportunity} other {# open opportunities}}",
+      "buyingWindow": "In a buying window",
+      "buyingWindowHint": "accounts ready or hot"
     },
     "itemLabels": {
       "battlecards": "battlecards",
@@ -68,23 +70,30 @@
       "ranking": {
         "title": "Team ranking",
         "caption": "90-day closes · ring = progress to goal",
-        "link": "See Sales →"
+        "link": "See Sales"
       },
       "sales": {
         "title": "Sales",
         "caption": "Won per month · last 12 months",
         "captionGoal": "Won per month · 12 months · goal {goal}",
         "goalLabel": "Goal",
-        "link": "See Sales →",
+        "link": "See Sales",
         "empty": "No closes yet. The first one will show up here."
       },
       "market": {
         "title": "Market",
-        "caption": "Signals per week and their mix by type, last 30 days"
+        "caption": "{count} signals in 84 days, by day and type",
+        "other": "Other",
+        "link": "See Signals",
+        "empty": "No signals yet. They appear once your market sources are connected."
       },
       "hive": {
         "title": "Intent hive",
-        "caption": "Each cell is an account; the closer to the centre, the closer to buying"
+        "caption": "Each cell is an account; the closer to the centre, the closer to buying",
+        "link": "See Signals"
+      },
+      "calendar": {
+        "caption": "Your next meetings"
       }
     }
   },

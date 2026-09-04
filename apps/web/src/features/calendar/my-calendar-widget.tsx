@@ -42,8 +42,8 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
   const calendarHref = pathname?.startsWith("/probar") ? "/probar/calendar" : "/dashboard/calendar";
   const tz = resolveTimezone(user?.timezone);
 
-  // Row = border 2 + py-2 (16) + xs line (16) + micro line (16) → 50; gap-2 → 8.
-  const [listRef, capacity] = useRowCapacity<HTMLUListElement>(50, 8, { min: 5, max: 14 });
+  // Row = py-2.5 (20) + sm line (20) + caption line (16) + hairline 1 → 57.
+  const [listRef, capacity] = useRowCapacity<HTMLUListElement>(57, 0, { min: 5, max: 14 });
   const nowIso = useMemo(() => new Date().toISOString(), []);
   const { data: meetings, isLoading } = useMeetings({ startsAfter: nowIso });
 
@@ -63,14 +63,15 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
       <p className="bee-caption">{t("widget.empty")}</p>
     </div>
   ) : (
-    <ul ref={listRef} className="bee-fill flex flex-col justify-evenly gap-2 overflow-hidden">
+    <ul ref={listRef} className="bee-fill flex flex-col overflow-hidden">
       {upcoming.map((m) => {
         const dotColor = m.color ? `var(--color-${m.color})` : CLIENT_CONTEXT_DOT[m.client_context ?? "new_contact"];
         return (
           // Same fill as the event on the Calendario page (eventFill there): the
           // color the rep picked for the meeting, at full strength, ink on top.
-          <li key={m.id} className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-[var(--color-text)]" style={{ background: dotColor }}>
-            <span className="bee-micro shrink-0 font-mono opacity-80">
+          <li key={m.id} className="bee-row text-[var(--color-text)]">
+            <span className="size-2.5 shrink-0 rounded-full" style={{ background: dotColor }} aria-hidden />
+            <span className="bee-micro w-[5.5rem] shrink-0 tabular-nums">
               {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", {
                 weekday: "short",
                 hour: "2-digit",
@@ -79,8 +80,8 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
               }).format(new Date(m.starts_at))}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-xs font-medium">{m.title}</span>
-              {(m.company_name || m.contact_name) && <span className="block truncate bee-micro opacity-80">{m.company_name ?? m.contact_name}</span>}
+              <span className="block truncate text-sm font-medium">{m.title}</span>
+              {(m.company_name || m.contact_name) && <span className="block truncate bee-caption">{m.company_name ?? m.contact_name}</span>}
             </span>
             {m.meeting_url && <Video className="size-3 shrink-0 opacity-70" />}
           </li>

@@ -1,44 +1,51 @@
 "use client";
 
-import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 
-import { AreaChart } from "@/components/charts/area-chart";
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { Donut } from "@/components/charts/donut";
-import { DATA, mix as tint } from "@/components/charts/palette";
+import { TONE, tint } from "@/components/charts/palette";
+import { StackedBars, type StackedPoint } from "@/components/charts/stacked-bars";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-heatmap";
-import { OverviewCard } from "@/components/dashboard/overview-card";
+import { CardLink, OverviewCard } from "@/components/dashboard/overview-card";
+import { PageHeader, PageShell } from "@/components/dashboard/page-shell";
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
+import { LiveBadge } from "@/components/live-badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { IntentHive } from "@/features/signals/intent-hive";
+import { MyCalendarWidget } from "@/features/calendar/my-calendar-widget";
 import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { DecisionFeed } from "@/features/dashboard/decision-feed";
 import { GettingStartedCard } from "@/features/dashboard/getting-started-card";
-import { MyCalendarWidget } from "@/features/calendar/my-calendar-widget";
 import { TeamGoalRanking } from "@/features/dashboard/team-goal-ranking";
-import { getSignalTypeLabels } from "@/lib/format";
-import { useLocale } from "next-intl";
-import type { Locale } from "@/i18n/locales";
-import { useMemo, useState } from "react";
+import { IntentHive } from "@/features/signals/intent-hive";
 import { useCompanies } from "@/hooks/queries/use-companies";
-import { useDashboardBase } from "@/lib/demo/mode";
+import { useHiveLeads } from "@/hooks/queries/use-lead-board";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
-import { useSignals } from "@/hooks/queries/use-signals";
 import { useQuotas } from "@/hooks/queries/use-quotas";
+import { useSignals } from "@/hooks/queries/use-signals";
 import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
+import type { Locale } from "@/i18n/locales";
+import { localeTags } from "@/i18n/locales";
+import { useDashboardBase } from "@/lib/demo/mode";
+import { getSignalTypeLabels } from "@/lib/format";
 import { formatMoney } from "@/lib/i18n/format";
 import { buildSalesModel } from "@/lib/sales-model";
-import { LiveBadge } from "@/components/live-badge";
+
+const DAY_MS = 86_400_000;
+const WEEK_MS = 7 * DAY_MS;
+const MARKET_DAYS = 84;
 
 /**
- * Resumen — the analytics tool: KPI strip, enriched battlecards, and the
- * live signal feed. The operational panels (brand, network, dark funnel,
- * sequences, resilience) each have their own dedicated route — see the
- * rail nav — so this page stays a focused overview rather than a
- * kitchen-sink dashboard.
+ * Resumen — nine boxes, four questions, read top to bottom:
+ *   Hoy      · the hive of intent with today's plays beside it, then the
+ *              brief, the calendar and the ranking;
+ *   Dinero   · won by month against the goal, the funnel;
+ *   Apuntar  · where we close best (industry × signal);
+ *   Mercado  · 84 days of signals stacked by type.
+ * The strip above mixes two market KPIs with two money KPIs. Everything
+ * here is a window; each page is the detail, so no chart repeats another.
  */
 export function DashboardOverview({
   headerAction,
@@ -47,12 +54,13 @@ export function DashboardOverview({
   headerAction?: React.ReactNode;
 } = {}) {
   const t = useTranslations("dashboardOverview.overview");
-  const locale = useLocale() as Locale;
-  const [now] = useState(() => Date.now());
   const tFeed = useTranslations("dashboardOverview.decisionFeed");
   const tBrief = useTranslations("dashboardOverview.dailyBrief");
   const tCalendar = useTranslations("calendar");
+  const locale = useLocale() as Locale;
   const base = useDashboardBase();
+  const [now] = useState(() => Date.now());
+
   const { data: signalsResult, isLoading: signalsLoading } = useSignals();
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
   const { data: allOppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 200);
@@ -60,46 +68,43 @@ export function DashboardOverview({
   const { data: companiesResult } = useCompanies(200);
   const { data: teamsData } = useTeams();
   const { data: quotasResult } = useQuotas();
+  const { data: hiveResult } = useHiveLeads(200);
 
   const signals = useMemo(() => signalsResult?.data ?? [], [signalsResult]);
   const battlecards = useMemo(() => battlecardsResult?.data ?? [], [battlecardsResult]);
   const live = Boolean(signalsResult?.live || battlecardsResult?.live);
-  // Incluye opps/users: sin esto, el Leaderboard alcanza a renderizar su
-  // "todavía no hay ganadas" antes de que esas dos queries respondan —
-  // un vacío que parece confirmado sin serlo.
   const loading = signalsLoading || battlecardsLoading || oppsLoading || usersLoading;
 
+  // Eight weeks of signals behind the first tile.
+  const weekly = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, i) => {
+        const to = now - (7 - i) * WEEK_MS;
+        return signals.filter((s) => {
+          const d = new Date(s.detected_at).getTime();
+          return d >= to - WEEK_MS && d < to;
+        }).length;
+      }),
+    [signals, now],
+  );
+  const weekDelta = weekly[6] > 0 ? (weekly[7] - weekly[6]) / weekly[6] : null;
 
-  const hotSignals = signals.filter((s) => s.score >= 75).length;
-
-  // Weekly series (8 weeks) behind the tiles and the first chart, and the
-  // 30-day mix by type for the donut — all from the signals already loaded.
-  const weekly = useMemo(() => {
-    const WEEK = 7 * 86_400_000;
-    return Array.from({ length: 8 }, (_, i) => {
-      const to = now - (7 - i) * WEEK;
-      const rows = signals.filter((s) => {
-        const d = new Date(s.detected_at).getTime();
-        return d >= to - WEEK && d < to;
-      });
-      const hot = rows.filter((s) => s.score >= 75).length;
-      const avg = rows.length ? rows.reduce((a, s) => a + s.score, 0) / rows.length : 0;
-      const label = new Intl.DateTimeFormat(locale === "es" ? "es-MX" : "en-US", { day: "numeric", month: "short" }).format(new Date(to - WEEK));
-      return { label, count: rows.length, hot, avg };
-    });
-  }, [signals, now, locale]);
-  const mix = useMemo(() => {
-    const labels = getSignalTypeLabels(locale);
-    const since = now - 30 * 86_400_000;
-    const counts = new Map<string, number>();
-    for (const s of signals) {
-      if (new Date(s.detected_at).getTime() < since) continue;
-      counts.set(s.signal_type, (counts.get(s.signal_type) ?? 0) + 1);
+  // Accounts in a buying window: ready to buy or hot, from the same leads
+  // the hive draws.
+  const hiveLeads = useMemo(() => hiveResult?.data ?? [], [hiveResult]);
+  const buyingWindow = hiveLeads.filter((l) => l.buying_stage === "ready_to_buy" || l.is_hot).length;
+  const hotTrend = useMemo(() => {
+    const byWeek = Array.from({ length: 8 }, () => 0);
+    for (const l of hiveLeads) {
+      const at = l.hot_since ?? l.last_signal_at ?? l.created_at;
+      const age = Math.floor((now - new Date(at).getTime()) / WEEK_MS);
+      if (age >= 0 && age < 8) byWeek[7 - age] += 1;
     }
-    return [...counts.entries()].map(([type, value]) => ({ label: labels[type as keyof typeof labels] ?? type, value }));
-  }, [signals, now, locale]);
-  // Twelve months of closed revenue against the active goal — the same model
-  // the Ventas page uses, so the box and the page never disagree.
+    return byWeek;
+  }, [hiveLeads, now]);
+
+  // Twelve months of closed revenue against the active goal — the same
+  // model the Ventas page uses, so the box and the page never disagree.
   const sales = useMemo(
     () =>
       buildSalesModel({
@@ -120,133 +125,101 @@ export function DashboardOverview({
     return { count: open.length, amount: open.reduce((sum, o) => sum + (o.amount ?? 0), 0) };
   }, [allOppsResult]);
   const criticalAccounts = useMemo(() => battlecards.filter((b) => b.ready_to_action).sort((a, b) => b.score - a.score), [battlecards]);
-  const weekDelta = (pick: (w: (typeof weekly)[number]) => number) => {
-    const last = pick(weekly[7]);
-    const prev = pick(weekly[6]);
-    return prev > 0 ? (last - prev) / prev : null;
-  };
+
+  // Mercado: 84 days of signals, stacked by the three most common types.
+  const market = useMemo(() => {
+    const labels = getSignalTypeLabels(locale);
+    const since = now - MARKET_DAYS * DAY_MS;
+    const recent = signals.filter((s) => new Date(s.detected_at).getTime() >= since);
+    const counts = new Map<string, number>();
+    for (const s of recent) counts.set(s.signal_type, (counts.get(s.signal_type) ?? 0) + 1);
+    const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
+    const fmt = new Intl.DateTimeFormat(localeTags[locale], { day: "numeric", month: "short" });
+    const points: StackedPoint[] = [];
+    for (let i = MARKET_DAYS - 1; i >= 0; i--) {
+      const dayStart = new Date(now - i * DAY_MS);
+      dayStart.setHours(0, 0, 0, 0);
+      const from = dayStart.getTime();
+      const rows = recent.filter((s) => {
+        const d = new Date(s.detected_at).getTime();
+        return d >= from && d < from + DAY_MS;
+      });
+      const parts = top.map((k) => rows.filter((s) => s.signal_type === k).length);
+      parts.push(rows.filter((s) => !top.includes(s.signal_type)).length);
+      points.push({ label: fmt.format(dayStart), parts, current: i === 0 });
+    }
+    const legend = top.map((k) => labels[k as keyof typeof labels] ?? k);
+    if (points.some((p) => p.parts[p.parts.length - 1] > 0)) legend.push(t("sections.market.other"));
+    return { points, legend, total: recent.length };
+  }, [signals, now, locale, t]);
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-8 w-72" />
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className={`h-14 ${i === 4 ? "hidden md:block" : ""}`} />
+      <PageShell header={<PageHeader eyebrow={t("eyebrow")} title={t("title")} caption={t("subtitle")} />}>
+        <div className="bee-strip grid grid-cols-2 md:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-[var(--radius-lg)]" />
           ))}
         </div>
-      </div>
+        <Skeleton className="mt-6 h-96 rounded-[var(--radius-lg)]" />
+      </PageShell>
     );
   }
 
   return (
-    <>
-      {/* Same header block as every other page, so the KPI strip below
-          starts at the same height everywhere in BEE. */}
-      <header className="mb-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="bee-eyebrow">{t("eyebrow")}</p>
-            <h1 className="bee-display mt-1">{t("title")}</h1>
-            <p className="bee-caption mt-1">{t("subtitle")}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <LiveBadge live={live} />
-            {headerAction}
-          </div>
-        </div>
-
-      </header>
-
-      {/* KPIs: two about the market, two about money — the first line already
-          mixes what is coming in with what is being closed. */}
-      <div className="mb-4">
+    <PageShell
+      header={
+        <PageHeader
+          eyebrow={t("eyebrow")}
+          title={t("title")}
+          caption={t("subtitle")}
+          actions={
+            <>
+              <LiveBadge live={live} />
+              {headerAction}
+            </>
+          }
+        />
+      }
+      kpis={
         <StatStrip cols={4}>
-          <StatTile label={t("kpis.signals")} value={signals.length} delta={weekDelta((w) => w.count)} deltaLabel={t("kpis.weeklySignals")} trend={weekly.map((w) => w.count)} tone={DATA.indigo} />
-          <StatTile label={t("kpis.hotSignals")} value={hotSignals} delta={weekDelta((w) => w.hot)} trend={weekly.map((w) => w.hot)} tone={DATA.honey} />
+          <StatTile label={t("kpis.signals")} value={signals.length} delta={weekDelta} deltaLabel={t("kpis.weeklySignals")} trend={weekly} tone={TONE.market} />
+          <StatTile label={t("kpis.buyingWindow")} value={buyingWindow} hint={t("kpis.buyingWindowHint")} trend={hotTrend} tone={TONE.forecast} />
           <StatTile
             label={t("kpis.wonMonth")}
             value={money(sales.thisMonth.value)}
             delta={sales.monthDelta}
-            hint={sales.goal ? t("kpis.goalHint", { goal: money(sales.goal) }) : undefined}
+            deltaLabel={sales.goal ? t("kpis.goalHint", { goal: money(sales.goal) }) : undefined}
             progress={sales.attainment ?? undefined}
-            tone={DATA.honey}
+            tone={TONE.urgency}
           />
-          <StatTile
-            label={t("kpis.openPipeline")}
-            value={money(openPipeline.amount)}
-            hint={t("kpis.openPipelineHint", { count: openPipeline.count })}
-            tone={DATA.violet}
-          />
+          <StatTile label={t("kpis.openPipeline")} value={money(openPipeline.amount)} hint={t("kpis.openPipelineHint", { count: openPipeline.count })} tone={TONE.prepared} />
         </StatStrip>
-      </div>
+      }
+    >
+      <GettingStartedCard signalCount={signals.length} opportunityCount={allOppsResult?.data.length ?? 0} userCount={usersResult?.length ?? 0} />
 
-      <GettingStartedCard
-        signalCount={signals.length}
-        opportunityCount={allOppsResult?.data.length ?? 0}
-        userCount={usersResult?.length ?? 0}
-      />
-
-      {/* Four rows, one question each, read top to bottom:
-          Hoy      — what do I do today (plays incl. critical accounts · brief · calendar)
-          Dinero   — how is the money (won by month · funnel · team)
-          Mercado  — what the market sent (weekly signals with their mix, one box)
-          Apuntar  — where to aim (the hive of intent · where we close best)
-          Down from 13 boxes to 9 so the page tells the rep what to do instead
-          of tiring them. "Cuándo llega el mercado" moved to Señales, where the
-          day/hour pattern is used to plan prospecting. */}
       <div className="bee-overview">
-        {/* Central block: the hive — BEE's identity — with the stage metrics
-            under it; the day's plays at its side. */}
-        <OverviewCard span={8} title={t("sections.hive.title")} caption={t("sections.hive.caption")} className="lg:min-h-[32rem]!"><IntentHive maxRadius={34} minHeight={280} /></OverviewCard>
-
-        <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")} className="lg:min-h-[32rem]!">
-          <DecisionFeed embedded criticalAccounts={criticalAccounts} />
+        {/* Hoy — the hive at the centre, the plays beside it. */}
+        <OverviewCard span={8} title={t("sections.hive.title")} caption={t("sections.hive.caption")} className="lg:min-h-[34rem]!" action={<CardLink href={`${base}/signals?tab=intent`}>{t("sections.hive.link")}</CardLink>}>
+          <IntentHive maxRadius={34} minHeight={300} />
+        </OverviewCard>
+        <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")} className="lg:min-h-[34rem]!">
+          <DecisionFeed criticalAccounts={criticalAccounts} />
         </OverviewCard>
 
-        {/* Hoy — what needs me, when, and who is closing. */}
-        <OverviewCard span={4} title={tBrief("title")} caption={t("sections.brief.caption")} className="lg:min-h-[26rem]!">
-          <DailyBrief embedded />
+        <OverviewCard span={4} title={tBrief("title")} caption={t("sections.brief.caption")} className="lg:min-h-[24rem]!">
+          <DailyBrief />
         </OverviewCard>
-
-        <OverviewCard
-          span={4}
-          className="lg:min-h-[26rem]!"
-          title={tCalendar("widget.title")}
-          action={
-            <Link href={`${base}/calendar`} className="bee-micro font-medium text-[var(--color-text)] hover:underline">
-              {tCalendar("widget.viewAll")}
-            </Link>
-          }
-        >
+        <OverviewCard span={4} title={tCalendar("widget.title")} caption={t("sections.calendar.caption")} className="lg:min-h-[24rem]!" action={<CardLink href={`${base}/calendar`}>{tCalendar("widget.viewAll")}</CardLink>}>
           <MyCalendarWidget embedded />
         </OverviewCard>
-
-        <OverviewCard
-          span={4}
-          className="lg:min-h-[26rem]!"
-          title={t("sections.ranking.title")}
-          caption={t("sections.ranking.caption")}
-          action={
-            <Link href={`${base}/sales`} className="bee-micro font-medium text-[var(--color-text)] hover:underline">
-              {t("sections.ranking.link")}
-            </Link>
-          }
-        >
+        <OverviewCard span={4} title={t("sections.ranking.title")} caption={t("sections.ranking.caption")} className="lg:min-h-[24rem]!" action={<CardLink href={`${base}/sales`}>{t("sections.ranking.link")}</CardLink>}>
           <TeamGoalRanking days={90} limit={4} bars />
         </OverviewCard>
 
-        {/* Dinero — closed by month, the funnel, where we close best. */}
-        <OverviewCard
-          span={5}
-          title={t("sections.sales.title")}
-          caption={sales.goal ? t("sections.sales.captionGoal", { goal: money(sales.goal) }) : t("sections.sales.caption")}
-          action={
-            <Link href={`${base}/sales`} className="bee-micro font-medium text-[var(--color-text)] hover:underline">
-              {t("sections.sales.link")}
-            </Link>
-          }
-        >
+        {/* Dinero — closed by month, the funnel; Apuntar — where we close best. */}
+        <OverviewCard span={5} title={t("sections.sales.title")} caption={sales.goal ? t("sections.sales.captionGoal", { goal: money(sales.goal) }) : t("sections.sales.caption")} action={<CardLink href={`${base}/sales`}>{t("sections.sales.link")}</CardLink>}>
           {sales.won.length === 0 ? (
             <p className="bee-caption py-8 text-center">{t("sections.sales.empty")}</p>
           ) : (
@@ -254,41 +227,26 @@ export function DashboardOverview({
               points={sales.months}
               target={sales.goal}
               formatValue={(v) => money(v)}
-              colorFor={(p, _i, max) => (p.value >= max * 0.66 ? DATA.honey : p.value >= max * 0.33 ? tint(DATA.honey, 65) : tint(DATA.honey, 40))}
+              colorFor={(p, _i, max) => (p.value >= max * 0.66 ? TONE.market : p.value >= max * 0.33 ? tint(TONE.market, 70) : tint(TONE.market, 45))}
             />
           )}
         </OverviewCard>
-
         <OverviewCard span={3} title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
           <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
         </OverviewCard>
-
         <OverviewCard span={4} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
-          <IndustrySignalHeatmap
-            opportunities={allOppsResult?.data ?? []}
-            signals={signals}
-            companies={companiesResult?.data ?? []}
-          />
+          <IndustrySignalHeatmap opportunities={allOppsResult?.data ?? []} signals={signals} companies={companiesResult?.data ?? []} />
         </OverviewCard>
 
-        {/* Mercado — one box: volume by week on the left, mix by type on the right. */}
-        <OverviewCard span={12} title={t("sections.market.title")} caption={t("sections.market.caption")}>
-          <div className="bee-fill grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-            <div className="flex min-h-0 flex-col">
-              <p className="bee-caption mb-1">{t("sections.signalsWeekly.caption")}</p>
-              <div className="bee-fill min-h-[11rem]">
-                <AreaChart points={weekly.map((w) => ({ label: w.label, value: w.count }))} color={DATA.indigo} />
-              </div>
-            </div>
-            <div className="flex min-h-0 flex-col lg:border-l lg:border-border lg:pl-6">
-              <p className="bee-caption mb-1">{t("sections.signalMix.caption")}</p>
-              <div className="bee-fill min-h-[11rem]">
-                <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
-              </div>
-            </div>
-          </div>
+        {/* Mercado — one box, 84 days of signals by type. */}
+        <OverviewCard span={12} title={t("sections.market.title")} caption={t("sections.market.caption", { count: market.total })} className="lg:min-h-[16rem]!" action={<CardLink href={`${base}/signals`}>{t("sections.market.link")}</CardLink>}>
+          {market.total === 0 ? (
+            <p className="bee-caption py-8 text-center">{t("sections.market.empty")}</p>
+          ) : (
+            <StackedBars points={market.points} legend={market.legend} tone={TONE.market} minHeight={150} />
+          )}
         </OverviewCard>
       </div>
-    </>
+    </PageShell>
   );
 }

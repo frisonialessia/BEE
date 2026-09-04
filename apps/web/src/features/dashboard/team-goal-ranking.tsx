@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { DATA, SALES, mix } from "@/components/charts/palette";
+import { REST, SALES, TONE, mix, tint } from "@/components/charts/palette";
 import { ProgressRing } from "@/components/charts/progress-ring";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useQuotas } from "@/hooks/queries/use-quotas";
@@ -15,8 +15,9 @@ import type { Locale } from "@/i18n/locales";
 import { formatMoney } from "@/lib/i18n/format";
 import { computeQuotaAttainment, isQuotaActive } from "@/lib/quotas";
 
-// One color per box: honey at three strengths by rank (greens on Ventas).
-const RANK_TONE = [DATA.honey, mix(DATA.honey, 60), mix(DATA.honey, 35)];
+// One hue per box — indigo, the team — at three intensities by rank
+// (greens on Ventas); past the podium, the page grey.
+const RANK_TONE = [TONE.forecast, tint(TONE.forecast, 70), tint(TONE.forecast, 45)];
 // Ventas is greens-only: the podium avatars go won → lime → mint, mint
 // with dark text so it still reads.
 const RANK_TONE_SALES = [SALES.won, SALES.lime, SALES.mint];
@@ -97,17 +98,17 @@ export function TeamGoalRanking({
   if (rows.length === 0) return <p className="bee-caption py-6 text-center">{t("empty")}</p>;
 
   const list = (
-    <ol className="flex flex-1 flex-col justify-evenly gap-2">
+    <ol className="flex flex-1 flex-col justify-evenly">
       {rows.map((rep, i) => {
         const reached = rep.attainment !== null && rep.attainment >= 1;
-        const ringColor = sales ? (reached ? SALES.won : SALES.lime) : DATA.honey;
-        const bg = sales ? (reached ? mix(SALES.mint, 70) : i === 0 ? mix(SALES.mint, 40) : undefined) : i === 0 ? mix(DATA.honeyFill, 22) : undefined;
-        const avatar = sales ? RANK_TONE_SALES[i] ?? SALES.mint : RANK_TONE[i] ?? mix(DATA.honey, 35);
-        const avatarText = i >= 1 ? "var(--color-text)" : "#fff";
+        const ringColor = sales ? (reached ? SALES.won : SALES.lime) : TONE.forecast;
+        const bg = sales ? (reached ? mix(SALES.mint, 70) : i === 0 ? mix(SALES.mint, 40) : undefined) : undefined;
+        const avatar = sales ? RANK_TONE_SALES[i] ?? SALES.mint : "var(--color-primary)";
+        const avatarText = "var(--color-text)";
         return (
           // Fixed columns (# · avatar · name · ring · amount) so every rank,
           // ring and figure lines up down the list.
-          <li key={rep.userId} className="grid grid-cols-[1.25rem_2rem_minmax(0,1fr)_2.25rem_4.5rem] items-center gap-3 rounded-[var(--radius-md)] px-3 py-2" style={bg ? { background: bg } : undefined}>
+          <li key={rep.userId} className="bee-row grid grid-cols-[1.25rem_2rem_minmax(0,1fr)_2.25rem_4.5rem] gap-3 rounded-[var(--radius-md)] px-2" style={bg ? { background: bg } : undefined}>
             <span className="bee-micro font-semibold text-[var(--color-text)]">#{i + 1}</span>
             {rep.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- avatar URLs come from the user's own profile, any host
@@ -119,11 +120,11 @@ export function TeamGoalRanking({
             )}
             <div className="min-w-0">
               <p className="flex items-center gap-1 text-sm font-medium">
-                {i === 0 && <Trophy className="size-3.5 shrink-0" style={{ color: sales ? SALES.won : DATA.honey }} />}
+                {i === 0 && <Trophy className="size-3.5 shrink-0 text-[var(--color-text)]" />}
                 <span className="truncate">{rep.name}</span>
               </p>
               <p className="mt-0.5 flex items-center gap-1.5">
-                <span className="rounded-full px-2 py-0.5 bee-micro font-medium" style={{ background: sales ? mix(SALES.mint, 70) : mix(DATA.honey, 22) }}>
+                <span className="rounded-full px-2 py-0.5 bee-micro font-medium text-[var(--color-text)]" style={{ background: sales ? mix(SALES.mint, 70) : RANK_TONE[i] ?? REST }}>
                   {t("deals", { count: rep.deals })}
                 </span>
                 {rep.attainment === null && <span className="bee-micro">{t("noGoal")}</span>}
@@ -144,7 +145,7 @@ export function TeamGoalRanking({
         points={rows.map((r) => ({ label: r.name.split(/\s+/)[0], value: r.value }))}
         minHeight={72}
         formatValue={(v) => formatMoney(v, rows[0]?.currency ?? "USD", locale, true)}
-        colorFor={(_p, i) => (sales ? RANK_TONE_SALES[i] ?? SALES.mint : RANK_TONE[i] ?? mix(DATA.honey, 35))}
+        colorFor={(_p, i) => (sales ? RANK_TONE_SALES[i] ?? SALES.mint : RANK_TONE[i] ?? REST)}
       />
     </div>
   );
