@@ -10,8 +10,8 @@
   },
   "streak": {
     "label": "Streak",
-    "hint": "{days} days in a row with closes on the team",
-    "hintZero": "Start the team's streak today"
+    "hint": "{days} days in a row with closes of your own",
+    "hintZero": "Start your streak today"
   },
   "burnout": {
     "title": "Slower week than usual",
@@ -19,34 +19,26 @@
     "empty": "Not enough hot accounts to suggest yet."
   },
   "path": {
-    "title": "Milestone path",
-    "caption": "Team closes, no ceiling",
-    "aria": "Team close-milestone path — {total} closes so far",
-    "progress": "{current} of {next} to the next milestone",
+    "aria": "Your milestone path — {total} of your own closes so far",
+    "goalFraction": "{current}/{next}",
+    "goalLabel": "goal this month",
+    "nextMilestoneLabel": "next milestone",
     "nodeReached": "{value} closes — reached",
     "nodeNext": "{value} closes — {remaining} to go",
     "nodeAhead": "{value} closes — the stretch after that"
   },
   "milestone": {
     "messages": [
-      "{count} closes on the team! A real milestone, not a random number.",
-      "{count} deals won — the consistency is showing.",
-      "Milestone reached: {count} closes for the team."
+      "{count} closes of your own! A real milestone, not a random number.",
+      "{count} deals won — your consistency is showing.",
+      "Milestone reached: {count} closes of your own."
     ]
   },
   "recap": {
     "title": "Your week in BEE",
-    "caption": "Last 7 days",
+    "caption": "Your streak, your signals, your path",
+    "captionRank": "Your streak, your signals, your path · #{rank} on the team this week",
     "signals": "Signals",
-    "won": "Won",
-    "streak": "Streak",
-    "chartCaption": "Signals per day",
-    "signalsCount": "{count} signals",
-    "tips": {
-      "slow": "The market is slower than usual this week — below are high-intent accounts to pick back up.",
-      "streak": "{days} days in a row with closes on the team — don't break it today.",
-      "won": "{count} closes this week — each one already adjusted the next play.",
-      "steady": "No closes yet this week — the intent hive has accounts ready to act on."
-    }
+    "won": "Won"
   }
 }

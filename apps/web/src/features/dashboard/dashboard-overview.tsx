@@ -4,7 +4,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { AntiBurnoutCard } from "@/components/celebration/anti-burnout-card";
-import { StreakBadge } from "@/components/celebration/streak-badge";
 import { useMilestoneCelebration } from "@/components/celebration/use-milestone-celebration";
 import { WeeklyRecapCard } from "@/components/celebration/weekly-recap-card";
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
@@ -36,7 +35,9 @@ import { localeTags } from "@/i18n/locales";
 import { useDashboardBase } from "@/lib/demo/mode";
 import { getSignalTypeLabels } from "@/lib/format";
 import { formatAmount, formatMoney } from "@/lib/i18n/format";
+import { isQuotaActive } from "@/lib/quotas";
 import { buildSalesModel } from "@/lib/sales-model";
+import { useAuth } from "@/providers/auth-provider";
 
 const DAY_MS = 86_400_000;
 const WEEK_MS = 7 * DAY_MS;
@@ -69,6 +70,10 @@ export function DashboardOverview({
   const salesRange = useTimeRange();
   const marketRange = useTimeRange();
 
+  // Real session on the dashboard; the sandbox has none (see
+  // my-calendar-widget.tsx's own docstring) so the first seeded teammate
+  // stands in as "you" there — same fallback account-menu-demo.tsx uses.
+  const { user: authUser } = useAuth();
   const { data: signalsResult, isLoading: signalsLoading } = useSignals();
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
   const { data: allOppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 200);
@@ -96,19 +101,6 @@ export function DashboardOverview({
     [signals, now],
   );
   const weekDelta = weekly[6] > 0 ? (weekly[7] - weekly[6]) / weekly[6] : null;
-  // Seven days of signals, for the recap card's own small chart — daily,
-  // not the weekly buckets above, so "your week" actually reads day by day.
-  const dailySignals = useMemo(() => {
-    const fmt = new Intl.DateTimeFormat(localeTags[locale], { weekday: "short" });
-    return Array.from({ length: 7 }, (_, i) => {
-      const dayStart = now - (6 - i) * DAY_MS;
-      const count = signals.filter((s) => {
-        const d = new Date(s.detected_at).getTime();
-        return d >= dayStart - DAY_MS && d < dayStart;
-      }).length;
-      return { label: fmt.format(new Date(dayStart)), value: count };
-    });
-  }, [signals, now, locale]);
   // Only a real, well-below-average week counts as slow — never a single
   // noisy day-to-day dip, and never when there's too little history yet.
   const marketSlow = useMemo(() => {
@@ -157,27 +149,6 @@ export function DashboardOverview({
   }, [allOppsResult]);
   const criticalAccounts = useMemo(() => battlecards.filter((b) => b.ready_to_action).sort((a, b) => b.score - a.score), [battlecards]);
 
-  // Consecutive days, ending today, with at least one won deal on the
-  // team — derived from the same closed_at the ranking and Ventas already
-  // read, so no new backend state. Today doesn't break the count while
-  // it's still in progress: the streak is judged from yesterday back
-  // until today closes something of its own.
-  const streakDays = useMemo(() => {
-    const closedDays = new Set(
-      (allOppsResult?.data ?? [])
-        .filter((o) => o.status === "won" && o.closed_at)
-        .map((o) => new Date(o.closed_at as string).toDateString()),
-    );
-    const cursor = new Date(now);
-    if (!closedDays.has(cursor.toDateString())) cursor.setDate(cursor.getDate() - 1);
-    let days = 0;
-    while (closedDays.has(cursor.toDateString())) {
-      days += 1;
-      cursor.setDate(cursor.getDate() - 1);
-    }
-    return days;
-  }, [allOppsResult, now]);
-
   // Real accounts to suggest on a slow week — the hottest ones not yet in
   // motion, from the same hive data the centre box already fetched.
   const burnoutLeads = useMemo(
@@ -190,14 +161,79 @@ export function DashboardOverview({
     [hiveLeads],
   );
 
-  // The recap's "won" fact and the milestone celebration both read the
-  // team's own total — the same opportunities the ranking and Ventas use.
-  const wonThisWeek = useMemo(
-    () => (allOppsResult?.data ?? []).filter((o) => o.status === "won" && o.closed_at && now - new Date(o.closed_at).getTime() < WEEK_MS).length,
-    [allOppsResult, now],
+  // "Tu semana en BEE" — every number here is scoped to this one rep, not
+  // the team: streak, signals, closes, the milestone road. `meId` is the
+  // real session's user on the dashboard; the sandbox has none, so the
+  // first seeded teammate (same one account-menu-demo.tsx shows as "you")
+  // stands in there.
+  const meId = authUser?.id ?? usersResult?.[0]?.id ?? null;
+  const myOpps = useMemo(() => (allOppsResult?.data ?? []).filter((o) => o.assigned_to_user_id === meId), [allOppsResult, meId]);
+  const myWonAll = useMemo(() => myOpps.filter((o) => o.status === "won" && o.closed_at), [myOpps]);
+  const myTotalWon = myWonAll.length;
+  const myWonThisWeek = useMemo(() => myWonAll.filter((o) => now - new Date(o.closed_at as string).getTime() < WEEK_MS).length, [myWonAll, now]);
+  const myWonLastWeek = useMemo(
+    () => myWonAll.filter((o) => { const age = now - new Date(o.closed_at as string).getTime(); return age >= WEEK_MS && age < 2 * WEEK_MS; }).length,
+    [myWonAll, now],
   );
-  const totalWon = useMemo(() => (allOppsResult?.data ?? []).filter((o) => o.status === "won").length, [allOppsResult]);
-  useMilestoneCelebration(totalWon);
+  const myWonDelta = myWonLastWeek > 0 ? (myWonThisWeek - myWonLastWeek) / myWonLastWeek : null;
+
+  // Consecutive days, ending today, with at least one deal *this rep*
+  // closed — today doesn't break the count while it's still in progress:
+  // judged from yesterday back until today closes something of its own.
+  const myStreakDays = useMemo(() => {
+    const closedDays = new Set(myWonAll.map((o) => new Date(o.closed_at as string).toDateString()));
+    const cursor = new Date(now);
+    if (!closedDays.has(cursor.toDateString())) cursor.setDate(cursor.getDate() - 1);
+    let days = 0;
+    while (closedDays.has(cursor.toDateString())) {
+      days += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return days;
+  }, [myWonAll, now]);
+
+  // Signals don't belong to a rep in the data model (they're market
+  // detections, not an action a person took) — the honest personal scope
+  // is "signals on accounts you actually have an opportunity for", not a
+  // fabricated per-rep signal feed.
+  const myCompanyIds = useMemo(() => new Set(myOpps.map((o) => o.company_id).filter((id): id is string => Boolean(id))), [myOpps]);
+  const mySignals = useMemo(() => signals.filter((s) => s.company_id && myCompanyIds.has(s.company_id)), [signals, myCompanyIds]);
+  const mySignalsThisWeek = useMemo(() => mySignals.filter((s) => now - new Date(s.detected_at).getTime() < WEEK_MS).length, [mySignals, now]);
+  const mySignalsLastWeek = useMemo(
+    () => mySignals.filter((s) => { const age = now - new Date(s.detected_at).getTime(); return age >= WEEK_MS && age < 2 * WEEK_MS; }).length,
+    [mySignals, now],
+  );
+  const mySignalsDelta = mySignalsLastWeek > 0 ? (mySignalsThisWeek - mySignalsLastWeek) / mySignalsLastWeek : null;
+
+  // The manager-set monthly goal for this rep, when one exists (see
+  // quotas-section.tsx / the invite form) — a deal-count target for the
+  // *current period*, not a lifetime number, so it's judged against this
+  // month's wins, never against totalWon (which is all-time and would
+  // almost always already be past a small monthly target).
+  const monthlyGoal = useMemo(() => {
+    const quota = (quotasResult?.data ?? []).find((q) => q.user_id === meId && isQuotaActive(q, new Date(now)));
+    if (!quota?.target_count) return null;
+    const monthStart = new Date(new Date(now).getFullYear(), new Date(now).getMonth(), 1).getTime();
+    const current = myWonAll.filter((o) => new Date(o.closed_at as string).getTime() >= monthStart).length;
+    return { current, target: quota.target_count };
+  }, [quotasResult, meId, now, myWonAll]);
+
+  // Only shown when this rep actually won something this week — a rank
+  // with no wins to earn it would be a made-up "last place", not a fact.
+  const teamRank = useMemo(() => {
+    if (!meId) return null;
+    const byUser = new Map<string, number>();
+    for (const o of allOppsResult?.data ?? []) {
+      if (o.status !== "won" || !o.assigned_to_user_id || !o.closed_at) continue;
+      if (now - new Date(o.closed_at).getTime() >= WEEK_MS) continue;
+      byUser.set(o.assigned_to_user_id, (byUser.get(o.assigned_to_user_id) ?? 0) + (o.amount ?? 0));
+    }
+    const ranked = [...byUser.entries()].sort((a, b) => b[1] - a[1]);
+    const idx = ranked.findIndex(([id]) => id === meId);
+    return idx === -1 ? null : { rank: idx + 1 };
+  }, [allOppsResult, meId, now]);
+
+  useMilestoneCelebration(myTotalWon);
 
   // Mercado: signals stacked by the three most common types — one bar a
   // week over a year, one a month when zoomed out to two or five years.
@@ -275,7 +311,16 @@ export function DashboardOverview({
           right under the header (the one page that departs from Rule 11's
           usual "header → KPIs" rhythm, on purpose: here the personal recap
           outranks the strip). */}
-      <WeeklyRecapCard signals={weekly[7]} won={wonThisWeek} streakDays={streakDays} marketSlow={marketSlow} dailySignals={dailySignals} totalWon={totalWon} />
+      <WeeklyRecapCard
+        streakDays={myStreakDays}
+        signalsThisWeek={mySignalsThisWeek}
+        signalsDelta={mySignalsDelta}
+        wonThisWeek={myWonThisWeek}
+        wonDelta={myWonDelta}
+        totalWon={myTotalWon}
+        monthlyGoal={monthlyGoal}
+        teamRank={teamRank}
+      />
 
       <GettingStartedCard signalCount={signals.length} opportunityCount={allOppsResult?.data.length ?? 0} userCount={usersResult?.length ?? 0} />
 
@@ -315,12 +360,7 @@ export function DashboardOverview({
           title={t("sections.ranking.title")}
           caption={t("sections.ranking.caption")}
           className="lg:min-h-[24rem]!"
-          action={
-            <span className="flex items-center gap-3">
-              <StreakBadge days={streakDays} />
-              <CardLink href={`${base}/sales`}>{t("sections.ranking.link")}</CardLink>
-            </span>
-          }
+          action={<CardLink href={`${base}/sales`}>{t("sections.ranking.link")}</CardLink>}
         >
           <TeamGoalRanking days={90} bars />
         </OverviewCard>

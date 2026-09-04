@@ -2,77 +2,81 @@
 
 import { useTranslations } from "next-intl";
 
-import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { TONE } from "@/components/charts/palette";
 import { MilestonePath } from "@/components/celebration/milestone-path";
+import { DeltaChip } from "@/components/charts/delta-chip";
+import { TONE } from "@/components/charts/palette";
 import { OverviewCard } from "@/components/dashboard/overview-card";
+import { hexagonPath } from "@/lib/visualization/honeycomb-radial";
+
+function StreakChip({ days }: { days: number }) {
+  const t = useTranslations("celebration.streak");
+  return (
+    <span
+      className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full py-1.5 pl-2 pr-3"
+      style={{ background: `linear-gradient(135deg, ${TONE.market}, ${TONE.marketDeep})` }}
+      title={days > 0 ? t("hint", { days }) : t("hintZero")}
+    >
+      <svg width="17" height="17" viewBox="-9 -9 18 18" aria-hidden>
+        <path d={hexagonPath(0, 0, 9)} fill="#fff" />
+      </svg>
+      <span className="text-sm font-bold tabular-nums text-white">{days}</span>
+    </span>
+  );
+}
+
+function StatMini({ label, value, delta, tone }: { label: string; value: number; delta: number | null; tone?: string }) {
+  return (
+    <div className="flex shrink-0 items-baseline gap-2">
+      <div>
+        <p className="text-base font-bold leading-tight tabular-nums">{value}</p>
+        <p className="bee-micro">{label}</p>
+      </div>
+      {delta !== null && <DeltaChip value={delta} tone={tone} />}
+    </div>
+  );
+}
 
 /**
- * A permanent fixture at the top of Resumen, not a notice to clear — real
- * facts from the last 7 days (three tiles, a daily signals chart, one line
- * of guidance) and the all-time milestone road in the same window: one
- * place for "how's this week" and "how far has the team come", instead of
- * two cards saying similar things. No dismiss: the point is to be there
- * every time, the same way the KPI strip above it always is.
+ * A permanent fixture at the top of Resumen — one narrow row, entirely
+ * personal (this rep's own streak, own signals, own path), not a team
+ * dashboard: streak, this week's signals and closes (each with a real
+ * delta against last week), then the milestone road toward this rep's
+ * manager-set goal when one exists, else the next round number. No
+ * dismiss — the point is to be there every time, like the KPI strip.
  */
 export function WeeklyRecapCard({
-  signals,
-  won,
   streakDays,
-  marketSlow,
-  dailySignals,
+  signalsThisWeek,
+  signalsDelta,
+  wonThisWeek,
+  wonDelta,
   totalWon,
+  monthlyGoal,
+  teamRank,
 }: {
-  signals: number;
-  won: number;
   streakDays: number;
-  marketSlow: boolean;
-  dailySignals: { label: string; value: number }[];
+  signalsThisWeek: number;
+  signalsDelta: number | null;
+  wonThisWeek: number;
+  wonDelta: number | null;
   totalWon: number;
+  monthlyGoal: { current: number; target: number } | null;
+  teamRank: { rank: number } | null;
 }) {
   const t = useTranslations("celebration.recap");
 
-  if (signals === 0 && won === 0) return null;
+  if (signalsThisWeek === 0 && wonThisWeek === 0 && totalWon === 0) return null;
 
-  // Priority order: a real slow week first (it's the most actionable),
-  // then the streak (encourage keeping it, or starting one), then a real
-  // close this week, then a plain steady-state line — always a fact
-  // already shown elsewhere on the page, never a new number.
-  const tip = marketSlow
-    ? t("tips.slow")
-    : streakDays > 0
-      ? t("tips.streak", { days: streakDays })
-      : won > 0
-        ? t("tips.won", { count: won })
-        : t("tips.steady");
+  const caption = teamRank ? t("captionRank", { rank: teamRank.rank }) : t("caption");
 
   return (
-    <OverviewCard span={12} title={t("title")} caption={t("caption")} className="lg:min-h-0!">
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[auto_1fr]">
-        <div className="flex gap-8 lg:flex-col lg:gap-5 lg:border-r lg:border-[var(--color-divider)] lg:pr-8">
-          <div>
-            <p className="bee-micro">{t("signals")}</p>
-            <p className="text-xl font-bold tabular-nums">{signals}</p>
-          </div>
-          <div>
-            <p className="bee-micro">{t("won")}</p>
-            <p className="text-xl font-bold tabular-nums">{won}</p>
-          </div>
-          <div>
-            <p className="bee-micro">{t("streak")}</p>
-            <p className="text-xl font-bold tabular-nums">{streakDays}</p>
-          </div>
-        </div>
-        <div className="min-w-0">
-          <p className="bee-micro">{t("chartCaption")}</p>
-          <div className="mt-1">
-            <BarsVsTarget points={dailySignals} minHeight={96} color={TONE.market} formatValue={(v) => t("signalsCount", { count: Math.round(v) })} />
-          </div>
-        </div>
-      </div>
-      <p className="bee-caption mt-5 border-t border-[var(--color-divider)] pt-4">{tip}</p>
-      <div className="mt-5 border-t border-[var(--color-divider)] pt-4">
-        <MilestonePath totalWon={totalWon} />
+    <OverviewCard span={12} title={t("title")} caption={caption} className="lg:min-h-0!">
+      <div className="flex flex-wrap items-center gap-4">
+        <StreakChip days={streakDays} />
+        <StatMini label={t("signals")} value={signalsThisWeek} delta={signalsDelta} tone={TONE.market} />
+        <StatMini label={t("won")} value={wonThisWeek} delta={wonDelta} tone="sales" />
+        <div className="hidden h-8 w-px shrink-0 bg-[var(--color-divider)] sm:block" />
+        <MilestonePath totalWon={totalWon} monthlyGoal={monthlyGoal} />
       </div>
     </OverviewCard>
   );

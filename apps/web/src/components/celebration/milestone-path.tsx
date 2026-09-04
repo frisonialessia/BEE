@@ -1,124 +1,173 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { mix, SALES, TONE } from "@/components/charts/palette";
-import { currentMilestoneIndex, milestoneAt } from "@/lib/milestones";
+import { milestoneAt } from "@/lib/milestones";
 
-// Honey at the start, a genuine honey→green bridge tone in the middle
+// Honey at the start, a genuine honey→mint bridge tone in the middle
 // (color-mix between the two, not a tint toward white), the main green as
 // the goal at the end — the same sweep however far the real total climbs.
+// No other hue in this component, by design: not even the magenta the
+// "current" ring used before — a deeper honey does that job instead.
 const RAMP = [TONE.marketDeep, TONE.market, mix(TONE.market, 55, SALES.mint), SALES.mint, SALES.lime, SALES.won];
 
-const NODE_R = 20;
-const STEP_X = 128;
-const Y_TOP = 54;
-const Y_BOTTOM = 116;
-const VIEW_H = 170;
-// Every milestone the team has ever crossed shows — not a truncated tail —
-// so the road reads as fully walked, not mostly empty; only two hollow
-// ones ahead, enough to say it keeps going without the path looking
-// mostly grey.
+const NODE_R = 13;
+const STEP_X = 62;
+const CY = 22;
+const VIEW_H = 44;
+// Just enough reached milestones to show the sweep, plus a couple ahead
+// to say it keeps going — this row is meant to stay narrow, not walk the
+// rep's entire history.
+const BEHIND = 3;
 const AHEAD = 2;
 
 /**
- * The team's real close-milestones (10/20/50/100/200/500…, same sequence
- * `use-milestone-celebration.ts` fires its toast from) as a winding road —
- * no fixed end, since `milestoneAt` never stops generating the next
- * number. Every one already reached is shown, filled solid, honey to
- * green along the whole walked stretch; the road ahead stays hollow and
- * dashed until the team's own total actually gets there. Bare content,
- * no card shell of its own — lives inside WeeklyRecapCard, the week and
- * the all-time road in one window instead of two.
+ * A rep's own lifetime close-milestones (10/20/50/100…, same sequence
+ * `use-milestone-celebration.ts` fires its toast from) as a slim inline
+ * road — one row, no card of its own, meant to sit inside
+ * WeeklyRecapCard's single compact line. The road itself always reads
+ * the lifetime sequence, never distorted by a period goal — a manager's
+ * monthly target (see quotas-section.tsx) and a lifetime round number
+ * are different axes, and splicing one into the other as if they were
+ * the same "next milestone" was a real bug caught before this shipped.
+ * Instead, when a monthly goal is active, the fraction on the right
+ * switches to it (this month's progress toward it) while the path keeps
+ * showing the honest lifetime sweep. Hover (not a native `title`, which
+ * can't be styled) shows what each node means.
  */
-export function MilestonePath({ totalWon }: { totalWon: number }) {
+export function MilestonePath({
+  totalWon,
+  monthlyGoal = null,
+}: {
+  totalWon: number;
+  /** This rep's wins so far this calendar month vs. their manager-set
+   *  monthly target (`Quota.target_count`) — independent of `totalWon`. */
+  monthlyGoal?: { current: number; target: number } | null;
+}) {
   const t = useTranslations("celebration.path");
-  const tooltipFor = (n: { value: number; reached: boolean; isCurrent: boolean }) =>
-    n.reached ? t("nodeReached", { value: n.value }) : n.isCurrent ? t("nodeNext", { value: n.value, remaining: n.value - totalWon }) : t("nodeAhead", { value: n.value });
+  const [hover, setHover] = useState<number | null>(null);
 
-  const { nodes, allPath, reachedPath, viewW, next } = useMemo(() => {
-    const curIdx = currentMilestoneIndex(totalWon);
-    const startIdx = 0;
-    const endIdx = curIdx + AHEAD;
-    const list = Array.from({ length: endIdx - startIdx + 1 }, (_, k) => {
-      const index = startIdx + k;
-      const value = milestoneAt(index);
-      return {
-        index,
-        value,
-        reached: value <= totalWon,
-        isCurrent: index === curIdx,
-        x: 40 + k * STEP_X,
-        y: k % 2 === 0 ? Y_TOP : Y_BOTTOM,
-      };
-    });
-    const reachedIndices = list.filter((n) => n.reached).map((n) => n.index);
-    const reachedTotal = Math.max(1, reachedIndices.length - 1);
-    const colorFor = (n: (typeof list)[number]) => {
-      const rampPos = reachedIndices.indexOf(n.index);
-      return RAMP[Math.round((rampPos / reachedTotal) * (RAMP.length - 1))];
-    };
+  const { nodes, allPath, reachedPath, viewW, nextMilestone } = useMemo(() => {
+    const behind: number[] = [];
+    let i = 0;
+    while (milestoneAt(i) < totalWon) {
+      behind.push(milestoneAt(i));
+      i++;
+    }
+    // Only the last few reached milestones show — this row stays narrow
+    // by design (no horizontal scroll: a scroll container would clip the
+    // hover tooltip), so a veteran rep's full history would otherwise
+    // overflow it. The sweep still reads honey→green across whatever is
+    // visible, just over a shorter, bounded stretch.
+    const behindShown = behind.slice(-BEHIND);
+    const current = milestoneAt(i);
+
+    const ahead: number[] = [];
+    let j = i + 1;
+    while (ahead.length < AHEAD) {
+      ahead.push(milestoneAt(j));
+      j++;
+    }
+
+    const values = [...behindShown, current, ...ahead];
+    const list = values.map((value, k) => ({
+      value,
+      reached: value <= totalWon,
+      isCurrent: value === current,
+      x: 18 + k * STEP_X,
+    }));
+
+    const rampDenom = Math.max(1, behindShown.length - 1);
+    const colorFor = (idx: number) => RAMP[Math.round((idx / rampDenom) * (RAMP.length - 1))];
 
     let all = "";
     let reachedD = "";
-    for (let i = 0; i < list.length; i++) {
-      const n = list[i];
-      if (i === 0) {
-        all = `M${n.x},${n.y}`;
+    for (let k = 0; k < list.length; k++) {
+      const n = list[k];
+      if (k === 0) {
+        all = `M${n.x},${CY}`;
       } else {
-        const a = list[i - 1];
-        const midX = (a.x + n.x) / 2;
-        const seg = ` C${midX},${a.y} ${midX},${n.y} ${n.x},${n.y}`;
-        all += seg;
+        all += ` L${n.x},${CY}`;
         if (n.reached) {
-          if (!reachedD) reachedD = `M${a.x},${a.y}`;
-          reachedD += seg;
+          if (!reachedD) reachedD = `M${list[k - 1].x},${CY}`;
+          reachedD += ` L${n.x},${CY}`;
         }
       }
     }
+
     return {
-      nodes: list.map((n) => ({ ...n, fill: n.reached ? colorFor(n) : null })),
+      nodes: list.map((n, k) => ({ ...n, fill: n.reached ? colorFor(k) : null })),
       allPath: all,
       reachedPath: reachedD,
-      viewW: 40 + (list.length - 1) * STEP_X + 40,
-      next: milestoneAt(curIdx),
+      viewW: 18 + (list.length - 1) * STEP_X + 18,
+      nextMilestone: current,
     };
   }, [totalWon]);
 
+  function tooltipFor(n: (typeof nodes)[number]): string {
+    if (n.reached) return t("nodeReached", { value: n.value });
+    if (n.isCurrent) return t("nodeNext", { value: n.value, remaining: n.value - totalWon });
+    return t("nodeAhead", { value: n.value });
+  }
+
   return (
-    <div>
-      <p className="bee-micro">{t("title")}</p>
-      <div className="mt-1 overflow-x-auto">
-        <svg width={viewW} height={VIEW_H} viewBox={`0 0 ${viewW} ${VIEW_H}`} role="img" aria-label={t("aria", { total: totalWon })} className="mx-auto block">
-          <path d={allPath} fill="none" stroke="var(--color-divider)" strokeWidth={4} strokeLinecap="round" strokeDasharray="1 9" />
-          {reachedPath && <path d={reachedPath} fill="none" stroke={SALES.won} strokeWidth={4} strokeLinecap="round" />}
-          {nodes.map((n) => (
-            <g key={n.index} className="cursor-default">
-              {/* The next milestone to reach keeps a standing ring — not
-                  just the one-time mount pulse, which alone reads too
-                  subtle at this size to say "this is the one you're on". */}
-              {n.isCurrent && <circle cx={n.x} cy={n.y} r={NODE_R + 9} fill="none" stroke={TONE.urgency} strokeWidth={2} strokeDasharray="2 4" />}
+    <div className="flex min-w-0 flex-1 items-center gap-3">
+      {/* No overflow-x-auto here: at this size the row never needs to
+          scroll, and a scroll container would clip the hover tooltip
+          positioned above it (setting overflow-x forces overflow-y to
+          "auto" too, per the CSS overflow spec). */}
+      <div className="relative min-w-0 flex-1">
+        <svg width={viewW} height={VIEW_H} viewBox={`0 0 ${viewW} ${VIEW_H}`} role="img" aria-label={t("aria", { total: totalWon })} className="block">
+          <path d={allPath} fill="none" stroke="var(--color-divider)" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 7" />
+          {reachedPath && <path d={reachedPath} fill="none" stroke={SALES.won} strokeWidth={3} strokeLinecap="round" />}
+          {nodes.map((n, i) => (
+            <g
+              key={i}
+              className="cursor-pointer"
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover((h) => (h === i ? null : h))}
+            >
+              {n.isCurrent && <circle cx={n.x} cy={CY} r={NODE_R + 5} fill="none" stroke={TONE.marketDeep} strokeWidth={2} strokeDasharray="2 3" />}
               <circle
                 cx={n.x}
-                cy={n.y}
-                r={n.isCurrent ? NODE_R + 4 : NODE_R}
+                cy={CY}
+                r={hover === i ? NODE_R + 3 : n.isCurrent ? NODE_R + 2 : NODE_R}
                 fill={n.fill ?? "var(--color-card)"}
                 stroke={n.reached ? "var(--color-card)" : "var(--color-border)"}
-                strokeWidth={n.reached ? 3 : 2}
-                strokeDasharray={n.reached ? undefined : "3 4"}
-                className={n.isCurrent ? "bee-hive-pulse-path" : undefined}
-              >
-                <title>{tooltipFor(n)}</title>
-              </circle>
-              <text x={n.x} y={n.y + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill={n.reached ? "#fff" : "var(--color-text-muted)"}>
+                strokeWidth={n.reached ? 2.5 : 2}
+                strokeDasharray={n.reached ? undefined : "3 3"}
+                style={{ transition: "r 120ms ease" }}
+              />
+              <text x={n.x} y={CY + 3.5} textAnchor="middle" fontSize={9.5} fontWeight={700} fill={n.reached ? "#fff" : "var(--color-text-muted)"} className="pointer-events-none">
                 {n.value}
               </text>
             </g>
           ))}
         </svg>
+        {hover !== null && nodes[hover] && (
+          <div
+            className="pointer-events-none absolute bottom-full z-10 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-[var(--radius-sm)] bg-[var(--color-text)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-card)]"
+            style={{ left: nodes[hover].x }}
+          >
+            {tooltipFor(nodes[hover])}
+          </div>
+        )}
       </div>
-      <p className="bee-caption mt-1 text-center">{t("progress", { current: totalWon, next })}</p>
+      <div className="shrink-0 text-right">
+        {monthlyGoal ? (
+          <>
+            <p className="text-sm font-bold tabular-nums leading-tight">{t("goalFraction", { current: monthlyGoal.current, next: monthlyGoal.target })}</p>
+            <p className="bee-micro">{t("goalLabel")}</p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-bold tabular-nums leading-tight">{t("goalFraction", { current: totalWon, next: nextMilestone })}</p>
+            <p className="bee-micro">{t("nextMilestoneLabel")}</p>
+          </>
+        )}
+      </div>
     </div>
   );
 }

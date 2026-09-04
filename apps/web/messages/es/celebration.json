@@ -10,8 +10,8 @@
   },
   "streak": {
     "label": "Racha",
-    "hint": "{days} días seguidos con cierres en el equipo",
-    "hintZero": "Arranca hoy la racha del equipo"
+    "hint": "{days} días seguidos con cierres tuyos",
+    "hintZero": "Arranca hoy tu racha"
   },
   "burnout": {
     "title": "Semana más lenta de lo normal",
@@ -19,34 +19,26 @@
     "empty": "Aún no hay suficientes cuentas calientes para sugerir."
   },
   "path": {
-    "title": "Camino de hitos",
-    "caption": "Cierres del equipo, sin techo",
-    "aria": "Camino de hitos de cierres del equipo — {total} cierres hasta hoy",
-    "progress": "{current} de {next} para el siguiente hito",
+    "aria": "Tu camino de hitos — {total} cierres tuyos hasta hoy",
+    "goalFraction": "{current}/{next}",
+    "goalLabel": "meta del mes",
+    "nextMilestoneLabel": "siguiente hito",
     "nodeReached": "{value} cierres — alcanzado",
     "nodeNext": "{value} cierres — faltan {remaining} para llegar",
     "nodeAhead": "{value} cierres — el siguiente tramo del camino"
   },
   "milestone": {
     "messages": [
-      "¡{count} cierres en el equipo! Un hito real, no un número al azar.",
-      "{count} operaciones ganadas — la constancia ya se nota.",
-      "Hito alcanzado: {count} cierres del equipo."
+      "¡{count} cierres tuyos! Un hito real, no un número al azar.",
+      "{count} operaciones ganadas — tu constancia ya se nota.",
+      "Hito alcanzado: {count} cierres tuyos."
     ]
   },
   "recap": {
     "title": "Tu semana en BEE",
-    "caption": "Últimos 7 días",
+    "caption": "Tu racha, tus señales, tu camino",
+    "captionRank": "Tu racha, tus señales, tu camino · #{rank} del equipo esta semana",
     "signals": "Señales",
-    "won": "Ganado",
-    "streak": "Racha",
-    "chartCaption": "Señales por día",
-    "signalsCount": "{count} señales",
-    "tips": {
-      "slow": "El mercado está más lento de lo normal esta semana — abajo tienes cuentas de alta intención para retomar.",
-      "streak": "Llevas {days} días seguidos con cierres en el equipo — no la cortes hoy.",
-      "won": "{count} cierres esta semana — cada uno ya ajustó la siguiente jugada.",
-      "steady": "Sin cierres todavía esta semana — la colmena de intención tiene cuentas listas para actuar."
-    }
+    "won": "Ganado"
   }
 }
