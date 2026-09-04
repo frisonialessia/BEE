@@ -20,7 +20,7 @@ import { MarketingHoneycomb } from "@/components/marketing-honeycomb";
  * hues appear on chart marks and chip backgrounds, one hue per box — honey
  * on the signal-type chips and the weekly bars, lilac on the mix by type,
  * the hive's own cold→hot scale on the hive. Score pills are white with
- * ink text. Nothing here names a data source or provider.
+ * ink text. Nothing here names where the signals come from.
  *
  * Copy lives in landing.demo.*; the fixed rows (company names, scores) stay
  * in SIGNALS and are referenced by stable `id`.

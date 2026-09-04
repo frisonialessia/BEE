@@ -40,14 +40,12 @@ export function MeetingsTab({
   opportunity,
   meetings,
   users,
-  hue,
   createOpen,
   onCreateOpenChange,
 }: {
   opportunity: Opportunity;
   meetings: Meeting[];
   users: UserOut[];
-  hue: string;
   createOpen: boolean;
   onCreateOpenChange: (open: boolean) => void;
 }) {
@@ -94,22 +92,22 @@ export function MeetingsTab({
   return (
     <div className="space-y-3">
       {createOpen ? (
-        <form onSubmit={handleSubmit} className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-divider)] bg-[var(--color-card)] p-4">
+        <form onSubmit={handleSubmit} className="bee-surface space-y-3 p-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 sm:col-span-2">
-              <span className="bee-caption font-medium">{t("title")}</span>
-              <input value={title} onChange={(e) => setTitle(e.target.value)}  required className="bee-input" />
+              <span className="bee-caption">{t("title")}</span>
+              <input value={title} onChange={(e) => setTitle(e.target.value)} required className="bee-input" />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="bee-caption font-medium">{t("when")}</span>
+              <span className="bee-caption">{t("when")}</span>
               <input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required className="bee-input" />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="bee-caption font-medium">{t("duration")}</span>
+              <span className="bee-caption">{t("duration")}</span>
               <input type="number" min={15} step={15} value={duration} onChange={(e) => setDuration(Number(e.target.value) || 30)} className="bee-input" />
             </label>
             <label className="flex flex-col gap-1 sm:col-span-2">
-              <span className="bee-caption font-medium">{t("link")}</span>
+              <span className="bee-caption">{t("link")}</span>
               <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" className="bee-input" />
             </label>
           </div>
@@ -137,7 +135,7 @@ export function MeetingsTab({
             const attendees = m.attendee_user_ids.map(nameOf).filter(Boolean) as string[];
             return (
               <li key={m.id} className="bee-surface flex items-start gap-3 p-3">
-                <IconDisc icon={m.completed_at ? CalendarCheck : CalendarDays} hue={hue} size={32} />
+                <IconDisc icon={m.completed_at ? CalendarCheck : CalendarDays} size={32} />
                 <div className="min-w-0 flex-1 leading-tight">
                   <p className="bee-caption tabular-nums">
                     {formatDateTime(m.starts_at, locale)} · {m.duration_minutes} min

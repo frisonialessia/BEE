@@ -10,7 +10,7 @@ import { prefersReducedMotion, Reveal } from "@/components/marketing-motion";
  * MarketingFAQ — objeciones reales de un evaluador B2B, respondidas con
  * las garantías arquitectónicas que el sistema ya sostiene (scores solo
  * con dato, aprobación humana, aislamiento por organización) — no texto
- * nuevo inventado para esta sección. Nunca nombra fuentes ni proveedores.
+ * nuevo inventado para esta sección. Nunca nombra de dónde salen las señales.
  *
  * Las preguntas/respuestas viven en messages/{locale}/landing.json bajo
  * `faq.items` como un array de {question, answer} — se leen con `t.raw`

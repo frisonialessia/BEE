@@ -1564,6 +1564,48 @@
   .bee-drawer--wide { width: 100vw; }
 }
 
+/* ── Opportunity drawer: the create form's "dynamism" ───────────────────
+   Same controls as the calendar's "Nueva reunión" dialog (caption labels,
+   .bee-input, ghost pills, a row of color dots) plus the small motions
+   that make the panel answer as you type: a pill fills when pressed, the
+   preview card and the stepper crossfade to the new stage hue, the
+   priority ring slides to the chosen dot. Nothing floats, nothing bounces.
+   The fill a pressed pill takes is the caller's (--bee-pill-fill: a stage
+   hue, lavender for a person) — never the blue, which stays the primary
+   button's alone. */
+.bee-drawer-pill {
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.bee-drawer-pill[aria-pressed="true"] {
+  background: var(--bee-pill-fill, var(--color-primary));
+  border-color: var(--bee-pill-fill, var(--color-primary));
+  font-weight: 600;
+}
+.bee-drawer-pill[aria-pressed="true"]:hover {
+  background: var(--bee-pill-fill, var(--color-primary));
+  filter: brightness(0.96);
+}
+.bee-drawer-pill:disabled { opacity: 0.45; cursor: default; }
+.bee-drawer-pill:disabled:hover { background: transparent; }
+
+.bee-drawer-dot {
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+.bee-drawer-dot:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+.bee-drawer-card { transition: background-color 240ms ease; }
+.bee-drawer-step { transition: background-color 240ms ease, filter 120ms ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bee-drawer-pill,
+  .bee-drawer-dot,
+  .bee-drawer-card,
+  .bee-drawer-step { transition: none; }
+}
+
 /* ── Calendario: fixed-height event blocks + drag to reschedule ─────────
  * The blocks themselves are colored inline (the meeting's own hue — see
  * calendar-page.tsx's eventFill); these classes only add the drag states.

@@ -9,8 +9,6 @@ import { formatChannel, formatNextBestAction, formatPlaybook } from "@/lib/forma
 import { formatDateTime } from "@/lib/i18n/format";
 import type { Meeting, Opportunity, OpportunityTask } from "@/types/domain";
 
-import { IconDisc } from "./primitives";
-
 /** What's scheduled next, from real records only: the earliest upcoming
  *  meeting, else the next open task with a due date, else the deal's own
  *  `next_meeting_at`. */
@@ -34,20 +32,10 @@ export function nextScheduled(
   return null;
 }
 
-/** Two read-only cells: BEE's next best action (from the strategy) · the
- *  next scheduled step (meeting / task / date). The actions themselves live
- *  in the header (primary button, calendar) — never repeated here. */
-export function NextStepStrip({
-  opportunity,
-  meetings,
-  tasks,
-  hue,
-}: {
-  opportunity: Opportunity;
-  meetings: Meeting[];
-  tasks: OpportunityTask[];
-  hue: string;
-}) {
+/** Two read-only cells on one white card: BEE's next best action (from the
+ *  strategy) · the next scheduled step (meeting / task / date). The actions
+ *  themselves live in the header (primary button, calendar) — never here. */
+export function NextStepStrip({ opportunity, meetings, tasks }: { opportunity: Opportunity; meetings: Meeting[]; tasks: OpportunityTask[] }) {
   const t = useTranslations("crm.drawer.next");
   const locale = useLocale() as Locale;
   const { strategy } = opportunity;
@@ -59,35 +47,35 @@ export function NextStepStrip({
   const next = nextScheduled(opportunity, meetings, tasks, now);
 
   return (
-    <div className="grid grid-cols-1 rounded-[var(--radius-lg)] border border-[var(--color-divider)] bg-[var(--color-card)] sm:grid-cols-2">
-      <div className="flex items-center gap-3 px-4 py-3">
-        <IconDisc icon={ArrowUpRight} hue={hue} />
-        <div className="min-w-0 flex-1 leading-tight">
-          <p className="bee-caption">{t("action")}</p>
-          <p className="truncate text-sm font-medium">{action ? formatNextBestAction(action, locale) : "—"}</p>
-          {(channel || playbook) && (
-            <p className="truncate text-sm text-muted-foreground">
-              {[channel && formatChannel(channel, locale), playbook && formatPlaybook(playbook, locale)].filter(Boolean).join(" · ")}
-            </p>
-          )}
-        </div>
+    <div className="bee-surface grid grid-cols-1 sm:grid-cols-2">
+      <div className="min-w-0 px-4 py-3 leading-tight">
+        <p className="bee-caption flex items-center gap-1.5">
+          <ArrowUpRight className="size-3.5 stroke-[1.5]" />
+          {t("action")}
+        </p>
+        <p className="mt-0.5 truncate text-sm font-medium">{action ? formatNextBestAction(action, locale) : "—"}</p>
+        {(channel || playbook) && (
+          <p className="truncate text-sm text-muted-foreground">
+            {[channel && formatChannel(channel, locale), playbook && formatPlaybook(playbook, locale)].filter(Boolean).join(" · ")}
+          </p>
+        )}
       </div>
-      <div className="flex items-center gap-3 border-t border-[var(--color-divider)] px-4 py-3 sm:border-l sm:border-t-0">
-        <IconDisc icon={CalendarClock} hue={hue} />
-        <div className="min-w-0 flex-1 leading-tight">
-          <p className="bee-caption">{t("step")}</p>
-          {next ? (
-            <>
-              <p className="truncate text-sm font-medium">{next.title || t(next.kind)}</p>
-              <p className="truncate text-sm tabular-nums text-muted-foreground">
-                {next.title ? `${t(next.kind)} · ` : ""}
-                {formatDateTime(next.at, locale)}
-              </p>
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">{t("none")}</p>
-          )}
-        </div>
+      <div className="min-w-0 border-t border-[var(--color-divider)] px-4 py-3 leading-tight sm:border-l sm:border-t-0">
+        <p className="bee-caption flex items-center gap-1.5">
+          <CalendarClock className="size-3.5 stroke-[1.5]" />
+          {t("step")}
+        </p>
+        {next ? (
+          <>
+            <p className="mt-0.5 truncate text-sm font-medium">{next.title || t(next.kind)}</p>
+            <p className="truncate text-sm tabular-nums text-muted-foreground">
+              {next.title ? `${t(next.kind)} · ` : ""}
+              {formatDateTime(next.at, locale)}
+            </p>
+          </>
+        ) : (
+          <p className="mt-0.5 text-sm text-muted-foreground">{t("none")}</p>
+        )}
       </div>
     </div>
   );

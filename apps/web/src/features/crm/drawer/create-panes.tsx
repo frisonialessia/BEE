@@ -1,27 +1,13 @@
 "use client";
 
-import {
-  Building2,
-  CalendarClock,
-  ExternalLink,
-  Mail,
-  MessageSquareText,
-  Phone,
-  Plus,
-  Radio,
-  Sparkles,
-  UserRound,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { Building2, Plus, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
 import { DATA, mix } from "@/components/charts/palette";
-import { ProgressRing } from "@/components/charts/progress-ring";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer, type DrawerCreatePreset } from "@/features/crm/opportunity-drawer-context";
 import { useCreateCompany, useCompanies, useScanCompany } from "@/hooks/queries/use-companies";
@@ -30,10 +16,11 @@ import { useCreateOpportunity, useOpportunities } from "@/hooks/queries/use-oppo
 import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
 import type { Locale } from "@/i18n/locales";
+import { localeTags } from "@/i18n/locales";
 import type { CrmStage } from "@/lib/api/opportunities";
-import { EMPLOYEE_RANGES } from "@/lib/api/organizations";
+import { CRM_STAGES } from "@/lib/crm-board";
 import { isDemoMode } from "@/lib/demo/mode";
-import { getOpportunityTypeLabels, getSignalTypeLabels } from "@/lib/format";
+import { getOpportunityTypeLabels } from "@/lib/format";
 import { formatMoney, formatRelativeTime } from "@/lib/i18n/format";
 import { closedDealSample } from "@/lib/strategy-evidence";
 import { cn } from "@/lib/utils";
@@ -41,9 +28,9 @@ import { useAuth } from "@/providers/auth-provider";
 import type { Company, Lead, Opportunity, OpportunityType, Signal, SignalType } from "@/types/domain";
 
 import { countByStep, monthlyAmounts, segmentFill } from "./account-stats";
-import { Avatar, IconDisc, PaneSection } from "./primitives";
+import { PreviewCard } from "./preview-card";
+import { Avatar, Field, Pill, PriorityDots } from "./primitives";
 import { STAGE_ACCENT, STEP_ORDER } from "./stage-meta";
-import { StageStepper } from "./stage-stepper";
 import { DrawerTopBar } from "./top-bar";
 
 // Same set LeadCreateIn's own "de dónde salió" field uses (see
@@ -55,25 +42,12 @@ const OPPORTUNITY_SOURCES = ["referral", "inbound", "outbound", "event", "cold_c
 const START_STAGES = ["detected", "prioritized", "in_progress"] as const satisfies readonly CrmStage[];
 type StartStage = (typeof START_STAGES)[number];
 const OPPORTUNITY_TYPES: OpportunityType[] = ["new_logo", "expansion", "renewal_risk"];
-// Priority as three steps on BEE's 0–100 score: a preset signal keeps its
-// exact score, a click snaps to the step's center.
-const PRIORITY_STEPS = [
-  { key: "low", score: 25, max: 40 },
-  { key: "mid", score: 50, max: 70 },
-  { key: "high", score: 80, max: 101 },
-] as const;
 const MAX_MATCHES = 6;
-const MAX_CHIPS = 6;
+const MAX_CHIPS = 8;
 const FORM_ID = "bee-drawer-create-form";
-const PANES = "lg:grid-cols-[minmax(0,9fr)_minmax(0,16fr)]";
+const PANES = "lg:grid-cols-[minmax(0,10fr)_minmax(0,13fr)]";
 const DRAFT_PREFIX = "bee_opportunity_draft_v1";
 const AUTOSAVE_MS = 600;
-
-/** An editable slot: the field sits exactly where view mode prints the
- *  value — no box around it, a hairline under it, the label is the
- *  placeholder. Same type size as the value it replaces. */
-const INLINE =
-  "min-w-0 w-full border-0 border-b border-[var(--color-divider)] bg-transparent py-0.5 text-[var(--color-text)] outline-none placeholder:text-[var(--color-text-muted)] focus:border-[var(--color-chart-4)]";
 const MENU_ITEM = "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[color-mix(in_srgb,var(--color-text)_5%,transparent)]";
 
 // ── Draft ─────────────────────────────────────────────────────────────────
@@ -84,30 +58,23 @@ interface Draft {
   companyId: string | null;
   companyQuery: string;
   companyDomain: string;
-  companyLinkedin: string;
   companyIndustry: string;
-  companySize: string;
-  companyCountry: string;
-  companySites: string;
   leadId: string | null;
   leadFullName: string;
   leadTitle: string;
-  leadSeniority: string;
   leadEmail: string;
   leadPhone: string;
   leadLinkedin: string;
   title: string;
-  assignedTo: string;
-  stage: StartStage;
-  opportunityType: OpportunityType;
+  description: string;
   amount: string;
   expectedClose: string;
+  opportunityType: OpportunityType;
   source: string;
-  signalType: SignalType;
+  stage: StartStage;
+  assignedTo: string;
   score: number;
-  description: string;
-  nextMeetingAt: string;
-  meetingsHeldCount: string;
+  signalType: SignalType;
 }
 
 interface StoredDraft {
@@ -152,39 +119,11 @@ function clearDraft(key: string) {
   }
 }
 
-// ── Small pieces ──────────────────────────────────────────────────────────
-
-/** Icon disc + label + slot — InfoRow without the overflow clip, so an
- *  autocomplete menu can hang below the field. */
-function EditRow({ icon, hue, label, children }: { icon: LucideIcon; hue: string; label: string; children: ReactNode }) {
+/** Dashed empty box with a one-line hint — a chart with nothing to draw yet. */
+function EmptyChart({ hint }: { hint: string }) {
   return (
-    <div className="flex min-w-0 items-center gap-3">
-      <IconDisc icon={icon} hue={hue} />
-      <div className="min-w-0 flex-1 leading-tight">
-        <p className="bee-caption">{label}</p>
-        <div className="text-sm">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-/** Initials once there is a name; a person icon before — never a dash. */
-function PersonDisc({ name, hue, size, photoUrl }: { name: string | null | undefined; hue: string; size: number; photoUrl?: string | null }) {
-  if (name?.trim() || photoUrl) return <Avatar name={name} hue={hue} size={size} photoUrl={photoUrl} />;
-  return (
-    <span aria-hidden className="grid shrink-0 place-items-center rounded-full" style={{ width: size, height: size, background: mix(hue, 20) }}>
-      <UserRound className="size-4 stroke-[1.5] text-[var(--color-text)]" />
-    </span>
-  );
-}
-
-/** Label over value, for a fact the account already has. */
-function Fact({ label, value }: { label: string; value: string | null | undefined }) {
-  if (!value) return null;
-  return (
-    <div className="min-w-0 leading-tight">
-      <p className="bee-caption">{label}</p>
-      <p className="truncate text-sm">{value}</p>
+    <div className="bee-fill grid min-h-28 place-items-center rounded-[var(--radius-md)] border border-dashed border-[var(--color-divider)]">
+      <p className="bee-caption px-4 text-center">{hint}</p>
     </div>
   );
 }
@@ -192,12 +131,11 @@ function Fact({ label, value }: { label: string; value: string | null | undefine
 /**
  * Create mode of the CRM side panel — the "+ Nueva oportunidad" of the
  * CRM, "+ Nuevo lead" of Empresas, "Agregar oportunidad" of a company page
- * and any signal card. It LOOKS like view mode: the same two panes with
- * every field in the slot where the opportunity will later show it —
- * contact and account on the left over the amount box and the owner, the
- * pipeline stepper (click = starting stage), the "why" strip and the
- * account's charts on the right. A preset (company / lead / signal) only
- * decides which slots arrive filled or locked; the layout never changes.
+ * and any signal card. Left, the form in the calendar dialog's language
+ * (caption labels, grey filled inputs, toggle pills, a dot row for the
+ * priority); right, the board card the deal will become, redrawn on every
+ * keystroke, with the account's charts under it. A preset (company / lead
+ * / signal) only decides which fields arrive filled or locked.
  *
  * Nothing typed is lost: the form is a draft in localStorage (one per way
  * of opening the panel), autosaved on every change, restored on reopen,
@@ -238,10 +176,7 @@ export function CreateOpportunityPanes({ preset }: { preset?: DrawerCreatePreset
     return id ? companies.find((c) => c.id === id) ?? null : null;
   }, [companies, preset, presetLead, presetSignal]);
 
-  const waiting =
-    !companiesResult ||
-    !leadsResult ||
-    (Boolean(preset?.signalId) && !signalsResult);
+  const waiting = !companiesResult || !leadsResult || (Boolean(preset?.signalId) && !signalsResult);
 
   if (waiting) {
     return (
@@ -307,7 +242,6 @@ function CreateForm({
   const t = useTranslations("crm.form");
   const tDrawer = useTranslations("crm.drawer");
   const tStages = useTranslations("crm.board.stages");
-  const signalTypeOptions = Object.entries(getSignalTypeLabels(locale)) as [SignalType, string][];
   const opportunityTypeLabels = getOpportunityTypeLabels(locale);
   const { user } = useAuth();
   const { data: users } = useUsers();
@@ -325,30 +259,23 @@ function CreateForm({
       companyId: presetCompany?.id ?? null,
       companyQuery: "",
       companyDomain: "",
-      companyLinkedin: "",
       companyIndustry: "",
-      companySize: "",
-      companyCountry: "",
-      companySites: "",
       leadId: presetLead?.id ?? null,
       leadFullName: "",
       leadTitle: "",
-      leadSeniority: "",
       leadEmail: "",
       leadPhone: "",
       leadLinkedin: "",
       title: presetSignal?.title ?? "",
-      assignedTo: user?.id ?? "",
-      stage: "detected",
-      opportunityType: "new_logo",
+      description: presetSignal?.description ?? "",
       amount: "",
       expectedClose: "",
+      opportunityType: "new_logo",
       source: "",
-      signalType: presetSignal?.signal_type ?? "other",
+      stage: "detected",
+      assignedTo: user?.id ?? "",
       score: presetSignal ? Math.round(presetSignal.score) : 50,
-      description: presetSignal?.description ?? "",
-      nextMeetingAt: "",
-      meetingsHeldCount: "",
+      signalType: presetSignal?.signal_type ?? "other",
     }),
     [presetCompany, presetLead, presetSignal, user],
   );
@@ -397,7 +324,6 @@ function CreateForm({
   }, [companies, draft.companyQuery]);
   const exactCompany = companies.find((c) => c.name.toLowerCase() === draft.companyQuery.trim().toLowerCase()) ?? null;
   const creatingCompany = !activeCompany && draft.companyQuery.trim().length > 0;
-  const companySites = draft.companySites.split(",").map((s) => s.trim()).filter(Boolean);
 
   function pickCompany(c: Company) {
     update({ companyId: c.id, companyQuery: c.name, companyDomain: c.domain ?? "", leadId: null });
@@ -405,36 +331,30 @@ function CreateForm({
   }
 
   function clearCompany() {
-    update({ companyId: null, companyQuery: "", companyDomain: "", leadId: null });
+    update({ companyId: null, companyQuery: "", companyDomain: "", companyIndustry: "", leadId: null });
   }
 
   // ── Contact ───────────────────────────────────────────────────────────
-  const [leadFocus, setLeadFocus] = useState(false);
   const companyLeads = useMemo(
     () => (activeCompany ? leads.filter((l) => l.company_id === activeCompany.id) : []),
     [leads, activeCompany],
   );
   const activeLead = draft.leadId ? leads.find((l) => l.id === draft.leadId) ?? null : null;
-  const leadMatches = useMemo(() => {
-    const q = draft.leadFullName.trim().toLowerCase();
-    return (q ? companyLeads.filter((l) => l.full_name.toLowerCase().includes(q)) : companyLeads).slice(0, MAX_MATCHES);
-  }, [companyLeads, draft.leadFullName]);
-  const otherLeads = companyLeads.filter((l) => l.id !== activeLead?.id).slice(0, MAX_CHIPS);
-
-  function pickLead(l: Lead) {
-    update({ leadId: l.id });
-    setLeadFocus(false);
-  }
+  const contactPills = useMemo(() => {
+    const list = companyLeads.slice(0, MAX_CHIPS);
+    if (activeLead && !list.some((l) => l.id === activeLead.id)) list.unshift(activeLead);
+    return list;
+  }, [companyLeads, activeLead]);
 
   // ── Deal ──────────────────────────────────────────────────────────────
   const hue = STAGE_ACCENT[draft.stage];
   const owner = (users ?? []).find((u) => u.id === draft.assignedTo) ?? null;
-  const contactName = activeLead?.full_name ?? draft.leadFullName;
   const companyLabel = activeCompany?.name ?? draft.companyQuery.trim();
   const draftAmount = draft.amount ? Number(draft.amount) : 0;
   const busy = createCompany.isPending || createLead.isPending || createOpportunity.isPending;
   const canSubmit = Boolean(companyLabel) && draft.description.trim().length > 0 && !busy;
-  const priorityStep = PRIORITY_STEPS.find((s) => draft.score < s.max) ?? PRIORITY_STEPS[PRIORITY_STEPS.length - 1];
+  const stageWord = tStages(draft.stage);
+  const today = useMemo(() => new Intl.DateTimeFormat(localeTags[locale], { day: "numeric", month: "short" }).format(new Date(now)), [locale, now]);
 
   // ── Account: what the company already has in the pipeline, this draft
   //    counted in its chosen stage and the current month.
@@ -471,38 +391,20 @@ function CreateForm({
   })();
   const expectedValue = closeRate && draftAmount > 0 ? draftAmount * closeRate.rate : null;
 
-  // ── BEE summary slot: only what exists — never invented.
-  const summary = activeCompany
-    ? activeCompany.description || t("summary.none")
-    : creatingCompany && draft.companyDomain.trim() && !demo
-      ? t("summary.onCreate")
-      : creatingCompany && !demo
-        ? t("summary.addWebsite")
-        : t("summary.none");
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
     try {
-      // 1. The account — an existing one, or created with every fact typed
-      //    (the opportunity endpoint only carries name/domain/industry).
+      // 1. The account — an existing one, or created from the name typed
+      //    (plus website and sector when given).
       let company = activeCompany ?? exactCompany;
       if (!company) {
-        const notes = [
-          draft.companyLinkedin.trim() && `${t("companyLinkedin")}: ${draft.companyLinkedin.trim()}`,
-          companySites.length > 0 && `${t("companySites")}: ${companySites.join(", ")}`,
-        ]
-          .filter(Boolean)
-          .join("\n");
         const domain = draft.companyDomain.trim().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
         company = await createCompany.mutateAsync({
           name: draft.companyQuery.trim(),
           domain: domain || undefined,
           industry: draft.companyIndustry.trim() || undefined,
-          size: draft.companySize || undefined,
-          country: draft.companyCountry.trim() || undefined,
           website: domain ? `https://${domain}` : undefined,
-          description: notes || undefined,
         });
         // Same market scan as "Escanear ahora" — live only, and never a
         // blocker: the deal is created whether or not the scan answers.
@@ -518,15 +420,14 @@ function CreateForm({
           company_id: company.id,
           email: draft.leadEmail.trim() || undefined,
           title: draft.leadTitle.trim() || undefined,
-          seniority: draft.leadSeniority.trim() || undefined,
           linkedin_url: draft.leadLinkedin.trim() || undefined,
           phone: draft.leadPhone.trim() || undefined,
           source: draft.source || undefined,
         });
       }
 
-      // 3. The deal itself — same payload as before, now always pointing
-      //    at ids. Name/title/email ride along for the sandbox battlecard.
+      // 3. The deal itself — always pointing at ids. Name/title/email ride
+      //    along for the sandbox battlecard.
       const created = await createOpportunity.mutateAsync({
         company_id: company.id,
         company_name: company.name,
@@ -540,8 +441,6 @@ function CreateForm({
         score: draft.score,
         amount: draftAmount > 0 ? draftAmount : undefined,
         source: draft.source || undefined,
-        next_meeting_at: draft.nextMeetingAt ? new Date(draft.nextMeetingAt).toISOString() : undefined,
-        meetings_held_count: draft.meetingsHeldCount ? Number(draft.meetingsHeldCount) : undefined,
         assigned_to_user_id: draft.assignedTo || undefined,
         status: draft.stage,
         expected_close_date: draft.expectedClose || undefined,
@@ -567,9 +466,6 @@ function CreateForm({
     closeOpportunity();
   }
 
-  const companyLine = activeCompany ? [activeCompany.domain, activeCompany.industry, activeCompany.country].filter(Boolean).join(" · ") : "";
-  const stageWord = tStages(draft.stage);
-
   return (
     <>
       <DrawerTopBar
@@ -577,7 +473,10 @@ function CreateForm({
         left={
           <div className="min-w-0 leading-tight">
             <p className="bee-eyebrow">{tDrawer("eyebrow")}</p>
-            <p className="truncate text-sm font-semibold">{t("title")}</p>
+            <p className="truncate text-sm">
+              <span className="font-semibold">{t("title")}</span>
+              <span className="text-muted-foreground"> · {t("stageLabel")}: {stageWord}</span>
+            </p>
           </div>
         }
         right={
@@ -592,141 +491,32 @@ function CreateForm({
         }
       />
       <form id={FORM_ID} onSubmit={handleSubmit} className={cn("min-h-0 flex-1 overflow-y-auto lg:grid lg:overflow-hidden", PANES)}>
-        {/* ── Left: who — same slots as view mode's LeftPane ───────────── */}
-        <div className="flex flex-col gap-5 border-b border-[var(--color-divider)] px-4 py-5 sm:px-6 lg:overflow-y-auto lg:border-b-0 lg:border-r">
-          {/* Contacto */}
-          <PaneSection>
-            <div className="flex items-center gap-3">
-              <PersonDisc name={contactName} hue={hue} size={44} />
-              <div className="flex min-w-0 flex-1 flex-col gap-1 leading-tight">
-                {activeLead ? (
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-semibold">{activeLead.full_name}</p>
-                    {!leadLocked && (
-                      <button type="button" onClick={() => update({ leadId: null })} className="bee-btn-ghost !h-8 shrink-0 !text-sm">
-                        {t("change")}
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <input
-                      value={draft.leadFullName}
-                      onChange={(e) => {
-                        update({ leadFullName: e.target.value });
-                        setLeadFocus(true);
-                      }}
-                      onFocus={() => setLeadFocus(true)}
-                      onBlur={() => window.setTimeout(() => setLeadFocus(false), 120)}
-                      placeholder={t("contactNamePlaceholder")}
-                      aria-label={t("contactNamePlaceholder")}
-                      autoComplete="off"
-                      className={cn(INLINE, "text-sm font-semibold")}
-                    />
-                    {leadFocus && leadMatches.length > 0 && (
-                      <ul className="bee-surface absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden">
-                        {leadMatches.map((l) => (
-                          <li key={l.id}>
-                            <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pickLead(l)} className={MENU_ITEM}>
-                              <UserRound className="size-3.5 shrink-0 text-muted-foreground" />
-                              <span className="truncate">{l.full_name}</span>
-                              {l.title && <span className="truncate text-muted-foreground">{l.title}</span>}
-                            </button>
-                          </li>
-                        ))}
-                        {draft.leadFullName.trim() && (
-                          <li className="border-t border-[var(--color-divider)]">
-                            <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => setLeadFocus(false)} className={cn(MENU_ITEM, "font-medium")}>
-                              <Plus className="size-3.5 shrink-0" />
-                              {t("contactCreate", { name: draft.leadFullName.trim() })}
-                            </button>
-                          </li>
-                        )}
-                      </ul>
-                    )}
-                  </div>
-                )}
-                {activeLead ? (
-                  <p className="truncate text-sm text-muted-foreground">{[activeLead.title, activeLead.seniority].filter(Boolean).join(" · ") || "—"}</p>
-                ) : (
-                  <div className="flex gap-2">
-                    <input value={draft.leadTitle} onChange={(e) => update({ leadTitle: e.target.value })} placeholder={t("contactTitle")} aria-label={t("contactTitle")} className={cn(INLINE, "text-sm")} />
-                    <input value={draft.leadSeniority} onChange={(e) => update({ leadSeniority: e.target.value })} placeholder={t("contactSeniority")} aria-label={t("contactSeniority")} className={cn(INLINE, "text-sm")} />
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="mt-4 flex flex-col gap-3">
-              <EditRow icon={Mail} hue={hue} label={t("contactEmail")}>
-                {activeLead ? (
-                  <p className="truncate">{activeLead.email ?? "—"}</p>
-                ) : (
-                  <input value={draft.leadEmail} onChange={(e) => update({ leadEmail: e.target.value })} type="email" placeholder={t("contactEmailPlaceholder")} aria-label={t("contactEmail")} className={INLINE} />
-                )}
-              </EditRow>
-              <EditRow icon={Phone} hue={hue} label={t("contactPhone")}>
-                {activeLead ? (
-                  <p className="truncate">{activeLead.phone ?? "—"}</p>
-                ) : (
-                  <input value={draft.leadPhone} onChange={(e) => update({ leadPhone: e.target.value })} type="tel" placeholder="+52 55 0000 0000" aria-label={t("contactPhone")} className={INLINE} />
-                )}
-              </EditRow>
-              <EditRow icon={ExternalLink} hue={hue} label={t("contactLinkedin")}>
-                {activeLead ? (
-                  <p className="truncate">{activeLead.linkedin_url?.replace(/^https?:\/\/(www\.)?/, "") ?? "—"}</p>
-                ) : (
-                  <input value={draft.leadLinkedin} onChange={(e) => update({ leadLinkedin: e.target.value })} type="url" placeholder="https://linkedin.com/in/…" aria-label={t("contactLinkedin")} className={INLINE} />
-                )}
-              </EditRow>
-              <EditRow icon={Radio} hue={hue} label={t("sourceLabel")}>
-                <select value={draft.source} onChange={(e) => update({ source: e.target.value })} aria-label={t("sourceLabel")} className={INLINE}>
-                  <option value="">{t("sourcePlaceholder")}</option>
-                  {OPPORTUNITY_SOURCES.map((s) => (
-                    <option key={s} value={s}>
-                      {t(`sourceOptions.${s}`)}
-                    </option>
-                  ))}
-                </select>
-              </EditRow>
-            </div>
-            {otherLeads.length > 0 && !leadLocked && (
-              <div className="mt-4">
-                <p className="bee-caption mb-1.5">{t("otherContacts")}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {otherLeads.map((l) => (
-                    <button
-                      key={l.id}
-                      type="button"
-                      onClick={() => pickLead(l)}
-                      title={l.title ?? undefined}
-                      className="flex items-center gap-1.5 rounded-full border border-[var(--color-divider)] bg-[var(--color-card)] py-0.5 pl-0.5 pr-2.5 text-sm hover:bg-[var(--color-primary)]"
-                    >
-                      <Avatar name={l.full_name} hue={hue} size={20} />
-                      <span className="max-w-32 truncate">{l.full_name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </PaneSection>
+        {/* ── Left: the form, in the calendar dialog's language ──────────── */}
+        <div className="flex flex-col gap-4 border-b border-[var(--color-divider)] px-4 py-5 sm:px-6 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+          <div className="leading-tight">
+            <h2 className="bee-display">{t("title")}</h2>
+            <p className="bee-caption mt-1">{t("subtitle")}</p>
+          </div>
 
           {/* Empresa */}
-          <PaneSection>
-            <EditRow icon={Building2} hue={hue} label={tDrawer("company")}>
-              {activeCompany ? (
-                <div className="flex items-center justify-between gap-2">
-                  <p className="min-w-0 truncate">
-                    <span className="font-medium">{activeCompany.name}</span>
-                    {companyLine && <span className="text-muted-foreground"> · {companyLine}</span>}
-                  </p>
+          <div className="flex flex-col gap-2">
+            {activeCompany ? (
+              <div className="flex min-w-0 flex-col gap-1">
+                <span className="bee-caption">{t("company")} *</span>
+                <div className="bee-input flex items-center gap-2">
+                  <Building2 className="size-3.5 shrink-0 stroke-[1.5]" />
+                  <span className="min-w-0 truncate font-medium">{activeCompany.name}</span>
+                  {activeCompany.domain && <span className="min-w-0 truncate text-muted-foreground">{activeCompany.domain}</span>}
                   {!companyLocked && (
-                    <button type="button" onClick={clearCompany} className="bee-btn-ghost !h-8 shrink-0 !text-sm">
-                      {t("change")}
+                    <button type="button" onClick={clearCompany} aria-label={t("change")} title={t("change")} className="ml-auto grid size-5 shrink-0 place-items-center rounded-full hover:bg-[color-mix(in_srgb,var(--color-text)_8%,transparent)]">
+                      <X className="size-3.5" />
                     </button>
                   )}
                 </div>
-              ) : (
-                <div className="relative">
+              </div>
+            ) : (
+              <div className="relative">
+                <Field label={t("company")} required>
                   <input
                     value={draft.companyQuery}
                     onChange={(e) => {
@@ -736,238 +526,238 @@ function CreateForm({
                     onFocus={() => setCompanyFocus(true)}
                     onBlur={() => window.setTimeout(() => setCompanyFocus(false), 120)}
                     placeholder={t("companySearchPlaceholder")}
-                    aria-label={tDrawer("company")}
                     autoComplete="off"
                     required
-                    className={cn(INLINE, "font-medium")}
+                    className="bee-input"
                   />
-                  {companyFocus && (companyMatches.length > 0 || draft.companyQuery.trim()) && (
-                    <ul className="bee-surface absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden">
-                      {companyMatches.map((c) => (
-                        <li key={c.id}>
-                          <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pickCompany(c)} className={MENU_ITEM}>
-                            <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
-                            <span className="truncate">{c.name}</span>
-                            {c.domain && <span className="truncate text-muted-foreground">{c.domain}</span>}
-                          </button>
-                        </li>
-                      ))}
-                      {draft.companyQuery.trim() && !exactCompany && (
-                        <li className="border-t border-[var(--color-divider)]">
-                          <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => setCompanyFocus(false)} className={cn(MENU_ITEM, "font-medium")}>
-                            <Plus className="size-3.5 shrink-0" />
-                            {t("companyCreate", { name: draft.companyQuery.trim() })}
-                          </button>
-                        </li>
-                      )}
-                    </ul>
-                  )}
-                </div>
-              )}
-            </EditRow>
-
-            {/* The account's facts — typed for a new one, read for an existing one */}
-            {activeCompany ? (
-              (activeCompany.website || activeCompany.industry || activeCompany.size || activeCompany.country || activeCompany.revenue_range) && (
-                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 pl-10">
-                  <Fact label={t("companyWebsite")} value={activeCompany.website?.replace(/^https?:\/\/(www\.)?/, "")} />
-                  <Fact label={t("companyIndustry")} value={activeCompany.industry} />
-                  <Fact label={t("companySize")} value={activeCompany.size} />
-                  <Fact label={t("companyCountry")} value={activeCompany.country} />
-                  <Fact label={t("companyRevenue")} value={activeCompany.revenue_range} />
-                </div>
-              )
-            ) : creatingCompany ? (
-              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 pl-10">
-                <input value={draft.companyDomain} onChange={(e) => update({ companyDomain: e.target.value })} placeholder={t("companyDomainPlaceholder")} aria-label={t("companyWebsite")} className={cn(INLINE, "text-sm")} />
-                <input value={draft.companyLinkedin} onChange={(e) => update({ companyLinkedin: e.target.value })} type="url" placeholder="https://linkedin.com/company/…" aria-label={t("companyLinkedin")} className={cn(INLINE, "text-sm")} />
-                <input value={draft.companyIndustry} onChange={(e) => update({ companyIndustry: e.target.value })} placeholder={t("companyIndustry")} aria-label={t("companyIndustry")} className={cn(INLINE, "text-sm")} />
-                <select value={draft.companySize} onChange={(e) => update({ companySize: e.target.value })} aria-label={t("companySize")} className={cn(INLINE, "text-sm", !draft.companySize && "text-[var(--color-text-muted)]")}>
-                  <option value="">{t("companySize")}</option>
-                  {EMPLOYEE_RANGES.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
-                <input value={draft.companyCountry} onChange={(e) => update({ companyCountry: e.target.value })} placeholder={t("companyCountry")} aria-label={t("companyCountry")} className={cn(INLINE, "text-sm")} />
-                <input value={draft.companySites} onChange={(e) => update({ companySites: e.target.value })} placeholder={t("companySites")} aria-label={t("companySites")} className={cn(INLINE, "text-sm")} />
-                {companySites.length > 0 && (
-                  <div className="col-span-2 flex flex-wrap gap-1.5">
-                    {companySites.map((s) => (
-                      <span key={s} className="rounded-full border border-[var(--color-divider)] px-2.5 py-0.5 text-sm">
-                        {s}
-                      </span>
+                </Field>
+                {companyFocus && (companyMatches.length > 0 || draft.companyQuery.trim()) && (
+                  <ul className="bee-surface absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden">
+                    {companyMatches.map((c) => (
+                      <li key={c.id}>
+                        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pickCompany(c)} className={MENU_ITEM}>
+                          <Building2 className="size-3.5 shrink-0 stroke-[1.5] text-muted-foreground" />
+                          <span className="truncate">{c.name}</span>
+                          {c.domain && <span className="truncate text-muted-foreground">{c.domain}</span>}
+                        </button>
+                      </li>
                     ))}
-                  </div>
+                    {draft.companyQuery.trim() && !exactCompany && (
+                      <li className="border-t border-[var(--color-divider)]">
+                        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => setCompanyFocus(false)} className={cn(MENU_ITEM, "font-medium")}>
+                          <Plus className="size-3.5 shrink-0" />
+                          {t("companyCreate", { name: draft.companyQuery.trim() })}
+                        </button>
+                      </li>
+                    )}
+                  </ul>
                 )}
               </div>
-            ) : null}
+            )}
 
-            {/* Resumen de BEE — right under the website; only what exists */}
-            <div className="mt-3 flex items-start gap-3">
-              <IconDisc icon={Sparkles} hue={hue} />
-              <div className="min-w-0 flex-1 leading-tight">
-                <p className="bee-caption">{t("summary.title")}</p>
-                <p className={cn("line-clamp-3 text-sm", (!activeCompany || !activeCompany.description) && "text-muted-foreground")}>{summary}</p>
+            {/* A new account: website and sector, nothing more */}
+            {creatingCompany && (
+              <div className="grid grid-cols-2 gap-2">
+                <Field label={t("companyWebsite")}>
+                  <input value={draft.companyDomain} onChange={(e) => update({ companyDomain: e.target.value })} placeholder={t("companyDomainPlaceholder")} className="bee-input" />
+                </Field>
+                <Field label={t("companyIndustry")}>
+                  <input value={draft.companyIndustry} onChange={(e) => update({ companyIndustry: e.target.value })} className="bee-input" />
+                </Field>
               </div>
-            </div>
-          </PaneSection>
+            )}
 
-          {/* Monto — quiet lavender box, same as view mode; greens are Ventas-only */}
-          <div className="flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3" style={{ background: "var(--color-primary)" }}>
-            <div className="min-w-0 flex-1 leading-tight">
-              <p className="bee-caption font-medium text-[var(--color-text)]">{stageWord}</p>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-lg font-bold">{t("estimatedValuePlaceholder")}</span>
-                <input
-                  value={draft.amount}
-                  onChange={(e) => update({ amount: e.target.value })}
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="0"
-                  aria-label={t("estimatedValueLabel")}
-                  className={cn(INLINE, "text-lg font-bold tabular-nums")}
-                />
-              </div>
-              <label className="bee-caption mt-1 flex items-center gap-1.5">
-                <span className="shrink-0">{t("expectedCloseLabel")}</span>
-                <input value={draft.expectedClose} onChange={(e) => update({ expectedClose: e.target.value })} type="date" className={cn(INLINE, "text-sm")} />
-              </label>
-              <p className="bee-caption mt-1 truncate tabular-nums">
-                {t("expectedValue")} ·{" "}
-                {closeRate ? (
-                  <>
-                    {expectedValue != null && <span className="font-semibold text-[var(--color-text)]">{formatMoney(expectedValue, "USD", locale)} · </span>}
-                    {t("expectedValueRate", { pct: Math.round(closeRate.rate * 100), count: closeRate.n })}
-                  </>
-                ) : (
-                  t("expectedValueNoSample")
+            {/* The account's contacts as toggle pills — pick one, or start a new one */}
+            {activeCompany && contactPills.length > 0 && (
+              <div role="group" aria-label={t("contact")} className="flex flex-wrap gap-2">
+                {contactPills.map((l) => (
+                  <Pill key={l.id} pressed={l.id === activeLead?.id} disabled={leadLocked} title={l.title ?? undefined} onClick={() => update({ leadId: l.id })}>
+                    <Avatar name={l.full_name} size={18} />
+                    <span className="max-w-36 truncate">{l.full_name}</span>
+                  </Pill>
+                ))}
+                {!leadLocked && (
+                  <Pill pressed={activeLead === null} onClick={() => update({ leadId: null })}>
+                    <Plus className="size-3.5" />
+                    {t("contactNew")}
+                  </Pill>
                 )}
-              </p>
-            </div>
-            <select value={draft.opportunityType} onChange={(e) => update({ opportunityType: e.target.value as OpportunityType })} aria-label={t("typeLabel")} className="bee-input !h-8 !w-auto max-w-36 !text-sm">
-              {OPPORTUNITY_TYPES.map((ot) => (
-                <option key={ot} value={ot}>
-                  {opportunityTypeLabels[ot]}
-                </option>
-              ))}
-            </select>
+              </div>
+            )}
           </div>
 
-          {/* Responsable */}
-          <PaneSection>
-            <div className="flex items-center gap-3">
-              <PersonDisc name={owner?.full_name} hue={hue} size={32} photoUrl={owner?.avatar_url} />
-              <div className="min-w-0 flex-1 leading-tight">
-                <p className="bee-caption">{t("ownerLabel")}</p>
-                <select value={draft.assignedTo} onChange={(e) => update({ assignedTo: e.target.value })} aria-label={t("ownerLabel")} className={cn(INLINE, "text-sm font-medium")}>
-                  {(users ?? []).map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.full_name}
+          {/* Contacto */}
+          <div className="flex flex-col gap-2 border-t border-[var(--color-divider)] pt-4">
+            {activeLead ? (
+              <div className="flex min-w-0 flex-col gap-1">
+                <span className="bee-caption">{t("contact")}</span>
+                <div className="flex items-center gap-3">
+                  <Avatar name={activeLead.full_name} size={32} photoUrl={activeLead.photo_url} />
+                  <div className="min-w-0 leading-tight">
+                    <p className="truncate text-sm font-semibold">{activeLead.full_name}</p>
+                    <p className="truncate text-sm text-muted-foreground">{[activeLead.title, activeLead.email].filter(Boolean).join(" · ") || "—"}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Field label={t("contactName")}>
+                  <input value={draft.leadFullName} onChange={(e) => update({ leadFullName: e.target.value })} placeholder={t("contactNamePlaceholder")} autoComplete="off" className="bee-input" />
+                </Field>
+                <Field label={t("contactTitle")}>
+                  <input value={draft.leadTitle} onChange={(e) => update({ leadTitle: e.target.value })} className="bee-input" />
+                </Field>
+                <Field label={t("contactEmail")}>
+                  <input value={draft.leadEmail} onChange={(e) => update({ leadEmail: e.target.value })} type="email" placeholder={t("contactEmailPlaceholder")} className="bee-input" />
+                </Field>
+                <Field label={t("contactPhone")}>
+                  <input value={draft.leadPhone} onChange={(e) => update({ leadPhone: e.target.value })} type="tel" placeholder="+52 55 0000 0000" className="bee-input" />
+                </Field>
+                <Field label={t("contactLinkedin")} className="col-span-2">
+                  <input value={draft.leadLinkedin} onChange={(e) => update({ leadLinkedin: e.target.value })} type="url" placeholder="https://linkedin.com/in/…" className="bee-input" />
+                </Field>
+              </div>
+            )}
+          </div>
+
+          {/* Oportunidad */}
+          <div className="flex flex-col gap-2 border-t border-[var(--color-divider)] pt-4">
+            <Field label={t("dealTitle")}>
+              <input value={draft.title} onChange={(e) => update({ title: e.target.value })} placeholder={companyLabel ? t("dealTitlePlaceholder", { company: companyLabel }) : undefined} className="bee-input" />
+            </Field>
+            <Field label={t("descriptionLabel")} required>
+              <textarea value={draft.description} onChange={(e) => update({ description: e.target.value })} placeholder={t("descriptionPlaceholder")} required rows={3} className="bee-input" />
+            </Field>
+            <div className="grid grid-cols-2 gap-2">
+              <Field label={t("amountLabel")}>
+                <input value={draft.amount} onChange={(e) => update({ amount: e.target.value })} type="number" min="0" step="any" placeholder="0" className="bee-input tabular-nums" />
+              </Field>
+              <Field label={t("expectedCloseLabel")}>
+                <input value={draft.expectedClose} onChange={(e) => update({ expectedClose: e.target.value })} type="date" className="bee-input" />
+              </Field>
+              <Field label={t("typeLabel")}>
+                <select value={draft.opportunityType} onChange={(e) => update({ opportunityType: e.target.value as OpportunityType })} className="bee-input">
+                  {OPPORTUNITY_TYPES.map((ot) => (
+                    <option key={ot} value={ot}>
+                      {opportunityTypeLabels[ot]}
                     </option>
                   ))}
                 </select>
-              </div>
+              </Field>
+              <Field label={t("sourceLabel")}>
+                <select value={draft.source} onChange={(e) => update({ source: e.target.value })} className={cn("bee-input", !draft.source && "text-[var(--color-text-muted)]")}>
+                  <option value="">{t("sourcePlaceholder")}</option>
+                  {OPPORTUNITY_SOURCES.map((s) => (
+                    <option key={s} value={s}>
+                      {t(`sourceOptions.${s}`)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
             </div>
-          </PaneSection>
+          </div>
 
-          {/* Prioridad — lavender track, the drawer's hue on the chosen step; the slot where view mode shows the score */}
-          <PaneSection
-            className="flex flex-1 flex-col"
-            title={t("priority")}
-            aside={<ProgressRing value={draft.score / 100} size={36} stroke={4} color={hue} label={`${t("priority")} ${draft.score}`} />}
-          >
-            <div role="group" aria-label={t("priority")} className="grid grid-cols-3 gap-1">
-              {PRIORITY_STEPS.map((step) => {
-                const active = step.key === priorityStep.key;
+          {/* Etapa inicial — pills in the stage hues */}
+          <div className="flex flex-col gap-1 border-t border-[var(--color-divider)] pt-4">
+            <p className="bee-caption">{t("stageLabel")}</p>
+            <div role="group" aria-label={t("stageLabel")} className="flex flex-wrap gap-2">
+              {CRM_STAGES.map((s) => {
+                const startable = (START_STAGES as readonly CrmStage[]).includes(s.id);
                 return (
-                  <button
-                    key={step.key}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => update({ score: step.score })}
-                    className={cn("h-8 rounded-[var(--radius-sm)] text-sm text-[var(--color-text)] hover:brightness-95", active && "font-semibold")}
-                    style={{ background: active ? hue : DATA.lavender }}
+                  <Pill
+                    key={s.id}
+                    pressed={draft.stage === s.id}
+                    fill={STAGE_ACCENT[s.id]}
+                    disabled={!startable}
+                    title={startable ? undefined : t("stageHint")}
+                    onClick={() => startable && update({ stage: s.id as StartStage })}
                   >
-                    {t(`priorityLevels.${step.key}`)}
-                  </button>
+                    {tStages(s.id)}
+                  </Pill>
                 );
               })}
             </div>
-          </PaneSection>
-        </div>
+            <p className="bee-micro">{t("stageHint")}</p>
+          </div>
 
-        {/* ── Right: the deal — same slots as view mode's RightPane ─────── */}
-        <div className="flex flex-col gap-4 px-4 pt-5 sm:px-6 lg:overflow-y-auto">
-          <header className="flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-3">
-              <p className="bee-eyebrow truncate">
-                {tDrawer("pipeline")} · {t("stageLabel")}: {stageWord}
-              </p>
-              <select value={draft.signalType} onChange={(e) => update({ signalType: e.target.value as SignalType })} aria-label={t("signalType")} className="bee-input !h-8 !w-auto max-w-48 !text-sm">
-                {signalTypeOptions.map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <input
-              value={draft.title}
-              onChange={(e) => update({ title: e.target.value })}
-              placeholder={companyLabel ? t("dealTitlePlaceholder", { company: companyLabel }) : t("dealTitle")}
-              aria-label={t("dealTitle")}
-              className={cn(INLINE, "bee-display")}
-            />
-          </header>
-
-          <StageStepper status={draft.stage} closedLabel={null} onMove={(s) => update({ stage: s as StartStage })} allowed={START_STAGES} />
-
-          {/* Why · next meeting · meetings held — the next-step strip's slot */}
-          <div className="rounded-[var(--radius-lg)] border border-[var(--color-divider)] bg-[var(--color-card)]">
-            <div className="flex items-start gap-3 px-4 py-3">
-              <IconDisc icon={MessageSquareText} hue={hue} />
-              <textarea
-                value={draft.description}
-                onChange={(e) => update({ description: e.target.value })}
-                placeholder={t("descriptionPlaceholder")}
-                aria-label={t("descriptionLabel")}
-                required
-                rows={3}
-                className={cn(INLINE, "resize-none text-sm leading-snug")}
-              />
-            </div>
-            <div className="grid grid-cols-1 border-t border-[var(--color-divider)] sm:grid-cols-2">
-              <div className="flex items-center gap-3 px-4 py-3">
-                <IconDisc icon={CalendarClock} hue={hue} />
-                <div className="min-w-0 flex-1 leading-tight">
-                  <p className="bee-caption">{t("nextMeetingLabel")}</p>
-                  <input value={draft.nextMeetingAt} onChange={(e) => update({ nextMeetingAt: e.target.value })} type="datetime-local" aria-label={t("nextMeetingLabel")} className={cn(INLINE, "text-sm")} />
-                </div>
-              </div>
-              <div className="flex items-center gap-3 border-t border-[var(--color-divider)] px-4 py-3 sm:border-l sm:border-t-0">
-                <IconDisc icon={Users} hue={hue} />
-                <div className="min-w-0 flex-1 leading-tight">
-                  <p className="bee-caption">{t("meetingsHeldLabel")}</p>
-                  <input value={draft.meetingsHeldCount} onChange={(e) => update({ meetingsHeldCount: e.target.value })} type="number" min="0" step="1" placeholder="0" aria-label={t("meetingsHeldLabel")} className={cn(INLINE, "text-sm tabular-nums")} />
-                </div>
-              </div>
+          {/* Responsable — team pills, like "Invitar a tu equipo" */}
+          <div className="flex flex-col gap-1 border-t border-[var(--color-divider)] pt-4">
+            <p className="bee-caption">{t("ownerLabel")}</p>
+            <div role="group" aria-label={t("ownerLabel")} className="flex flex-wrap gap-2">
+              {(users ?? []).map((u) => (
+                <Pill key={u.id} pressed={draft.assignedTo === u.id} onClick={() => update({ assignedTo: draft.assignedTo === u.id ? "" : u.id })}>
+                  {u.full_name}
+                </Pill>
+              ))}
             </div>
           </div>
 
+          {/* Prioridad — the dialog's dot row */}
+          <div className="flex flex-col gap-1 border-t border-[var(--color-divider)] pt-4">
+            <p className="bee-caption">{t("priority")}</p>
+            <PriorityDots score={draft.score} onChange={(score) => update({ score })} />
+            <p className="bee-micro">{t("priorityHint")}</p>
+          </div>
+        </div>
+
+        {/* ── Right: the card this becomes, live ─────────────────────────── */}
+        <div className="flex flex-col gap-4 px-4 pt-5 sm:px-6 lg:overflow-y-auto">
+          <div className="leading-tight">
+            <h3 className="bee-card-title !mb-0">{t("preview.title")}</h3>
+            <p className="bee-caption">{t("preview.hint")}</p>
+          </div>
+
+          <div className="flex flex-wrap items-start gap-6">
+            <PreviewCard
+              title={draft.title.trim()}
+              placeholder={companyLabel ? t("dealTitlePlaceholder", { company: companyLabel }) : t("preview.untitled")}
+              stageLabel={stageWord}
+              columnCount={byStep[draft.stage] + 1}
+              accent={hue}
+              score={draft.score}
+              status={draft.stage}
+              ownerName={owner?.full_name ?? null}
+              date={today}
+              hot={draft.score >= 75}
+            />
+            <dl className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 self-center text-sm">
+              <dt className="bee-caption">{t("company")}</dt>
+              <dd className={cn("truncate", !companyLabel && "text-muted-foreground")}>{companyLabel || "—"}</dd>
+              <dt className="bee-caption">{t("contact")}</dt>
+              <dd className={cn("truncate", !(activeLead?.full_name ?? draft.leadFullName.trim()) && "text-muted-foreground")}>{activeLead?.full_name ?? draft.leadFullName.trim() || "—"}</dd>
+              <dt className="bee-caption">{t("amountLabel")}</dt>
+              <dd className={cn("truncate tabular-nums", draftAmount <= 0 && "text-muted-foreground")}>{draftAmount > 0 ? formatMoney(draftAmount, "USD", locale) : "—"}</dd>
+              <dt className="bee-caption">{t("expectedValue")}</dt>
+              <dd className="truncate tabular-nums">
+                {closeRate ? (
+                  <>
+                    {expectedValue != null && <span className="font-semibold">{formatMoney(expectedValue, "USD", locale)} · </span>}
+                    <span className="text-muted-foreground">{t("expectedValueRate", { pct: Math.round(closeRate.rate * 100), count: closeRate.n })}</span>
+                  </>
+                ) : (
+                  <span className="text-muted-foreground">{t("expectedValueNoSample")}</span>
+                )}
+              </dd>
+            </dl>
+          </div>
+
           {/* Cuenta — the company's opportunities as charts, this draft included */}
-          <div className="grid min-h-64 flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="bee-surface flex flex-col gap-3 p-4">
-              <div className="flex items-baseline justify-between gap-2">
+          <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="bee-surface flex min-h-56 flex-col gap-3 p-4">
+              <div className="flex items-baseline justify-between gap-2 leading-tight">
                 <p className="bee-card-title !mb-0">{tDrawer("account.title")}</p>
-                <span className="bee-caption">{tDrawer("account.byStage", { count: accountOpps.length + 1 })}</span>
+                {activeCompany && <span className="bee-caption">{tDrawer("account.byStage", { count: accountOpps.length + 1 })}</span>}
               </div>
-              <HorizontalFunnel rows={funnelRows} />
-              <p className="bee-caption">{!activeCompany ? t("charts.pickCompany") : accountOpps.length === 0 ? t("charts.first") : companyLabel}</p>
+              {activeCompany ? (
+                <>
+                  <HorizontalFunnel rows={funnelRows} />
+                  <p className="bee-caption truncate">{accountOpps.length === 0 ? t("charts.first") : activeCompany.name}</p>
+                </>
+              ) : (
+                <EmptyChart hint={t("charts.pickCompany")} />
+              )}
             </div>
-            <div className="bee-surface flex flex-col gap-3 p-4">
+            <div className="bee-surface flex min-h-56 flex-col gap-3 p-4">
               <p className="bee-card-title !mb-0">{tDrawer("account.amounts")}</p>
               {hasAmounts ? (
                 <BarsVsTarget
@@ -977,36 +767,7 @@ function CreateForm({
                   colorFor={(p) => (p.current ? DATA.honey : mix(DATA.honey, 45))}
                 />
               ) : (
-                <div className="bee-fill grid place-items-center rounded-[var(--radius-md)] border border-dashed border-[var(--color-divider)]">
-                  <p className="bee-caption px-4 text-center">{t("charts.noAmount")}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Contactos de la cuenta — real leads only */}
-          <div className="flex items-center gap-3">
-            <IconDisc icon={Users} hue={hue} />
-            <div className="min-w-0 flex-1 leading-tight">
-              <p className="bee-caption">{t("accountContacts", { count: companyLeads.length })}</p>
-              {companyLeads.length > 0 ? (
-                <div className="mt-1 flex flex-wrap gap-1.5">
-                  {companyLeads.slice(0, MAX_CHIPS).map((l) => (
-                    <button
-                      key={l.id}
-                      type="button"
-                      onClick={() => !leadLocked && pickLead(l)}
-                      disabled={leadLocked}
-                      className="flex items-center gap-1.5 rounded-full border border-[var(--color-divider)] py-0.5 pl-0.5 pr-2.5 text-sm hover:bg-[var(--color-primary)] disabled:cursor-default"
-                      style={{ background: l.id === activeLead?.id ? DATA.lavender : "var(--color-card)" }}
-                    >
-                      <Avatar name={l.full_name} hue={hue} size={20} />
-                      <span className="max-w-32 truncate">{l.full_name}</span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">{activeCompany ? t("noAccountContacts") : t("charts.pickCompany")}</p>
+                <EmptyChart hint={activeCompany ? t("charts.noAmount") : t("charts.pickCompany")} />
               )}
             </div>
           </div>
@@ -1016,9 +777,7 @@ function CreateForm({
             <div className="flex min-w-0 items-center gap-3">
               {savedAt && (
                 <>
-                  <span className="bee-caption truncate font-medium">
-                    {t("draft.saved", { time: formatRelativeTime(savedAt, locale, new Date(now)) })}
-                  </span>
+                  <span className="truncate text-sm">{t("draft.saved", { time: formatRelativeTime(savedAt, locale, new Date(now)) })}</span>
                   <button type="button" onClick={discardDraft} className="bee-btn-text !text-sm">
                     {t("draft.discard")}
                   </button>

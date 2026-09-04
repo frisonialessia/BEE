@@ -211,7 +211,7 @@ export function ActivityTab({
               {visible.map((ev) => (
                 <li key={ev.id} className="relative flex items-start gap-3 py-2">
                   <span className="relative z-10 rounded-full ring-4 ring-[var(--color-background)]">
-                    <IconDisc icon={ev.icon} hue={hue} />
+                    <IconDisc icon={ev.icon} />
                   </span>
                   <div className="min-w-0 flex-1 leading-tight">
                     <div className="flex items-baseline justify-between gap-3">
@@ -248,7 +248,7 @@ export function ActivityTab({
       >
         {upcoming.length === 0 ? (
           <div className="bee-surface flex items-center gap-3 p-4">
-            <IconDisc icon={CalendarClock} hue={hue} size={32} />
+            <IconDisc icon={CalendarClock} size={32} />
             <p className="flex-1 text-sm text-muted-foreground">{t("noUpcoming")}</p>
           </div>
         ) : (
@@ -279,7 +279,7 @@ export function ActivityTab({
                   )}
                   {owner && (
                     <p className="bee-caption flex items-center gap-2">
-                      <Avatar name={owner.full_name} hue={hue} size={20} photoUrl={owner.avatar_url} />
+                      <Avatar name={owner.full_name} size={20} photoUrl={owner.avatar_url} />
                       <span className="truncate">{owner.full_name}</span>
                     </p>
                   )}

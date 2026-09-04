@@ -145,7 +145,6 @@ export function OpportunityViewPanes({ opportunityId, initialTab }: { opportunit
             fallbackCompany={battlecardResult?.data.company ?? null}
             owner={owner}
             accountOpps={accountOpps}
-            hue={hue}
             onViewAmount={() => setTab("notes")}
           />
         </div>

@@ -1,24 +1,23 @@
 "use client";
 
-import { Building2, ExternalLink, Mail, Phone, Radio } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
-import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { DATA, mix } from "@/components/charts/palette";
-import { ProgressRing } from "@/components/charts/progress-ring";
+import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
+import { DATA } from "@/components/charts/palette";
 import type { Locale } from "@/i18n/locales";
 import { getOpportunityStatusLabels, getOpportunityTypeLabels } from "@/lib/format";
 import { formatDate, formatMoney } from "@/lib/i18n/format";
 import type { UserOut } from "@/types/auth";
 import type { BattlecardCompany, BattlecardLead, Company, Lead, Opportunity } from "@/types/domain";
 
-import { countByStep, monthlyAmounts, segmentFill } from "./account-stats";
-import { Avatar, Chip, InfoRow, PaneSection } from "./primitives";
+import { countByStep, segmentFill } from "./account-stats";
+import { Avatar, Chip, FactRow, PaneSection, PersonPill, PriorityDots } from "./primitives";
 import { STEP_ORDER, isClosedStatus, stepOf } from "./stage-meta";
 
 /** Left pane: who (contact), where (company), how much (amount), who owns
- *  it, then the account's opportunities as charts — never prose. */
+ *  it, the priority as the dot row, then the account's pipeline as one
+ *  compact funnel — facts as label/value rows with hairlines, no boxes. */
 export function LeftPane({
   opportunity,
   lead,
@@ -27,7 +26,6 @@ export function LeftPane({
   fallbackCompany,
   owner,
   accountOpps,
-  hue,
   onViewAmount,
 }: {
   opportunity: Opportunity;
@@ -38,7 +36,6 @@ export function LeftPane({
   owner: UserOut | null;
   /** Every opportunity of the same account, this one included. */
   accountOpps: Opportunity[];
-  hue: string;
   onViewAmount: () => void;
 }) {
   const t = useTranslations("crm.drawer");
@@ -54,9 +51,9 @@ export function LeftPane({
   const phone = lead?.phone ?? null;
   const linkedin = lead?.linkedin_url ?? fallbackLead?.linkedin_url ?? null;
   const companyName = company?.name ?? fallbackCompany?.name ?? null;
-  const companyLine = [company?.domain ?? fallbackCompany?.domain, company?.industry ?? fallbackCompany?.industry, company?.country ?? fallbackCompany?.country]
-    .filter(Boolean)
-    .join(" · ");
+  const domain = company?.domain ?? fallbackCompany?.domain ?? null;
+  const industry = company?.industry ?? fallbackCompany?.industry ?? null;
+  const country = company?.country ?? fallbackCompany?.country ?? null;
 
   const isClient = accountOpps.some((o) => o.status === "won");
   const isHot = Boolean(opportunity.strategy?.hot_lead);
@@ -66,10 +63,7 @@ export function LeftPane({
   const stageWord = closed ? tStage(`closedStatus.${opportunity.status as "won" | "lost" | "dismissed"}`) : tStage(`stages.${stepOf(opportunity.status)}`);
 
   const byStep = useMemo(() => countByStep(accountOpps), [accountOpps]);
-  const total = accountOpps.length;
-
-  const monthly = useMemo(() => monthlyAmounts(accountOpps, locale), [accountOpps, locale]);
-  const hasAmounts = monthly.some((p) => p.value > 0);
+  const funnelRows = STEP_ORDER.map((s) => ({ label: tStage(`stages.${s}`), value: byStep[s], color: segmentFill(s, accountOpps) }));
 
   return (
     <div className="flex min-h-full flex-col gap-5">
@@ -85,122 +79,98 @@ export function LeftPane({
       {/* ── Contacto ─────────────────────────────────────────────────── */}
       <PaneSection>
         <div className="flex items-center gap-3">
-          <Avatar name={contactName} hue={hue} size={44} photoUrl={opportunity.photo_url} />
+          <Avatar name={contactName} size={44} photoUrl={opportunity.photo_url} />
           <div className="min-w-0 leading-tight">
             <p className="truncate text-sm font-semibold">{contactName ?? t("noContact")}</p>
             {contactTitle && <p className="truncate text-sm text-muted-foreground">{contactTitle}</p>}
           </div>
         </div>
         {(email || phone || linkedin || opportunity.source) && (
-          <div className="mt-4 flex flex-col gap-3">
+          <dl className="mt-3">
             {email && (
-              <InfoRow icon={Mail} hue={hue} label={t("contact.email")}>
+              <FactRow label={t("contact.email")}>
                 <a href={`mailto:${email}`} className="hover:underline">{email}</a>
-              </InfoRow>
+              </FactRow>
             )}
             {phone && (
-              <InfoRow icon={Phone} hue={hue} label={t("contact.phone")}>
+              <FactRow label={t("contact.phone")}>
                 <a href={`tel:${phone}`} className="hover:underline">{phone}</a>
-              </InfoRow>
+              </FactRow>
             )}
-            {linkedin ? (
-              <InfoRow icon={ExternalLink} hue={hue} label={t("contact.linkedin")}>
+            {linkedin && (
+              <FactRow label={t("contact.linkedin")}>
                 <a href={linkedin} target="_blank" rel="noreferrer" className="hover:underline">
                   {linkedin.replace(/^https?:\/\/(www\.)?/, "")}
                 </a>
-              </InfoRow>
-            ) : (
-              opportunity.source && (
-                <InfoRow icon={Radio} hue={hue} label={t("contact.source")}>
-                  {tForm.has(`sourceOptions.${opportunity.source}`) ? tForm(`sourceOptions.${opportunity.source}`) : opportunity.source}
-                </InfoRow>
-              )
+              </FactRow>
             )}
-          </div>
+            {opportunity.source && (
+              <FactRow label={t("contact.source")}>
+                {tForm.has(`sourceOptions.${opportunity.source}`) ? tForm(`sourceOptions.${opportunity.source}`) : opportunity.source}
+              </FactRow>
+            )}
+          </dl>
         )}
       </PaneSection>
 
       {/* ── Empresa ──────────────────────────────────────────────────── */}
       <PaneSection>
-        <InfoRow icon={Building2} hue={hue} label={t("company")}>
-          <span className="font-medium">{companyName ?? t("noCompany")}</span>
-          {companyLine && <span className="text-muted-foreground"> · {companyLine}</span>}
-        </InfoRow>
+        <dl>
+          <FactRow label={t("company")}>
+            <span className="font-medium">{companyName ?? t("noCompany")}</span>
+          </FactRow>
+          {domain && <FactRow label={tForm("companyWebsite")}>{domain}</FactRow>}
+          {industry && <FactRow label={tForm("companyIndustry")}>{industry}</FactRow>}
+          {country && <FactRow label={t("companyCountry")}>{country}</FactRow>}
+        </dl>
       </PaneSection>
 
-      {/* ── Monto — a quiet lavender box; greens belong to the Ventas page ── */}
-      <div className="flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3" style={{ background: "var(--color-primary)" }}>
-        <div className="min-w-0 flex-1 leading-tight">
-          <p className="bee-caption font-medium text-[var(--color-text)]">{stageWord}</p>
-          <p className="text-lg font-bold tabular-nums">
-            {opportunity.amount != null ? formatMoney(opportunity.amount, "USD", locale) : "—"}
-          </p>
-          {opportunity.expected_close_date && (
-            <p className="bee-caption">{t("expectedClose", { date: formatDate(opportunity.expected_close_date, locale) })}</p>
+      {/* ── Monto — a plain large figure, the stage and the close date beside it ── */}
+      <PaneSection>
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0 leading-tight">
+            <p className="bee-caption">
+              {t("amount")} · {stageWord}
+            </p>
+            <p className="bee-kpi mt-1">{opportunity.amount != null ? formatMoney(opportunity.amount, "USD", locale) : "—"}</p>
+            <p className="bee-caption mt-1">
+              {opportunity.expected_close_date ? t("expectedClose", { date: formatDate(opportunity.expected_close_date, locale) }) : t("noCloseDate")}
+            </p>
+          </div>
+          {!closed && (
+            <button type="button" onClick={onViewAmount} className="bee-btn-ghost !h-8 shrink-0 !text-sm">
+              {t("view")}
+            </button>
           )}
         </div>
-        {!closed && (
-          <button type="button" onClick={onViewAmount} className="bee-btn-ghost !h-8 !text-sm">
-            {t("view")}
-          </button>
-        )}
-      </div>
-
-      {/* ── Responsable ──────────────────────────────────────────────── */}
-      <PaneSection>
-        <div className="flex items-center gap-3">
-          <Avatar name={owner?.full_name} hue={hue} size={32} photoUrl={owner?.avatar_url} />
-          <div className="min-w-0 leading-tight">
-            <p className="bee-caption">{t("owner")}</p>
-            <p className="truncate text-sm font-medium">{owner?.full_name ?? tStage("unassigned")}</p>
-          </div>
-        </div>
-      </PaneSection>
-
-      {/* ── Cuenta: oportunidades como gráficos ──────────────────────── */}
-      <PaneSection
-        className="flex flex-1 flex-col"
-        title={t("account.title")}
-        aside={
-          <div className="flex items-center gap-2">
-            <span className="bee-caption">{t("account.score")}</span>
-            <ProgressRing value={opportunity.score / 100} size={36} stroke={4} color={hue} label={`${t("account.score")} ${Math.round(opportunity.score)}`} />
-          </div>
-        }
-      >
-        <p className="bee-caption mb-1.5">{t("account.byStage", { count: total })}</p>
-        <div className="flex h-2 w-full gap-0.5 overflow-hidden rounded-full" role="img" aria-label={t("account.byStage", { count: total })}>
-          {STEP_ORDER.filter((s) => byStep[s] > 0).map((s) => (
-            <span key={s} className="h-full" style={{ width: `${(byStep[s] / Math.max(total, 1)) * 100}%`, background: segmentFill(s, accountOpps) }} />
-          ))}
-        </div>
-        <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-          {STEP_ORDER.filter((s) => byStep[s] > 0).map((s) => (
-            <li key={s} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-              <span className="size-2 rounded-full" style={{ background: segmentFill(s, accountOpps) }} />
-              {tStage(`stages.${s}`)} <span className="font-bold tabular-nums text-[var(--color-text)]">{byStep[s]}</span>
-            </li>
-          ))}
-        </ul>
-
-        {hasAmounts && (
-          <div className="mt-4 flex flex-1 flex-col">
-            <p className="bee-caption mb-1">{t("account.amounts")}</p>
-            <BarsVsTarget
-              points={monthly}
-              minHeight={96}
-              formatValue={(v) => formatMoney(v, "USD", locale, true)}
-              colorFor={(p) => (p.current ? DATA.honey : mix(DATA.honey, 45))}
-            />
-          </div>
-        )}
-
         {closed && (
-          <p className="bee-caption mt-3">
+          <p className="bee-caption mt-2">
             {statusLabels[opportunity.status]}
             {opportunity.closed_at && ` · ${formatDate(opportunity.closed_at, locale)}`}
           </p>
         )}
+      </PaneSection>
+
+      {/* ── Responsable · Prioridad ──────────────────────────────────── */}
+      <PaneSection>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="min-w-0 leading-tight">
+            <p className="bee-caption mb-1.5">{t("owner")}</p>
+            {owner ? <PersonPill name={owner.full_name} photoUrl={owner.avatar_url} /> : <p className="text-sm text-muted-foreground">{tStage("unassigned")}</p>}
+          </div>
+          <div className="min-w-0 leading-tight">
+            <p className="bee-caption mb-1.5">{tForm("priority")}</p>
+            <div className="flex h-7 items-center gap-3">
+              <PriorityDots score={opportunity.score} size={20} />
+              <span className="bee-caption tabular-nums">{t("account.score")} {Math.round(opportunity.score)}</span>
+            </div>
+          </div>
+        </div>
+      </PaneSection>
+
+      {/* ── Cuenta: the account's opportunities per stage ───────────── */}
+      <PaneSection className="flex flex-1 flex-col" title={t("account.title")} aside={<span className="bee-caption">{t("account.byStage", { count: accountOpps.length })}</span>}>
+        <HorizontalFunnel rows={funnelRows} />
       </PaneSection>
 
       <p className="bee-caption border-t border-[var(--color-divider)] pt-3">{t("createdOn", { date: formatDate(opportunity.created_at, locale) })}</p>

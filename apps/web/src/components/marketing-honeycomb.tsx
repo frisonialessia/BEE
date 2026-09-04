@@ -48,7 +48,7 @@ interface HexCell {
 // comparación de string exacta de React marque un mismatch de
 // hidratación en el atributo `points`, aunque el valor sea visualmente
 // idéntico. Constantes fijas + redondeo a 2 decimales eliminan esa
-// fuente de no-determinismo por completo.
+// origen de no-determinismo por completo.
 const HEX_ANGLE_COS = [1, 0.5, -0.5, -1, -0.5, 0.5] as const;
 const HEX_ANGLE_SIN = [0, 0.8660254037844387, 0.8660254037844387, 0, -0.8660254037844387, -0.8660254037844387] as const;
 
@@ -78,7 +78,7 @@ const SQRT_3 = 1.7320508075688772;
 // Etiquetas de etapa: `stage` referencia una clave de landing.stages (mismo
 // diccionario compartido que usa marketing-demo-panel.tsx) — no un
 // diccionario propio, para que las 4
-// etiquetas de etapa tengan una sola fuente de traducción en toda la
+// etiquetas de etapa tengan un solo diccionario de traducción en toda la
 // landing, igual vocabulario que SignalHexMap/HiveTooltip en el dashboard.
 
 // Pool de empresas de ejemplo — mismas que aparecen en el resto del Demo en

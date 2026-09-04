@@ -24,13 +24,12 @@ import { DATA } from "@/components/charts/palette";
 
 import { Chip } from "./primitives";
 
-// `hue` stays in the contract for callers; the icon is ink now (no colored text/icons).
-function Tile({ icon: Icon, label, meta, body }: { icon: LucideIcon; label: string; meta?: string; body: string; hue: string }) {
+function Tile({ icon: Icon, label, meta, body }: { icon: LucideIcon; label: string; meta?: string; body: string }) {
   const t = useTranslations("crm.drawer.strategy");
   const [more, setMore] = useState(false);
   const long = body.length > 160;
   return (
-    <div className="flex flex-col gap-1.5 rounded-[var(--radius-lg)] border border-[var(--color-divider)] bg-[var(--color-card)] p-4">
+    <div className="bee-surface flex flex-col gap-1.5 p-4">
       <div className="flex items-center gap-2">
         <Icon className="size-3.5 stroke-[1.5]" />
         <p className="bee-caption font-medium">{label}</p>
@@ -65,7 +64,7 @@ function Fold({ title, children, defaultOpen }: { title: string; children: React
  * prediction, DISC, execution artifacts — stays one fold away, so the tab
  * opens quiet.
  */
-export function StrategyTab({ opportunity, hue, expandArtifacts }: { opportunity: Opportunity; hue: string; expandArtifacts: boolean }) {
+export function StrategyTab({ opportunity, expandArtifacts }: { opportunity: Opportunity; expandArtifacts: boolean }) {
   const t = useTranslations("crm.drawer");
   const tCard = useTranslations("shared.battlecard.sections");
   const locale = useLocale() as Locale;
@@ -99,7 +98,7 @@ export function StrategyTab({ opportunity, hue, expandArtifacts }: { opportunity
   return (
     <div className="space-y-4">
       {pending && (
-        <div className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-divider)] bg-[var(--color-card)] px-4 py-3">
+        <div className="bee-surface flex items-center gap-3 px-4 py-3">
           <div className="min-w-0 flex-1 leading-tight">
             <p className="bee-caption">{t("strategy.queued")}</p>
             <p className="truncate text-sm font-medium">{pending.title}</p>
@@ -125,9 +124,9 @@ export function StrategyTab({ opportunity, hue, expandArtifacts }: { opportunity
         </div>
       )}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <Tile icon={AlertCircle} label={tCard("painPoint")} body={s.pain_point} hue={hue} />
-        <Tile icon={Zap} label={tCard("closingArgument")} meta={formatChannel(s.channel, locale)} body={s.closing_argument} hue={hue} />
-        <Tile icon={Clock} label={tCard("timingWindow")} meta={urgencyLabels[s.timing_window.urgency]} body={s.timing_window.reason} hue={hue} />
+        <Tile icon={AlertCircle} label={tCard("painPoint")} body={s.pain_point} />
+        <Tile icon={Zap} label={tCard("closingArgument")} meta={formatChannel(s.channel, locale)} body={s.closing_argument} />
+        <Tile icon={Clock} label={tCard("timingWindow")} meta={urgencyLabels[s.timing_window.urgency]} body={s.timing_window.reason} />
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Chip hue={DATA.lavender}>{formatNextBestAction(s.next_best_action, locale)}</Chip>

@@ -33,7 +33,9 @@ import { StageStepper } from "./stage-stepper";
 import { StrategyTab } from "./strategy-tab";
 
 /** Right pane: the deal itself — title and its three actions, the pipeline
- *  stepper, next action / next step, and the five tabs. */
+ *  stepper, next action / next step, and the five tabs. `hue` (the stage's
+ *  accent) only ever lands on small accents: the tab underline and the
+ *  activity's dots. */
 export function RightPane({
   opportunity,
   companyName,
@@ -143,7 +145,7 @@ export function RightPane({
 
       <StageStepper status={opportunity.status} closedLabel={closed ? stageLabel : null} onMove={onMoveStage} busy={movingStage} />
 
-      <NextStepStrip opportunity={opportunity} meetings={meetings} tasks={tasks} hue={hue} />
+      <NextStepStrip opportunity={opportunity} meetings={meetings} tasks={tasks} />
 
       <DrawerTabs tabs={tabs} value={tab} onChange={onTabChange} hue={hue} ariaLabel={t("tabs.aria")} />
 
@@ -169,12 +171,11 @@ export function RightPane({
             opportunity={opportunity}
             meetings={meetings}
             users={users}
-            hue={hue}
             createOpen={meetingCreateOpen}
             onCreateOpenChange={onMeetingCreateOpenChange}
           />
         )}
-        {tab === "strategy" && <StrategyTab opportunity={opportunity} hue={hue} expandArtifacts={expandArtifacts} />}
+        {tab === "strategy" && <StrategyTab opportunity={opportunity} expandArtifacts={expandArtifacts} />}
         {tab === "tasks" && <TaskListPanel key={opportunity.id} opportunityId={opportunity.id} />}
         {tab === "notes" && (
           <div className="space-y-4">
