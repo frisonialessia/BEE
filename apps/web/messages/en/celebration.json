@@ -31,6 +31,13 @@
     "signals": "Signals",
     "won": "Won",
     "streak": "Streak",
-    "dismiss": "Dismiss"
+    "chartCaption": "Signals per day",
+    "signalsCount": "{count} signals",
+    "tips": {
+      "slow": "The market is slower than usual this week — below are high-intent accounts to pick back up.",
+      "streak": "{days} days in a row with closes on the team — don't break it today.",
+      "won": "{count} closes this week — each one already adjusted the next play.",
+      "steady": "No closes yet this week — the intent hive has accounts ready to act on."
+    }
   }
 }

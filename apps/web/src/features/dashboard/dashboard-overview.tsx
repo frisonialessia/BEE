@@ -96,6 +96,19 @@ export function DashboardOverview({
     [signals, now],
   );
   const weekDelta = weekly[6] > 0 ? (weekly[7] - weekly[6]) / weekly[6] : null;
+  // Seven days of signals, for the recap card's own small chart — daily,
+  // not the weekly buckets above, so "your week" actually reads day by day.
+  const dailySignals = useMemo(() => {
+    const fmt = new Intl.DateTimeFormat(localeTags[locale], { weekday: "short" });
+    return Array.from({ length: 7 }, (_, i) => {
+      const dayStart = now - (6 - i) * DAY_MS;
+      const count = signals.filter((s) => {
+        const d = new Date(s.detected_at).getTime();
+        return d >= dayStart - DAY_MS && d < dayStart;
+      }).length;
+      return { label: fmt.format(new Date(dayStart)), value: count };
+    });
+  }, [signals, now, locale]);
   // Only a real, well-below-average week counts as slow — never a single
   // noisy day-to-day dip, and never when there's too little history yet.
   const marketSlow = useMemo(() => {
@@ -275,7 +288,7 @@ export function DashboardOverview({
       <GettingStartedCard signalCount={signals.length} opportunityCount={allOppsResult?.data.length ?? 0} userCount={usersResult?.length ?? 0} />
 
       <div className="bee-overview">
-        <WeeklyRecapCard now={now} signals={weekly[7]} won={wonThisWeek} streakDays={streakDays} />
+        <WeeklyRecapCard signals={weekly[7]} won={wonThisWeek} streakDays={streakDays} marketSlow={marketSlow} dailySignals={dailySignals} />
         {marketSlow && <AntiBurnoutCard leads={burnoutLeads} />}
 
         {/* Hoy — the hive at the centre, the plays beside it. */}

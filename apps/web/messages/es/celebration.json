@@ -31,6 +31,13 @@
     "signals": "Señales",
     "won": "Ganado",
     "streak": "Racha",
-    "dismiss": "Cerrar"
+    "chartCaption": "Señales por día",
+    "signalsCount": "{count} señales",
+    "tips": {
+      "slow": "El mercado está más lento de lo normal esta semana — abajo tienes cuentas de alta intención para retomar.",
+      "streak": "Llevas {days} días seguidos con cierres en el equipo — no la cortes hoy.",
+      "won": "{count} cierres esta semana — cada uno ya ajustó la siguiente jugada.",
+      "steady": "Sin cierres todavía esta semana — la colmena de intención tiene cuentas listas para actuar."
+    }
   }
 }
