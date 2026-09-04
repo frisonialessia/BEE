@@ -211,7 +211,7 @@
   },
   "form": {
     "title": "Nueva oportunidad",
-    "companySearchPlaceholder": "Busca o escribe una empresa…",
+    "companySearchPlaceholder": "Nombre de la empresa",
     "companyCreate": "Crear «{name}»",
     "companyIndustry": "Sector",
     "contactTitle": "Cargo",
@@ -225,7 +225,7 @@
     "estimatedValuePlaceholder": "USD",
     "expectedCloseLabel": "Cierre estimado",
     "sourceLabel": "Origen",
-    "sourcePlaceholder": "¿De dónde salió?",
+    "sourcePlaceholder": "Selecciona…",
     "sourceOptions": {
       "referral": "Referido",
       "inbound": "Entrante",
@@ -239,7 +239,7 @@
     "meetingsHeldLabel": "Reuniones previas",
     "priority": "Prioridad",
     "descriptionLabel": "¿Por qué es una oportunidad? *",
-    "descriptionPlaceholder": "¿Por qué es una oportunidad? Qué cambió, qué necesitan, quién decide.",
+    "descriptionPlaceholder": "¿Por qué es una oportunidad?",
     "saving": "Creando…",
     "cancel": "Cancelar",
     "successToast": "Oportunidad creada en {company} — estrategia lista.",
@@ -253,9 +253,9 @@
     "contactEmailPlaceholder": "nombre@empresa.com",
     "contactCreate": "Nuevo contacto «{name}»",
     "charts": {
-      "pickCompany": "Elige la empresa para ver su cuenta",
+      "pickCompany": "Sin empresa seleccionada",
       "first": "Primera oportunidad de esta cuenta",
-      "noAmount": "Escribe un monto y aparece aquí"
+      "noAmount": "Sin montos todavía"
     },
     "save": "Crear oportunidad",
     "companyWebsite": "Sitio web",
@@ -263,13 +263,12 @@
     "companySize": "Empleados",
     "companyCountry": "País / sede principal",
     "companySites": "Otras sedes",
-    "companySitesPlaceholder": "Otras sedes, separadas por coma",
     "companyRevenue": "Ingresos",
     "summary": {
       "title": "Resumen de BEE",
       "none": "Sin resumen todavía",
       "onCreate": "BEE resumirá el sitio al crear la cuenta",
-      "addWebsite": "Agrega el sitio web y BEE lo resume al crear"
+      "addWebsite": "Sin sitio web"
     },
     "contactPhone": "Teléfono",
     "otherContacts": "Otros contactos",

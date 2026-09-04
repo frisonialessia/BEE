@@ -148,18 +148,19 @@ export function SignalHexMap({
     if (leads.length === 0) return [];
     const counts: Record<string, number> = {};
     for (const l of leads) counts[l.buying_stage] = (counts[l.buying_stage] ?? 0) + 1;
+    // Same hue per stage as the Dark Funnel page (STAGE_CONFIG) — hottest
+    // first, the whole funnel so the column beside the comb is complete.
     const order: Array<{ stage: string; color: string }> = [
-      // ready_to_buy used to be chart-2/orange — the same hue as
-      // --destructive — for what's actually the best buying stage. Matches
-      // the magenta STAGE_CONFIG uses for this stage in dark-funnel-dashboard.tsx.
       { stage: "ready_to_buy", color: "var(--color-chart-5)" },
       { stage: "decision", color: "var(--color-chart-1)" },
       { stage: "consideration", color: "var(--color-chart-3)" },
+      { stage: "awareness", color: "var(--color-chart-4)" },
     ];
     return order.map(({ stage, color }) => ({
       stage,
       color,
       label: stageLabel(t, stage),
+      count: counts[stage] ?? 0,
       pct: Math.round(((counts[stage] ?? 0) / leads.length) * 100),
     }));
   }, [leads, t]);
@@ -291,10 +292,6 @@ export function SignalHexMap({
       style={style}
       aria-label={t("sectionAriaLabel")}
     >
-      {/* Hexágonos flotantes decorativos — puro CSS, no interactúan. */}
-      <span className="bee-hex-float" style={{ width: 90, height: 104, top: -30, right: -20, animationDelay: "0s" }} aria-hidden />
-      <span className="bee-hex-float" style={{ width: 56, height: 64, bottom: -16, left: 12, animationDelay: "1.4s" }} aria-hidden />
-      <span className="bee-hex-float" style={{ width: 40, height: 46, top: "40%", right: 24, animationDelay: "2.6s" }} aria-hidden />
       <div className="relative z-[1] mb-4 flex flex-wrap items-start justify-between gap-4">
         <div>
           {/* Two lines (title + caption), same as every other Resumen
@@ -338,7 +335,12 @@ export function SignalHexMap({
           measurement) would otherwise feed back into the card's min-content
           width — the ResizeObserver then measured *that* inflated width and
           the hive stayed 600px wide on a 375px phone (see /probar). */}
-      <div className="relative z-[1] min-h-0 w-full min-w-0 flex-1 overflow-hidden" style={{ minHeight: height }}>
+      {/* Comb on the left, the funnel by stage on the right: the comb keeps
+          a readable cell size (layoutHiveCells caps the radius) and the
+          column uses the width the comb does not need — no oversized cells,
+          no empty band. */}
+      <div className="relative z-[1] flex min-h-0 flex-1 gap-4">
+      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden" style={{ minHeight: height }}>
         {isLoading ? (
           <Skeleton className="h-full w-full rounded-lg" />
         ) : leads.length === 0 ? (
@@ -374,19 +376,23 @@ export function SignalHexMap({
         )}
       </div>
 
-      {stageStats.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-border pt-3">
-          {stageStats.map((s) => (
-            <div key={s.stage} className="flex items-center gap-4">
-              <span className="h-7 w-[3px] shrink-0 rounded-full" style={{ background: s.color }} />
-              <div>
-                <p className="text-base font-bold leading-none tabular-nums">{s.pct}%</p>
-                <p className="mt-1 bee-micro leading-none">{s.label}</p>
+
+        {stageStats.length > 0 && (
+          <div className="flex w-44 shrink-0 flex-col justify-evenly gap-2 border-l border-border pl-4">
+            {stageStats.map((s) => (
+              <div key={s.stage}>
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="truncate text-sm">{s.label}</span>
+                  <span className="text-sm font-semibold tabular-nums">{s.count}</span>
+                </div>
+                <div className="mt-1 h-1.5 overflow-hidden rounded-full" style={{ background: "var(--color-primary)" }}>
+                  <div className="h-full rounded-full" style={{ width: `${s.pct}%`, background: s.color }} />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

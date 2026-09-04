@@ -20,23 +20,24 @@ import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/types/api";
 import type { Opportunity } from "@/types/domain";
 
+import { DATA } from "@/components/charts/palette";
+
 import { Chip } from "./primitives";
-import { tint } from "./stage-meta";
 
 function Tile({ icon: Icon, label, meta, body, hue }: { icon: LucideIcon; label: string; meta?: string; body: string; hue: string }) {
   const t = useTranslations("crm.drawer.strategy");
   const [more, setMore] = useState(false);
   const long = body.length > 160;
   return (
-    <div className="flex flex-col gap-1.5 rounded-[var(--radius-lg)] p-4" style={{ background: tint.wash(hue) }}>
+    <div className="flex flex-col gap-1.5 rounded-[var(--radius-lg)] border border-[var(--color-divider)] bg-[var(--color-card)] p-4">
       <div className="flex items-center gap-2">
-        <Icon className="size-3.5 stroke-[1.5]" />
-        <p className="bee-micro font-medium">{label}</p>
-        {meta && <span className="bee-micro ml-auto font-medium text-[var(--color-text)]">{meta}</span>}
+        <Icon className="size-3.5 stroke-[1.5]" style={{ color: hue }} />
+        <p className="bee-caption font-medium">{label}</p>
+        {meta && <span className="bee-caption ml-auto font-medium text-[var(--color-text)]">{meta}</span>}
       </div>
       <p className={cn("text-sm leading-snug", !more && "line-clamp-4")}>{body}</p>
       {long && (
-        <button type="button" onClick={() => setMore((v) => !v)} className="bee-micro self-start font-medium text-[var(--color-text)] underline-offset-2 hover:underline">
+        <button type="button" onClick={() => setMore((v) => !v)} className="self-start text-sm font-medium text-[var(--color-text)] underline-offset-2 hover:underline">
           {more ? t("less") : t("more")}
         </button>
       )}
@@ -49,7 +50,7 @@ function Fold({ title, children, defaultOpen }: { title: string; children: React
     <details className="group border-t border-[var(--color-divider)] pt-3" open={defaultOpen}>
       <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium [&::-webkit-details-marker]:hidden">
         {title}
-        <span aria-hidden className="bee-micro transition-transform group-open:rotate-180">⌄</span>
+        <span aria-hidden className="text-sm text-muted-foreground transition-transform group-open:rotate-180">⌄</span>
       </summary>
       <div className="pt-3">{children}</div>
     </details>
@@ -97,11 +98,11 @@ export function StrategyTab({ opportunity, hue, expandArtifacts }: { opportunity
   return (
     <div className="space-y-4">
       {pending && (
-        <div className="flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3" style={{ background: tint.soft(hue) }}>
+        <div className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-divider)] bg-[var(--color-card)] px-4 py-3">
           <div className="min-w-0 flex-1 leading-tight">
-            <p className="bee-micro">{t("strategy.queued")}</p>
+            <p className="bee-caption">{t("strategy.queued")}</p>
             <p className="truncate text-sm font-medium">{pending.title}</p>
-            {pending.preview && <p className="bee-micro truncate">{pending.preview}</p>}
+            {pending.preview && <p className="truncate text-sm text-muted-foreground">{pending.preview}</p>}
           </div>
           <button
             type="button"
@@ -116,7 +117,7 @@ export function StrategyTab({ opportunity, hue, expandArtifacts }: { opportunity
                 },
               )
             }
-            className="bee-btn bee-btn--primary shrink-0 text-xs"
+            className="bee-btn bee-btn--primary shrink-0 !text-sm"
           >
             {approve.isPending ? t("strategy.approving") : t("strategy.approveSend")}
           </button>
@@ -128,10 +129,10 @@ export function StrategyTab({ opportunity, hue, expandArtifacts }: { opportunity
         <Tile icon={Clock} label={tCard("timingWindow")} meta={urgencyLabels[s.timing_window.urgency]} body={s.timing_window.reason} hue={hue} />
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Chip hue={hue}>{formatNextBestAction(s.next_best_action, locale)}</Chip>
-        <Chip hue={hue}>{formatChannel(s.channel, locale)}</Chip>
-        <Chip hue={hue}>{formatPlaybook(s.playbook, locale)}</Chip>
-        <span className="bee-micro ml-auto">
+        <Chip hue={DATA.lavender}>{formatNextBestAction(s.next_best_action, locale)}</Chip>
+        <Chip hue={DATA.lavender}>{formatChannel(s.channel, locale)}</Chip>
+        <Chip hue={DATA.lavender}>{formatPlaybook(s.playbook, locale)}</Chip>
+        <span className="bee-caption ml-auto">
           {formatGenerator(s.generator, locale)} · {Math.round(s.confidence_score * 100)}%
         </span>
       </div>
@@ -149,14 +150,14 @@ export function StrategyTab({ opportunity, hue, expandArtifacts }: { opportunity
           ) : disc ? (
             <div className="flex flex-wrap items-center gap-4">
               <DiscRadar d={disc.d_score} i={disc.i_score} s={disc.s_score} c={disc.c_score} className="w-full max-w-[220px]" />
-              <dl className="grid min-w-0 flex-1 grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs">
-                <dt className="bee-micro">{t("disc.dominantStyle")}</dt>
+              <dl className="grid min-w-0 flex-1 grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                <dt className="bee-caption">{t("disc.dominantStyle")}</dt>
                 <dd>{DISC_LABELS[disc.dominant_style] ?? disc.dominant_style}</dd>
-                <dt className="bee-micro">{t("disc.preferredTone")}</dt>
+                <dt className="bee-caption">{t("disc.preferredTone")}</dt>
                 <dd>{disc.preferred_tone}</dd>
-                <dt className="bee-micro">{t("disc.messages")}</dt>
+                <dt className="bee-caption">{t("disc.messages")}</dt>
                 <dd>{disc.preferred_message_length}</dd>
-                <dt className="bee-micro">{t("disc.confidence")}</dt>
+                <dt className="bee-caption">{t("disc.confidence")}</dt>
                 <dd className="font-bold tabular-nums">{Math.round(disc.confidence * 100)}%</dd>
               </dl>
             </div>

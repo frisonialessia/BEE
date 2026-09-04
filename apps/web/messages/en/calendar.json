@@ -87,5 +87,18 @@
     "completing": "Saving…",
     "completeSuccess": "Meeting marked as completed.",
     "completeError": "Couldn't mark the meeting as completed — try again."
+  },
+  "reschedule": {
+    "title": "Reschedule this meeting?",
+    "description": "It will move to the new date. Nothing changes until you confirm.",
+    "from": "Current date",
+    "to": "New date",
+    "durationKept": "Duration: {minutes} min — unchanged.",
+    "confirm": "Reschedule",
+    "cancel": "Cancel",
+    "saving": "Rescheduling…",
+    "success": "Meeting rescheduled",
+    "error": "Couldn't reschedule the meeting — try again.",
+    "dragHint": "Drag to reschedule · click to open"
   }
 }

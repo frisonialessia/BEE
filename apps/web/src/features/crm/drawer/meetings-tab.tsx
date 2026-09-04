@@ -16,7 +16,6 @@ import type { Meeting, MeetingColor, Opportunity } from "@/types/domain";
 import type { UserOut } from "@/types/auth";
 
 import { IconDisc } from "./primitives";
-import { tint } from "./stage-meta";
 
 /** The meeting takes the stage's tone so the calendar reads like the board. */
 const STAGE_MEETING_COLOR: Record<string, MeetingColor> = {
@@ -95,36 +94,36 @@ export function MeetingsTab({
   return (
     <div className="space-y-3">
       {createOpen ? (
-        <form onSubmit={handleSubmit} className="space-y-3 rounded-[var(--radius-lg)] p-4" style={{ background: tint.wash(hue) }}>
+        <form onSubmit={handleSubmit} className="space-y-3 rounded-[var(--radius-lg)] border border-[var(--color-divider)] bg-[var(--color-card)] p-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="flex flex-col gap-1 sm:col-span-2">
-              <span className="bee-micro font-medium">{t("title")}</span>
+              <span className="bee-caption font-medium">{t("title")}</span>
               <input value={title} onChange={(e) => setTitle(e.target.value)}  required className="bee-input" />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="bee-micro font-medium">{t("when")}</span>
+              <span className="bee-caption font-medium">{t("when")}</span>
               <input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} required className="bee-input" />
             </label>
             <label className="flex flex-col gap-1">
-              <span className="bee-micro font-medium">{t("duration")}</span>
+              <span className="bee-caption font-medium">{t("duration")}</span>
               <input type="number" min={15} step={15} value={duration} onChange={(e) => setDuration(Number(e.target.value) || 30)} className="bee-input" />
             </label>
             <label className="flex flex-col gap-1 sm:col-span-2">
-              <span className="bee-micro font-medium">{t("link")}</span>
+              <span className="bee-caption font-medium">{t("link")}</span>
               <input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" className="bee-input" />
             </label>
           </div>
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => onCreateOpenChange(false)} className="bee-btn-ghost text-xs">
+            <button type="button" onClick={() => onCreateOpenChange(false)} className="bee-btn-ghost !text-sm">
               {t("cancel")}
             </button>
-            <button type="submit" disabled={!title.trim() || createMeeting.isPending} className="bee-btn bee-btn--primary text-xs">
+            <button type="submit" disabled={!title.trim() || createMeeting.isPending} className="bee-btn bee-btn--primary !text-sm">
               {createMeeting.isPending ? t("saving") : t("save")}
             </button>
           </div>
         </form>
       ) : (
-        <button type="button" onClick={() => onCreateOpenChange(true)} className="bee-btn-ghost text-xs">
+        <button type="button" onClick={() => onCreateOpenChange(true)} className="bee-btn-ghost !text-sm">
           <Plus className="size-3.5" />
           {t("create")}
         </button>
@@ -140,7 +139,7 @@ export function MeetingsTab({
               <li key={m.id} className="bee-surface flex items-start gap-3 p-3">
                 <IconDisc icon={m.completed_at ? CalendarCheck : CalendarDays} hue={hue} size={32} />
                 <div className="min-w-0 flex-1 leading-tight">
-                  <p className="bee-micro tabular-nums">
+                  <p className="bee-caption tabular-nums">
                     {formatDateTime(m.starts_at, locale)} · {m.duration_minutes} min
                     {m.completed_at && <span className="font-medium"> · {t("held")}</span>}
                   </p>
@@ -150,13 +149,13 @@ export function MeetingsTab({
                   </p>
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                     {m.meeting_url && (
-                      <a href={m.meeting_url} target="_blank" rel="noreferrer" className="bee-micro inline-flex items-center gap-1 underline-offset-2 hover:underline">
+                      <a href={m.meeting_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm underline-offset-2 hover:underline">
                         <Link2 className="size-3" />
                         {t("join")}
                       </a>
                     )}
                     {attendees.length > 0 && (
-                      <span className="bee-micro inline-flex items-center gap-1 truncate">
+                      <span className="inline-flex items-center gap-1 truncate text-sm text-muted-foreground">
                         <Users className="size-3" />
                         {attendees.join(", ")}
                       </span>

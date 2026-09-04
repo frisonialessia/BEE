@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
-import { mix } from "@/components/charts/palette";
+import { DATA, SALES, mix } from "@/components/charts/palette";
 import { ProgressRing } from "@/components/charts/progress-ring";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer, type DrawerCreatePreset } from "@/features/crm/opportunity-drawer-context";
@@ -42,7 +42,7 @@ import type { Company, Lead, Opportunity, OpportunityType, Signal, SignalType } 
 
 import { countByStep, monthlyAmounts, segmentFill } from "./account-stats";
 import { Avatar, IconDisc, PaneSection } from "./primitives";
-import { STAGE_ACCENT, STEP_ORDER, tint } from "./stage-meta";
+import { STAGE_ACCENT, STEP_ORDER } from "./stage-meta";
 import { StageStepper } from "./stage-stepper";
 import { DrawerTopBar } from "./top-bar";
 
@@ -161,7 +161,7 @@ function EditRow({ icon, hue, label, children }: { icon: LucideIcon; hue: string
     <div className="flex min-w-0 items-center gap-3">
       <IconDisc icon={icon} hue={hue} />
       <div className="min-w-0 flex-1 leading-tight">
-        <p className="bee-micro">{label}</p>
+        <p className="bee-caption">{label}</p>
         <div className="text-sm">{children}</div>
       </div>
     </div>
@@ -172,7 +172,7 @@ function EditRow({ icon, hue, label, children }: { icon: LucideIcon; hue: string
 function PersonDisc({ name, hue, size, photoUrl }: { name: string | null | undefined; hue: string; size: number; photoUrl?: string | null }) {
   if (name?.trim() || photoUrl) return <Avatar name={name} hue={hue} size={size} photoUrl={photoUrl} />;
   return (
-    <span aria-hidden className="grid shrink-0 place-items-center rounded-full" style={{ width: size, height: size, background: tint.chip(hue) }}>
+    <span aria-hidden className="grid shrink-0 place-items-center rounded-full" style={{ width: size, height: size, background: mix(hue, 20) }}>
       <UserRound className="size-4 stroke-[1.5] text-[var(--color-text)]" />
     </span>
   );
@@ -183,7 +183,7 @@ function Fact({ label, value }: { label: string; value: string | null | undefine
   if (!value) return null;
   return (
     <div className="min-w-0 leading-tight">
-      <p className="bee-micro">{label}</p>
+      <p className="bee-caption">{label}</p>
       <p className="truncate text-sm">{value}</p>
     </div>
   );
@@ -447,7 +447,7 @@ function CreateForm({
   const funnelRows = STEP_ORDER.map((s) => ({
     label: tStages(s),
     value: byStep[s] + (s === draft.stage ? 1 : 0),
-    color: s === draft.stage ? hue : mix(segmentFill(s, accountOpps), 45),
+    color: segmentFill(s, accountOpps),
   }));
   const monthly = useMemo(() => {
     const points = monthlyAmounts(accountOpps, locale);
@@ -582,10 +582,10 @@ function CreateForm({
         }
         right={
           <>
-            <button type="button" onClick={handleCancel} className="bee-btn-ghost text-xs">
+            <button type="button" onClick={handleCancel} className="bee-btn-ghost !text-sm">
               {t("cancel")}
             </button>
-            <button type="button" onClick={handleSaveDraft} disabled={!dirty} className="bee-btn-ghost text-xs">
+            <button type="button" onClick={handleSaveDraft} disabled={!dirty} className="bee-btn-ghost !text-sm">
               {t("draft.save")}
             </button>
           </>
@@ -603,7 +603,7 @@ function CreateForm({
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-sm font-semibold">{activeLead.full_name}</p>
                     {!leadLocked && (
-                      <button type="button" onClick={() => update({ leadId: null })} className="bee-btn-ghost !h-7 shrink-0 text-xs">
+                      <button type="button" onClick={() => update({ leadId: null })} className="bee-btn-ghost !h-8 shrink-0 !text-sm">
                         {t("change")}
                       </button>
                     )}
@@ -630,7 +630,7 @@ function CreateForm({
                             <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pickLead(l)} className={MENU_ITEM}>
                               <UserRound className="size-3.5 shrink-0 text-muted-foreground" />
                               <span className="truncate">{l.full_name}</span>
-                              {l.title && <span className="bee-micro truncate">{l.title}</span>}
+                              {l.title && <span className="truncate text-muted-foreground">{l.title}</span>}
                             </button>
                           </li>
                         ))}
@@ -647,11 +647,11 @@ function CreateForm({
                   </div>
                 )}
                 {activeLead ? (
-                  <p className="bee-micro truncate">{[activeLead.title, activeLead.seniority].filter(Boolean).join(" · ") || "—"}</p>
+                  <p className="truncate text-sm text-muted-foreground">{[activeLead.title, activeLead.seniority].filter(Boolean).join(" · ") || "—"}</p>
                 ) : (
                   <div className="flex gap-2">
-                    <input value={draft.leadTitle} onChange={(e) => update({ leadTitle: e.target.value })} placeholder={t("contactTitle")} aria-label={t("contactTitle")} className={cn(INLINE, "bee-micro")} />
-                    <input value={draft.leadSeniority} onChange={(e) => update({ leadSeniority: e.target.value })} placeholder={t("contactSeniority")} aria-label={t("contactSeniority")} className={cn(INLINE, "bee-micro")} />
+                    <input value={draft.leadTitle} onChange={(e) => update({ leadTitle: e.target.value })} placeholder={t("contactTitle")} aria-label={t("contactTitle")} className={cn(INLINE, "text-sm")} />
+                    <input value={draft.leadSeniority} onChange={(e) => update({ leadSeniority: e.target.value })} placeholder={t("contactSeniority")} aria-label={t("contactSeniority")} className={cn(INLINE, "text-sm")} />
                   </div>
                 )}
               </div>
@@ -691,7 +691,7 @@ function CreateForm({
             </div>
             {otherLeads.length > 0 && !leadLocked && (
               <div className="mt-4">
-                <p className="bee-micro mb-1.5">{t("otherContacts")}</p>
+                <p className="bee-caption mb-1.5">{t("otherContacts")}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {otherLeads.map((l) => (
                     <button
@@ -699,8 +699,7 @@ function CreateForm({
                       type="button"
                       onClick={() => pickLead(l)}
                       title={l.title ?? undefined}
-                      className="flex items-center gap-1.5 rounded-full py-0.5 pl-0.5 pr-2.5 text-xs hover:brightness-95"
-                      style={{ background: tint.wash(hue) }}
+                      className="flex items-center gap-1.5 rounded-full border border-[var(--color-divider)] bg-[var(--color-card)] py-0.5 pl-0.5 pr-2.5 text-sm hover:bg-[var(--color-primary)]"
                     >
                       <Avatar name={l.full_name} hue={hue} size={20} />
                       <span className="max-w-32 truncate">{l.full_name}</span>
@@ -718,10 +717,10 @@ function CreateForm({
                 <div className="flex items-center justify-between gap-2">
                   <p className="min-w-0 truncate">
                     <span className="font-medium">{activeCompany.name}</span>
-                    {companyLine && <span className="bee-micro"> · {companyLine}</span>}
+                    {companyLine && <span className="text-muted-foreground"> · {companyLine}</span>}
                   </p>
                   {!companyLocked && (
-                    <button type="button" onClick={clearCompany} className="bee-btn-ghost !h-7 shrink-0 text-xs">
+                    <button type="button" onClick={clearCompany} className="bee-btn-ghost !h-8 shrink-0 !text-sm">
                       {t("change")}
                     </button>
                   )}
@@ -749,7 +748,7 @@ function CreateForm({
                           <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => pickCompany(c)} className={MENU_ITEM}>
                             <Building2 className="size-3.5 shrink-0 text-muted-foreground" />
                             <span className="truncate">{c.name}</span>
-                            {c.domain && <span className="bee-micro truncate">{c.domain}</span>}
+                            {c.domain && <span className="truncate text-muted-foreground">{c.domain}</span>}
                           </button>
                         </li>
                       ))}
@@ -792,11 +791,11 @@ function CreateForm({
                   ))}
                 </select>
                 <input value={draft.companyCountry} onChange={(e) => update({ companyCountry: e.target.value })} placeholder={t("companyCountry")} aria-label={t("companyCountry")} className={cn(INLINE, "text-sm")} />
-                <input value={draft.companySites} onChange={(e) => update({ companySites: e.target.value })} placeholder={t("companySitesPlaceholder")} aria-label={t("companySites")} className={cn(INLINE, "text-sm")} />
+                <input value={draft.companySites} onChange={(e) => update({ companySites: e.target.value })} placeholder={t("companySites")} aria-label={t("companySites")} className={cn(INLINE, "text-sm")} />
                 {companySites.length > 0 && (
                   <div className="col-span-2 flex flex-wrap gap-1.5">
                     {companySites.map((s) => (
-                      <span key={s} className="rounded-full px-2 py-0.5 text-xs" style={{ background: tint.wash(hue) }}>
+                      <span key={s} className="rounded-full border border-[var(--color-divider)] px-2.5 py-0.5 text-sm">
                         {s}
                       </span>
                     ))}
@@ -809,16 +808,16 @@ function CreateForm({
             <div className="mt-3 flex items-start gap-3">
               <IconDisc icon={Sparkles} hue={hue} />
               <div className="min-w-0 flex-1 leading-tight">
-                <p className="bee-micro">{t("summary.title")}</p>
+                <p className="bee-caption">{t("summary.title")}</p>
                 <p className={cn("line-clamp-3 text-sm", (!activeCompany || !activeCompany.description) && "text-muted-foreground")}>{summary}</p>
               </div>
             </div>
           </PaneSection>
 
-          {/* Monto — same tinted box as view mode */}
-          <div className="flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3" style={{ background: tint.soft(hue) }}>
+          {/* Monto — the one green box, same as view mode (SALES palette) */}
+          <div className="flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3" style={{ background: mix(SALES.mint, 60) }}>
             <div className="min-w-0 flex-1 leading-tight">
-              <p className="bee-micro font-medium text-[var(--color-text)]">{stageWord}</p>
+              <p className="bee-caption font-medium text-[var(--color-text)]">{stageWord}</p>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-lg font-bold">{t("estimatedValuePlaceholder")}</span>
                 <input
@@ -832,11 +831,11 @@ function CreateForm({
                   className={cn(INLINE, "text-lg font-bold tabular-nums")}
                 />
               </div>
-              <label className="bee-micro mt-1 flex items-center gap-1.5">
+              <label className="bee-caption mt-1 flex items-center gap-1.5">
                 <span className="shrink-0">{t("expectedCloseLabel")}</span>
-                <input value={draft.expectedClose} onChange={(e) => update({ expectedClose: e.target.value })} type="date" className={cn(INLINE, "bee-micro")} />
+                <input value={draft.expectedClose} onChange={(e) => update({ expectedClose: e.target.value })} type="date" className={cn(INLINE, "text-sm")} />
               </label>
-              <p className="bee-micro mt-1 truncate tabular-nums">
+              <p className="bee-caption mt-1 truncate tabular-nums">
                 {t("expectedValue")} ·{" "}
                 {closeRate ? (
                   <>
@@ -848,7 +847,7 @@ function CreateForm({
                 )}
               </p>
             </div>
-            <select value={draft.opportunityType} onChange={(e) => update({ opportunityType: e.target.value as OpportunityType })} aria-label={t("typeLabel")} className="bee-input !h-8 !w-auto max-w-36 text-xs">
+            <select value={draft.opportunityType} onChange={(e) => update({ opportunityType: e.target.value as OpportunityType })} aria-label={t("typeLabel")} className="bee-input !h-8 !w-auto max-w-36 !text-sm" style={{ borderColor: SALES.won }}>
               {OPPORTUNITY_TYPES.map((ot) => (
                 <option key={ot} value={ot}>
                   {opportunityTypeLabels[ot]}
@@ -862,7 +861,7 @@ function CreateForm({
             <div className="flex items-center gap-3">
               <PersonDisc name={owner?.full_name} hue={hue} size={32} photoUrl={owner?.avatar_url} />
               <div className="min-w-0 flex-1 leading-tight">
-                <p className="bee-micro">{t("ownerLabel")}</p>
+                <p className="bee-caption">{t("ownerLabel")}</p>
                 <select value={draft.assignedTo} onChange={(e) => update({ assignedTo: e.target.value })} aria-label={t("ownerLabel")} className={cn(INLINE, "text-sm font-medium")}>
                   {(users ?? []).map((u) => (
                     <option key={u.id} value={u.id}>
@@ -874,7 +873,7 @@ function CreateForm({
             </div>
           </PaneSection>
 
-          {/* Prioridad — three steps in the box's own hue; the slot where view mode shows the score */}
+          {/* Prioridad — lavender track, the drawer's hue on the chosen step; the slot where view mode shows the score */}
           <PaneSection
             className="flex flex-1 flex-col"
             title={t("priority")}
@@ -889,8 +888,8 @@ function CreateForm({
                     type="button"
                     aria-pressed={active}
                     onClick={() => update({ score: step.score })}
-                    className={cn("h-8 rounded-[var(--radius-sm)] text-xs text-[var(--color-text)] hover:brightness-95", active && "font-semibold")}
-                    style={{ background: active ? hue : tint.soft(hue) }}
+                    className={cn("h-8 rounded-[var(--radius-sm)] text-sm text-[var(--color-text)] hover:brightness-95", active && "font-semibold")}
+                    style={{ background: active ? hue : DATA.lavender }}
                   >
                     {t(`priorityLevels.${step.key}`)}
                   </button>
@@ -907,7 +906,7 @@ function CreateForm({
               <p className="bee-eyebrow truncate">
                 {tDrawer("pipeline")} · {t("stageLabel")}: {stageWord}
               </p>
-              <select value={draft.signalType} onChange={(e) => update({ signalType: e.target.value as SignalType })} aria-label={t("signalType")} className="bee-input !h-8 !w-auto max-w-48 text-xs">
+              <select value={draft.signalType} onChange={(e) => update({ signalType: e.target.value as SignalType })} aria-label={t("signalType")} className="bee-input !h-8 !w-auto max-w-48 !text-sm">
                 {signalTypeOptions.map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
@@ -927,7 +926,7 @@ function CreateForm({
           <StageStepper status={draft.stage} closedLabel={null} onMove={(s) => update({ stage: s as StartStage })} allowed={START_STAGES} />
 
           {/* Why · next meeting · meetings held — the next-step strip's slot */}
-          <div className="rounded-[var(--radius-lg)]" style={{ background: tint.wash(hue) }}>
+          <div className="rounded-[var(--radius-lg)] border border-[var(--color-divider)] bg-[var(--color-card)]">
             <div className="flex items-start gap-3 px-4 py-3">
               <IconDisc icon={MessageSquareText} hue={hue} />
               <textarea
@@ -944,14 +943,14 @@ function CreateForm({
               <div className="flex items-center gap-3 px-4 py-3">
                 <IconDisc icon={CalendarClock} hue={hue} />
                 <div className="min-w-0 flex-1 leading-tight">
-                  <p className="bee-micro">{t("nextMeetingLabel")}</p>
+                  <p className="bee-caption">{t("nextMeetingLabel")}</p>
                   <input value={draft.nextMeetingAt} onChange={(e) => update({ nextMeetingAt: e.target.value })} type="datetime-local" aria-label={t("nextMeetingLabel")} className={cn(INLINE, "text-sm")} />
                 </div>
               </div>
               <div className="flex items-center gap-3 border-t border-[var(--color-divider)] px-4 py-3 sm:border-l sm:border-t-0">
                 <IconDisc icon={Users} hue={hue} />
                 <div className="min-w-0 flex-1 leading-tight">
-                  <p className="bee-micro">{t("meetingsHeldLabel")}</p>
+                  <p className="bee-caption">{t("meetingsHeldLabel")}</p>
                   <input value={draft.meetingsHeldCount} onChange={(e) => update({ meetingsHeldCount: e.target.value })} type="number" min="0" step="1" placeholder="0" aria-label={t("meetingsHeldLabel")} className={cn(INLINE, "text-sm tabular-nums")} />
                 </div>
               </div>
@@ -963,10 +962,10 @@ function CreateForm({
             <div className="bee-surface flex flex-col gap-3 p-4">
               <div className="flex items-baseline justify-between gap-2">
                 <p className="bee-card-title !mb-0">{tDrawer("account.title")}</p>
-                <span className="bee-micro">{tDrawer("account.byStage", { count: accountOpps.length + 1 })}</span>
+                <span className="bee-caption">{tDrawer("account.byStage", { count: accountOpps.length + 1 })}</span>
               </div>
               <HorizontalFunnel rows={funnelRows} />
-              <p className="bee-micro">{!activeCompany ? t("charts.pickCompany") : accountOpps.length === 0 ? t("charts.first") : companyLabel}</p>
+              <p className="bee-caption">{!activeCompany ? t("charts.pickCompany") : accountOpps.length === 0 ? t("charts.first") : companyLabel}</p>
             </div>
             <div className="bee-surface flex flex-col gap-3 p-4">
               <p className="bee-card-title !mb-0">{tDrawer("account.amounts")}</p>
@@ -975,10 +974,10 @@ function CreateForm({
                   points={monthly}
                   minHeight={120}
                   formatValue={(v) => formatMoney(v, "USD", locale, true)}
-                  colorFor={(p) => (p.current ? hue : mix(hue, 45))}
+                  colorFor={(p) => (p.current ? SALES.won : SALES.mint)}
                 />
               ) : (
-                <div className="bee-fill grid place-items-center rounded-[var(--radius-md)]" style={{ background: tint.wash(hue) }}>
+                <div className="bee-fill grid place-items-center rounded-[var(--radius-md)] border border-dashed border-[var(--color-divider)]">
                   <p className="bee-caption px-4 text-center">{t("charts.noAmount")}</p>
                 </div>
               )}
@@ -989,7 +988,7 @@ function CreateForm({
           <div className="flex items-center gap-3">
             <IconDisc icon={Users} hue={hue} />
             <div className="min-w-0 flex-1 leading-tight">
-              <p className="bee-micro">{t("accountContacts", { count: companyLeads.length })}</p>
+              <p className="bee-caption">{t("accountContacts", { count: companyLeads.length })}</p>
               {companyLeads.length > 0 ? (
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   {companyLeads.slice(0, MAX_CHIPS).map((l) => (
@@ -998,8 +997,8 @@ function CreateForm({
                       type="button"
                       onClick={() => !leadLocked && pickLead(l)}
                       disabled={leadLocked}
-                      className="flex items-center gap-1.5 rounded-full py-0.5 pl-0.5 pr-2.5 text-xs hover:brightness-95 disabled:cursor-default"
-                      style={{ background: l.id === activeLead?.id ? tint.chip(hue) : tint.wash(hue) }}
+                      className="flex items-center gap-1.5 rounded-full border border-[var(--color-divider)] py-0.5 pl-0.5 pr-2.5 text-sm hover:bg-[var(--color-primary)] disabled:cursor-default"
+                      style={{ background: l.id === activeLead?.id ? DATA.lavender : "var(--color-card)" }}
                     >
                       <Avatar name={l.full_name} hue={hue} size={20} />
                       <span className="max-w-32 truncate">{l.full_name}</span>
@@ -1017,16 +1016,16 @@ function CreateForm({
             <div className="flex min-w-0 items-center gap-3">
               {savedAt && (
                 <>
-                  <span className="bee-micro truncate font-medium" style={{ color: mix(hue, 65, "var(--color-text)") }}>
+                  <span className="bee-caption truncate font-medium" style={{ color: mix(hue, 65, "var(--color-text)") }}>
                     {t("draft.saved", { time: formatRelativeTime(savedAt, locale, new Date(now)) })}
                   </span>
-                  <button type="button" onClick={discardDraft} className="bee-btn-text text-xs">
+                  <button type="button" onClick={discardDraft} className="bee-btn-text !text-sm">
                     {t("draft.discard")}
                   </button>
                 </>
               )}
             </div>
-            <button type="submit" form={FORM_ID} disabled={!canSubmit} className="bee-btn bee-btn--primary text-xs">
+            <button type="submit" form={FORM_ID} disabled={!canSubmit} className="bee-btn bee-btn--primary !text-sm" style={{ background: SALES.won, borderColor: SALES.won, color: "var(--color-card)" }}>
               {busy ? t("saving") : t("save")}
             </button>
           </div>

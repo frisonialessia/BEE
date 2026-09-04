@@ -21,15 +21,14 @@ export function CrmView() {
 
   return (
     <div>
-      <header className="mb-4">
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1">
-          <h1 className="bee-display">{t("title")}</h1>
-          <p className="bee-caption mt-1">{t("description")}</p>
-        </div>
-      </header>
-
       <MergedPageTabs
+        header={
+          <header>
+            <p className="bee-eyebrow">{t("eyebrow")}</p>
+            <h1 className="bee-display mt-1">{t("title")}</h1>
+            <p className="bee-caption mt-1">{t("description")}</p>
+          </header>
+        }
         defaultValue="pipeline"
         tabs={[
           { value: "pipeline", label: t("pipelineTab"), content: <CrmBoard /> },

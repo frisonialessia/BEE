@@ -39,25 +39,17 @@ export function SignalsDashboard() {
 
   return (
     <div>
-      <header className="mb-4">
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="bee-display">{t("title")}</h1>
-            <p className="bee-caption mt-1">
-              {t("subtitle")}
-            </p>
-          </div>
-          <LiveBadge live={live} />
-        </div>
-
-        <div className="mt-4 flex gap-4 text-sm text-muted-foreground">
-          <span>{t("totalCount", { count: signals.length })}</span>
-          <span>{t("hotCount", { count: hotCount })}</span>
-        </div>
-      </header>
-
       <MergedPageTabs
+        header={
+          <header>
+            <p className="bee-eyebrow">{t("eyebrow")}</p>
+            <h1 className="bee-display mt-1">{t("title")}</h1>
+            <p className="bee-caption mt-1">
+              {t("subtitle")} · {t("totalCount", { count: signals.length })} · {t("hotCount", { count: hotCount })}
+            </p>
+          </header>
+        }
+        actions={<LiveBadge live={live} />}
         defaultValue="feed"
         tabs={[
           {

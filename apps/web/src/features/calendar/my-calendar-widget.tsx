@@ -67,8 +67,10 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
       {upcoming.map((m) => {
         const dotColor = m.color ? `var(--color-${m.color})` : CLIENT_CONTEXT_DOT[m.client_context ?? "new_contact"];
         return (
-          <li key={m.id} className="bee-bento flex items-center gap-3 border-l-4 py-2 pl-3 pr-2" style={{ borderLeftColor: dotColor }}>
-            <span className="bee-micro shrink-0 font-mono text-muted-foreground">
+          // Same fill as the event on the Calendario page (eventFill there): the
+          // color the rep picked for the meeting, at full strength, ink on top.
+          <li key={m.id} className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2 text-[var(--color-text)]" style={{ background: dotColor }}>
+            <span className="bee-micro shrink-0 font-mono opacity-80">
               {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", {
                 weekday: "short",
                 hour: "2-digit",
@@ -78,9 +80,9 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
             </span>
             <span className="min-w-0 flex-1">
               <span className="block truncate text-xs font-medium">{m.title}</span>
-              {(m.company_name || m.contact_name) && <span className="block truncate bee-micro">{m.company_name ?? m.contact_name}</span>}
+              {(m.company_name || m.contact_name) && <span className="block truncate bee-micro opacity-80">{m.company_name ?? m.contact_name}</span>}
             </span>
-            {m.meeting_url && <Video className="size-3 shrink-0 text-muted-foreground" />}
+            {m.meeting_url && <Video className="size-3 shrink-0 opacity-70" />}
           </li>
         );
       })}

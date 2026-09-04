@@ -12,12 +12,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
  * page.tsx), so a bookmark/link to it still lands on the right tab instead
  * of always defaulting to the first one. `defaultValue`'s own tab omits the
  * param entirely, keeping the canonical URL clean. */
+/** BEE standard: on a tabbed page the page header (eyebrow · title · caption)
+ * and the tab strip share ONE row — header left, tabs + actions right — so
+ * the KPI strip below starts at exactly the same height as on a page
+ * without tabs (and as on Resumen). `actionsByTab` is for a control that
+ * belongs to one tab only (an export button), `actions` for the page-wide
+ * ones (live badge, primary button). */
 export function MergedPageTabs({
   tabs,
   defaultValue,
+  header,
+  actions,
+  actionsByTab,
 }: {
   tabs: { value: string; label: string; content: React.ReactNode }[];
   defaultValue: string;
+  header?: React.ReactNode;
+  actions?: React.ReactNode;
+  actionsByTab?: Partial<Record<string, React.ReactNode>>;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -34,14 +46,21 @@ export function MergedPageTabs({
   }
 
   return (
-    <Tabs value={value} onValueChange={handleChange}>
-      <TabsList className="mb-4 h-auto max-w-full flex-wrap border border-border bg-background group-data-[orientation=horizontal]/tabs:h-auto">
-        {tabs.map((tab) => (
-          <TabsTrigger key={tab.value} value={tab.value} className="rounded-sm">
-            {tab.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
+    <Tabs value={value} onValueChange={handleChange} className="gap-0">
+      <div className={header ? "mb-4 flex flex-wrap items-end justify-between gap-4" : "mb-4 flex flex-wrap items-center justify-between gap-2"}>
+        {header}
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <TabsList className="h-auto max-w-full flex-wrap border border-border bg-background group-data-[orientation=horizontal]/tabs:h-auto">
+            {tabs.map((tab) => (
+              <TabsTrigger key={tab.value} value={tab.value} className="rounded-sm">
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {actionsByTab?.[value]}
+          {actions}
+        </div>
+      </div>
       {tabs.map((tab) => (
         <TabsContent key={tab.value} value={tab.value}>
           {tab.content}

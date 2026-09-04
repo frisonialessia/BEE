@@ -59,7 +59,9 @@
      button/CTA instead of near-black. Never use --color-text as a button
      background; it's for text only. */
   --color-cta: var(--color-chart-4);
-  --color-cta-hover: color-mix(in srgb, var(--color-chart-4) 85%, var(--color-text) 15%);
+  /* Pure token: hover darkens with a filter (see .bee-btn--primary:hover),
+     never by mixing indigo toward ink — that mix reads as a purple that is not BEE's. */
+  --color-cta-hover: var(--color-chart-4);
 
   --color-chart-1: #ffb213;
   --color-chart-2: #fca000;
@@ -972,6 +974,7 @@
 .bee-btn--primary:hover:not(:disabled) {
   background: var(--color-cta-hover);
   border-color: var(--color-cta-hover);
+  filter: brightness(0.94);
 }
 
 .bee-btn-ghost {
@@ -1334,27 +1337,66 @@
 }
 @media (prefers-reduced-motion: reduce) { .bee-hex-breathe { animation: none; } }
 
-/* ── Landing sparkles ─────────────────────────────────────────────────────
-   Faint white points over the one landing ground — 1–2px, no glow, a slow
-   twinkle to ~0.5 opacity, like distant stars. Positions are fixed in the
-   markup (MarketingSparkles), timing varies per point. */
-.bee-sparkles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
-.bee-sparkles i {
+/* ── Landing shell: floating nav, hero wash, CTA lift, live dot ──────────
+   Pure BEE tokens throughout — card, border, primary (lavender), chart-1
+   (honey), chart-4 (indigo); nothing mixed toward ink, no blend of two
+   hues. */
+
+/* Floating navbar (marketing-header.tsx): translucent card over the page,
+   blurred, hairline border, the card shadow. */
+.bee-nav {
+  background: color-mix(in srgb, var(--color-card) 80%, transparent);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--bee-shadow-card);
+}
+
+/* Ethereal ground, hero only: a wash from a light lavender (the primary
+   token toward the page background) down to the page background, plus two
+   soft blurred blobs — lavender/indigo and honey — each one token. */
+.bee-hero-wash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--color-primary) 55%, var(--color-background)), var(--color-background) 85%);
+}
+.bee-hero-wash i {
   position: absolute;
   display: block;
-  width: 2px;
-  height: 2px;
   border-radius: 50%;
-  background: #fff;
-  opacity: 0;
-  animation: bee-twinkle 12s ease-in-out infinite;
+  filter: blur(80px);
 }
-.bee-sparkles i:nth-child(odd) { width: 1px; height: 1px; }
-@keyframes bee-twinkle {
-  0%, 100% { opacity: 0; }
-  50% { opacity: 0.5; }
+.bee-hero-wash i:nth-child(1) { width: min(36rem, 90vw); height: 22rem; left: -8rem; top: -6rem; background: var(--color-chart-4); opacity: 0.28; }
+.bee-hero-wash i:nth-child(2) { width: min(30rem, 80vw); height: 20rem; right: -6rem; top: 4rem; background: var(--color-chart-1); opacity: 0.22; }
+
+/* CTA hover: a shadow lift only — colors stay the button's own. */
+.bee-cta-lift { transition: box-shadow 180ms ease, background-color 150ms ease, border-color 150ms ease; }
+.bee-cta-lift:hover { box-shadow: var(--bee-shadow-card-lift); }
+
+/* Live dot on the hero shot's window bar — indigo, with a slow ring. */
+.bee-live-dot {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--color-chart-4);
 }
-@media (prefers-reduced-motion: reduce) { .bee-sparkles i { animation: none; opacity: 0.35; } }
+.bee-live-dot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  border: 1.5px solid var(--color-chart-4);
+  animation: bee-live-ring 2.4s ease-out infinite;
+}
+@keyframes bee-live-ring {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  70%, 100% { transform: scale(1.5); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .bee-live-dot::after { animation: none; opacity: 0.5; } }
 
 @keyframes bee-hex-pulse {
   0%, 100% { opacity: 0.35; transform: scale(1); }
@@ -1528,8 +1570,8 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Headline highlight: the key words in magenta mixed toward --color-text
-   (≈4.2:1 on the ground). No marker, no underline. */
+/* Headline highlight: the key words in BEE's deeper honey (chart-2), the
+   pure token — no mix toward ink, no marker, no underline. */
 .bee-hl { color: var(--color-chart-2); }
 
 /* Demo panel: honey hairline filling across the active tab until the next
@@ -1568,19 +1610,26 @@
 
 /* ── Trust cards: the dashboard charts play once on entry ─────────────────
    Driven by the same data-reveal state as the card stagger (.bee-trust is
-   the stagger wrapper). While "hidden": ring/donut arcs empty, funnel bars
-   at zero width, sparkline clipped; on "in" each transitions to the value
-   the component already rendered. Selectors reach into the chart
-   components' own markup (second circle = the value arc; .h-5 > div = a
-   funnel bar) — kept here, next to the only place that uses them. */
-.bee-trust[data-reveal="hidden"] .bee-trust-ring circle:nth-of-type(2),
+   the stagger wrapper). While "hidden": donut arcs empty, funnel bars at
+   zero width, vertical bars (BarsVsTarget and the source mini-bars) at
+   zero height, heat cells fully transparent; on "in" each transitions to
+   the value the component already rendered. Selectors reach into the
+   chart components' own markup (.h-5 > div = a funnel bar; rect = a bar or
+   a heat cell) — kept here, next to the only place that uses them. CSS
+   wins over SVG presentation attributes, so no !important is needed on
+   stroke-dasharray / fill-opacity. */
 .bee-trust[data-reveal="hidden"] .bee-trust-donut circle { stroke-dasharray: 0 1000; }
-.bee-trust-ring circle:nth-of-type(2),
-.bee-trust-donut circle { transition: stroke-dasharray 1200ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms; }
+.bee-trust-donut circle { transition: stroke-dasharray 1200ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms, opacity 150ms ease; }
 .bee-trust[data-reveal="hidden"] .bee-trust-funnel .h-5 > div { width: 0 !important; }
 .bee-trust-funnel .h-5 > div { transition: width 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms, opacity 150ms ease; }
-.bee-trust[data-reveal="hidden"] .bee-trust-spark svg { clip-path: inset(0 100% 0 0); }
-.bee-trust-spark svg { transition: clip-path 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms; }
+.bee-trust-bars rect {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transition: transform 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms, opacity 150ms ease;
+}
+.bee-trust[data-reveal="hidden"] .bee-trust-bars rect { transform: scaleY(0); }
+.bee-trust-heat rect { transition: fill-opacity 900ms ease 300ms; }
+.bee-trust[data-reveal="hidden"] .bee-trust-heat rect { fill-opacity: 0; }
 
 /* ── FAQ answers that type themselves ─────────────────────────────────────
    The full answer owns the layout (transparent ink while typing, so the
@@ -1623,10 +1672,10 @@
   .bee-draw[data-reveal] .bee-draw__line { stroke-dasharray: none; stroke-dashoffset: 0; transition: none; }
   .bee-draw[data-reveal] .bee-draw__area { clip-path: none; transition: none; }
   .bee-draw[data-reveal] .bee-draw__dot { opacity: 1; transform: none; transition: none; }
-  .bee-trust-ring circle,
   .bee-trust-donut circle,
   .bee-trust-funnel .h-5 > div,
-  .bee-trust-spark svg { transition: none; }
+  .bee-trust-bars rect,
+  .bee-trust-heat rect { transition: none; }
 }
 
 /* ── Opportunity drawer, "engine" size ─────────────────────────────────────
@@ -1641,4 +1690,36 @@
 }
 @media (max-width: 1023px) {
   .bee-drawer--wide { width: 100vw; }
+}
+
+/* ── Calendario: fixed-height event blocks + drag to reschedule ─────────
+ * The blocks themselves are colored inline (the meeting's own hue — see
+ * calendar-page.tsx's eventFill); these classes only add the drag states.
+ * The source block dims while it's being dragged, the ghost in the target
+ * column is the same block dashed, and a month cell under the pointer gets
+ * a dashed outline in the brand blue so the target reads before the drop. */
+.bee-cal-block,
+.bee-cal-chip {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-drag: element;
+}
+.bee-cal-block:active,
+.bee-cal-chip:active { cursor: grabbing; }
+.bee-cal-block:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 1px;
+}
+.bee-cal-block--dragging { opacity: 0.4; }
+.bee-cal-ghost {
+  border-style: dashed;
+  border-color: var(--color-text);
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: 40;
+}
+.bee-cal-drop-target {
+  outline: 2px dashed var(--color-chart-4);
+  outline-offset: -2px;
+  background: var(--color-primary);
 }

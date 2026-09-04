@@ -139,7 +139,7 @@ function Pill({ left, top, width, children }: { left: number; top: number; width
   return (
     <div
       className={cn("pointer-events-none absolute z-10 whitespace-nowrap rounded-[var(--radius-sm)] bg-[var(--color-text)] px-2 py-1 text-xs font-medium text-[var(--color-card)]", shift)}
-      style={{ left, top: Math.max(0, top) }}
+      style={{ left, top }}
     >
       {children}
     </div>

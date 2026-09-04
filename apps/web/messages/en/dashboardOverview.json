@@ -104,7 +104,8 @@
     "noActivity": "No activity recorded yet.",
     "less": "Less",
     "more": "More",
-    "signalsDetected": "{count, plural, one {# signal detected} other {# signals detected}}"
+    "signalsDetected": "{count, plural, one {# signal detected} other {# signals detected}}",
+    "hourProfile": "Signals by hour"
   },
   "todayImpact": {
     "emptyState": "No high-intent signals detected in the last 24h — nothing urgent to project today.",

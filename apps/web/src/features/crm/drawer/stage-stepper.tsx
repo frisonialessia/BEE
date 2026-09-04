@@ -87,7 +87,7 @@ export function StageStepper({
             onClick={clickable ? () => onMove(step as CrmStage) : undefined}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
-              "relative -ml-[6px] h-9 min-w-0 flex-1 truncate px-4 text-xs transition-[filter] first:ml-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-chart-4)]",
+              "relative -ml-[6px] h-9 min-w-0 flex-1 truncate px-4 text-sm transition-[filter] first:ml-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-chart-4)]",
               isCurrent ? "font-semibold text-[var(--color-text)]" : "text-[var(--color-text)]",
               clickable ? "hover:brightness-95" : "cursor-default",
               !isCurrent && i > currentIdx && step !== "closed" && "text-muted-foreground",

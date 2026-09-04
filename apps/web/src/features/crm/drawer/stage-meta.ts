@@ -1,4 +1,4 @@
-import { SALES, mix } from "@/components/charts/palette";
+import { SALES } from "@/components/charts/palette";
 import type { CrmStage } from "@/lib/api/opportunities";
 import { CRM_STAGES } from "@/lib/crm-board";
 import { CLOSED_OPPORTUNITY_STATUSES, type Opportunity, type OpportunityStatus } from "@/types/domain";
@@ -39,12 +39,3 @@ export function accentOf(opportunity: Pick<Opportunity, "status">): string {
   if (isClosedStatus(opportunity.status)) return "var(--color-text)";
   return STAGE_ACCENT[opportunity.status as CrmStage];
 }
-
-/** Tints of the block hue: chips, discs and meters share one color at
- *  different strengths (BEE's "one color per block"). */
-export const tint = {
-  wash: (hue: string) => mix(hue, 12),
-  soft: (hue: string) => mix(hue, 22),
-  chip: (hue: string) => mix(hue, 32),
-  strong: (hue: string) => mix(hue, 55),
-};

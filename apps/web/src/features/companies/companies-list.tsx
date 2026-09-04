@@ -1,16 +1,19 @@
 "use client";
 
-import { Building2, Globe } from "lucide-react";
+import { Building2, Globe, Upload } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
 import { CompanyDuplicatesPanel } from "@/components/dedup/company-duplicates-panel";
 import { LookalikesPanel } from "@/components/lookalikes/lookalikes-panel";
 import { MergedPageTabs } from "@/components/merged-page-tabs";
-import { LeadsDirectory } from "@/features/leads/leads-directory";
+import { LeadImportPanel } from "@/features/leads/lead-import-panel";
+import { LeadsDirectory, leadExportRow, leadsExportColumns } from "@/features/leads/leads-directory";
+import type { Locale } from "@/i18n/locales";
+import { getLeadStatusLabels } from "@/lib/format";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -43,6 +46,7 @@ export function CompaniesList() {
   const { data: oppsResult } = useOpportunities(undefined, 200);
   const { data: signalsResult } = useSignals(200);
   const { openNew } = useOpportunityDrawer();
+  const [importOpen, setImportOpen] = useState(false);
   const tLeads = useTranslations("companiesLeads.leadsDirectory");
   const demo = useIsDemoMode();
   // Read the clock once per mount, same as company-detail/crm-board — the
@@ -106,18 +110,29 @@ export function CompaniesList() {
     oportunidades: oppCountByCompany.get(c.id) ?? 0,
   }));
 
+  const locale = useLocale() as Locale;
+  const leadStatusLabels = getLeadStatusLabels(locale);
+  const companyNameById = new Map(companies.map((c) => [c.id, c.name]));
+  const leadExportRows = (leadsResult?.data ?? []).map((l) =>
+    leadExportRow(l, l.company_id ? companyNameById.get(l.company_id) ?? "" : "", leadStatusLabels[l.status]),
+  );
+
   return (
     <div>
-      <header className="mb-4">
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="bee-display">{t("title")}</h1>
-            <p className="bee-caption mt-1">
-              {t("subtitle")}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
+      {/* BEE standard: header and tabs share one row, each tab's own
+          controls (export, import) sit at its right end, and the KPI strip
+          starts right below — at the same height as on every other page. */}
+      <MergedPageTabs
+        defaultValue="companies"
+        header={
+          <header>
+            <p className="bee-eyebrow">{t("eyebrow")}</p>
+            <h1 className="bee-display mt-1">{t("title")}</h1>
+            <p className="bee-caption mt-1">{t("subtitle")}</p>
+          </header>
+        }
+        actions={
+          <>
             <LiveBadge live={live} />
             {/* One way to add anyone, anywhere in BEE: the same "Nueva
                 oportunidad" window the CRM uses (company + contact + deal
@@ -125,37 +140,41 @@ export function CompaniesList() {
             <button type="button" onClick={() => openNew()} className="bee-btn bee-btn--primary">
               {tLeads("newLeadButton")}
             </button>
-          </div>
-        </div>
-      </header>
-
-      <MergedPageTabs
-        defaultValue="companies"
+          </>
+        }
+        actionsByTab={{
+          companies: (
+            <ExportCsvButton
+              rows={exportRows}
+              filename="bee-empresas.csv"
+              columns={[
+                { key: "nombre", header: t("export.columns.name") },
+                { key: "dominio", header: t("export.columns.domain") },
+                { key: "industria", header: t("export.columns.industry") },
+                { key: "tamano", header: t("export.columns.size") },
+                { key: "pais", header: t("export.columns.country") },
+                { key: "sitio_web", header: t("export.columns.website") },
+                { key: "contactos", header: t("export.columns.contacts") },
+                { key: "oportunidades", header: t("export.columns.opportunities") },
+              ]}
+            />
+          ),
+          leads: (
+            <>
+              <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost inline-flex items-center gap-2">
+                <Upload className="size-3.5" />
+                {tLeads("importButton")}
+              </button>
+              <ExportCsvButton rows={leadExportRows} filename="bee-leads.csv" columns={leadsExportColumns(tLeads)} />
+            </>
+          ),
+        }}
         tabs={[
           {
             value: "companies",
             label: t("outerTabs.companies"),
             content: (
               <>
-                {/* The export is this tab's — the Leads tab has its own — so
-                    a page never shows two "Exportar CSV" buttons at once. */}
-                <div className="mb-3 flex justify-end">
-                  <ExportCsvButton
-                    rows={exportRows}
-                    filename="bee-empresas.csv"
-                    columns={[
-                      { key: "nombre", header: t("export.columns.name") },
-                      { key: "dominio", header: t("export.columns.domain") },
-                      { key: "industria", header: t("export.columns.industry") },
-                      { key: "tamano", header: t("export.columns.size") },
-                      { key: "pais", header: t("export.columns.country") },
-                      { key: "sitio_web", header: t("export.columns.website") },
-                      { key: "contactos", header: t("export.columns.contacts") },
-                      { key: "oportunidades", header: t("export.columns.opportunities") },
-                    ]}
-                  />
-                </div>
-
                 {companies.length > 0 && (
                   <div className="mb-4 space-y-4">
                     {/* Four tiles, one hue each, same strip as the Leads tab:
@@ -255,6 +274,7 @@ export function CompaniesList() {
           { value: "leads", label: t("outerTabs.leads"), content: <LeadsDirectory showHeader={false} /> },
         ]}
       />
+      <LeadImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
     </div>
   );
 }

@@ -55,6 +55,38 @@ const STATUS_OPTIONS: LeadStatus[] = ["new", "qualified", "engaged", "converted"
 /** `showHeader=false` when embedded as a tab of the merged Companies page
  * (see companies-list.tsx) — the live/demo badge, import, and CSV export
  * actions stay either way. */
+/** CSV columns for a leads export — shared with companies-list.tsx, which
+ *  hosts the Leads tab's export button in the page's tabs row. */
+export function leadsExportColumns(t: (key: string) => string): { key: keyof ReturnType<typeof leadExportRow>; header: string }[] {
+  return [
+    { key: "nombre", header: t("export.columns.name") },
+    { key: "empresa", header: t("export.columns.company") },
+    { key: "cargo", header: t("export.columns.title") },
+    { key: "email", header: t("export.columns.email") },
+    { key: "telefono", header: t("export.columns.phone") },
+    { key: "linkedin", header: t("export.columns.linkedin") },
+    { key: "estado", header: t("export.columns.status") },
+    { key: "intent_score", header: t("export.columns.intentScore") },
+    { key: "frescura_datos", header: t("export.columns.dataFreshness") },
+    { key: "creado", header: t("export.columns.createdAt") },
+  ];
+}
+
+export function leadExportRow(l: Lead, companyName: string, statusLabel: string) {
+  return {
+    nombre: l.full_name,
+    empresa: companyName,
+    cargo: l.title ?? "",
+    email: l.email ?? "",
+    telefono: l.phone ?? "",
+    linkedin: l.linkedin_url ?? "",
+    estado: statusLabel,
+    intent_score: Math.round(l.score),
+    frescura_datos: Math.round(l.data_freshness_score * 100),
+    creado: l.created_at,
+  };
+}
+
 export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } = {}) {
   const locale = useLocale() as Locale;
   const t = useTranslations("companiesLeads.leadsDirectory");
@@ -189,19 +221,21 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
 
   return (
     <div>
-      <header className={showHeader ? "mb-4" : "mb-4"}>
-        {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
-        <div className={`flex flex-wrap items-start justify-between gap-4 ${showHeader ? "mt-1" : ""}`}>
-          {showHeader && (
-            <div>
-              <h1 className="bee-display">{t("title")}</h1>
-              <p className="bee-caption mt-1">
-                {t("subtitle")}
-              </p>
-            </div>
-          )}
+      {/* Embedded in the Companies page the header and the import/export
+          controls live in that page's tabs row (companies-list.tsx), so the
+          KPI strip starts at the standard height on both tabs. */}
+      {showHeader && (
+      <header className="mb-4">
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
+        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="bee-display">{t("title")}</h1>
+            <p className="bee-caption mt-1">
+              {t("subtitle")}
+            </p>
+          </div>
           <div className="ml-auto flex items-center gap-2">
-            {showHeader && <LiveBadge live={live} />}
+            <LiveBadge live={live} />
             <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost inline-flex items-center gap-2">
               <Upload className="size-3.5" />
               {t("importButton")}
@@ -225,6 +259,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
           </div>
         </div>
       </header>
+      )}
 
       <LeadDuplicatesPanel />
       <LeadImportPanel open={importOpen} onClose={() => setImportOpen(false)} />

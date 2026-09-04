@@ -86,6 +86,7 @@ export function TeamGoalRanking({
         return {
           userId,
           name: user?.full_name ?? t("unknown"),
+          avatarUrl: user?.avatar_url ?? null,
           currency,
           attainment,
           ...row,
@@ -104,20 +105,27 @@ export function TeamGoalRanking({
         const avatar = sales ? RANK_TONE_SALES[i] ?? SALES.mint : RANK_TONE[i] ?? mix(DATA.honey, 35);
         const avatarText = i >= 1 ? "var(--color-text)" : "#fff";
         return (
-          <li key={rep.userId} className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2" style={bg ? { background: bg } : undefined}>
-            <span className="bee-micro w-6 font-semibold text-[var(--color-text)]">#{i + 1}</span>
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: avatar, color: avatarText }}>
-              {rep.name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("")}
-            </span>
-            <div className="min-w-0 flex-1">
+          // Fixed columns (# · avatar · name · ring · amount) so every rank,
+          // ring and figure lines up down the list.
+          <li key={rep.userId} className="grid grid-cols-[1.25rem_2rem_minmax(0,1fr)_2.25rem_4.5rem] items-center gap-3 rounded-[var(--radius-md)] px-3 py-2" style={bg ? { background: bg } : undefined}>
+            <span className="bee-micro font-semibold text-[var(--color-text)]">#{i + 1}</span>
+            {rep.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- avatar URLs come from the user's own profile, any host
+              <img src={rep.avatarUrl} alt="" className="size-8 shrink-0 rounded-full object-cover" />
+            ) : (
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: avatar, color: avatarText }}>
+                {rep.name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("")}
+              </span>
+            )}
+            <div className="min-w-0">
               <p className="flex items-center gap-1 text-sm font-medium">
                 {i === 0 && <Trophy className="size-3.5 shrink-0" style={{ color: sales ? SALES.won : DATA.honey }} />}
                 <span className="truncate">{rep.name}</span>
               </p>
               <p className="bee-micro">{t("deals", { count: rep.deals })}{rep.attainment === null ? ` · ${t("noGoal")}` : ""}</p>
             </div>
-            {rep.attainment !== null && <ProgressRing value={rep.attainment} size={36} stroke={4} color={ringColor} />}
-            <span className="text-sm font-bold tabular-nums">{formatMoney(rep.value, rep.currency, locale, true)}</span>
+            <span className="flex justify-center">{rep.attainment !== null && <ProgressRing value={rep.attainment} size={36} stroke={4} color={ringColor} />}</span>
+            <span className="text-right text-sm font-bold tabular-nums">{formatMoney(rep.value, rep.currency, locale, true)}</span>
           </li>
         );
       })}

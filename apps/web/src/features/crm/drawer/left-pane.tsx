@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { mix } from "@/components/charts/palette";
+import { DATA, SALES, mix } from "@/components/charts/palette";
 import { ProgressRing } from "@/components/charts/progress-ring";
 import type { Locale } from "@/i18n/locales";
 import { getOpportunityStatusLabels, getOpportunityTypeLabels } from "@/lib/format";
@@ -15,7 +15,7 @@ import type { BattlecardCompany, BattlecardLead, Company, Lead, Opportunity } fr
 
 import { countByStep, monthlyAmounts, segmentFill } from "./account-stats";
 import { Avatar, Chip, InfoRow, PaneSection } from "./primitives";
-import { STEP_ORDER, isClosedStatus, stepOf, tint } from "./stage-meta";
+import { STEP_ORDER, isClosedStatus, stepOf } from "./stage-meta";
 
 /** Left pane: who (contact), where (company), how much (amount), who owns
  *  it, then the account's opportunities as charts — never prose. */
@@ -75,10 +75,10 @@ export function LeftPane({
     <div className="flex min-h-full flex-col gap-5">
       {(isHot || isClient || needsReview || type !== "new_logo") && (
         <div className="flex flex-wrap gap-1.5">
-          {isHot && !closed && <Chip hue={hue}>{t("tags.hot")}</Chip>}
-          {isClient && <Chip hue={hue}>{t("tags.client")}</Chip>}
-          {type !== "new_logo" && <Chip hue={hue}>{typeLabels[type]}</Chip>}
-          {needsReview && !closed && <Chip hue={hue}>{t("tags.review")}</Chip>}
+          {isHot && !closed && <Chip hue={DATA.honeyFill}>{t("tags.hot")}</Chip>}
+          {isClient && <Chip hue={SALES.mint}>{t("tags.client")}</Chip>}
+          {type !== "new_logo" && <Chip hue={DATA.lavender}>{typeLabels[type]}</Chip>}
+          {needsReview && !closed && <Chip hue={DATA.lavender}>{t("tags.review")}</Chip>}
         </div>
       )}
 
@@ -88,7 +88,7 @@ export function LeftPane({
           <Avatar name={contactName} hue={hue} size={44} photoUrl={opportunity.photo_url} />
           <div className="min-w-0 leading-tight">
             <p className="truncate text-sm font-semibold">{contactName ?? t("noContact")}</p>
-            {contactTitle && <p className="bee-micro truncate">{contactTitle}</p>}
+            {contactTitle && <p className="truncate text-sm text-muted-foreground">{contactTitle}</p>}
           </div>
         </div>
         {(email || phone || linkedin || opportunity.source) && (
@@ -124,23 +124,23 @@ export function LeftPane({
       <PaneSection>
         <InfoRow icon={Building2} hue={hue} label={t("company")}>
           <span className="font-medium">{companyName ?? t("noCompany")}</span>
-          {companyLine && <span className="bee-micro"> · {companyLine}</span>}
+          {companyLine && <span className="text-muted-foreground"> · {companyLine}</span>}
         </InfoRow>
       </PaneSection>
 
-      {/* ── Monto ────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3" style={{ background: tint.soft(hue) }}>
+      {/* ── Monto — money is the one green box (SALES palette) ──────── */}
+      <div className="flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3" style={{ background: mix(SALES.mint, 60) }}>
         <div className="min-w-0 flex-1 leading-tight">
-          <p className="bee-micro font-medium text-[var(--color-text)]">{stageWord}</p>
+          <p className="bee-caption font-medium text-[var(--color-text)]">{stageWord}</p>
           <p className="text-lg font-bold tabular-nums">
             {opportunity.amount != null ? formatMoney(opportunity.amount, "USD", locale) : "—"}
           </p>
           {opportunity.expected_close_date && (
-            <p className="bee-micro">{t("expectedClose", { date: formatDate(opportunity.expected_close_date, locale) })}</p>
+            <p className="bee-caption">{t("expectedClose", { date: formatDate(opportunity.expected_close_date, locale) })}</p>
           )}
         </div>
         {!closed && (
-          <button type="button" onClick={onViewAmount} className="bee-btn-ghost !h-8 text-xs">
+          <button type="button" onClick={onViewAmount} className="bee-btn-ghost !h-8 !text-sm" style={{ borderColor: SALES.won }}>
             {t("view")}
           </button>
         )}
@@ -151,7 +151,7 @@ export function LeftPane({
         <div className="flex items-center gap-3">
           <Avatar name={owner?.full_name} hue={hue} size={32} photoUrl={owner?.avatar_url} />
           <div className="min-w-0 leading-tight">
-            <p className="bee-micro">{t("owner")}</p>
+            <p className="bee-caption">{t("owner")}</p>
             <p className="truncate text-sm font-medium">{owner?.full_name ?? tStage("unassigned")}</p>
           </div>
         </div>
@@ -163,12 +163,12 @@ export function LeftPane({
         title={t("account.title")}
         aside={
           <div className="flex items-center gap-2">
-            <span className="bee-micro">{t("account.score")}</span>
+            <span className="bee-caption">{t("account.score")}</span>
             <ProgressRing value={opportunity.score / 100} size={36} stroke={4} color={hue} label={`${t("account.score")} ${Math.round(opportunity.score)}`} />
           </div>
         }
       >
-        <p className="bee-micro mb-1.5">{t("account.byStage", { count: total })}</p>
+        <p className="bee-caption mb-1.5">{t("account.byStage", { count: total })}</p>
         <div className="flex h-2 w-full gap-0.5 overflow-hidden rounded-full" role="img" aria-label={t("account.byStage", { count: total })}>
           {STEP_ORDER.filter((s) => byStep[s] > 0).map((s) => (
             <span key={s} className="h-full" style={{ width: `${(byStep[s] / Math.max(total, 1)) * 100}%`, background: segmentFill(s, accountOpps) }} />
@@ -176,7 +176,7 @@ export function LeftPane({
         </div>
         <ul className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
           {STEP_ORDER.filter((s) => byStep[s] > 0).map((s) => (
-            <li key={s} className="bee-micro inline-flex items-center gap-1.5">
+            <li key={s} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
               <span className="size-2 rounded-full" style={{ background: segmentFill(s, accountOpps) }} />
               {tStage(`stages.${s}`)} <span className="font-bold tabular-nums text-[var(--color-text)]">{byStep[s]}</span>
             </li>
@@ -185,25 +185,25 @@ export function LeftPane({
 
         {hasAmounts && (
           <div className="mt-4 flex flex-1 flex-col">
-            <p className="bee-micro mb-1">{t("account.amounts")}</p>
+            <p className="bee-caption mb-1">{t("account.amounts")}</p>
             <BarsVsTarget
               points={monthly}
               minHeight={96}
               formatValue={(v) => formatMoney(v, "USD", locale, true)}
-              colorFor={(p) => (p.current ? hue : mix(hue, 45))}
+              colorFor={(p) => (p.current ? SALES.won : SALES.mint)}
             />
           </div>
         )}
 
         {closed && (
-          <p className="bee-micro mt-3">
+          <p className="bee-caption mt-3">
             {statusLabels[opportunity.status]}
             {opportunity.closed_at && ` · ${formatDate(opportunity.closed_at, locale)}`}
           </p>
         )}
       </PaneSection>
 
-      <p className="bee-micro border-t border-[var(--color-divider)] pt-3">{t("createdOn", { date: formatDate(opportunity.created_at, locale) })}</p>
+      <p className="bee-caption border-t border-[var(--color-divider)] pt-3">{t("createdOn", { date: formatDate(opportunity.created_at, locale) })}</p>
     </div>
   );
 }

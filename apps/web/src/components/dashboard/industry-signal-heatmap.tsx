@@ -3,6 +3,7 @@
 import { Tooltip as TooltipPrimitive } from "radix-ui";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useBoxSize } from "@/components/charts/use-box-size";
 import { TooltipContent } from "@/components/ui/tooltip";
 import type { Locale } from "@/i18n/locales";
 import { DATA, SALES } from "@/components/charts/palette";
@@ -22,14 +23,12 @@ const SIGNAL_ORDER: SignalType[] = [
   "other",
 ];
 
-const R = 20; // hex circumradius, px
-const HEX_W = Math.sqrt(3) * R;
-const HEX_H = 2 * R;
-const ROW_STEP = HEX_H * 0.75;
-const MAX_ROWS = 5;
-const PAD = 10;
-const LABEL_W = 104;
-const HEADER_H = 66;
+const MAX_COLS = 5; // industries across
+const MAX_ROWS = 6; // signal types down
+const MAX_R = 30; // hex circumradius cap, px
+const PAD = 6;
+const LABEL_W = 150; // signal-type labels, one line each
+const HEADER_H = 24; // one line of industry labels
 
 function hexPoints(cx: number, cy: number, r: number): string {
   return Array.from({ length: 6 }, (_, i) => {
@@ -38,9 +37,16 @@ function hexPoints(cx: number, cy: number, r: number): string {
   }).join(" ");
 }
 
-/** Heatmap hexagonal: filas = industria, columnas = tipo de señal, color =
+/** Matriz hexagonal: filas = tipo de señal (etiqueta completa a la
+ * izquierda, una línea), columnas = industria (una línea arriba), color =
  * tasa de cierre de esa combinación. Cruza datos que hoy viven repartidos
- * entre Ganado/Perdido y Señales — ver lib/industry-signal-grid.ts. */
+ * entre Ganado/Perdido y Señales — ver lib/industry-signal-grid.ts.
+ *
+ * La matriz mide su caja (use-box-size) y reparte columnas y filas en todo
+ * el ancho y alto disponibles; el hexágono es el mayor que cabe en su
+ * celda. Así ninguna etiqueta se corta ni se gira, y la caja se llena sea
+ * cual sea la altura que le dé su vecina. Texto en tamaño estándar (1
+ * unidad SVG = 1 px). */
 export function IndustrySignalHeatmap({
   opportunities,
   signals,
@@ -54,6 +60,7 @@ export function IndustrySignalHeatmap({
   const t = useTranslations("dashboardOverview.industryHeatmap");
   const signalTypeLabels = getSignalTypeLabels(locale);
   const cells = computeIndustrySignalGrid(opportunities, signals, companies);
+  const [ref, { width: boxW, height: boxH }] = useBoxSize<HTMLDivElement>({ width: 640, height: 240 });
 
   if (cells.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("empty")}</p>;
@@ -63,11 +70,19 @@ export function IndustrySignalHeatmap({
   for (const c of cells) totalByIndustry.set(c.industry, (totalByIndustry.get(c.industry) ?? 0) + c.closedCount);
   const industries = [...totalByIndustry.entries()]
     .sort((a, b) => b[1] - a[1])
-    .slice(0, MAX_ROWS)
+    .slice(0, MAX_COLS)
     .map(([industry]) => industry);
 
-  const presentSignalTypes = new Set(cells.map((c) => c.signalType));
-  const signalTypes = SIGNAL_ORDER.filter((t) => presentSignalTypes.has(t));
+  // Only rows that have a cell in one of the shown columns, and at most
+  // MAX_ROWS of them by closed deals — a row of empty hexagons tells the
+  // rep nothing and only shrinks every other cell.
+  const shown = new Set(industries);
+  const closedBySignal = new Map<SignalType, number>();
+  for (const c of cells) if (shown.has(c.industry)) closedBySignal.set(c.signalType, (closedBySignal.get(c.signalType) ?? 0) + c.closedCount);
+  const signalTypes = SIGNAL_ORDER.filter((s) => closedBySignal.has(s))
+    .sort((a, b) => (closedBySignal.get(b) ?? 0) - (closedBySignal.get(a) ?? 0))
+    .slice(0, MAX_ROWS)
+    .sort((a, b) => SIGNAL_ORDER.indexOf(a) - SIGNAL_ORDER.indexOf(b));
 
   const byKey = new Map(cells.map((c) => [`${c.industry}::${c.signalType}`, c]));
   // Close rate is a sales reading, so the scale is the sales family: honey at
@@ -87,97 +102,53 @@ export function IndustrySignalHeatmap({
     return SALES.won;
   };
 
-  const width = LABEL_W + signalTypes.length * HEX_W + HEX_W / 2 + PAD * 2;
-  const height = HEADER_H + industries.length * ROW_STEP + HEX_H / 2 + PAD;
+  const cols = Math.max(1, industries.length);
+  const rows = Math.max(1, signalTypes.length);
+  const width = Math.max(boxW, LABEL_W + cols * 60);
+  const height = Math.max(boxH, HEADER_H + rows * 30);
+  const colStep = (width - LABEL_W - PAD) / cols;
+  const rowStep = (height - HEADER_H - PAD) / rows;
+  const R = Math.max(9, Math.min(MAX_R, rowStep / 2 - 2, colStep / Math.sqrt(3) - 2));
+  const cx = (ci: number) => LABEL_W + PAD + ci * colStep + colStep / 2;
+  const cy = (ri: number) => HEADER_H + PAD + ri * rowStep + rowStep / 2;
 
   return (
     <TooltipPrimitive.Provider delayDuration={100}>
-      <div className="bee-fill flex flex-col gap-4">
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          width="100%"
-          style={{
-            aspectRatio: `${width} / ${height}`,
-            overflow: "visible",
-            // width="100%" alone stretches this SVG to fill however wide
-            // its card happens to be — and every <text> fontSize below is
-            // set in viewBox units, not real CSS px, so it scales up right
-            // along with the grid. On a wide card that blew the row/column
-            // labels up to 2-3x the app's standard 11px captions (nothing
-            // else in the app draws labels this way — they're all
-            // fixed-size HTML text) and inflated this card's height past
-            // its "Cuándo llega el mercado" sibling. maxWidth caps it at
-            // the grid's own natural size (1 viewBox unit = 1px by design)
-            // and centers it — still shrinks to fit a narrow card/viewport,
-            // it just never grows past its intended size.
-            maxWidth: width,
-            marginInline: "auto",
-            display: "block",
-          }}
-          role="img"
-          aria-label={t("ariaLabel")}
-        >
-          {signalTypes.map((t, ci) => {
-            const x = LABEL_W + PAD + ci * HEX_W + HEX_W / 2;
-            return (
-              <text
-                key={t}
-                x={x}
-                y={HEADER_H - 12}
-                textAnchor="start"
-                fontSize={11}
-                fill="var(--color-muted-foreground)"
-                transform={`rotate(-32 ${x} ${HEADER_H - 12})`}
-              >
-                {signalTypeLabels[t]}
-              </text>
-            );
-          })}
-
-          {industries.map((industry, ri) => {
-            const y = HEADER_H + ri * ROW_STEP + R;
-            return (
-              <text
-                key={industry}
-                x={LABEL_W - 10}
-                y={y + 4}
-                textAnchor="end"
-                fontSize={11}
-                fill="var(--color-foreground)"
-              >
+      <div className="bee-fill flex flex-col gap-3">
+        <div ref={ref} className="min-h-0 w-full min-w-0 flex-1" style={{ minHeight: HEADER_H + 4 * 30 }}>
+          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="block" role="img" aria-label={t("ariaLabel")}>
+            {industries.map((industry, ci) => (
+              <text key={industry} x={cx(ci)} y={HEADER_H - 8} textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
                 {industry}
               </text>
-            );
-          })}
+            ))}
+            {signalTypes.map((signalType, ri) => (
+              <text key={signalType} x={LABEL_W - 8} y={cy(ri) + 4} textAnchor="end" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-foreground)">
+                {signalTypeLabels[signalType]}
+              </text>
+            ))}
+            {signalTypes.map((signalType, ri) =>
+              industries.map((industry, ci) => {
+                const cell = byKey.get(`${industry}::${signalType}`);
+                if (!cell) {
+                  return (
+                    <polygon
+                      key={`${industry}::${signalType}`}
+                      points={hexPoints(cx(ci), cy(ri), R - 1)}
+                      fill="var(--color-muted)"
+                      fillOpacity={0.25}
+                      stroke="var(--color-border)"
+                      strokeWidth={0.5}
+                    />
+                  );
+                }
+                return <HexCell key={`${industry}::${signalType}`} x={cx(ci)} y={cy(ri)} r={R} cell={cell} fill={color(cell.winRate * 100)} />;
+              }),
+            )}
+          </svg>
+        </div>
 
-          {industries.map((industry, ri) =>
-            signalTypes.map((signalType, ci) => {
-              const cell = byKey.get(`${industry}::${signalType}`);
-              const x =
-                LABEL_W + PAD + ci * HEX_W + HEX_W / 2 + (ri % 2 === 1 ? HEX_W / 2 : 0);
-              const y = HEADER_H + ri * ROW_STEP + R;
-
-              if (!cell) {
-                return (
-                  <polygon
-                    key={`${industry}::${signalType}`}
-                    points={hexPoints(x, y, R - 1)}
-                    fill="var(--color-muted)"
-                    fillOpacity={0.25}
-                    stroke="var(--color-border)"
-                    strokeWidth={0.5}
-                  />
-                );
-              }
-
-              return (
-                <HexCell key={`${industry}::${signalType}`} x={x} y={y} cell={cell} fill={color(cell.winRate * 100)} />
-              );
-            }),
-          )}
-        </svg>
-
-        <div className="mt-auto flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <span>{t("legendLabel")}</span>
           <span className="h-2.5 w-24 rounded-full" style={{ background: `linear-gradient(to right, ${color(0)}, ${color(34)}, ${color(67)}, ${color(100)})` }} />
           <span>0%</span>
@@ -188,7 +159,7 @@ export function IndustrySignalHeatmap({
   );
 }
 
-function HexCell({ x, y, cell, fill }: { x: number; y: number; cell: IndustrySignalCell; fill: string }) {
+function HexCell({ x, y, r, cell, fill }: { x: number; y: number; r: number; cell: IndustrySignalCell; fill: string }) {
   const locale = useLocale() as Locale;
   const t = useTranslations("dashboardOverview.industryHeatmap");
   const signalTypeLabels = getSignalTypeLabels(locale);
@@ -197,10 +168,14 @@ function HexCell({ x, y, cell, fill }: { x: number; y: number; cell: IndustrySig
     <TooltipPrimitive.Root>
       <TooltipPrimitive.Trigger asChild>
         <g>
-          <polygon points={hexPoints(x, y, R - 1)} fill={fill} fillOpacity={0.85} stroke="var(--color-border)" strokeWidth={0.75} />
-          <text x={x} y={y + 4} textAnchor="middle" fontSize={10} fontWeight={600} fill="var(--color-text)">
-            {Math.round(cell.winRate * 100)}%
-          </text>
+          <polygon points={hexPoints(x, y, r - 1)} fill={fill} fillOpacity={0.85} stroke="var(--color-border)" strokeWidth={0.75} />
+          {/* The rate only when the cell is big enough for it; smaller cells
+              keep it for the hover tooltip. */}
+          {r >= 16 && (
+            <text x={x} y={y + 4} textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }} fontWeight={600} fill="var(--color-text)">
+              {Math.round(cell.winRate * 100)}%
+            </text>
+          )}
         </g>
       </TooltipPrimitive.Trigger>
       <TooltipContent>

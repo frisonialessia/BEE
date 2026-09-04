@@ -29,6 +29,8 @@ import { formatDate, formatDateTimePadded, formatLongDate, formatMoney } from "@
 import type { UserOut } from "@/types/auth";
 import type { Meeting, Opportunity, OpportunityTask, Signal } from "@/types/domain";
 
+import { DATA } from "@/components/charts/palette";
+
 import { Avatar, Chip, IconDisc } from "./primitives";
 import { isClosedStatus, stepOf } from "./stage-meta";
 
@@ -226,7 +228,7 @@ export function ActivityTab({
               ))}
             </ol>
             {events.length > LATEST_COLLAPSED && (
-              <button type="button" onClick={() => setShowAll((v) => !v)} className="bee-micro ml-11 self-start font-medium text-[var(--color-text)] underline-offset-2 hover:underline">
+              <button type="button" onClick={() => setShowAll((v) => !v)} className="ml-11 self-start text-sm font-medium text-[var(--color-text)] underline-offset-2 hover:underline">
                 {showAll ? t("showLess") : t("showMore", { count: events.length - LATEST_COLLAPSED })}
               </button>
             )}
@@ -238,7 +240,7 @@ export function ActivityTab({
       <Section
         title={t("upcoming")}
         action={
-          <button type="button" onClick={onCreateMeeting} className="bee-btn-ghost !h-8 text-xs">
+          <button type="button" onClick={onCreateMeeting} className="bee-btn-ghost !h-8 !text-sm">
             <CalendarPlus className="size-3.5" />
             {tDrawer("actions.calendar")}
           </button>
@@ -256,7 +258,7 @@ export function ActivityTab({
             return (
               <div key={a.id} className="bee-surface grid gap-4 p-4 sm:grid-cols-[minmax(0,11rem)_1fr]">
                 <div className="leading-tight sm:border-r sm:border-[var(--color-divider)] sm:pr-4">
-                  <p className="bee-micro font-medium capitalize text-[var(--color-text)]">{weekdayFmt.format(start)}</p>
+                  <p className="bee-caption font-medium capitalize text-[var(--color-text)]">{weekdayFmt.format(start)}</p>
                   <p className="text-base font-bold">{formatLongDate(start, locale)}</p>
                   <p className="bee-caption mt-1 tabular-nums">
                     {timeFmt.format(start)}
@@ -293,7 +295,7 @@ export function ActivityTab({
         title={t("proposal")}
         action={
           !closed ? (
-            <button type="button" onClick={onEditAmount} className="bee-btn-ghost !h-8 text-xs">
+            <button type="button" onClick={onEditAmount} className="bee-btn-ghost !h-8 !text-sm">
               <Pencil className="size-3.5" />
               {t("update")}
             </button>
@@ -309,22 +311,22 @@ export function ActivityTab({
             </p>
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div>
-                <p className="bee-micro">{t("createdDate")}</p>
+                <p className="bee-caption">{t("createdDate")}</p>
                 <p className="text-sm tabular-nums">{formatDate(opportunity.created_at, locale)}</p>
               </div>
               <div>
-                <p className="bee-micro">{t("closeDate")}</p>
+                <p className="bee-caption">{t("closeDate")}</p>
                 <p className="text-sm tabular-nums">{opportunity.expected_close_date ? formatDate(opportunity.expected_close_date, locale) : "—"}</p>
               </div>
             </div>
           </div>
           <div className="flex flex-col gap-2 leading-tight sm:min-w-40 sm:border-l sm:border-[var(--color-divider)] sm:pl-4">
-            <p className="bee-micro">{t("amount")}</p>
+            <p className="bee-caption">{t("amount")}</p>
             <p className="text-lg font-bold tabular-nums">
               {opportunity.amount != null ? formatMoney(opportunity.amount, "USD", locale) : t("noAmount")}
             </p>
             <div>
-              <Chip hue={hue}>{stageWord}</Chip>
+              <Chip hue={DATA.lavender}>{stageWord}</Chip>
             </div>
           </div>
         </div>

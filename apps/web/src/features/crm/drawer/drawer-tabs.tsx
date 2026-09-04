@@ -63,7 +63,7 @@ export function DrawerTabs<K extends string>({
           >
             {tab.label}
             {typeof tab.count === "number" && (
-              <span className="bee-micro font-bold tabular-nums">{tab.count}</span>
+              <span className="bee-caption font-bold tabular-nums">{tab.count}</span>
             )}
           </button>
         );

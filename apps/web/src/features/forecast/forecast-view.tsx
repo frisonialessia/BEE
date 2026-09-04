@@ -63,18 +63,15 @@ export function ForecastView() {
 
   return (
     <div>
-      <header className="mb-4">
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="bee-display">{t("forecast.title")}</h1>
-            <p className="bee-caption mt-1">{t("forecast.subtitle")}</p>
-          </div>
-          <LiveBadge live={live} />
-        </div>
-      </header>
-
       <MergedPageTabs
+        header={
+          <header>
+            <p className="bee-eyebrow">{t("eyebrow")}</p>
+            <h1 className="bee-display mt-1">{t("forecast.title")}</h1>
+            <p className="bee-caption mt-1">{t("forecast.subtitle")}</p>
+          </header>
+        }
+        actions={<LiveBadge live={live} />}
         defaultValue="forecast"
         tabs={[
           {

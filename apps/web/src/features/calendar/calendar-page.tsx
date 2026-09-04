@@ -2,7 +2,7 @@
 
 import { Building2, CheckCircle2, ChevronLeft, ChevronRight, Link2, Plus, Trash2, Users, Video } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { OverviewCard } from "@/components/dashboard/overview-card";
@@ -20,6 +20,7 @@ import {
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useUsers } from "@/hooks/queries/use-users";
+import { RescheduleDialog, type PendingReschedule } from "@/features/calendar/reschedule-dialog";
 import type { Locale } from "@/i18n/locales";
 import type { MeetingCreateIn } from "@/lib/api/meetings";
 import { stripOpportunityTitlePrefix } from "@/lib/format";
@@ -61,11 +62,34 @@ function eventFill(m: { color?: string | null; client_context?: MeetingClientCon
 const GRID_START_HOUR = 8;
 const GRID_END_HOUR = 19;
 const GRID_HOURS = Array.from({ length: GRID_END_HOUR - GRID_START_HOUR + 1 }, (_, i) => GRID_START_HOUR + i);
-const HOUR_HEIGHT = 84; // px per hour row — a 30-min block (42px) shows the title, 45 min (63px) adds time + account, an hour (84px) adds attendees/link/type. Taller rows meant a full screen of scrolling to see one day.
+const HOUR_HEIGHT = 84; // px per hour row. Taller rows meant a full screen of scrolling to see one day.
+const GRID_HEIGHT = (GRID_END_HOUR - GRID_START_HOUR + 1) * HOUR_HEIGHT;
+// Every event block is the SAME height regardless of duration — the founder's
+// ask: a 30-minute meeting used to get a 42px sliver that cut its title to
+// one line and hid the time and the account. 80px is what the three lines a
+// rep needs actually measure: a two-line title (text-xs, leading-snug ≈ 33px)
+// + the time range + the account line (bee-micro ≈ 15px each) + the 2px row
+// gaps + py-1 + the border ≈ 78px — with 4px to spare so two back-to-back
+// hourly meetings don't touch. The block is anchored at the meeting's start,
+// so a short meeting visibly spills into the next slot — intended; duration
+// still reads in the time range itself.
+// 104 px: up to three lines of title, the time range on its own line (the
+// link/attendee marks wrap under it in a narrow column instead of breaking
+// the hours apart) and the account — nothing is ever cut, whatever the duration.
+const EVENT_BLOCK_HEIGHT = 104;
+// Overlapping blocks in one day column step right by this much (later one on
+// top) instead of splitting the column's width — a half-width block would
+// have to shrink its text again, which is the very thing this fixes.
+const OVERLAP_SHIFT_PX = 12;
+// Dragging a block vertically moves it in half-hour steps; no vertical
+// movement keeps the original time to the minute (a 10:45 meeting dragged to
+// another day stays at 10:45).
+const DRAG_SNAP_MINUTES = 30;
+const DRAG_SNAP_PX = (HOUR_HEIGHT * DRAG_SNAP_MINUTES) / 60;
 
-/** Pixel top/height for one meeting block within the hour grid — clamped
- * to the visible window (a meeting outside business hours still shows,
- * pinned to the nearest edge, rather than disappearing entirely).
+/** Pixel top for one fixed-height meeting block within the hour grid —
+ * clamped to the visible window (a meeting outside business hours still
+ * shows, pinned to the nearest edge, rather than disappearing entirely).
  * `timeZone` decides whose wall clock "top" is measured against — the
  * viewer's chosen timezone, not whatever the browser happens to be set
  * to (see zonedFakeLocalDate). */
@@ -76,52 +100,41 @@ function sentenceCase(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function meetingPosition(meeting: Meeting, timeZone: string): { top: number; height: number } {
+function meetingTop(meeting: Meeting, timeZone: string): number {
   const start = zonedFakeLocalDate(new Date(meeting.starts_at), timeZone);
   const startHour = start.getHours() + start.getMinutes() / 60;
-  const endHour = startHour + meeting.duration_minutes / 60;
   const clampedStart = Math.max(GRID_START_HOUR, Math.min(startHour, GRID_END_HOUR));
-  const clampedEnd = Math.max(GRID_START_HOUR, Math.min(endHour, GRID_END_HOUR));
-  const top = (clampedStart - GRID_START_HOUR) * HOUR_HEIGHT;
-  const height = Math.max(20, (clampedEnd - clampedStart) * HOUR_HEIGHT - 2);
-  return { top, height };
+  return clampBlockTop((clampedStart - GRID_START_HOUR) * HOUR_HEIGHT);
 }
 
-/** Side-by-side column assignment for meetings that overlap in time —
- * without this, two meetings booked at the same hour draw stacked exactly
- * on top of each other and one is effectively invisible/unclickable.
- * Standard greedy calendar layout: sort by start, give each meeting the
- * first column whose previous occupant has already ended; every meeting in
- * a connected run of overlaps then shares that run's column count so they
- * end up evenly divided instead of full-width. */
-function layoutDayMeetings(
-  meetings: Meeting[],
-  tz: string,
-): Map<string, { column: number; columns: number }> {
+/** Keeps a fixed-height block fully inside the hour grid. */
+function clampBlockTop(top: number): number {
+  return Math.max(0, Math.min(top, GRID_HEIGHT - EVENT_BLOCK_HEIGHT));
+}
+
+/** Stacking for blocks that overlap visually in one day column — with every
+ * block the same height, a 10:00 and a 10:30 meeting overlap even though
+ * the meetings don't. Without this they'd draw exactly on top of each other
+ * and one would be invisible/unclickable. Greedy column assignment (sort by
+ * start, take the first column whose previous occupant has ended); each
+ * column steps OVERLAP_SHIFT_PX to the right and `order` (start order in the
+ * day) drives z-index so the later meeting sits on top and its start edge
+ * is always visible. Blocks never shrink. */
+function layoutDayMeetings(meetings: Meeting[], tz: string): Map<string, { column: number; order: number }> {
   const withRange = meetings
     .map((m) => {
-      const pos = meetingPosition(m, tz);
-      return { id: m.id, start: pos.top, end: pos.top + pos.height };
+      const top = meetingTop(m, tz);
+      return { id: m.id, start: top, end: top + EVENT_BLOCK_HEIGHT };
     })
     .sort((a, b) => a.start - b.start);
 
-  const result = new Map<string, { column: number; columns: number }>();
-  let clusterIds: string[] = [];
+  const result = new Map<string, { column: number; order: number }>();
   let columnEnds: number[] = [];
   let clusterEnd = -Infinity;
 
-  function flushCluster() {
-    for (const id of clusterIds) {
-      const existing = result.get(id);
-      if (existing) result.set(id, { column: existing.column, columns: columnEnds.length });
-    }
-    clusterIds = [];
-    columnEnds = [];
-  }
-
-  for (const item of withRange) {
+  withRange.forEach((item, order) => {
     if (item.start >= clusterEnd) {
-      flushCluster();
+      columnEnds = [];
       clusterEnd = -Infinity;
     }
     let column = columnEnds.findIndex((end) => end <= item.start);
@@ -131,12 +144,40 @@ function layoutDayMeetings(
     } else {
       columnEnds[column] = item.end;
     }
-    result.set(item.id, { column, columns: 1 });
-    clusterIds.push(item.id);
+    result.set(item.id, { column, order });
     clusterEnd = Math.max(clusterEnd, item.end);
-  }
-  flushCluster();
+  });
   return result;
+}
+
+/** Wall-clock start of `meeting` moved to `day` (a fake-local grid day) and
+ * shifted `slotDelta` half-hour steps — the drop target of a drag. With no
+ * vertical movement the original time is kept to the minute; with movement
+ * the new start is kept inside business hours. Returns a real UTC instant. */
+function rescheduledStart(meeting: Meeting, day: Date, slotDelta: number, tz: string): Date {
+  const original = zonedFakeLocalDate(new Date(meeting.starts_at), tz);
+  let minutes = original.getHours() * 60 + original.getMinutes();
+  if (slotDelta !== 0) {
+    minutes = Math.max(
+      GRID_START_HOUR * 60,
+      Math.min(minutes + slotDelta * DRAG_SNAP_MINUTES, GRID_END_HOUR * 60 - DRAG_SNAP_MINUTES),
+    );
+  }
+  return zonedWallClockToUtc(day.getFullYear(), day.getMonth(), day.getDate(), Math.floor(minutes / 60), minutes % 60, tz);
+}
+
+/** Drag-to-reschedule plumbing shared by the week grid and the month grid —
+ * native HTML5 drag and drop, same approach as the CRM board (no library).
+ * A drop never saves on its own: it opens the "¿Reagendar esta junta?"
+ * confirmation, and only "Reagendar" there calls the update mutation. */
+interface MeetingDragHandlers {
+  draggingId: string | null;
+  overDayKey: string | null;
+  onDragStart: (e: React.DragEvent, meeting: Meeting) => void;
+  onDragEnd: () => void;
+  onDragOverDay: (dayKey: string, slotDelta: number) => void;
+  onDragLeaveDay: (e: React.DragEvent, dayKey: string) => void;
+  onDropOnDay: (day: Date, slotDelta: number) => void;
 }
 
 /** "GMT-5"/"GMT+1" style label — shown next to the week grid so it's clear
@@ -481,13 +522,16 @@ function MonthGridView({
   onSelectDay,
   locale,
   todayStr,
+  drag,
 }: {
   monthCursor: Date;
   meetingsByDay: Map<string, Meeting[]>;
   onSelectDay: (day: Date) => void;
   locale: Locale;
   todayStr: string;
+  drag: MeetingDragHandlers;
 }) {
+  const t = useTranslations("calendar");
   const intlLocale = locale === "en" ? "en-US" : "es-MX";
   const grid = useMemo(() => buildMonthGrid(monthCursor), [monthCursor]);
   const weekdayLabels = useMemo(
@@ -509,15 +553,37 @@ function MonthGridView({
         {grid.map((day) => {
           const inMonth = day.getMonth() === monthCursor.getMonth();
           const isToday = day.toDateString() === todayStr;
-          const dayMeetings = meetingsByDay.get(day.toDateString()) ?? [];
+          const dayKey = day.toDateString();
+          const dayMeetings = meetingsByDay.get(dayKey) ?? [];
           const shown = dayMeetings.slice(0, 3);
           const overflow = dayMeetings.length - shown.length;
+          const isDropTarget = drag.overDayKey === dayKey;
           return (
-            <button
+            // A div, not a <button>: the meeting chips inside are draggable,
+            // and Firefox never starts a native drag from inside a <button>
+            // (same reason the CRM board's cards are role="button" divs).
+            // Enter/Space keep the cell keyboard-operable like the button was.
+            <div
               key={day.toISOString()}
-              type="button"
+              role="button"
+              tabIndex={0}
               onClick={() => onSelectDay(day)}
-              className={`min-h-24 border-b border-l border-border p-2 text-left align-top transition-colors hover:bg-[var(--color-primary)]/20 ${inMonth ? "" : "bg-muted/30"}`}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelectDay(day);
+                }
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                drag.onDragOverDay(dayKey, 0);
+              }}
+              onDragLeave={(e) => drag.onDragLeaveDay(e, dayKey)}
+              onDrop={(e) => {
+                e.preventDefault();
+                drag.onDropOnDay(day, 0);
+              }}
+              className={`min-h-24 cursor-pointer border-b border-l border-border p-2 text-left align-top transition-colors hover:bg-[var(--color-primary)]/20 ${inMonth ? "" : "bg-muted/30"} ${isDropTarget ? "bee-cal-drop-target" : ""}`}
             >
               <span
                 className={`inline-flex size-5 items-center justify-center rounded-full text-xs ${
@@ -532,9 +598,18 @@ function MonthGridView({
               </span>
               <div className="mt-1 space-y-1">
                 {shown.map((m) => (
+                  // Draggable chip — its click bubbles to the cell (same
+                  // "jump to that week" the whole cell already does), so it
+                  // needs no role of its own. Dropping it on another day
+                  // keeps the meeting's time and asks before saving.
+                  // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- drag handlers only: a native drag has no keyboard form; the cell itself (role="button") stays the keyboard path and the edit form moves a meeting without a mouse.
                   <p
                     key={m.id}
-                    className="truncate rounded-md border px-2 py-1 text-xs font-medium"
+                    draggable
+                    onDragStart={(e) => drag.onDragStart(e, m)}
+                    onDragEnd={drag.onDragEnd}
+                    title={t("reschedule.dragHint")}
+                    className={`bee-cal-chip truncate rounded-md border px-2 py-1 text-xs font-medium ${drag.draggingId === m.id ? "bee-cal-block--dragging" : ""}`}
                     style={eventFill(m)}
                   >
                     {m.title}
@@ -542,7 +617,7 @@ function MonthGridView({
                 ))}
                 {overflow > 0 && <p className="bee-micro px-1 text-muted-foreground">+{overflow}</p>}
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
@@ -716,6 +791,19 @@ export function CalendarPage() {
   const [detail, setDetail] = useState<Meeting | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Drag-to-reschedule (see MeetingDragHandlers). `draggingId` dims the
+  // source block; `dragOver` positions the ghost in the hovered column (or
+  // highlights the hovered month cell); `pendingReschedule` is the drop
+  // waiting for the rep's confirmation — nothing is saved until they say
+  // "Reagendar", and Cancel/Escape leaves the meeting exactly where it was.
+  // The grab offset (where inside the block the pointer took hold) lives in
+  // a ref: it's read on every dragover but never needs a re-render.
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const grabOffsetYRef = useRef(0);
+  const [dragOver, setDragOver] = useState<{ dayKey: string; slotDelta: number } | null>(null);
+  const [pendingReschedule, setPendingReschedule] = useState<PendingReschedule | null>(null);
+  const [rescheduling, setRescheduling] = useState(false);
 
   // The mini month calendar follows whatever week the main grid is showing
   // — jumping weeks via "Hoy"/prev/next/a day click keeps both in sync,
@@ -972,6 +1060,94 @@ export function CalendarPage() {
     }));
   }
 
+  // ── Drag to reschedule ──────────────────────────────────────────────────
+  const draggingMeeting = useMemo(
+    () => (draggingId ? (allMeetings ?? []).find((m) => m.id === draggingId) ?? null : null),
+    [allMeetings, draggingId],
+  );
+  const drag: MeetingDragHandlers = {
+    draggingId,
+    overDayKey: dragOver?.dayKey ?? null,
+    onDragStart(e, meeting) {
+      // Firefox needs data set for the drag to start at all (same as the
+      // CRM board); the id is also what a drop reads back.
+      e.dataTransfer.setData("text/plain", meeting.id);
+      e.dataTransfer.effectAllowed = "move";
+      grabOffsetYRef.current = e.clientY - e.currentTarget.getBoundingClientRect().top;
+      setDraggingId(meeting.id);
+    },
+    onDragEnd() {
+      // Fires on drop AND on Escape/drop-outside — either way the ghost goes.
+      setDraggingId(null);
+      setDragOver(null);
+    },
+    onDragOverDay(dayKey, slotDelta) {
+      // dragover fires continuously — only re-render when the target moves.
+      setDragOver((prev) => (prev && prev.dayKey === dayKey && prev.slotDelta === slotDelta ? prev : { dayKey, slotDelta }));
+    },
+    onDragLeaveDay(e, dayKey) {
+      // Moving between a column's own children also fires dragleave (and
+      // Chrome often reports relatedTarget as null then), so test the
+      // pointer against the column's box instead: only clear when it has
+      // really left the column. Leaving the window fires dragend anyway.
+      const r = e.currentTarget.getBoundingClientRect();
+      const inside = e.clientX >= r.left && e.clientX < r.right && e.clientY >= r.top && e.clientY < r.bottom;
+      if (inside) return;
+      setDragOver((prev) => (prev?.dayKey === dayKey ? null : prev));
+    },
+    onDropOnDay(day, slotDelta) {
+      const meeting = draggingMeeting;
+      setDraggingId(null);
+      setDragOver(null);
+      if (!meeting) return;
+      const newStart = rescheduledStart(meeting, day, slotDelta, tz);
+      // Dropped back where it came from — nothing to ask.
+      if (newStart.getTime() === new Date(meeting.starts_at).getTime()) return;
+      setPendingReschedule({ meeting, newStartsAt: newStart.toISOString() });
+    },
+  };
+
+  /** Where in the hovered week column the ghost should sit, in half-hour
+   * steps from the dragged meeting's own position — pointer Y minus where
+   * inside the block it grabbed, so the block moves with the hand instead
+   * of jumping to the cursor. */
+  function slotDeltaFor(e: React.DragEvent<HTMLDivElement>): number {
+    if (!draggingMeeting) return 0;
+    const columnTop = e.currentTarget.getBoundingClientRect().top;
+    const targetTop = e.clientY - columnTop - grabOffsetYRef.current;
+    return Math.round((targetTop - meetingTop(draggingMeeting, tz)) / DRAG_SNAP_PX);
+  }
+
+  async function confirmReschedule() {
+    if (!pendingReschedule) return;
+    setRescheduling(true);
+    try {
+      await updateMeeting.mutateAsync({
+        id: pendingReschedule.meeting.id,
+        body: { starts_at: pendingReschedule.newStartsAt },
+      });
+      toast.success(t("reschedule.success"));
+      setPendingReschedule(null);
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : t("reschedule.error"));
+    } finally {
+      setRescheduling(false);
+    }
+  }
+
+  const whenFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: tz,
+      }),
+    [locale, tz],
+  );
+
   return (
     <div>
       <header className="mb-4 flex flex-wrap items-center justify-between gap-4">
@@ -1129,6 +1305,7 @@ export function CalendarPage() {
           }}
           locale={locale}
           todayStr={today}
+          drag={drag}
         />
       ) : (
         <div className="bee-surface overflow-x-auto rounded-[var(--radius-lg)]">
@@ -1167,13 +1344,25 @@ export function CalendarPage() {
               ))}
             </div>
             {days.map((day) => {
-              const dayMeetings = byDay.get(day.toDateString()) ?? [];
+              const dayKey = day.toDateString();
+              const dayMeetings = byDay.get(dayKey) ?? [];
               const layout = layoutDayMeetings(dayMeetings, tz);
+              const ghost = draggingMeeting && dragOver?.dayKey === dayKey ? draggingMeeting : null;
               return (
+                // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- drop target only (dragover/drop), not a control: nothing here is clickable or focusable, and the keyboard path to move a meeting is the edit form.
                 <div
                   key={day.toISOString()}
                   className="relative border-l border-border"
-                  style={{ height: GRID_HOURS.length * HOUR_HEIGHT }}
+                  style={{ height: GRID_HEIGHT }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    drag.onDragOverDay(dayKey, slotDeltaFor(e));
+                  }}
+                  onDragLeave={(e) => drag.onDragLeaveDay(e, dayKey)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    drag.onDropOnDay(day, slotDeltaFor(e));
+                  }}
                 >
                   {GRID_HOURS.map((h) => (
                     <div
@@ -1183,69 +1372,90 @@ export function CalendarPage() {
                     />
                   ))}
                   {dayMeetings.map((m) => {
-                    const pos = meetingPosition(m, tz);
-                    // Overlapping meetings (e.g. two booked at the same hour)
-                    // used to draw stacked exactly on top of each other, one
-                    // effectively invisible/unclickable — layoutDayMeetings
-                    // above splits them into side-by-side columns instead.
-                    const { column, columns } = layout.get(m.id) ?? { column: 0, columns: 1 };
+                    const top = meetingTop(m, tz);
+                    // Same-height blocks that overlap step right and stack
+                    // (later on top) — see layoutDayMeetings. They never
+                    // shrink, so the text below is always all there.
+                    const { column, order } = layout.get(m.id) ?? { column: 0, order: 0 };
                     // A personal color (m.color) wins over the client_context
-                    // tone when set — same color-mix() recipe globals.css's
-                    // own bee-bento--* tint classes use, just parameterized
-                    // by whichever chart color the rep picked.
+                    // hue when set — see eventFill.
                     return (
-                      <button
+                      // A div with role="button", not a <button>: Firefox never
+                      // starts a native drag from a <button> (same reason the
+                      // CRM board's cards are divs). Click-without-drag still
+                      // opens the meeting; Enter does too.
+                      <div
                         key={m.id}
-                        type="button"
+                        role="button"
+                        tabIndex={0}
+                        draggable
+                        onDragStart={(e) => drag.onDragStart(e, m)}
+                        onDragEnd={drag.onDragEnd}
                         onClick={() => setDetail(m)}
-                        className="absolute flex flex-col gap-0.5 overflow-hidden rounded-md border px-2 py-1.5 text-left"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setDetail(m);
+                          }
+                        }}
+                        title={t("reschedule.dragHint")}
+                        className={`bee-cal-block absolute flex flex-col gap-0.5 overflow-hidden rounded-md border px-2 py-1 text-left ${draggingId === m.id ? "bee-cal-block--dragging" : ""}`}
                         style={{
-                          top: pos.top,
-                          height: pos.height,
-                          left: `calc(${(column / columns) * 100}% + 2px)`,
-                          width: `calc(${100 / columns}% - 4px)`,
+                          top,
+                          height: EVENT_BLOCK_HEIGHT,
+                          left: column * OVERLAP_SHIFT_PX + 2,
+                          width: `calc(100% - ${column * OVERLAP_SHIFT_PX + 4}px)`,
+                          zIndex: order + 1,
                           ...eventFill(m),
                         }}
                       >
-                        {/* What fits, in order of what a rep needs first: the
-                            title always; the time range from ~56px; the account
-                            from ~84px; attendees/link from ~108px. A short block
-                            never hides the title behind the hour. */}
-                        {/* Three lines of title from 104px (an hour), two below — a long
-                            title reads whole instead of ending in "…". */}
-                        <p className={`${pos.height >= 84 ? "line-clamp-3" : "line-clamp-2"} text-xs font-semibold leading-snug`} title={m.title}>
+                        {/* Always all three, whatever the duration: two lines of
+                            title, the time range (plus link/attendee marks),
+                            and the account — never a one-line sliver again. */}
+                        <p className="line-clamp-3 text-xs font-semibold leading-snug" title={m.title}>
                           {m.title}
                         </p>
-                        {pos.height >= 40 && (
-                          <p className="truncate bee-micro tabular-nums text-[var(--color-text)]">
-                            {rangeLabel(m.starts_at, m.duration_minutes, tz)}
-                          </p>
-                        )}
-                        {pos.height >= 60 && (m.company_name || m.contact_name) && (
+                        <p className="flex min-w-0 flex-wrap items-center gap-x-1.5 bee-micro text-[var(--color-text)]">
+                          <span className="shrink-0 whitespace-nowrap tabular-nums">{rangeLabel(m.starts_at, m.duration_minutes, tz)}</span>
+                          {m.meeting_url && <Video className="size-3 shrink-0" aria-hidden="true" />}
+                          {m.attendee_user_ids.length > 0 && (
+                            <span className="flex items-center gap-0.5">
+                              <Users className="size-3 shrink-0" aria-hidden="true" />
+                              <span>{m.attendee_user_ids.length}</span>
+                            </span>
+                          )}
+                        </p>
+                        {(m.company_name || m.contact_name) && (
                           <p className="flex min-w-0 items-center gap-1 bee-micro text-[var(--color-text)]">
-                            <Building2 className="size-3 shrink-0" />
+                            <Building2 className="size-3 shrink-0" aria-hidden="true" />
                             <span className="truncate">{m.company_name ?? m.contact_name}</span>
                           </p>
                         )}
-                        {pos.height >= 84 && (
-                          <div className="mt-auto flex items-center gap-2 text-[var(--color-text)]">
-                            <span className="bee-micro tabular-nums">{m.duration_minutes} min</span>
-                            {m.attendee_user_ids.length > 0 && (
-                              <span className="flex items-center gap-1">
-                                <Users className="size-3" />
-                                <span className="bee-micro">{m.attendee_user_ids.length}</span>
-                              </span>
-                            )}
-                            {m.meeting_url && <Video className="size-3" />}
-                            {m.client_context && (
-                              <span className="ml-auto truncate bee-micro">{t(`clientContext.${m.client_context}`)}</span>
-                            )}
-                          </div>
-                        )}
-                      </button>
+                      </div>
                     );
                   })}
-                  {dayMeetings.length === 0 && (
+                  {/* Drop preview: the dragged meeting, dashed, where it would
+                      land — the source block stays put (dimmed) until the
+                      rep confirms in the dialog. */}
+                  {ghost && dragOver && (
+                    <div
+                      aria-hidden="true"
+                      className="bee-cal-ghost absolute flex flex-col gap-0.5 overflow-hidden rounded-md border px-2 py-1 text-left"
+                      style={{
+                        top: clampBlockTop(meetingTop(ghost, tz) + dragOver.slotDelta * DRAG_SNAP_PX),
+                        height: EVENT_BLOCK_HEIGHT,
+                        left: 2,
+                        width: "calc(100% - 4px)",
+                        ...eventFill(ghost),
+                      }}
+                    >
+                      <p className="line-clamp-3 text-xs font-semibold leading-snug">{ghost.title}</p>
+                      <p className="bee-micro tabular-nums text-[var(--color-text)]">
+                        {rangeLabel(rescheduledStart(ghost, day, dragOver.slotDelta, tz).toISOString(), ghost.duration_minutes, tz)}
+                      </p>
+                    </div>
+                  )}
+                  {dayMeetings.length === 0 && !ghost && (
                     <p className="bee-micro px-2 py-2 text-muted-foreground">{t("page.emptyDay")}</p>
                   )}
                 </div>
@@ -1256,6 +1466,19 @@ export function CalendarPage() {
       )}
         </div>
       </div>
+
+      {/* Drag-to-reschedule confirmation — a drop opens this; only
+          "Reagendar" saves. Closing it any other way (Cancelar, Escape,
+          the overlay) leaves the meeting where it was. */}
+      <RescheduleDialog
+        pending={pendingReschedule}
+        formatWhen={(iso) => whenFormatter.format(new Date(iso))}
+        saving={rescheduling}
+        onConfirm={confirmReschedule}
+        onCancel={() => {
+          if (!rescheduling) setPendingReschedule(null);
+        }}
+      />
 
       {/* Detail dialog */}
       <Dialog open={detail !== null} onOpenChange={(open) => !open && setDetail(null)}>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { ArrowRight, Mail, PlayCircle, Search, Star, Users } from "lucide-react";
+import { ArrowRight, PlayCircle } from "lucide-react";
 
 import { MarketingCounters } from "@/components/marketing-counters";
 import { MarketingDemoPanel } from "@/components/marketing-demo-panel";
@@ -9,7 +9,6 @@ import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
 import { Reveal } from "@/components/marketing-motion";
 import { MarketingSalesProof } from "@/components/marketing-sales-proof";
-import { MarketingSignalTicker } from "@/components/marketing-signal-ticker";
 import { MarketingTrustCards } from "@/components/marketing-trust-cards";
 
 /**
@@ -21,70 +20,34 @@ import { MarketingTrustCards } from "@/components/marketing-trust-cards";
  * social fabricada.
  *
  * Order, and the reason for it — a visitor should know what BEE is within
- * two scrolls: the hero says it (headline, subtitle, CTAs — nothing
- * floating around them), the ticker shows the signals, the
- * Demo en vivo shows the product. Then the argument: Ventas, why to trust
- * it (four guarantees as dashboard charts, plus the real sources), FAQ,
- * closing CTA. The
- * module tour lives on /funcionalidades (linked from header and footer),
- * not here.
+ * one scroll: a floating nav, then the hero says it (headline, subtitle,
+ * two CTAs) and SHOWS it right underneath — the hero shot is the product
+ * itself (MarketingDemoPanel, the "Cerebro de BEE", with its tabs) in one
+ * floating card, followed by four honest stat cards. Then the argument:
+ * Ventas, why to trust it (five dashboard chart cards, the real sources
+ * among them), FAQ, closing CTA. The module tour lives on /funcionalidades.
  *
  * i18n: this file's own copy (hero, confianza, CTA de cierre) lives in
  * messages/{locale}/marketing.json; every sub-component below reads
  * messages/{locale}/landing.json.
  *
- * Motion is restraint: one plain fade + 12px rise per section (Reveal,
- * staggered for lists), the chart drawing itself once, figures counting
- * up once, and never more than one animated element per viewport. All of
- * it is progressive enhancement over this server-rendered final state,
- * and none of it adds a fill: one background for the whole landing, the
- * hero's blurred atmosphere the only exception.
+ * Ground and motion are restraint: one page background for everything
+ * outside the hero; the hero alone gets a light lavender wash and two
+ * blurred blobs in pure BEE tokens (.bee-hero-wash). Motion is Reveal's
+ * fade + 12px rise per section, the charts drawing themselves once, the
+ * figures counting up once — nothing floating, no parallax, no cursor
+ * effects. All of it is progressive enhancement over this server-rendered
+ * final state.
  */
 
-/** The real signal sources and the outbound channel — LinkedIn/G2/Google
- * Search are the providers in apps/api/app/services/external_api/providers/,
- * email goes out via SMTP/SendGrid/Resend. Names are proper nouns (not
- * translated); no third-party logos — the repo has none as assets and
- * claiming affiliation is not ours to make. */
-const SOURCES = [
-  { id: "linkedin", name: "LinkedIn", icon: Users, hue: "var(--color-chart-4)" },
-  { id: "g2", name: "G2", icon: Star, hue: "var(--color-accent-warm)" },
-  { id: "googleSearch", name: "Google Search", icon: Search, hue: "var(--color-chart-6)" },
-  { id: "email", name: "Email", icon: Mail, hue: "var(--color-chart-5)" },
-] as const;
-
-/** Faint white points over the landing — like distant stars, the only
- * motion on the shared ground. Fixed positions (no randomness: server and
- * client must agree), each with its own delay/duration so the twinkle
- * never reads as a loop. [left%, top%, delay s, duration s]. */
-const SPARKLES = [
-  [5, 9, 0, 11], [17, 26, 2.5, 13], [29, 7, 5, 12], [41, 21, 1.5, 14], [56, 12, 3.5, 11.5],
-  [68, 29, 6, 12.5], [83, 8, 0.8, 13.5], [94, 24, 4.2, 11], [9, 47, 2, 12], [24, 58, 5.5, 13],
-  [46, 44, 0.4, 14], [62, 52, 3, 11.5], [77, 46, 6.5, 12.5], [91, 60, 1.2, 13], [13, 76, 4.8, 11],
-  [33, 88, 0.2, 12.5], [51, 71, 2.8, 13.5], [70, 84, 5.2, 11.5], [86, 92, 3.8, 14], [97, 77, 1.8, 12],
-] as const;
-
-function MarketingSparkles() {
-  return (
-    <div className="bee-sparkles" aria-hidden>
-      {SPARKLES.map(([left, top, delay, duration], i) => (
-        <i key={i} style={{ left: `${left}%`, top: `${top}%`, animationDelay: `${delay}s`, animationDuration: `${duration}s` }} />
-      ))}
-    </div>
-  );
-}
-
-/** Manchas de gradiente detrás del hero — mezcla de la paleta institucional,
- * blureadas y de baja opacidad para que el texto #222222 siga siendo
- * perfectamente legible encima. Puro CSS, sin imagen ni librería. */
+/** Ethereal ground for the hero only — see .bee-hero-wash in globals.css:
+ * a wash from light lavender to the page background and two soft blobs,
+ * honey and lavender, each a single token (never a blend of two hues). */
 function HeroAtmosphere() {
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      <div className="absolute -left-24 -top-32 size-[26rem] rounded-full bg-[var(--color-chart-4)]/35 blur-3xl" />
-      <div className="absolute -right-16 -top-20 size-[22rem] rounded-full bg-[var(--color-chart-5)]/30 blur-3xl" />
-      <div className="absolute left-1/3 top-24 size-[20rem] rounded-full bg-[var(--color-chart-2)]/20 blur-3xl" />
-      <div className="absolute -bottom-24 right-1/4 size-[24rem] rounded-full bg-[var(--color-chart-6)]/25 blur-3xl" />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background" />
+    <div className="bee-hero-wash" aria-hidden>
+      <i />
+      <i />
     </div>
   );
 }
@@ -134,61 +97,57 @@ function HeroHeadline({ raw }: { raw: string }) {
 
 export default async function Home() {
   const t = await getTranslations("marketing.landing");
-  const tSources = await getTranslations("landing.integrations.items");
 
   return (
     <div className="flex min-h-full flex-col bg-background">
       <MarketingHeader />
 
       <main className="relative flex-1">
-        <MarketingSparkles />
-        {/* ── Hero ─────────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden">
+        {/* ── Hero ─────────────────────────────────────────────────────────
+         * Pulled up under the floating nav (its 3.5rem bar + 0.75rem top
+         * gap) so the wash starts at the very top of the page. */}
+        <section className="relative -mt-[4.25rem] overflow-hidden pt-[4.25rem]">
           <HeroAtmosphere />
 
-          <div className="relative mx-auto w-full max-w-4xl px-6 pb-16 pt-16 text-center sm:pb-20 sm:pt-24">
+          <div className="relative mx-auto w-full max-w-4xl px-6 pt-16 text-center sm:pt-24">
             {/* .bee-hero-in: eyebrow → headline (word by word) → subtitle →
              * CTAs rise in on load, 60 ms apart. */}
             <div className="bee-hero-in relative">
               <p className="bee-eyebrow">{t("eyebrow")}</p>
-              <h1 className="bee-headline mx-auto mt-5 max-w-3xl text-balance text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+              <h1 className="bee-headline mx-auto mt-5 max-w-3xl text-balance text-4xl font-bold leading-[1.05] tracking-tight text-foreground md:text-6xl">
                 <HeroHeadline raw={t.raw("heroTitle") as string} />
               </h1>
-              <p className="bee-caption mx-auto mt-6 max-w-xl text-base sm:text-lg">{t("heroSubtitle")}</p>
+              <p className="bee-caption mx-auto mt-6 max-w-xl text-base">{t("heroSubtitle")}</p>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-                <Link href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary">
+                <Link href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary bee-cta-lift">
                   {t("ctaStart")} <ArrowRight className="size-4" />
                 </Link>
-                <Link href="/probar" className="bee-btn-ghost">
+                <Link href="/probar" className="bee-btn-ghost bee-cta-lift">
                   <PlayCircle className="size-4" /> {t("ctaTry")}
                 </Link>
               </div>
             </div>
           </div>
 
-        </section>
-
-        <MarketingSignalTicker />
-
-        {/* ── Vista previa del producto ───────────────────────────────────── */}
-        <section id="producto" className="mx-auto w-full max-w-6xl px-6 py-12 lg:py-14">
-          <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="bee-eyebrow bee-eyebrow--blue">{t("demoEyebrow")}</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("demoTitle")}</h2>
-          </Reveal>
-          <Reveal className="mt-10" delay={100}>
-            <MarketingDemoPanel />
-          </Reveal>
-          {/* The demo's own figures, counting up once — a recap of the panel
-           * above, labelled as demo data, not a second set of statistics. */}
-          <MarketingCounters />
+          {/* ── Hero shot — the product itself, one floating card ─────────
+           * MarketingDemoPanel is the "Cerebro de BEE": three tabs of the
+           * real dashboard with demo data. Under it, four honest figures
+           * (MarketingCounters) and their footnote. */}
+          <div className="relative mx-auto w-full max-w-6xl px-6 pb-20 pt-14 lg:pb-28 lg:pt-16">
+            <Reveal delay={200}>
+              <div className="rounded-3xl border border-[var(--color-border)] bg-[var(--color-card)] p-4 shadow-2xl md:p-6">
+                <MarketingDemoPanel />
+              </div>
+            </Reveal>
+            <MarketingCounters />
+          </div>
         </section>
 
         <MarketingSalesProof />
 
-        {/* ── Por qué confiar — four guarantees, each as a dashboard chart ── */}
+        {/* ── Por qué confiar — five guarantees, each a dashboard chart ──── */}
         <section id="features" className="border-t border-border">
-          <div className="mx-auto w-full max-w-6xl px-6 py-12 lg:py-14">
+          <div className="mx-auto w-full max-w-6xl px-6 py-20 lg:py-28">
             <Reveal className="mx-auto max-w-2xl text-center">
               <p className="bee-eyebrow bee-eyebrow--warm">{t("guaranteesEyebrow")}</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("guaranteesTitle")}</h2>
@@ -199,26 +158,8 @@ export default async function Home() {
               <MarketingTrustCards />
             </div>
 
-            {/* Footer row: where the signals actually come from — the same
-             * trust theme, the four real sources, one line — plus the note
-             * that the figures above are demo values. */}
-            <Reveal className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3" delay={120}>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                <span className="bee-micro">{t("sourcesLabel")}</span>
-                {SOURCES.map((source, i) => (
-                  <span key={source.id} className="inline-flex items-center gap-2">
-                    {i > 0 && <span className="bee-micro" aria-hidden>·</span>}
-                    <span
-                      className="flex size-6 items-center justify-center rounded-full"
-                      style={{ background: `color-mix(in srgb, ${source.hue} 20%, var(--color-card))`, color: `color-mix(in srgb, ${source.hue} 70%, var(--color-text) 30%)` }}
-                      title={tSources(source.id)}
-                    >
-                      <source.icon className="size-3 stroke-[1.75]" />
-                    </span>
-                    <span className="text-sm font-medium">{source.name}</span>
-                  </span>
-                ))}
-              </div>
+            {/* The figures above are demo values — said once, under the grid. */}
+            <Reveal className="mt-6 text-center" delay={120}>
               <p className="bee-micro">{t("trustNote")}</p>
             </Reveal>
           </div>
@@ -230,9 +171,9 @@ export default async function Home() {
 
         {/* ── CTA de cierre ────────────────────────────────────────────────── */}
         <section className="border-t border-border">
-          <Reveal className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 py-12 text-center lg:py-14">
+          <Reveal className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 py-20 text-center lg:py-28">
             <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">{t("closingTitle")}</h2>
-            <Link href="/contacto?source=closing_cta" className="bee-btn bee-btn--primary">
+            <Link href="/contacto?source=closing_cta" className="bee-btn bee-btn--primary bee-cta-lift">
               {t("closingCta")} <ArrowRight className="size-4" />
             </Link>
           </Reveal>

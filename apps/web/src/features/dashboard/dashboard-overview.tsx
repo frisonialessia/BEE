@@ -145,7 +145,9 @@ export function DashboardOverview({
 
   return (
     <>
-      <header className="bee-topbar -mx-5 -mt-4 mb-4 px-5 pt-4">
+      {/* Same header block as every other page, so the KPI strip below
+          starts at the same height everywhere in BEE. */}
+      <header className="mb-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="bee-eyebrow">{t("eyebrow")}</p>

@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SALES } from "@/components/charts/palette";
 import type { DrawerTabKey } from "@/features/crm/opportunity-drawer-context";
 import type { Locale } from "@/i18n/locales";
 import type { CrmStage } from "@/lib/api/opportunities";
@@ -96,7 +97,7 @@ export function RightPane({
         </h2>
         <div className="flex flex-wrap items-center gap-2">
           {!closed && action && (
-            <button type="button" onClick={onPrimaryAction} className="bee-btn bee-btn--primary">
+            <button type="button" onClick={onPrimaryAction} className="bee-btn bee-btn--primary !text-sm" style={{ background: SALES.won, borderColor: SALES.won, color: "var(--color-card)" }}>
               {formatNextBestAction(action, locale)}
             </button>
           )}
@@ -120,7 +121,7 @@ export function RightPane({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="min-w-52">
-                <DropdownMenuLabel className="bee-micro">{t("actions.moveTo")}</DropdownMenuLabel>
+                <DropdownMenuLabel className="bee-caption">{t("actions.moveTo")}</DropdownMenuLabel>
                 {CRM_STAGES.filter((s) => s.id !== opportunity.status).map((s) => (
                   <DropdownMenuItem key={s.id} onSelect={() => onMoveStage(s.id)} className="gap-2 text-sm">
                     <span className="size-2 rounded-full" style={{ background: STAGE_ACCENT[s.id] }} />

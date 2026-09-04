@@ -13,22 +13,24 @@ const GAP = 3;
 const LABEL_W = 32;
 const HEADER_H = 18;
 const HOUR_MARKS = [0, 6, 12, 18];
+const PROFILE_LABEL_H = 18;
 
 /** Heatmap día × hora de cuándo llegan las señales de mercado — usa
  * `detected_at`, un dato que ya existe pero que hasta ahora no se
  * visualizaba así. Ver lib/signal-activity-grid.ts.
  *
- * El SVG escala por `viewBox` (width="100%" + aspect-ratio en CSS) en vez
- * de un tamaño en px fijo — así llena el ancho real de la tarjeta sin
- * importar cuánto más ancha sea que su vecina, en lugar de quedar
- * flotando chico con espacio en blanco alrededor. */
+ * Dos lecturas en una caja, ambas midiendo su espacio (use-box-size): la
+ * cuadrícula día × hora arriba, con celdas cuadradas que se ajustan al
+ * ancho, y debajo el perfil por hora — 24 barras alineadas con las
+ * columnas — que toma toda la altura que sobra, así la caja nunca termina
+ * en una banda vacía y la hora pico se ve, no solo se lee. Texto siempre en
+ * el tamaño estándar (1 unidad SVG = 1 px). */
 export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
   const t = useTranslations("dashboardOverview.activityHeatmap");
   const locale = useLocale() as Locale;
   const dayLabels = getDayLabels(locale);
-  // Cells shrink to the box, text never does: 1 SVG unit = 1 px, labels at
-  // the standard body-2 size whatever the column width.
   const [ref, { width: boxW }] = useBoxSize<HTMLDivElement>({ width: 480, height: 160 });
+  const [profileRef, { height: profileH }] = useBoxSize<HTMLDivElement>({ width: 480, height: 80 });
 
   if (signals.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("empty")}</p>;
@@ -42,28 +44,66 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
   const height = HEADER_H + 7 * STEP;
   const peak = mostActiveCell(cells);
 
+  const byHour = Array.from({ length: 24 }, (_, h) => cells.filter((c) => c.hour === h).reduce((s, c) => s + c.count, 0));
+  const maxHour = Math.max(...byHour, 1);
+  const barArea = Math.max(24, profileH - PROFILE_LABEL_H);
+
   return (
     <TooltipPrimitive.Provider delayDuration={100}>
-      <div className="bee-fill flex flex-col gap-4">
+      <div className="bee-fill flex flex-col gap-3">
         <div ref={ref} className="w-full min-w-0">
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="block" role="img" aria-label={t("ariaLabel")}>
-          {HOUR_MARKS.map((h) => (
-            <text key={h} x={LABEL_W + h * STEP + CELL / 2} y={HEADER_H - 6} textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
-              {h}h
-            </text>
-          ))}
-          {dayLabels.map((label, day) => (
-            <text key={label} x={LABEL_W - 8} y={HEADER_H + day * STEP + CELL / 2 + 4} textAnchor="end" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
-              {label}
-            </text>
-          ))}
-          {cells.map((cell) => (
-            <ActivitySquare key={`${cell.day}:${cell.hour}`} cell={cell} maxCount={maxCount} size={CELL} x={LABEL_W + cell.hour * STEP} y={HEADER_H + cell.day * STEP} />
-          ))}
-        </svg>
+          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="block" role="img" aria-label={t("ariaLabel")}>
+            {HOUR_MARKS.map((h) => (
+              <text key={h} x={LABEL_W + h * STEP + CELL / 2} y={HEADER_H - 6} textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
+                {h}h
+              </text>
+            ))}
+            {dayLabels.map((label, day) => (
+              <text key={label} x={LABEL_W - 8} y={HEADER_H + day * STEP + CELL / 2 + 4} textAnchor="end" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
+                {label}
+              </text>
+            ))}
+            {cells.map((cell) => (
+              <ActivitySquare key={`${cell.day}:${cell.hour}`} cell={cell} maxCount={maxCount} size={CELL} x={LABEL_W + cell.hour * STEP} y={HEADER_H + cell.day * STEP} />
+            ))}
+          </svg>
         </div>
 
-        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+        {/* Hour profile: the same 24 columns, as bars, filling the rest. */}
+        <div ref={profileRef} className="min-h-0 w-full min-w-0 flex-1">
+          <svg width={width} height={Math.max(profileH, PROFILE_LABEL_H + 24)} viewBox={`0 0 ${width} ${Math.max(profileH, PROFILE_LABEL_H + 24)}`} className="block" aria-hidden>
+            <text x={LABEL_W} y={12} style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
+              {t("hourProfile")}
+            </text>
+            {byHour.map((count, h) => {
+              const barH = count === 0 ? 2 : Math.max(3, Math.round((count / maxHour) * (barArea - 4)));
+              const isPeak = peak?.hour === h;
+              return (
+                <TooltipPrimitive.Root key={h}>
+                  <TooltipPrimitive.Trigger asChild>
+                    <rect
+                      x={LABEL_W + h * STEP}
+                      y={PROFILE_LABEL_H + barArea - barH}
+                      width={CELL}
+                      height={barH}
+                      rx={Math.min(3, CELL / 4)}
+                      fill="var(--color-chart-4)"
+                      fillOpacity={count === 0 ? 0.12 : isPeak ? 1 : 0.55}
+                    />
+                  </TooltipPrimitive.Trigger>
+                  <TooltipContent>
+                    <p className="font-medium">
+                      {h}:00–{h}:59
+                    </p>
+                    <p className="text-muted-foreground">{t("signalsDetected", { count })}</p>
+                  </TooltipContent>
+                </TooltipPrimitive.Root>
+              );
+            })}
+          </svg>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <span>
             {peak ? (
               <>
@@ -107,15 +147,7 @@ function ActivitySquare({
   return (
     <TooltipPrimitive.Root>
       <TooltipPrimitive.Trigger asChild>
-        <rect
-          x={x}
-          y={y}
-          width={size}
-          height={size}
-          rx={Math.min(3, size / 4)}
-          fill="var(--color-chart-4)"
-          fillOpacity={opacity}
-        />
+        <rect x={x} y={y} width={size} height={size} rx={Math.min(3, size / 4)} fill="var(--color-chart-4)" fillOpacity={opacity} />
       </TooltipPrimitive.Trigger>
       <TooltipContent>
         <p className="font-medium">

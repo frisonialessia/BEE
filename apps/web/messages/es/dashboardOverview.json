@@ -104,7 +104,8 @@
     "noActivity": "Sin actividad registrada todavía.",
     "less": "Menos",
     "more": "Más",
-    "signalsDetected": "{count, plural, one {# señal detectada} other {# señales detectadas}}"
+    "signalsDetected": "{count, plural, one {# señal detectada} other {# señales detectadas}}",
+    "hourProfile": "Señales por hora"
   },
   "todayImpact": {
     "emptyState": "Ninguna señal de alta intención detectada en las últimas 24h — nada urgente que proyectar hoy.",

@@ -211,7 +211,7 @@
   },
   "form": {
     "title": "New opportunity",
-    "companySearchPlaceholder": "Search or type a company…",
+    "companySearchPlaceholder": "Company name",
     "companyCreate": "Create “{name}”",
     "companyIndustry": "Sector",
     "contactTitle": "Title",
@@ -225,7 +225,7 @@
     "estimatedValuePlaceholder": "USD",
     "expectedCloseLabel": "Expected close",
     "sourceLabel": "Source",
-    "sourcePlaceholder": "Where did it come from?",
+    "sourcePlaceholder": "Select…",
     "sourceOptions": {
       "referral": "Referral",
       "inbound": "Inbound",
@@ -239,7 +239,7 @@
     "meetingsHeldLabel": "Previous meetings",
     "priority": "Priority",
     "descriptionLabel": "Why is this an opportunity? *",
-    "descriptionPlaceholder": "Why is this an opportunity? What changed, what they need, who decides.",
+    "descriptionPlaceholder": "Why is this an opportunity?",
     "saving": "Creating…",
     "cancel": "Cancel",
     "successToast": "Opportunity created at {company} — strategy ready.",
@@ -253,9 +253,9 @@
     "contactEmailPlaceholder": "name@company.com",
     "contactCreate": "New contact “{name}”",
     "charts": {
-      "pickCompany": "Pick the company to see its account",
+      "pickCompany": "No company selected",
       "first": "First opportunity for this account",
-      "noAmount": "Type an amount and it shows here"
+      "noAmount": "No amounts yet"
     },
     "save": "Create opportunity",
     "companyWebsite": "Website",
@@ -263,13 +263,12 @@
     "companySize": "Employees",
     "companyCountry": "Country / HQ",
     "companySites": "Other sites",
-    "companySitesPlaceholder": "Other sites, comma-separated",
     "companyRevenue": "Revenue",
     "summary": {
       "title": "BEE summary",
       "none": "No summary yet",
       "onCreate": "BEE will summarize the site when the account is created",
-      "addWebsite": "Add the website and BEE summarizes it on create"
+      "addWebsite": "No website"
     },
     "contactPhone": "Phone",
     "otherContacts": "Other contacts",

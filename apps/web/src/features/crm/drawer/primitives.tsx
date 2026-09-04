@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { tint } from "./stage-meta";
+import { mix } from "@/components/charts/palette";
 
 export function initials(name: string | null | undefined): string {
   if (!name) return "—";
@@ -47,7 +47,7 @@ export function Avatar({
     <span
       aria-hidden
       className={cn("grid shrink-0 place-items-center rounded-full font-bold text-[var(--color-text)]", className)}
-      style={{ width: size, height: size, background: tint.chip(hue), fontSize: size >= 40 ? 13 : 10 }}
+      style={{ width: size, height: size, background: mix(hue, 20), fontSize: size >= 40 ? 13 : 12 }}
     >
       {initials(name)}
     </span>
@@ -60,7 +60,7 @@ export function IconDisc({ icon: Icon, hue, size = 28 }: { icon: LucideIcon; hue
     <span
       aria-hidden
       className="grid shrink-0 place-items-center rounded-full"
-      style={{ width: size, height: size, background: tint.soft(hue) }}
+      style={{ width: size, height: size, background: mix(hue, 20) }}
     >
       <Icon className="size-3.5 stroke-[1.5] text-[var(--color-text)]" />
     </span>
@@ -83,19 +83,20 @@ export function InfoRow({
     <div className="flex min-w-0 items-center gap-3">
       <IconDisc icon={icon} hue={hue} />
       <div className="min-w-0 flex-1 leading-tight">
-        <p className="bee-micro">{label}</p>
+        <p className="bee-caption">{label}</p>
         <div className="truncate text-sm">{children}</div>
       </div>
     </div>
   );
 }
 
-/** Tag chip — one hue per block, so chips are tints of the block color. */
+/** Tag chip — a small pure-token accent (honey for a hot lead, lilac for
+ *  a type or status, mint for a client); never a wash of the block hue. */
 export function Chip({ hue, children }: { hue: string; children: ReactNode }) {
   return (
     <span
-      className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium text-[var(--color-text)]"
-      style={{ background: tint.chip(hue) }}
+      className="inline-flex items-center rounded-full px-2.5 py-1 text-sm font-medium text-[var(--color-text)]"
+      style={{ background: hue }}
     >
       {children}
     </span>

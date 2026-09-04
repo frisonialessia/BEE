@@ -10,7 +10,6 @@ import { formatDateTime } from "@/lib/i18n/format";
 import type { Meeting, Opportunity, OpportunityTask } from "@/types/domain";
 
 import { IconDisc } from "./primitives";
-import { tint } from "./stage-meta";
 
 /** What's scheduled next, from real records only: the earliest upcoming
  *  meeting, else the next open task with a due date, else the deal's own
@@ -60,14 +59,14 @@ export function NextStepStrip({
   const next = nextScheduled(opportunity, meetings, tasks, now);
 
   return (
-    <div className="grid grid-cols-1 rounded-[var(--radius-lg)] sm:grid-cols-2" style={{ background: tint.wash(hue) }}>
+    <div className="grid grid-cols-1 rounded-[var(--radius-lg)] border border-[var(--color-divider)] bg-[var(--color-card)] sm:grid-cols-2">
       <div className="flex items-center gap-3 px-4 py-3">
         <IconDisc icon={ArrowUpRight} hue={hue} />
         <div className="min-w-0 flex-1 leading-tight">
-          <p className="bee-micro">{t("action")}</p>
+          <p className="bee-caption">{t("action")}</p>
           <p className="truncate text-sm font-medium">{action ? formatNextBestAction(action, locale) : "—"}</p>
           {(channel || playbook) && (
-            <p className="bee-micro truncate">
+            <p className="truncate text-sm text-muted-foreground">
               {[channel && formatChannel(channel, locale), playbook && formatPlaybook(playbook, locale)].filter(Boolean).join(" · ")}
             </p>
           )}
@@ -76,11 +75,11 @@ export function NextStepStrip({
       <div className="flex items-center gap-3 border-t border-[var(--color-divider)] px-4 py-3 sm:border-l sm:border-t-0">
         <IconDisc icon={CalendarClock} hue={hue} />
         <div className="min-w-0 flex-1 leading-tight">
-          <p className="bee-micro">{t("step")}</p>
+          <p className="bee-caption">{t("step")}</p>
           {next ? (
             <>
               <p className="truncate text-sm font-medium">{next.title || t(next.kind)}</p>
-              <p className="bee-micro truncate tabular-nums">
+              <p className="truncate text-sm tabular-nums text-muted-foreground">
                 {next.title ? `${t(next.kind)} · ` : ""}
                 {formatDateTime(next.at, locale)}
               </p>

@@ -18,7 +18,7 @@ export function DrawerTopBar({ left, right, hideClose }: { left: ReactNode; righ
         {/* Create mode owns its two actions (Cancelar · Guardar borrador) —
             a third "Cerrar" there would be a second way to do the same. */}
         {!hideClose && (
-          <button type="button" onClick={closeOpportunity} className="bee-btn-ghost text-xs">
+          <button type="button" onClick={closeOpportunity} className="bee-btn-ghost !text-sm">
             <X className="size-3.5" />
             {t("close")}
           </button>

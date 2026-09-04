@@ -190,7 +190,12 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
       </OverviewCard>
 
       <OverviewCard span={5} title={t("byStage.title")} caption={t("byStage.caption")}>
-        <table className="w-full text-sm">
+        {/* Fixed content (one row per stage, never more) must still fill its
+            box: as a .bee-fill flex item the table takes the card's height
+            and, as tables do, hands the extra height to its rows evenly —
+            no blank band under the last stage, same margin whatever the
+            neighbor's height. */}
+        <table className="bee-fill w-full text-sm">
           <thead>
             <tr className="text-left">
               <th className="bee-micro pb-2 font-medium">{t("byStage.stage")}</th>
