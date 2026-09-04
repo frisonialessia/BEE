@@ -2,7 +2,8 @@
   "header": {
     "features": "Features",
     "login": "Sign in",
-    "tryFree": "Try without signing up"
+    "tryFree": "Try without signing up",
+    "backToTop": "Back to top"
   },
   "footer": {
     "tagline": "Autonomous sales intelligence for revenue teams who don't have time to go looking for the signal — only to act on it.",
@@ -36,7 +37,7 @@
   },
   "landing": {
     "eyebrow": "Sales Force Intelligence",
-    "heroTitle": "Autonomous sales intelligence that decides <hl>in real time</hl>.",
+    "heroTitle": "Autonomous sales intelligence that decides <hl>in real time.</hl>",
     "heroSubtitle": "BEE watches the market, prioritizes your pipeline, and prepares your next move while you close — no friction, no fabricated data, never losing control of a single decision.",
     "heroSignals": {
       "funding": {

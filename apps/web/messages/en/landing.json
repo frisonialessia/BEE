@@ -269,7 +269,9 @@
     "scoredCaption": "Prioritized by BEE — intent score, stage, and what to work first.",
     "illustrativeNote": "Illustrative view — same scoring criteria as the rest of the live demo.",
     "clickPromptBefore": "Click",
-    "clickPromptAfter": "to see the same list prioritized"
+    "clickPromptAfter": "to see the same list prioritized",
+    "sliderLabel": "Compare the list without BEE and with BEE",
+    "dragHint": "Drag the handle — or use the arrow keys — to move between the two lists."
   },
   "integrations": {
     "eyebrow": "Connected to what you already use",

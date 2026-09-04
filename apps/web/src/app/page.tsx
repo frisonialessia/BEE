@@ -14,6 +14,7 @@ import {
 
 import { MarketingBeforeAfter } from "@/components/marketing-before-after";
 import { MarketingCounters } from "@/components/marketing-counters";
+import { MarketingCursorTrail } from "@/components/marketing-cursor-trail";
 import { MarketingDemoPanel } from "@/components/marketing-demo-panel";
 import { MarketingFAQ } from "@/components/marketing-faq";
 import { MarketingFooter } from "@/components/marketing-footer";
@@ -21,6 +22,7 @@ import { MarketingHeader } from "@/components/marketing-header";
 import { MarketingHeroSignals } from "@/components/marketing-hero-signals";
 import { MarketingHowItWorks } from "@/components/marketing-how-it-works";
 import { MarketingIntegrations } from "@/components/marketing-integrations";
+import { MagneticLink } from "@/components/marketing-magnetic";
 import { Reveal } from "@/components/marketing-motion";
 import { MarketingOrbit } from "@/components/marketing-orbit";
 import { MarketingSalesProof } from "@/components/marketing-sales-proof";
@@ -142,6 +144,54 @@ function HeroAtmosphere() {
   );
 }
 
+// Per-word depth for the headline's word-by-word rise: each word comes up
+// from a slightly different distance/scale so the line doesn't read as one
+// block sliding in. Cycles by word index; values are px / scale factors.
+const WORD_RISE = ["18px", "26px", "14px", "22px"] as const;
+const WORD_SCALE = ["0.96", "0.93", "0.98", "0.95"] as const;
+
+/**
+ * Headline split into animated words. The message is parsed here (not via
+ * t.rich) because each WORD needs its own span: `<hl>…</hl>` marks the
+ * highlighted phrase, whose words get their marker span and the last
+ * indices so they land last. Pure string work on the server — identical
+ * output on the client, nothing to hydrate but static spans.
+ */
+function HeroHeadline({ raw }: { raw: string }) {
+  const parts = raw.split(/(<hl>.*?<\/hl>)/).filter((p) => p.length > 0);
+  const plainCount = parts.filter((p) => !p.startsWith("<hl>")).reduce((n, p) => n + p.split(/\s+/).filter(Boolean).length, 0);
+  let plainIndex = 0;
+  let hlIndex = plainCount;
+  const nodes: React.ReactNode[] = [];
+  parts.forEach((part, pi) => {
+    const isHl = part.startsWith("<hl>");
+    const text = isHl ? part.slice(4, -5) : part;
+    const words = text.split(/\s+/).filter(Boolean);
+    if (pi > 0 && (/^\s/.test(text) || /\s$/.test(parts[pi - 1].replace(/<\/?hl>/g, "")))) nodes.push(" ");
+    const spans = words.map((word, wi) => {
+      const i = isHl ? hlIndex++ : plainIndex++;
+      return (
+        <span key={`${pi}-${wi}`}>
+          {wi > 0 && " "}
+          <span className="bee-word" style={{ "--i": i, "--wy": WORD_RISE[i % 4], "--ws": WORD_SCALE[i % 4] } as React.CSSProperties}>
+            {word}
+          </span>
+        </span>
+      );
+    });
+    nodes.push(
+      isHl ? (
+        <span key={pi} className="bee-hl">
+          {spans}
+        </span>
+      ) : (
+        <span key={pi}>{spans}</span>
+      ),
+    );
+  });
+  return <>{nodes}</>;
+}
+
 /** Subtle background motif per module card — a corner flourish, not a
  * full-bleed pattern, so it survives the cards' variable content height
  * (fixed pixel size + the card's own overflow-hidden clip it cleanly on
@@ -204,6 +254,9 @@ export default async function Home() {
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
         <section className="relative overflow-hidden">
           <HeroAtmosphere />
+          {/* Pointer trail (xl+, mouse only): dots that drift to the nearest
+           * floating signal card. Before the text in DOM so it paints under it. */}
+          <MarketingCursorTrail />
 
           <div className="relative mx-auto w-full max-w-4xl px-6 pb-8 pt-16 text-center sm:pt-24">
             {/* Floating signal cards in the side margins (xl+ only). Outside
@@ -215,14 +268,14 @@ export default async function Home() {
              * itself under them once the headline has landed. */}
             <div className="bee-hero-in relative">
               <p className="bee-eyebrow">{t("eyebrow")}</p>
-              <h1 className="mx-auto mt-5 max-w-3xl text-balance text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                {t.rich("heroTitle", { hl: (chunks) => <span className="bee-hl">{chunks}</span> })}
+              <h1 className="bee-headline mx-auto mt-5 max-w-3xl text-balance text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+                <HeroHeadline raw={t.raw("heroTitle") as string} />
               </h1>
               <p className="bee-caption mx-auto mt-6 max-w-xl text-base sm:text-lg">{t("heroSubtitle")}</p>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-                <Link href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary bee-cta-glow">
+                <MagneticLink href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary">
                   {t("ctaStart")} <ArrowRight className="size-4" />
-                </Link>
+                </MagneticLink>
                 <Link href="/probar" className="bee-btn-ghost">
                   <PlayCircle className="size-4" /> {t("ctaTry")}
                 </Link>
@@ -314,23 +367,30 @@ export default async function Home() {
             <p className="bee-caption mt-3">{t("guaranteesSubtitle")}</p>
           </Reveal>
 
-          <Reveal stagger className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {GUARANTEE_KEYS.map((key, i) => {
-              const Icon = GUARANTEE_ICONS[key];
-              return (
-                <div
-                  key={key}
-                  className={`bee-bento bee-bento-pad bee-bar-card bee-glass--hover ${GUARANTEE_BAR_TONES[i]}`}
-                >
-                  <div className="flex size-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-                    <Icon className="size-4.5 stroke-[1.5]" style={{ color: GUARANTEE_ICON_STROKES[i] }} />
+          {/* .bee-lock: each card's icon "clicks" (200 ms scale) as it
+           * reveals, and once all four are in, the connector behind them
+           * draws from the first accent bar to the last — visible in the
+           * gaps between cards, so the four bars read as one line. */}
+          <div className="bee-lock relative mt-10">
+            <span className="bee-lock-line" aria-hidden />
+            <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {GUARANTEE_KEYS.map((key, i) => {
+                const Icon = GUARANTEE_ICONS[key];
+                return (
+                  <div
+                    key={key}
+                    className={`bee-bento bee-bento-pad bee-bar-card bee-glass--hover ${GUARANTEE_BAR_TONES[i]}`}
+                  >
+                    <div className="bee-lock-icon flex size-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
+                      <Icon className="size-4.5 stroke-[1.5]" style={{ color: GUARANTEE_ICON_STROKES[i] }} />
+                    </div>
+                    <h3 className="mt-3 text-sm font-semibold tracking-tight">{t(`guarantees.${key}.title`)}</h3>
+                    <p className="bee-caption mt-1.5">{t(`guarantees.${key}.description`)}</p>
                   </div>
-                  <h3 className="mt-3 text-sm font-semibold tracking-tight">{t(`guarantees.${key}.title`)}</h3>
-                  <p className="bee-caption mt-1.5">{t(`guarantees.${key}.description`)}</p>
-                </div>
-              );
-            })}
-          </Reveal>
+                );
+              })}
+            </Reveal>
+          </div>
         </section>
 
         <MarketingFAQ />
@@ -339,9 +399,9 @@ export default async function Home() {
         <section className="border-t border-border">
           <Reveal className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 py-16 text-center sm:py-20">
             <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">{t("closingTitle")}</h2>
-            <Link href="/contacto?source=closing_cta" className="bee-btn bee-btn--primary bee-cta-glow">
+            <MagneticLink href="/contacto?source=closing_cta" className="bee-btn bee-btn--primary">
               {t("closingCta")} <ArrowRight className="size-4" />
-            </Link>
+            </MagneticLink>
           </Reveal>
         </section>
       </main>

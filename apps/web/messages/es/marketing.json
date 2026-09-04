@@ -2,7 +2,8 @@
   "header": {
     "features": "Funcionalidades",
     "login": "Iniciar sesión",
-    "tryFree": "Probar sin registrarte"
+    "tryFree": "Probar sin registrarte",
+    "backToTop": "Volver arriba"
   },
   "footer": {
     "tagline": "Inteligencia comercial autónoma para equipos de revenue que no tienen tiempo de buscar la señal — solo de actuar sobre ella.",
@@ -36,7 +37,7 @@
   },
   "landing": {
     "eyebrow": "Sales Force Intelligence",
-    "heroTitle": "Inteligencia comercial autónoma que decide <hl>en tiempo real</hl>.",
+    "heroTitle": "Inteligencia comercial autónoma que decide <hl>en tiempo real.</hl>",
     "heroSubtitle": "BEE vigila el mercado, prioriza tu pipeline y prepara la próxima jugada mientras tú cierras — sin fricción, sin datos inventados, sin perder el control de cada decisión.",
     "heroSignals": {
       "funding": {

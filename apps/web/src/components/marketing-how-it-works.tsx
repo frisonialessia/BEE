@@ -2,9 +2,10 @@
 
 import { Check, CheckCircle2, Radio, Sparkles, Target } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
 
 import { MarketingHoneycomb } from "@/components/marketing-honeycomb";
-import { useScrollProgress } from "@/components/marketing-motion";
+import { clamp01, easeOutCubic, onScrollFrame, prefersReducedMotion, smoothstep, useScrollProgress } from "@/components/marketing-motion";
 
 /**
  * MarketingHowItWorks — the "señal → jugada → cierre" scroll story. The
@@ -25,6 +26,15 @@ import { useScrollProgress } from "@/components/marketing-motion";
  * shown), which is therefore also what the server sends: a visitor
  * without JS reads the complete four steps, not a dimmed list waiting
  * for a scroll handler.
+ *
+ * The ticker "catches" a signal (lg+ only): as this section scrolls in,
+ * a ghost of the ticker's first item — the very same Northwind Series C
+ * line — detaches from the ticker band ([data-ticker-band], measured
+ * live, usually far above the viewport by then) and floats down onto the
+ * first stage chip; when it lands the chip appears. Transform-only on a
+ * fixed layer under the header; `caught` is null whenever the feature is
+ * off (server, below lg, reduced motion, no ticker), in which case the
+ * first chip follows the normal rule.
  */
 
 const STEPS = [
@@ -47,13 +57,58 @@ function activeIndex(progress: number | null): number {
 
 export function MarketingHowItWorks() {
   const t = useTranslations("landing.howItWorks");
+  const tTicker = useTranslations("landing.ticker");
+  const caughtText = (tTicker.raw("items") as string[])[0];
   const { sectionRef, pinRef, progress } = useScrollProgress<HTMLElement, HTMLDivElement>();
   const active = activeIndex(progress);
   const measured = progress !== null;
   const trackFill = measured ? Math.max(0.06, progress) : 1;
 
+  const ghostRef = useRef<HTMLDivElement>(null);
+  const firstChipRef = useRef<HTMLLIElement>(null);
+  const [caught, setCaught] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const ghost = ghostRef.current;
+    if (!ghost) return;
+    return onScrollFrame(() => {
+      const section = sectionRef.current;
+      const chip = firstChipRef.current;
+      const band = document.querySelector<HTMLElement>("[data-ticker-band]");
+      const on = section && chip && band && window.matchMedia("(min-width: 1024px)").matches && !prefersReducedMotion();
+      if (!on) {
+        ghost.removeAttribute("data-active");
+        setCaught(null);
+        return;
+      }
+      const vh = window.innerHeight;
+      const p = clamp01((vh - section.getBoundingClientRect().top) / (vh * 0.9));
+      const landed = p >= 0.97;
+      setCaught(landed);
+      if (p <= 0 || landed) {
+        ghost.removeAttribute("data-active");
+        return;
+      }
+      ghost.setAttribute("data-active", "");
+      const b = band.getBoundingClientRect();
+      const c = chip.getBoundingClientRect();
+      const e = easeOutCubic(p);
+      const sx = b.left + b.width / 2 - ghost.offsetWidth / 2;
+      const sy = b.top + b.height / 2 - ghost.offsetHeight / 2;
+      const x = sx + (c.left - sx) * e;
+      const y = sy + (c.top - sy) * e;
+      ghost.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+      ghost.style.opacity = Math.min(smoothstep(0, 0.12, p), 1 - smoothstep(0.86, 0.97, p)).toFixed(3);
+    });
+  }, [sectionRef]);
+
   return (
     <section id="como-funciona" ref={sectionRef} className="bee-story" data-measured={measured ? "true" : undefined}>
+      {/* The caught ticker item in flight (see docblock). */}
+      <div ref={ghostRef} className="bee-catch-ghost bee-glass" aria-hidden>
+        <Radio className="size-3.5 shrink-0 text-[var(--color-chart-4)]" strokeWidth={1.75} />
+        <span className="whitespace-nowrap text-xs text-muted-foreground">{caughtText}</span>
+      </div>
       <div ref={pinRef} className="bee-story__pin">
         {/* py-16 → lg:py-10: while pinned, everything here has to fit in
          * one viewport minus the header (see .bee-story__pin); the ~700px a
@@ -102,11 +157,14 @@ export function MarketingHowItWorks() {
                 </div>
                 <ol className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   {STEPS.map((step, i) => {
-                    const shown = !measured || i <= active;
+                    // The first chip waits for the caught ticker item to land
+                    // when that flight is active; otherwise the normal rule.
+                    const shown = !measured || (i <= active && (i !== 0 || caught === null || caught));
                     const approved = step.id === "approve" && (!measured || progress >= 0.94);
                     return (
                       <li
                         key={step.id}
+                        ref={i === 0 ? firstChipRef : undefined}
                         className="bee-story__chip bee-bento flex items-start gap-2.5 p-3"
                         data-shown={shown ? "true" : undefined}
                         data-current={measured && i === active ? "true" : undefined}

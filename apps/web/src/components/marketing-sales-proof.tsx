@@ -3,8 +3,9 @@
 import { ArrowRight, Check, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
-import { CountUp, Reveal, useReveal } from "@/components/marketing-motion";
+import { clamp01, CountUp, onScrollFrame, parseCounter, prefersReducedMotion, Reveal } from "@/components/marketing-motion";
 
 /**
  * Landing — "Ventas": the one green section of the site, the same three
@@ -14,11 +15,14 @@ import { CountUp, Reveal, useReveal } from "@/components/marketing-motion";
  * hands the rep the play, and learns from every close. The chart is
  * illustrative and says so — no invented customer numbers.
  *
- * Motion: the area chart draws itself left→right as it scrolls into view
- * (stroke-dashoffset on the line via pathLength, clip-path on the fill)
- * and the three tiles count up to the copy's own values. Both are armed
- * only after hydration (useReveal / CountUp), so the server HTML — and a
- * reduced-motion visitor — get the finished chart and the final figures.
+ * Motion: the area chart is scrubbed by scroll — while the card is in
+ * view the green curve grows left→right with scroll depth (stroke-
+ * dashoffset on the line via pathLength, clip-path on the fill, both from
+ * one --draw custom property) and the "Meta del mes" tile ticks up with
+ * it, past 100 % to the copy's own 110 %. The other two tiles count up on
+ * entry (CountUp). `draw` is null until the client measures — null (the
+ * server render, no JS, reduced motion) is the finished chart and the
+ * literal copy strings.
  */
 const REASONS = ["earlier", "play", "priority", "learn"] as const;
 const ROWS = ["signal", "play", "pipeline", "goals"] as const;
@@ -26,7 +30,7 @@ const ROWS = ["signal", "play", "pipeline", "goals"] as const;
 // Illustrative cumulative closes, 12 points, drawn once (no data source).
 const CURVE = [4, 6, 9, 11, 16, 19, 25, 31, 34, 42, 49, 58];
 
-function IllustrativeChart({ state }: { state: "final" | "hidden" | "in" | "done" }) {
+function IllustrativeChart({ draw }: { draw: number | null }) {
   const W = 420;
   const H = 150;
   const padX = 10;
@@ -37,7 +41,12 @@ function IllustrativeChart({ state }: { state: "final" | "hidden" | "in" | "done
   const line = pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
   const area = `M${pts[0][0]},${H - padY} L${line.replace(/ /g, " L")} L${pts[pts.length - 1][0]},${H - padY} Z`;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="bee-draw h-auto w-full" data-reveal={state} aria-hidden="true">
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className="bee-draw h-auto w-full"
+      style={draw === null ? undefined : ({ "--draw": draw.toFixed(3), "--dot": draw >= 0.985 ? 1 : 0 } as React.CSSProperties)}
+      aria-hidden="true"
+    >
       <defs>
         <linearGradient id="bee-sales-fill" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0" stopColor="var(--color-green-1)" stopOpacity="0.35" />
@@ -54,11 +63,32 @@ function IllustrativeChart({ state }: { state: "final" | "hidden" | "in" | "done
   );
 }
 
+/** "110 %" scrubbed to progress p → "83 %" (same prefix/suffix/decimals),
+ *  or the literal copy at p ≥ 1 / when not scrubbing. */
+function scrubbed(text: string, p: number | null): string {
+  if (p === null || p >= 1) return text;
+  const parsed = parseCounter(text);
+  if (!parsed) return text;
+  const num = (parsed.value * p).toFixed(parsed.decimals);
+  return `${parsed.prefix}${/\d,\d/.test(text) ? num.replace(".", ",") : num}${parsed.suffix}`;
+}
+
 export function MarketingSalesProof() {
   const t = useTranslations("landing.sales");
-  // One reveal for the whole chart card: the card rises in and, on the
-  // same trigger, the chart draws itself — settleMs covers the 1.6 s draw.
-  const { ref: chartRef, state: chartState } = useReveal<HTMLDivElement>({ threshold: 0.3, settleMs: 1900 });
+  const scrubRef = useRef<HTMLDivElement>(null);
+  const [draw, setDraw] = useState<number | null>(null);
+
+  useEffect(() => {
+    const el = scrubRef.current;
+    if (!el || prefersReducedMotion()) return;
+    return onScrollFrame(() => {
+      const vh = window.innerHeight;
+      const top = el.getBoundingClientRect().top;
+      // 0 when the chart's top enters at 92 % of the viewport, 1 once it
+      // has risen to ~37 % — the curve grows as the visitor scrolls in.
+      setDraw(Math.round(clamp01((vh * 0.92 - top) / (vh * 0.55)) * 200) / 200);
+    });
+  }, []);
 
   return (
     <section id="ventas" className="border-t border-border">
@@ -70,7 +100,7 @@ export function MarketingSalesProof() {
         </Reveal>
 
         <div className="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-12">
-          <div ref={chartRef} data-reveal={chartState} className="bee-reveal bee-bento flex flex-col gap-4 p-5 lg:col-span-7">
+          <Reveal className="bee-bento flex flex-col gap-4 p-5 lg:col-span-7">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold">{t("chart.title")}</p>
@@ -80,19 +110,26 @@ export function MarketingSalesProof() {
                 {t("chart.badge")}
               </span>
             </div>
-            <IllustrativeChart state={chartState} />
-            <div className="grid grid-cols-3 gap-3">
-              {(["month", "clients", "goal"] as const).map((k, i) => (
-                <div key={k} className="rounded-[var(--radius-md)] p-3" style={{ background: ["var(--color-green-1)", "var(--color-green-2)", "var(--color-green-3)"][i] }}>
-                  <p className="text-micro font-semibold uppercase tracking-wide text-[var(--color-text)]/80">{t(`chart.tiles.${k}.label`)}</p>
-                  <p className="mt-1 text-lg font-bold tabular-nums text-[var(--color-text)]">
-                    <CountUp text={t(`chart.tiles.${k}.value`)} duration={1200 + i * 200} />
-                  </p>
-                </div>
-              ))}
+            <div ref={scrubRef} className="flex flex-col gap-4">
+              <IllustrativeChart draw={draw} />
+              <div className="grid grid-cols-3 gap-3">
+                {(["month", "clients", "goal"] as const).map((k, i) => (
+                  <div key={k} className="rounded-[var(--radius-md)] p-3" style={{ background: ["var(--color-green-1)", "var(--color-green-2)", "var(--color-green-3)"][i] }}>
+                    <p className="text-micro font-semibold uppercase tracking-wide text-[var(--color-text)]/80">{t(`chart.tiles.${k}.label`)}</p>
+                    <p className="mt-1 text-lg font-bold tabular-nums text-[var(--color-text)]">
+                      {k === "goal" ? (
+                        // Scrubbed with the curve: ticks past 100 % up to the copy's 110 %.
+                        <span className="tabular-nums">{scrubbed(t("chart.tiles.goal.value"), draw)}</span>
+                      ) : (
+                        <CountUp text={t(`chart.tiles.${k}.value`)} duration={1200 + i * 200} />
+                      )}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
             <p className="bee-micro">{t("chart.note")}</p>
-          </div>
+          </Reveal>
 
           <Reveal stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
             {REASONS.map((k, i) => (

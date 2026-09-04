@@ -104,7 +104,10 @@ function SignalsView() {
        * Agrupando el contenido en 3 bloques lógicos por columna y
        * repartiendo con justify-between, el espacio sobrante se reparte
        * entre los bloques en vez de acumularse en uno solo. */}
-      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3">
+      {/* data-morph-target: where the hero's floating signal cards land
+       * (marketing-hero-signals.tsx) — 1 Zona de acción · 2 Colmena · 3
+       * Inteligencia. Measured live, never positioned by these. */}
+      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3" data-morph-target="1">
         <div className="space-y-2">
           <p className="bee-eyebrow">{t("actionZoneTitle")}</p>
           {ACTION_ZONE.map((row) => (
@@ -144,7 +147,7 @@ function SignalsView() {
         </div>
       </div>
 
-      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3">
+      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3" data-morph-target="2">
         <div>
           <div className="flex items-center justify-between">
             <p className="bee-eyebrow">{t("hiveTitle")}</p>
@@ -200,7 +203,7 @@ function SignalsView() {
         </div>
       </div>
 
-      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3">
+      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3" data-morph-target="3">
         <div className="space-y-3">
           <p className="bee-eyebrow">{t("intelligenceTitle")}</p>
           <div className="grid grid-cols-2 gap-1.5">
@@ -660,6 +663,7 @@ export function MarketingDemoPanel() {
   return (
     <div
       ref={ref}
+      data-morph-panel
       className="bee-glass overflow-hidden rounded-[var(--radius-lg)]"
       onPointerDownCapture={stopAuto}
       onKeyDownCapture={stopAuto}

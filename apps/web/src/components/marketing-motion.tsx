@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * marketing-motion — the small set of scroll-motion primitives the public
- * landing is built from (Reveal, CountUp, ScrollProgressBar, useScrollProgress),
+ * landing is built from (Reveal, CountUp, useScrollProgress, onScrollFrame),
  * so every section animates with the same timing (300–500 ms, ease-out,
  * never bouncy) instead of each component rolling its own.
  *
@@ -30,6 +30,48 @@ export { useInView };
 export function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+/** Mouse-class pointer present (hover + fine). Pointer-only delights (magnetic
+ *  CTAs, cursor trail) check this so touch devices get none of the work. */
+export function isFinePointer(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
+export const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+/** Hermite smoothstep of v across [a, b] — the "no bounce" easing every
+ *  scroll-scrubbed value here uses. */
+export function smoothstep(a: number, b: number, v: number): number {
+  const t = clamp01((v - a) / (b - a));
+  return t * t * (3 - 2 * t);
+}
+export const easeOutCubic = (t: number) => 1 - Math.pow(1 - clamp01(t), 3);
+
+/**
+ * onScrollFrame — run `frame` once now and then at most once per animation
+ * frame on scroll/resize (passive listeners, rAF-coalesced). Returns the
+ * cleanup, so the idiom is `useEffect(() => onScrollFrame(() => …), [])`.
+ * A plain function rather than a hook on purpose: the frame closure is
+ * created inside the caller's effect, where reading refs is allowed.
+ */
+export function onScrollFrame(frame: () => void): () => void {
+  let raf = 0;
+  const run = () => {
+    raf = 0;
+    frame();
+  };
+  const schedule = () => {
+    if (!raf) raf = requestAnimationFrame(run);
+  };
+  schedule();
+  window.addEventListener("scroll", schedule, { passive: true });
+  window.addEventListener("resize", schedule);
+  return () => {
+    window.removeEventListener("scroll", schedule);
+    window.removeEventListener("resize", schedule);
+    if (raf) cancelAnimationFrame(raf);
+  };
 }
 
 type RevealState = "final" | "hidden" | "in" | "done";
@@ -199,51 +241,6 @@ export function CountUp({
 }
 
 /**
- * ScrollProgressBar — 2px indigo→magenta line along the very top of the
- * sticky header that fills with page progress. Uses CSS scroll-driven
- * animation (`animation-timeline: scroll()`) where the browser has it —
- * zero JS on the scroll path — and a passive, rAF-throttled scroll
- * listener everywhere else.
- */
-export function ScrollProgressBar() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (typeof CSS !== "undefined" && CSS.supports?.("animation-timeline: scroll()")) {
-      el.dataset.native = "true";
-      return;
-    }
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const doc = document.documentElement;
-      const max = doc.scrollHeight - window.innerHeight;
-      const p = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
-      el.style.transform = `scaleX(${p.toFixed(4)})`;
-    };
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    schedule();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
-
-  return (
-    <div className="bee-scroll-progress" aria-hidden>
-      <div ref={ref} className="bee-scroll-progress__bar" />
-    </div>
-  );
-}
-
-/**
  * useScrollProgress — 0..1 for how far the visitor has scrolled through a
  * section. Two regimes, chosen from the live CSS rather than a JS media
  * query so it can never disagree with the stylesheet:
@@ -266,9 +263,7 @@ export function useScrollProgress<TSection extends HTMLElement, TPin extends HTM
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
-    let raf = 0;
-    const measure = () => {
-      raf = 0;
+    return onScrollFrame(() => {
       const rect = section.getBoundingClientRect();
       const vh = window.innerHeight;
       const pin = pinRef.current;
@@ -279,19 +274,8 @@ export function useScrollProgress<TSection extends HTMLElement, TPin extends HTM
       } else {
         p = (vh * 0.85 - rect.top) / Math.max(rect.height, 1);
       }
-      setProgress(Math.min(1, Math.max(0, p)));
-    };
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(measure);
-    };
-    schedule();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      if (raf) cancelAnimationFrame(raf);
-    };
+      setProgress(clamp01(p));
+    });
   }, []);
 
   return { sectionRef, pinRef, progress };
