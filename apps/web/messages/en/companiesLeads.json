@@ -46,6 +46,7 @@
       "totalHint": "in your directory",
       "withOpps": "With an opportunity",
       "withContacts": "With contacts",
+      "withRecentSignal": "Signal in last 30 days",
       "industryTitle": "Mix by industry",
       "industryCaption": "Where your portfolio concentrates",
       "countryTitle": "By country",
@@ -171,6 +172,53 @@
     "live": "Live",
     "demoData": "Demo data",
     "importButton": "Import prospects",
+    "newLeadButton": "+ New lead",
+    "newLead": {
+      "heading": "New lead",
+      "description": "The same fields as the import template — only the name and the company are required.",
+      "fields": {
+        "nombre": "Full name",
+        "correo": "Email",
+        "cargo": "Title",
+        "seniority": "Seniority",
+        "linkedin": "LinkedIn",
+        "telefono": "Phone",
+        "empresa": "Company",
+        "dominio_empresa": "Company domain",
+        "industria": "Industry",
+        "pais": "Country"
+      },
+      "placeholders": {
+        "nombre": "Jane Doe",
+        "correo": "jane@example.com",
+        "cargo": "VP Sales",
+        "linkedin": "https://linkedin.com/in/…",
+        "telefono": "+1 555 123 4567",
+        "empresa": "Type or pick a company",
+        "dominio_empresa": "example.com",
+        "industria": "software",
+        "pais": "Mexico"
+      },
+      "seniorityNone": "Not specified",
+      "seniorityOptions": {
+        "c_level": "C-Level",
+        "vp": "VP",
+        "director": "Director",
+        "manager": "Manager",
+        "ic": "Individual contributor"
+      },
+      "companyHint": "If the company already exists (same name or domain) it is reused; otherwise it is created.",
+      "companyNew": "A new company will be created",
+      "companyExisting": "Will be linked to the existing company",
+      "submit": "Save lead",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "success": "{name} added to Leads.",
+      "errors": {
+        "emailInvalid": "That email doesn't look valid.",
+        "createFailed": "Couldn't save the lead — try again."
+      }
+    },
     "export": {
       "columns": {
         "name": "Name",
@@ -191,9 +239,10 @@
     },
     "metrics": {
       "total": "Total leads",
-      "avgScore": "Average intent score",
-      "hot": "Hot leads (≥75)",
-      "staleIncomplete": "With incomplete/stale data"
+      "totalHint": "{count, plural, one {across # company} other {across # companies}}",
+      "hot": "Hot (≥75)",
+      "avgScore": "Average score",
+      "uncontacted": "Not yet contacted"
     },
     "filters": {
       "searchPlaceholder": "Search by name, email, or company…",

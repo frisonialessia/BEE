@@ -46,6 +46,7 @@
       "totalHint": "en tu directorio",
       "withOpps": "Con oportunidad",
       "withContacts": "Con contactos",
+      "withRecentSignal": "Con señal en 30 días",
       "industryTitle": "Mezcla por industria",
       "industryCaption": "Dónde se concentra tu cartera",
       "countryTitle": "Por país",
@@ -171,6 +172,53 @@
     "live": "En vivo",
     "demoData": "Datos demo",
     "importButton": "Importar prospectos",
+    "newLeadButton": "+ Nuevo lead",
+    "newLead": {
+      "heading": "Nuevo lead",
+      "description": "Los mismos campos que la plantilla de importación — solo el nombre y la empresa son obligatorios.",
+      "fields": {
+        "nombre": "Nombre completo",
+        "correo": "Correo",
+        "cargo": "Cargo",
+        "seniority": "Seniority",
+        "linkedin": "LinkedIn",
+        "telefono": "Teléfono",
+        "empresa": "Empresa",
+        "dominio_empresa": "Dominio de la empresa",
+        "industria": "Industria",
+        "pais": "País"
+      },
+      "placeholders": {
+        "nombre": "Jane Doe",
+        "correo": "jane@ejemplo.com",
+        "cargo": "VP Ventas",
+        "linkedin": "https://linkedin.com/in/…",
+        "telefono": "+52 555 123 4567",
+        "empresa": "Escribe o elige una empresa",
+        "dominio_empresa": "ejemplo.com",
+        "industria": "software",
+        "pais": "México"
+      },
+      "seniorityNone": "Sin especificar",
+      "seniorityOptions": {
+        "c_level": "C-Level",
+        "vp": "VP",
+        "director": "Dirección",
+        "manager": "Manager",
+        "ic": "Colaborador/a individual"
+      },
+      "companyHint": "Si la empresa ya existe (mismo nombre o dominio) se reutiliza; si no, se crea.",
+      "companyNew": "Se creará una empresa nueva",
+      "companyExisting": "Se ligará a la empresa existente",
+      "submit": "Guardar lead",
+      "saving": "Guardando…",
+      "cancel": "Cancelar",
+      "success": "{name} agregado a Leads.",
+      "errors": {
+        "emailInvalid": "Ese correo no parece válido.",
+        "createFailed": "No se pudo guardar el lead — intenta de nuevo."
+      }
+    },
     "export": {
       "columns": {
         "name": "Nombre",
@@ -191,9 +239,10 @@
     },
     "metrics": {
       "total": "Total de leads",
-      "avgScore": "Puntaje de intención promedio",
-      "hot": "Leads calientes (≥75)",
-      "staleIncomplete": "Con datos incompletos/vencidos"
+      "totalHint": "{count, plural, one {en # empresa} other {en # empresas}}",
+      "hot": "Calientes (≥75)",
+      "avgScore": "Puntaje medio",
+      "uncontacted": "Sin contactar"
     },
     "filters": {
       "searchPlaceholder": "Buscar por nombre, email o empresa…",

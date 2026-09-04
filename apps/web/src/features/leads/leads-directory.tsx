@@ -1,21 +1,22 @@
 "use client";
 
-import { Flame, RefreshCw, Search, Upload, Workflow } from "lucide-react";
+import { Plus, RefreshCw, Search, Upload, Workflow } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
 
-import { StatStrip } from "@/components/charts/stat-tile";
+import { DATA } from "@/components/charts/palette";
+import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { LeadDuplicatesPanel } from "@/components/dedup/lead-duplicates-panel";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
-import { MetricCard } from "@/components/metric-card";
 import { SavedViewsControl } from "@/components/saved-views/saved-views-control";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeadImportPanel } from "@/features/leads/lead-import-panel";
+import { NewLeadForm } from "@/features/leads/new-lead-form";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBulkUpdateLeads, useLeads, useValidateLead } from "@/hooks/queries/use-leads";
 import { useBulkEnrollLeadsInSequence, useSequences } from "@/hooks/queries/use-sequences";
@@ -78,6 +79,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
   const [bulkAssignee, setBulkAssignee] = useState("");
   const [bulkSequence, setBulkSequence] = useState("");
   const [importOpen, setImportOpen] = useState(false);
+  const [newLeadOpen, setNewLeadOpen] = useState(false);
 
   const currentViewConfig: LeadsViewConfig = { query, statusFilter, staleOnly, sortKey };
   function applyViewConfig(config: LeadsViewConfig) {
@@ -163,8 +165,12 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
     }
   }
 
+  // The strip at a glance: how many, how many are hot, how strong on
+  // average, how many nobody has touched yet. "Stale/incomplete" stays as
+  // the filter toggle below — it's a hygiene action, not a headline number.
   const hotCount = leads.filter((l) => l.score >= 75).length;
-  const staleCount = leads.filter((l) => l.stale_risk || l.validation_flags.length > 0).length;
+  const uncontactedCount = leads.filter((l) => l.status === "new").length;
+  const companyCount = new Set(leads.map((l) => l.company_id).filter(Boolean)).size;
   const avgScore = leads.length > 0 ? Math.round(leads.reduce((s, l) => s + l.score, 0) / leads.length) : 0;
 
   const exportRows = filtered.map((l) => {
@@ -202,6 +208,15 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
               <Upload className="size-3.5" />
               {t("importButton")}
             </button>
+            <button
+              type="button"
+              onClick={() => setNewLeadOpen((v) => !v)}
+              aria-expanded={newLeadOpen}
+              className="bee-btn bee-btn--primary inline-flex items-center gap-2"
+            >
+              <Plus className="size-3.5" />
+              {t("newLeadButton")}
+            </button>
             <ExportCsvButton
               rows={exportRows}
               filename="bee-leads.csv"
@@ -224,6 +239,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
 
       <LeadDuplicatesPanel />
       <LeadImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
+      {newLeadOpen && <NewLeadForm onDone={() => setNewLeadOpen(false)} />}
 
       {loading ? (
         <div className="space-y-4">
@@ -241,18 +257,24 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
         </div>
       ) : (
         <div className="space-y-4">
+          {/* Same tile, same hue-per-meaning as the Directorio tab's strip:
+              indigo = volume, honey = hot/high intent, magenta = score,
+              violet = readiness. Every tile carries a ring or a hint so the
+              four are the same height. */}
           <StatStrip cols={4}>
-            <MetricCard label={t("metrics.total")} value={leads.length} />
-            <MetricCard
-              label={t("metrics.avgScore")}
-              value={avgScore}
-              tone={avgScore >= 60 ? "default" : "muted"}
+            <StatTile
+              label={t("metrics.total")}
+              value={leads.length}
+              hint={t("metrics.totalHint", { count: companyCount })}
+              tone={DATA.indigo}
             />
-            <MetricCard label={t("metrics.hot")} value={hotCount} icon={Flame} tone="warm" />
-            <MetricCard
-              label={t("metrics.staleIncomplete")}
-              value={staleCount}
-              tone={staleCount > 0 ? "warm" : "default"}
+            <StatTile label={t("metrics.hot")} value={hotCount} progress={hotCount / leads.length} tone={DATA.honey} />
+            <StatTile label={t("metrics.avgScore")} value={avgScore} progress={avgScore / 100} tone={DATA.magenta} />
+            <StatTile
+              label={t("metrics.uncontacted")}
+              value={uncontactedCount}
+              progress={uncontactedCount / leads.length}
+              tone={DATA.violet}
             />
           </StatStrip>
 

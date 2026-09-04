@@ -1,6 +1,12 @@
 import { apiFetch } from "@/lib/api/client";
 import { isDemoMode } from "@/lib/demo/mode";
-import { demoFetchCompanies, demoFetchCompany, demoGetCompanyBrief, demoResearchCompany } from "@/lib/demo/store";
+import {
+  demoCreateCompany,
+  demoFetchCompanies,
+  demoFetchCompany,
+  demoGetCompanyBrief,
+  demoResearchCompany,
+} from "@/lib/demo/store";
 import type { FetchResult } from "@/types/api";
 import type { AccountActivityEvent, Company } from "@/types/domain";
 import type { AccountBrief, AccountResearchResult } from "@/types/extended";
@@ -57,12 +63,11 @@ export async function fetchCompanyActivity(
   }
 }
 
+/** Creating a company is the one Companies mutation the sandbox supports
+ * (a local, get-or-create list — see demoCreateCompany); editing and
+ * merging still need the real backend. */
 export async function createCompany(body: CompanyCreateIn): Promise<Company> {
-  if (isDemoMode()) {
-    throw new Error(
-      "Empresas es de solo lectura en el sandbox — usa \"Simula tu empresa\" desde el Resumen para agregar una.",
-    );
-  }
+  if (isDemoMode()) return demoCreateCompany(body);
   return apiFetch<Company>("/api/v1/companies", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

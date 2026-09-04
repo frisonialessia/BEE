@@ -6,6 +6,8 @@
  */
 import type { Locale } from "@/i18n/locales";
 import type { EmployeeRange } from "@/lib/api/organizations";
+import type { CompanyCreateIn } from "@/lib/api/companies";
+import type { LeadCreateIn } from "@/lib/api/leads";
 import type { MeetingCreateIn, MeetingUpdateIn } from "@/lib/api/meetings";
 import type { CrmStage, OpportunityUpdateIn } from "@/lib/api/opportunities";
 import type { TeamOut, UserOut } from "@/types/auth";
@@ -92,7 +94,7 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * a returning visitor on an older snapshot has every opportunity's
  * `assigned_to_user_id` still `null`, which reads as "no one on the team
  * has ever won a deal" instead of the sandbox just never having stamped it. */
-const SEED_VERSION = "10";
+const SEED_VERSION = "11";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Which language the currently-stored seed was written in — separate from
@@ -377,22 +379,51 @@ export function resetDemoData(): void {
   saveJSON(TEMPLATES_KEY, structuredClone(getSeedTemplates(locale)));
   saveJSON(SEQUENCES_KEY, structuredClone(getSeedSequences(locale)));
   saveJSON(TASKS_KEY, []);
+  saveJSON(COMPANIES_KEY, []);
+  saveJSON(LEADS_KEY, []);
 }
 
-// ── Companies / Leads (derived, not their own store) ────────────────────────
+// ── Companies / Leads (derived from the pipeline + a small manual list) ─────
 //
-// There's no separate "companies" or "leads" local list — a Company/Lead in
-// this demo is just whatever a Battlecard's `company`/`lead` sub-object
-// says, deduped by name, across the 2 seeded battlecards plus any added via
-// "Simula tu empresa". This keeps them always in sync with the pipeline
-// (add a company there, it shows up here too) without a second source of
-// truth to drift out of. Read-only: there's no demoCreateCompany/
-// demoCreateLead — Empresas/Leads only display what the pipeline already
-// produced, matching "solo mover o visualizar, no modificar" for the
-// sections that aren't the pipeline itself.
+// A Company/Lead in this demo is, first of all, whatever a Battlecard's
+// `company`/`lead` sub-object says, deduped by name, across the 2 seeded
+// battlecards plus any added via "Simula tu empresa". That keeps them in
+// sync with the pipeline (add a company there, it shows up here too)
+// without a second source of truth to drift out of — which is why for a
+// long time there was no demoCreateCompany/demoCreateLead at all.
+//
+// The one thing that model can't express is a rep typing in a contact by
+// hand ("+ Nuevo lead" / "+ Nueva empresa" on the Empresas page), which the
+// real product supports and the CSV import already does in bulk. So the
+// two lists below hold ONLY those manually added rows — same
+// `loadJSON`/`saveJSON` persistence as Tasks/Meetings/Templates, seeded
+// empty — and `demoFetchCompanies`/`demoFetchLeads` append them after the
+// derived ones. Honesty rules for a manual row: no battlecard, so no
+// signal-derived score (a neutral 50, `status: "new"`), no fabricated
+// size/revenue bands (those are only stamped on the pipeline-derived
+// companies, see `demoCompanySize`), nothing "enriched" behind the rep's
+// back. Wiped together with everything else on `resetDemoData()`.
+
+const COMPANIES_KEY = "bee_demo_companies_v1";
+const LEADS_KEY = "bee_demo_leads_v1";
+
+const loadManualCompanies = () => loadJSON<Company[]>(COMPANIES_KEY, []);
+const saveManualCompanies = (list: Company[]) => saveJSON(COMPANIES_KEY, list);
+const loadManualLeads = () => loadJSON<Lead[]>(LEADS_KEY, []);
+const saveManualLeads = (list: Lead[]) => saveJSON(LEADS_KEY, list);
+
+/** A manually added lead has no signal behind it, so there is nothing to
+ * derive a score from — 50 is the neutral midpoint of BEE's 0–100 scale,
+ * neither "hot" (≥75) nor written off. */
+const MANUAL_LEAD_NEUTRAL_SCORE = 50;
 
 function slugify(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-+|-+$)/g, "") || "demo";
+}
+
+function normalizeDomain(value: string | null | undefined): string | null {
+  const trimmed = (value ?? "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, "");
+  return trimmed || null;
 }
 
 // Battlecard company/lead refs don't carry headcount or revenue (same as
@@ -455,6 +486,13 @@ export function demoFetchCompanies(): Company[] {
       created_at: card.created_at,
     });
   }
+  // Manually added companies come after the pipeline-derived ones; a
+  // manual row never shadows a derived one with the same name because
+  // demoCreateCompany reuses the derived company instead of adding a twin.
+  for (const company of loadManualCompanies()) {
+    if (seen.has(company.name)) continue;
+    seen.set(company.name, company);
+  }
   return [...seen.values()];
 }
 
@@ -462,6 +500,45 @@ export function demoFetchCompanies(): Company[] {
  * name-deduped list as `demoFetchCompanies`, just filtered to one id. */
 export function demoFetchCompany(companyId: string): Company | undefined {
   return demoFetchCompanies().find((c) => c.id === companyId);
+}
+
+/** "+ Nueva empresa" / the company half of "+ Nuevo lead" in the sandbox —
+ * local counterpart to `POST /companies`. Mirrors the backend's
+ * get-or-create: a name (case-insensitive) or domain that already matches
+ * a known company returns that company untouched, so the sandbox never
+ * grows duplicate accounts the way a real org can't either. */
+export function demoCreateCompany(body: CompanyCreateIn): Company {
+  const name = body.name.trim();
+  if (!name) throw new Error("A company needs a name.");
+  const domain = normalizeDomain(body.domain);
+  const existing = demoFetchCompanies().find(
+    (c) =>
+      c.name.trim().toLowerCase() === name.toLowerCase() ||
+      (domain !== null && normalizeDomain(c.domain) === domain),
+  );
+  if (existing) return existing;
+
+  const list = loadManualCompanies();
+  const company: Company = {
+    id: `demo-company-${slugify(name)}-${list.length + 1}`,
+    organization_id: null,
+    owner_user_id: null,
+    name,
+    domain,
+    industry: body.industry?.trim() || null,
+    // Honest nulls: a hand-typed company has no source for headcount or
+    // revenue, unlike the pipeline-derived ones (see demoCompanySize).
+    size: body.size?.trim() || null,
+    country: body.country?.trim() || null,
+    revenue_range: null,
+    website: body.website?.trim() || (domain ? `https://${domain}` : null),
+    description: body.description?.trim() || null,
+    attributes: {},
+    created_at: new Date().toISOString(),
+  };
+  list.push(company);
+  saveManualCompanies(list);
+  return company;
 }
 
 export function demoFetchLeads(): Lead[] {
@@ -497,7 +574,55 @@ export function demoFetchLeads(): Lead[] {
       photo_url: null,
     });
   }
+  for (const lead of loadManualLeads()) {
+    if (seen.has(lead.full_name)) continue;
+    seen.set(lead.full_name, lead);
+  }
   return [...seen.values()];
+}
+
+/** "+ Nuevo lead" in the sandbox — local counterpart to `POST /leads`.
+ * No signal, no battlecard, so nothing to derive a score from: the lead is
+ * saved as a plain `new` contact at the neutral midpoint, exactly what the
+ * rep typed and nothing more. `pipeline_stage`/`ai_context` are ignored
+ * here on purpose — a manual lead never spawns an Opportunity or an AI
+ * strategy in the sandbox, that path is "+ Nueva oportunidad". */
+export function demoCreateLead(body: LeadCreateIn): Lead {
+  const fullName = body.full_name.trim();
+  if (!fullName) throw new Error("A lead needs a name.");
+  const companyId = body.company_id && demoFetchCompany(body.company_id) ? body.company_id : null;
+  const list = loadManualLeads();
+  const now = new Date().toISOString();
+  const lead: Lead = {
+    id: `demo-lead-${slugify(fullName)}-${list.length + 1}`,
+    company_id: companyId,
+    organization_id: null,
+    assigned_to_user_id: null,
+    full_name: fullName,
+    email: body.email?.trim().toLowerCase() || null,
+    title: body.title?.trim() || null,
+    seniority: body.seniority?.trim() || null,
+    linkedin_url: body.linkedin_url?.trim() || null,
+    phone: body.phone?.trim() || null,
+    status: "new",
+    score: MANUAL_LEAD_NEUTRAL_SCORE,
+    attributes: {},
+    created_at: now,
+    // Never validated: the sandbox has no DataValidator to run, and
+    // pretending it did would be exactly the fake enrichment to avoid.
+    data_freshness_score: 1,
+    validation_flags: [],
+    last_validated_at: null,
+    stale_risk: false,
+    estimated_value: body.estimated_value ?? null,
+    source: body.source?.trim() || null,
+    next_meeting_at: body.next_meeting_at ?? null,
+    meetings_held_count: 0,
+    photo_url: body.photo_url ?? null,
+  };
+  list.push(lead);
+  saveManualLeads(list);
+  return lead;
 }
 
 const SUCCESS_PATTERN_MIN_SAMPLES = 3;
@@ -673,7 +798,7 @@ export function demoDeleteTask(taskId: string): void {
 // elsewhere in this file. User-added meetings persist locally same as
 // everything else here.
 
-const MEETINGS_KEY = "bee_demo_meetings_v2";
+const MEETINGS_KEY = "bee_demo_meetings_v3";
 const HOT_LEAD_SCORE_THRESHOLD = 75;
 
 /** Mirrors app.api.v1.endpoints.meetings._client_context on the backend —
@@ -698,9 +823,12 @@ function demoClientContext(
  * meeting always needs to land inside the calendar's visible business-hour
  * grid (see CalendarPage's own GRID_START_HOUR/GRID_END_HOUR) regardless of
  * what time of day it is when the sandbox happens to be opened. */
+/** `dayOffset` 0 is the Monday of the current week, so the seeded week
+ *  always reads Mon–Fri no matter which weekday the sandbox is opened. */
 function seedTime(dayOffset: number, hour: number, minute: number): string {
   const d = new Date();
-  d.setDate(d.getDate() + dayOffset);
+  const dow = (d.getDay() + 6) % 7; // Monday = 0
+  d.setDate(d.getDate() - dow + dayOffset);
   d.setHours(hour, minute, 0, 0);
   return d.toISOString();
 }
@@ -756,109 +884,76 @@ function seedMeetings(locale: Locale): Meeting[] {
   const hotLead = leads.find((l) => l.score >= HOT_LEAD_SCORE_THRESHOLD) ?? leads[0];
   const anyOpp = opps[0];
   const secondOpp = opps[1] ?? anyOpp;
+  const thirdOpp = opps[2] ?? secondOpp;
+  const en = locale === "en";
 
-  return [
-    buildMeeting({
-      id: "demo-meeting-1",
-      title: locale === "en" ? "Discovery call" : "Llamada de descubrimiento",
-      purpose:
-        locale === "en"
-          ? "First conversation — understand their current stack and pain points."
-          : "Primera conversación — entender su stack actual y sus dolores.",
-      dayOffset: 0,
-      hour: 14,
-      durationMinutes: 30,
-      meetingUrl: "https://meet.google.com/abc-defg-hij",
-      lead: hotLead,
-      attendeeUserIds: [users[0].id],
-    }),
-    buildMeeting({
-      id: "demo-meeting-2",
-      title: locale === "en" ? "Renewal check-in" : "Check-in de renovación",
-      purpose:
-        locale === "en"
-          ? "Review usage since last quarter, confirm renewal terms."
-          : "Revisar uso desde el trimestre pasado, confirmar términos de renovación.",
-      dayOffset: 1,
-      hour: 10,
-      durationMinutes: 45,
-      meetingUrl: "https://meet.google.com/klm-nopq-rst",
-      opportunity: oppByType("renewal_risk") ?? oppByType("expansion") ?? anyOpp,
-      attendeeUserIds: [users[0].id, users[1].id],
-    }),
-    buildMeeting({
-      id: "demo-meeting-3",
-      title: locale === "en" ? "Pricing follow-up" : "Seguimiento de precio",
-      purpose:
-        locale === "en"
-          ? "Address the objections raised last call, walk through the proposal."
-          : "Responder a las objeciones de la última llamada, repasar la propuesta.",
-      dayOffset: 2,
-      hour: 16,
-      minute: 30,
-      durationMinutes: 30,
-      opportunity: secondOpp,
-      attendeeUserIds: [users[2] ? users[2].id : users[0].id],
-    }),
-    buildMeeting({
-      id: "demo-meeting-4",
-      title: locale === "en" ? "Team sync — pipeline review" : "Sync de equipo — revisión de pipeline",
-      purpose:
-        locale === "en"
-          ? "Weekly walkthrough of what's moving and what's stuck."
-          : "Repaso semanal de qué avanza y qué está trabado.",
-      dayOffset: 0,
-      hour: 9,
-      durationMinutes: 30,
-      attendeeUserIds: users.map((u) => u.id),
-      color: "chart-2",
-    }),
-    buildMeeting({
-      id: "demo-meeting-5",
-      title: locale === "en" ? "Demo — product walkthrough" : "Demo — recorrido del producto",
-      purpose:
-        locale === "en"
-          ? "Live walkthrough of the signal-to-strategy flow."
-          : "Recorrido en vivo del flujo de señal a estrategia.",
-      dayOffset: 3,
-      hour: 11,
-      durationMinutes: 45,
-      meetingUrl: "https://meet.google.com/uvw-xyzz-123",
-      opportunity: oppByType("new_logo") ?? anyOpp,
-      attendeeUserIds: [users[1].id],
-    }),
-    // The two green ones — a closing meeting and a kickoff with a won
-    // client — so the sandbox shows what the sales greens are for.
-    buildMeeting({
-      id: "demo-meeting-6",
-      title: locale === "en" ? "Closing — contract signature" : "Cierre — firma de contrato",
-      purpose:
-        locale === "en"
-          ? "Final terms agreed; sign and hand off to onboarding."
-          : "Términos finales acordados; firmar y pasar a onboarding.",
-      dayOffset: 4,
-      hour: 12,
-      durationMinutes: 60,
-      meetingUrl: "https://meet.google.com/cie-rref-irm",
-      opportunity: opps.find((o) => o.status === "in_progress") ?? anyOpp,
-      attendeeUserIds: [users[0].id, users[1].id],
-      color: "green-1",
-    }),
-    buildMeeting({
-      id: "demo-meeting-7",
-      title: locale === "en" ? "Client kickoff — onboarding plan" : "Kickoff con cliente — plan de onboarding",
-      purpose:
-        locale === "en"
-          ? "First 30 days: owners, milestones, success metrics."
-          : "Primeros 30 días: responsables, hitos y métricas de éxito.",
-      dayOffset: 1,
-      hour: 15,
-      durationMinutes: 45,
-      opportunity: secondOpp,
-      attendeeUserIds: [users[0].id],
-      color: "green-3",
-    }),
+  // One week of a real team's calendar, repeated four weeks forward so the
+  // sandbox reads full whether someone opens it today or in two weeks.
+  // Durations are 45–60 min so every block shows title, time and account.
+  // Greens are for the closing side of the job (contract, kickoff,
+  // proposal); the BEE hues for everything else.
+  const week: Omit<Parameters<typeof buildMeeting>[0], "id">[] = [
+    {
+      title: en ? "Team sync — pipeline review" : "Sync de equipo — pipeline",
+      purpose: en ? "Weekly walkthrough of what's moving and what's stuck." : "Repaso semanal de qué avanza y qué está trabado.",
+      dayOffset: 0, hour: 9, durationMinutes: 45, attendeeUserIds: users.map((u) => u.id), color: "chart-2",
+    },
+    {
+      title: en ? "Discovery call" : "Llamada de descubrimiento",
+      purpose: en ? "First conversation — understand their current stack and pain points." : "Primera conversación — entender su stack actual y sus dolores.",
+      dayOffset: 0, hour: 14, durationMinutes: 45, meetingUrl: "https://meet.google.com/abc-defg-hij", lead: hotLead, attendeeUserIds: [users[0].id], color: "chart-4",
+    },
+    {
+      title: en ? "Renewal check-in" : "Check-in de renovación",
+      purpose: en ? "Review usage since last quarter, confirm renewal terms." : "Revisar uso desde el trimestre pasado, confirmar términos de renovación.",
+      dayOffset: 1, hour: 10, durationMinutes: 45, meetingUrl: "https://meet.google.com/klm-nopq-rst", opportunity: oppByType("renewal_risk") ?? oppByType("expansion") ?? anyOpp, attendeeUserIds: [users[0].id, users[1].id], color: "chart-6",
+    },
+    {
+      title: en ? "Client kickoff — onboarding plan" : "Kickoff con cliente — onboarding",
+      purpose: en ? "First 30 days: owners, milestones, success metrics." : "Primeros 30 días: responsables, hitos y métricas de éxito.",
+      dayOffset: 1, hour: 15, durationMinutes: 60, opportunity: secondOpp, attendeeUserIds: [users[0].id], color: "green-3",
+    },
+    {
+      title: en ? "Proposal — final review" : "Propuesta — revisión final",
+      purpose: en ? "Walk the champion through scope, price and timeline before signature." : "Repasar con el champion alcance, precio y tiempos antes de firmar.",
+      dayOffset: 2, hour: 11, durationMinutes: 45, meetingUrl: "https://meet.google.com/pro-pues-tal", opportunity: thirdOpp, attendeeUserIds: [users[1].id], color: "green-2",
+    },
+    {
+      title: en ? "Pricing follow-up" : "Seguimiento de precio",
+      purpose: en ? "Address the objections raised last call, walk through the proposal." : "Responder a las objeciones de la última llamada, repasar la propuesta.",
+      dayOffset: 2, hour: 16, durationMinutes: 45, opportunity: secondOpp, attendeeUserIds: [users[2] ? users[2].id : users[0].id], color: "chart-5",
+    },
+    {
+      title: en ? "Demo — product walkthrough" : "Demo — recorrido del producto",
+      purpose: en ? "Live walkthrough of the signal-to-strategy flow." : "Recorrido en vivo del flujo de señal a estrategia.",
+      dayOffset: 3, hour: 11, durationMinutes: 60, meetingUrl: "https://meet.google.com/uvw-xyzz-123", opportunity: oppByType("new_logo") ?? anyOpp, attendeeUserIds: [users[1].id], color: "chart-1",
+    },
+    {
+      title: en ? "Battlecard review" : "Revisión de battlecard",
+      purpose: en ? "Sharpen the closing argument before Thursday's call." : "Afinar el argumento de cierre antes de la llamada del jueves.",
+      dayOffset: 3, hour: 16, durationMinutes: 45, attendeeUserIds: [users[0].id, users[2] ? users[2].id : users[1].id], color: "chart-6",
+    },
+    {
+      title: en ? "Closing — contract signature" : "Cierre — firma de contrato",
+      purpose: en ? "Final terms agreed; sign and hand off to onboarding." : "Términos finales acordados; firmar y pasar a onboarding.",
+      dayOffset: 4, hour: 12, durationMinutes: 60, meetingUrl: "https://meet.google.com/cie-rref-irm", opportunity: opps.find((o) => o.status === "in_progress") ?? anyOpp, attendeeUserIds: [users[0].id, users[1].id], color: "green-1",
+    },
+    {
+      title: en ? "Champion call" : "Llamada con champion",
+      purpose: en ? "Confirm the internal buyers and the decision date." : "Confirmar compradores internos y fecha de decisión.",
+      dayOffset: 4, hour: 15, durationMinutes: 45, opportunity: thirdOpp, attendeeUserIds: [users[1].id], color: "chart-4",
+    },
   ];
+
+  return [0, 7, 14, 21].flatMap((weekOffset, w) =>
+    week.map((m, i) =>
+      buildMeeting({
+        ...m,
+        id: `demo-meeting-w${w}-${i + 1}`,
+        dayOffset: m.dayOffset + weekOffset,
+      }),
+    ),
+  );
 }
 
 const loadMeetings = () => loadJSON<Meeting[]>(MEETINGS_KEY, seedMeetings(getDemoLocale()));

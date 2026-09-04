@@ -14,8 +14,13 @@ import { LeadsDirectory } from "@/features/leads/leads-directory";
 import { useCompanies, useCreateCompany } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
+import { useSignals } from "@/hooks/queries/use-signals";
 import { useIsDemoMode } from "@/lib/demo/mode";
 import { LiveBadge } from "@/components/live-badge";
+
+/** "Con señal en 30 días" — the window that makes a signal still worth
+ * acting on, for the Directorio strip's fourth tile. */
+const RECENT_SIGNAL_WINDOW_DAYS = 30;
 
 function NewCompanyForm({ onDone }: { onDone: () => void }) {
   const t = useTranslations("companiesLeads.companiesList.newCompanyForm");
@@ -109,7 +114,11 @@ export function CompaniesList() {
   const { data: companiesResult, isLoading } = useCompanies(100);
   const { data: leadsResult } = useLeads(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);
+  const { data: signalsResult } = useSignals(200);
   const [showNew, setShowNew] = useState(false);
+  // Read the clock once per mount, same as company-detail/crm-board — the
+  // React Compiler treats Date.now() in render as impure.
+  const [nowMs] = useState(() => Date.now());
   const demo = useIsDemoMode();
 
   const companies = companiesResult?.data ?? [];
@@ -137,15 +146,26 @@ export function CompaniesList() {
     const countries = [...byCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
     const withOpps = companies.filter((c) => (oppCountByCompany.get(c.id) ?? 0) > 0).length;
     const withContacts = companies.filter((c) => (leadCountByCompany.get(c.id) ?? 0) > 0).length;
+    // Accounts with something recent to act on: at least one signal
+    // detected in the last 30 days.
+    const cutoff = nowMs - RECENT_SIGNAL_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+    const recentlySignaled = new Set<string>();
+    for (const signal of signalsResult?.data ?? []) {
+      if (signal.company_id && new Date(signal.detected_at).getTime() >= cutoff) {
+        recentlySignaled.add(signal.company_id);
+      }
+    }
+    const withRecentSignal = companies.filter((c) => recentlySignaled.has(c.id)).length;
     return {
       industries: [...byIndustry.entries()].map(([label, value]) => ({ label, value })),
       // One color per box: indigo at three strengths by rank.
       countries: countries.map(([label, value], i) => ({ label, value, color: i === 0 ? DATA.indigo : mix(DATA.indigo, i < 3 ? 75 : 50) })),
       withOpps,
       withContacts,
+      withRecentSignal,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- the count maps are rebuilt each render from the same query data
-  }, [companies, leadsResult, oppsResult]);
+  }, [companies, leadsResult, oppsResult, signalsResult, nowMs]);
 
   const exportRows = companies.map((c) => ({
     nombre: c.name,
@@ -171,11 +191,16 @@ export function CompaniesList() {
           </div>
           <div className="flex items-center gap-2">
             <LiveBadge live={live} />
-            {!demo && (
-              <button type="button" onClick={() => setShowNew((v) => !v)} className="bee-btn bee-btn--primary">
-                {t("newCompanyButton")}
-              </button>
-            )}
+            {/* Available in the sandbox too — createCompany routes to the
+                local demoCreateCompany list there (see lib/api/companies.ts). */}
+            <button
+              type="button"
+              onClick={() => setShowNew((v) => !v)}
+              aria-expanded={showNew}
+              className="bee-btn bee-btn--primary"
+            >
+              {t("newCompanyButton")}
+            </button>
           </div>
         </div>
       </header>
@@ -210,10 +235,15 @@ export function CompaniesList() {
 
                 {companies.length > 0 && (
                   <div className="mb-4 space-y-4">
-                    <StatStrip cols={3}>
+                    {/* Four tiles, one hue each, same strip as the Leads tab:
+                        indigo = volume, violet = readiness (an opportunity
+                        exists), magenta = coverage (a contact exists),
+                        honey = hot (a signal fired recently). */}
+                    <StatStrip cols={4}>
                       <StatTile label={t("portfolio.total")} value={companies.length} hint={t("portfolio.totalHint")} tone={DATA.indigo} />
                       <StatTile label={t("portfolio.withOpps")} value={portfolio.withOpps} progress={portfolio.withOpps / companies.length} tone={DATA.violet} />
                       <StatTile label={t("portfolio.withContacts")} value={portfolio.withContacts} progress={portfolio.withContacts / companies.length} tone={DATA.magenta} />
+                      <StatTile label={t("portfolio.withRecentSignal")} value={portfolio.withRecentSignal} progress={portfolio.withRecentSignal / companies.length} tone={DATA.honey} />
                     </StatStrip>
                     <div className="bee-overview">
                       <OverviewCard span={5} title={t("portfolio.industryTitle")} caption={t("portfolio.industryCaption")}>

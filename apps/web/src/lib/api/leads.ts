@@ -1,16 +1,17 @@
 import { apiFetch } from "@/lib/api/client";
 import { isDemoMode } from "@/lib/demo/mode";
-import { demoFetchLeads } from "@/lib/demo/store";
+import { demoCreateLead, demoFetchLeads } from "@/lib/demo/store";
 import type { FetchResult } from "@/types/api";
 import type { Lead, LeadPipelineStage, LeadStatus } from "@/types/domain";
 
-/** Leads (like Companies) is read-only in the sandbox — see
- * lib/demo/store.ts's "Companies / Leads" section for why there's no
- * demoCreateLead. Every mutation below throws the same clear message in
- * demo mode instead of silently hitting the real API (which would 401 and
- * surface a confusing generic error). */
+/** In the sandbox, Leads can be listed and added by hand ("+ Nuevo lead",
+ * backed by demoCreateLead's local list — see lib/demo/store.ts's
+ * "Companies / Leads" section) but nothing else: bulk import, merge,
+ * validation and bulk edits all need the real backend. Each of those throws
+ * the same clear message in demo mode instead of silently hitting the real
+ * API (which would 401 and surface a confusing generic error). */
 const READ_ONLY_MESSAGE =
-  "Leads es de solo lectura en el sandbox — usa \"Simula tu empresa\" desde el Resumen para agregar uno.";
+  "Esta acción no está disponible en el sandbox — agrega leads uno a uno con \"+ Nuevo lead\".";
 
 export async function fetchLeads(limit = 50): Promise<FetchResult<Lead[]>> {
   if (isDemoMode()) return { data: demoFetchLeads().slice(0, limit), live: false };
@@ -46,7 +47,7 @@ export interface LeadCreateIn {
 }
 
 export async function createLead(body: LeadCreateIn): Promise<Lead> {
-  if (isDemoMode()) throw new Error(READ_ONLY_MESSAGE);
+  if (isDemoMode()) return demoCreateLead(body);
   return apiFetch<Lead>("/api/v1/leads", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

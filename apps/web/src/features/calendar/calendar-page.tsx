@@ -1185,9 +1185,9 @@ export function CalendarPage() {
                             title always; the time range from ~56px; the account
                             from ~84px; attendees/link from ~108px. A short block
                             never hides the title behind the hour. */}
-                        {/* Three lines of title from 88px, two below — a long
+                        {/* Three lines of title from 104px (an hour), two below — a long
                             title reads whole instead of ending in "…". */}
-                        <p className={`${pos.height >= 88 ? "line-clamp-3" : "line-clamp-2"} text-xs font-semibold leading-snug`} title={m.title}>
+                        <p className={`${pos.height >= 104 ? "line-clamp-3" : "line-clamp-2"} text-xs font-semibold leading-snug`} title={m.title}>
                           {m.title}
                         </p>
                         {pos.height >= 44 && (
