@@ -364,7 +364,7 @@ interface SeedDef {
   amount: number;
   score: number;
   daysAgoCreated: number;
-  outcome: "won" | "lost" | "in_progress" | "ready_to_action" | "detected";
+  outcome: "won" | "lost" | "in_progress" | "prioritized" | "ready_to_action" | "detected";
   cycleDays?: number; // only for won/lost
   qualifiedCount: number;
   lossReason?: LossReason;
@@ -417,7 +417,10 @@ const SEEDS: SeedDef[] = [
   { id: "s15", company: "Onda Media Group", domain: "ondamedia.mx", industry: "Medios", country: "México", signalType: "product_launch", leadName: "Renata Cabrera", leadTitle: "Directora Comercial", seniority: "director", amount: 22000, score: 75, daysAgoCreated: 26, outcome: "won", cycleDays: 26, qualifiedCount: 4, intermediateSignal: { type: "engagement", description: { es: "Onda Media Group aceleró su evaluación con actividad de investigación adicional.", en: "Onda Media Group sped up its evaluation with additional research activity." } } },
   { id: "s16", company: "Cobre Insurtech", domain: "cobreinsurtech.co", industry: "Seguros", country: "Colombia", signalType: "funding_round", leadName: "Andrés Molina", leadTitle: "VP Growth", seniority: "vp", amount: 47000, score: 77, daysAgoCreated: 16, outcome: "in_progress", qualifiedCount: 4, daysUntilClose: 125 },
   { id: "s17", company: "Silo Data Works", domain: "silodata.io", industry: "Datos / Analytics", country: "Estados Unidos", signalType: "engagement", leadName: "Taylor Brooks", leadTitle: "Head of Revenue", seniority: "director", amount: 39000, score: 81, daysAgoCreated: 145, outcome: "won", cycleDays: 48, qualifiedCount: 6 },
-  { id: "s18", company: "Raíz Educación", domain: "raizeducacion.mx", industry: "EdTech", country: "México", signalType: "news_mention", leadName: "Fernanda Ríos", leadTitle: "Gerente Comercial", seniority: "manager", amount: 12500, score: 58, daysAgoCreated: 4, outcome: "ready_to_action", qualifiedCount: 3, daysUntilClose: 40 },
+  { id: "s18", company: "Raíz Educación", domain: "raizeducacion.mx", industry: "EdTech", country: "México", signalType: "news_mention", leadName: "Fernanda Ríos", leadTitle: "Gerente Comercial", seniority: "manager", amount: 12500, score: 58, daysAgoCreated: 4, outcome: "detected", qualifiedCount: 3, daysUntilClose: 40 },
+  // Silo Data Works is already a client (s17, won) — this is the expansion
+  // the team pinned by hand for the week: the one card in "Tu prioridad".
+  { id: "s21", company: "Silo Data Works", domain: "silodata.io", industry: "Datos / Analytics", country: "Estados Unidos", signalType: "expansion", leadName: "Taylor Brooks", leadTitle: "Head of Revenue", seniority: "director", amount: 39000, score: 81, daysAgoCreated: 3, outcome: "prioritized", qualifiedCount: 4, daysUntilClose: 45 },
   // s19/s20: two more distinct named competitors, on lost reasons
   // ("price"/"product_fit") that are narratively compatible with "went with
   // a competitor instead" — unlike s05/s11's "no_decision"/"timing" losses,
@@ -463,6 +466,9 @@ function buildStrategy(def: SeedDef, template: Template, createdAtIso: string, l
     next_best_action: rule.next_best_action,
     channel: rule.channel,
     rationale: SCORE_RATIONALE[locale](def.score, def.company, industry, country),
+    // Same field the backend writes when the Dark Funnel confirms intent;
+    // the battlecard below mirrors it (see hot_lead there).
+    hot_lead: def.score >= 75,
     generator: "rule_based",
     generator_version: "1.0.0",
     generated_at: createdAtIso,
@@ -476,6 +482,7 @@ function buildStrategy(def: SeedDef, template: Template, createdAtIso: string, l
 function statusFor(outcome: SeedDef["outcome"]): Opportunity["status"] {
   if (outcome === "won" || outcome === "lost") return outcome;
   if (outcome === "ready_to_action") return "ready_to_action";
+  if (outcome === "prioritized") return "prioritized";
   if (outcome === "in_progress") return "in_progress";
   return "detected";
 }
@@ -621,7 +628,7 @@ export function historicalOpportunities(locale: Locale = defaultLocale): Opportu
 export function historicalBattlecards(locale: Locale = defaultLocale): Battlecard[] {
   const templates = TEMPLATES[locale];
   return SEEDS.filter((def) =>
-    ["won", "lost", "in_progress", "ready_to_action"].includes(def.outcome),
+    ["won", "lost", "in_progress", "prioritized", "ready_to_action"].includes(def.outcome),
   ).map((def) => {
     const template = templates[def.signalType];
     const createdAtIso = daysAgoIso(def.daysAgoCreated, 3);
@@ -635,7 +642,7 @@ export function historicalBattlecards(locale: Locale = defaultLocale): Battlecar
       score: def.score,
       // Only an open deal with a finished battlecard is "ready to act";
       // a closed one is history (mirrors is_battlecard_complete + status).
-      ready_to_action: def.outcome === "ready_to_action" || def.outcome === "in_progress",
+      ready_to_action: def.outcome === "ready_to_action" || def.outcome === "prioritized" || def.outcome === "in_progress",
       hot_lead: def.score >= 75,
       manual_review_required: false,
       company: { name: def.company, domain: def.domain, industry: translate(def.industry, locale), country: translate(def.country, locale) },

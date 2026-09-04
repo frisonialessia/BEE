@@ -339,8 +339,15 @@ const baseSampleOpportunitiesEn: Opportunity[] = [
 ];
 
 export function getSampleOpportunities(locale: Locale = defaultLocale): Opportunity[] {
+  // The backend marks a hot lead on the opportunity's strategy
+  // (POST /signals/intent writes strategy.hot_lead); the battlecard only
+  // mirrors it. Keep the sandbox the same way round so the board's star
+  // reads the same field the live app does.
+  const hot = new Set((locale === "en" ? baseSampleBattlecardsEn : baseSampleBattlecardsEs).filter((b) => b.hot_lead).map((b) => b.opportunity_id));
   return [
-    ...(locale === "en" ? baseSampleOpportunitiesEn : baseSampleOpportunitiesEs),
+    ...(locale === "en" ? baseSampleOpportunitiesEn : baseSampleOpportunitiesEs).map((o) =>
+      hot.has(o.id) ? { ...o, strategy: { ...o.strategy, hot_lead: true } } : o,
+    ),
     ...historicalOpportunities(locale),
   ];
 }

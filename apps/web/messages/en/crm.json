@@ -54,7 +54,21 @@
       "hint": "As soon as a signal becomes an opportunity, it shows up here — or add the first one by hand."
     },
     "moveError": "Couldn't move the opportunity — try again.",
-    "scoreTooltip": "BEE intent score: {score} of 100"
+    "scoreTooltip": "BEE intent score: {score} of 100",
+    "clientSince": "{company} · Client since {date}",
+    "lostTitle": "{company} · Lost",
+    "dismissedTitle": "{company} · Dismissed",
+    "unassigned": "Unassigned",
+    "menu": {
+      "aria": "More actions",
+      "open": "Open opportunity"
+    },
+    "tooltip": {
+      "score": "Score {score}"
+    },
+    "progress": {
+      "aria": "Progress: {step} of 3 (signal · strategy · conversation)"
+    }
   },
   "drawer": {
     "closeOverlay": "Close detail panel",

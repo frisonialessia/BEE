@@ -99,6 +99,8 @@ export interface TimingWindow {
 
 /** Fully-typed strategy contract — required for READY_TO_ACTION battlecards. */
 export interface StrategySchema {
+  /** Set by the backend when the Dark Funnel confirms intent (POST /signals/intent); the battlecard mirrors it. */
+  hot_lead?: boolean;
   pain_point: string;
   closing_argument: string;
   timing_window: TimingWindow;

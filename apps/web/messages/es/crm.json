@@ -54,7 +54,21 @@
       "hint": "En cuanto una señal se convierta en oportunidad, aparece aquí — o agrega la primera a mano."
     },
     "moveError": "No se pudo mover la oportunidad — intenta de nuevo.",
-    "scoreTooltip": "Score de intención BEE: {score} de 100"
+    "scoreTooltip": "Score de intención BEE: {score} de 100",
+    "clientSince": "{company} · Cliente desde el {date}",
+    "lostTitle": "{company} · Perdida",
+    "dismissedTitle": "{company} · Descartada",
+    "unassigned": "Sin asignar",
+    "menu": {
+      "aria": "Más acciones",
+      "open": "Abrir oportunidad"
+    },
+    "tooltip": {
+      "score": "Score {score}"
+    },
+    "progress": {
+      "aria": "Avance: {step} de 3 (señal · estrategia · conversación)"
+    }
   },
   "drawer": {
     "closeOverlay": "Cerrar panel de detalle",
