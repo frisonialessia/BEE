@@ -65,8 +65,7 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
       {upcoming.map((m) => {
         const dotColor = m.color ? `var(--color-${m.color})` : CLIENT_CONTEXT_DOT[m.client_context ?? "new_contact"];
         return (
-          <li key={m.id} className="bee-bento flex items-center gap-4 p-2">
-            <span className="size-2 shrink-0 rounded-full" style={{ background: dotColor }} />
+          <li key={m.id} className="bee-bento flex items-center gap-3 border-l-4 py-2 pl-3 pr-2" style={{ borderLeftColor: dotColor }}>
             <span className="bee-micro shrink-0 font-mono text-muted-foreground">
               {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", {
                 weekday: "short",
@@ -75,7 +74,10 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
                 timeZone: tz,
               }).format(new Date(m.starts_at))}
             </span>
-            <span className="min-w-0 flex-1 truncate text-xs font-medium">{m.title}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-xs font-medium">{m.title}</span>
+              {(m.company_name || m.contact_name) && <span className="block truncate bee-micro">{m.company_name ?? m.contact_name}</span>}
+            </span>
             {m.meeting_url && <Video className="size-3 shrink-0 text-muted-foreground" />}
           </li>
         );

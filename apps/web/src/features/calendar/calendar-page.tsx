@@ -36,8 +36,9 @@ const CLIENT_CONTEXT_VARIANT: Record<MeetingClientContext, "success" | "warning"
 };
 // Calendar events are the one kind of box besides signal cards that carries a
 // BEE fill: a personal color (Meeting.color) or, by default, the hue of the
-// client context. Same 35% mix toward the background for both, so a
-// default-colored event and a hand-colored one read as the same family.
+// client context — at full strength, the brand color itself, so a booked
+// slot reads as booked from across the room. Dark text on every hue (all
+// of them are light-mid tones), a slightly deeper edge of the same hue.
 const CLIENT_CONTEXT_HUE: Record<MeetingClientContext, string> = {
   active_client: "var(--color-chart-4)",
   hot_lead: "var(--color-chart-1)",
@@ -48,8 +49,9 @@ const CLIENT_CONTEXT_HUE: Record<MeetingClientContext, string> = {
 function eventFill(m: { color?: string | null; client_context?: MeetingClientContext | null }): React.CSSProperties {
   const hue = m.color ? `var(--color-${m.color})` : CLIENT_CONTEXT_HUE[m.client_context ?? "new_contact"];
   return {
-    background: `color-mix(in srgb, ${hue} 35%, var(--color-background))`,
-    borderColor: `color-mix(in srgb, ${hue} 60%, var(--bee-card-border))`,
+    background: hue,
+    borderColor: `color-mix(in srgb, ${hue} 80%, var(--color-text))`,
+    color: "var(--color-text)",
   };
 }
 
@@ -58,7 +60,7 @@ function eventFill(m: { color?: string | null; client_context?: MeetingClientCon
 const GRID_START_HOUR = 7;
 const GRID_END_HOUR = 20;
 const GRID_HOURS = Array.from({ length: GRID_END_HOUR - GRID_START_HOUR + 1 }, (_, i) => GRID_START_HOUR + i);
-const HOUR_HEIGHT = 84; // px per hour row — a 30-min block (42px) keeps its title, 45 min adds the time range, an hour adds the account
+const HOUR_HEIGHT = 120; // px per hour row — a 30-min block (60px) shows title + time, 45 min adds the account, an hour adds attendees/link/type
 
 /** Pixel top/height for one meeting block within the hour grid — clamped
  * to the visible window (a meeting outside business hours still shows,
@@ -458,7 +460,7 @@ function MiniMonthCalendar({
               {day.getDate()}
               {hasMeeting && (
                 <span className="absolute inset-x-0 bottom-0.5 flex justify-center">
-                  <span className="size-1 rounded-full bg-[var(--color-chart-4)]" />
+                  <span className="size-1.5 rounded-full bg-[var(--color-chart-4)]" />
                 </span>
               )}
             </button>
@@ -1184,22 +1186,23 @@ export function CalendarPage() {
                             title always; the time range from ~56px; the account
                             from ~84px; attendees/link from ~108px. A short block
                             never hides the title behind the hour. */}
-                        <p className={`${pos.height >= 56 ? "line-clamp-2" : "truncate"} text-xs font-semibold leading-snug`} title={m.title}>
+                        <p className="line-clamp-2 text-xs font-semibold leading-snug" title={m.title}>
                           {m.title}
                         </p>
-                        {pos.height >= 56 && (
-                          <p className="truncate bee-micro tabular-nums">
-                            {rangeLabel(m.starts_at, m.duration_minutes, tz)} · {m.duration_minutes} min
+                        {pos.height >= 44 && (
+                          <p className="truncate bee-micro tabular-nums text-[var(--color-text)]">
+                            {rangeLabel(m.starts_at, m.duration_minutes, tz)}
                           </p>
                         )}
-                        {pos.height >= 84 && (m.company_name || m.contact_name) && (
-                          <p className="flex min-w-0 items-center gap-1 bee-micro">
+                        {pos.height >= 76 && (m.company_name || m.contact_name) && (
+                          <p className="flex min-w-0 items-center gap-1 bee-micro text-[var(--color-text)]">
                             <Building2 className="size-3 shrink-0" />
                             <span className="truncate">{m.company_name ?? m.contact_name}</span>
                           </p>
                         )}
-                        {pos.height >= 108 && (
-                          <div className="mt-auto flex items-center gap-2 text-muted-foreground">
+                        {pos.height >= 100 && (
+                          <div className="mt-auto flex items-center gap-2 text-[var(--color-text)]">
+                            <span className="bee-micro tabular-nums">{m.duration_minutes} min</span>
                             {m.attendee_user_ids.length > 0 && (
                               <span className="flex items-center gap-1">
                                 <Users className="size-3" />
