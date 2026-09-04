@@ -15,7 +15,7 @@ import { scoreVariant } from "@/lib/format";
 import { formatDate } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
 import { LiveBadge } from "@/components/live-badge";
-import { SignalHexMap } from "@/features/control/components/SignalHexMap";
+import { IntentHive } from "@/features/signals/intent-hive";
 
 // BEE's palette has no red — the heat gradient (hottest → coolest) maps onto
 // the chart accents instead: magenta (5, "hot"/success everywhere else in
@@ -138,10 +138,11 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
  * so /dashboard/dark-funnel's redirect to ?tab=intent lands here.
  */
 export function DarkFunnelTab() {
+  const t = useTranslations("signalsStrategies.darkFunnel");
   return (
     <div className="space-y-4">
       <div className="bee-overview">
-        <SignalHexMap height={240} maxLeads={200} className="h-full" style={{ gridColumn: "span 12" }} />
+        <OverviewCard span={12} title={t("hive.title")} caption={t("hive.caption")}><IntentHive maxRadius={30} minHeight={300} /></OverviewCard>
       </div>
       <DarkFunnelDashboard />
     </div>

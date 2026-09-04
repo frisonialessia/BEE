@@ -205,6 +205,7 @@ export function buildDemoCompanySet(
     next_meeting_at: null,
     meetings_held_count: 0,
     photo_url: null,
+    color: null,
     created_at: now,
     updated_at: now,
     loss_reason: null,
@@ -563,6 +564,7 @@ export interface ManualOpportunityInput {
   status?: "detected" | "prioritized" | "in_progress";
   expected_close_date?: string;
   opportunity_type?: Opportunity["opportunity_type"];
+  color?: Opportunity["color"];
 }
 
 /** Local counterpart to the real backend's `POST /opportunities`: resolves
@@ -653,6 +655,7 @@ export function buildManualOpportunitySet(
     next_meeting_at: input.next_meeting_at ?? null,
     meetings_held_count: input.meetings_held_count ?? 0,
     photo_url: input.photo_url ?? null,
+    color: input.color ?? null,
     created_at: now,
     updated_at: now,
     loss_reason: null,

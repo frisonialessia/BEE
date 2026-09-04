@@ -12,7 +12,7 @@ import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-he
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SignalHexMap } from "@/features/control/components/SignalHexMap";
+import { IntentHive } from "@/features/signals/intent-hive";
 import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { DecisionFeed } from "@/features/dashboard/decision-feed";
 import { GettingStartedCard } from "@/features/dashboard/getting-started-card";
@@ -198,7 +198,7 @@ export function DashboardOverview({
       <div className="bee-overview">
         {/* Central block: the hive — BEE's identity — with the stage metrics
             under it; the day's plays at its side. */}
-        <SignalHexMap height={260} maxRadius={42} className="h-full lg:min-h-[32rem]!" style={{ gridColumn: "span 8" }} />
+        <OverviewCard span={8} title={t("sections.hive.title")} caption={t("sections.hive.caption")} className="lg:min-h-[32rem]!"><IntentHive maxRadius={34} minHeight={280} /></OverviewCard>
 
         <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")} className="lg:min-h-[32rem]!">
           <DecisionFeed embedded criticalAccounts={criticalAccounts} />

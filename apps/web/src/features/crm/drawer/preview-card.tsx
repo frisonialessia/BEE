@@ -23,11 +23,12 @@ function progressOf(status: OpportunityStatus): number {
 }
 
 /**
- * The CRM board's card, drawn from a draft: same size, same rounded fill
- * (the stage hue at the score's intensity), same three progress segments,
- * same owner disc — so what you type on the left is what the board will
- * show. Sits under a mini column header so the stage reads as a column.
- * The fill crossfades when the stage changes (see .bee-drawer-card).
+ * The CRM board's card, drawn from a draft or a real deal: same size, same
+ * rounded fill (the stage hue at the score's intensity), same three
+ * progress segments, same owner disc — so what you type on the left is
+ * what the board will show. Sits under a mini column header so the stage
+ * reads as a column. A color the person picked shows as a small dot in the
+ * corner, the mark the calendar and lists use to spot the account.
  */
 export function PreviewCard({
   title,
@@ -40,6 +41,8 @@ export function PreviewCard({
   ownerName,
   date,
   hot,
+  color,
+  className,
 }: {
   title: string;
   /** Shown muted when there is no title yet. */
@@ -53,11 +56,14 @@ export function PreviewCard({
   ownerName: string | null;
   date: string;
   hot: boolean;
+  /** CSS color of the tag the person picked, if any. */
+  color?: string | null;
+  className?: string;
 }) {
   const t = useTranslations("crm.board");
   const progress = progressOf(status);
   return (
-    <div className="w-full max-w-[280px]">
+    <div className={cn("w-full max-w-[280px]", className)}>
       <div className="flex items-center gap-2 border-t-[3px] px-0.5 pb-3 pt-2.5 transition-[border-color] duration-300" style={{ borderTopColor: accent }}>
         <h4 className="bee-eyebrow truncate">{stageLabel}</h4>
         <span className="ml-auto text-sm font-light tabular-nums text-muted-foreground">{columnCount}</span>
@@ -66,9 +72,12 @@ export function PreviewCard({
         className="bee-kanban-card bee-drawer-card grid grid-rows-[34px_6px_28px] gap-y-2.5 rounded-[14px] px-3.5 pb-3 pt-3.5 text-left text-[var(--color-text)]"
         style={{ height: CARD_H, background: `color-mix(in srgb, ${accent} ${intensity(score)}%, var(--color-card))` }}
       >
-        <p className={cn("line-clamp-2 pr-6 text-xs font-semibold leading-[1.35]", !title && "font-medium text-[color-mix(in_srgb,var(--color-text)_55%,transparent)]")}>
-          {title || placeholder}
-        </p>
+        <div className="flex items-start gap-2 pr-1">
+          <p className={cn("line-clamp-2 min-w-0 flex-1 text-xs font-semibold leading-[1.35]", !title && "font-medium text-[color-mix(in_srgb,var(--color-text)_55%,transparent)]")}>
+            {title || placeholder}
+          </p>
+          {color && <span aria-hidden className="mt-0.5 size-2.5 shrink-0 rounded-full border border-white/80" style={{ background: color }} />}
+        </div>
         <div className="flex gap-1" aria-label={t("progress.aria", { step: progress })}>
           {[1, 2, 3].map((i) => (
             <i key={i} className="h-1 flex-1 rounded-full transition-colors duration-300" style={{ background: progress >= i ? "var(--color-text)" : "color-mix(in srgb, var(--color-text) 14%, transparent)" }} />

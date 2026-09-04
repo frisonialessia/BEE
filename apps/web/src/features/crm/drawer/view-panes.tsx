@@ -19,6 +19,7 @@ import type { CrmStage } from "@/lib/api/opportunities";
 import { groupByCrmStage } from "@/lib/crm-board";
 import { ApiError } from "@/types/api";
 
+import { AccountPanel } from "./account-panel";
 import { LeftPane } from "./left-pane";
 import { RightPane } from "./right-pane";
 import { accentOf, isClosedStatus } from "./stage-meta";
@@ -136,7 +137,7 @@ export function OpportunityViewPanes({ opportunityId, initialTab }: { opportunit
         }
       />
       <div className="min-h-0 flex-1 overflow-y-auto lg:grid lg:grid-cols-[minmax(0,9fr)_minmax(0,16fr)] lg:overflow-hidden">
-        <div className="border-b border-[var(--color-divider)] px-4 py-5 sm:px-6 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+        <div className="border-b border-[var(--color-divider)] bg-[var(--color-card)] px-5 py-6 sm:px-7 lg:overflow-y-auto lg:border-b-0 lg:border-r">
           <LeftPane
             opportunity={opportunity}
             lead={lead}
@@ -145,10 +146,22 @@ export function OpportunityViewPanes({ opportunityId, initialTab }: { opportunit
             fallbackCompany={battlecardResult?.data.company ?? null}
             owner={owner}
             accountOpps={accountOpps}
+            columnCount={column.cards.length}
             onViewAmount={() => setTab("notes")}
           />
+          <div className="mt-5 border-t border-[var(--color-divider)] pt-5">
+            <AccountPanel
+              company={company}
+              accountOpps={accountOpps}
+              allOpps={opportunities}
+              signals={signalsResult?.data ?? []}
+              meetings={meetingsData ?? []}
+              emptyHint={t("noCompany")}
+              compact
+            />
+          </div>
         </div>
-        <div className="flex flex-col px-4 py-5 sm:px-6 lg:overflow-y-auto">
+        <div className="flex flex-col px-5 py-6 sm:px-7 lg:overflow-y-auto">
           <RightPane
             opportunity={opportunity}
             companyName={companyName}

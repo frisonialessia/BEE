@@ -94,6 +94,15 @@ class SignalOut(BaseModel):
     analysis: dict[str, Any]
 
 
+# Personal color tag for an opportunity — the same nine tokens a meeting can
+# take (see MeetingColor in schemas/meeting.py), so a color means the same
+# thing on the calendar and in the CRM panel.
+OpportunityColor = Literal[
+    "chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6",
+    "green-1", "green-2", "green-3",
+]
+
+
 class OpportunityOut(BaseModel):
     """API representation of a generated opportunity."""
 
@@ -122,6 +131,8 @@ class OpportunityOut(BaseModel):
     next_meeting_at: datetime | None = None
     meetings_held_count: int = 0
     photo_url: str | None = None
+    # Personal color tag — same token vocabulary as MeetingColor.
+    color: str | None = None
     # Needed for trend/cohort BI (created_at) — was tracked on the model
     # (TimestampMixin) but never returned to clients.
     created_at: datetime
@@ -145,6 +156,7 @@ class OpportunityUpdateIn(BaseModel):
     amount: float | None = None
     expected_close_date: date | None = None
     qualification: dict[str, bool] | None = None
+    color: OpportunityColor | None = None
 
 
 class OpportunityStageIn(BaseModel):
@@ -223,6 +235,8 @@ class OpportunityCreateIn(BaseModel):
     status: Literal["detected", "prioritized", "in_progress"] | None = None
     expected_close_date: date | None = None
     opportunity_type: str | None = Field(default=None, max_length=32)
+    # Personal color tag — see Opportunity.color.
+    color: OpportunityColor | None = None
 
     @field_validator("opportunity_type")
     @classmethod

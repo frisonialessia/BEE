@@ -81,6 +81,10 @@
       "market": {
         "title": "Market",
         "caption": "Signals per week and their mix by type, last 30 days"
+      },
+      "hive": {
+        "title": "Intent hive",
+        "caption": "Each cell is an account; the closer to the centre, the closer to buying"
       }
     }
   },

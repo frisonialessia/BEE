@@ -117,5 +117,31 @@
       "newSignal": "This account already had a new signal",
       "newSignalWithTypes": "This account already had a new signal: {types}"
     }
+  },
+  "intentHive": {
+    "aria": "Intent hive with {count} accounts",
+    "empty": "The hive is born with the first account that shows buying intent.",
+    "score": "score {score}",
+    "stages": {
+      "ready_to_buy": "Ready to buy",
+      "decision": "Deciding",
+      "consideration": "Considering",
+      "awareness": "Discovering"
+    }
+  },
+  "colorDots": {
+    "aria": "Color",
+    "none": "No color",
+    "names": {
+      "chart-1": "Honey",
+      "chart-2": "Deep honey",
+      "chart-3": "Light honey",
+      "chart-4": "Indigo",
+      "chart-5": "Magenta",
+      "chart-6": "Lilac",
+      "green-1": "Green",
+      "green-2": "Lime",
+      "green-3": "Mint"
+    }
   }
 }

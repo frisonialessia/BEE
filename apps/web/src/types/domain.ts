@@ -152,6 +152,10 @@ export interface Opportunity {
   next_meeting_at: string | null;
   meetings_held_count: number;
   photo_url: string | null;
+  // Personal color tag — same nine tokens as MeetingColor, so an account
+  // reads the same on the calendar and in the CRM panel. Mirrors
+  // Opportunity.color / OpportunityColor in the API schemas.
+  color: MeetingColor | null;
   created_at: string;
   updated_at: string;
   // Win/Loss Analysis — null until PATCH /{id}/outcome is called.

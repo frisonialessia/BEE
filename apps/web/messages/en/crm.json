@@ -127,8 +127,20 @@
     "account": {
       "title": "Account",
       "byStage": "{count} opportunities by stage",
-      "amounts": "Amounts by month",
-      "score": "Score"
+      "amounts": "Amounts per month",
+      "score": "Score",
+      "signals": "Account signals",
+      "signalsCaption": "Per week and type, last {weeks}",
+      "closeBy": "Account opportunities",
+      "other": "Other",
+      "noSignals": "No signals for this account yet",
+      "glance": {
+        "title": "The account at a glance",
+        "caption": "{company} against the most active account",
+        "signals": "Signals in 90 days",
+        "meetings": "Meetings",
+        "deals": "Opportunities"
+      }
     },
     "actions": {
       "calendar": "Create meeting",
@@ -207,7 +219,9 @@
     },
     "amount": "Amount",
     "noCloseDate": "No close date",
-    "companyCountry": "Country"
+    "companyCountry": "Country",
+    "colorSaved": "Color saved.",
+    "colorError": "Could not save the color."
   },
   "form": {
     "title": "New opportunity",
@@ -279,6 +293,11 @@
       "saved": "Draft saved · {time}",
       "discard": "Discard draft",
       "savedToast": "Draft saved."
-    }
+    },
+    "colorLabel": "Color",
+    "colorHint": "To spot the account in the calendar and lists. The greens, if you like, for won clients.",
+    "saved": "Saved",
+    "closeLabel": "Close",
+    "typeHint": "Revenue type and where it came from"
   }
 }

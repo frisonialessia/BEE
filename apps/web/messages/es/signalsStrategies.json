@@ -114,6 +114,10 @@
     "stageMixTitle": "Mezcla por etapa de compra",
     "stageMixCaption": "Dónde están los leads calientes hoy",
     "keywordsTitle": "Qué investigan",
-    "keywordsCaption": "Palabras de intención más repetidas entre los leads calientes"
+    "keywordsCaption": "Palabras de intención más repetidas entre los leads calientes",
+    "hive": {
+      "title": "Colmena de intención",
+      "caption": "Cada celda es una cuenta; cuanto más al centro, más cerca de comprar. Clic abre la cuenta."
+    }
   }
 }

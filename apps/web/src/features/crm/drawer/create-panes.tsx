@@ -5,13 +5,13 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
-import { DATA, mix } from "@/components/charts/palette";
+import { pickedColor, type PickableColor } from "@/components/charts/palette";
+import { ColorDots } from "@/components/color-dots";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer, type DrawerCreatePreset } from "@/features/crm/opportunity-drawer-context";
 import { useCreateCompany, useCompanies, useScanCompany } from "@/hooks/queries/use-companies";
 import { useCreateLead, useLeads } from "@/hooks/queries/use-leads";
+import { useMeetings } from "@/hooks/queries/use-meetings";
 import { useCreateOpportunity, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
@@ -27,10 +27,11 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import type { Company, Lead, Opportunity, OpportunityType, Signal, SignalType } from "@/types/domain";
 
-import { countByStep, monthlyAmounts, segmentFill } from "./account-stats";
+import { AccountPanel } from "./account-panel";
+import { countByStep } from "./account-stats";
 import { PreviewCard } from "./preview-card";
 import { Avatar, Field, Pill, PriorityDots } from "./primitives";
-import { STAGE_ACCENT, STEP_ORDER } from "./stage-meta";
+import { STAGE_ACCENT } from "./stage-meta";
 import { DrawerTopBar } from "./top-bar";
 
 // Same set LeadCreateIn's own "de dónde salió" field uses (see
@@ -75,6 +76,7 @@ interface Draft {
   assignedTo: string;
   score: number;
   signalType: SignalType;
+  color: PickableColor | null;
 }
 
 interface StoredDraft {
@@ -117,15 +119,6 @@ function clearDraft(key: string) {
   } catch {
     // Nothing to clear.
   }
-}
-
-/** Dashed empty box with a one-line hint — a chart with nothing to draw yet. */
-function EmptyChart({ hint }: { hint: string }) {
-  return (
-    <div className="bee-fill grid min-h-28 place-items-center rounded-[var(--radius-md)] border border-dashed border-[var(--color-divider)]">
-      <p className="bee-caption px-4 text-center">{hint}</p>
-    </div>
-  );
 }
 
 /**
@@ -246,6 +239,8 @@ function CreateForm({
   const { user } = useAuth();
   const { data: users } = useUsers();
   const { data: oppsResult } = useOpportunities(undefined, 300);
+  const { data: meetingsData } = useMeetings();
+  const meetings = useMemo(() => meetingsData ?? [], [meetingsData]);
   const createCompany = useCreateCompany();
   const createLead = useCreateLead();
   const createOpportunity = useCreateOpportunity();
@@ -276,6 +271,7 @@ function CreateForm({
       assignedTo: user?.id ?? "",
       score: presetSignal ? Math.round(presetSignal.score) : 50,
       signalType: presetSignal?.signal_type ?? "other",
+      color: null,
     }),
     [presetCompany, presetLead, presetSignal, user],
   );
@@ -365,18 +361,6 @@ function CreateForm({
     [allOpps, activeCompany],
   );
   const byStep = useMemo(() => countByStep(accountOpps), [accountOpps]);
-  const funnelRows = STEP_ORDER.map((s) => ({
-    label: tStages(s),
-    value: byStep[s] + (s === draft.stage ? 1 : 0),
-    color: segmentFill(s, accountOpps),
-  }));
-  const monthly = useMemo(() => {
-    const points = monthlyAmounts(accountOpps, locale);
-    const last = points.length - 1;
-    if (draftAmount > 0) points[last] = { ...points[last], value: points[last].value + draftAmount };
-    return points;
-  }, [accountOpps, locale, draftAmount]);
-  const hasAmounts = monthly.some((p) => p.value > 0);
 
   // ── Expected value = amount × historical close rate. The rate is a count
   //    over real closed deals: this account's, else deals born from the
@@ -446,6 +430,7 @@ function CreateForm({
         status: draft.stage,
         expected_close_date: draft.expectedClose || undefined,
         opportunity_type: draft.opportunityType,
+        color: draft.color ?? undefined,
       });
       clearDraft(key);
       toast.success(activeCompany ? t("successToast", { company: company.name }) : t("successToastNewCompany", { company: company.name }));
@@ -482,18 +467,16 @@ function CreateForm({
         }
         right={
           <>
+            {savedAt && <span className="bee-caption hidden sm:inline">{t("draft.saved", { time: formatRelativeTime(savedAt, locale, new Date(now)) })}</span>}
             <button type="button" onClick={handleCancel} className="bee-btn-ghost !text-sm">
               {t("cancel")}
-            </button>
-            <button type="button" onClick={handleSaveDraft} disabled={!dirty} className="bee-btn-ghost !text-sm">
-              {t("draft.save")}
             </button>
           </>
         }
       />
       <form id={FORM_ID} onSubmit={handleSubmit} className={cn("min-h-0 flex-1 overflow-y-auto lg:grid lg:overflow-hidden", PANES)}>
         {/* ── Left: the form, in the calendar dialog's language ──────────── */}
-        <div className="flex flex-col gap-4 border-b border-[var(--color-divider)] px-4 py-5 sm:px-6 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+        <div className="flex flex-col gap-5 bg-[var(--color-card)] px-5 py-6 sm:px-7 lg:overflow-y-auto">
           <div className="leading-tight">
             <h2 className="bee-display">{t("title")}</h2>
             <p className="bee-caption mt-1">{t("subtitle")}</p>
@@ -502,8 +485,7 @@ function CreateForm({
           {/* Empresa */}
           <div className="flex flex-col gap-2">
             {activeCompany ? (
-              <div className="flex min-w-0 flex-col gap-1">
-                <span className="bee-caption">{t("company")} *</span>
+              <Field label={t("company")} required>
                 <div className="bee-input flex items-center gap-2">
                   <Building2 className="size-3.5 shrink-0 stroke-[1.5]" />
                   <span className="min-w-0 truncate font-medium">{activeCompany.name}</span>
@@ -514,7 +496,7 @@ function CreateForm({
                     </button>
                   )}
                 </div>
-              </div>
+              </Field>
             ) : (
               <div className="relative">
                 <Field label={t("company")} required>
@@ -556,7 +538,6 @@ function CreateForm({
               </div>
             )}
 
-            {/* A new account: website and sector, nothing more */}
             {creatingCompany && (
               <div className="grid grid-cols-2 gap-2">
                 <Field label={t("companyWebsite")}>
@@ -568,7 +549,6 @@ function CreateForm({
               </div>
             )}
 
-            {/* The account's contacts as toggle pills — pick one, or start a new one */}
             {activeCompany && contactPills.length > 0 && (
               <div role="group" aria-label={t("contact")} className="flex flex-wrap gap-2">
                 {contactPills.map((l) => (
@@ -588,18 +568,17 @@ function CreateForm({
           </div>
 
           {/* Contacto */}
-          <div className="flex flex-col gap-2 border-t border-[var(--color-divider)] pt-4">
+          <div className="flex flex-col gap-2 border-t border-[var(--color-divider)] pt-5">
             {activeLead ? (
-              <div className="flex min-w-0 flex-col gap-1">
-                <span className="bee-caption">{t("contact")}</span>
-                <div className="flex items-center gap-3">
+              <Field label={t("contact")}>
+                <div className="flex items-center gap-3 py-1">
                   <Avatar name={activeLead.full_name} size={32} photoUrl={activeLead.photo_url} />
                   <div className="min-w-0 leading-tight">
                     <p className="truncate text-sm font-semibold">{activeLead.full_name}</p>
                     <p className="truncate text-sm text-muted-foreground">{[activeLead.title, activeLead.email].filter(Boolean).join(" · ") || "—"}</p>
                   </div>
                 </div>
-              </div>
+              </Field>
             ) : (
               <div className="grid grid-cols-2 gap-2">
                 <Field label={t("contactName")}>
@@ -622,8 +601,8 @@ function CreateForm({
           </div>
 
           {/* Oportunidad */}
-          <div className="flex flex-col gap-2 border-t border-[var(--color-divider)] pt-4">
-            <Field label={t("dealTitle")}>
+          <div className="flex flex-col gap-2 border-t border-[var(--color-divider)] pt-5">
+            <Field label={t("dealTitle")} required>
               <input value={draft.title} onChange={(e) => update({ title: e.target.value })} placeholder={companyLabel ? t("dealTitlePlaceholder", { company: companyLabel }) : undefined} className="bee-input" />
             </Field>
             <Field label={t("descriptionLabel")} required>
@@ -636,43 +615,17 @@ function CreateForm({
               <Field label={t("expectedCloseLabel")}>
                 <input value={draft.expectedClose} onChange={(e) => update({ expectedClose: e.target.value })} type="date" className="bee-input" />
               </Field>
-              <Field label={t("typeLabel")}>
-                <select value={draft.opportunityType} onChange={(e) => update({ opportunityType: e.target.value as OpportunityType })} className="bee-input">
-                  {OPPORTUNITY_TYPES.map((ot) => (
-                    <option key={ot} value={ot}>
-                      {opportunityTypeLabels[ot]}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label={t("sourceLabel")}>
-                <select value={draft.source} onChange={(e) => update({ source: e.target.value })} className={cn("bee-input", !draft.source && "text-[var(--color-text-muted)]")}>
-                  <option value="">{t("sourcePlaceholder")}</option>
-                  {OPPORTUNITY_SOURCES.map((s) => (
-                    <option key={s} value={s}>
-                      {t(`sourceOptions.${s}`)}
-                    </option>
-                  ))}
-                </select>
-              </Field>
             </div>
           </div>
 
-          {/* Etapa inicial — pills in the stage hues */}
-          <div className="flex flex-col gap-1 border-t border-[var(--color-divider)] pt-4">
+          {/* Etapa — pills in the board's own stage hues */}
+          <div className="flex flex-col gap-1.5 border-t border-[var(--color-divider)] pt-5">
             <p className="bee-caption">{t("stageLabel")}</p>
             <div role="group" aria-label={t("stageLabel")} className="flex flex-wrap gap-2">
               {CRM_STAGES.map((s) => {
                 const startable = (START_STAGES as readonly CrmStage[]).includes(s.id);
                 return (
-                  <Pill
-                    key={s.id}
-                    pressed={draft.stage === s.id}
-                    fill={STAGE_ACCENT[s.id]}
-                    disabled={!startable}
-                    title={startable ? undefined : t("stageHint")}
-                    onClick={() => startable && update({ stage: s.id as StartStage })}
-                  >
+                  <Pill key={s.id} pressed={draft.stage === s.id} fill={STAGE_ACCENT[s.id]} disabled={!startable} title={startable ? undefined : t("stageHint")} onClick={() => startable && update({ stage: s.id as StartStage })}>
                     {tStages(s.id)}
                   </Pill>
                 );
@@ -682,7 +635,7 @@ function CreateForm({
           </div>
 
           {/* Responsable — team pills, like "Invitar a tu equipo" */}
-          <div className="flex flex-col gap-1 border-t border-[var(--color-divider)] pt-4">
+          <div className="flex flex-col gap-1.5 border-t border-[var(--color-divider)] pt-5">
             <p className="bee-caption">{t("ownerLabel")}</p>
             <div role="group" aria-label={t("ownerLabel")} className="flex flex-wrap gap-2">
               {(users ?? []).map((u) => (
@@ -693,21 +646,42 @@ function CreateForm({
             </div>
           </div>
 
-          {/* Prioridad — the dialog's dot row */}
-          <div className="flex flex-col gap-1 border-t border-[var(--color-divider)] pt-4">
-            <p className="bee-caption">{t("priority")}</p>
-            <PriorityDots score={draft.score} onChange={(score) => update({ score })} />
-            <p className="bee-micro">{t("priorityHint")}</p>
+          {/* Prioridad · Color — the dialog's dot rows */}
+          <div className="grid grid-cols-1 gap-4 border-t border-[var(--color-divider)] pt-5 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <p className="bee-caption">{t("priority")}</p>
+              <PriorityDots score={draft.score} onChange={(score) => update({ score })} />
+              <p className="bee-micro">{t("priorityHint")}</p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <p className="bee-caption">{t("colorLabel")}</p>
+              <ColorDots value={draft.color} onChange={(color) => update({ color })} />
+              <p className="bee-micro">{t("colorHint")}</p>
+            </div>
+          </div>
+
+          {/* Tipo · Origen — pills, never a select */}
+          <div className="flex flex-col gap-1.5 border-t border-[var(--color-divider)] pt-5">
+            <p className="bee-caption">{t("typeLabel")} · {t("sourceLabel")}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              {OPPORTUNITY_TYPES.map((ot) => (
+                <Pill key={ot} pressed={draft.opportunityType === ot} onClick={() => update({ opportunityType: ot })}>
+                  {opportunityTypeLabels[ot]}
+                </Pill>
+              ))}
+              <span className="mx-1 h-5 w-px bg-[color-mix(in_srgb,var(--color-text)_14%,transparent)]" aria-hidden="true" />
+              {OPPORTUNITY_SOURCES.map((src) => (
+                <Pill key={src} pressed={draft.source === src} onClick={() => update({ source: draft.source === src ? "" : src })}>
+                  {t(`sourceOptions.${src}`)}
+                </Pill>
+              ))}
+            </div>
+            <p className="bee-micro">{t("typeHint")}</p>
           </div>
         </div>
 
-        {/* ── Right: the card this becomes, live ─────────────────────────── */}
-        <div className="flex flex-col gap-4 px-4 pt-5 sm:px-6 lg:overflow-y-auto">
-          <div className="leading-tight">
-            <h3 className="bee-card-title !mb-0">{t("preview.title")}</h3>
-            <p className="bee-caption">{t("preview.hint")}</p>
-          </div>
-
+        {/* ── Right: the card this becomes, live, and the account under it ── */}
+        <div className="flex flex-col gap-4 bg-[var(--color-background)] px-5 pt-6 sm:px-7 lg:overflow-y-auto">
           <div className="flex flex-wrap items-start gap-6">
             <PreviewCard
               title={draft.title.trim()}
@@ -720,8 +694,9 @@ function CreateForm({
               ownerName={owner?.full_name ?? null}
               date={today}
               hot={draft.score >= 75}
+              color={pickedColor(draft.color)}
             />
-            <dl className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 self-center text-sm">
+            <dl className="grid min-w-0 flex-1 grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 self-center text-sm">
               <dt className="bee-caption">{t("company")}</dt>
               <dd className={cn("truncate", !companyLabel && "text-muted-foreground")}>{companyLabel || "—"}</dd>
               <dt className="bee-caption">{t("contact")}</dt>
@@ -742,39 +717,18 @@ function CreateForm({
             </dl>
           </div>
 
-          {/* Cuenta — the company's opportunities as charts, this draft included */}
-          <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="bee-surface flex min-h-56 flex-col gap-3 p-4">
-              <div className="flex items-baseline justify-between gap-2 leading-tight">
-                <p className="bee-card-title !mb-0">{tDrawer("account.title")}</p>
-                {activeCompany && <span className="bee-caption">{tDrawer("account.byStage", { count: accountOpps.length + 1 })}</span>}
-              </div>
-              {activeCompany ? (
-                <>
-                  <HorizontalFunnel rows={funnelRows} />
-                  <p className="bee-caption truncate">{accountOpps.length === 0 ? t("charts.first") : activeCompany.name}</p>
-                </>
-              ) : (
-                <EmptyChart hint={t("charts.pickCompany")} />
-              )}
-            </div>
-            <div className="bee-surface flex min-h-56 flex-col gap-3 p-4">
-              <p className="bee-card-title !mb-0">{tDrawer("account.amounts")}</p>
-              {hasAmounts ? (
-                <BarsVsTarget
-                  points={monthly}
-                  minHeight={120}
-                  formatValue={(v) => formatMoney(v, "USD", locale, true)}
-                  colorFor={(p) => (p.current ? DATA.honey : mix(DATA.honey, 45))}
-                />
-              ) : (
-                <EmptyChart hint={activeCompany ? t("charts.noAmount") : t("charts.pickCompany")} />
-              )}
-            </div>
-          </div>
+          <AccountPanel
+            company={activeCompany}
+            accountOpps={accountOpps}
+            allOpps={allOpps}
+            signals={signals}
+            meetings={meetings}
+            draftStep={draft.stage}
+            emptyHint={t("charts.pickCompany")}
+          />
 
           {/* Footer: the draft's state · the one primary action */}
-          <div className="sticky bottom-0 -mx-4 mt-auto flex items-center justify-between gap-3 border-t border-[var(--color-divider)] bg-[var(--color-background)] px-4 py-3 sm:-mx-6 sm:px-6">
+          <div className="sticky bottom-0 -mx-5 mt-auto flex items-center justify-between gap-3 border-t border-[var(--color-divider)] bg-[var(--color-background)] px-5 py-3 sm:-mx-7 sm:px-7">
             <div className="flex min-w-0 items-center gap-3">
               {savedAt && (
                 <>
@@ -785,9 +739,14 @@ function CreateForm({
                 </>
               )}
             </div>
-            <button type="submit" form={FORM_ID} disabled={!canSubmit} className="bee-btn bee-btn--primary !text-sm">
-              {busy ? t("saving") : t("save")}
-            </button>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={handleSaveDraft} disabled={!dirty} className="bee-btn-ghost !text-sm">
+                {t("draft.save")}
+              </button>
+              <button type="submit" form={FORM_ID} disabled={!canSubmit} className="bee-btn bee-btn--primary !text-sm">
+                {busy ? t("saving") : t("save")}
+              </button>
+            </div>
           </div>
         </div>
       </form>

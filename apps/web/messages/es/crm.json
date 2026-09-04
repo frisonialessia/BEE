@@ -128,7 +128,19 @@
       "title": "Cuenta",
       "byStage": "{count} oportunidades por etapa",
       "amounts": "Montos por mes",
-      "score": "Score"
+      "score": "Score",
+      "signals": "Señales de la cuenta",
+      "signalsCaption": "Por semana y tipo, últimas {weeks}",
+      "closeBy": "Oportunidades de la cuenta",
+      "other": "Otras",
+      "noSignals": "Sin señales todavía para esta cuenta",
+      "glance": {
+        "title": "La cuenta en un vistazo",
+        "caption": "{company} frente a la cuenta más activa",
+        "signals": "Señales en 90 días",
+        "meetings": "Reuniones",
+        "deals": "Oportunidades"
+      }
     },
     "actions": {
       "calendar": "Crear reunión",
@@ -207,7 +219,9 @@
     },
     "amount": "Monto",
     "noCloseDate": "Sin fecha de cierre",
-    "companyCountry": "País"
+    "companyCountry": "País",
+    "colorSaved": "Color guardado.",
+    "colorError": "No se pudo guardar el color."
   },
   "form": {
     "title": "Nueva oportunidad",
@@ -279,6 +293,11 @@
       "saved": "Borrador guardado · {time}",
       "discard": "Descartar borrador",
       "savedToast": "Borrador guardado."
-    }
+    },
+    "colorLabel": "Color",
+    "colorHint": "Para reconocer la cuenta en calendario y listas. Los verdes, si quieres, para clientes ganados.",
+    "saved": "Guardado",
+    "closeLabel": "Cerrar",
+    "typeHint": "Tipo de ingreso y de dónde salió"
   }
 }

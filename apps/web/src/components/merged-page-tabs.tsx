@@ -4,20 +4,17 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-/** Shared tab mechanics for a page that used to be two separate sidebar
- * entries (see lib/nav-items.ts — several pairs were merged into one page
- * with tabs to cut sidebar sprawl, e.g. CRM+Oportunidades, Forecast+Win/Loss).
- * The active tab lives in `?tab=`, not just component state — the old
- * standalone route now 301s here with that param set (see the old page's
- * page.tsx), so a bookmark/link to it still lands on the right tab instead
- * of always defaulting to the first one. `defaultValue`'s own tab omits the
- * param entirely, keeping the canonical URL clean. */
-/** BEE standard: on a tabbed page the page header (eyebrow · title · caption)
- * and the tab strip share ONE row — header left, tabs + actions right — so
- * the KPI strip below starts at exactly the same height as on a page
- * without tabs (and as on Resumen). `actionsByTab` is for a control that
- * belongs to one tab only (an export button), `actions` for the page-wide
- * ones (live badge, primary button). */
+/**
+ * A page with tabs. The active tab lives in `?tab=`, not just component
+ * state — a bookmark to an old standalone route 301s here with that param
+ * set, so it still lands on the right tab. `defaultValue`'s own tab omits
+ * the param, keeping the canonical URL clean.
+ *
+ * BEE standard: the page header (eyebrow · title · caption) and the tab
+ * strip share ONE row — header left, tabs + actions right — so the KPI
+ * strip below (`belowTabs`) starts at the same height as on a page without
+ * tabs. `actionsByTab` is for a control that belongs to one tab only.
+ */
 export function MergedPageTabs({
   tabs,
   defaultValue,
@@ -50,24 +47,28 @@ export function MergedPageTabs({
   }
 
   return (
-    <Tabs value={value} onValueChange={handleChange} className="gap-0">
-      <div className={header ? "mb-4 flex flex-wrap items-end justify-between gap-4" : "mb-4 flex flex-wrap items-center justify-between gap-2"}>
+    <Tabs value={value} onValueChange={handleChange} className="bee-page gap-0">
+      <div className="bee-page-head">
         {header}
-        <div className="ml-auto flex flex-wrap items-center gap-2">
-          <TabsList className="h-auto max-w-full flex-wrap border border-border bg-background group-data-[orientation=horizontal]/tabs:h-auto">
+        <div className="bee-page-head__side">
+          <TabsList className="bee-tabs">
             {tabs.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="rounded-sm">
+              <TabsTrigger key={tab.value} value={tab.value} className="bee-tabs__tab">
                 {tab.label}
               </TabsTrigger>
             ))}
           </TabsList>
-          {actionsByTab?.[value]}
-          {actions}
+          {(actionsByTab?.[value] || actions) && (
+            <div className="bee-page-head__actions">
+              {actionsByTab?.[value]}
+              {actions}
+            </div>
+          )}
         </div>
       </div>
-      {belowTabs}
+      {belowTabs && <div className="bee-page__kpis">{belowTabs}</div>}
       {tabs.map((tab) => (
-        <TabsContent key={tab.value} value={tab.value}>
+        <TabsContent key={tab.value} value={tab.value} className="bee-page__body">
           {tab.content}
         </TabsContent>
       ))}

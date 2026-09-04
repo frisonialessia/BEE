@@ -17,6 +17,7 @@ import type { FetchResult } from "@/types/api";
 import type {
   ArtifactBundle,
   Battlecard,
+  MeetingColor,
   Opportunity,
   OpportunityStatus,
   OpportunityType,
@@ -55,6 +56,8 @@ export interface OpportunityCreateIn {
   status?: "detected" | "prioritized" | "in_progress";
   expected_close_date?: string;
   opportunity_type?: OpportunityType;
+  /** Personal color tag — same tokens as a meeting's color. */
+  color?: MeetingColor;
 }
 
 /** Carga manual de una oportunidad — el "+ Nueva oportunidad" del CRM y de
@@ -212,6 +215,7 @@ export interface OpportunityUpdateIn {
   amount?: number | null;
   expected_close_date?: string | null;
   qualification?: Record<string, boolean> | null;
+  color?: MeetingColor | null;
 }
 
 /** Actualiza monto, fecha esperada de cierre y/o checklist MEDDIC. */

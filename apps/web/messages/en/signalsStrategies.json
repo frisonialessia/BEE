@@ -114,6 +114,10 @@
     "stageMixTitle": "Mix by buying stage",
     "stageMixCaption": "Where today's hot leads sit",
     "keywordsTitle": "What they research",
-    "keywordsCaption": "Most repeated intent keywords across hot leads"
+    "keywordsCaption": "Most repeated intent keywords across hot leads",
+    "hive": {
+      "title": "Intent hive",
+      "caption": "Each cell is an account; the closer to the centre, the closer to buying. Click opens the account."
+    }
   }
 }

@@ -220,6 +220,7 @@ def create_opportunity(
         strategy={},
         opportunity_type=data.opportunity_type or NEW_LOGO,
         expected_close_date=data.expected_close_date,
+        color=data.color,
         amount=data.amount,
         source=data.source,
         next_meeting_at=data.next_meeting_at,

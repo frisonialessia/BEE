@@ -111,6 +111,11 @@ class Opportunity(TimestampMixin, table=True):
     # A client-resized data: URI, not a link — see User.avatar_url's
     # docstring for the reasoning and the size cap this relies on.
     photo_url: str | None = Field(default=None, max_length=300_000)
+    # Personal color tag picked in the opportunity panel — one of the BEE
+    # tokens ("chart-1".."chart-6", "green-1".."green-3"), the same
+    # vocabulary Meeting.color uses, so calendar and CRM agree on what a
+    # color means. Purely organizational: never read by scoring.
+    color: str | None = Field(default=None, max_length=20)
 
     # ----- Outcome detail (Win/Loss Analysis) -----------------------------------
     # Set once, by FeedbackLoopService.record_outcome, the moment status

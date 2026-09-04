@@ -2,22 +2,29 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
+import { toast } from "sonner";
 
-import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
-import { DATA } from "@/components/charts/palette";
+import { TONE, pickedColor, type PickableColor } from "@/components/charts/palette";
+import { ColorDots } from "@/components/color-dots";
+import { useUpdateOpportunity } from "@/hooks/queries/use-opportunities";
 import type { Locale } from "@/i18n/locales";
-import { getOpportunityStatusLabels, getOpportunityTypeLabels } from "@/lib/format";
+import { localeTags } from "@/i18n/locales";
+import { getOpportunityStatusLabels, getOpportunityTypeLabels, stripOpportunityTitlePrefix } from "@/lib/format";
 import { formatDate, formatMoney } from "@/lib/i18n/format";
 import type { UserOut } from "@/types/auth";
 import type { BattlecardCompany, BattlecardLead, Company, Lead, Opportunity } from "@/types/domain";
 
-import { countByStep, segmentFill } from "./account-stats";
+import { PreviewCard } from "./preview-card";
 import { Avatar, Chip, FactRow, PaneSection, PersonPill, PriorityDots } from "./primitives";
-import { STEP_ORDER, isClosedStatus, stepOf } from "./stage-meta";
+import { accentOf, isClosedStatus, stepOf } from "./stage-meta";
 
-/** Left pane: who (contact), where (company), how much (amount), who owns
- *  it, the priority as the dot row, then the account's pipeline as one
- *  compact funnel — facts as label/value rows with hairlines, no boxes. */
+/**
+ * Left pane of view mode — the same fields the create form asks for, now
+ * as facts: the board card the deal is (with its color, the one thing
+ * editable here), who (contact), where (company), how much (amount), who
+ * owns it and the priority as the dot row. Label/value rows with
+ * hairlines, no boxes.
+ */
 export function LeftPane({
   opportunity,
   lead,
@@ -26,6 +33,7 @@ export function LeftPane({
   fallbackCompany,
   owner,
   accountOpps,
+  columnCount,
   onViewAmount,
 }: {
   opportunity: Opportunity;
@@ -36,6 +44,8 @@ export function LeftPane({
   owner: UserOut | null;
   /** Every opportunity of the same account, this one included. */
   accountOpps: Opportunity[];
+  /** Cards in the deal's column on the board. */
+  columnCount: number;
   onViewAmount: () => void;
 }) {
   const t = useTranslations("crm.drawer");
@@ -44,6 +54,7 @@ export function LeftPane({
   const locale = useLocale() as Locale;
   const typeLabels = getOpportunityTypeLabels(locale);
   const statusLabels = getOpportunityStatusLabels(locale);
+  const updateOpportunity = useUpdateOpportunity();
 
   const contactName = lead?.full_name ?? fallbackLead?.full_name ?? null;
   const contactTitle = lead?.title ?? fallbackLead?.title ?? null;
@@ -61,20 +72,52 @@ export function LeftPane({
   const type = opportunity.opportunity_type ?? "new_logo";
   const closed = isClosedStatus(opportunity.status);
   const stageWord = closed ? tStage(`closedStatus.${opportunity.status as "won" | "lost" | "dismissed"}`) : tStage(`stages.${stepOf(opportunity.status)}`);
+  const when = useMemo(
+    () => new Intl.DateTimeFormat(localeTags[locale], { day: "numeric", month: "short" }).format(new Date(opportunity.closed_at ?? opportunity.created_at)),
+    [locale, opportunity.closed_at, opportunity.created_at],
+  );
 
-  const byStep = useMemo(() => countByStep(accountOpps), [accountOpps]);
-  const funnelRows = STEP_ORDER.map((s) => ({ label: tStage(`stages.${s}`), value: byStep[s], color: segmentFill(s, accountOpps) }));
+  function handleColor(color: PickableColor | null) {
+    updateOpportunity.mutate(
+      { id: opportunity.id, body: { color } },
+      { onSuccess: () => toast.success(t("colorSaved")), onError: () => toast.error(t("colorError")) },
+    );
+  }
 
   return (
     <div className="flex min-h-full flex-col gap-5">
-      {(isHot || isClient || needsReview || type !== "new_logo") && (
-        <div className="flex flex-wrap gap-1.5">
-          {isHot && !closed && <Chip hue={DATA.honeyFill}>{t("tags.hot")}</Chip>}
-          {isClient && <Chip hue={DATA.lavender}>{t("tags.client")}</Chip>}
-          {type !== "new_logo" && <Chip hue={DATA.lavender}>{typeLabels[type]}</Chip>}
-          {needsReview && !closed && <Chip hue={DATA.lavender}>{t("tags.review")}</Chip>}
+      {/* ── The card, as the board shows it, and its color ───────────── */}
+      <PaneSection>
+        <div className="flex flex-wrap items-start gap-5">
+          <PreviewCard
+            title={stripOpportunityTitlePrefix(opportunity.title)}
+            placeholder=""
+            stageLabel={stageWord}
+            columnCount={columnCount}
+            accent={accentOf(opportunity)}
+            score={opportunity.score}
+            status={opportunity.status}
+            ownerName={owner?.full_name ?? null}
+            date={when}
+            hot={isHot && !closed}
+            color={pickedColor(opportunity.color)}
+            className="max-w-[240px]"
+          />
+          <div className="flex min-w-0 flex-1 flex-col gap-2 self-end">
+            {(isHot || isClient || needsReview || type !== "new_logo") && (
+              <div className="flex flex-wrap gap-1.5">
+                {isHot && !closed && <Chip hue={TONE.market}>{t("tags.hot")}</Chip>}
+                {isClient && <Chip hue={TONE.calm}>{t("tags.client")}</Chip>}
+                {type !== "new_logo" && <Chip hue={TONE.calm}>{typeLabels[type]}</Chip>}
+                {needsReview && !closed && <Chip hue={TONE.calm}>{t("tags.review")}</Chip>}
+              </div>
+            )}
+            <p className="bee-caption">{tForm("colorLabel")}</p>
+            <ColorDots value={opportunity.color} onChange={handleColor} size={22} />
+            <p className="bee-micro">{tForm("colorHint")}</p>
+          </div>
         </div>
-      )}
+      </PaneSection>
 
       {/* ── Contacto ─────────────────────────────────────────────────── */}
       <PaneSection>
@@ -168,12 +211,7 @@ export function LeftPane({
         </div>
       </PaneSection>
 
-      {/* ── Cuenta: the account's opportunities per stage ───────────── */}
-      <PaneSection className="flex flex-1 flex-col" title={t("account.title")} aside={<span className="bee-caption">{t("account.byStage", { count: accountOpps.length })}</span>}>
-        <HorizontalFunnel rows={funnelRows} />
-      </PaneSection>
-
-      <p className="bee-caption border-t border-[var(--color-divider)] pt-3">{t("createdOn", { date: formatDate(opportunity.created_at, locale) })}</p>
+      <p className="bee-caption mt-auto border-t border-[var(--color-divider)] pt-3">{t("createdOn", { date: formatDate(opportunity.created_at, locale) })}</p>
     </div>
   );
 }

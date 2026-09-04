@@ -626,6 +626,7 @@ export function historicalOpportunities(locale: Locale = defaultLocale): Opportu
       next_meeting_at: null,
       meetings_held_count: 0,
       photo_url: null,
+      color: null,
       created_at: createdAtIso,
       updated_at: closedAtIso ?? createdAtIso,
       loss_reason: def.outcome === "lost" ? (def.lossReason ?? "other") : null,

@@ -117,5 +117,31 @@
       "newSignal": "Esta cuenta ya tuvo una señal nueva",
       "newSignalWithTypes": "Esta cuenta ya tuvo una señal nueva: {types}"
     }
+  },
+  "intentHive": {
+    "aria": "Colmena de intención con {count} cuentas",
+    "empty": "La colmena nace con la primera cuenta que muestre intención de compra.",
+    "score": "score {score}",
+    "stages": {
+      "ready_to_buy": "Listas para comprar",
+      "decision": "Decidiendo",
+      "consideration": "Considerando",
+      "awareness": "Descubriendo"
+    }
+  },
+  "colorDots": {
+    "aria": "Color",
+    "none": "Sin color",
+    "names": {
+      "chart-1": "Miel",
+      "chart-2": "Miel intensa",
+      "chart-3": "Miel clara",
+      "chart-4": "Índigo",
+      "chart-5": "Magenta",
+      "chart-6": "Lila",
+      "green-1": "Verde",
+      "green-2": "Lima",
+      "green-3": "Menta"
+    }
   }
 }

@@ -253,6 +253,7 @@ export function demoUpdateOpportunity(id: string, patch: OpportunityUpdateIn): O
         ? patch.expected_close_date
         : current.expected_close_date,
     qualification: patch.qualification ?? current.qualification,
+    color: patch.color !== undefined ? patch.color : current.color,
     updated_at: new Date().toISOString(),
   };
   save(list);
