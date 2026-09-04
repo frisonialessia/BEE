@@ -148,16 +148,13 @@ const TEMP_STOPS = [
   "--color-chart-5",
 ] as const;
 
-/** Frío → dorado, medio → naranja/azul, caliente → violeta — interpolado
- *  por hexágono en vez de por posición en una barra lineal, mismos tonos. */
+/** One pure BEE color per heat band — never a blend of two hues, which
+ *  reads as grey or brown between them: pale honey → honey → deep honey →
+ *  indigo → lilac → magenta as the cell gets hotter. */
 function heatColor(heat: number): string {
   const clamped = Math.min(1, Math.max(0, heat));
-  const segments = TEMP_STOPS.length - 1;
-  const scaled = clamped * segments;
-  const idx = Math.min(segments - 1, Math.floor(scaled));
-  const t = scaled - idx;
-  const toPct = Math.round(t * 100);
-  return `color-mix(in srgb, var(${TEMP_STOPS[idx + 1]}) ${toPct}%, var(${TEMP_STOPS[idx]}) ${100 - toPct}%)`;
+  const idx = Math.min(TEMP_STOPS.length - 1, Math.floor(clamped * TEMP_STOPS.length));
+  return `var(${TEMP_STOPS[idx]})`;
 }
 
 function HexTooltip({

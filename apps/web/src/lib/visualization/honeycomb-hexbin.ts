@@ -1,6 +1,4 @@
 import { hexbin as d3Hexbin } from "d3-hexbin";
-import { interpolateRgb } from "d3-interpolate";
-import { scaleLinear } from "d3-scale";
 
 import { hashDomain } from "@/lib/control/lead-board";
 import type { HotLeadScore } from "@/types/extended";
@@ -41,11 +39,16 @@ export interface HiveHexCell {
   leads: HotLeadScore[];
 }
 
+/** Stepped, not interpolated: every cell wears one of the six brand colors.
+ *  Blending two hues (honey → indigo) produced greys and browns that are
+ *  not BEE's and made the hottest cells hard to spot. */
 export function createTemperatureColorScale() {
-  return scaleLinear<string>()
-    .domain([0, 20, 45, 65, 85, 100])
-    .range([...TEMPERATURE_SCALE])
-    .interpolate(interpolateRgb);
+  const bands = [20, 45, 65, 85, 100];
+  return (temperature: number): string => {
+    const t = Math.max(0, Math.min(100, temperature));
+    const idx = bands.findIndex((b) => t < b);
+    return TEMPERATURE_SCALE[idx === -1 ? TEMPERATURE_SCALE.length - 1 : idx];
+  };
 }
 
 /** Map DarkFunnel leads to 2D points (stage × temperature + stable jitter). */

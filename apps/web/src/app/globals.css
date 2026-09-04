@@ -1528,7 +1528,7 @@
 
 /* Headline highlight: the key words in magenta mixed toward --color-text
    (≈4.2:1 on the ground). No marker, no underline. */
-.bee-hl { color: color-mix(in srgb, var(--color-chart-5) 70%, var(--color-text) 30%); }
+.bee-hl { color: var(--color-chart-2); }
 
 /* Demo panel: honey hairline filling across the active tab until the next
    auto-rotation (duration set inline from AUTO_ROTATE_MS). */

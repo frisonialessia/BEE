@@ -58,10 +58,10 @@ function eventFill(m: { color?: string | null; client_context?: MeetingClientCon
 
 // Hour-grid — business hours only (not a full 24h day) so a week's worth of
 // meetings reads at a glance without scrolling past mostly-empty rows.
-const GRID_START_HOUR = 7;
-const GRID_END_HOUR = 20;
+const GRID_START_HOUR = 8;
+const GRID_END_HOUR = 19;
 const GRID_HOURS = Array.from({ length: GRID_END_HOUR - GRID_START_HOUR + 1 }, (_, i) => GRID_START_HOUR + i);
-const HOUR_HEIGHT = 120; // px per hour row — a 30-min block (60px) shows title + time, 45 min adds the account, an hour adds attendees/link/type
+const HOUR_HEIGHT = 84; // px per hour row — a 30-min block (42px) shows the title, 45 min (63px) adds time + account, an hour (84px) adds attendees/link/type. Taller rows meant a full screen of scrolling to see one day.
 
 /** Pixel top/height for one meeting block within the hour grid — clamped
  * to the visible window (a meeting outside business hours still shows,
@@ -1187,21 +1187,21 @@ export function CalendarPage() {
                             never hides the title behind the hour. */}
                         {/* Three lines of title from 104px (an hour), two below — a long
                             title reads whole instead of ending in "…". */}
-                        <p className={`${pos.height >= 104 ? "line-clamp-3" : "line-clamp-2"} text-xs font-semibold leading-snug`} title={m.title}>
+                        <p className={`${pos.height >= 84 ? "line-clamp-3" : "line-clamp-2"} text-xs font-semibold leading-snug`} title={m.title}>
                           {m.title}
                         </p>
-                        {pos.height >= 44 && (
+                        {pos.height >= 40 && (
                           <p className="truncate bee-micro tabular-nums text-[var(--color-text)]">
                             {rangeLabel(m.starts_at, m.duration_minutes, tz)}
                           </p>
                         )}
-                        {pos.height >= 76 && (m.company_name || m.contact_name) && (
+                        {pos.height >= 60 && (m.company_name || m.contact_name) && (
                           <p className="flex min-w-0 items-center gap-1 bee-micro text-[var(--color-text)]">
                             <Building2 className="size-3 shrink-0" />
                             <span className="truncate">{m.company_name ?? m.contact_name}</span>
                           </p>
                         )}
-                        {pos.height >= 100 && (
+                        {pos.height >= 84 && (
                           <div className="mt-auto flex items-center gap-2 text-[var(--color-text)]">
                             <span className="bee-micro tabular-nums">{m.duration_minutes} min</span>
                             {m.attendee_user_ids.length > 0 && (

@@ -3,16 +3,15 @@
 import { Tooltip as TooltipPrimitive } from "radix-ui";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useBoxSize } from "@/components/charts/use-box-size";
 import { TooltipContent } from "@/components/ui/tooltip";
 import type { Locale } from "@/i18n/locales";
 import { computeActivityGrid, getDayLabels, mostActiveCell } from "@/lib/signal-activity-grid";
 import type { Signal } from "@/types/domain";
 
-const CELL = 16;
 const GAP = 3;
-const STEP = CELL + GAP;
-const LABEL_W = 30;
-const HEADER_H = 16;
+const LABEL_W = 32;
+const HEADER_H = 18;
 const HOUR_MARKS = [0, 6, 12, 18];
 
 /** Heatmap día × hora de cuándo llegan las señales de mercado — usa
@@ -27,6 +26,9 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
   const t = useTranslations("dashboardOverview.activityHeatmap");
   const locale = useLocale() as Locale;
   const dayLabels = getDayLabels(locale);
+  // Cells shrink to the box, text never does: 1 SVG unit = 1 px, labels at
+  // the standard body-2 size whatever the column width.
+  const [ref, { width: boxW }] = useBoxSize<HTMLDivElement>({ width: 480, height: 160 });
 
   if (signals.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("empty")}</p>;
@@ -34,6 +36,8 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
 
   const cells = computeActivityGrid(signals);
   const maxCount = Math.max(...cells.map((c) => c.count), 1);
+  const CELL = Math.max(6, Math.floor((boxW - LABEL_W - 23 * GAP) / 24));
+  const STEP = CELL + GAP;
   const width = LABEL_W + 24 * STEP;
   const height = HEADER_H + 7 * STEP;
   const peak = mostActiveCell(cells);
@@ -41,27 +45,23 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
   return (
     <TooltipPrimitive.Provider delayDuration={100}>
       <div className="bee-fill flex flex-col gap-4">
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          width="100%"
-          style={{ aspectRatio: `${width} / ${height}` }}
-          role="img"
-          aria-label={t("ariaLabel")}
-        >
+        <div ref={ref} className="w-full min-w-0">
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="block" role="img" aria-label={t("ariaLabel")}>
           {HOUR_MARKS.map((h) => (
-            <text key={h} x={LABEL_W + h * STEP + CELL / 2} y={HEADER_H - 7} textAnchor="middle" fontSize={11} fill="var(--color-muted-foreground)">
+            <text key={h} x={LABEL_W + h * STEP + CELL / 2} y={HEADER_H - 6} textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
               {h}h
             </text>
           ))}
           {dayLabels.map((label, day) => (
-            <text key={label} x={LABEL_W - 8} y={HEADER_H + day * STEP + CELL / 2 + 4} textAnchor="end" fontSize={11} fill="var(--color-muted-foreground)">
+            <text key={label} x={LABEL_W - 8} y={HEADER_H + day * STEP + CELL / 2 + 4} textAnchor="end" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
               {label}
             </text>
           ))}
           {cells.map((cell) => (
-            <ActivitySquare key={`${cell.day}:${cell.hour}`} cell={cell} maxCount={maxCount} x={LABEL_W + cell.hour * STEP} y={HEADER_H + cell.day * STEP} />
+            <ActivitySquare key={`${cell.day}:${cell.hour}`} cell={cell} maxCount={maxCount} size={CELL} x={LABEL_W + cell.hour * STEP} y={HEADER_H + cell.day * STEP} />
           ))}
         </svg>
+        </div>
 
         <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <span>
@@ -91,11 +91,13 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
 function ActivitySquare({
   cell,
   maxCount,
+  size,
   x,
   y,
 }: {
   cell: { day: number; hour: number; count: number };
   maxCount: number;
+  size: number;
   x: number;
   y: number;
 }) {
@@ -108,9 +110,9 @@ function ActivitySquare({
         <rect
           x={x}
           y={y}
-          width={CELL}
-          height={CELL}
-          rx={3}
+          width={size}
+          height={size}
+          rx={Math.min(3, size / 4)}
           fill="var(--color-chart-4)"
           fillOpacity={opacity}
         />

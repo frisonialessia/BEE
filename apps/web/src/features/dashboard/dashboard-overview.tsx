@@ -234,7 +234,7 @@ export function DashboardOverview({
           <DecisionFeed embedded />
         </OverviewCard>
 
-        <div className="grid grid-rows-[auto_minmax(0,1fr)] gap-4" style={{ gridColumn: "span 3" }}>
+        <div className="grid min-w-0 grid-cols-12 grid-rows-[auto_minmax(0,1fr)] gap-4" style={{ gridColumn: "span 3" }}>
           <OverviewCard span={12} className="!h-auto" title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
             <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
           </OverviewCard>
