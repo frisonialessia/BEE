@@ -117,7 +117,10 @@ export function MessageLibrary() {
             {t("empty.title")} {t("empty.subtitle")}
           </p>
         ) : (
-          <div className="flex flex-col">
+          // Rule 14 (docs/DESIGN_BRIEF.md): an org can create as many
+          // templates as it wants — the list caps its own height and
+          // scrolls instead of stretching the card without limit.
+          <div className="flex max-h-[26rem] flex-col overflow-y-auto">
             {templates.map((tpl) => (
               <div key={tpl.id} className="bee-row items-start">
                 <span className="mt-0.5 inline-flex shrink-0 rounded-full bg-[var(--color-primary)] px-2 py-0.5 text-xs font-medium">

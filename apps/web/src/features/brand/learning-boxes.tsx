@@ -206,7 +206,10 @@ export function AnomalyMonitorBox() {
       ) : alerts.length === 0 ? (
         <EmptyLine>{t("empty.title")}</EmptyLine>
       ) : (
-        <ul className="bee-fill min-h-0">
+        // Rule 14 (docs/DESIGN_BRIEF.md): open alerts can pile up between
+        // scans — the list caps its own height and scrolls instead of
+        // growing the card without limit.
+        <ul className="bee-fill min-h-0 max-h-72 overflow-y-auto">
           {alerts.map((a) => (
             <AlertRow key={a.id} alert={a} onAcknowledge={(id) => void handleAcknowledge(id)} />
           ))}
