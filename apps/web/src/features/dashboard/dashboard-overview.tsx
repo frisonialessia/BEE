@@ -269,28 +269,33 @@ export function DashboardOverview({
           }
         />
       }
-      kpis={
-        <StatStrip cols={4}>
-          <StatTile label={t("kpis.signals")} value={signals.length} delta={weekDelta} deltaLabel={t("kpis.weeklySignals")} trend={weekly} tone={TONE.market} />
-          <StatTile label={t("kpis.buyingWindow")} value={buyingWindow} hint={t("kpis.buyingWindowHint")} trend={hotTrend} tone={TONE.forecast} />
-          <StatTile
-            label={t("kpis.wonMonth")}
-            value={amount(sales.thisMonth.value)}
-            delta={sales.monthDelta}
-            deltaLabel={sales.goal ? t("kpis.goalHint", { goal: amount(sales.goal) }) : undefined}
-            progress={sales.attainment ?? undefined}
-            tone={TONE.urgency}
-          />
-          <StatTile label={t("kpis.openPipeline")} value={amount(openPipeline.amount)} hint={t("kpis.openPipelineHint", { count: openPipeline.count })} tone={TONE.prepared} />
-        </StatStrip>
-      }
     >
+      {/* "Tu semana en BEE" leads the page — it's the one personal, always-
+          there fixture — with the KPI strip right above the hive instead of
+          right under the header (the one page that departs from Rule 11's
+          usual "header → KPIs" rhythm, on purpose: here the personal recap
+          outranks the strip). */}
+      <WeeklyRecapCard signals={weekly[7]} won={wonThisWeek} streakDays={streakDays} marketSlow={marketSlow} dailySignals={dailySignals} totalWon={totalWon} />
+
       <GettingStartedCard signalCount={signals.length} opportunityCount={allOppsResult?.data.length ?? 0} userCount={usersResult?.length ?? 0} />
 
-      <div className="bee-overview">
-        <WeeklyRecapCard signals={weekly[7]} won={wonThisWeek} streakDays={streakDays} marketSlow={marketSlow} dailySignals={dailySignals} totalWon={totalWon} />
-        {marketSlow && <AntiBurnoutCard leads={burnoutLeads} />}
+      {marketSlow && <AntiBurnoutCard leads={burnoutLeads} />}
 
+      <StatStrip cols={4}>
+        <StatTile label={t("kpis.signals")} value={signals.length} delta={weekDelta} deltaLabel={t("kpis.weeklySignals")} trend={weekly} tone={TONE.market} />
+        <StatTile label={t("kpis.buyingWindow")} value={buyingWindow} hint={t("kpis.buyingWindowHint")} trend={hotTrend} tone={TONE.forecast} />
+        <StatTile
+          label={t("kpis.wonMonth")}
+          value={amount(sales.thisMonth.value)}
+          delta={sales.monthDelta}
+          deltaLabel={sales.goal ? t("kpis.goalHint", { goal: amount(sales.goal) }) : undefined}
+          progress={sales.attainment ?? undefined}
+          tone={TONE.urgency}
+        />
+        <StatTile label={t("kpis.openPipeline")} value={amount(openPipeline.amount)} hint={t("kpis.openPipelineHint", { count: openPipeline.count })} tone={TONE.prepared} />
+      </StatStrip>
+
+      <div className="bee-overview">
         {/* Hoy — the hive at the centre, the plays beside it. */}
         <OverviewCard span={8} title={t("sections.hive.title")} caption={t("sections.hive.caption")} className="lg:min-h-[34rem]!" action={<CardLink href={`${base}/signals?tab=intent`}>{t("sections.hive.link")}</CardLink>}>
           <IntentHive maxRadius={34} minHeight={300} maxCells={200} />
