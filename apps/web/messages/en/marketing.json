@@ -2,7 +2,8 @@
   "header": {
     "features": "Features",
     "login": "Sign in",
-    "tryFree": "Try without signing up"
+    "tryFree": "Try without signing up",
+    "contact": "Contact"
   },
   "footer": {
     "tagline": "Autonomous sales intelligence for revenue teams who don't have time to go looking for the signal — only to act on it.",
@@ -40,8 +41,6 @@
     "heroSubtitle": "BEE watches the market, prioritizes your pipeline, and prepares your next move while you close — no friction, no fabricated data, never losing control of a single decision.",
     "ctaStart": "Get started",
     "ctaTry": "Try without signing up",
-    "demoEyebrow": "Live demo",
-    "demoTitle": "From signal to opportunity — explore the dashboard yourself.",
     "guaranteesEyebrow": "Why trust BEE",
     "guaranteesTitle": "Built for high-performing sales teams.",
     "guaranteesSubtitle": "Not promises — architectural guarantees behind every decision BEE makes on your behalf.",
@@ -61,20 +60,68 @@
       "secureByDesign": {
         "title": "Secure by design",
         "description": "HMAC-signed webhooks; secrets never in the code."
+      },
+      "sources": {
+        "title": "Real sources",
+        "description": "Six providers connected in the product today; the six below are on the roadmap, not in production."
       }
     },
     "trustCharts": {
-      "ringLabel": "scores backed by real data",
-      "funnel": {
+      "week": "Wk {n}",
+      "coverage": {
+        "real": "Backed by data",
+        "invented": "Invented",
+        "empty": "No data → empty"
+      },
+      "approval": {
         "prepared": "Prepared",
         "approved": "Approved",
-        "sent": "Sent"
+        "sent": "Sent",
+        "rejected": "Rejected",
+        "unit": "approved"
       },
-      "donutSlice": "Your organization",
-      "sparkLabel": "0 incidents"
+      "tenant": {
+        "orgA": "Organization A",
+        "orgB": "Organization B",
+        "orgC": "Organization C",
+        "orgD": "Organization D",
+        "center": "{n} orgs",
+        "cross": "Cross-tenant queries",
+        "scoped": "Scoped by organization",
+        "isolated": "Isolated organizations"
+      },
+      "security": {
+        "signed": "HMAC-signed",
+        "rejected": "Signatures rejected",
+        "incidents": "Incidents",
+        "deliveries": "{count} verified deliveries",
+        "total": "Verified deliveries this week:",
+        "less": "Less",
+        "more": "More",
+        "aria": "Webhook deliveries by weekday and hour, every one HMAC-verified — illustrative view"
+      },
+      "sources": {
+        "live": "Live today · {count}",
+        "planned": "Coming soon · {count}",
+        "soon": "coming soon",
+        "unit": "signals",
+        "kinds": {
+          "linkedin": "Profiles and hiring",
+          "g2": "Reviews and buying intent",
+          "googleSearch": "Mentions and tech stack",
+          "gdelt": "World press, no API key",
+          "hiring": "Public job boards",
+          "website": "Enrichment from the domain",
+          "crunchbase": "Funding rounds",
+          "apollo": "Contacts and accounts",
+          "hubspot": "Sync with your CRM",
+          "salesforce": "Sync with your CRM",
+          "slack": "Team alerts",
+          "gmail": "Sending and replies"
+        }
+      }
     },
     "trustNote": "Illustrative demo figures — not a real account.",
-    "sourcesLabel": "Real sources:",
     "closingTitle": "Your next customer is already sending signals. The question is whether you're seeing them.",
     "closingCta": "Get started"
   }

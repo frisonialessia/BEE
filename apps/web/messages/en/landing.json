@@ -171,26 +171,31 @@
       "nextUpdateValue": "in 24h",
       "basedOn": "Based on 312 buying-intent data points from the last 90 days.",
       "viewMore": "View more"
-    }
+    },
+    "status": "Model · 94% confidence · sample data"
   },
   "counters": {
-    "note": "Figures from the demo above — sample data, not a real account.",
+    "note": "Figures from the demo above — sample data, not a real account. The connected sources are the product's own.",
     "items": {
       "signals": {
         "label": "Facts analyzed today",
-        "value": "128"
+        "value": "128",
+        "hint": "The demo's signal engine"
       },
       "plays": {
         "label": "Plays ready to approve",
-        "value": "7"
-      },
-      "hot": {
-        "label": "Hot leads right now",
-        "value": "3"
+        "value": "7",
+        "hint": "Action zone · Ready"
       },
       "confidence": {
         "label": "Model confidence",
-        "value": "94%"
+        "value": "94%",
+        "hint": "Scoring backed by data"
+      },
+      "sources": {
+        "label": "Connected sources",
+        "value": "6",
+        "hint": "LinkedIn · G2 · Google · GDELT · jobs · web"
       }
     }
   },

@@ -2,7 +2,8 @@
   "header": {
     "features": "Funcionalidades",
     "login": "Iniciar sesión",
-    "tryFree": "Probar sin registrarte"
+    "tryFree": "Probar sin registrarte",
+    "contact": "Contacto"
   },
   "footer": {
     "tagline": "Inteligencia comercial autónoma para equipos de revenue que no tienen tiempo de buscar la señal — solo de actuar sobre ella.",
@@ -40,8 +41,6 @@
     "heroSubtitle": "BEE vigila el mercado, prioriza tu pipeline y prepara la próxima jugada mientras tú cierras — sin fricción, sin datos inventados, sin perder el control de cada decisión.",
     "ctaStart": "Comenzar ahora",
     "ctaTry": "Probar sin registrarte",
-    "demoEyebrow": "Demo en vivo",
-    "demoTitle": "De la señal a la oportunidad — explora el panel tú mismo.",
     "guaranteesEyebrow": "Por qué confiar en BEE",
     "guaranteesTitle": "Diseñado para equipos comerciales de alto rendimiento.",
     "guaranteesSubtitle": "No promesas — garantías de arquitectura que sostienen cada decisión que BEE toma por ti.",
@@ -61,20 +60,68 @@
       "secureByDesign": {
         "title": "Seguro desde el diseño",
         "description": "Webhooks firmados con HMAC; secretos fuera del código."
+      },
+      "sources": {
+        "title": "Fuentes reales",
+        "description": "Seis proveedores conectados hoy en el producto; los seis de abajo están en la hoja de ruta, no en producción."
       }
     },
     "trustCharts": {
-      "ringLabel": "scores con dato real",
-      "funnel": {
+      "week": "Sem {n}",
+      "coverage": {
+        "real": "Con dato real",
+        "invented": "Inventados",
+        "empty": "Sin dato → vacío"
+      },
+      "approval": {
         "prepared": "Preparadas",
         "approved": "Aprobadas",
-        "sent": "Enviadas"
+        "sent": "Enviadas",
+        "rejected": "Rechazadas",
+        "unit": "aprobadas"
       },
-      "donutSlice": "Tu organización",
-      "sparkLabel": "0 incidentes"
+      "tenant": {
+        "orgA": "Organización A",
+        "orgB": "Organización B",
+        "orgC": "Organización C",
+        "orgD": "Organización D",
+        "center": "{n} orgs",
+        "cross": "Consultas cruzadas",
+        "scoped": "Filtradas por organización",
+        "isolated": "Organizaciones aisladas"
+      },
+      "security": {
+        "signed": "Firmadas con HMAC",
+        "rejected": "Firmas rechazadas",
+        "incidents": "Incidentes",
+        "deliveries": "{count} entregas verificadas",
+        "total": "Entregas verificadas esta semana:",
+        "less": "Menos",
+        "more": "Más",
+        "aria": "Entregas de webhook por día de la semana y hora, todas verificadas con HMAC — vista ilustrativa"
+      },
+      "sources": {
+        "live": "En producción hoy · {count}",
+        "planned": "Próximamente · {count}",
+        "soon": "próximamente",
+        "unit": "señales",
+        "kinds": {
+          "linkedin": "Perfiles y contratación",
+          "g2": "Reseñas e intención de compra",
+          "googleSearch": "Menciones y stack tecnológico",
+          "gdelt": "Prensa mundial, sin API key",
+          "hiring": "Portales de empleo públicos",
+          "website": "Enriquecimiento desde el dominio",
+          "crunchbase": "Rondas de inversión",
+          "apollo": "Contactos y cuentas",
+          "hubspot": "Sincronización con tu CRM",
+          "salesforce": "Sincronización con tu CRM",
+          "slack": "Alertas al equipo",
+          "gmail": "Envío y respuestas"
+        }
+      }
     },
     "trustNote": "Cifras ilustrativas del demo — no una cuenta real.",
-    "sourcesLabel": "Fuentes reales:",
     "closingTitle": "Tu próximo cliente ya está mandando señales. La pregunta es si las estás viendo.",
     "closingCta": "Comenzar ahora"
   }

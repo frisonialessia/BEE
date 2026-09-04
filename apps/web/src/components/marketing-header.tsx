@@ -4,56 +4,54 @@ import { useTranslations } from "next-intl";
 import { Logo } from "@/components/logo";
 
 /**
- * Cabecera pública — Iniciar sesión + Funcionalidades + Probar sin
- * registrarte (/probar). El CTA relleno manda al sandbox, no a /contacto —
- * es el mismo camino de cero fricción que el botón ghost del hero, y este
- * es el único que queda visible siempre (sticky) mientras el visitante
- * scrollea el resto de la landing.
+ * Cabecera pública — barra flotante: sticky, centrada en el mismo
+ * max-w-6xl que el resto de la landing, esquinas redondeadas, fondo de
+ * tarjeta translúcido con blur y borde hairline (.bee-nav en globals.css,
+ * puros tokens). Logo a la izquierda, enlaces limpios al centro
+ * (Funcionalidades · Contacto), a la derecha "Iniciar sesión" como enlace
+ * de texto discreto y un único CTA sólido "Probar sin registrarte" — el
+ * camino de cero fricción, el único que sigue visible mientras el
+ * visitante scrollea.
  *
  * Botones sin el wrapper <Button> de shadcn a propósito: sus variantes
- * cva (size="sm"/"lg") traían su propio alto/padding/radio, distinto del
- * sistema .bee-btn/.bee-btn-ghost que usa el resto de la app (Control,
- * Leads, etc.) — de ahí que radios y tamaños de botón no coincidieran
- * entre la landing y el dashboard. Enlaces planos + clases bee-btn*
- * directas, igual que en cualquier otra página del producto.
+ * cva traían su propio alto/padding/radio, distinto del sistema
+ * .bee-btn/.bee-btn-ghost que usa el resto de la app.
+ *
+ * En teléfono solo quedan logo + CTA: los enlaces del centro y "Iniciar
+ * sesión" no entran sin que el CTA se salga de la pantalla, y siguen
+ * alcanzables desde el footer. El hidden/md: va en un <span> envolvente,
+ * no directo en el link (.bee-btn-text fija su propio display fuera de
+ * @layer y ganaría a cualquier utilidad de Tailwind).
  */
 export function MarketingHeader() {
   const t = useTranslations("marketing.header");
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[color-mix(in_srgb,var(--color-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--color-background)_75%,transparent)] backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-6">
+    <header className="sticky top-0 z-40 px-4 pt-3 sm:px-6">
+      <div className="bee-nav mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 rounded-2xl px-4 sm:px-5">
         <Link href="/" aria-label="Inicio BEE" className="shrink-0">
           <Logo />
         </Link>
-        {/* Funcionalidades/Iniciar sesión ocultos bajo sm: en un viewport de
-         * teléfono no entran junto al logo y al CTA principal sin que este
-         * último se salga de la pantalla — el CTA es lo único imprescindible
-         * ahí; los otros dos siguen alcanzables desde el footer.
-         *
-         * El hidden/sm: va en un <span> envolvente, no directo en el link:
-         * .bee-btn-ghost fija su propio display:inline-flex como CSS sin
-         * capa (fuera de @layer), y una regla sin capa siempre gana sobre
-         * cualquier utilidad de Tailwind — que sí vive dentro de @layer
-         * utilities — sin importar el breakpoint. Puesto directo en el
-         * link, hidden/sm:inline-flex quedaban anulados y el link nunca
-         * se ocultaba en mobile. En el <span> no hay pelea: nada ahí
-         * fuerza su propio display. */}
-        <nav className="flex shrink-0 items-center gap-2">
+
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Secciones">
+          <Link href="/funcionalidades" className="bee-btn-text text-sm">
+            {t("features")}
+          </Link>
+          <Link href="/contacto" className="bee-btn-text text-sm">
+            {t("contact")}
+          </Link>
+        </nav>
+
+        <div className="flex shrink-0 items-center gap-2">
           <span className="hidden sm:inline-flex">
-            <Link href="/funcionalidades" className="bee-btn-ghost">
-              {t("features")}
-            </Link>
-          </span>
-          <span className="hidden sm:inline-flex">
-            <Link href="/login" className="bee-btn-ghost">
+            <Link href="/login" className="bee-btn-text text-sm">
               {t("login")}
             </Link>
           </span>
-          <Link href="/probar" className="bee-btn bee-btn--primary">
+          <Link href="/probar" className="bee-btn bee-btn--primary bee-cta-lift">
             {t("tryFree")}
           </Link>
-        </nav>
+        </div>
       </div>
     </header>
   );

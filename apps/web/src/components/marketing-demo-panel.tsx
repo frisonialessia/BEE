@@ -75,6 +75,10 @@ const STAGE_STATS = [
   { id: "consideration", pct: 38, color: "var(--color-chart-3)" },
 ] as const;
 
+// Same six stops, same order, as the landing hive (marketing-honeycomb.tsx
+// TEMP_STOPS): pale honey → honey → deep honey → indigo → lilac → magenta.
+const HEAT_SWATCHES = ["--color-chart-3", "--color-chart-1", "--color-chart-2", "--color-chart-4", "--color-chart-6", "--color-chart-5"] as const;
+
 const KPI_TILES = [
   { id: "ingestion", value: null },
   { id: "queue", value: "3" },
@@ -149,13 +153,14 @@ function SignalsView() {
             <p className="bee-eyebrow">{t("hiveTitle")}</p>
             <div className="flex items-center gap-1.5 bee-micro">
               <span>{t("cold")}</span>
-              <span
-                className="h-1.5 w-10 rounded-full"
-                style={{
-                  background:
-                    "linear-gradient(90deg, var(--color-chart-3), var(--color-chart-1), var(--color-chart-2), var(--color-chart-4), var(--color-chart-6), var(--color-chart-5))",
-                }}
-              />
+              {/* Six pure BEE swatches, the hive's own cold → hot stops
+               * (marketing-honeycomb TEMP_STOPS) — never a gradient that
+               * blends two hues into a brown or grey between them. */}
+              <span className="flex items-center gap-0.5" aria-hidden>
+                {HEAT_SWATCHES.map((v) => (
+                  <span key={v} className="size-1.5 rounded-full" style={{ background: `var(${v})` }} />
+                ))}
+              </span>
               <span>{t("hot")}</span>
             </div>
           </div>
@@ -660,12 +665,16 @@ export function MarketingDemoPanel() {
   return (
     <div
       ref={ref}
-      className="bee-glass overflow-hidden rounded-[var(--radius-lg)]"
+      className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-background)]"
       onPointerDownCapture={stopAuto}
       onKeyDownCapture={stopAuto}
       onFocusCapture={stopAuto}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-divider)] px-4 py-2.5 sm:px-5">
+      {/* Window bar: the three window dots (the product's own greens), the
+       * URL chip, a slim live status — indigo dot + "Modelo · 94 %
+       * confianza · datos de ejemplo" — and the tabs. Solid card surface
+       * over the panel's ground so it reads as the frame of the shot. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-card)] px-4 py-2.5 sm:px-5">
         <div className="flex items-center gap-2">
           <span className="size-2.5 rounded-full bg-[var(--color-green-1)]" aria-hidden />
           <span className="size-2.5 rounded-full bg-[var(--color-green-2)]" aria-hidden />
@@ -673,6 +682,10 @@ export function MarketingDemoPanel() {
           <span className="bee-micro ml-2 hidden rounded-sm bg-[var(--color-primary)]/60 px-2 py-0.5 sm:inline">
             app.bee.io/dashboard
           </span>
+        </div>
+        <div className="hidden items-center gap-2 lg:flex">
+          <span className="bee-live-dot" aria-hidden />
+          <span className="bee-micro">{t("status")}</span>
         </div>
         <div className="bee-filter-tabs">
           {TABS.map((tabItem) => (
