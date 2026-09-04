@@ -50,7 +50,7 @@ export function MarketingSalesProof() {
   const t = useTranslations("landing.sales");
 
   return (
-    <section id="ventas" className="border-t border-border bg-[color-mix(in_srgb,var(--color-green-3)_28%,var(--color-background))]">
+    <section id="ventas" className="border-t border-border">
       <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
         <div className="mx-auto max-w-2xl text-center">
           <p className="bee-eyebrow bee-eyebrow--green">{t("eyebrow")}</p>
