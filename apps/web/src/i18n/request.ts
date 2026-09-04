@@ -99,6 +99,7 @@ const NAMESPACES = [
   "probarForecastOps",
   "probarNetworkBrandControl",
   "sales",
+  "celebration",
 ] as const;
 
 async function loadMessages(locale: Locale) {

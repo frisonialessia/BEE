@@ -1,0 +1,21 @@
+{
+  "toast": {
+    "messages": [
+      "¡Cerrado! {title} pasa a ganado.",
+      "{title} — ganado. Otro cierre que entrena la siguiente jugada.",
+      "Trato cerrado: {title}. El sistema ya aprendió de este.",
+      "¡Bien jugado! {title} queda en ganado.",
+      "{title} ganado — la señal se confirmó."
+    ]
+  },
+  "streak": {
+    "label": "Racha",
+    "hint": "{days} días seguidos con cierres en el equipo",
+    "hintZero": "Arranca hoy la racha del equipo"
+  },
+  "burnout": {
+    "title": "Semana más lenta de lo normal",
+    "text": "Menos señales que tu promedio esta semana — aquí tienes cuentas de alta intención para retomar.",
+    "empty": "Aún no hay suficientes cuentas calientes para sugerir."
+  }
+}

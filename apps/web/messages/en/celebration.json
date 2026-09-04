@@ -1,0 +1,21 @@
+{
+  "toast": {
+    "messages": [
+      "Closed! {title} moves to won.",
+      "{title} — won. Another close that trains the next play.",
+      "Deal closed: {title}. The system already learned from it.",
+      "Well played! {title} is in the win column.",
+      "{title} won — the signal held."
+    ]
+  },
+  "streak": {
+    "label": "Streak",
+    "hint": "{days} days in a row with closes on the team",
+    "hintZero": "Start the team's streak today"
+  },
+  "burnout": {
+    "title": "Slower week than usual",
+    "text": "Fewer signals than your average this week — here are high-intent accounts to pick back up.",
+    "empty": "Not enough hot accounts to suggest yet."
+  }
+}

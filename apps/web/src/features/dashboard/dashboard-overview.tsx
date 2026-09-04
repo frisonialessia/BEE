@@ -3,6 +3,8 @@
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
+import { AntiBurnoutCard } from "@/components/celebration/anti-burnout-card";
+import { StreakBadge } from "@/components/celebration/streak-badge";
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { SALES, TONE } from "@/components/charts/palette";
 import { RANGE_MONTHS, RangePills, useTimeRange } from "@/components/charts/range-pills";
@@ -92,6 +94,14 @@ export function DashboardOverview({
     [signals, now],
   );
   const weekDelta = weekly[6] > 0 ? (weekly[7] - weekly[6]) / weekly[6] : null;
+  // Only a real, well-below-average week counts as slow — never a single
+  // noisy day-to-day dip, and never when there's too little history yet.
+  const marketSlow = useMemo(() => {
+    const trailing = weekly.slice(0, 7).filter((v) => v > 0);
+    if (trailing.length < 3) return false;
+    const avg = trailing.reduce((a, b) => a + b, 0) / trailing.length;
+    return weekly[7] < avg * 0.5;
+  }, [weekly]);
 
   // Accounts in a buying window: ready to buy or hot, from the same leads
   // the hive draws.
@@ -131,6 +141,39 @@ export function DashboardOverview({
     return { count: open.length, amount: open.reduce((sum, o) => sum + (o.amount ?? 0), 0) };
   }, [allOppsResult]);
   const criticalAccounts = useMemo(() => battlecards.filter((b) => b.ready_to_action).sort((a, b) => b.score - a.score), [battlecards]);
+
+  // Consecutive days, ending today, with at least one won deal on the
+  // team — derived from the same closed_at the ranking and Ventas already
+  // read, so no new backend state. Today doesn't break the count while
+  // it's still in progress: the streak is judged from yesterday back
+  // until today closes something of its own.
+  const streakDays = useMemo(() => {
+    const closedDays = new Set(
+      (allOppsResult?.data ?? [])
+        .filter((o) => o.status === "won" && o.closed_at)
+        .map((o) => new Date(o.closed_at as string).toDateString()),
+    );
+    const cursor = new Date(now);
+    if (!closedDays.has(cursor.toDateString())) cursor.setDate(cursor.getDate() - 1);
+    let days = 0;
+    while (closedDays.has(cursor.toDateString())) {
+      days += 1;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return days;
+  }, [allOppsResult, now]);
+
+  // Real accounts to suggest on a slow week — the hottest ones not yet in
+  // motion, from the same hive data the centre box already fetched.
+  const burnoutLeads = useMemo(
+    () =>
+      [...hiveLeads]
+        .filter((l) => stageOf(l) === "ready_to_buy" || (l.manual_temperature === null && l.is_hot))
+        .sort((a, b) => b.research_intensity_score - a.research_intensity_score)
+        .slice(0, 4)
+        .map((l) => ({ id: l.id, label: l.company_name ?? l.company_domain })),
+    [hiveLeads],
+  );
 
   // Mercado: signals stacked by the three most common types — one bar a
   // week over a year, one a month when zoomed out to two or five years.
@@ -221,6 +264,8 @@ export function DashboardOverview({
       <GettingStartedCard signalCount={signals.length} opportunityCount={allOppsResult?.data.length ?? 0} userCount={usersResult?.length ?? 0} />
 
       <div className="bee-overview">
+        {marketSlow && <AntiBurnoutCard leads={burnoutLeads} />}
+
         {/* Hoy — the hive at the centre, the plays beside it. */}
         <OverviewCard span={8} title={t("sections.hive.title")} caption={t("sections.hive.caption")} className="lg:min-h-[34rem]!" action={<CardLink href={`${base}/signals?tab=intent`}>{t("sections.hive.link")}</CardLink>}>
           <IntentHive maxRadius={34} minHeight={300} maxCells={200} />
@@ -235,7 +280,18 @@ export function DashboardOverview({
         <OverviewCard span={4} title={tCalendar("widget.title")} caption={t("sections.calendar.caption")} className="lg:min-h-[24rem]!" action={<CardLink href={`${base}/calendar`}>{tCalendar("widget.viewAll")}</CardLink>}>
           <MyCalendarWidget embedded />
         </OverviewCard>
-        <OverviewCard span={4} title={t("sections.ranking.title")} caption={t("sections.ranking.caption")} className="lg:min-h-[24rem]!" action={<CardLink href={`${base}/sales`}>{t("sections.ranking.link")}</CardLink>}>
+        <OverviewCard
+          span={4}
+          title={t("sections.ranking.title")}
+          caption={t("sections.ranking.caption")}
+          className="lg:min-h-[24rem]!"
+          action={
+            <span className="flex items-center gap-3">
+              <StreakBadge days={streakDays} />
+              <CardLink href={`${base}/sales`}>{t("sections.ranking.link")}</CardLink>
+            </span>
+          }
+        >
           <TeamGoalRanking days={90} bars />
         </OverviewCard>
 

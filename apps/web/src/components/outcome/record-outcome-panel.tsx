@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CheckCircle2, XCircle } from "lucide-react";
 
+import { useCelebrateWon } from "@/components/celebration/celebration-toast";
 import { Badge } from "@/components/ui/badge";
 import { useRecordOutcome } from "@/hooks/mutations/use-record-outcome";
 import { getLossReasonLabels, lossReasonLabels } from "@/lib/format";
@@ -28,6 +29,7 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
   const t = useTranslations("sharedB.outcome");
   const lossReasonLabelsForLocale = getLossReasonLabels(locale);
   const recordOutcome = useRecordOutcome(opportunity.id);
+  const celebrateWon = useCelebrateWon();
   const [mode, setMode] = useState<"won" | "lost" | null>(null);
   const [lossReason, setLossReason] = useState<LossReason | "">("");
   const [competitor, setCompetitor] = useState("");
@@ -93,7 +95,12 @@ export function RecordOutcomePanel({ opportunity }: { opportunity: Opportunity }
         competitor: competitor.trim() === "" ? undefined : competitor.trim(),
         notes: notes.trim() === "" ? undefined : notes.trim(),
       },
-      { onSuccess: reset },
+      {
+        onSuccess: () => {
+          if (outcome === "won") celebrateWon({ title: opportunity.title, amount: opportunity.amount });
+          reset();
+        },
+      },
     );
   }
 

@@ -1835,3 +1835,16 @@
 @media (prefers-reduced-motion: reduce) {
   .bee-hive-cell, .bee-hive-cell path { transition: none; }
 }
+
+/* Won-deal celebration toast (celebration-toast.tsx): six hexagons drawn
+   at the origin, flung to their spot via CSS vars and faded — an elegant
+   burst built from the hive's own shape, never generic confetti. */
+@keyframes bee-celebration-burst {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.35); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--bee-celebration-tx, 0), var(--bee-celebration-ty, 0)) scale(1); }
+}
+.bee-celebration-hex { transform-box: fill-box; transform-origin: center; animation: bee-celebration-burst 900ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .bee-celebration-hex { animation: none; opacity: 0.9; }
+}
