@@ -1399,6 +1399,46 @@
   pointer-events: none;
 }
 
+/* Landing hive: the hottest cells breathe, each on its own delay. */
+.bee-hex-breathe { animation: bee-hex-breathe 3.2s ease-in-out infinite; }
+@keyframes bee-hex-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) { .bee-hex-breathe { animation: none; } }
+
+/* ── Landing sparkles ─────────────────────────────────────────────────────
+   Small white glints drifting and twinkling over the one landing ground —
+   movement without a second background color. Positions are fixed in the
+   markup (MarketingSparkles), timing varies per glint. */
+.bee-sparkles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.bee-sparkles i {
+  position: absolute;
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 12px 4px rgba(255,255,255,.9), 0 0 2px 1px rgba(255,255,255,1);
+  opacity: 0;
+  animation: bee-twinkle 7s ease-in-out infinite;
+}
+.bee-sparkles i::before {
+  /* four-point star */
+  content: "";
+  position: absolute;
+  inset: -7px;
+  background:
+    linear-gradient(#fff, #fff) center / 2px 100% no-repeat,
+    linear-gradient(#fff, #fff) center / 100% 2px no-repeat;
+  opacity: .8;
+}
+@keyframes bee-twinkle {
+  0%, 100% { opacity: 0; transform: translateY(0) scale(.6); }
+  45%, 55% { opacity: .95; transform: translateY(-10px) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .bee-sparkles i { animation: none; opacity: .5; } }
+
 @keyframes bee-hex-pulse {
   0%, 100% { opacity: 0.35; transform: scale(1); }
   50% { opacity: 0.7; transform: scale(1.08); }

@@ -21,7 +21,7 @@ export function OverviewCard({
   caption?: string;
   action?: ReactNode;
   /** Columns of the 12-column .bee-overview grid this box takes on desktop. */
-  span?: 3 | 4 | 5 | 6 | 8 | 12;
+  span?: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 12;
   tone?: "blue" | "warm" | "violet" | "magenta";
   className?: string;
   children: ReactNode;

@@ -23,7 +23,7 @@ export function SignalVolumeChart({ points }: { points: DailySignalPoint[] }) {
   const maxCount = Math.max(1, ...points.map((p) => p.count));
 
   return (
-    <div className="flex items-end gap-2 overflow-x-auto pb-1" style={{ height: "var(--bee-chart-h)" }}>
+    <div className="bee-fill flex min-h-[160px] items-end gap-2 overflow-x-auto pb-1">
       {points.map((p, i) => {
         const totalPct = (p.count / maxCount) * 100;
         const hotPct = (p.hotCount / maxCount) * 100;

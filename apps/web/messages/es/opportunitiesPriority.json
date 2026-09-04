@@ -106,7 +106,17 @@
     },
     "emptyQuadrant": "Sin cuentas en esta zona todavía",
     "fitIntent": "Fit {fit} · Intención {intent}",
-    "emptyQuadrantsLine": "Sin cuentas en: {quadrants}"
+    "emptyQuadrantsLine": "Sin cuentas en: {quadrants}",
+    "howTo": {
+      "title": "Cómo leer la matriz",
+      "caption": "Dos ejes, cuatro zonas · corte en 50 / 50",
+      "axes": "Fit = qué tanto encaja la cuenta con tu ICP (industria, tamaño, país, cargo). Intención = el score de su señal más caliente ahora mismo."
+    },
+    "lists": {
+      "caption": "{count, plural, =1 {1 cuenta} other {# cuentas}} · ordenadas por intención",
+      "fit": "Fit",
+      "intent": "Intención"
+    }
   },
   "icpForm": {
     "title": "Perfil de Cliente Ideal (ICP)",

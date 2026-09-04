@@ -153,7 +153,7 @@ function SignalsView() {
                 className="h-1.5 w-10 rounded-full"
                 style={{
                   background:
-                    "linear-gradient(90deg, var(--color-chart-1), var(--color-chart-2), var(--color-chart-3), var(--color-chart-4), var(--color-chart-6))",
+                    "linear-gradient(90deg, var(--color-chart-3), var(--color-chart-1), var(--color-chart-2), var(--color-chart-4), var(--color-chart-6), var(--color-chart-5))",
                 }}
               />
               <span>{t("hot")}</span>
@@ -634,9 +634,9 @@ export function MarketingDemoPanel() {
     <div className="bee-glass overflow-hidden rounded-[var(--radius-lg)]">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-divider)] px-4 py-2.5 sm:px-5">
         <div className="flex items-center gap-2">
-          <span className="size-2.5 rounded-full bg-[var(--color-chart-2)]/60" aria-hidden />
-          <span className="size-2.5 rounded-full bg-[var(--color-chart-1)]/60" aria-hidden />
-          <span className="size-2.5 rounded-full bg-[var(--color-chart-4)]/60" aria-hidden />
+          <span className="size-2.5 rounded-full bg-[var(--color-green-1)]" aria-hidden />
+          <span className="size-2.5 rounded-full bg-[var(--color-green-2)]" aria-hidden />
+          <span className="size-2.5 rounded-full bg-[var(--color-green-3)]" aria-hidden />
           <span className="bee-micro ml-2 hidden rounded-sm bg-[var(--color-primary)]/60 px-2 py-0.5 sm:inline">
             app.bee.io/dashboard
           </span>

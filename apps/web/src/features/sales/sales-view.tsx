@@ -18,12 +18,9 @@ import { useQuotas } from "@/hooks/queries/use-quotas";
 import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
 import type { Locale } from "@/i18n/locales";
-import { localeTags } from "@/i18n/locales";
 import { formatDate, formatMoney } from "@/lib/i18n/format";
-import { stripOpportunityTitlePrefix } from "@/lib/format";
-import { isQuotaActive } from "@/lib/quotas";
+import { buildSalesModel } from "@/lib/sales-model";
 
-const DAY_MS = 86_400_000;
 const MONTHS = 12;
 
 /**
@@ -43,63 +40,20 @@ export function SalesView() {
   const { openOpportunity } = useOpportunityDrawer();
   const [now] = useState(() => Date.now());
 
-  const model = useMemo(() => {
-    const opportunities = oppsResult?.data ?? [];
-    const teams = teamsData ?? [];
-    const quotas = quotasResult?.data ?? [];
-    const currency = teams[0]?.currency ?? "USD";
-    const won = opportunities
-      .filter((o) => o.status === "won" && o.closed_at)
-      .sort((a, b) => (b.closed_at as string).localeCompare(a.closed_at as string));
-    const total = won.reduce((s, o) => s + (o.amount ?? 0), 0);
-    const avgTicket = won.length ? total / won.length : 0;
-    const cycles = won.map((o) => (new Date(o.closed_at as string).getTime() - new Date(o.created_at).getTime()) / DAY_MS);
-    const avgCycle = cycles.length ? cycles.reduce((a, b) => a + b, 0) / cycles.length : null;
-
-    const monthFmt = new Intl.DateTimeFormat(localeTags[locale], { month: "short" });
-    const months = Array.from({ length: MONTHS }, (_, i) => {
-      const d = new Date(now);
-      d.setDate(1);
-      d.setMonth(d.getMonth() - (MONTHS - 1 - i));
-      const start = new Date(d.getFullYear(), d.getMonth(), 1).getTime();
-      const end = new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime();
-      const rows = won.filter((o) => {
-        const c = new Date(o.closed_at as string).getTime();
-        return c >= start && c < end;
-      });
-      return { label: monthFmt.format(d), value: rows.reduce((s, o) => s + (o.amount ?? 0), 0), count: rows.length, current: i === MONTHS - 1 };
-    });
-    let acc = 0;
-    const cumulative = months.map((m) => ({ label: m.label, value: (acc += m.value) }));
-    const thisMonth = months[MONTHS - 1];
-    const lastMonth = months[MONTHS - 2];
-    const monthDelta = lastMonth.value > 0 ? (thisMonth.value - lastMonth.value) / lastMonth.value : null;
-    const clientsDelta = lastMonth.count > 0 ? (thisMonth.count - lastMonth.count) / lastMonth.count : null;
-
-    const today = new Date(now);
-    const teamGoal = quotas
-      .filter((q) => q.team_id && isQuotaActive(q, today) && q.target_amount > 0)
-      .reduce((s, q) => s + q.target_amount, 0);
-    const userGoal = quotas
-      .filter((q) => q.user_id && isQuotaActive(q, today) && q.target_amount > 0)
-      .reduce((s, q) => s + q.target_amount, 0);
-    const goal = teamGoal || userGoal || null;
-    const attainment = goal ? thisMonth.value / goal : null;
-
-    const companyById = new Map((companiesResult?.data ?? []).map((c) => [c.id, c.name]));
-    const userById = new Map((users ?? []).map((u) => [u.id, u.full_name]));
-    const ledger = won.slice(0, 60).map((o) => ({
-      id: o.id,
-      title: stripOpportunityTitlePrefix(o.title),
-      company: o.company_id ? companyById.get(o.company_id) ?? "" : "",
-      owner: o.assigned_to_user_id ? userById.get(o.assigned_to_user_id) ?? "" : "",
-      amount: o.amount ?? 0,
-      closedAt: o.closed_at as string,
-      type: o.opportunity_type ?? "new_logo",
-    }));
-
-    return { currency, won, total, avgTicket, avgCycle, months, cumulative, thisMonth, monthDelta, clientsDelta, goal, attainment, ledger };
-  }, [oppsResult, teamsData, quotasResult, companiesResult, users, locale, now]);
+  const model = useMemo(
+    () =>
+      buildSalesModel({
+        opportunities: oppsResult?.data ?? [],
+        teams: teamsData ?? [],
+        quotas: quotasResult?.data ?? [],
+        companies: companiesResult?.data ?? [],
+        users: users ?? [],
+        locale,
+        now,
+        months: MONTHS,
+      }),
+    [oppsResult, teamsData, quotasResult, companiesResult, users, locale, now],
+  );
 
   const money = (v: number, compact = true) => formatMoney(v, model.currency, locale, compact);
   const live = oppsResult?.live ?? false;

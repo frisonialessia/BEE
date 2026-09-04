@@ -63,8 +63,16 @@
       },
       "ranking": {
         "title": "Team ranking",
-        "caption": "30-day closes · ring = progress to goal",
+        "caption": "90-day closes · ring = progress to goal",
         "link": "See Sales →"
+      },
+      "sales": {
+        "title": "Sales",
+        "caption": "Won per month · last 6 months",
+        "captionGoal": "Won per month · goal {goal}",
+        "goalLabel": "Goal",
+        "link": "See Sales →",
+        "empty": "No closes yet. The first one will show up here."
       }
     }
   },

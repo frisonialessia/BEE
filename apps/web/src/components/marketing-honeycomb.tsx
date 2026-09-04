@@ -132,12 +132,17 @@ const VIEW = HEX_SIZE * 1.5 * RADIUS + HEX_SIZE * 1.5;
 // esta función mezclaba chart-6→chart-4 para frío y chart-1→chart-6 para
 // caliente, un orden inventado que además iba en la dirección contraria a
 // la barra real.
+// Landing only: the whole BEE palette from cold to hot — pale honey, honey,
+// deep honey, indigo, lilac and magenta at the peak — so the hive on the
+// landing shows every brand color at once (the dashboard hive keeps its
+// five-stop scale).
 const TEMP_STOPS = [
+  "--color-chart-3",
   "--color-chart-1",
   "--color-chart-2",
-  "--color-chart-3",
   "--color-chart-4",
   "--color-chart-6",
+  "--color-chart-5",
 ] as const;
 
 /** Frío → dorado, medio → naranja/azul, caliente → violeta — interpolado
@@ -214,10 +219,10 @@ export function MarketingHoneycomb() {
   const hovered = hoveredIdx !== null ? CELLS[hoveredIdx] : null;
 
   return (
-    <div className="relative mx-auto h-full w-full max-w-[220px]">
+    <div className="relative mx-auto h-full w-full max-w-[240px]">
       <svg
         viewBox={`${-VIEW} ${-VIEW} ${VIEW * 2} ${VIEW * 2}`}
-        className="mx-auto block h-full w-full max-w-[220px]"
+        className="mx-auto block h-full w-full max-w-[240px]"
         role="img"
         aria-label={t("ariaLabel")}
         onMouseLeave={() => setHoveredIdx(null)}
@@ -230,7 +235,8 @@ export function MarketingHoneycomb() {
             stroke={hoveredIdx === i ? "var(--color-chart-5)" : "var(--color-background)"}
             strokeWidth={hoveredIdx === i ? 2 : 1.5}
             opacity={Number((0.55 + cell.heat * 0.45).toFixed(3))}
-            className="cursor-pointer transition-[stroke,stroke-width] duration-100"
+            className={`cursor-pointer transition-[stroke,stroke-width] duration-100 ${cell.heat > HOT_THRESHOLD ? "bee-hex-breathe" : ""}`}
+            style={cell.heat > HOT_THRESHOLD ? { animationDelay: `${Math.round(hash01(cell.q + 7, cell.r + 3) * 3000)}ms`, transformOrigin: `${cell.x}px ${cell.y}px` } : undefined}
             onMouseEnter={(e) => handlePointer(i, e)}
             onMouseMove={(e) => handlePointer(i, e)}
           />

@@ -106,7 +106,17 @@
     },
     "emptyQuadrant": "No accounts in this zone yet",
     "fitIntent": "Fit {fit} · Intent {intent}",
-    "emptyQuadrantsLine": "No accounts in: {quadrants}"
+    "emptyQuadrantsLine": "No accounts in: {quadrants}",
+    "howTo": {
+      "title": "How to read the matrix",
+      "caption": "Two axes, four zones · cut at 50 / 50",
+      "axes": "Fit = how well the account matches your ICP (industry, size, country, title). Intent = the score of its hottest signal right now."
+    },
+    "lists": {
+      "caption": "{count, plural, =1 {1 account} other {# accounts}} · sorted by intent",
+      "fit": "Fit",
+      "intent": "Intent"
+    }
   },
   "icpForm": {
     "title": "Ideal Customer Profile (ICP)",

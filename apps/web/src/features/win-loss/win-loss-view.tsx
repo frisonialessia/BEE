@@ -12,6 +12,7 @@ import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeWinLoss } from "@/lib/win-loss";
 import { LiveBadge } from "@/components/live-badge";
 import { KpiStrip } from "@/components/metric-card";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 
 /** Ganado/Perdido — por qué se ganan y se pierden los deals, no solo cuántos.
  *  Todo calculado en el cliente a partir de las oportunidades ya cargadas
@@ -97,25 +98,17 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
               card to the taller one's height, leaving blank space below its
               last row instead of just being its own natural height (same fix
               already applied to the two Resumen heatmaps below). */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <section className="bee-surface bee-bento-pad">
-              <h3 className="bee-card-title">{t("winLoss.reasons.title")}</h3>
-              <p className="bee-caption mb-4">{t("winLoss.reasons.caption")}</p>
+          <div className="bee-overview">
+            <OverviewCard span={6} title={t("winLoss.reasons.title")} caption={t("winLoss.reasons.caption")}>
               <LossReasonChart stats={summary.reasonBreakdown} />
-            </section>
-
-            <section className="bee-surface bee-bento-pad">
-              <h3 className="bee-card-title">{t("winLoss.competitors.title")}</h3>
-              <p className="bee-caption mb-4">{t("winLoss.competitors.caption")}</p>
+            </OverviewCard>
+            <OverviewCard span={6} title={t("winLoss.competitors.title")} caption={t("winLoss.competitors.caption")}>
               <CompetitorBreakdown stats={summary.competitorBreakdown} />
-            </section>
+            </OverviewCard>
+            <OverviewCard span={12} title={t("winLoss.meddic.title")} caption={t("winLoss.meddic.caption")}>
+              <MeddicCorrelationChart stats={summary.meddicCorrelation} />
+            </OverviewCard>
           </div>
-
-          <section className="bee-surface bee-bento-pad">
-            <h3 className="bee-card-title">{t("winLoss.meddic.title")}</h3>
-            <p className="bee-caption mb-4">{t("winLoss.meddic.caption")}</p>
-            <MeddicCorrelationChart stats={summary.meddicCorrelation} />
-          </section>
         </div>
       )}
     </div>

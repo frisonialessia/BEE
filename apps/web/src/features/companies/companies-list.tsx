@@ -102,6 +102,7 @@ import { Donut } from "@/components/charts/donut";
 import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
 import { DATA } from "@/components/charts/palette";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 
 export function CompaniesList() {
   const t = useTranslations("companiesLeads.companiesList");
@@ -213,21 +214,17 @@ export function CompaniesList() {
                       <StatTile label={t("portfolio.withOpps")} value={portfolio.withOpps} progress={portfolio.withOpps / companies.length} tone={DATA.violet} />
                       <StatTile label={t("portfolio.withContacts")} value={portfolio.withContacts} progress={portfolio.withContacts / companies.length} tone={DATA.magenta} />
                     </StatStrip>
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-                      <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-5">
-                        <h3 className="bee-card-title">{t("portfolio.industryTitle")}</h3>
-                        <p className="bee-caption mb-4">{t("portfolio.industryCaption")}</p>
+                    <div className="bee-overview">
+                      <OverviewCard span={5} title={t("portfolio.industryTitle")} caption={t("portfolio.industryCaption")}>
                         <Donut slices={portfolio.industries} otherLabel={t("portfolio.other")} />
-                      </section>
-                      <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-7">
-                        <h3 className="bee-card-title">{t("portfolio.countryTitle")}</h3>
-                        <p className="bee-caption mb-4">{t("portfolio.countryCaption")}</p>
+                      </OverviewCard>
+                      <OverviewCard span={7} title={t("portfolio.countryTitle")} caption={t("portfolio.countryCaption")}>
                         {portfolio.countries.length === 0 ? (
                           <p className="bee-caption py-6 text-center">—</p>
                         ) : (
                           <HorizontalFunnel rows={portfolio.countries} />
                         )}
-                      </section>
+                      </OverviewCard>
                     </div>
                   </div>
                 )}

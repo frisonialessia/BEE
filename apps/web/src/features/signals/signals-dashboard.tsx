@@ -14,6 +14,7 @@ import type { Locale } from "@/i18n/locales";
 import { computeDailySignalVolume } from "@/lib/signal-trends";
 import { LiveBadge } from "@/components/live-badge";
 import { Donut } from "@/components/charts/donut";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { getSignalTypeLabels } from "@/lib/format";
 
 /** Panel de señales — triggers de mercado del Signal Engine — con
@@ -77,17 +78,13 @@ export function SignalsDashboard() {
               </div>
             ) : (
               <>
-                <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
-                  <section className="bee-surface bee-bento-pad lg:col-span-8">
-                    <h3 className="bee-card-title">{t("volumeTitle")}</h3>
-                    <p className="bee-caption mb-4">{t("volumeSubtitle")}</p>
+                <div className="bee-overview mb-4">
+                  <OverviewCard span={8} title={t("volumeTitle")} caption={t("volumeSubtitle")}>
                     <SignalVolumeChart points={dailyVolume} />
-                  </section>
-                  <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-4">
-                    <h3 className="bee-card-title">{t("mixTitle")}</h3>
-                    <p className="bee-caption mb-4">{t("mixSubtitle")}</p>
+                  </OverviewCard>
+                  <OverviewCard span={4} title={t("mixTitle")} caption={t("mixSubtitle")}>
                     <Donut slices={mixByType} otherLabel={locale === "es" ? "Otras" : "Other"} />
-                  </section>
+                  </OverviewCard>
                 </div>
 
                 {/* Columna apilada en mobile a propósito, no el patrón de caja

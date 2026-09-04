@@ -54,7 +54,13 @@ export function groupByCrmStage(opportunities: Opportunity[]): {
   for (const s of CRM_STAGES) {
     stages[s.id].sort((a, b) => b.score - a.score);
   }
-  closed.sort((a, b) => (b.closed_at ?? "").localeCompare(a.closed_at ?? ""));
+  // Clients (won) first, newest close on top, then everything else — the
+  // Cerradas column reads as "who we won" before "what we lost".
+  closed.sort((a, b) => {
+    const wa = a.status === "won" ? 0 : 1;
+    const wb = b.status === "won" ? 0 : 1;
+    return wa - wb || (b.closed_at ?? "").localeCompare(a.closed_at ?? "");
+  });
 
   return { stages, closed };
 }

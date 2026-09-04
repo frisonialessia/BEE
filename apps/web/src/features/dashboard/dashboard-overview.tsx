@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { AreaChart } from "@/components/charts/area-chart";
+import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { Donut } from "@/components/charts/donut";
-import { DATA } from "@/components/charts/palette";
+import { DATA, SALES } from "@/components/charts/palette";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-heatmap";
 import { OverviewCard } from "@/components/dashboard/overview-card";
@@ -27,7 +28,11 @@ import { useCompanies } from "@/hooks/queries/use-companies";
 import { useDashboardBase } from "@/lib/demo/mode";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
+import { useQuotas } from "@/hooks/queries/use-quotas";
+import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
+import { formatMoney } from "@/lib/i18n/format";
+import { buildSalesModel } from "@/lib/sales-model";
 import { LiveBadge } from "@/components/live-badge";
 
 /**
@@ -56,6 +61,8 @@ export function DashboardOverview({
   const { data: allOppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 200);
   const { data: usersResult, isLoading: usersLoading } = useUsers();
   const { data: companiesResult } = useCompanies(200);
+  const { data: teamsData } = useTeams();
+  const { data: quotasResult } = useQuotas();
 
   const signals = useMemo(() => signalsResult?.data ?? [], [signalsResult]);
   const battlecards = battlecardsResult?.data ?? [];
@@ -100,6 +107,23 @@ export function DashboardOverview({
     }
     return [...counts.entries()].map(([type, value]) => ({ label: labels[type as keyof typeof labels] ?? type, value }));
   }, [signals, now, locale]);
+  // Six months of closed revenue against the active goal — the same model
+  // the Ventas page uses, so the box and the page never disagree.
+  const sales = useMemo(
+    () =>
+      buildSalesModel({
+        opportunities: allOppsResult?.data ?? [],
+        teams: teamsData ?? [],
+        quotas: quotasResult?.data ?? [],
+        companies: companiesResult?.data ?? [],
+        users: usersResult ?? [],
+        locale,
+        now,
+        months: 6,
+      }),
+    [allOppsResult, teamsData, quotasResult, companiesResult, usersResult, locale, now],
+  );
+  const money = (v: number) => formatMoney(v, sales.currency, locale, true);
   const weekDelta = (pick: (w: (typeof weekly)[number]) => number) => {
     const last = pick(weekly[7]);
     const prev = pick(weekly[6]);
@@ -153,45 +177,71 @@ export function DashboardOverview({
         userCount={usersResult?.length ?? 0}
       />
 
-      {/* Nine boxes, three rows, one shell (OverviewCard). Every box in a
-          row is the same height; the only colored fills on the page are the
-          signal-tone accents inside cards, never the cards themselves. What
-          used to sit below this grid (battlecards, revenue simulator, every
+      {/* One shell (OverviewCard), rows paired by natural height so nothing
+          has to stretch: three charts of the same aspect on top, then the
+          hive next to the three decision cards (both ~380px), then three
+          short lists, then two lists, then the two heatmaps. What used to
+          sit below this grid (battlecards, revenue simulator, every
           signal) lives on its own page — Estrategias, Pronóstico, Señales —
           so this stays a summary, not the whole product on one screen. */}
       <div className="bee-overview">
-        {/* Row 1 — the hive between two charts: signals per week on the
-            left, the 30-day mix by type on the right. */}
-        <OverviewCard span={3} title={t("sections.signalsWeekly.title")} caption={t("sections.signalsWeekly.caption")}>
+        {/* Row 1 — three charts, same height, same aspect. Ventas is the one
+            green box on this page: closed revenue, the Ventas page's colors. */}
+        <OverviewCard span={4} title={t("sections.signalsWeekly.title")} caption={t("sections.signalsWeekly.caption")}>
           <AreaChart points={weekly.map((w) => ({ label: w.label, value: w.count }))} color={DATA.indigo} />
-        </OverviewCard>
-
-        <SignalHexMap height={240} className="h-full" style={{ gridColumn: "span 6" }} />
-
-        <OverviewCard span={3} title={t("sections.signalMix.title")} caption={t("sections.signalMix.caption")}>
-          <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
-        </OverviewCard>
-
-        {/* Row 2 — the decisions: today's play, the daily brief, the funnel. */}
-        <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")}>
-          <DecisionFeed embedded />
-        </OverviewCard>
-
-        <OverviewCard span={5} title={tBrief("title")} caption={t("sections.brief.caption")}>
-          <DailyBrief embedded />
-        </OverviewCard>
-
-        <OverviewCard span={3} title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
-          <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
-        </OverviewCard>
-
-        {/* Row 3 — people: critical accounts, calendar, team ranking. */}
-        <OverviewCard span={4} title={tCritical("title")} caption={t("sections.critical.caption")}>
-          <CriticalAccountsDigest battlecards={battlecards} today={new Date()} embedded />
         </OverviewCard>
 
         <OverviewCard
           span={4}
+          title={t("sections.sales.title")}
+          caption={sales.goal ? t("sections.sales.captionGoal", { goal: money(sales.goal) }) : t("sections.sales.caption")}
+          action={
+            <Link href={`${base}/sales`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
+              {t("sections.sales.link")}
+            </Link>
+          }
+        >
+          {sales.won.length === 0 ? (
+            <p className="bee-caption py-8 text-center">{t("sections.sales.empty")}</p>
+          ) : (
+            <BarsVsTarget
+              points={sales.months}
+              target={sales.goal}
+              color={SALES.lime}
+              hitColor={SALES.won}
+              targetLabel={sales.goal ? t("sections.sales.goalLabel") : undefined}
+              formatValue={(v) => money(v)}
+            />
+          )}
+        </OverviewCard>
+
+        <OverviewCard span={4} title={t("sections.signalMix.title")} caption={t("sections.signalMix.caption")}>
+          <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
+        </OverviewCard>
+
+        {/* Row 2 — the hive and today's three plays: both tall by nature. */}
+        <SignalHexMap height={260} className="h-full" style={{ gridColumn: "span 8" }} />
+
+        <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")}>
+          <DecisionFeed embedded />
+        </OverviewCard>
+
+        {/* Row 3 — three short lists: the brief, the funnel, critical accounts. */}
+        <OverviewCard span={4} title={tBrief("title")} caption={t("sections.brief.caption")}>
+          <DailyBrief embedded />
+        </OverviewCard>
+
+        <OverviewCard span={4} title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
+          <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
+        </OverviewCard>
+
+        <OverviewCard span={4} title={tCritical("title")} caption={t("sections.critical.caption")}>
+          <CriticalAccountsDigest battlecards={battlecards} today={new Date()} embedded />
+        </OverviewCard>
+
+        {/* Row 4 — people: calendar and team ranking. */}
+        <OverviewCard
+          span={6}
           title={tCalendar("widget.title")}
           action={
             <Link href={`${base}/calendar`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
@@ -203,7 +253,7 @@ export function DashboardOverview({
         </OverviewCard>
 
         <OverviewCard
-          span={4}
+          span={6}
           title={t("sections.ranking.title")}
           caption={t("sections.ranking.caption")}
           action={
@@ -212,10 +262,10 @@ export function DashboardOverview({
             </Link>
           }
         >
-          <TeamGoalRanking days={30} />
+          <TeamGoalRanking days={90} />
         </OverviewCard>
 
-        {/* Row 4 — the patterns. */}
+        {/* Row 5 — the patterns. */}
         <OverviewCard span={6} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
           <IndustrySignalHeatmap
             opportunities={allOppsResult?.data ?? []}

@@ -7,6 +7,7 @@ import { addNetworkConnection, findIntroPaths, getNetworkConnections, getNetwork
 import { Skeleton } from "@/components/ui/skeleton";
 import { LiveBadge } from "@/components/live-badge";
 import { KpiStrip } from "@/components/metric-card";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Donut } from "@/components/charts/donut";
 import { DATA } from "@/components/charts/palette";
 
@@ -188,8 +189,8 @@ export function NetworkNavigatorPanel() {
     <div className="space-y-4">
       {/* Stats row */}
       {stats && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          <div className="lg:col-span-8">
+        <div className="bee-overview">
+          <div style={{ gridColumn: "span 8" }}>
             <KpiStrip
               cols={2}
               items={[
@@ -200,9 +201,7 @@ export function NetworkNavigatorPanel() {
               ]}
             />
           </div>
-          <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-4">
-            <h3 className="bee-card-title">{t("degreeTitle")}</h3>
-            <p className="bee-caption mb-4">{t("degreeCaption")}</p>
+          <OverviewCard span={4} title={t("degreeTitle")} caption={t("degreeCaption")}>
             <Donut
               slices={[
                 { label: t("stats.firstDegree"), value: stats.first_degree_count, color: DATA.indigo },
@@ -219,7 +218,7 @@ export function NetworkNavigatorPanel() {
                 ))}
               </div>
             )}
-          </section>
+          </OverviewCard>
         </div>
       )}
 

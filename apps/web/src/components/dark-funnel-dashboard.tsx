@@ -6,6 +6,7 @@ import type { DarkFunnelSummary, HotLeadScore } from "@/lib/types";
 import { getDarkFunnelHotLeads, getDarkFunnelSummary, ingestDarkFunnelSignal } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { KpiStrip } from "@/components/metric-card";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Donut } from "@/components/charts/donut";
 import { DATA } from "@/components/charts/palette";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -189,8 +190,8 @@ export function DarkFunnelDashboard() {
     <div className="space-y-4">
       {/* Summary cards */}
       {summary && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          <div className="lg:col-span-8">
+        <div className="bee-overview">
+          <div style={{ gridColumn: "span 8" }}>
             <KpiStrip
               cols={2}
               items={[
@@ -201,17 +202,15 @@ export function DarkFunnelDashboard() {
               ]}
             />
           </div>
-          <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-4">
-            <h3 className="bee-card-title">{t("stageMixTitle")}</h3>
-            <p className="bee-caption mb-4">{t("stageMixCaption")}</p>
+          <OverviewCard span={4} title={t("stageMixTitle")} caption={t("stageMixCaption")}>
             <Donut
-                slices={[
-                  { label: t("stageReadyToBuy"), value: summary.ready_to_buy_count, color: DATA.honey },
-                  { label: t("stageDecision"), value: summary.decision_stage_count, color: DATA.indigo },
-                  { label: t("stageConsideration"), value: summary.consideration_stage_count, color: DATA.violet },
-                ]}
-              />
-          </section>
+              slices={[
+                { label: t("stageReadyToBuy"), value: summary.ready_to_buy_count, color: DATA.honey },
+                { label: t("stageDecision"), value: summary.decision_stage_count, color: DATA.indigo },
+                { label: t("stageConsideration"), value: summary.consideration_stage_count, color: DATA.violet },
+              ]}
+            />
+          </OverviewCard>
         </div>
       )}
 

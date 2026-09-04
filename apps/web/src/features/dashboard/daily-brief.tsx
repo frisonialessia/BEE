@@ -34,6 +34,15 @@ const TONE_FILL: Record<BriefTone, React.CSSProperties> = {
   info: { background: "color-mix(in srgb, var(--color-chart-4) 22%, var(--color-card))", borderColor: "var(--color-chart-4)" },
 };
 
+/* Embedded on Resumen the brief is a list: the tone lives in a small
+   tinted disc behind the icon, never in a block of fill that would have to
+   stretch to the height of the box next to it. */
+const TONE_RING: Record<BriefTone, string> = {
+  hot: "color-mix(in srgb, var(--color-chart-5) 18%, var(--color-card))",
+  risk: "color-mix(in srgb, var(--color-chart-1) 26%, var(--color-card))",
+  info: "color-mix(in srgb, var(--color-chart-4) 20%, var(--color-card))",
+};
+
 const TONE_COLOR: Record<BriefTone, string> = {
   hot: "var(--color-chart-5)",
   risk: "var(--color-chart-1)",
@@ -45,7 +54,7 @@ const TONE_COLOR: Record<BriefTone, string> = {
  *  necesita tu atención hoy", arriba del todo en Resumen. Si no hay nada
  *  real que decir, lo dice — nunca inventa urgencia para llenar el espacio. */
 /** `embedded`: rendered inside an OverviewCard (which owns the title), as a
- *  two-column list of outlined rows that fills the box. */
+ *  single column of compact rows — icon disc, title, one line of detail. */
 export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useTranslations("dashboardOverview.dailyBrief");
   const tItems = useTranslations("dashboardOverview.dailyBrief.items");
@@ -113,25 +122,30 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
       return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
     }
     return (
-      <div className="bee-fill grid grid-cols-1 auto-rows-fr gap-2 sm:grid-cols-2">
-        {items.slice(0, 6).map((item) => {
+      <ul className="flex flex-col gap-1">
+        {items.slice(0, 5).map((item) => {
           const Icon = TONE_ICON[item.tone];
           return (
-            <Link
-              key={item.id}
-              href={resolveHref(item.href)}
-              className="bee-bento flex items-start gap-4 px-4 py-3 transition-opacity hover:opacity-90"
-              style={TONE_FILL[item.tone]}
-            >
-              <Icon className="mt-1 size-4 shrink-0" style={{ color: TONE_COLOR[item.tone] }} />
-              <div className="min-w-0">
-                <p className="truncate text-xs font-semibold">{item.title}</p>
-                <p className="mt-1 line-clamp-2 bee-micro">{item.description}</p>
-              </div>
-            </Link>
+            <li key={item.id}>
+              <Link
+                href={resolveHref(item.href)}
+                className="flex items-start gap-3 rounded-[var(--radius-md)] px-2 py-2 transition-colors hover:bg-[var(--color-primary)]/30"
+              >
+                <span
+                  className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full"
+                  style={{ background: TONE_RING[item.tone], color: TONE_COLOR[item.tone] }}
+                >
+                  <Icon className="size-3.5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium">{item.title}</span>
+                  <span className="mt-0.5 block line-clamp-1 bee-micro">{item.description}</span>
+                </span>
+              </Link>
+            </li>
           );
         })}
-      </div>
+      </ul>
     );
   }
 

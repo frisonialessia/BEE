@@ -63,8 +63,16 @@
       },
       "ranking": {
         "title": "Ranking del equipo",
-        "caption": "Cierres de 30 días · anillo = avance a la meta",
+        "caption": "Cierres de 90 días · anillo = avance a la meta",
         "link": "Ver Ventas →"
+      },
+      "sales": {
+        "title": "Ventas",
+        "caption": "Ganado por mes · últimos 6 meses",
+        "captionGoal": "Ganado por mes · meta {goal}",
+        "goalLabel": "Meta",
+        "link": "Ver Ventas →",
+        "empty": "Todavía no hay cierres. El primero aparecerá aquí."
       }
     }
   },

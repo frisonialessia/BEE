@@ -18,9 +18,9 @@ import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeForecast, qualificationScore } from "@/lib/forecast";
 import { computeMonthlyTrends } from "@/lib/trends";
 import { LiveBadge } from "@/components/live-badge";
-import { KpiStrip } from "@/components/metric-card";
-import { StageTiles } from "@/components/charts/stage-tiles";
-import { DATA } from "@/components/charts/palette";
+import { DATA, mix } from "@/components/charts/palette";
+import { StatStrip, StatTile } from "@/components/charts/stat-tile";
+import { OverviewCard } from "@/components/dashboard/overview-card";
 import { useQuotas } from "@/hooks/queries/use-quotas";
 import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
@@ -61,16 +61,6 @@ export function ForecastView() {
   const currency = (teamsData ?? [])[0]?.currency ?? "USD";
   const goalAttainment = teamQuota ? computeQuotaAttainment(teamQuota, users ?? [], opportunities) : undefined;
 
-  const STAGE_COLOR = { detected: DATA.indigo, ready_to_action: DATA.violet, in_progress: DATA.magenta } as const;
-  const byStage = (["detected", "ready_to_action", "in_progress"] as const).map((status) => {
-    const rows = opportunities.filter((o) => o.status === status);
-    return {
-      label: t(`forecast.byStage.${status}`),
-      value: `${formatCurrencyUSD(rows.reduce((s, o) => s + (o.amount ?? 0), 0), locale)} · ${rows.length}`,
-      color: STAGE_COLOR[status],
-    };
-  });
-
   return (
     <div>
       <header className="mb-4">
@@ -106,119 +96,106 @@ export function ForecastView() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Misma tarjeta compacta que Dark Funnel — antes era
-                 * MetricCard (ícono + número + línea de ayuda), sin columna
-                 * base para móvil. El ícono y el hint de cada KPI se van de
-                 * esta fila puntual; el resto de la página no cambia. */}
-                <KpiStrip
-                  cols={4}
-                  items={[
-                    { label: t("forecast.kpis.pipeline.label"), value: formatCurrencyUSD(forecast.pipelineValue, locale), hint: t("forecast.kpis.pipeline.hint", { count: forecast.openCount }), trend: forecast.byMonth.map((b) => b.total) },
-                    { label: t("forecast.kpis.weighted.label"), value: formatCurrencyUSD(forecast.weightedForecast, locale), hint: hasHistoricalRates ? t("forecast.kpis.weighted.hintHistorical") : t("forecast.kpis.weighted.hintDefault"), trend: forecast.byMonth.map((b) => b.weighted) },
-                    {
-                      label: t("forecast.kpis.won.label"),
-                      value: formatCurrencyUSD(forecast.wonValue, locale),
-                      hint: teamQuota ? t("forecast.kpis.won.goalHint", { goal: formatMoney(teamQuota.target_amount, currency, locale, true) }) : t("forecast.kpis.won.hint"),
-                      progress: goalAttainment,
-                      tone: "blue",
-                    },
-                    {
-                      label: t("forecast.kpis.atRisk.label"),
-                      value: forecast.atRisk.length,
-                      hint: t("forecast.kpis.atRisk.hint"),
-                      tone: forecast.atRisk.length > 0 ? "warm" : "default",
-                    },
-                  ]}
-                />
+                {/* Four tiles, then the 12-column grid — the same shell as
+                    Ventas and Resumen. The stage split that used to sit here
+                    as a second "pipeline abierto" row is the CRM's job; this
+                    page keeps the four numbers that answer "how much will we
+                    close": open, weighted, won against goal, at risk. */}
+                <StatStrip cols={4}>
+                  <StatTile
+                    label={t("forecast.kpis.pipeline.label")}
+                    value={formatCurrencyUSD(forecast.pipelineValue, locale)}
+                    hint={t("forecast.kpis.pipeline.hint", { count: forecast.openCount })}
+                    trend={forecast.byMonth.map((b) => b.total)}
+                    tone={DATA.indigo}
+                    formatValue={(v) => formatCurrencyUSD(v, locale)}
+                  />
+                  <StatTile
+                    label={t("forecast.kpis.weighted.label")}
+                    value={formatCurrencyUSD(forecast.weightedForecast, locale)}
+                    hint={hasHistoricalRates ? t("forecast.kpis.weighted.hintHistorical") : t("forecast.kpis.weighted.hintDefault")}
+                    trend={forecast.byMonth.map((b) => b.weighted)}
+                    tone={DATA.honey}
+                    formatValue={(v) => formatCurrencyUSD(v, locale)}
+                  />
+                  <StatTile
+                    label={t("forecast.kpis.won.label")}
+                    value={formatCurrencyUSD(forecast.wonValue, locale)}
+                    hint={teamQuota ? t("forecast.kpis.won.goalHint", { goal: formatMoney(teamQuota.target_amount, currency, locale, true) }) : t("forecast.kpis.won.hint")}
+                    progress={goalAttainment}
+                    tone={DATA.violet}
+                  />
+                  <StatTile
+                    label={t("forecast.kpis.atRisk.label")}
+                    value={forecast.atRisk.length}
+                    hint={t("forecast.kpis.atRisk.hint")}
+                    tone={forecast.atRisk.length > 0 ? DATA.honey : DATA.muted}
+                  />
+                </StatStrip>
 
-                <section className="bee-surface bee-bento-pad">
-                  <h3 className="bee-card-title">{t("forecast.byStage.title")}</h3>
-                  <p className="bee-caption mb-4">{t("forecast.byStage.caption")}</p>
-                  <StageTiles tiles={byStage} />
-                </section>
+                <div className="bee-overview">
+                  <OverviewCard span={8} title={t("forecast.byMonth.title")} caption={t("forecast.byMonth.caption")}>
+                    <ForecastBarChart buckets={forecast.byMonth} />
+                  </OverviewCard>
 
-                <section className="bee-surface bee-bento-pad">
-                  <h3 className="bee-card-title">{t("forecast.byMonth.title")}</h3>
-                  <p className="bee-caption mb-4">{t("forecast.byMonth.caption")}</p>
-                  <ForecastBarChart buckets={forecast.byMonth} />
-                </section>
+                  <OverviewCard span={4} title={t("forecast.atRiskSection.title")} caption={t("forecast.atRiskSection.caption")}>
+                    {forecast.atRisk.length === 0 ? (
+                      <p className="bee-caption py-8 text-center">{t("forecast.atRiskSection.empty")}</p>
+                    ) : (
+                      <ul className="flex max-h-[22rem] flex-col gap-1 overflow-y-auto">
+                        {forecast.atRisk.map(({ opportunity, reason }) => {
+                          const company = opportunity.company_id ? companyById.get(opportunity.company_id) : undefined;
+                          return (
+                            <li key={opportunity.id}>
+                              <button
+                                type="button"
+                                onClick={() => openOpportunity(opportunity.id)}
+                                className="flex w-full items-center justify-between gap-3 rounded-[var(--radius-md)] px-2 py-2 text-left transition-colors hover:bg-[var(--color-primary)]/30"
+                              >
+                                <span className="min-w-0">
+                                  <span className="block truncate text-sm font-medium">{stripOpportunityTitlePrefix(opportunity.title)}</span>
+                                  <span className="block truncate bee-micro">
+                                    {company?.name ?? t("forecast.atRiskSection.noCompany")} ·{" "}
+                                    {t("forecast.atRiskSection.qualifiedPercent", { percent: Math.round(qualificationScore(opportunity.qualification) * 100) })}
+                                  </span>
+                                </span>
+                                <span className="shrink-0 rounded-full px-2 py-0.5 bee-micro font-medium text-[var(--color-text)]" style={{ background: mix(DATA.honeyFill, 30) }}>
+                                  {t(`forecast.atRiskSection.riskLabels.${reason}`)}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </OverviewCard>
+
+                  {hasClosedHistory && (
+                    <OverviewCard span={forecast.scoreBucketStats.length > 0 ? 6 : 12} title={t("forecast.trend.title")} caption={t("forecast.trend.caption")}>
+                      <TrendsChart points={trends} />
+                    </OverviewCard>
+                  )}
+
+                  {forecast.scoreBucketStats.length > 0 && (
+                    <OverviewCard span={hasClosedHistory ? 6 : 12} title={t("forecast.accuracy.title")} caption={t("forecast.accuracy.caption")}>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {forecast.scoreBucketStats.map((s) => (
+                          <div key={s.bucketStart} className="flex flex-col justify-center rounded-[var(--radius-md)] px-3 py-2" style={{ background: mix(DATA.indigo, 14) }}>
+                            <p className="bee-micro font-medium text-[var(--color-text)]">
+                              {t("forecast.accuracy.scoreLabel", { start: s.bucketStart, end: s.bucketStart + 19 })}
+                            </p>
+                            <p className="text-sm font-bold tabular-nums">{Math.round(s.winRate * 100)}%</p>
+                            <p className="bee-micro">{t("forecast.accuracy.sampleSize", { count: s.sampleSize })}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </OverviewCard>
+                  )}
+                </div>
 
                 {/* Moved here from Resumen — "what if we prospect more" is a
                     forecasting question, and Resumen is now a summary only. */}
                 <RevenueSimulatorWidget />
-
-                {hasClosedHistory && (
-                  <section className="bee-surface bee-bento-pad">
-                    <h3 className="bee-card-title">{t("forecast.trend.title")}</h3>
-                    <p className="bee-caption mb-4">{t("forecast.trend.caption")}</p>
-                    <TrendsChart points={trends} />
-                  </section>
-                )}
-
-                {forecast.scoreBucketStats.length > 0 && (
-                  <section className="bee-surface bee-bento-pad">
-                    <h3 className="bee-card-title">{t("forecast.accuracy.title")}</h3>
-                    <p className="bee-caption mb-4">{t("forecast.accuracy.caption")}</p>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-                      {forecast.scoreBucketStats.map((s) => (
-                        <div key={s.bucketStart} className="bee-bento p-4 text-center">
-                          <p className="bee-kpi-tile__label">
-                            {t("forecast.accuracy.scoreLabel", {
-                              start: s.bucketStart,
-                              end: s.bucketStart + 19,
-                            })}
-                          </p>
-                          <p className="bee-kpi-sm mt-1">{Math.round(s.winRate * 100)}%</p>
-                          <p className="bee-micro">
-                            {t("forecast.accuracy.sampleSize", { count: s.sampleSize })}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
-
-                <section className="bee-surface bee-bento-pad">
-                  <h3 className="bee-card-title">{t("forecast.atRiskSection.title")}</h3>
-                  <p className="bee-caption mb-3">{t("forecast.atRiskSection.caption")}</p>
-                  {forecast.atRisk.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">{t("forecast.atRiskSection.empty")}</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {forecast.atRisk.map(({ opportunity, reason }) => {
-                        const company = opportunity.company_id
-                          ? companyById.get(opportunity.company_id)
-                          : undefined;
-                        return (
-                          <li key={opportunity.id}>
-                            <button
-                              type="button"
-                              onClick={() => openOpportunity(opportunity.id)}
-                              className="flex w-full items-center justify-between gap-4 rounded-[var(--radius-md)] px-3 py-3 text-left transition-colors hover:bg-[var(--color-primary)]/30"
-                            >
-                              <div className="min-w-0">
-                                <p className="truncate text-xs font-medium">
-                                  {stripOpportunityTitlePrefix(opportunity.title)}
-                                </p>
-                                <p className="truncate bee-micro">
-                                  {company?.name ?? t("forecast.atRiskSection.noCompany")} ·{" "}
-                                  {t("forecast.atRiskSection.qualifiedPercent", {
-                                    percent: Math.round(
-                                      qualificationScore(opportunity.qualification) * 100,
-                                    ),
-                                  })}
-                                </p>
-                              </div>
-                              <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-1)]/20 px-2 py-1 text-micro font-medium text-[var(--color-chart-1)]">
-                                {t(`forecast.atRiskSection.riskLabels.${reason}`)}
-                              </span>
-                            </button>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
-                </section>
               </div>
             ),
           },

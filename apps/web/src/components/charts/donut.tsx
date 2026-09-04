@@ -18,13 +18,13 @@ export function Donut({
   otherLabel = "Otros",
 }: {
   slices: DonutSlice[];
-  /** Fixed diameter; omit to size from the box (clamped 96–176px). */
+  /** Fixed diameter; omit to size from the box (clamped 96–150px, so the legend keeps room for whole labels). */
   size?: number;
   centerLabel?: string;
   otherLabel?: string;
 }) {
   const [ref, box] = useBoxSize<HTMLDivElement>({ width: 320, height: 140 });
-  const size = sizeProp ?? Math.round(Math.max(96, Math.min(176, box.height - 8, box.width * 0.42)));
+  const size = sizeProp ?? Math.round(Math.max(96, Math.min(150, box.height - 8, box.width * 0.4)));
   const sorted = [...slices].filter((s) => s.value > 0).sort((a, b) => b.value - a.value);
   const top = sorted.slice(0, 4);
   const rest = sorted.slice(4).reduce((s, x) => s + x.value, 0);

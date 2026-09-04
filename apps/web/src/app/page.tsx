@@ -99,6 +99,25 @@ const GUARANTEE_ICON_STROKES = [
   "color-mix(in srgb, var(--color-chart-5) 70%, var(--color-text) 30%)",
 ] as const;
 
+/** White glints over the landing — the only motion on the shared ground.
+ * Fixed positions (no randomness: server and client must agree), each with
+ * its own delay/duration so the twinkle never reads as a loop. */
+const SPARKLES = [
+  [6, 14, 0, 7.5], [22, 31, 1.8, 8.5], [41, 19, 3.1, 7], [58, 27, 0.9, 9], [77, 12, 2.4, 8],
+  [91, 34, 4.2, 7.5], [12, 52, 1.2, 8.8], [35, 61, 3.6, 7.2], [63, 55, 0.4, 9.4], [86, 63, 2.9, 8.1],
+  [8, 82, 3.9, 7.8], [29, 90, 1.5, 8.6], [52, 79, 4.6, 7.3], [72, 93, 0.7, 9.1], [95, 84, 2.1, 8.3],
+] as const;
+
+function MarketingSparkles() {
+  return (
+    <div className="bee-sparkles" aria-hidden>
+      {SPARKLES.map(([left, top, delay, duration], i) => (
+        <i key={i} style={{ left: `${left}%`, top: `${top}%`, animationDelay: `${delay}s`, animationDuration: `${duration}s` }} />
+      ))}
+    </div>
+  );
+}
+
 /** Manchas de gradiente detrás del hero — mezcla de la paleta institucional,
  * blureadas y de baja opacidad para que el texto #222222 siga siendo
  * perfectamente legible encima. Puro CSS, sin imagen ni librería. */
@@ -171,7 +190,8 @@ export default async function Home() {
     <div className="flex min-h-full flex-col bg-background">
       <MarketingHeader />
 
-      <main className="flex-1">
+      <main className="relative flex-1">
+        <MarketingSparkles />
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
         <section className="relative overflow-hidden">
           <HeroAtmosphere />
@@ -223,7 +243,7 @@ export default async function Home() {
         <MarketingSalesProof />
 
         {/* ── Módulos de valor ─────────────────────────────────────────────── */}
-        <section id="modulos" className="border-t border-border bg-[var(--color-primary)]/15">
+        <section id="modulos" className="border-t border-border">
           <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
             <p className="bee-eyebrow bee-eyebrow--blue">{t("modulesEyebrow")}</p>
             <h2 className="mt-2 max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
