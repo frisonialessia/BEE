@@ -53,6 +53,7 @@ export function WeeklyRecapCard({
   totalWon,
   monthlyGoal,
   teamRank,
+  weeklyEvents,
 }: {
   streakDays: number;
   signalsThisWeek: number;
@@ -62,6 +63,12 @@ export function WeeklyRecapCard({
   totalWon: number;
   monthlyGoal: { current: number; target: number } | null;
   teamRank: { rank: number } | null;
+  /** This week's real, per-rep pipeline actions — leads/organizations
+   *  added, an unusually active meeting week — shown as a short prelude
+   *  of distinct badges before the numeric milestone road (see
+   *  milestone-path.tsx). Optional: undefined reads as "nothing to show
+   *  yet", same as any of its three fields being zero/false. */
+  weeklyEvents?: { leadsAdded: number; companiesAdded: number; activeMeetingsWeek: boolean };
 }) {
   const t = useTranslations("celebration.recap");
 
@@ -78,7 +85,7 @@ export function WeeklyRecapCard({
         <StatMini label={t("signals")} value={signalsThisWeek} delta={signalsDelta} tone={TONE.market} />
         <StatMini label={t("won")} value={wonThisWeek} delta={wonDelta} tone="sales" />
         <div className="hidden h-8 w-px shrink-0 bg-[var(--color-divider)] sm:block" />
-        <MilestonePath totalWon={totalWon} monthlyGoal={monthlyGoal} />
+        <MilestonePath totalWon={totalWon} monthlyGoal={monthlyGoal} weeklyEvents={weeklyEvents} />
       </div>
     </OverviewCard>
   );

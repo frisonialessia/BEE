@@ -25,6 +25,8 @@ import { TeamGoalRanking } from "@/features/dashboard/team-goal-ranking";
 import { IntentHive, stageOf } from "@/features/signals/intent-hive";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useHiveLeads } from "@/hooks/queries/use-lead-board";
+import { useLeads } from "@/hooks/queries/use-leads";
+import { useMeetings } from "@/hooks/queries/use-meetings";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useQuotas } from "@/hooks/queries/use-quotas";
 import { useSignals } from "@/hooks/queries/use-signals";
@@ -41,6 +43,10 @@ import { useAuth } from "@/providers/auth-provider";
 
 const DAY_MS = 86_400_000;
 const WEEK_MS = 7 * DAY_MS;
+// A rep with this many meetings in the current calendar week gets the
+// "active meetings week" badge on the milestone path — a real threshold,
+// not every week with at least one meeting on the calendar.
+const HIGH_MEETING_WEEK_THRESHOLD = 4;
 
 /**
  * Resumen — nine boxes, four questions, read top to bottom:
@@ -82,6 +88,8 @@ export function DashboardOverview({
   const { data: teamsData } = useTeams();
   const { data: quotasResult } = useQuotas();
   const { data: hiveResult } = useHiveLeads(200);
+  const { data: leadsResult } = useLeads(200);
+  const { data: meetingsResult } = useMeetings();
 
   const signals = useMemo(() => signalsResult?.data ?? [], [signalsResult]);
   const battlecards = useMemo(() => battlecardsResult?.data ?? [], [battlecardsResult]);
@@ -205,6 +213,42 @@ export function DashboardOverview({
   );
   const mySignalsDelta = mySignalsLastWeek > 0 ? (mySignalsThisWeek - mySignalsLastWeek) / mySignalsLastWeek : null;
 
+  // Same three real actions the milestone path's badge prelude shows
+  // (see milestone-path.tsx): a lead this rep added, an organization this
+  // rep added — both honest per-rep counts now that demo/store.ts stamps
+  // Lead.assigned_to_user_id/Company.owner_user_id instead of leaving them
+  // null — and whether this calendar week (Monday-anchored, same as the
+  // seeded meetings themselves) crossed the "busy" threshold.
+  const myLeadsThisWeek = useMemo(
+    () => (leadsResult?.data ?? []).filter((l) => l.assigned_to_user_id === meId && now - new Date(l.created_at).getTime() < WEEK_MS).length,
+    [leadsResult, meId, now],
+  );
+  const myCompaniesThisWeek = useMemo(
+    () => (companiesResult?.data ?? []).filter((c) => c.owner_user_id === meId && now - new Date(c.created_at).getTime() < WEEK_MS).length,
+    [companiesResult, meId, now],
+  );
+  const weekBounds = useMemo(() => {
+    const d = new Date(now);
+    const dow = (d.getDay() + 6) % 7; // Monday = 0
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - dow);
+    const start = d.getTime();
+    return { start, end: start + WEEK_MS };
+  }, [now]);
+  const myMeetingsThisWeek = useMemo(() => {
+    if (!meId) return 0;
+    return (meetingsResult ?? []).filter((m) => {
+      if (m.created_by_user_id !== meId && !m.attendee_user_ids.includes(meId)) return false;
+      const at = new Date(m.starts_at).getTime();
+      return at >= weekBounds.start && at < weekBounds.end;
+    }).length;
+  }, [meetingsResult, meId, weekBounds]);
+  const weeklyEvents = {
+    leadsAdded: myLeadsThisWeek,
+    companiesAdded: myCompaniesThisWeek,
+    activeMeetingsWeek: myMeetingsThisWeek >= HIGH_MEETING_WEEK_THRESHOLD,
+  };
+
   // The manager-set monthly goal for this rep, when one exists (see
   // quotas-section.tsx / the invite form) — a deal-count target for the
   // *current period*, not a lifetime number, so it's judged against this
@@ -320,6 +364,7 @@ export function DashboardOverview({
         totalWon={myTotalWon}
         monthlyGoal={monthlyGoal}
         teamRank={teamRank}
+        weeklyEvents={weeklyEvents}
       />
 
       <GettingStartedCard signalCount={signals.length} opportunityCount={allOppsResult?.data.length ?? 0} userCount={usersResult?.length ?? 0} />

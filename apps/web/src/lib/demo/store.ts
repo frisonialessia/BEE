@@ -497,6 +497,23 @@ export function demoFetchAllBattlecards(): Battlecard[] {
   return allBattlecards();
 }
 
+// The two battlecards built fresh ("right now", see sample-data.ts) are
+// the only pipeline-derived companies/leads honestly "added this week" —
+// every other one comes from `historicalBattlecards()`, whose created_at
+// is the signal's real detection date, weeks before whatever it closed
+// into (an existing account revisited, not a new one). Those two go to
+// demo-user-1/"you" specifically, same reasoning as THIS_WEEK_OPP_IDS
+// above; everything else rotates deterministically across the team so no
+// company/lead sits at a fabricated `null` owner forever.
+const THIS_WEEK_COMPANY_NAMES = new Set(["Northwind Labs", "Acme Corp"]);
+const THIS_WEEK_LEAD_NAMES = new Set(["Alice Mercer", "Robert Chen"]);
+
+function ownerFor(name: string, thisWeek: Set<string>): string {
+  const reps = demoFetchUsers();
+  if (thisWeek.has(name)) return reps[0].id;
+  return reps[stableHash(name) % reps.length].id;
+}
+
 export function demoFetchCompanies(): Company[] {
   const seen = new Map<string, Company>();
   for (const card of allBattlecards()) {
@@ -505,7 +522,7 @@ export function demoFetchCompanies(): Company[] {
     seen.set(name, {
       id: `demo-company-${slugify(name)}`,
       organization_id: null,
-      owner_user_id: null,
+      owner_user_id: ownerFor(name, THIS_WEEK_COMPANY_NAMES),
       name,
       domain: card.company.domain,
       industry: card.company.industry,
@@ -554,7 +571,10 @@ export function demoCreateCompany(body: CompanyCreateIn): Company {
   const company: Company = {
     id: `demo-company-${slugify(name)}-${list.length + 1}`,
     organization_id: null,
-    owner_user_id: null,
+    // Typed in by hand right now, in the sandbox's single-user session —
+    // it's "you" (demo-user-1, same fallback account-menu-demo.tsx uses)
+    // who added it, never a fabricated null.
+    owner_user_id: demoFetchUsers()[0].id,
     name,
     domain,
     industry: body.industry?.trim() || null,
@@ -584,7 +604,7 @@ export function demoFetchLeads(): Lead[] {
       id: `demo-lead-${slugify(name)}`,
       company_id: companyName ? (companyIdByName.get(companyName) ?? null) : null,
       organization_id: null,
-      assigned_to_user_id: null,
+      assigned_to_user_id: ownerFor(name, THIS_WEEK_LEAD_NAMES),
       full_name: name,
       email: card.lead.email,
       title: card.lead.title,
@@ -629,7 +649,9 @@ export function demoCreateLead(body: LeadCreateIn): Lead {
     id: `demo-lead-${slugify(fullName)}-${list.length + 1}`,
     company_id: companyId,
     organization_id: null,
-    assigned_to_user_id: null,
+    // Same reasoning as demoCreateCompany: hand-typed right now by the
+    // sandbox's one real user, not a fabricated null.
+    assigned_to_user_id: demoFetchUsers()[0].id,
     full_name: fullName,
     email: body.email?.trim().toLowerCase() || null,
     title: body.title?.trim() || null,

@@ -1,11 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 
 import { mix, SALES, TONE } from "@/components/charts/palette";
 import { useBoxSize } from "@/components/charts/use-box-size";
 import { milestoneAt } from "@/lib/milestones";
+import { hexagonPath } from "@/lib/visualization/honeycomb-radial";
 
 // Honey at the start, a genuine honey→mint bridge tone in the middle
 // (color-mix between the two, not a tint toward white), the main green as
@@ -17,6 +18,19 @@ const RAMP = [TONE.marketDeep, TONE.market, mix(TONE.market, 55, SALES.mint), SA
 const NODE_R = 13;
 const CY = 22;
 const VIEW_H = 44;
+const BADGE_R = 12;
+
+/** This week's real, per-rep activity — a hexagon (honey, matching the
+ *  hive) when the rep added a lead, a distinct badge for an organization,
+ *  another for an unusually active meeting week. Each only renders when
+ *  it actually happened; a rep with a quiet week just gets a shorter
+ *  prelude, never a fabricated badge. */
+type WeeklyEvents = {
+  leadsAdded: number;
+  companiesAdded: number;
+  activeMeetingsWeek: boolean;
+};
+type EventKey = "leads" | "companies" | "meetings";
 // Just enough reached milestones to show the sweep, plus a couple ahead
 // to say it keeps going — this row is meant to stay narrow, not walk the
 // rep's entire history.
@@ -36,18 +50,29 @@ const AHEAD = 2;
  * switches to it (this month's progress toward it) while the path keeps
  * showing the honest lifetime sweep. Hover (not a native `title`, which
  * can't be styled) shows what each node means.
+ *
+ * A short prelude of up to three event badges can sit before the numeric
+ * spine — this week's real actions (a lead added, an organization added,
+ * an active meeting week), each its own shape and BEE tone so the road
+ * reads like a real timeline of what the rep actually did, not just a
+ * close counter. They share this same row (and so the same measured
+ * width — see useBoxSize below), never grow the card.
  */
 export function MilestonePath({
   totalWon,
   monthlyGoal = null,
+  weeklyEvents,
 }: {
   totalWon: number;
   /** This rep's wins so far this calendar month vs. their manager-set
    *  monthly target (`Quota.target_count`) — independent of `totalWon`. */
   monthlyGoal?: { current: number; target: number } | null;
+  weeklyEvents?: WeeklyEvents;
 }) {
   const t = useTranslations("celebration.path");
   const [hover, setHover] = useState<number | null>(null);
+  const [eventHover, setEventHover] = useState<EventKey | null>(null);
+  const gradId = useId();
   // Same rule every chart in BEE follows (see use-box-size.ts): the chart
   // fills the box it's actually given, it doesn't pick its own width and
   // leave the rest of the row empty. Node spacing is derived from the
@@ -120,6 +145,74 @@ export function MilestonePath({
 
   return (
     <div className="flex min-w-0 flex-1 items-center gap-3">
+      {weeklyEvents && (weeklyEvents.leadsAdded > 0 || weeklyEvents.companiesAdded > 0 || weeklyEvents.activeMeetingsWeek) && (
+        <div className="flex shrink-0 items-center gap-1.5">
+          {weeklyEvents.leadsAdded > 0 && (
+            <div className="relative">
+              <svg width={BADGE_R * 2 + 2} height={BADGE_R * 2 + 2} viewBox={`0 0 ${BADGE_R * 2 + 2} ${BADGE_R * 2 + 2}`} role="img" aria-label={t("eventLeads", { count: weeklyEvents.leadsAdded })}>
+                <defs>
+                  <linearGradient id={`${gradId}-lead`} x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor={TONE.market} />
+                    <stop offset="100%" stopColor={TONE.marketDeep} />
+                  </linearGradient>
+                </defs>
+                <g
+                  className="cursor-pointer"
+                  onMouseEnter={() => setEventHover("leads")}
+                  onMouseLeave={() => setEventHover((h) => (h === "leads" ? null : h))}
+                >
+                  <circle cx={BADGE_R + 1} cy={BADGE_R + 1} r={BADGE_R} fill={`url(#${gradId}-lead)`} />
+                  <path d={hexagonPath(BADGE_R + 1, BADGE_R + 1, 7)} fill="#fff" />
+                </g>
+              </svg>
+              {eventHover === "leads" && (
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-[var(--radius-sm)] bg-[var(--color-text)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-card)]">
+                  {t("eventLeads", { count: weeklyEvents.leadsAdded })}
+                </div>
+              )}
+            </div>
+          )}
+          {weeklyEvents.companiesAdded > 0 && (
+            <div className="relative">
+              <svg width={BADGE_R * 2 + 2} height={BADGE_R * 2 + 2} viewBox={`0 0 ${BADGE_R * 2 + 2} ${BADGE_R * 2 + 2}`} role="img" aria-label={t("eventCompanies", { count: weeklyEvents.companiesAdded })}>
+                <g
+                  className="cursor-pointer"
+                  onMouseEnter={() => setEventHover("companies")}
+                  onMouseLeave={() => setEventHover((h) => (h === "companies" ? null : h))}
+                >
+                  <circle cx={BADGE_R + 1} cy={BADGE_R + 1} r={BADGE_R} fill={TONE.prepared} />
+                  <rect x={BADGE_R + 1 - 6} y={BADGE_R + 1 - 6} width={12} height={12} rx={2.5} fill="#fff" />
+                </g>
+              </svg>
+              {eventHover === "companies" && (
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-[var(--radius-sm)] bg-[var(--color-text)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-card)]">
+                  {t("eventCompanies", { count: weeklyEvents.companiesAdded })}
+                </div>
+              )}
+            </div>
+          )}
+          {weeklyEvents.activeMeetingsWeek && (
+            <div className="relative">
+              <svg width={BADGE_R * 2 + 2} height={BADGE_R * 2 + 2} viewBox={`0 0 ${BADGE_R * 2 + 2} ${BADGE_R * 2 + 2}`} role="img" aria-label={t("eventMeetings")}>
+                <g
+                  className="cursor-pointer"
+                  onMouseEnter={() => setEventHover("meetings")}
+                  onMouseLeave={() => setEventHover((h) => (h === "meetings" ? null : h))}
+                >
+                  <circle cx={BADGE_R + 1} cy={BADGE_R + 1} r={BADGE_R} fill={TONE.forecast} />
+                  <circle cx={BADGE_R + 1} cy={BADGE_R + 1} r={5} fill="none" stroke="#fff" strokeWidth={2} />
+                </g>
+              </svg>
+              {eventHover === "meetings" && (
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-[var(--radius-sm)] bg-[var(--color-text)] px-2.5 py-1.5 text-xs font-medium text-[var(--color-card)]">
+                  {t("eventMeetings")}
+                </div>
+              )}
+            </div>
+          )}
+          <div className="h-6 w-px shrink-0 bg-[var(--color-divider)]" />
+        </div>
+      )}
       {/* No overflow-x-auto here: at this size the row never needs to
           scroll, and a scroll container would clip the hover tooltip
           positioned above it (setting overflow-x forces overflow-y to

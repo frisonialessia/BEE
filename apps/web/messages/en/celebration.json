@@ -25,7 +25,10 @@
     "nextMilestoneLabel": "next milestone",
     "nodeReached": "{value} closes — reached",
     "nodeNext": "{value} closes — {remaining} to go",
-    "nodeAhead": "{value} closes — the stretch after that"
+    "nodeAhead": "{value} closes — the stretch after that",
+    "eventLeads": "{count} leads added this week",
+    "eventCompanies": "{count} organizations added this week",
+    "eventMeetings": "A busy week of meetings"
   },
   "milestone": {
     "messages": [

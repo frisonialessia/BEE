@@ -25,7 +25,10 @@
     "nextMilestoneLabel": "siguiente hito",
     "nodeReached": "{value} cierres — alcanzado",
     "nodeNext": "{value} cierres — faltan {remaining} para llegar",
-    "nodeAhead": "{value} cierres — el siguiente tramo del camino"
+    "nodeAhead": "{value} cierres — el siguiente tramo del camino",
+    "eventLeads": "{count} leads agregados esta semana",
+    "eventCompanies": "{count} organizaciones agregadas esta semana",
+    "eventMeetings": "Semana con mucha actividad de reuniones"
   },
   "milestone": {
     "messages": [
