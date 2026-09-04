@@ -350,6 +350,7 @@ function CreateForm({
   const hue = STAGE_ACCENT[draft.stage];
   const owner = (users ?? []).find((u) => u.id === draft.assignedTo) ?? null;
   const companyLabel = activeCompany?.name ?? draft.companyQuery.trim();
+  const contactLabel = activeLead?.full_name ?? draft.leadFullName.trim();
   const draftAmount = draft.amount ? Number(draft.amount) : 0;
   const busy = createCompany.isPending || createLead.isPending || createOpportunity.isPending;
   const canSubmit = Boolean(companyLabel) && draft.description.trim().length > 0 && !busy;
@@ -571,7 +572,7 @@ function CreateForm({
             {activeCompany && contactPills.length > 0 && (
               <div role="group" aria-label={t("contact")} className="flex flex-wrap gap-2">
                 {contactPills.map((l) => (
-                  <Pill key={l.id} pressed={l.id === activeLead?.id} disabled={leadLocked} title={l.title ?? undefined} onClick={() => update({ leadId: l.id })}>
+                  <Pill key={l.id} pressed={l.id === activeLead?.id} disabled={leadLocked && l.id !== activeLead?.id} title={l.title ?? undefined} onClick={() => update({ leadId: l.id })}>
                     <Avatar name={l.full_name} size={18} />
                     <span className="max-w-36 truncate">{l.full_name}</span>
                   </Pill>
@@ -724,7 +725,7 @@ function CreateForm({
               <dt className="bee-caption">{t("company")}</dt>
               <dd className={cn("truncate", !companyLabel && "text-muted-foreground")}>{companyLabel || "—"}</dd>
               <dt className="bee-caption">{t("contact")}</dt>
-              <dd className={cn("truncate", !(activeLead?.full_name ?? draft.leadFullName.trim()) && "text-muted-foreground")}>{activeLead?.full_name ?? draft.leadFullName.trim() || "—"}</dd>
+              <dd className={cn("truncate", !contactLabel && "text-muted-foreground")}>{contactLabel || "—"}</dd>
               <dt className="bee-caption">{t("amountLabel")}</dt>
               <dd className={cn("truncate tabular-nums", draftAmount <= 0 && "text-muted-foreground")}>{draftAmount > 0 ? formatMoney(draftAmount, "USD", locale) : "—"}</dd>
               <dt className="bee-caption">{t("expectedValue")}</dt>

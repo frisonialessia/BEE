@@ -56,7 +56,7 @@ export function DrawerTabs<K extends string>({
             onClick={() => onChange(tab.key)}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={cn(
-              "-mb-px flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-chart-4)]",
+              "-mb-px flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-text)]",
               active ? "font-semibold text-[var(--color-text)]" : "border-transparent text-muted-foreground hover:text-[var(--color-text)]",
             )}
             style={active ? { borderBottomColor: hue } : undefined}
