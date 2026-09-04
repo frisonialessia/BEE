@@ -3,38 +3,43 @@
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
-import { SALES, TONE, tint } from "@/components/charts/palette";
-import { OverviewCard } from "@/components/dashboard/overview-card";
+import { mix, SALES, TONE } from "@/components/charts/palette";
 import { currentMilestoneIndex, milestoneAt } from "@/lib/milestones";
 
-// Honey at the start of the window, the three Ventas greens by its end —
-// the window always sweeps that way, however far the real total climbs.
-const RAMP = [TONE.marketDeep, TONE.market, tint(TONE.market, 45), SALES.mint, SALES.lime, SALES.won];
+// Honey at the start, a genuine honey→green bridge tone in the middle
+// (color-mix between the two, not a tint toward white), the main green as
+// the goal at the end — the same sweep however far the real total climbs.
+const RAMP = [TONE.marketDeep, TONE.market, mix(TONE.market, 55, SALES.mint), SALES.mint, SALES.lime, SALES.won];
 
 const NODE_R = 20;
 const STEP_X = 128;
 const Y_TOP = 54;
 const Y_BOTTOM = 116;
 const VIEW_H = 170;
-// A short trail behind the current milestone, then a few ahead — reads as
-// a road already walked and one that keeps going, never a fixed finish.
-const BEHIND = 3;
-const AHEAD = 3;
+// Every milestone the team has ever crossed shows — not a truncated tail —
+// so the road reads as fully walked, not mostly empty; only two hollow
+// ones ahead, enough to say it keeps going without the path looking
+// mostly grey.
+const AHEAD = 2;
 
 /**
- * The team's real close-milestones (10/25/50/100…, same sequence
+ * The team's real close-milestones (10/20/50/100/200/500…, same sequence
  * `use-milestone-celebration.ts` fires its toast from) as a winding road —
  * no fixed end, since `milestoneAt` never stops generating the next
- * number. Reached nodes fill solid, honey to green along the visible
- * stretch; the road ahead stays hollow and dashed until the team's own
- * total actually gets there.
+ * number. Every one already reached is shown, filled solid, honey to
+ * green along the whole walked stretch; the road ahead stays hollow and
+ * dashed until the team's own total actually gets there. Bare content,
+ * no card shell of its own — lives inside WeeklyRecapCard, the week and
+ * the all-time road in one window instead of two.
  */
-export function MilestonePathCard({ span = 12, totalWon }: { span?: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 12; totalWon: number }) {
+export function MilestonePath({ totalWon }: { totalWon: number }) {
   const t = useTranslations("celebration.path");
+  const tooltipFor = (n: { value: number; reached: boolean; isCurrent: boolean }) =>
+    n.reached ? t("nodeReached", { value: n.value }) : n.isCurrent ? t("nodeNext", { value: n.value, remaining: n.value - totalWon }) : t("nodeAhead", { value: n.value });
 
   const { nodes, allPath, reachedPath, viewW, next } = useMemo(() => {
     const curIdx = currentMilestoneIndex(totalWon);
-    const startIdx = Math.max(0, curIdx - BEHIND);
+    const startIdx = 0;
     const endIdx = curIdx + AHEAD;
     const list = Array.from({ length: endIdx - startIdx + 1 }, (_, k) => {
       const index = startIdx + k;
@@ -82,13 +87,14 @@ export function MilestonePathCard({ span = 12, totalWon }: { span?: 3 | 4 | 5 | 
   }, [totalWon]);
 
   return (
-    <OverviewCard span={span} title={t("title")} caption={t("caption")}>
-      <div className="overflow-x-auto">
+    <div>
+      <p className="bee-micro">{t("title")}</p>
+      <div className="mt-1 overflow-x-auto">
         <svg width={viewW} height={VIEW_H} viewBox={`0 0 ${viewW} ${VIEW_H}`} role="img" aria-label={t("aria", { total: totalWon })} className="mx-auto block">
           <path d={allPath} fill="none" stroke="var(--color-divider)" strokeWidth={4} strokeLinecap="round" strokeDasharray="1 9" />
           {reachedPath && <path d={reachedPath} fill="none" stroke={SALES.won} strokeWidth={4} strokeLinecap="round" />}
           {nodes.map((n) => (
-            <g key={n.index}>
+            <g key={n.index} className="cursor-default">
               {/* The next milestone to reach keeps a standing ring — not
                   just the one-time mount pulse, which alone reads too
                   subtle at this size to say "this is the one you're on". */}
@@ -102,7 +108,9 @@ export function MilestonePathCard({ span = 12, totalWon }: { span?: 3 | 4 | 5 | 
                 strokeWidth={n.reached ? 3 : 2}
                 strokeDasharray={n.reached ? undefined : "3 4"}
                 className={n.isCurrent ? "bee-hive-pulse-path" : undefined}
-              />
+              >
+                <title>{tooltipFor(n)}</title>
+              </circle>
               <text x={n.x} y={n.y + 4} textAnchor="middle" fontSize={11} fontWeight={700} fill={n.reached ? "#fff" : "var(--color-text-muted)"}>
                 {n.value}
               </text>
@@ -111,6 +119,6 @@ export function MilestonePathCard({ span = 12, totalWon }: { span?: 3 | 4 | 5 | 
         </svg>
       </div>
       <p className="bee-caption mt-1 text-center">{t("progress", { current: totalWon, next })}</p>
-    </OverviewCard>
+    </div>
   );
 }

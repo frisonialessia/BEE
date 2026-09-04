@@ -4,15 +4,16 @@ import { useTranslations } from "next-intl";
 
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { TONE } from "@/components/charts/palette";
+import { MilestonePath } from "@/components/celebration/milestone-path";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 
 /**
- * A permanent fixture at the top of Resumen, not a notice to clear — three
- * real facts from the last 7 days plus the same signals as a small daily
- * chart (so there's always something to look at, not three numbers over
- * empty space), and one line of guidance picked from what's actually true
- * this week, never a random or invented one. No dismiss: the point is to
- * be there every time, the same way the KPI strip above it always is.
+ * A permanent fixture at the top of Resumen, not a notice to clear — real
+ * facts from the last 7 days (three tiles, a daily signals chart, one line
+ * of guidance) and the all-time milestone road in the same window: one
+ * place for "how's this week" and "how far has the team come", instead of
+ * two cards saying similar things. No dismiss: the point is to be there
+ * every time, the same way the KPI strip above it always is.
  */
 export function WeeklyRecapCard({
   signals,
@@ -20,12 +21,14 @@ export function WeeklyRecapCard({
   streakDays,
   marketSlow,
   dailySignals,
+  totalWon,
 }: {
   signals: number;
   won: number;
   streakDays: number;
   marketSlow: boolean;
   dailySignals: { label: string; value: number }[];
+  totalWon: number;
 }) {
   const t = useTranslations("celebration.recap");
 
@@ -68,6 +71,9 @@ export function WeeklyRecapCard({
         </div>
       </div>
       <p className="bee-caption mt-5 border-t border-[var(--color-divider)] pt-4">{tip}</p>
+      <div className="mt-5 border-t border-[var(--color-divider)] pt-4">
+        <MilestonePath totalWon={totalWon} />
+      </div>
     </OverviewCard>
   );
 }

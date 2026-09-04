@@ -22,7 +22,10 @@
     "title": "Camino de hitos",
     "caption": "Cierres del equipo, sin techo",
     "aria": "Camino de hitos de cierres del equipo — {total} cierres hasta hoy",
-    "progress": "{current} de {next} para el siguiente hito"
+    "progress": "{current} de {next} para el siguiente hito",
+    "nodeReached": "{value} cierres — alcanzado",
+    "nodeNext": "{value} cierres — faltan {remaining} para llegar",
+    "nodeAhead": "{value} cierres — el siguiente tramo del camino"
   },
   "milestone": {
     "messages": [

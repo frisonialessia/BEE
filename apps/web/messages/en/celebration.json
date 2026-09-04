@@ -22,7 +22,10 @@
     "title": "Milestone path",
     "caption": "Team closes, no ceiling",
     "aria": "Team close-milestone path — {total} closes so far",
-    "progress": "{current} of {next} to the next milestone"
+    "progress": "{current} of {next} to the next milestone",
+    "nodeReached": "{value} closes — reached",
+    "nodeNext": "{value} closes — {remaining} to go",
+    "nodeAhead": "{value} closes — the stretch after that"
   },
   "milestone": {
     "messages": [
