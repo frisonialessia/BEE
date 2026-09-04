@@ -5,7 +5,6 @@ import {
   KanbanSquare,
   LayoutDashboard,
   Lightbulb,
-  Plug,
   Radio,
   Settings,
   SlidersHorizontal,
@@ -77,7 +76,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/dashboard/network", icon: Zap, labelKey: "network" },
       { href: "/dashboard/brand", icon: Fingerprint, labelKey: "brand" },
       { href: "/dashboard/sequences", icon: Workflow, labelKey: "sequences" },
-      { href: "/dashboard/integrations", icon: Plug, labelKey: "integrations" },
     ],
   },
   {

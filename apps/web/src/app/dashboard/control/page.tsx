@@ -2,7 +2,9 @@
 
 import { useTranslations } from "next-intl";
 
+import { MergedPageTabs } from "@/components/merged-page-tabs";
 import { PendingActionsPanel } from "@/components/pending-actions";
+import { IntegrationsView } from "@/features/integrations/integrations-view";
 import { AuditLogPanel, FailedEventsPanel } from "@/components/resilience-panel";
 import {
   AnomaliesPanel,
@@ -26,7 +28,7 @@ export default function ControlPage() {
   const tRes = useTranslations("probarForecastOps.resilience");
 
   return (
-    <ControlLayout
+    <MergedPageTabs
       header={
         <header>
           <p className="bee-eyebrow">{tNav("groups.operations")}</p>
@@ -34,21 +36,40 @@ export default function ControlPage() {
           <p className="bee-caption mt-1">{t("caption")}</p>
         </header>
       }
-      engine={<SystemHealth />}
-      dlq={<FailedEventsPanel />}
-      audit={<AuditLogPanel />}
-      resilienceHeader={
-        <header>
-          <p className="bee-eyebrow">{tRes("eyebrow")}</p>
-          <h2 className="bee-card-title !mb-0 mt-1">{tRes("title")}</h2>
-          <p className="bee-caption">{tRes("subtitle")}</p>
-        </header>
-      }
-      pending={<PendingActionsPanel />}
-      anomalies={<AnomaliesPanel />}
-      apiStatus={<ApiStatusPanel />}
-      stream={<SignalStream />}
-      action={<LeadWorkspace />}
+      defaultValue="health"
+      tabs={[
+        {
+          value: "health",
+          label: t("tabs.health"),
+          content: (
+            <ControlLayout
+              header={null}
+              engine={<SystemHealth />}
+              dlq={<FailedEventsPanel />}
+              audit={<AuditLogPanel />}
+              resilienceHeader={
+                <header>
+                  <p className="bee-eyebrow">{tRes("eyebrow")}</p>
+                  <h2 className="bee-card-title !mb-0 mt-1">{tRes("title")}</h2>
+                  <p className="bee-caption">{tRes("subtitle")}</p>
+                </header>
+              }
+              pending={<PendingActionsPanel />}
+              anomalies={<AnomaliesPanel />}
+              apiStatus={<ApiStatusPanel />}
+              stream={<SignalStream />}
+              action={<LeadWorkspace />}
+            />
+          ),
+        },
+        {
+          // Integraciones used to be its own sidebar page; connecting a
+          // source is operations, so it lives here as a tab.
+          value: "connections",
+          label: t("tabs.connections"),
+          content: <IntegrationsView showHeader={false} />,
+        },
+      ]}
     />
   );
 }

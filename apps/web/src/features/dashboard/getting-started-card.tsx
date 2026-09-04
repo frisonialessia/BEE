@@ -51,7 +51,7 @@ export function GettingStartedCard({
 
   const steps: Step[] = [
     { key: "icp", href: "/dashboard/signals?tab=priority", done: icpDone },
-    { key: "signals", href: "/dashboard/integrations", done: keysDone },
+    { key: "signals", href: "/dashboard/control?tab=connections", done: keysDone },
     { key: "opportunity", href: "/dashboard/crm", done: opportunityCount > 0 },
     { key: "team", href: "/dashboard/team", done: userCount > 1 },
   ];

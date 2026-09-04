@@ -280,26 +280,26 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Same tile, same hue-per-meaning as the Directorio tab's strip:
-              indigo = volume, honey = hot/high intent, magenta = score,
-              violet = readiness. Every tile carries a ring or a hint so the
-              four are the same height. */}
-          <StatStrip cols={4}>
-            <StatTile
-              label={t("metrics.total")}
-              value={leads.length}
-              hint={t("metrics.totalHint", { count: companyCount })}
-              tone={DATA.indigo}
-            />
-            <StatTile label={t("metrics.hot")} value={hotCount} progress={hotCount / leads.length} tone={DATA.honey} />
-            <StatTile label={t("metrics.avgScore")} value={avgScore} progress={avgScore / 100} tone={DATA.magenta} />
-            <StatTile
-              label={t("metrics.uncontacted")}
-              value={uncontactedCount}
-              progress={uncontactedCount / leads.length}
-              tone={DATA.violet}
-            />
-          </StatStrip>
+          {/* Standalone page only: embedded in Empresas the page's shared
+              strip (companies-list.tsx) already carries these figures. */}
+          {showHeader && (
+            <StatStrip cols={4}>
+              <StatTile
+                label={t("metrics.total")}
+                value={leads.length}
+                hint={t("metrics.totalHint", { count: companyCount })}
+                tone={DATA.indigo}
+              />
+              <StatTile label={t("metrics.hot")} value={hotCount} progress={hotCount / leads.length} tone={DATA.honey} />
+              <StatTile label={t("metrics.avgScore")} value={avgScore} progress={avgScore / 100} tone={DATA.magenta} />
+              <StatTile
+                label={t("metrics.uncontacted")}
+                value={uncontactedCount}
+                progress={uncontactedCount / leads.length}
+                tone={DATA.violet}
+              />
+            </StatStrip>
+            )}
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-full border border-border bg-[var(--color-card)]/60 px-3 py-2">

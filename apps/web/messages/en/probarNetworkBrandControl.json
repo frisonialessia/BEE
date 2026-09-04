@@ -469,6 +469,10 @@
       "modelConfidence": "Model confidence",
       "modelConfidenceHint": "{count, plural, =0 {No decision pending review} one {# agent decision to review} other {# agent decisions to review}}",
       "modelConfidenceHintNone": "No decisions logged yet"
+    },
+    "tabs": {
+      "health": "Health",
+      "connections": "Connections"
     }
   },
   "resiliencePanel": {

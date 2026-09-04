@@ -469,6 +469,10 @@
       "modelConfidence": "Confianza del modelo",
       "modelConfidenceHint": "{count, plural, =0 {Ninguna decisión pendiente de revisión} one {# decisión de agentes a revisar} other {# decisiones de agentes a revisar}}",
       "modelConfidenceHintNone": "Todavía no hay decisiones registradas"
+    },
+    "tabs": {
+      "health": "Salud",
+      "connections": "Conexiones"
     }
   },
   "resiliencePanel": {

@@ -1,5 +1,6 @@
-import { IntegrationsView } from "@/features/integrations/integrations-view";
+import { redirect } from "next/navigation";
 
-export default function ProbarIntegrationsPage() {
-  return <IntegrationsView />;
+/** Integraciones lives inside Control (tab Conexiones) now; old links land there. */
+export default function IntegrationsRedirectPage() {
+  redirect("/probar/control?tab=connections");
 }

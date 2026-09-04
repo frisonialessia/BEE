@@ -68,7 +68,7 @@ export const PROBAR_LIVE_SECTIONS = new Set([
   "/probar/dark-funnel",
   "/probar/forecast",
   "/probar/win-loss",
-  "/probar/integrations",
+  "/probar/control?tab=connections",
   "/probar/sequences",
   "/probar/control",
   "/probar/network",

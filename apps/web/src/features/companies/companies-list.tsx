@@ -169,6 +169,21 @@ export function CompaniesList() {
             </>
           ),
         }}
+        belowTabs={
+          companies.length > 0 ? (
+            <div className="mb-4">
+              {/* One strip for Directorio and Leads — the account book at a
+                  glance: how many, how many people, how many with a deal,
+                  how many moved recently. Same tiles on both tabs. */}
+              <StatStrip cols={4}>
+                <StatTile label={t("portfolio.total")} value={companies.length} hint={t("portfolio.totalHint")} tone={DATA.indigo} />
+                <StatTile label={tLeads("metrics.total")} value={leadsResult?.data.length ?? 0} hint={tLeads("metrics.hot") + ` · ${(leadsResult?.data ?? []).filter((l) => l.score >= 75).length}`} tone={DATA.honey} />
+                <StatTile label={t("portfolio.withOpps")} value={portfolio.withOpps} progress={portfolio.withOpps / companies.length} tone={DATA.violet} />
+                <StatTile label={t("portfolio.withRecentSignal")} value={portfolio.withRecentSignal} progress={portfolio.withRecentSignal / companies.length} tone={DATA.magenta} />
+              </StatStrip>
+            </div>
+          ) : null
+        }
         tabs={[
           {
             value: "companies",
@@ -177,16 +192,6 @@ export function CompaniesList() {
               <>
                 {companies.length > 0 && (
                   <div className="mb-4 space-y-4">
-                    {/* Four tiles, one hue each, same strip as the Leads tab:
-                        indigo = volume, violet = readiness (an opportunity
-                        exists), magenta = coverage (a contact exists),
-                        honey = hot (a signal fired recently). */}
-                    <StatStrip cols={4}>
-                      <StatTile label={t("portfolio.total")} value={companies.length} hint={t("portfolio.totalHint")} tone={DATA.indigo} />
-                      <StatTile label={t("portfolio.withOpps")} value={portfolio.withOpps} progress={portfolio.withOpps / companies.length} tone={DATA.violet} />
-                      <StatTile label={t("portfolio.withContacts")} value={portfolio.withContacts} progress={portfolio.withContacts / companies.length} tone={DATA.magenta} />
-                      <StatTile label={t("portfolio.withRecentSignal")} value={portfolio.withRecentSignal} progress={portfolio.withRecentSignal / companies.length} tone={DATA.honey} />
-                    </StatStrip>
                     <div className="bee-overview">
                       <OverviewCard span={5} title={t("portfolio.industryTitle")} caption={t("portfolio.industryCaption")}>
                         <Donut slices={portfolio.industries} otherLabel={t("portfolio.other")} />

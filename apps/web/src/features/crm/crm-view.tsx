@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { MergedPageTabs } from "@/components/merged-page-tabs";
 import { CrmBoard } from "@/features/crm/crm-board";
-import { BattlecardsGallery, OpportunitiesList } from "@/features/opportunities/opportunities-dashboard";
+import { OpportunitiesList } from "@/features/opportunities/opportunities-dashboard";
 
 /** CRM — four views of the same pipeline in one tab strip: Pipeline (the
  *  drag-and-drop board), Oportunidades (the searchable list), Battlecards
@@ -33,7 +33,6 @@ export function CrmView() {
         tabs={[
           { value: "pipeline", label: t("pipelineTab"), content: <CrmBoard /> },
           { value: "opportunities", label: t("opportunitiesTab"), content: <OpportunitiesList /> },
-          { value: "battlecards", label: t("battlecardsTab"), content: <BattlecardsGallery /> },
         ]}
       />
     </div>

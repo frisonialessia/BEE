@@ -24,12 +24,16 @@ export function MergedPageTabs({
   header,
   actions,
   actionsByTab,
+  belowTabs,
 }: {
   tabs: { value: string; label: string; content: React.ReactNode }[];
   defaultValue: string;
   header?: React.ReactNode;
   actions?: React.ReactNode;
   actionsByTab?: Partial<Record<string, React.ReactNode>>;
+  /** Shared block under the tabs row and above every tab's content — the
+   *  page's KPI strip, so it starts at the standard height on every tab. */
+  belowTabs?: React.ReactNode;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -61,6 +65,7 @@ export function MergedPageTabs({
           {actions}
         </div>
       </div>
+      {belowTabs}
       {tabs.map((tab) => (
         <TabsContent key={tab.value} value={tab.value}>
           {tab.content}

@@ -358,7 +358,8 @@ function ServerChannelRow({ status }: { status: IntegrationStatus }) {
  *  (SMTP) y X siguen siendo credenciales del servidor completo, no por
  *  cuenta — se muestran aparte, de solo lectura, para que quede claro que
  *  son otra cosa (ver app.services.omnichannel). */
-export function IntegrationsView() {
+/** `showHeader=false` when embedded as the Conexiones tab of Control. */
+export function IntegrationsView({ showHeader = true }: { showHeader?: boolean } = {}) {
   const t = useTranslations("workspace.integrations");
   useOAuthCallbackToast();
   const { user } = useAuth();
@@ -387,13 +388,15 @@ export function IntegrationsView() {
 
   return (
     <div>
-      <header className="mb-4">
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1">
-          <h1 className="bee-display">{t("title")}</h1>
-          <p className="bee-caption mt-1">{t("subtitle")}</p>
-        </div>
-      </header>
+      {showHeader && (
+        <header className="mb-4">
+          <p className="bee-eyebrow">{t("eyebrow")}</p>
+          <div className="mt-1">
+            <h1 className="bee-display">{t("title")}</h1>
+            <p className="bee-caption mt-1">{t("subtitle")}</p>
+          </div>
+        </header>
+      )}
 
       {isLoading ? (
         <div className="space-y-4">

@@ -129,28 +129,20 @@ function buildGrid(): HexCell[] {
 const CELLS = buildGrid();
 const VIEW = HEX_SIZE * 1.5 * RADIUS + HEX_SIZE * 1.5;
 
-// Mismos 5 tonos y mismo orden que la barra "Frío → Caliente" real
-// (SignalHexMap.tsx, TEMPERATURE_COLORS.cool/mild/warm/hot/peak) — chart-5
-// (magenta) no es parte de esa escala, así que tampoco entra aquí; antes
-// esta función mezclaba chart-6→chart-4 para frío y chart-1→chart-6 para
-// caliente, un orden inventado que además iba en la dirección contraria a
-// la barra real.
-// Landing only: the whole BEE palette from cold to hot — pale honey, honey,
-// deep honey, indigo, lilac and magenta at the peak — so the hive on the
-// landing shows every brand color at once (the dashboard hive keeps its
-// five-stop scale).
+// Landing only: the brand hues from cold to hot — pale honey, honey, deep
+// honey, lilac and magenta at the peak. Indigo (chart-4) is deliberately
+// absent: on the landing that blue belongs to buttons and nothing else.
 const TEMP_STOPS = [
   "--color-chart-3",
   "--color-chart-1",
   "--color-chart-2",
-  "--color-chart-4",
   "--color-chart-6",
   "--color-chart-5",
 ] as const;
 
 /** One pure BEE color per heat band — never a blend of two hues, which
  *  reads as grey or brown between them: pale honey → honey → deep honey →
- *  indigo → lilac → magenta as the cell gets hotter. */
+ *  lilac → magenta as the cell gets hotter. */
 function heatColor(heat: number): string {
   const clamped = Math.min(1, Math.max(0, heat));
   const idx = Math.min(TEMP_STOPS.length - 1, Math.floor(clamped * TEMP_STOPS.length));
