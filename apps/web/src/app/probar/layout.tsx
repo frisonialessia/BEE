@@ -79,7 +79,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
                     >
                       {t("createAccount")}
                     </Link>
-                    <Link href="/contacto" className="bee-btn-ghost !border-white !text-white px-3 py-2 text-xs">
+                    <Link href="/contacto" className="bee-btn-ghost !bg-transparent !border-white !text-white px-3 py-2 text-xs">
                       {t("contactUs")}
                     </Link>
                   </div>
