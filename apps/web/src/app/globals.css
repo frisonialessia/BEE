@@ -1537,3 +1537,308 @@
 @keyframes bee-bloom-a { 0%,100% { transform: translate(0,0); } 50% { transform: translate(60px, 30px); } }
 @keyframes bee-bloom-b { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-50px, -40px); } }
 @media (prefers-reduced-motion: reduce) { .bee-ground i { animation: none; } }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ── Landing motion ──
+   The public landing's scroll story (src/components/marketing-motion.tsx,
+   marketing-how-it-works.tsx, marketing-hero-signals.tsx, …).
+
+   Ground rules, so this block stays honest to the landing's design:
+   · Motion only — no section fills, no gradients on the ground, nothing the
+     palette does not already have. The two hairlines (page progress, tab
+     progress) are the only gradients, both 2px.
+   · The FINAL state is the default. The server renders fully visible
+     content; JS "arms" an element (data-reveal="hidden") only after
+     hydration and only to release it a moment later. No JS ⇒ nothing here
+     ever hides anything.
+   · Timing: 300–500 ms, ease-out, never bouncy. The chart draw (1.6 s) and
+     the hero load-in are the two deliberate exceptions.
+   · prefers-reduced-motion: the block at the end turns every rule off and
+     pins each element to its final state.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Reveal — fade + 12px rise (marketing-motion.tsx → Reveal / useReveal). */
+.bee-reveal[data-reveal="hidden"] { opacity: 0; transform: translateY(12px); }
+.bee-reveal[data-reveal="in"] {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 450ms ease-out, transform 450ms ease-out;
+  transition-delay: var(--bee-reveal-delay, 0ms);
+}
+/* Stagger variant: the wrapper never moves, its direct children rise 80 ms
+   apart (up to 8 — the biggest grid on the page has 6). */
+.bee-reveal--stagger[data-reveal="hidden"],
+.bee-reveal--stagger[data-reveal="in"] { opacity: 1; transform: none; transition: none; }
+.bee-reveal--stagger[data-reveal="hidden"] > * { opacity: 0; transform: translateY(12px); }
+.bee-reveal--stagger[data-reveal="in"] > * {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 450ms ease-out, transform 450ms ease-out;
+  transition-delay: calc(var(--bee-reveal-delay, 0ms) + var(--bee-stagger, 0ms));
+}
+.bee-reveal--stagger > :nth-child(2) { --bee-stagger: 80ms; }
+.bee-reveal--stagger > :nth-child(3) { --bee-stagger: 160ms; }
+.bee-reveal--stagger > :nth-child(4) { --bee-stagger: 240ms; }
+.bee-reveal--stagger > :nth-child(5) { --bee-stagger: 320ms; }
+.bee-reveal--stagger > :nth-child(6) { --bee-stagger: 400ms; }
+.bee-reveal--stagger > :nth-child(7) { --bee-stagger: 480ms; }
+.bee-reveal--stagger > :nth-child(8) { --bee-stagger: 560ms; }
+
+@keyframes bee-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bee-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes bee-grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Hero load-in: eyebrow → headline → subtitle → CTAs, 90 ms apart. */
+.bee-hero-in > * { animation: bee-rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.bee-hero-in > :nth-child(2) { animation-delay: 90ms; }
+.bee-hero-in > :nth-child(3) { animation-delay: 180ms; }
+.bee-hero-in > :nth-child(4) { animation-delay: 270ms; }
+
+/* Headline highlight: the key words in indigo (mixed toward --color-text so
+   the 60px heading clears 3:1 on the ground) over a pale-honey marker that
+   draws itself in once the headline has landed. */
+.bee-hl {
+  color: color-mix(in srgb, var(--color-chart-4) 72%, var(--color-text) 28%);
+  background: linear-gradient(transparent 64%, color-mix(in srgb, var(--color-chart-3) 60%, transparent) 64%) no-repeat 0 0 / 100% 100%;
+  padding: 0 0.08em;
+  margin: 0 -0.08em;
+  border-radius: 0.2em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.bee-hero-in .bee-hl { animation: bee-marker 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 700ms both; }
+@keyframes bee-marker {
+  from { background-size: 0 100%; }
+  to { background-size: 100% 100%; }
+}
+
+/* Hero signal cards: fade in after the headline, float on their own loop,
+   and lean toward the pointer / drift with scroll at per-card depth (the
+   --mx/--my/--sy custom properties are written by marketing-hero-signals). */
+.bee-hero-signals { animation: bee-fade 700ms ease-out 500ms both; }
+.bee-hero-signal {
+  transform: translate3d(
+    calc(var(--mx, 0) * var(--depth, 1) * 16px),
+    calc(var(--my, 0) * var(--depth, 1) * 12px - var(--sy, 0px) * var(--depth, 1) * 0.12),
+    0
+  );
+  transition: transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  will-change: transform;
+}
+.bee-hero-signal__float { animation: bee-float 7s ease-in-out infinite; }
+@keyframes bee-float {
+  0%, 100% { transform: translateY(0) rotate(-0.8deg); }
+  50% { transform: translateY(-10px) rotate(0.8deg); }
+}
+
+/* Page progress hairline (top edge of the sticky header). CSS scroll-driven
+   where supported (data-native, set by ScrollProgressBar), JS transform
+   elsewhere. */
+.bee-scroll-progress {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bee-scroll-progress__bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--color-chart-4), var(--color-chart-5));
+}
+@supports (animation-timeline: scroll()) {
+  .bee-scroll-progress__bar[data-native] {
+    animation: bee-grow-x linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+/* Demo panel: honey hairline filling across the active tab until the next
+   auto-rotation (duration set inline from AUTO_ROTATE_MS). */
+.bee-tab-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  transform-origin: 0 50%;
+  background: var(--color-chart-1);
+  animation: bee-grow-x 6s linear both;
+}
+
+/* Primary CTA: soft honey glow + 1px lift on hover. Landing only (opt-in
+   class), so dashboard .bee-btn--primary buttons keep their flat hover. */
+.bee-cta-glow { transition: background 120ms ease, border-color 120ms ease, box-shadow 250ms ease, transform 250ms ease; }
+.bee-cta-glow:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 12px 28px -10px color-mix(in srgb, var(--color-chart-1) 75%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--color-chart-3) 40%, transparent);
+}
+
+/* Before/after: the prioritized rows arrive top-down when toggled on. */
+.bee-rows-in > * { animation: bee-rise 380ms ease-out both; }
+.bee-rows-in > :nth-child(2) { animation-delay: 60ms; }
+.bee-rows-in > :nth-child(3) { animation-delay: 120ms; }
+.bee-rows-in > :nth-child(4) { animation-delay: 180ms; }
+.bee-rows-in > :nth-child(5) { animation-delay: 240ms; }
+.bee-rows-in > :nth-child(6) { animation-delay: 300ms; }
+
+/* Ventas chart draws itself: line via stroke-dashoffset (pathLength="1"),
+   area via clip-path, end dot pops last. Greens stay the chart's own. */
+.bee-draw[data-reveal="hidden"] .bee-draw__line { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.bee-draw[data-reveal="hidden"] .bee-draw__area { clip-path: inset(0 100% 0 0); }
+.bee-draw[data-reveal="hidden"] .bee-draw__dot { opacity: 0; transform: scale(0.4); }
+.bee-draw[data-reveal="in"] .bee-draw__line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1600ms cubic-bezier(0.4, 0, 0.2, 1) 250ms;
+}
+.bee-draw[data-reveal="in"] .bee-draw__area {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 1600ms cubic-bezier(0.4, 0, 0.2, 1) 250ms;
+}
+.bee-draw[data-reveal="in"] .bee-draw__dot {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms ease-out 1700ms, transform 400ms cubic-bezier(0.2, 0.7, 0.2, 1) 1700ms;
+}
+
+/* Hive cells: opacity now transitions too (storyline lights them up). */
+.bee-hex-cell { transition: stroke 100ms ease, stroke-width 100ms ease, opacity 500ms ease-out; }
+
+/* ── Story: señal → jugada → cierre (marketing-how-it-works.tsx) ──────────
+   lg+: the section is tall and its content pins; scroll position drives
+   which step is lit, the track fill, the hive and the stage chips. Below
+   lg nothing pins — the section flows and the same data attributes still
+   light the steps in order. */
+.bee-story { position: relative; }
+@media (min-width: 1024px) {
+  .bee-story { min-height: 260vh; }
+  .bee-story__pin {
+    position: sticky;
+    top: 4rem; /* header height */
+    min-height: calc(100vh - 4rem);
+    display: flex;
+    /* Centered in the viewport when it fits; `safe` keeps the top edge
+       reachable on a short screen instead of clipping it (plain `center`
+       overflows both ways). flex-start is the fallback for browsers that
+       don't know `safe`. */
+    align-items: flex-start;
+    align-items: safe center;
+  }
+}
+.bee-story__steps {
+  position: relative;
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0 0 0 1.75rem;
+  list-style: none;
+}
+/* Vertical track beside the steps: divider grey, uncovered top-down by the
+   honey → deep honey → indigo → magenta fill (clip-path from --p). */
+.bee-story__track {
+  position: absolute;
+  left: 0.6rem;
+  top: 1.25rem;
+  bottom: 1.25rem;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--color-divider);
+}
+.bee-story__track-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, var(--color-chart-1), var(--color-chart-2) 35%, var(--color-chart-4) 68%, var(--color-chart-5));
+  clip-path: inset(0 0 calc((1 - var(--p, 1)) * 100%) 0);
+  transition: clip-path 300ms ease-out;
+}
+.bee-story__step { position: relative; transition: opacity 350ms ease-out; }
+.bee-story__step::before {
+  content: "";
+  position: absolute;
+  left: calc(-1.15rem - 4px);
+  top: 1.25rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-card);
+  border: 2px solid var(--color-divider);
+  transition: background 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+}
+.bee-story__step[data-state="active"]::before,
+.bee-story__step[data-state="past"]::before { background: var(--step-color); border-color: var(--step-color); }
+.bee-story__step[data-state="active"]::before { box-shadow: 0 0 0 5px color-mix(in srgb, var(--step-color) 25%, transparent); }
+.bee-story__step[data-state="next"] { opacity: 0.5; }
+.bee-story__step[data-state="past"] { opacity: 0.8; }
+.bee-story__disc {
+  background: var(--color-primary);
+  color: var(--color-text-muted);
+  transition: background 300ms ease, color 300ms ease;
+}
+.bee-story__step[data-state="active"] .bee-story__disc,
+.bee-story__step[data-state="past"] .bee-story__disc {
+  background: color-mix(in srgb, var(--step-color) 24%, white);
+  color: color-mix(in srgb, var(--step-color) 78%, var(--color-text) 22%);
+}
+.bee-story__card { transition: box-shadow 350ms ease-out, transform 350ms ease-out; }
+.bee-story__step[data-state="active"] .bee-story__card { box-shadow: var(--bee-shadow-card-lift); transform: translateX(4px); }
+/* Stage chips: one per step, landing as its step lights. Until the client
+   has measured (no data-measured on the section) all four are shown. */
+.bee-story__chip { transition: opacity 400ms ease-out, transform 400ms ease-out, box-shadow 300ms ease; }
+.bee-story[data-measured] .bee-story__chip:not([data-shown]) { opacity: 0; transform: translateY(10px); }
+.bee-story__chip-dot { background: var(--step-color); }
+.bee-story__chip[data-current] {
+  box-shadow: var(--bee-shadow-card-lift), 0 0 0 1.5px color-mix(in srgb, var(--step-color) 55%, transparent);
+}
+.bee-story__approve {
+  background: var(--color-primary);
+  color: var(--color-text-muted);
+  transition: background 300ms ease, color 300ms ease;
+}
+.bee-story__approve[data-approved] {
+  background: color-mix(in srgb, var(--color-chart-5) 22%, white);
+  color: color-mix(in srgb, var(--color-chart-5) 75%, var(--color-text) 25%);
+}
+
+/* Reduced motion: every rule above → final state, no transitions. */
+@media (prefers-reduced-motion: reduce) {
+  .bee-reveal[data-reveal="hidden"],
+  .bee-reveal--stagger[data-reveal="hidden"] > * { opacity: 1; transform: none; }
+  .bee-reveal[data-reveal="in"],
+  .bee-reveal--stagger[data-reveal="in"] > * { transition: none; }
+  .bee-hero-in > *,
+  .bee-hero-in .bee-hl,
+  .bee-hero-signals,
+  .bee-hero-signal__float,
+  .bee-rows-in > *,
+  .bee-tab-progress { animation: none; }
+  .bee-hero-signal { transform: none; transition: none; }
+  .bee-draw[data-reveal] .bee-draw__line { stroke-dasharray: none; stroke-dashoffset: 0; transition: none; }
+  .bee-draw[data-reveal] .bee-draw__area { clip-path: none; transition: none; }
+  .bee-draw[data-reveal] .bee-draw__dot { opacity: 1; transform: none; transition: none; }
+  .bee-hex-cell,
+  .bee-cta-glow,
+  .bee-story__step,
+  .bee-story__step::before,
+  .bee-story__disc,
+  .bee-story__card,
+  .bee-story__chip,
+  .bee-story__approve,
+  .bee-story__track-fill { transition: none; }
+  .bee-cta-glow:hover:not(:disabled) { transform: none; }
+}

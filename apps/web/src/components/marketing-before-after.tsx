@@ -4,6 +4,7 @@ import { AlertCircle, ArrowRight, CheckCircle2, Flame } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { Reveal } from "@/components/marketing-motion";
 import { Badge } from "@/components/ui/badge";
 import { scoreVariant } from "@/lib/format";
 
@@ -50,12 +51,12 @@ export function MarketingBeforeAfter() {
   return (
     <section className="border-t border-border">
       <div className="mx-auto w-full max-w-4xl px-6 py-16 sm:py-20">
-        <div className="mx-auto max-w-2xl text-center">
+        <Reveal className="mx-auto max-w-2xl text-center">
           <p className="bee-eyebrow bee-eyebrow--violet">{t("eyebrow")}</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("heading")}</h2>
-        </div>
+        </Reveal>
 
-        <div className="mt-8 flex justify-center">
+        <Reveal className="mt-8 flex justify-center" delay={80}>
           <div className="bee-filter-tabs">
             <button
               onClick={() => setWithBee(false)}
@@ -70,9 +71,9 @@ export function MarketingBeforeAfter() {
               {t("withBee")}
             </button>
           </div>
-        </div>
+        </Reveal>
 
-        <div className="mt-6 bee-bento bee-bento-pad-lg">
+        <Reveal className="mt-6 bee-bento bee-bento-pad-lg" delay={160}>
           {!withBee ? (
             <div>
               <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
@@ -94,7 +95,11 @@ export function MarketingBeforeAfter() {
                 <CheckCircle2 className="size-3.5" />
                 <span>{t("scoredCaption")}</span>
               </div>
-              <div className="divide-y divide-border">
+              {/* bee-rows-in: each row slides in 60 ms after the previous one
+               * when the visitor flips to "Con BEE" — the priority order
+               * literally arrives top-down. Pure CSS, keyframes in
+               * globals.css; off under prefers-reduced-motion. */}
+              <div className="bee-rows-in divide-y divide-border">
                 {SCORED_ROWS.map((row) => (
                   <div key={row.company} className="flex items-center justify-between py-2.5">
                     <span className="text-sm font-medium">{row.company}</span>
@@ -110,7 +115,7 @@ export function MarketingBeforeAfter() {
               </div>
             </div>
           )}
-        </div>
+        </Reveal>
 
         <p className="bee-micro mt-4 flex items-center justify-center gap-1.5 text-center">
           {!withBee ? (

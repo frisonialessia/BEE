@@ -207,7 +207,13 @@ function HexTooltip({
   );
 }
 
-export function MarketingHoneycomb() {
+/**
+ * `progress` (0..1, optional) lights the hive up progressively, hottest
+ * cells first, radiating outward — the how-it-works storyline drives it
+ * from scroll position. Omitted (the Demo en vivo) → every cell lit, which
+ * is also what the server renders for the storyline before JS measures.
+ */
+export function MarketingHoneycomb({ progress }: { progress?: number } = {}) {
   const t = useTranslations("landing.honeycomb");
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
@@ -230,20 +236,25 @@ export function MarketingHoneycomb() {
         aria-label={t("ariaLabel")}
         onMouseLeave={() => setHoveredIdx(null)}
       >
-        {CELLS.map((cell, i) => (
-          <polygon
-            key={i}
-            points={hexPolygonPoints(cell.x, cell.y, HEX_SIZE - 1.5)}
-            fill={heatColor(cell.heat)}
-            stroke={hoveredIdx === i ? "var(--color-chart-5)" : "var(--color-background)"}
-            strokeWidth={hoveredIdx === i ? 2 : 1.5}
-            opacity={Number((0.55 + cell.heat * 0.45).toFixed(3))}
-            className={`cursor-pointer transition-[stroke,stroke-width] duration-100 ${cell.heat > HOT_THRESHOLD ? "bee-hex-breathe" : ""}`}
-            style={cell.heat > HOT_THRESHOLD ? { animationDelay: `${Math.round(hash01(cell.q + 7, cell.r + 3) * 3000)}ms`, transformOrigin: `${cell.x}px ${cell.y}px` } : undefined}
-            onMouseEnter={(e) => handlePointer(i, e)}
-            onMouseMove={(e) => handlePointer(i, e)}
-          />
-        ))}
+        {CELLS.map((cell, i) => {
+          // Lit from the centre out: at progress 0 only the peak cells
+          // glow (the signal appears), at 1 the whole hive is on.
+          const lit = progress === undefined || cell.heat >= 1 - progress * 1.1;
+          return (
+            <polygon
+              key={i}
+              points={hexPolygonPoints(cell.x, cell.y, HEX_SIZE - 1.5)}
+              fill={heatColor(cell.heat)}
+              stroke={hoveredIdx === i ? "var(--color-chart-5)" : "var(--color-background)"}
+              strokeWidth={hoveredIdx === i ? 2 : 1.5}
+              opacity={lit ? Number((0.55 + cell.heat * 0.45).toFixed(3)) : 0.1}
+              className={`bee-hex-cell cursor-pointer ${lit && cell.heat > HOT_THRESHOLD ? "bee-hex-breathe" : ""}`}
+              style={cell.heat > HOT_THRESHOLD ? { animationDelay: `${Math.round(hash01(cell.q + 7, cell.r + 3) * 3000)}ms`, transformOrigin: `${cell.x}px ${cell.y}px` } : undefined}
+              onMouseEnter={(e) => handlePointer(i, e)}
+              onMouseMove={(e) => handlePointer(i, e)}
+            />
+          );
+        })}
       </svg>
       {hovered && <HexTooltip cell={hovered} pointer={pointer} />}
     </div>

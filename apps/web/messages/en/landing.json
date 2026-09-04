@@ -193,6 +193,27 @@
       "viewMore": "View more"
     }
   },
+  "counters": {
+    "note": "Figures from the demo above — sample data, not a real account.",
+    "items": {
+      "signals": {
+        "label": "Facts analyzed today",
+        "value": "128"
+      },
+      "plays": {
+        "label": "Plays ready to approve",
+        "value": "7"
+      },
+      "hot": {
+        "label": "Hot leads right now",
+        "value": "3"
+      },
+      "confidence": {
+        "label": "Model confidence",
+        "value": "94%"
+      }
+    }
+  },
   "howItWorks": {
     "eyebrow": "How it works",
     "heading": "From signal to action, in four steps.",
@@ -212,6 +233,29 @@
       "approve": {
         "title": "4. You approve",
         "description": "Nothing goes out without explicit sign-off. You approve, adjust, or discard — the final call is always human."
+      }
+    },
+    "stage": {
+      "title": "One signal, end to end",
+      "scrollHint": "Scroll to advance",
+      "approveLabel": "Waiting for your approval",
+      "approvedLabel": "Approved · ready to send",
+      "note": "Illustrative sequence with the same sample data as the live demo.",
+      "detect": {
+        "label": "Signal detected",
+        "text": "Northwind Robotics raised a USD 40M Series C — webhook received 2 min ago."
+      },
+      "enrich": {
+        "label": "Enriched and prioritized",
+        "text": "Elena Cross · VP Sales · score 92 · Ready to buy. Moves to the top of the list."
+      },
+      "prepare": {
+        "label": "Suggested play",
+        "text": "Email Elena today: scale the sales team after the round. Argument, channel and timing, ready."
+      },
+      "approve": {
+        "label": "Your approval",
+        "text": "Nothing goes out without your go-ahead. Approve, adjust or discard."
       }
     }
   },

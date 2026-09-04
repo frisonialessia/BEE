@@ -4,6 +4,8 @@ import { ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { Reveal } from "@/components/marketing-motion";
+
 /**
  * MarketingFAQ — objeciones reales de un evaluador B2B, respondidas con
  * las mismas garantías arquitectónicas que ya aparecen en GUARANTEES
@@ -53,15 +55,15 @@ export function MarketingFAQ() {
 
   return (
     <section className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-20">
-      <div className="mx-auto max-w-2xl text-center">
+      <Reveal className="mx-auto max-w-2xl text-center">
         <p className="bee-eyebrow bee-eyebrow--violet">{t("eyebrow")}</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("heading")}</h2>
-      </div>
-      <div className="mt-8">
+      </Reveal>
+      <Reveal stagger className="mt-8">
         {items.map((item) => (
           <FaqRow key={item.question} q={item.question} a={item.answer} />
         ))}
-      </div>
+      </Reveal>
     </section>
   );
 }

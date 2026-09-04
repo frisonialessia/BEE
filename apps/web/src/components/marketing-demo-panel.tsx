@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowDownToLine,
   ArrowUpRight,
@@ -15,6 +15,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { MarketingHoneycomb } from "@/components/marketing-honeycomb";
+import { prefersReducedMotion, useInView } from "@/components/marketing-motion";
 import { scoreVariant } from "@/lib/format";
 
 /**
@@ -625,13 +626,45 @@ const VIEWS: Record<TabId, () => React.ReactElement> = {
   forecast: ForecastView,
 };
 
+// Tabs auto-rotate this often while the panel is on screen and untouched.
+const AUTO_ROTATE_MS = 6000;
+
 export function MarketingDemoPanel() {
   const t = useTranslations("landing.demo");
   const [tab, setTab] = useState<TabId>("signals");
+  // Auto-rotation: the three tabs cycle every 6 s so a visitor who only
+  // scrolls still sees Señales, Leads and Simulador — but only while the
+  // panel is actually in view (once: false — it resumes when scrolled back
+  // to), never after the visitor has touched it (a click, a keypress, a
+  // focus inside: from then on the panel is theirs), and never under
+  // prefers-reduced-motion, where content swapping on its own is exactly
+  // the kind of unrequested movement the setting asks to avoid.
+  const [auto, setAuto] = useState(true);
+  const { ref, inView } = useInView<HTMLDivElement>({ threshold: 0.35, once: false });
   const ActiveView = VIEWS[tab];
 
+  useEffect(() => {
+    if (!auto || !inView || prefersReducedMotion()) return;
+    const id = window.setInterval(() => {
+      setTab((current) => {
+        const idx = TABS.findIndex((item) => item.id === current);
+        return TABS[(idx + 1) % TABS.length].id;
+      });
+    }, AUTO_ROTATE_MS);
+    return () => window.clearInterval(id);
+  }, [auto, inView]);
+
+  const stopAuto = () => setAuto(false);
+  const rotating = auto && inView;
+
   return (
-    <div className="bee-glass overflow-hidden rounded-[var(--radius-lg)]">
+    <div
+      ref={ref}
+      className="bee-glass overflow-hidden rounded-[var(--radius-lg)]"
+      onPointerDownCapture={stopAuto}
+      onKeyDownCapture={stopAuto}
+      onFocusCapture={stopAuto}
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-divider)] px-4 py-2.5 sm:px-5">
         <div className="flex items-center gap-2">
           <span className="size-2.5 rounded-full bg-[var(--color-green-1)]" aria-hidden />
@@ -646,9 +679,16 @@ export function MarketingDemoPanel() {
             <button
               key={tabItem.id}
               onClick={() => setTab(tabItem.id)}
-              className={`bee-filter-tab ${tab === tabItem.id ? "bee-filter-tab--active" : ""}`}
+              className={`bee-filter-tab relative overflow-hidden ${tab === tabItem.id ? "bee-filter-tab--active" : ""}`}
             >
               {t(`tabs.${tabItem.id}`)}
+              {/* Honey hairline that fills across the active tab over the
+               * 6 s until the next rotation — keyed on the tab so it
+               * restarts with every switch; gone once the visitor takes
+               * over. */}
+              {rotating && tab === tabItem.id && (
+                <span key={tab} className="bee-tab-progress" style={{ animationDuration: `${AUTO_ROTATE_MS}ms` }} aria-hidden />
+              )}
             </button>
           ))}
         </div>

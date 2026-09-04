@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
+import { ScrollProgressBar } from "@/components/marketing-motion";
 
 /**
  * Cabecera pública — Iniciar sesión + Funcionalidades + Probar sin
@@ -23,6 +24,10 @@ export function MarketingHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[color-mix(in_srgb,var(--color-text)_8%,transparent)] bg-[color-mix(in_srgb,var(--color-background)_75%,transparent)] backdrop-blur-md">
+      {/* Page-progress hairline along the very top edge — the header is the
+       * only element that stays on screen for the whole scroll story, so
+       * it is where "how far along am I" belongs. Decorative, aria-hidden. */}
+      <ScrollProgressBar />
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-6">
         <Link href="/" aria-label="Inicio BEE" className="shrink-0">
           <Logo />
@@ -54,7 +59,7 @@ export function MarketingHeader() {
               {t("login")}
             </Link>
           </span>
-          <Link href="/probar" className="bee-btn bee-btn--primary">
+          <Link href="/probar" className="bee-btn bee-btn--primary bee-cta-glow">
             {t("tryFree")}
           </Link>
         </nav>

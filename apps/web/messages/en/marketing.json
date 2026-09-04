@@ -36,8 +36,26 @@
   },
   "landing": {
     "eyebrow": "Sales Force Intelligence",
-    "heroTitle": "Autonomous sales intelligence that decides in real time.",
+    "heroTitle": "Autonomous sales intelligence that decides <hl>in real time</hl>.",
     "heroSubtitle": "BEE watches the market, prioritizes your pipeline, and prepares your next move while you close — no friction, no fabricated data, never losing control of a single decision.",
+    "heroSignals": {
+      "funding": {
+        "label": "Funding round",
+        "detail": "Northwind Robotics · Series C · USD 40M"
+      },
+      "hire": {
+        "label": "Key hire",
+        "detail": "Solace Data appointed a new CRO"
+      },
+      "stack": {
+        "label": "Stack change",
+        "detail": "Fielder Logistics switched CRMs"
+      },
+      "intent": {
+        "label": "Intent spike",
+        "detail": "Anchor Freight · temperature 92°"
+      }
+    },
     "ctaStart": "Get started",
     "ctaTry": "Try without signing up",
     "demoEyebrow": "Live demo",

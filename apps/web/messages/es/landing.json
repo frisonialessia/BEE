@@ -193,6 +193,27 @@
       "viewMore": "Ver más"
     }
   },
+  "counters": {
+    "note": "Cifras del demo de arriba — datos de ejemplo, no una cuenta real.",
+    "items": {
+      "signals": {
+        "label": "Hechos analizados hoy",
+        "value": "128"
+      },
+      "plays": {
+        "label": "Jugadas listas para aprobar",
+        "value": "7"
+      },
+      "hot": {
+        "label": "Leads calientes ahora",
+        "value": "3"
+      },
+      "confidence": {
+        "label": "Confianza del modelo",
+        "value": "94 %"
+      }
+    }
+  },
   "howItWorks": {
     "eyebrow": "Cómo funciona",
     "heading": "De la señal a la acción, en cuatro pasos.",
@@ -212,6 +233,29 @@
       "approve": {
         "title": "4. Tú apruebas",
         "description": "Nada sale sin luz verde explícita. Apruebas, ajustas o descartas — la decisión final es siempre humana."
+      }
+    },
+    "stage": {
+      "title": "Una señal, de punta a punta",
+      "scrollHint": "Desplázate para avanzar",
+      "approveLabel": "Esperando tu aprobación",
+      "approvedLabel": "Aprobada · lista para enviar",
+      "note": "Secuencia ilustrativa con los mismos datos de ejemplo del Demo en vivo.",
+      "detect": {
+        "label": "Señal detectada",
+        "text": "Northwind Robotics levantó una Serie C de USD 40M — webhook recibido hace 2 min."
+      },
+      "enrich": {
+        "label": "Enriquecida y priorizada",
+        "text": "Elena Cross · VP Sales · score 92 · Listo para comprar. Sube al primer lugar de la lista."
+      },
+      "prepare": {
+        "label": "Jugada sugerida",
+        "text": "Email a Elena hoy: escalar el equipo comercial tras la ronda. Argumento, canal y momento, listos."
+      },
+      "approve": {
+        "label": "Tu aprobación",
+        "text": "Nada sale sin tu luz verde. Apruebas, ajustas o descartas."
       }
     }
   },

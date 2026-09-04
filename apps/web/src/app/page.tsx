@@ -13,12 +13,15 @@ import {
 } from "lucide-react";
 
 import { MarketingBeforeAfter } from "@/components/marketing-before-after";
+import { MarketingCounters } from "@/components/marketing-counters";
 import { MarketingDemoPanel } from "@/components/marketing-demo-panel";
 import { MarketingFAQ } from "@/components/marketing-faq";
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
+import { MarketingHeroSignals } from "@/components/marketing-hero-signals";
 import { MarketingHowItWorks } from "@/components/marketing-how-it-works";
 import { MarketingIntegrations } from "@/components/marketing-integrations";
+import { Reveal } from "@/components/marketing-motion";
 import { MarketingOrbit } from "@/components/marketing-orbit";
 import { MarketingSalesProof } from "@/components/marketing-sales-proof";
 import { MarketingSignalTicker } from "@/components/marketing-signal-ticker";
@@ -31,12 +34,18 @@ import { MarketingSignalTicker } from "@/components/marketing-signal-ticker";
  * apoya en garantías técnicas verificables del sistema en vez de prueba
  * social fabricada.
  *
- * NOTE (i18n): only this file's own copy (hero, módulos, garantías, CTA de
- * cierre) is wired to messages/{locale}/marketing.json today. The 7
- * sub-components it renders below (MarketingOrbit, MarketingSignalTicker,
- * MarketingDemoPanel, MarketingHowItWorks, MarketingBeforeAfter,
- * MarketingIntegrations, MarketingFAQ) still have hardcoded Spanish copy —
- * tracked as follow-up work, not silently skipped.
+ * i18n: this file's own copy (hero, módulos, garantías, CTA de cierre)
+ * lives in messages/{locale}/marketing.json; every sub-component below
+ * reads messages/{locale}/landing.json.
+ *
+ * Motion: the landing is a scroll story (see marketing-motion.tsx). Every
+ * section reveals with the same fade + 12px rise, grids stagger their
+ * children, figures count up, the Ventas chart draws itself and the
+ * how-it-works section is a pinned sequence driven by scroll position.
+ * All of it is progressive enhancement over this server-rendered final
+ * state — no JS, no IntersectionObserver or prefers-reduced-motion all
+ * get the finished page — and none of it adds a fill: one background for
+ * the whole landing, the hero's blurred atmosphere the only exception.
  */
 
 const MODULE_ICONS = { signals: Radio, brief: Sparkles, simulator: TrendingUp, automation: Share2 } as const;
@@ -197,18 +206,27 @@ export default async function Home() {
           <HeroAtmosphere />
 
           <div className="relative mx-auto w-full max-w-4xl px-6 pb-8 pt-16 text-center sm:pt-24">
-            <p className="bee-eyebrow">{t("eyebrow")}</p>
-            <h1 className="mx-auto mt-5 max-w-3xl text-balance text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-              {t("heroTitle")}
-            </h1>
-            <p className="bee-caption mx-auto mt-6 max-w-xl text-base sm:text-lg">{t("heroSubtitle")}</p>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-              <Link href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary">
-                {t("ctaStart")} <ArrowRight className="size-4" />
-              </Link>
-              <Link href="/probar" className="bee-btn-ghost">
-                <PlayCircle className="size-4" /> {t("ctaTry")}
-              </Link>
+            {/* Floating signal cards in the side margins (xl+ only). Outside
+             * .bee-hero-in so the load-in stagger below doesn't fight their
+             * own parallax transform. */}
+            <MarketingHeroSignals />
+            {/* .bee-hero-in: eyebrow → headline → subtitle → CTAs rise in on
+             * load, 90 ms apart; the <hl> words get a honey marker that draws
+             * itself under them once the headline has landed. */}
+            <div className="bee-hero-in relative">
+              <p className="bee-eyebrow">{t("eyebrow")}</p>
+              <h1 className="mx-auto mt-5 max-w-3xl text-balance text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+                {t.rich("heroTitle", { hl: (chunks) => <span className="bee-hl">{chunks}</span> })}
+              </h1>
+              <p className="bee-caption mx-auto mt-6 max-w-xl text-base sm:text-lg">{t("heroSubtitle")}</p>
+              <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
+                <Link href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary bee-cta-glow">
+                  {t("ctaStart")} <ArrowRight className="size-4" />
+                </Link>
+                <Link href="/probar" className="bee-btn-ghost">
+                  <PlayCircle className="size-4" /> {t("ctaTry")}
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -227,13 +245,16 @@ export default async function Home() {
 
         {/* ── Vista previa del producto ───────────────────────────────────── */}
         <section id="producto" className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
-          <div className="mx-auto max-w-2xl text-center">
+          <Reveal className="mx-auto max-w-2xl text-center">
             <p className="bee-eyebrow bee-eyebrow--blue">{t("demoEyebrow")}</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("demoTitle")}</h2>
-          </div>
-          <div className="mt-10">
+          </Reveal>
+          <Reveal className="mt-10" delay={100}>
             <MarketingDemoPanel />
-          </div>
+          </Reveal>
+          {/* The demo's own figures, counting up — a recap of the panel
+           * above, labelled as demo data, not a second set of statistics. */}
+          <MarketingCounters />
         </section>
 
         <MarketingHowItWorks />
@@ -245,11 +266,13 @@ export default async function Home() {
         {/* ── Módulos de valor ─────────────────────────────────────────────── */}
         <section id="modulos" className="border-t border-border">
           <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
-            <p className="bee-eyebrow bee-eyebrow--blue">{t("modulesEyebrow")}</p>
-            <h2 className="mt-2 max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
-              {t("modulesTitle")}
-            </h2>
-            <div className="bee-bento-grid mt-10">
+            <Reveal>
+              <p className="bee-eyebrow bee-eyebrow--blue">{t("modulesEyebrow")}</p>
+              <h2 className="mt-2 max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
+                {t("modulesTitle")}
+              </h2>
+            </Reveal>
+            <Reveal stagger className="bee-bento-grid mt-10">
               {MODULE_KEYS.map((key) => {
                 const Icon = MODULE_ICONS[key];
                 return (
@@ -277,7 +300,7 @@ export default async function Home() {
                   </Link>
                 );
               })}
-            </div>
+            </Reveal>
           </div>
         </section>
 
@@ -285,13 +308,13 @@ export default async function Home() {
 
         {/* ── Autoridad / garantías del sistema ───────────────────────────── */}
         <section id="features" className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
-          <div className="mx-auto max-w-2xl text-center">
+          <Reveal className="mx-auto max-w-2xl text-center">
             <p className="bee-eyebrow bee-eyebrow--warm">{t("guaranteesEyebrow")}</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("guaranteesTitle")}</h2>
             <p className="bee-caption mt-3">{t("guaranteesSubtitle")}</p>
-          </div>
+          </Reveal>
 
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Reveal stagger className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {GUARANTEE_KEYS.map((key, i) => {
               const Icon = GUARANTEE_ICONS[key];
               return (
@@ -307,19 +330,19 @@ export default async function Home() {
                 </div>
               );
             })}
-          </div>
+          </Reveal>
         </section>
 
         <MarketingFAQ />
 
         {/* ── CTA de cierre ────────────────────────────────────────────────── */}
         <section className="border-t border-border">
-          <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 py-16 text-center sm:py-20">
+          <Reveal className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 py-16 text-center sm:py-20">
             <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">{t("closingTitle")}</h2>
-            <Link href="/contacto?source=closing_cta" className="bee-btn bee-btn--primary">
+            <Link href="/contacto?source=closing_cta" className="bee-btn bee-btn--primary bee-cta-glow">
               {t("closingCta")} <ArrowRight className="size-4" />
             </Link>
-          </div>
+          </Reveal>
         </section>
       </main>
 

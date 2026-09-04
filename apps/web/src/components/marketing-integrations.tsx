@@ -1,6 +1,8 @@
 import { Mail, Search, Star, Users } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { Reveal } from "@/components/marketing-motion";
+
 /**
  * MarketingIntegrations — de dónde salen las señales y por dónde sale el
  * alcance, listado real (no un muro de logos de clientes inventado):
@@ -56,11 +58,11 @@ export async function MarketingIntegrations() {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
-      <div className="mx-auto max-w-2xl text-center">
+      <Reveal className="mx-auto max-w-2xl text-center">
         <p className="bee-eyebrow bee-eyebrow--muted">{t("eyebrow")}</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("heading")}</h2>
-      </div>
-      <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      </Reveal>
+      <Reveal stagger className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {INTEGRATIONS.map((i) => (
           <div key={i.name} className="bee-bento bee-bento-pad bee-glass--hover flex items-start gap-3">
             <div
@@ -74,7 +76,7 @@ export async function MarketingIntegrations() {
             </div>
           </div>
         ))}
-      </div>
+      </Reveal>
     </section>
   );
 }
