@@ -219,9 +219,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
         # Timing-safe comparison to prevent key enumeration
         if not self._is_valid_key(provided_key):
-            logger.warning(
-                "APIKeyMiddleware: rejected request — invalid X-API-Key. path=%s", path
-            )
+            logger.warning("APIKeyMiddleware: rejected request — invalid X-API-Key. path=%s", path)
             return JSONResponse(
                 status_code=403,
                 content={"detail": "Invalid API key."},
@@ -288,7 +286,9 @@ class APIRateLimitMiddleware(BaseHTTPMiddleware):
         guard = get_api_rate_limit_guard()
         client_ip = get_client_ip(request)
         if not guard.try_consume(client_ip):
-            logger.warning("APIRateLimitMiddleware: rate limit exceeded. ip=%s path=%s", client_ip, path)
+            logger.warning(
+                "APIRateLimitMiddleware: rate limit exceeded. ip=%s path=%s", client_ip, path
+            )
             return JSONResponse(
                 status_code=429,
                 content={"detail": "Too many requests. Try again shortly."},
@@ -296,3 +296,26 @@ class APIRateLimitMiddleware(BaseHTTPMiddleware):
             )
 
         return await call_next(request)
+
+
+class UnhandledErrorMiddleware(BaseHTTPMiddleware):
+    """Turn an unhandled exception into a JSON 500 *inside* the CORS layer.
+
+    Starlette's outermost ServerErrorMiddleware answers an uncaught exception
+    with a bare 500 and no CORS headers, so a browser on another origin
+    (apps/web on Vercel) reports it as a network failure — "could not reach
+    the server" — instead of a server error. That is how the 2026-09-04
+    schema-drift incident looked to every user trying to log in. Registered
+    just inside CORSMiddleware, this catches the exception first, logs it
+    (Sentry's ASGI wrapper still sees it via the logging integration and the
+    outer span), and returns a normal response that CORS can decorate.
+    """
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        try:
+            return await call_next(request)
+        except Exception as exc:  # noqa: BLE001 — this is the catch-all by design
+            logger.exception(
+                "Unhandled exception on %s %s", request.method, request.url.path, exc_info=exc
+            )
+            return JSONResponse(status_code=500, content={"detail": "internal_error"})

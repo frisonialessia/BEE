@@ -12,12 +12,12 @@ const TRANSPORT_MESSAGES: Record<Locale, { network: string; validation: string; 
   es: {
     network: "No se pudo conectar con el servidor. Intenta de nuevo en un momento.",
     validation: "Revisa los datos ingresados.",
-    generic: "Error del servidor ({status}).",
+    generic: "BEE tuvo un error interno ({status}). Quedó registrado; intenta de nuevo en un minuto.",
   },
   en: {
     network: "Could not reach the server. Try again in a moment.",
     validation: "Check the data you entered.",
-    generic: "Server error ({status}).",
+    generic: "BEE hit an internal error ({status}). It has been logged; try again in a minute.",
   },
 };
 

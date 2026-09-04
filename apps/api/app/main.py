@@ -18,7 +18,12 @@ from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.logging import configure_logging, get_logger
-from app.core.middleware import APIKeyMiddleware, APIRateLimitMiddleware, SecurityHeadersMiddleware
+from app.core.middleware import (
+    APIKeyMiddleware,
+    APIRateLimitMiddleware,
+    SecurityHeadersMiddleware,
+    UnhandledErrorMiddleware,
+)
 from app.core.tracing import setup_tracing
 from app.services.events import register_listeners
 
@@ -41,7 +46,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     async external ingestion worker. Cleanup stops the worker gracefully.
     """
     configure_logging()
-    logger.info("Starting %s v%s (env=%s)", settings.PROJECT_NAME, __version__, settings.ENVIRONMENT)
+    logger.info(
+        "Starting %s v%s (env=%s)", settings.PROJECT_NAME, __version__, settings.ENVIRONMENT
+    )
 
     # Schema provisioning: in local/staging, create_all() is a zero-friction
     # convenience so the app is usable straight out of `docker compose up`. In
@@ -51,6 +58,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # paper over a missing/failed migration instead of failing loudly.
     if settings.ENVIRONMENT == "production":
         logger.info("ENVIRONMENT=production — skipping init_db(); schema is managed by Alembic.")
+        # Vercel never runs migrations: say loudly, at boot, whether the
+        # database is at the revision this code expects (see schema_check).
+        from app.core.database import engine
+        from app.core.schema_check import check_schema
+
+        check_schema(engine)
     else:
         try:
             init_db()
@@ -124,6 +137,11 @@ def create_app() -> FastAPI:
     #    client hammering the API with no/invalid keys still gets throttled
     #    per-IP, not just 401'd forever at zero cost to the attacker.
     app.add_middleware(APIRateLimitMiddleware)
+
+    # 1b. Unhandled exceptions → JSON 500. Registered right before CORS so it
+    #     sits just inside it: CORS still decorates the error response, and
+    #     the browser sees a server error instead of a network failure.
+    app.add_middleware(UnhandledErrorMiddleware)
 
     # 1. CORS — registered LAST so it's outermost and handles pre-flight
     #    OPTIONS requests before APIKeyMiddleware/APIRateLimitMiddleware

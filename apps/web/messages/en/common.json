@@ -70,7 +70,7 @@
   "apiErrors": {
     "network": "Could not reach the server. Try again in a moment.",
     "validation": "Check the data you entered.",
-    "generic": "Server error ({status})."
+    "generic": "BEE hit an internal error ({status}). It has been logged; try again in a minute."
   },
   "teamStrip": {
     "members": "{count, plural, one {# on the team} other {# on the team}}"

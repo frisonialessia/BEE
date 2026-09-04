@@ -13,7 +13,7 @@ from __future__ import annotations
 import time
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import text
 from sqlmodel import Session
 
@@ -35,8 +35,18 @@ def health() -> dict[str, str]:
 
 @router.get("/ready", summary="Readiness probe (checks the database)")
 def ready(session: Session = Depends(get_session)) -> dict[str, str]:
-    """Verify the database connection is usable before accepting traffic."""
+    """Verify the database connection is usable — and at the schema revision
+    this code expects — before accepting traffic. Drift answers 503 with the
+    two revisions in the detail, so an operator sees the cause in one call."""
     session.execute(text("SELECT 1"))
+    from app.core.schema_check import check_schema, last_schema_status
+
+    status = last_schema_status() or check_schema(session.get_bind())  # type: ignore[arg-type]
+    if not status.in_sync and status.error is None:
+        raise HTTPException(
+            status_code=503,
+            detail=f"schema drift: database at {status.db_version}, code expects {status.code_head} — run `alembic upgrade head`",
+        )
     return {"status": "ready"}
 
 
@@ -52,6 +62,15 @@ def deep_status(session: Session = Depends(get_session)) -> dict:
     don't alarm on degraded-but-functional subsystems.
     """
     checks: dict[str, dict] = {}
+
+    # ── 0. Schema revision (Alembic) ─────────────────────────────────────────
+    try:
+        from app.core.schema_check import check_schema
+
+        schema = check_schema(session.get_bind())  # type: ignore[arg-type]
+        checks["schema"] = {"status": "ok" if schema.in_sync else "error", **schema.as_dict()}
+    except Exception as exc:  # noqa: BLE001
+        checks["schema"] = {"status": "error", "error": str(exc)[:200]}
 
     # ── 1. Database ──────────────────────────────────────────────────────────
     t0 = time.monotonic()
@@ -189,9 +208,7 @@ def deep_status(session: Session = Depends(get_session)) -> dict:
         "provider": settings.AI_PROVIDER,
         "model": settings.AI_MODEL,
         "status": (
-            "rule-based fallback (no cost)"
-            if settings.AI_PROVIDER == "none"
-            else "configured"
+            "rule-based fallback (no cost)" if settings.AI_PROVIDER == "none" else "configured"
         ),
     }
 

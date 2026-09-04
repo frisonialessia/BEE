@@ -1,0 +1,60 @@
+name: Migrate production database
+
+# Vercel redeploys the API on every push to main but never runs Alembic, so
+# a push that adds a migration used to leave production at the old schema
+# until someone ran `alembic upgrade head` by hand (2026-09-04: code at
+# revision 047, Supabase at 028, every login a 500). This workflow closes
+# that gap: whenever a migration or a model changes on main, it upgrades the
+# production database — before Vercel's build has usually finished.
+#
+# Requires the repository secret PRODUCTION_DATABASE_URL (Supabase → Project
+# Settings → Database → Connection string, *transaction pooler* on port
+# 6543, with `?sslmode=require`). Without the secret the job explains itself
+# and exits successfully so CI never goes red for a missing credential.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/alembic/**"
+      - "apps/api/app/models/**"
+  workflow_dispatch:
+
+concurrency:
+  group: migrate-production
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: alembic upgrade head (production)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: apps/api/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Upgrade production schema
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          ENVIRONMENT: production
+          # Required by Settings validation in production; the value is
+          # irrelevant to Alembic itself.
+          JWT_SECRET_KEY: ${{ secrets.PRODUCTION_JWT_SECRET_KEY || 'migration-only-not-used-for-tokens' }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::warning::PRODUCTION_DATABASE_URL secret is not set — skipping. Add it in Settings → Secrets and re-run, or run 'alembic upgrade head' by hand (DEPLOY_CHECKLIST.md §1)."
+            exit 0
+          fi
+          alembic current
+          alembic upgrade head
+          alembic current

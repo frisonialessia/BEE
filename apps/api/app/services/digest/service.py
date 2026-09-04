@@ -116,14 +116,19 @@ class DailyDigestService:
             logger.warning("DailyDigest: webhook delivery failed: %s", exc)
             return False
 
-    def send_now(self, org: Organization) -> DigestSendResult:
-        """"Enviar ahora" — ignores the schedule and the once-a-day guard."""
+    def send_now(self, org: Organization, *, now: datetime | None = None) -> DigestSendResult:
+        """"Enviar ahora" — ignores the schedule and the once-a-day guard.
+
+        ``now`` is the clock the caller reasons with (the cron tick passes its
+        own), so ``digest_last_sent_at`` and the once-a-day comparison in
+        ``send_scheduled`` always speak about the same day.
+        """
         if not org.digest_webhook_url:
             return DigestSendResult(sent=False, reason="not_configured")
         text, count = self.build_message(org)
         if not self._deliver(org.digest_webhook_url, text):
             return DigestSendResult(sent=False, reason="delivery_failed", cards=count)
-        org.digest_last_sent_at = datetime.now(UTC)
+        org.digest_last_sent_at = now or datetime.now(UTC)
         self.session.add(org)
         self.session.commit()
         return DigestSendResult(sent=True, cards=count)
@@ -142,7 +147,7 @@ class DailyDigestService:
             last_utc = last if last.tzinfo is not None else last.replace(tzinfo=UTC)
             if last_utc.date() == now.date():
                 return DigestSendResult(sent=False, reason="already_sent_today")
-        return self.send_now(org)
+        return self.send_now(org, now=now)
 
     def run_tick(self, *, now: datetime | None = None) -> DigestTickSummary:
         start = time.monotonic()
