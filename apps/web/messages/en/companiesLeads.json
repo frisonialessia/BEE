@@ -47,11 +47,30 @@
       "withOpps": "With an opportunity",
       "withContacts": "With contacts",
       "withRecentSignal": "Signal in last 30 days",
-      "industryTitle": "Mix by industry",
-      "industryCaption": "Where your portfolio concentrates",
+      "industryTitle": "Industries",
+      "industryCaption": "The five with the most accounts in your directory",
       "countryTitle": "By country",
       "countryCaption": "The five geographies with the most accounts",
-      "other": "Other"
+      "other": "Other",
+      "withRecentSignalHint": "signals per week"
+    },
+    "searchPlaceholder": "Search companies or leads…",
+    "importButton": "Import",
+    "newButton": "+ New",
+    "directory": {
+      "title": "Directory",
+      "caption": "{count, plural, one {# company} other {# companies}} — click a row to open the account",
+      "captionFiltered": "{count} of {total} companies match the search",
+      "noMatch": "No company matches the search.",
+      "headers": {
+        "company": "Company",
+        "industry": "Industry",
+        "lastSignal": "Last signal",
+        "openOpportunities": "Open opps",
+        "owner": "Owner"
+      },
+      "unassigned": "Unassigned",
+      "itemLabel": "companies"
     }
   },
   "companyDetail": {
@@ -63,7 +82,14 @@
       "opportunities": "Opportunities",
       "signals": "Signals",
       "contactsHint": "{count, plural, =0 {no hot leads} one {# hot lead} other {# hot leads}}",
-      "opportunitiesHint": "{amount} in open pipeline"
+      "opportunitiesHint": "{amount} in open pipeline",
+      "signals90": "Signals · 90 days",
+      "signals90Hint": "{count, plural, one {# in total} other {# in total}}",
+      "openOpportunities": "Open opportunities",
+      "openOpportunitiesHint": "{count, plural, =0 {no opportunities yet} one {# in total} other {# in total}}",
+      "meetings": "Meetings",
+      "meetingsHint": "{count, plural, =0 {none held yet} one {# held} other {# held}}",
+      "won": "Won deals"
     },
     "accountBrief": {
       "heading": "Account research",
@@ -73,7 +99,9 @@
       "empty": "This account hasn't been researched in depth yet.",
       "disabledNote": "Deep account research isn't enabled for this deployment yet.",
       "budgetExceededNote": "Daily research budget reached — showing the most recent result available.",
-      "generatedAt": "Generated {time}"
+      "generatedAt": "Generated {time}",
+      "caption": "What BEE found researching this account",
+      "sources": "Sources"
     },
     "contacts": {
       "heading": "Contacts ({count})",
@@ -124,7 +152,10 @@
         "resultImported": "{count} contacts imported",
         "resultSkipped": "{count} without a name (skipped)",
         "resultErrors": "{count} with errors"
-      }
+      },
+      "caption": "The people at this account",
+      "incompleteShort": "Check data",
+      "more": "+{count} more"
     },
     "relationshipMap": {
       "heading": "Relationship map",
@@ -133,7 +164,8 @@
     "opportunities": {
       "heading": "Opportunities ({count})",
       "addOpportunity": "+ New opportunity",
-      "empty": "No opportunities for this company yet."
+      "empty": "No opportunities for this company yet.",
+      "caption": "Click one to open it in the CRM"
     },
     "signals": {
       "heading": "Signals ({count})",
@@ -142,7 +174,9 @@
       "activityTitle": "Signal activity",
       "activityCaption": "Signals detected per week, last 12 weeks",
       "mixTitle": "Signal mix",
-      "mixCaption": "By type, across the account"
+      "mixCaption": "By type, across the account",
+      "other": "Other",
+      "listCaption": "Most recent first"
     },
     "owner": {
       "label": "Owner",
@@ -155,7 +189,8 @@
       "empty": "No activity recorded yet.",
       "viewed": "{name} viewed this account",
       "edited": "{name} edited this account",
-      "assigned": "{name} reassigned this account"
+      "assigned": "{name} reassigned this account",
+      "caption": "Who viewed, edited or reassigned this account"
     },
     "scan": {
       "scanNow": "Scan now",
@@ -163,7 +198,8 @@
       "done": "Scan complete: {count, plural, =0 {no new signals} =1 {1 new signal} other {# new signals}}.",
       "disabled": "The market scan is switched off on this deployment.",
       "error": "Could not scan this account."
-    }
+    },
+    "eyebrow": "Account"
   },
   "leadsDirectory": {
     "eyebrow": "CRM",
@@ -242,7 +278,8 @@
       "totalHint": "{count, plural, one {across # company} other {across # companies}}",
       "hot": "Hot (≥75)",
       "avgScore": "Average score",
-      "uncontacted": "Not yet contacted"
+      "uncontacted": "Not yet contacted",
+      "unowned": "Leads without an owner"
     },
     "filters": {
       "searchPlaceholder": "Search by name, email, or company…",
@@ -251,7 +288,8 @@
       "sortScoreAsc": "Lowest intent score",
       "sortRecent": "Most recent",
       "sortName": "Name (A-Z)",
-      "staleOnlyLabel": "Only incomplete/stale data"
+      "staleOnlyLabel": "Only incomplete/stale data",
+      "sortLabel": "Sort"
     },
     "bulk": {
       "selected": "{count, plural, one {# selected} other {# selected}}",
@@ -271,7 +309,10 @@
         "title": "Title",
         "status": "Status",
         "intentScore": "Intent score",
-        "data": "Data"
+        "data": "Data",
+        "email": "Email",
+        "source": "Source",
+        "owner": "Owner"
       },
       "noMatch": "No leads match these filters.",
       "staleWarning": "Not validated in over 90 days",
@@ -280,7 +321,22 @@
       "validatedAgo": "Validated {timeAgo}",
       "notValidated": "Not validated",
       "validateTitle": "Re-validate data",
-      "validate": "Validate"
+      "validate": "Validate",
+      "title": "Leads",
+      "caption": "{count, plural, one {# lead} other {# leads}} — select rows to change status, reassign or send to a sequence",
+      "captionFiltered": "{count} of {total} leads match the filters",
+      "noTitle": "No title on record",
+      "unassigned": "Unassigned",
+      "itemLabel": "leads",
+      "sources": {
+        "referral": "Referral",
+        "inbound": "Inbound",
+        "outbound": "Outbound",
+        "event": "Event",
+        "cold_call": "Cold call",
+        "linkedin": "LinkedIn",
+        "other": "Other"
+      }
     },
     "tip": {
       "prefix": "Tip: leads don't have their own detail page yet — open the company from",
@@ -336,7 +392,13 @@
     "actions": {
       "importing": "Importing…",
       "importLeads": "{count, plural, one {Import # lead} other {Import # leads}}",
-      "startOver": "Start over"
+      "startOver": "Start over",
+      "cancel": "Cancel"
     }
+  },
+  "dedup": {
+    "keep": "Keep",
+    "companiesCaption": "Pick which one to keep in each group; the others merge into it",
+    "leadsCaption": "Pick which one to keep in each group; the others merge into it"
   }
 }

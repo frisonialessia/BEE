@@ -1,18 +1,21 @@
 "use client";
 
-import { AlertTriangle } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
+import { InitialsDisc } from "@/features/companies/table-bits";
+import { Pill } from "@/features/crm/drawer/primitives";
 import { useLeadDuplicates, useMergeLeads } from "@/hooks/queries/use-leads";
 import type { Locale } from "@/i18n/locales";
 import { formatDate } from "@/lib/i18n/format";
 import type { Lead } from "@/types/domain";
 
-function GroupRow({ groupKey, leads }: { groupKey: string; leads: Lead[] }) {
+function GroupRows({ groupKey, leads }: { groupKey: string; leads: Lead[] }) {
   const mergeLeads = useMergeLeads();
   const locale = useLocale() as Locale;
   const t = useTranslations("sharedB.leadDuplicates");
+  const tDedup = useTranslations("companiesLeads.dedup");
   const sorted = [...leads].sort((a, b) => a.created_at.localeCompare(b.created_at));
   const [keepId, setKeepId] = useState(sorted[0].id);
 
@@ -24,61 +27,49 @@ function GroupRow({ groupKey, leads }: { groupKey: string; leads: Lead[] }) {
   }
 
   return (
-    <div className="rounded-[var(--radius-md)] border border-dashed border-border p-3">
-      <p className="mb-2 text-xs font-medium text-muted-foreground">
-        {t("sameEmail")} <span className="font-mono">{groupKey}</span>
-      </p>
-      <div className="space-y-2">
-        {leads.map((l) => (
-          <label key={l.id} className="flex items-center gap-2 text-xs">
-            <input
-              type="radio"
-              name={`keep-lead-${groupKey}`}
-              checked={keepId === l.id}
-              onChange={() => setKeepId(l.id)}
-              className="accent-[var(--color-chart-4)]"
-            />
-            <span className="font-medium">{l.full_name}</span>
-            <span className="text-muted-foreground">
-              · {t("createdOn", { date: formatDate(l.created_at, locale) })}
-            </span>
-          </label>
-        ))}
+    <div className="border-t border-[var(--color-divider)] pt-3 first:border-t-0 first:pt-0">
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+        <p className="bee-caption">
+          {t("sameEmail")} <span className="font-medium text-[var(--color-text)]">{groupKey}</span>
+        </p>
+        <button type="button" onClick={handleMerge} disabled={mergeLeads.isPending} className="bee-btn bee-btn--primary">
+          {mergeLeads.isPending ? t("merging") : t("mergeButton")}
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={handleMerge}
-        disabled={mergeLeads.isPending}
-        className="bee-btn bee-btn--primary mt-3 text-xs"
-      >
-        {mergeLeads.isPending ? t("merging") : t("mergeButton")}
-      </button>
+      {leads.map((l) => (
+        <div key={l.id} className="bee-row">
+          <InitialsDisc name={l.full_name} size={28} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{l.full_name}</p>
+            <p className="bee-micro">{t("createdOn", { date: formatDate(l.created_at, locale) })}</p>
+          </div>
+          <Pill pressed={keepId === l.id} onClick={() => setKeepId(l.id)}>
+            {tDedup("keep")}
+          </Pill>
+        </div>
+      ))}
     </div>
   );
 }
 
 /** Contactos que probablemente son la misma persona duplicada — mismo email
- *  en más de un registro, sin importar la empresa. */
+ *  en más de un registro, sin importar la empresa. Self-hides when there is
+ *  nothing to merge. */
 export function LeadDuplicatesPanel() {
   const t = useTranslations("sharedB.leadDuplicates");
+  const tDedup = useTranslations("companiesLeads.dedup");
   const { data: result } = useLeadDuplicates();
   const groups = result?.data ?? [];
 
   if (groups.length === 0) return null;
 
   return (
-    <div className="mb-4 rounded-[var(--radius-lg)] border border-[var(--color-chart-1)]/40 bg-[var(--color-chart-1)]/10 p-4">
-      <div className="mb-3 flex items-center gap-2">
-        <AlertTriangle className="size-4 text-[var(--color-text)]" />
-        <p className="text-sm font-semibold">
-          {t("heading", { count: groups.length })}
-        </p>
-      </div>
-      <div className="space-y-2">
+    <OverviewCard span={12} title={t("heading", { count: groups.length })} caption={tDedup("leadsCaption")}>
+      <div className="space-y-3">
         {groups.map((g) => (
-          <GroupRow key={g.key} groupKey={g.key} leads={g.leads} />
+          <GroupRows key={g.key} groupKey={g.key} leads={g.leads} />
         ))}
       </div>
-    </div>
+    </OverviewCard>
   );
 }

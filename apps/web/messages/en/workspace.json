@@ -7,7 +7,9 @@
       "tabs": {
         "status": "Status",
         "library": "Message library",
-        "automations": "Automations"
+        "automations": "Automations",
+        "active": "Active",
+        "performance": "Performance"
       }
     },
     "probarPage": {
@@ -35,14 +37,21 @@
         "bodyPlaceholder": "Message body — use '{{first_name}}', '{{company_name}}', etc. as placeholders",
         "saving": "Saving…",
         "save": "Save",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "caption": "Write the message once, use it in any sequence",
+        "nameLabel": "Name",
+        "channelLabel": "Channel",
+        "subjectLabel": "Subject",
+        "bodyLabel": "Message",
+        "bodyHint": "Use {{first_name}}, {{company_name}}, etc. as placeholders."
       },
       "empty": {
         "title": "No templates saved yet.",
         "subtitle": "Create the first one to reuse it in your sequences."
       },
       "edit": "Edit",
-      "delete": "Delete"
+      "delete": "Delete",
+      "title": "{count, plural, one {# template} other {# templates}}"
     },
     "automation": {
       "channelStatus": {
@@ -56,7 +65,12 @@
         "anySignal": "Any signal",
         "industryPlaceholder": "Industry (optional)",
         "anySeniority": "Any seniority",
-        "note": "Industry and seniority are descriptive — who this flow was designed for. Enrollment is always manual from Leads, never automatic on a match."
+        "note": "Industry and seniority are descriptive — who this flow was designed for. Enrollment is always manual from Leads, never automatic on a match.",
+        "nameLabel": "Name",
+        "descriptionLabel": "Description",
+        "signalLabel": "Triggering signal",
+        "industryLabel": "Industry",
+        "seniorityLabel": "Seniority"
       },
       "save": "Save flow",
       "saving": "Saving…",
@@ -74,6 +88,11 @@
           "title": "No automation flows yet.",
           "subtitle": "Create the first one to scale outreach without repeated manual work."
         }
+      },
+      "editor": {
+        "title": "New sequence",
+        "caption": "Say who it is for and build the steps; nothing is sent without approval",
+        "cancel": "Cancel"
       }
     },
     "flowCanvas": {
@@ -109,7 +128,11 @@
       "customFormatEvent": "event",
       "customFormatHelp": "This deploy has no scheduler of its own — it's evaluated the next time an event reaches this execution, not automatically every day.",
       "notesPlaceholder": "Notes (optional)",
-      "addButton": "Add to flow"
+      "addButton": "Add to flow",
+      "actionLabel": "Action",
+      "nameLabel": "Step name",
+      "conditionLabel": "Advances to the next step",
+      "notesLabel": "Notes"
     },
     "actions": {
       "send_email": {
@@ -218,6 +241,59 @@
         "title": "No tasks dispatched yet.",
         "subtitle": "Close an opportunity as WON to activate the event bus."
       }
+    },
+    "kpis": {
+      "activeSequences": "Active sequences",
+      "activeSequencesHint": "{count, plural, one {# defined} other {# defined}}",
+      "enrolled": "Enrolled contacts",
+      "enrolledHint": "{count, plural, =0 {no enrollments yet} one {# enrollment in total} other {# enrollments in total}}",
+      "replyRate": "Reply rate",
+      "replyRateEmpty": "no sends yet",
+      "dueToday": "Sends due today",
+      "dueTodayHint": "steps due today or earlier"
+    },
+    "active": {
+      "title": "{count, plural, one {# sequence} other {# sequences}}",
+      "caption": "Each cadence as a timeline: one dot per step, its channel and the day it fires",
+      "captionNoEnrollments": "Each cadence as a timeline — enroll leads from Leads to see the funnel and the enrollments here",
+      "enrolled": "{count, plural, =0 {no one enrolled} one {# enrolled} other {# enrolled}}",
+      "showSteps": "Show conditions",
+      "hideSteps": "Hide conditions",
+      "status": {
+        "active": "Active",
+        "draft": "Draft",
+        "paused": "Paused",
+        "archived": "Archived"
+      },
+      "enrollmentsTitle": "{count, plural, one {# enrollment} other {# enrollments}}",
+      "enrollmentsCaption": "Who is at which step, most recent first",
+      "unknownContact": "Unnamed contact",
+      "moreEnrollments": "+{count} more",
+      "executionStatus": {
+        "running": "Running",
+        "waiting": "Waiting",
+        "paused": "Paused",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "funnel": {
+      "title": "Reply funnel",
+      "caption": "From enrolled to replies",
+      "enrolled": "Enrolled",
+      "opened": "Opened",
+      "clicked": "Clicked",
+      "replied": "Replied"
+    },
+    "timeline": {
+      "empty": "No steps yet — add the first one below.",
+      "removeStepAria": "Remove step",
+      "channels": {
+        "email": "Email",
+        "linkedin": "LinkedIn"
+      },
+      "day": "Day {day}"
     }
   },
   "integrations": {
@@ -276,7 +352,10 @@
         "title": "Save this key now — it won't be shown again.",
         "help": "Paste it into your BI tool's Web connector as an ?org_key= URL parameter, or as an X-BEE-Org-Key header if the tool supports one.",
         "confirm": "I've saved it"
-      }
+      },
+      "keyNameLabel": "Key name",
+      "cancel": "Cancel",
+      "revoke": "Revoke"
     },
     "genericConnectedCopy": "{label} connected as {account}.",
     "genericDisconnectedCopy": "Connect your {label} account.",
@@ -303,7 +382,8 @@
       "saveProjectKey": "Save project",
       "saving": "Saving…",
       "configSaved": "Project {key} configured — sync is now active.",
-      "configError": "Couldn't save the project."
+      "configError": "Couldn't save the project.",
+      "projectKeyLabel": "Jira project"
     },
     "import": {
       "noNew": "There was nothing new to import.",
@@ -318,7 +398,8 @@
       "title": "Server channels",
       "caption": "Configured once for the whole BEE deployment, not per account — see the backend's environment variables if you need to change them.",
       "connected": "connected",
-      "mock": "simulated mode"
+      "mock": "simulated mode",
+      "empty": "No server channels."
     },
     "inbound": {
       "title": "Inbound signals (webhook)",
@@ -359,7 +440,8 @@
           "label": "News (Google)",
           "description": "Market-news search through Google Custom Search. Adds to press coverage when a key is set."
         }
-      }
+      },
+      "empty": "No market sources configured."
     },
     "digest": {
       "title": "Today's play in Slack or Teams",
@@ -369,7 +451,7 @@
       "webhookLabel": "Incoming webhook (Slack / Teams)",
       "webhookSetPlaceholder": "Configured ({hint}) — paste another URL to replace it",
       "hourLabel": "Send time",
-      "enabledLabel": "Send daily",
+      "enabledLabel": "Every day",
       "save": "Save",
       "saving": "Saving…",
       "sendNow": "Send now",
@@ -385,7 +467,13 @@
         "already_sent_today": "Already sent today.",
         "not_the_hour": "It isn't the configured hour yet.",
         "delivery_failed": "The webhook rejected the message. Check the URL."
-      }
+      },
+      "scheduleLabel": "Delivery",
+      "pausedLabel": "Paused"
+    },
+    "card": {
+      "connectedWhen": "Connected {when}",
+      "neverConnected": "Not connected yet"
     }
   },
   "team": {

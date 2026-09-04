@@ -1,41 +1,43 @@
 "use client";
 
-import { AlertTriangle, ArrowUpRight, Building2, Clock, Globe, Mail, Radar, Radio, Target, Upload, Users } from "lucide-react";
-import { useRef, useState } from "react";
+import { ArrowUpRight, Radar, Upload } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { TONE } from "@/components/charts/palette";
+import { StackedBars, type StackedPoint } from "@/components/charts/stacked-bars";
+import { StatStrip, StatTile } from "@/components/charts/stat-tile";
+import { useRowCapacity } from "@/components/charts/use-row-capacity";
 import { AccountBriefPanel } from "@/components/companies/account-brief-panel";
 import { RelationshipMap } from "@/components/companies/relationship-map";
-import { Badge } from "@/components/ui/badge";
+import { CardLink, OverviewCard } from "@/components/dashboard/overview-card";
+import { PageHeader, PageShell } from "@/components/dashboard/page-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useCompany, useCompanyActivity, useScanCompany, useUpdateCompany } from "@/hooks/queries/use-companies";
-import { useBulkCreateLeads, useCreateLead, useLeads } from "@/hooks/queries/use-leads";
+import { useBulkCreateLeads, useLeads } from "@/hooks/queries/use-leads";
+import { useMeetings } from "@/hooks/queries/use-meetings";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
+import type { Locale } from "@/i18n/locales";
+import { localeTags } from "@/i18n/locales";
+import { parseCsv, pickColumn as pick } from "@/lib/csv";
 import { useIsDemoMode } from "@/lib/demo/mode";
+import { getOpportunityStatusLabels, getOpportunityTypeLabels, getSignalTypeLabels, getValidationFlagLabels, stripOpportunityTitlePrefix } from "@/lib/format";
+import { formatCurrencyUSD, formatDate, formatRelativeTime } from "@/lib/i18n/format";
+import { computeRelationshipMap } from "@/lib/relationship-map";
 import { useAuth } from "@/providers/auth-provider";
 import { ApiError } from "@/types/api";
-import type { LeadPipelineStage } from "@/types/domain";
-import {
-  getOpportunityStatusLabels,
-  getOpportunityTypeLabels,
-  getValidationFlagLabels,
-  opportunityTypeVariant,
-  stripOpportunityTitlePrefix,
-} from "@/lib/format";
-import { formatCurrencyUSD, formatDate, formatRelativeTime } from "@/lib/i18n/format";
-import type { Locale } from "@/i18n/locales";
-import { parseCsv, pickColumn as pick } from "@/lib/csv";
-import { resizeImageToDataUrl } from "@/lib/image";
-import { computeRelationshipMap } from "@/lib/relationship-map";
-import { KpiStrip } from "@/components/metric-card";
-import { AreaChart } from "@/components/charts/area-chart";
-import { Donut } from "@/components/charts/donut";
-import { DATA } from "@/components/charts/palette";
-import { getSignalTypeLabels } from "@/lib/format";
+
+import { InitialsDisc, ListRow, RowChip } from "./table-bits";
+
+const DAY_MS = 86_400_000;
+const WEEK_MS = 7 * DAY_MS;
+const SIGNAL_WEEKS = 12;
+const SIGNAL_WINDOW_DAYS = 90;
+const CLOSED_STATUSES = ["won", "lost", "dismissed"];
 
 /** Owner display + reassign — visible to everyone, editable only by
  * OWNER/ADMIN/MANAGER (the roles that can already reassign a teammate's
@@ -47,8 +49,7 @@ function CompanyOwner({ companyId, ownerUserId }: { companyId: string; ownerUser
   const { user: currentUser } = useAuth();
   const { data: users } = useUsers();
   const updateCompany = useUpdateCompany();
-  const canManage =
-    currentUser?.role === "owner" || currentUser?.role === "admin" || currentUser?.role === "manager";
+  const canManage = currentUser?.role === "owner" || currentUser?.role === "admin" || currentUser?.role === "manager";
 
   const owner = (users ?? []).find((u) => u.id === ownerUserId);
 
@@ -62,21 +63,16 @@ function CompanyOwner({ companyId, ownerUserId }: { companyId: string; ownerUser
 
   if (!canManage) {
     return (
-      <p className="text-xs text-muted-foreground">
-        {t("label")}: {owner?.full_name ?? t("unassigned")}
-      </p>
+      <span className="bee-caption whitespace-nowrap">
+        {t("label")}: <span className="text-[var(--color-text)]">{owner?.full_name ?? t("unassigned")}</span>
+      </span>
     );
   }
 
   return (
-    <label className="flex items-center gap-2 text-xs text-muted-foreground">
-      {t("label")}:
-      <select
-        value={ownerUserId ?? ""}
-        onChange={(e) => handleChange(e.target.value)}
-        disabled={updateCompany.isPending}
-        className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-2 py-1 text-xs outline-none"
-      >
+    <label className="flex items-center gap-2">
+      <span className="bee-caption whitespace-nowrap">{t("label")}</span>
+      <select value={ownerUserId ?? ""} onChange={(e) => handleChange(e.target.value)} disabled={updateCompany.isPending} className="bee-input w-40">
         <option value="">{t("unassigned")}</option>
         {(users ?? []).map((u) => (
           <option key={u.id} value={u.id}>
@@ -88,33 +84,27 @@ function CompanyOwner({ companyId, ownerUserId }: { companyId: string; ownerUser
   );
 }
 
-function CompanyActivityFeed({ companyId }: { companyId: string }) {
+/** Who looked at, edited or reassigned this account — hairline rows, only
+ *  as many as the box fits. */
+function CompanyActivityRows({ companyId }: { companyId: string }) {
   const t = useTranslations("companiesLeads.companyDetail.activity");
   const locale = useLocale() as Locale;
   const { data: activityResult } = useCompanyActivity(companyId);
   const events = activityResult?.data ?? [];
+  const [ref, capacity] = useRowCapacity<HTMLDivElement>(44, 0, { min: 4, max: 10 });
+
+  if (events.length === 0) return <p className="bee-caption py-6 text-center">{t("empty")}</p>;
 
   return (
-    <section>
-      <h2 className="flex items-center gap-2 bee-card-title">
-        <Clock className="size-4 text-muted-foreground" />
-        {t("heading")}
-      </h2>
-      {events.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("empty")}</p>
-      ) : (
-        <ul className="space-y-2">
-          {events.map((event) => (
-            <li key={event.id} className="bee-caption flex items-center justify-between gap-4">
-              <span>{t(event.event_type, { name: event.user_full_name })}</span>
-              <span className="shrink-0 text-muted-foreground">
-                {formatRelativeTime(event.created_at, locale)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    <div ref={ref} className="bee-fill flex flex-col overflow-hidden">
+      {events.slice(0, capacity).map((event) => (
+        <div key={event.id} className="bee-row" style={{ height: 44 }}>
+          <InitialsDisc name={event.user_full_name} size={28} />
+          <span className="min-w-0 flex-1 truncate text-sm">{t(event.event_type, { name: event.user_full_name })}</span>
+          <span className="bee-micro shrink-0">{formatRelativeTime(event.created_at, locale)}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -185,487 +175,241 @@ function CsvImportButton({ companyId }: { companyId: string }) {
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={bulkCreate.isPending}
-        className="bee-btn-ghost text-xs"
-      >
+    <span className="inline-flex items-center gap-2">
+      {result && (
+        <span className="bee-micro hidden sm:inline">
+          {t("resultImported", { count: result.created })}
+          {result.skipped > 0 && ` · ${t("resultSkipped", { count: result.skipped })}`}
+          {result.errors > 0 && ` · ${t("resultErrors", { count: result.errors })}`}
+        </span>
+      )}
+      <button type="button" onClick={() => inputRef.current?.click()} disabled={bulkCreate.isPending} className="bee-btn-text" title={t("importCsv")}>
         <Upload className="size-3.5" />
         {bulkCreate.isPending ? t("importing") : t("importCsv")}
       </button>
       <input ref={inputRef} type="file" accept=".csv,text/csv" onChange={handleFile} className="hidden" />
-      {result && (
-        <p className="bee-micro">
-          {t("resultImported", { count: result.created })}
-          {result.skipped > 0 && ` · ${t("resultSkipped", { count: result.skipped })}`}
-          {result.errors > 0 && ` · ${t("resultErrors", { count: result.errors })}`}
-        </p>
-      )}
-    </div>
+    </span>
   );
 }
 
-const CONTACT_SOURCES = ["referral", "inbound", "outbound", "event", "cold_call", "other"] as const;
-const PIPELINE_STAGES: LeadPipelineStage[] = ["detected", "prioritized", "in_progress"];
-const INPUT_CLASS =
-  "rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]";
-
-function NewContactForm({ companyId, onDone }: { companyId: string; onDone: () => void }) {
-  const t = useTranslations("companiesLeads.companyDetail.contacts.newContactForm");
-  // Same 5-stage taxonomy the CRM board's own "?" tooltips explain
-  // (stageSubtitles) — reused here so picking a stage doesn't require a
-  // trip to the CRM board just to know what it means.
-  const tStage = useTranslations("crm.board");
-  const createLead = useCreateLead();
-  const photoInputRef = useRef<HTMLInputElement>(null);
-  const [fullName, setFullName] = useState("");
-  const [title, setTitle] = useState("");
-  const [email, setEmail] = useState("");
-  const [estimatedValue, setEstimatedValue] = useState("");
-  const [source, setSource] = useState("");
-  const [nextMeetingAt, setNextMeetingAt] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
-  const [pipelineStage, setPipelineStage] = useState<LeadPipelineStage | "">("");
-  const [aiContext, setAiContext] = useState("");
-
-  async function handlePhotoPick(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // allow picking the same file again after a change
-    if (!file) return;
-    try {
-      setPhotoUrl(await resizeImageToDataUrl(file));
-    } catch {
-      toast.error(t("createError"));
-    }
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!fullName.trim()) return;
-    try {
-      await createLead.mutateAsync({
-        full_name: fullName.trim(),
-        company_id: companyId,
-        title: title.trim() || undefined,
-        email: email.trim() || undefined,
-        estimated_value: estimatedValue ? Number(estimatedValue) : undefined,
-        source: source || undefined,
-        next_meeting_at: nextMeetingAt ? new Date(nextMeetingAt).toISOString() : undefined,
-        photo_url: photoUrl || undefined,
-        pipeline_stage: pipelineStage || undefined,
-        // Only meaningful when a stage is also picked — see LeadCreateIn's
-        // own docstring on the backend; harmless to send either way.
-        ai_context: pipelineStage && aiContext.trim() ? aiContext.trim() : undefined,
-      });
-      setFullName("");
-      setTitle("");
-      setEmail("");
-      setEstimatedValue("");
-      setSource("");
-      setNextMeetingAt("");
-      setPhotoUrl("");
-      setPipelineStage("");
-      setAiContext("");
-      onDone();
-    } catch (err) {
-      // Was previously unhandled — a failed create left the form open with
-      // zero feedback, the rejection only visible in the browser console.
-      // Same pattern as CompanyOwner's reassign handler just above.
-      toast.error(err instanceof ApiError ? err.message : t("createError"));
-    }
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="mb-3 space-y-3 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-3"
-    >
-      <div className="flex items-start gap-4">
-        <div className="flex shrink-0 flex-col items-center gap-2">
-          {photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- a client-resized data: URI, not an optimizable remote asset
-            <img src={photoUrl} alt="" className="size-14 rounded-full object-cover" />
-          ) : (
-            <span className="flex size-14 items-center justify-center rounded-full bg-[var(--color-card)] text-xs text-muted-foreground">
-              {t("photoLabel")}
-            </span>
-          )}
-          <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoPick} className="hidden" />
-          <button type="button" onClick={() => photoInputRef.current?.click()} className="bee-btn-ghost text-xs">
-            {photoUrl ? t("photoChange") : t("photoUpload")}
-          </button>
-        </div>
-
-        <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-3">
-          <input
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            placeholder={t("namePlaceholder")}
-            required
-            className={INPUT_CLASS}
-          />
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder={t("titlePlaceholder")}
-            className={INPUT_CLASS}
-          />
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={t("emailPlaceholder")}
-            type="email"
-            className={INPUT_CLASS}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <div>
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">
-            {t("estimatedValueLabel")}
-          </label>
-          <input
-            value={estimatedValue}
-            onChange={(e) => setEstimatedValue(e.target.value)}
-            placeholder={t("estimatedValuePlaceholder")}
-            type="number"
-            min="0"
-            step="any"
-            className={INPUT_CLASS + " w-full"}
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("sourceLabel")}</label>
-          <select value={source} onChange={(e) => setSource(e.target.value)} className={INPUT_CLASS + " w-full"}>
-            <option value="">{t("sourcePlaceholder")}</option>
-            {CONTACT_SOURCES.map((s) => (
-              <option key={s} value={s}>
-                {t(`sourceOptions.${s}`)}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("nextMeetingLabel")}</label>
-          <input
-            value={nextMeetingAt}
-            onChange={(e) => setNextMeetingAt(e.target.value)}
-            type="datetime-local"
-            className={INPUT_CLASS + " w-full"}
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("pipelineStageLabel")}</label>
-        <select
-          value={pipelineStage}
-          onChange={(e) => setPipelineStage(e.target.value as LeadPipelineStage | "")}
-          className={INPUT_CLASS + " w-full sm:w-64"}
-        >
-          <option value="">{t("pipelineStageNone")}</option>
-          {PIPELINE_STAGES.map((s) => (
-            <option key={s} value={s}>
-              {t(`pipelineStageOptions.${s}`)}
-            </option>
-          ))}
-        </select>
-        <p className="mt-1 bee-micro">{t("pipelineStageHint")}</p>
-        {pipelineStage && (
-          <p className="mt-1 bee-micro text-muted-foreground">
-            {tStage(`stageSubtitles.${pipelineStage}`)}
-          </p>
-        )}
-      </div>
-
-      {pipelineStage && (
-        <div>
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">{t("aiContextLabel")}</label>
-          <textarea
-            value={aiContext}
-            onChange={(e) => setAiContext(e.target.value)}
-            placeholder={t("aiContextPlaceholder")}
-            rows={3}
-            className="bee-input w-full"
-          />
-          <p className="mt-1 bee-micro">{t("aiContextHint")}</p>
-        </div>
-      )}
-
-      <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={!fullName.trim() || createLead.isPending}
-          className="bee-btn bee-btn--primary"
-        >
-          {createLead.isPending ? t("saving") : t("save")}
-        </button>
-        <button type="button" onClick={onDone} className="bee-btn-ghost">
-          {t("cancel")}
-        </button>
-      </div>
-    </form>
-  );
-}
-
-/** Ficha de empresa — contactos, oportunidades y señales, todo junto. */
+/**
+ * Ficha de empresa — the account as one page: four tiles (signals in 90
+ * days, open opportunities, meetings, won deals), the signals by week and
+ * type, the contacts, the opportunities, the buying committee, the brief,
+ * the latest signals and who touched the account. A contact or an
+ * opportunity is created through the CRM's drawer, preset to this company.
+ */
 export function CompanyDetail({ companyId }: { companyId: string }) {
   const t = useTranslations("companiesLeads.companyDetail");
   const locale = useLocale() as Locale;
   const opportunityStatusLabels = getOpportunityStatusLabels(locale);
   const opportunityTypeLabels = getOpportunityTypeLabels(locale);
   const validationFlagLabels = getValidationFlagLabels(locale);
+  const signalTypeLabels = getSignalTypeLabels(locale);
   const { data: companyResult, isLoading } = useCompany(companyId);
   const { data: leadsResult } = useLeads(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);
   const { data: signalsResult } = useSignals(200);
+  const { data: meetingsData } = useMeetings();
   const { openOpportunity, openNew } = useOpportunityDrawer();
-
-  const [showNewContact, setShowNewContact] = useState(false);
+  const [nowMs] = useState(() => Date.now());
+  const [contactsRef, contactsCapacity] = useRowCapacity<HTMLDivElement>(52, 0, { min: 4, max: 12 });
+  const [signalsRef, signalsCapacity] = useRowCapacity<HTMLDivElement>(52, 0, { min: 4, max: 10 });
+  const [oppsRef, oppsCapacity] = useRowCapacity<HTMLDivElement>(52, 0, { min: 4, max: 10 });
 
   const company = companyResult?.data;
-  const leads = (leadsResult?.data ?? []).filter((l) => l.company_id === companyId);
-  const opportunities = (oppsResult?.data ?? []).filter((o) => o.company_id === companyId);
-  const signals = (signalsResult?.data ?? []).filter((s) => s.company_id === companyId);
-  // Signal activity for this account: 12 weeks of counts and the mix by
-  // type — the account's pulse, not just a number of signals.
-  const weekMs = 7 * 86_400_000;
-  const [nowMs] = useState(() => Date.now());
-  const weekFmt = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { day: "numeric", month: "short" });
-  const signalWeeks = Array.from({ length: 12 }, (_, i) => {
-    const end = nowMs - (11 - i) * weekMs;
-    const start = end - weekMs;
-    return { label: weekFmt.format(new Date(end)), value: signals.filter((s) => { const ts = new Date(s.detected_at).getTime(); return ts > start && ts <= end; }).length };
-  });
-  const signalTypeLabels = getSignalTypeLabels(locale);
-  const signalMix = [...signals.reduce((m, s) => m.set(s.signal_type, (m.get(s.signal_type) ?? 0) + 1), new Map<string, number>()).entries()].map(([type, value]) => ({ label: signalTypeLabels[type as keyof typeof signalTypeLabels] ?? type, value }));
-  const pipelineAmount = opportunities.filter((o) => !["won", "lost", "dismissed"].includes(o.status)).reduce((sum, o) => sum + (o.amount ?? 0), 0);
+  const leads = useMemo(() => (leadsResult?.data ?? []).filter((l) => l.company_id === companyId), [leadsResult, companyId]);
+  const opportunities = useMemo(() => (oppsResult?.data ?? []).filter((o) => o.company_id === companyId), [oppsResult, companyId]);
+  const signals = useMemo(
+    () => (signalsResult?.data ?? []).filter((s) => s.company_id === companyId).sort((a, b) => b.detected_at.localeCompare(a.detected_at)),
+    [signalsResult, companyId],
+  );
+  // Meetings tied to this account through its opportunities or its contacts —
+  // a meeting has no company of its own.
+  const meetings = useMemo(() => {
+    const oppIds = new Set(opportunities.map((o) => o.id));
+    const leadIds = new Set(leads.map((l) => l.id));
+    return (meetingsData ?? []).filter((m) => (m.opportunity_id && oppIds.has(m.opportunity_id)) || (m.lead_id && leadIds.has(m.lead_id)));
+  }, [meetingsData, opportunities, leads]);
+
+  const openOpps = opportunities.filter((o) => !CLOSED_STATUSES.includes(o.status));
+  const wonOpps = opportunities.filter((o) => o.status === "won");
+  const pipelineAmount = openOpps.reduce((sum, o) => sum + (o.amount ?? 0), 0);
+  const signals90 = signals.filter((s) => new Date(s.detected_at).getTime() >= nowMs - SIGNAL_WINDOW_DAYS * DAY_MS);
+  const meetingsHeld = meetings.filter((m) => m.completed_at).length;
+
+  // Twelve weeks of this account's signals, stacked by the three most
+  // common types — the account's pulse, in honey.
+  const weekly = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const s of signals) counts.set(s.signal_type, (counts.get(s.signal_type) ?? 0) + 1);
+    const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
+    const fmt = new Intl.DateTimeFormat(localeTags[locale], { day: "numeric", month: "short" });
+    const points: StackedPoint[] = [];
+    for (let i = SIGNAL_WEEKS - 1; i >= 0; i--) {
+      const end = nowMs - i * WEEK_MS;
+      const start = end - WEEK_MS;
+      const rows = signals.filter((s) => {
+        const ts = new Date(s.detected_at).getTime();
+        return ts > start && ts <= end;
+      });
+      const parts = top.map((k) => rows.filter((s) => s.signal_type === k).length);
+      parts.push(rows.filter((s) => !top.includes(s.signal_type)).length);
+      points.push({ label: fmt.format(new Date(end)), parts, current: i === 0 });
+    }
+    const legend = top.map((k) => signalTypeLabels[k as keyof typeof signalTypeLabels] ?? k);
+    if (points.some((p) => p.parts[p.parts.length - 1] > 0)) legend.push(t("signals.other"));
+    return { points, legend, trend: points.map((p) => p.parts.reduce((s, v) => s + v, 0)) };
+  }, [signals, nowMs, locale, signalTypeLabels, t]);
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-24" />
-        <Skeleton className="h-64" />
-      </div>
+      <PageShell header={<Skeleton className="h-16 w-1/2" />}>
+        <Skeleton className="h-32" />
+        <Skeleton className="mt-6 h-96" />
+      </PageShell>
     );
   }
 
   if (!company) {
     return (
-      <div className="bee-bento bee-bento-pad py-8 text-center">
-        <p className="text-sm text-muted-foreground">{t("notFound")}</p>
-      </div>
+      <PageShell header={<PageHeader eyebrow={t("eyebrow")} title={t("notFound")} />}>
+        <p className="bee-caption">{t("notFound")}</p>
+      </PageShell>
     );
   }
 
+  const meta = [company.domain, company.industry, company.country, company.size ? `${company.size} ${t("employeesSuffix")}` : null].filter(Boolean).join(" · ");
+
   return (
-    <div className="space-y-4">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]">
-            <Building2 className="size-5 text-[var(--color-text)]" />
-          </span>
-          <div>
-            <h1 className="bee-display">{company.name}</h1>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              {company.domain && (
-                <span className="flex items-center gap-1">
-                  <Globe className="size-3" />
-                  {company.domain}
-                </span>
-              )}
-              {company.industry && <span>{company.industry}</span>}
-              {company.country && <span>{company.country}</span>}
-              {company.size && <span>{company.size} {t("employeesSuffix")}</span>}
-            </div>
-            <div className="mt-2">
+    <PageShell
+      header={
+        <PageHeader
+          eyebrow={t("eyebrow")}
+          title={company.name}
+          caption={meta || company.description || undefined}
+          actions={
+            <>
               <CompanyOwner companyId={companyId} ownerUserId={company.owner_user_id} />
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {company.website && (
-            <a
-              href={company.website}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-text)] hover:underline"
-            >
-              {t("website")}
-              <ArrowUpRight className="size-3" />
-            </a>
-          )}
-          <ScanNowButton companyId={companyId} />
-        </div>
-      </header>
-
-      {company.description && <p className="text-sm text-muted-foreground">{company.description}</p>}
-
-      {/* Same centered value-over-label tile every KPI strip in the app uses. */}
-      <KpiStrip
-        cols={3}
-        items={[
-          { label: t("kpi.contacts"), value: leads.length, hint: t("kpi.contactsHint", { count: leads.filter((l) => l.score >= 75).length }) },
-          { label: t("kpi.opportunities"), value: opportunities.length, hint: pipelineAmount > 0 ? t("kpi.opportunitiesHint", { amount: formatCurrencyUSD(pipelineAmount, locale) }) : undefined },
-          { label: t("kpi.signals"), value: signals.length, trend: signalWeeks.map((w) => w.value) },
-        ]}
-      />
-
-      {signals.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-8">
-            <h3 className="bee-card-title">{t("signals.activityTitle")}</h3>
-            <p className="bee-caption mb-4">{t("signals.activityCaption")}</p>
-            <AreaChart points={signalWeeks} color={DATA.indigo} minHeight={150} />
-          </section>
-          <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-4">
-            <h3 className="bee-card-title">{t("signals.mixTitle")}</h3>
-            <p className="bee-caption mb-4">{t("signals.mixCaption")}</p>
-            <Donut slices={signalMix} otherLabel={locale === "es" ? "Otras" : "Other"} />
-          </section>
-        </div>
-      )}
-
-      <AccountBriefPanel companyId={companyId} />
-
-      <section>
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 bee-card-title">
-            <Mail className="size-4 text-muted-foreground" />
-            {t("contacts.heading", { count: leads.length })}
-          </h2>
-          <div className="flex items-center gap-2">
-            <CsvImportButton companyId={companyId} />
-            <button
-              type="button"
-              onClick={() => setShowNewContact((v) => !v)}
-              className="bee-btn-ghost text-xs"
-            >
-              {t("contacts.addContact")}
-            </button>
-          </div>
-        </div>
-        {showNewContact && (
-          <NewContactForm companyId={companyId} onDone={() => setShowNewContact(false)} />
-        )}
-        {leads.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("contacts.empty")}</p>
-        ) : (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {leads.map((lead) => {
-              const hasIssues = lead.validation_flags.length > 0 || lead.stale_risk;
-              return (
-                <div key={lead.id} className="bee-bento bee-bento-pad">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium">{lead.full_name}</p>
-                    {hasIssues && (
-                      <span
-                        title={[
-                          ...lead.validation_flags.map((f) => validationFlagLabels[f] ?? f),
-                          ...(lead.stale_risk ? [t("contacts.staleWarning")] : []),
-                        ].join(" · ")}
-                      >
-                        <AlertTriangle
-                          className="mt-1 size-3.5 shrink-0 text-[var(--color-text)]"
-                          aria-label={t("contacts.incompleteAria")}
-                        />
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {[lead.title, lead.seniority].filter(Boolean).join(" · ") || t("contacts.noTitle")}
-                  </p>
-                  {lead.email && <p className="mt-1 text-xs text-muted-foreground">{lead.email}</p>}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {leads.length > 0 && (
-        <section>
-          <h2 className="flex items-center gap-2 bee-card-title">
-            <Users className="size-4 text-muted-foreground" />
-            {t("relationshipMap.heading")}
-          </h2>
-          <p className="bee-caption mb-3">
-            {t("relationshipMap.description")}
-          </p>
-          <RelationshipMap
-            groups={computeRelationshipMap(leads, opportunities)}
-            onOpenOpportunity={openOpportunity}
-          />
-        </section>
-      )}
-
-      <section>
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <h2 className="flex items-center gap-2 bee-card-title">
-            <Target className="size-4 text-muted-foreground" />
-            {t("opportunities.heading", { count: opportunities.length })}
-          </h2>
-          <button
-            type="button"
-            onClick={() => openNew({ companyId: company.id })}
-            className="bee-btn-ghost text-xs"
-          >
-            {t("opportunities.addOpportunity")}
-          </button>
-        </div>
-        {opportunities.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("opportunities.empty")}</p>
-        ) : (
-          <div className="space-y-2">
-            {opportunities.map((opp) => (
-              <button
-                key={opp.id}
-                type="button"
-                onClick={() => openOpportunity(opp.id)}
-                className="bee-bento bee-bento-pad flex w-full items-center justify-between gap-4 text-left transition-colors hover:border-[var(--color-chart-4)]"
-              >
-                <span className="min-w-0 truncate text-sm font-medium">
-                  {stripOpportunityTitlePrefix(opp.title)}
-                </span>
-                <div className="flex shrink-0 items-center gap-2">
-                  {(opp.opportunity_type ?? "new_logo") !== "new_logo" && (
-                    <Badge variant={opportunityTypeVariant(opp.opportunity_type ?? "new_logo")}>
-                      {opportunityTypeLabels[opp.opportunity_type ?? "new_logo"]}
-                    </Badge>
-                  )}
-                  <Badge variant="secondary">{opportunityStatusLabels[opp.status]}</Badge>
-                </div>
+              {company.website && (
+                <a href={company.website} target="_blank" rel="noreferrer" className="bee-btn-ghost">
+                  {t("website")}
+                  <ArrowUpRight className="size-3.5" />
+                </a>
+              )}
+              <ScanNowButton companyId={companyId} />
+              <button type="button" onClick={() => openNew({ companyId: company.id })} className="bee-btn bee-btn--primary">
+                {t("opportunities.addOpportunity")}
               </button>
-            ))}
-          </div>
-        )}
-      </section>
+            </>
+          }
+        />
+      }
+      kpis={
+        <StatStrip cols={4}>
+          <StatTile label={t("kpi.signals90")} value={signals90.length} trend={weekly.trend} hint={t("kpi.signals90Hint", { count: signals.length })} tone={TONE.market} />
+          <StatTile label={t("kpi.openOpportunities")} value={openOpps.length} hint={pipelineAmount > 0 ? t("kpi.opportunitiesHint", { amount: formatCurrencyUSD(pipelineAmount, locale) }) : t("kpi.openOpportunitiesHint", { count: opportunities.length })} tone={TONE.forecast} />
+          <StatTile label={t("kpi.meetings")} value={meetings.length} hint={t("kpi.meetingsHint", { count: meetingsHeld })} tone={TONE.urgency} />
+          <StatTile label={t("kpi.won")} value={wonOpps.length} progress={opportunities.length > 0 ? wonOpps.length / opportunities.length : 0} tone={TONE.prepared} />
+        </StatStrip>
+      }
+    >
+      <div className="bee-overview">
+        {/* The account's pulse: 12 weeks of signals by type. */}
+        <OverviewCard span={8} title={t("signals.activityTitle")} caption={t("signals.activityCaption")}>
+          {signals.length === 0 ? (
+            <p className="bee-caption py-8 text-center">{t("signals.empty")}</p>
+          ) : (
+            <StackedBars points={weekly.points} legend={weekly.legend} tone={TONE.market} minHeight={150} />
+          )}
+        </OverviewCard>
 
-      <section>
-        <h2 className="flex items-center gap-2 bee-card-title">
-          <Radio className="size-4 text-muted-foreground" />
-          {t("signals.heading", { count: signals.length })}
-        </h2>
-        {signals.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("signals.empty")}</p>
-        ) : (
-          <div className="space-y-2">
-            {signals.map((signal) => (
-              <div key={signal.id} className="bee-bento bee-bento-pad">
-                <p className="text-sm font-medium">{signal.title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {t("signals.score", { score: Math.round(signal.score) })} · {formatDate(signal.detected_at, locale)}
-                </p>
-              </div>
-            ))}
+        {/* The people: as many rows as fit; adding one goes through the drawer. */}
+        <OverviewCard
+          span={4}
+          title={t("contacts.heading", { count: leads.length })}
+          caption={t("contacts.caption")}
+          action={<CardLink onClick={() => openNew({ companyId: company.id })}>{t("contacts.addContact")}</CardLink>}
+        >
+          {leads.length === 0 ? (
+            <p className="bee-caption py-8 text-center">{t("contacts.empty")}</p>
+          ) : (
+            <div ref={contactsRef} className="bee-fill flex flex-col overflow-hidden">
+              {leads.slice(0, contactsCapacity).map((lead) => {
+                const issues = [...lead.validation_flags.map((f) => validationFlagLabels[f] ?? f), ...(lead.stale_risk ? [t("contacts.staleWarning")] : [])];
+                return (
+                  <div key={lead.id} className="bee-row" style={{ height: 52 }} title={issues.length > 0 ? issues.join(" · ") : undefined}>
+                    <InitialsDisc name={lead.full_name} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{lead.full_name}</p>
+                      <p className="bee-caption truncate">{[lead.title, lead.seniority].filter(Boolean).join(" · ") || lead.email || t("contacts.noTitle")}</p>
+                    </div>
+                    {issues.length > 0 && <span className="bee-micro shrink-0">{t("contacts.incompleteShort")}</span>}
+                  </div>
+                );
+              })}
+              {leads.length > contactsCapacity && <p className="bee-micro pt-2">{t("contacts.more", { count: leads.length - contactsCapacity })}</p>}
+            </div>
+          )}
+          <div className="mt-auto flex justify-end pt-2">
+            <CsvImportButton companyId={companyId} />
           </div>
-        )}
-      </section>
+        </OverviewCard>
 
-      <CompanyActivityFeed companyId={companyId} />
-    </div>
+        {/* The deals, the committee, the brief — three boxes, one row. */}
+        <OverviewCard span={4} title={t("opportunities.heading", { count: opportunities.length })} caption={t("opportunities.caption")}>
+          {opportunities.length === 0 ? (
+            <p className="bee-caption py-8 text-center">{t("opportunities.empty")}</p>
+          ) : (
+            <div ref={oppsRef} className="bee-fill flex flex-col overflow-hidden">
+              {opportunities.slice(0, oppsCapacity).map((opp) => (
+                <ListRow key={opp.id} onClick={() => openOpportunity(opp.id)} className="h-[52px]">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{stripOpportunityTitlePrefix(opp.title)}</p>
+                    <p className="bee-caption truncate">
+                      {opp.amount ? formatCurrencyUSD(opp.amount, locale) : "—"}
+                      {(opp.opportunity_type ?? "new_logo") !== "new_logo" && ` · ${opportunityTypeLabels[opp.opportunity_type ?? "new_logo"]}`}
+                    </p>
+                  </div>
+                  <RowChip hue={TONE.prepared} level={opp.status === "won" ? 100 : CLOSED_STATUSES.includes(opp.status) ? 45 : 70}>
+                    {opportunityStatusLabels[opp.status]}
+                  </RowChip>
+                </ListRow>
+              ))}
+              {opportunities.length > oppsCapacity && <p className="bee-micro pt-2">{t("contacts.more", { count: opportunities.length - oppsCapacity })}</p>}
+            </div>
+          )}
+        </OverviewCard>
+        <OverviewCard span={4} title={t("relationshipMap.heading")} caption={t("relationshipMap.description")}>
+          <RelationshipMap groups={computeRelationshipMap(leads, opportunities)} onOpenOpportunity={openOpportunity} />
+        </OverviewCard>
+        <AccountBriefPanel companyId={companyId} span={4} />
+
+        {/* The latest signals and who touched the account. */}
+        <OverviewCard span={6} title={t("signals.heading", { count: signals.length })} caption={t("signals.listCaption")}>
+          {signals.length === 0 ? (
+            <p className="bee-caption py-8 text-center">{t("signals.empty")}</p>
+          ) : (
+            <div ref={signalsRef} className="bee-fill flex flex-col overflow-hidden">
+              {signals.slice(0, signalsCapacity).map((signal) => (
+                <div key={signal.id} className="bee-row" style={{ height: 52 }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{signal.title}</p>
+                    <p className="bee-caption truncate">{t("signals.score", { score: Math.round(signal.score) })}</p>
+                  </div>
+                  <RowChip hue={TONE.market} level={45} className="hidden shrink-0 sm:inline-flex">
+                    {signalTypeLabels[signal.signal_type] ?? signal.signal_type}
+                  </RowChip>
+                  <span className="bee-micro shrink-0">{formatDate(signal.detected_at, locale)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </OverviewCard>
+        <OverviewCard span={6} title={t("activity.heading")} caption={t("activity.caption")}>
+          <CompanyActivityRows companyId={companyId} />
+        </OverviewCard>
+      </div>
+    </PageShell>
   );
 }

@@ -47,11 +47,30 @@
       "withOpps": "Con oportunidad",
       "withContacts": "Con contactos",
       "withRecentSignal": "Con señal en 30 días",
-      "industryTitle": "Mezcla por industria",
-      "industryCaption": "Dónde se concentra tu cartera",
+      "industryTitle": "Industrias",
+      "industryCaption": "Las cinco con más cuentas en tu directorio",
       "countryTitle": "Por país",
       "countryCaption": "Las cinco geografías con más cuentas",
-      "other": "Otras"
+      "other": "Otras",
+      "withRecentSignalHint": "señales por semana"
+    },
+    "searchPlaceholder": "Buscar empresa o lead…",
+    "importButton": "Importar",
+    "newButton": "+ Nueva",
+    "directory": {
+      "title": "Directorio",
+      "caption": "{count, plural, one {# empresa} other {# empresas}} — toca una fila para abrir la cuenta",
+      "captionFiltered": "{count} de {total} empresas coinciden con la búsqueda",
+      "noMatch": "Ninguna empresa coincide con la búsqueda.",
+      "headers": {
+        "company": "Empresa",
+        "industry": "Industria",
+        "lastSignal": "Última señal",
+        "openOpportunities": "Oport. abiertas",
+        "owner": "Responsable"
+      },
+      "unassigned": "Sin asignar",
+      "itemLabel": "empresas"
     }
   },
   "companyDetail": {
@@ -63,7 +82,14 @@
       "opportunities": "Oportunidades",
       "signals": "Señales",
       "contactsHint": "{count, plural, =0 {sin leads calientes} one {# lead caliente} other {# leads calientes}}",
-      "opportunitiesHint": "{amount} en pipeline abierto"
+      "opportunitiesHint": "{amount} en pipeline abierto",
+      "signals90": "Señales · 90 días",
+      "signals90Hint": "{count, plural, one {# en total} other {# en total}}",
+      "openOpportunities": "Oportunidades abiertas",
+      "openOpportunitiesHint": "{count, plural, =0 {sin oportunidades todavía} one {# en total} other {# en total}}",
+      "meetings": "Reuniones",
+      "meetingsHint": "{count, plural, =0 {ninguna realizada todavía} one {# realizada} other {# realizadas}}",
+      "won": "Negocios ganados"
     },
     "accountBrief": {
       "heading": "Investigación de cuenta",
@@ -73,7 +99,9 @@
       "empty": "Todavía no se investigó esta cuenta en profundidad.",
       "disabledNote": "La investigación profunda de cuentas no está habilitada en este despliegue todavía.",
       "budgetExceededNote": "Se alcanzó el presupuesto diario de investigación — mostrando el último resultado disponible.",
-      "generatedAt": "Generado {time}"
+      "generatedAt": "Generado {time}",
+      "caption": "Lo que BEE encontró investigando esta cuenta",
+      "sources": "Fuentes"
     },
     "contacts": {
       "heading": "Contactos ({count})",
@@ -124,7 +152,10 @@
         "resultImported": "{count} contactos importados",
         "resultSkipped": "{count} sin nombre (omitidos)",
         "resultErrors": "{count} con error"
-      }
+      },
+      "caption": "Las personas de esta cuenta",
+      "incompleteShort": "Revisar datos",
+      "more": "+{count} más"
     },
     "relationshipMap": {
       "heading": "Mapa de relaciones",
@@ -133,7 +164,8 @@
     "opportunities": {
       "heading": "Oportunidades ({count})",
       "addOpportunity": "+ Nueva oportunidad",
-      "empty": "Sin oportunidades para esta empresa todavía."
+      "empty": "Sin oportunidades para esta empresa todavía.",
+      "caption": "Toca una para abrirla en el CRM"
     },
     "signals": {
       "heading": "Señales ({count})",
@@ -142,7 +174,9 @@
       "activityTitle": "Actividad de señales",
       "activityCaption": "Señales detectadas por semana, últimas 12 semanas",
       "mixTitle": "Mezcla de señales",
-      "mixCaption": "Por tipo, toda la cuenta"
+      "mixCaption": "Por tipo, toda la cuenta",
+      "other": "Otras",
+      "listCaption": "Las más recientes primero"
     },
     "owner": {
       "label": "Asignado a",
@@ -155,7 +189,8 @@
       "empty": "Todavía no hay actividad registrada.",
       "viewed": "{name} vio esta cuenta",
       "edited": "{name} editó esta cuenta",
-      "assigned": "{name} reasignó esta cuenta"
+      "assigned": "{name} reasignó esta cuenta",
+      "caption": "Quién vio, editó o reasignó esta cuenta"
     },
     "scan": {
       "scanNow": "Escanear ahora",
@@ -163,7 +198,8 @@
       "done": "Escaneo completado: {count, plural, =0 {sin señales nuevas} =1 {1 señal nueva} other {# señales nuevas}}.",
       "disabled": "El escaneo de mercado está desactivado en este despliegue.",
       "error": "No se pudo escanear esta cuenta."
-    }
+    },
+    "eyebrow": "Cuenta"
   },
   "leadsDirectory": {
     "eyebrow": "CRM",
@@ -242,7 +278,8 @@
       "totalHint": "{count, plural, one {en # empresa} other {en # empresas}}",
       "hot": "Calientes (≥75)",
       "avgScore": "Puntaje medio",
-      "uncontacted": "Sin contactar"
+      "uncontacted": "Sin contactar",
+      "unowned": "Leads sin responsable"
     },
     "filters": {
       "searchPlaceholder": "Buscar por nombre, email o empresa…",
@@ -251,7 +288,8 @@
       "sortScoreAsc": "Menor intent score",
       "sortRecent": "Más recientes",
       "sortName": "Nombre (A-Z)",
-      "staleOnlyLabel": "Solo con datos incompletos/vencidos"
+      "staleOnlyLabel": "Solo con datos incompletos/vencidos",
+      "sortLabel": "Orden"
     },
     "bulk": {
       "selected": "{count, plural, one {# seleccionado} other {# seleccionados}}",
@@ -271,7 +309,10 @@
         "title": "Cargo",
         "status": "Estado",
         "intentScore": "Puntaje de intención",
-        "data": "Datos"
+        "data": "Datos",
+        "email": "Correo",
+        "source": "Origen",
+        "owner": "Responsable"
       },
       "noMatch": "Ningún lead coincide con estos filtros.",
       "staleWarning": "Sin validar en más de 90 días",
@@ -280,7 +321,22 @@
       "validatedAgo": "Validado {timeAgo}",
       "notValidated": "Sin validar",
       "validateTitle": "Re-validar datos",
-      "validate": "Validar"
+      "validate": "Validar",
+      "title": "Leads",
+      "caption": "{count, plural, one {# lead} other {# leads}} — selecciona filas para cambiar estado, reasignar o enviar a una secuencia",
+      "captionFiltered": "{count} de {total} leads coinciden con los filtros",
+      "noTitle": "Sin cargo registrado",
+      "unassigned": "Sin asignar",
+      "itemLabel": "leads",
+      "sources": {
+        "referral": "Referido",
+        "inbound": "Entrante",
+        "outbound": "Saliente",
+        "event": "Evento",
+        "cold_call": "Llamada en frío",
+        "linkedin": "LinkedIn",
+        "other": "Otro"
+      }
     },
     "tip": {
       "prefix": "Consejo: los leads todavía no tienen ficha propia — abre la empresa desde",
@@ -336,7 +392,13 @@
     "actions": {
       "importing": "Importando…",
       "importLeads": "{count, plural, one {Importar # lead} other {Importar # leads}}",
-      "startOver": "Empezar de nuevo"
+      "startOver": "Empezar de nuevo",
+      "cancel": "Cancelar"
     }
+  },
+  "dedup": {
+    "keep": "Conservar",
+    "companiesCaption": "Elige cuál conservar en cada grupo; las demás se fusionan en ella",
+    "leadsCaption": "Elige cuál conservar en cada grupo; los demás se fusionan en él"
   }
 }

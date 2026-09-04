@@ -1,10 +1,10 @@
 "use client";
 
-import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { ACTION_PALETTE } from "@/components/sequences/action-palette";
+import { Field, Pill } from "@/features/crm/drawer/primitives";
 
 const CONDITIONS_BY_CHANNEL: Record<string, string[]> = {
   email: ["opened", "clicked", "replied", "no_response"],
@@ -20,7 +20,9 @@ export interface NewStepInput {
 }
 
 /** Formulario para agregar un paso nuevo al flujo — un solo paso a la vez,
- *  se agrega al final de la cadena (ver SequenceBuilder). */
+ *  se agrega al final de la cadena (ver SequenceEditor). In the "Nueva
+ *  reunión" language: the action and the condition as toggle pills, the
+ *  name and the notes as grey filled inputs, one help line. */
 export function StepComposer({ onAdd }: { onAdd: (step: NewStepInput) => void }) {
   const t = useTranslations("workspace.sequences");
   const [actionValue, setActionValue] = useState(ACTION_PALETTE[0].action);
@@ -56,77 +58,63 @@ export function StepComposer({ onAdd }: { onAdd: (step: NewStepInput) => void })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bee-bento bee-bento-pad space-y-2">
-      <p className="text-xs font-semibold">{t("stepComposer.title")}</p>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <p className="bee-caption font-medium uppercase tracking-wide">{t("stepComposer.title")}</p>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <select
-          value={actionValue}
-          onChange={(e) => handleActionChange(e.target.value)}
-          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
-        >
+      <div className="flex flex-col gap-1">
+        <span className="bee-caption">{t("stepComposer.actionLabel")}</span>
+        <div className="flex flex-wrap gap-2">
           {ACTION_PALETTE.map((a) => (
-            <option key={a.action} value={a.action}>
+            <Pill key={a.action} pressed={actionValue === a.action} onClick={() => handleActionChange(a.action)} title={t(`actions.${a.action}.description`)}>
               {t(`actions.${a.action}.label`)}
-            </option>
+            </Pill>
           ))}
-        </select>
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t("stepComposer.namePlaceholder")}
-          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
-        />
+        </div>
+        <span className="bee-micro">{t(`actions.${selectedAction.action}.description`)}</span>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <select
-            value={useCustom ? "__custom" : condition}
-            onChange={(e) => {
-              if (e.target.value === "__custom") setUseCustom(true);
-              else {
+      <Field label={t("stepComposer.nameLabel")} required>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t("stepComposer.namePlaceholder")} className="bee-input" />
+      </Field>
+
+      <div className="flex flex-col gap-1">
+        <span className="bee-caption">{t("stepComposer.conditionLabel")}</span>
+        <div className="flex flex-wrap gap-2">
+          {conditions.map((c) => (
+            <Pill
+              key={c}
+              pressed={!useCustom && condition === c}
+              onClick={() => {
                 setUseCustom(false);
-                setCondition(e.target.value);
-              }
-            }}
-            className="flex-1 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
-          >
-            {conditions.map((c) => (
-              <option key={c} value={c}>
-                {t(`stepComposer.conditions.${c}`)}
-              </option>
-            ))}
-            <option value="__custom">{t("stepComposer.advancedCondition")}</option>
-          </select>
+                setCondition(c);
+              }}
+            >
+              {t(`stepComposer.conditions.${c}`)}
+            </Pill>
+          ))}
+          <Pill pressed={useCustom} onClick={() => setUseCustom(true)}>
+            {t("stepComposer.advancedCondition")}
+          </Pill>
         </div>
         {useCustom && (
           <>
-            <input
-              value={customCondition}
-              onChange={(e) => setCustomCondition(e.target.value)}
-              placeholder={t("stepComposer.customPlaceholder")}
-              className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
-            />
-            <p className="bee-micro">
-              {t("stepComposer.customFormatPrefix")} <code>not_&lt;{t("stepComposer.customFormatEvent")}&gt;_&lt;N&gt;d</code>.{" "}
-              {t("stepComposer.customFormatHelp")}
-            </p>
+            <input value={customCondition} onChange={(e) => setCustomCondition(e.target.value)} placeholder={t("stepComposer.customPlaceholder")} className="bee-input mt-1" />
+            <span className="bee-micro">
+              {t("stepComposer.customFormatPrefix")} <code>not_&lt;{t("stepComposer.customFormatEvent")}&gt;_&lt;N&gt;d</code>. {t("stepComposer.customFormatHelp")}
+            </span>
           </>
         )}
       </div>
 
-      <input
-        value={notes}
-        onChange={(e) => setNotes(e.target.value)}
-        placeholder={t("stepComposer.notesPlaceholder")}
-        className="w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
-      />
+      <Field label={t("stepComposer.notesLabel")}>
+        <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t("stepComposer.notesPlaceholder")} className="bee-input" />
+      </Field>
 
-      <button type="submit" disabled={!name.trim()} className="bee-btn bee-btn--primary text-xs">
-        <Plus className="size-3.5" />
-        {t("stepComposer.addButton")}
-      </button>
+      <div>
+        <button type="submit" disabled={!name.trim()} className="bee-btn">
+          {t("stepComposer.addButton")}
+        </button>
+      </div>
     </form>
   );
 }

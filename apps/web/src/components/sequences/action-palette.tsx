@@ -19,7 +19,9 @@ import {
  *
  *  `label`/`description` viven en `messages/{locale}/workspace.json` bajo
  *  `sequences.actions.<action>` (ver step-composer.tsx / flow-canvas.tsx) —
- *  este catálogo solo trae el `action` value que sirve de llave de traducción. */
+ *  este catálogo solo trae el `action` value que sirve de llave de traducción.
+ *  A channel never carries a hue of its own: it reads as a lavender chip and
+ *  an ink icon, so a timeline stays in the page's one hue. */
 export interface ActionDef {
   action: string;
   channel: "email" | "linkedin";
@@ -37,16 +39,21 @@ export const ACTION_PALETTE: ActionDef[] = [
   { action: "follow_up", channel: "email", icon: RotateCcw },
 ];
 
-export const ACTION_BY_VALUE: Record<string, ActionDef> = Object.fromEntries(
-  ACTION_PALETTE.map((a) => [a.action, a]),
-);
+export const ACTION_BY_VALUE: Record<string, ActionDef> = Object.fromEntries(ACTION_PALETTE.map((a) => [a.action, a]));
 
 export const CHANNEL_ICON: Record<string, LucideIcon> = {
   linkedin: Link2,
   email: Mail,
 };
 
-export const CHANNEL_COLOR: Record<string, string> = {
-  linkedin: "var(--color-chart-4)",
-  email: "var(--color-chart-6)",
-};
+/** Day offset of each step from enrollment — the sum of the delays of the
+ *  transitions before it (the builder writes one transition per step). */
+export function stepDayOffsets(steps: { transitions: { delay_days: number }[] }[]): number[] {
+  const out: number[] = [];
+  let day = 0;
+  for (const step of steps) {
+    out.push(day);
+    day += step.transitions[0]?.delay_days ?? 0;
+  }
+  return out;
+}

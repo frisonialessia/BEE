@@ -7,7 +7,9 @@
       "tabs": {
         "status": "Estado",
         "library": "Biblioteca de mensajes",
-        "automations": "Automatizaciones"
+        "automations": "Automatizaciones",
+        "active": "Activas",
+        "performance": "Rendimiento"
       }
     },
     "probarPage": {
@@ -35,14 +37,21 @@
         "bodyPlaceholder": "Cuerpo del mensaje — usa '{{first_name}}', '{{company_name}}', etc. como marcadores",
         "saving": "Guardando…",
         "save": "Guardar",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "caption": "Escribe el mensaje una vez, úsalo en cualquier secuencia",
+        "nameLabel": "Nombre",
+        "channelLabel": "Canal",
+        "subjectLabel": "Asunto",
+        "bodyLabel": "Mensaje",
+        "bodyHint": "Usa {{first_name}}, {{company_name}}, etc. como marcadores."
       },
       "empty": {
         "title": "Todavía no hay plantillas guardadas.",
         "subtitle": "Crea la primera para reutilizarla en tus secuencias."
       },
       "edit": "Editar",
-      "delete": "Eliminar"
+      "delete": "Eliminar",
+      "title": "{count, plural, one {# plantilla} other {# plantillas}}"
     },
     "automation": {
       "channelStatus": {
@@ -56,7 +65,12 @@
         "anySignal": "Cualquier señal",
         "industryPlaceholder": "Industria (opcional)",
         "anySeniority": "Cualquier cargo",
-        "note": "Industria y cargo son descriptivos — para quién se pensó este flujo. La inscripción siempre es manual desde Leads, nunca automática por coincidencia."
+        "note": "Industria y cargo son descriptivos — para quién se pensó este flujo. La inscripción siempre es manual desde Leads, nunca automática por coincidencia.",
+        "nameLabel": "Nombre",
+        "descriptionLabel": "Descripción",
+        "signalLabel": "Señal que la dispara",
+        "industryLabel": "Industria",
+        "seniorityLabel": "Cargo"
       },
       "save": "Guardar flujo",
       "saving": "Guardando…",
@@ -74,6 +88,11 @@
           "title": "Todavía no hay flujos de automatización.",
           "subtitle": "Crea el primero para escalar el alcance sin trabajo manual repetido."
         }
+      },
+      "editor": {
+        "title": "Nueva secuencia",
+        "caption": "Define para quién es y arma los pasos; nada se envía sin aprobación",
+        "cancel": "Cancelar"
       }
     },
     "flowCanvas": {
@@ -109,7 +128,11 @@
       "customFormatEvent": "evento",
       "customFormatHelp": "Este deploy no tiene un scheduler propio — se evalúa la próxima vez que llegue un evento a esta ejecución, no automáticamente cada día.",
       "notesPlaceholder": "Notas (opcional)",
-      "addButton": "Agregar al flujo"
+      "addButton": "Agregar al flujo",
+      "actionLabel": "Acción",
+      "nameLabel": "Nombre del paso",
+      "conditionLabel": "Avanza al siguiente paso",
+      "notesLabel": "Notas"
     },
     "actions": {
       "send_email": {
@@ -218,6 +241,59 @@
         "title": "Aún no se han despachado tareas.",
         "subtitle": "Cierra una oportunidad como GANADA para activar el bus de eventos."
       }
+    },
+    "kpis": {
+      "activeSequences": "Secuencias activas",
+      "activeSequencesHint": "{count, plural, one {# definida} other {# definidas}}",
+      "enrolled": "Contactos inscritos",
+      "enrolledHint": "{count, plural, =0 {sin inscripciones todavía} one {# inscripción en total} other {# inscripciones en total}}",
+      "replyRate": "Tasa de respuesta",
+      "replyRateEmpty": "sin envíos todavía",
+      "dueToday": "Envíos para hoy",
+      "dueTodayHint": "pasos que tocan hoy o antes"
+    },
+    "active": {
+      "title": "{count, plural, one {# secuencia} other {# secuencias}}",
+      "caption": "Cada cadencia como línea de tiempo: un punto por paso, el canal y el día en que dispara",
+      "captionNoEnrollments": "Cada cadencia como línea de tiempo — inscribe leads desde Leads para ver el embudo y las inscripciones aquí",
+      "enrolled": "{count, plural, =0 {sin inscritos} one {# inscrito} other {# inscritos}}",
+      "showSteps": "Ver condiciones",
+      "hideSteps": "Ocultar condiciones",
+      "status": {
+        "active": "Activa",
+        "draft": "Borrador",
+        "paused": "Pausada",
+        "archived": "Archivada"
+      },
+      "enrollmentsTitle": "{count, plural, one {# inscripción} other {# inscripciones}}",
+      "enrollmentsCaption": "Quién está en qué paso, las más recientes primero",
+      "unknownContact": "Contacto sin nombre",
+      "moreEnrollments": "+{count} más",
+      "executionStatus": {
+        "running": "En curso",
+        "waiting": "Esperando",
+        "paused": "Pausada",
+        "completed": "Completada",
+        "failed": "Fallida",
+        "cancelled": "Cancelada"
+      }
+    },
+    "funnel": {
+      "title": "Embudo de respuesta",
+      "caption": "De inscritos a respuestas",
+      "enrolled": "Inscritos",
+      "opened": "Abrieron",
+      "clicked": "Hicieron clic",
+      "replied": "Respondieron"
+    },
+    "timeline": {
+      "empty": "Todavía no hay pasos — agrega el primero abajo.",
+      "removeStepAria": "Quitar paso",
+      "channels": {
+        "email": "Email",
+        "linkedin": "LinkedIn"
+      },
+      "day": "Día {day}"
     }
   },
   "integrations": {
@@ -276,7 +352,10 @@
         "title": "Guarda esta key ahora — no vuelve a mostrarse.",
         "help": "Pégala en el conector Web de tu herramienta de BI como parámetro ?org_key= en la URL, o como el header X-BEE-Org-Key si la herramienta lo permite.",
         "confirm": "Ya la guardé"
-      }
+      },
+      "keyNameLabel": "Nombre de la key",
+      "cancel": "Cancelar",
+      "revoke": "Revocar"
     },
     "genericConnectedCopy": "{label} conectado como {account}.",
     "genericDisconnectedCopy": "Conecta tu cuenta de {label}.",
@@ -303,7 +382,8 @@
       "saveProjectKey": "Guardar proyecto",
       "saving": "Guardando…",
       "configSaved": "Proyecto {key} configurado — la sincronización ya está activa.",
-      "configError": "No se pudo guardar el proyecto."
+      "configError": "No se pudo guardar el proyecto.",
+      "projectKeyLabel": "Proyecto de Jira"
     },
     "import": {
       "noNew": "No había nada nuevo que importar.",
@@ -318,7 +398,8 @@
       "title": "Canales del servidor",
       "caption": "Configurados una sola vez para todo el despliegue de BEE, no por cuenta — ver variables de entorno del backend si necesitas cambiarlos.",
       "connected": "conectado",
-      "mock": "modo simulado"
+      "mock": "modo simulado",
+      "empty": "No hay canales del servidor."
     },
     "inbound": {
       "title": "Señales entrantes (webhook)",
@@ -359,7 +440,8 @@
           "label": "Noticias (Google)",
           "description": "Búsqueda de noticias de mercado con Google Custom Search. Complementa a la prensa cuando hay clave."
         }
-      }
+      },
+      "empty": "No hay fuentes de mercado configuradas."
     },
     "digest": {
       "title": "La jugada de hoy en Slack o Teams",
@@ -369,7 +451,7 @@
       "webhookLabel": "Webhook entrante (Slack / Teams)",
       "webhookSetPlaceholder": "Configurado ({hint}) — pega otra URL para reemplazarlo",
       "hourLabel": "Hora de envío",
-      "enabledLabel": "Enviar cada día",
+      "enabledLabel": "Cada día",
       "save": "Guardar",
       "saving": "Guardando…",
       "sendNow": "Enviar ahora",
@@ -385,7 +467,13 @@
         "already_sent_today": "Hoy ya se envió.",
         "not_the_hour": "Todavía no es la hora configurada.",
         "delivery_failed": "El webhook no aceptó el mensaje. Revisa la URL."
-      }
+      },
+      "scheduleLabel": "Envío",
+      "pausedLabel": "Pausado"
+    },
+    "card": {
+      "connectedWhen": "Conectado {when}",
+      "neverConnected": "Sin conectar todavía"
     }
   },
   "team": {

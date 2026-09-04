@@ -1,31 +1,33 @@
 "use client";
 
-import { RefreshCw, Search, Upload, Workflow } from "lucide-react";
+import { Upload } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocale, useTranslations } from "next-intl";
 
-import { DATA } from "@/components/charts/palette";
+import { TONE } from "@/components/charts/palette";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
+import { OverviewCard } from "@/components/dashboard/overview-card";
+import { PaginationBar } from "@/components/dashboard/pagination-bar";
 import { LeadDuplicatesPanel } from "@/components/dedup/lead-duplicates-panel";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
+import { LiveBadge } from "@/components/live-badge";
 import { SavedViewsControl } from "@/components/saved-views/saved-views-control";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InitialsDisc, RowChip, Td, Th } from "@/features/companies/table-bits";
+import { Pill } from "@/features/crm/drawer/primitives";
 import { LeadImportPanel } from "@/features/leads/lead-import-panel";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBulkUpdateLeads, useLeads, useValidateLead } from "@/hooks/queries/use-leads";
 import { useBulkEnrollLeadsInSequence, useSequences } from "@/hooks/queries/use-sequences";
 import { useUsers } from "@/hooks/queries/use-users";
+import { usePagination } from "@/hooks/use-pagination";
 import type { Locale } from "@/i18n/locales";
-import { useIsDemoMode } from "@/lib/demo/mode";
+import { useDashboardBase } from "@/lib/demo/mode";
 import { formatRelativeTime } from "@/lib/i18n/format";
-import { getLeadStatusLabels, getValidationFlagLabels, scoreVariant } from "@/lib/format";
+import { getLeadStatusLabels, getValidationFlagLabels } from "@/lib/format";
 import type { Lead, LeadStatus } from "@/types/domain";
-import { LiveBadge } from "@/components/live-badge";
 
 type SortKey = "score_desc" | "score_asc" | "recent" | "name";
 
@@ -47,16 +49,10 @@ const SORTERS: Record<SortKey, (a: Lead, b: Lead) => number> = {
 };
 
 const STATUS_OPTIONS: LeadStatus[] = ["new", "qualified", "engaged", "converted", "disqualified"];
+const SORT_OPTIONS: SortKey[] = ["score_desc", "score_asc", "recent", "name"];
 
-/** Directorio central de leads — el centro de operaciones para saber a quién
- *  enfocar cada día: intent score, filtros, búsqueda y exportación completa.
- *  Todo se calcula en el cliente a partir de lo que ya está cargado, mismo
- *  patrón que el resto de la BI de BEE — sin endpoint de búsqueda aparte. */
-/** `showHeader=false` when embedded as a tab of the merged Companies page
- * (see companies-list.tsx) — the live/demo badge, import, and CSV export
- * actions stay either way. */
-/** CSV columns for a leads export — shared with companies-list.tsx, which
- *  hosts the Leads tab's export button in the page's tabs row. */
+/** CSV columns for a leads export — the same shape whether the tab or the
+ *  standalone page exports it. */
 export function leadsExportColumns(t: (key: string) => string): { key: keyof ReturnType<typeof leadExportRow>; header: string }[] {
   return [
     { key: "nombre", header: t("export.columns.name") },
@@ -87,9 +83,29 @@ export function leadExportRow(l: Lead, companyName: string, statusLabel: string)
   };
 }
 
-export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } = {}) {
+/**
+ * Leads — the people behind the accounts, as one table: who, where, how to
+ * reach them, where they came from, who owns them. Filters are toggle
+ * pills, the sort a grey filled control, bulk actions a hairline row that
+ * appears with a selection. Everything is computed on the client from what
+ * is already loaded — no search endpoint, same as the rest of BEE.
+ *
+ * `showHeader=false` when embedded as the Leads tab of Empresas
+ * (companies-list.tsx): the header, the strip and the search box are the
+ * page's, handed in through `query`/`onQueryChange`.
+ */
+export function LeadsDirectory({
+  showHeader = true,
+  query: externalQuery,
+  onQueryChange,
+}: {
+  showHeader?: boolean;
+  query?: string;
+  onQueryChange?: (query: string) => void;
+} = {}) {
   const locale = useLocale() as Locale;
   const t = useTranslations("companiesLeads.leadsDirectory");
+  const base = useDashboardBase();
   const leadStatusLabels = getLeadStatusLabels(locale);
   const validationFlagLabels = getValidationFlagLabels(locale);
   const { data: leadsResult, isLoading: leadsLoading } = useLeads(300);
@@ -97,11 +113,12 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
   const { data: users } = useUsers();
   const validateLead = useValidateLead();
   const bulkUpdate = useBulkUpdateLeads();
-  const demo = useIsDemoMode();
   const { data: sequencesResult } = useSequences();
   const bulkEnroll = useBulkEnrollLeadsInSequence();
 
-  const [query, setQuery] = useState("");
+  const [internalQuery, setInternalQuery] = useState("");
+  const query = externalQuery ?? internalQuery;
+  const setQuery = onQueryChange ?? setInternalQuery;
   const [statusFilter, setStatusFilter] = useState<LeadStatus | "all">("all");
   const [staleOnly, setStaleOnly] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("score_desc");
@@ -125,10 +142,8 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
   const loading = leadsLoading || companiesLoading;
 
   const leads = useMemo(() => leadsData ?? [], [leadsData]);
-  const companyById = useMemo(
-    () => new Map((companiesData ?? []).map((c) => [c.id, c])),
-    [companiesData],
-  );
+  const companyById = useMemo(() => new Map((companiesData ?? []).map((c) => [c.id, c])), [companiesData]);
+  const userNameById = useMemo(() => new Map((users ?? []).map((u) => [u.id, u.full_name])), [users]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -138,14 +153,11 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
         if (staleOnly && !l.stale_risk && l.validation_flags.length === 0) return false;
         if (!q) return true;
         const company = l.company_id ? companyById.get(l.company_id) : undefined;
-        return (
-          l.full_name.toLowerCase().includes(q) ||
-          (l.email ?? "").toLowerCase().includes(q) ||
-          (company?.name ?? "").toLowerCase().includes(q)
-        );
+        return l.full_name.toLowerCase().includes(q) || (l.email ?? "").toLowerCase().includes(q) || (company?.name ?? "").toLowerCase().includes(q);
       })
       .sort(SORTERS[sortKey]);
   }, [leads, query, statusFilter, staleOnly, sortKey, companyById]);
+  const pagination = usePagination(filtered);
 
   function toggleOne(id: string) {
     setSelected((prev) => {
@@ -184,9 +196,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
       if (result.failed.length === 0) {
         toast.success(t("toasts.enrolledSuccess", { count: result.created.length }));
       } else {
-        toast.warning(
-          t("toasts.enrolledPartial", { created: result.created.length, failed: result.failed.length }),
-        );
+        toast.warning(t("toasts.enrolledPartial", { created: result.created.length, failed: result.failed.length }));
       }
       setSelected(new Set());
       setBulkSequence("");
@@ -195,9 +205,8 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
     }
   }
 
-  // The strip at a glance: how many, how many are hot, how strong on
-  // average, how many nobody has touched yet. "Stale/incomplete" stays as
-  // the filter toggle below — it's a hygiene action, not a headline number.
+  // The standalone strip: how many, how many are hot, how strong on
+  // average, how many nobody has touched yet.
   const hotCount = leads.filter((l) => l.score >= 75).length;
   const uncontactedCount = leads.filter((l) => l.status === "new").length;
   const companyCount = new Set(leads.map((l) => l.company_id).filter(Boolean)).size;
@@ -205,346 +214,233 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
 
   const exportRows = filtered.map((l) => {
     const company = l.company_id ? companyById.get(l.company_id) : undefined;
-    return {
-      nombre: l.full_name,
-      empresa: company?.name ?? "",
-      cargo: l.title ?? "",
-      email: l.email ?? "",
-      telefono: l.phone ?? "",
-      linkedin: l.linkedin_url ?? "",
-      estado: leadStatusLabels[l.status],
-      intent_score: Math.round(l.score),
-      frescura_datos: Math.round(l.data_freshness_score * 100),
-      creado: l.created_at,
-    };
+    return leadExportRow(l, company?.name ?? "", leadStatusLabels[l.status]);
   });
+
+  function sourceLabel(source: string): string {
+    return t.has(`table.sources.${source}`) ? t(`table.sources.${source}`) : source;
+  }
+
+  const allVisibleSelected = filtered.length > 0 && filtered.every((l) => selected.has(l.id));
 
   return (
     <div>
-      {/* Embedded in the Companies page the header and the import/export
-          controls live in that page's tabs row (companies-list.tsx), so the
-          KPI strip starts at the standard height on both tabs. */}
       {showHeader && (
-      <header className="mb-4">
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-        <div className="mt-1 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="bee-display">{t("title")}</h1>
-            <p className="bee-caption mt-1">
-              {t("subtitle")}
-            </p>
+        <header className="bee-page-head mb-6">
+          <div className="min-w-0">
+            <p className="bee-eyebrow">{t("eyebrow")}</p>
+            <h1 className="bee-display mt-1 truncate">{t("title")}</h1>
+            <p className="bee-caption mt-1 line-clamp-2">{t("subtitle")}</p>
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <LiveBadge live={live} />
-            <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost inline-flex items-center gap-2">
-              <Upload className="size-3.5" />
-              {t("importButton")}
-            </button>
-            <ExportCsvButton
-              rows={exportRows}
-              filename="bee-leads.csv"
-              columns={[
-                { key: "nombre", header: t("export.columns.name") },
-                { key: "empresa", header: t("export.columns.company") },
-                { key: "cargo", header: t("export.columns.title") },
-                { key: "email", header: t("export.columns.email") },
-                { key: "telefono", header: t("export.columns.phone") },
-                { key: "linkedin", header: t("export.columns.linkedin") },
-                { key: "estado", header: t("export.columns.status") },
-                { key: "intent_score", header: t("export.columns.intentScore") },
-                { key: "frescura_datos", header: t("export.columns.dataFreshness") },
-                { key: "creado", header: t("export.columns.createdAt") },
-              ]}
-            />
-          </div>
-        </div>
-      </header>
-      )}
-
-      <LeadDuplicatesPanel />
-      <LeadImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
-
-      {loading ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24" />
-            ))}
-          </div>
-          <Skeleton className="h-96" />
-        </div>
-      ) : leads.length === 0 ? (
-        <div className="bee-bento bee-bento-pad py-8 text-center">
-          <p className="text-sm text-muted-foreground">{t("empty.title")}</p>
-          <p className="bee-caption mt-1">{t("empty.subtitle")}</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {/* Standalone page only: embedded in Empresas the page's shared
-              strip (companies-list.tsx) already carries these figures. */}
-          {showHeader && (
-            <StatStrip cols={4}>
-              <StatTile
-                label={t("metrics.total")}
-                value={leads.length}
-                hint={t("metrics.totalHint", { count: companyCount })}
-                tone={DATA.indigo}
-              />
-              <StatTile label={t("metrics.hot")} value={hotCount} progress={hotCount / leads.length} tone={DATA.honey} />
-              <StatTile label={t("metrics.avgScore")} value={avgScore} progress={avgScore / 100} tone={DATA.magenta} />
-              <StatTile
-                label={t("metrics.uncontacted")}
-                value={uncontactedCount}
-                progress={uncontactedCount / leads.length}
-                tone={DATA.violet}
-              />
-            </StatStrip>
-            )}
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex min-w-[14rem] flex-1 items-center gap-2 rounded-full border border-border bg-[var(--color-card)]/60 px-3 py-2">
-              <Search className="size-3.5 shrink-0 text-muted-foreground" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t("filters.searchPlaceholder")}
-                className="w-full bg-transparent text-xs outline-none placeholder:text-muted-foreground"
-              />
-            </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as LeadStatus | "all")}
-              className="rounded-full border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
-            >
-              <option value="all">{t("filters.allStatuses")}</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {leadStatusLabels[s]}
-                </option>
-              ))}
-            </select>
-            <select
-              value={sortKey}
-              onChange={(e) => setSortKey(e.target.value as SortKey)}
-              className="rounded-full border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none"
-            >
-              <option value="score_desc">{t("filters.sortScoreDesc")}</option>
-              <option value="score_asc">{t("filters.sortScoreAsc")}</option>
-              <option value="recent">{t("filters.sortRecent")}</option>
-              <option value="name">{t("filters.sortName")}</option>
-            </select>
-            <Label className="text-xs font-normal text-muted-foreground">
-              <Checkbox checked={staleOnly} onCheckedChange={(checked) => setStaleOnly(checked === true)} />
-              {t("filters.staleOnlyLabel")}
-            </Label>
-            <SavedViewsControl page="leads" currentConfig={currentViewConfig} onApply={applyViewConfig} />
-          </div>
-
-          {selected.size > 0 && (
-            <div className="flex flex-wrap items-center gap-2 rounded-[var(--radius-lg)] border border-[var(--color-chart-4)]/40 bg-[var(--color-chart-4)]/10 px-4 py-3">
-              <p className="text-xs font-medium">
-                {t("bulk.selected", { count: selected.size })}
-              </p>
-              <div className="flex items-center gap-2">
-                <select
-                  value={bulkStatus}
-                  onChange={(e) => setBulkStatus(e.target.value as LeadStatus | "")}
-                  className="rounded-full border border-border bg-[var(--color-card)] px-3 py-1 text-xs outline-none"
-                >
-                  <option value="">{t("bulk.changeStatusTo")}</option>
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {leadStatusLabels[s]}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={applyBulkStatus}
-                  disabled={!bulkStatus || bulkUpdate.isPending}
-                  className="bee-btn bee-btn--primary text-xs"
-                >
-                  {t("bulk.apply")}
-                </button>
+          <div className="bee-page-head__side">
+            <div className="bee-page-head__actions">
+              <LiveBadge live={live} />
+              <div className="w-full sm:w-56">
+                <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("filters.searchPlaceholder")} aria-label={t("filters.searchPlaceholder")} className="bee-input" />
               </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={bulkAssignee}
-                  onChange={(e) => setBulkAssignee(e.target.value)}
-                  className="rounded-full border border-border bg-[var(--color-card)] px-3 py-1 text-xs outline-none"
-                >
-                  <option value="">{t("bulk.reassignTo")}</option>
-                  {(users ?? []).map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.full_name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={applyBulkAssignee}
-                  disabled={!bulkAssignee || bulkUpdate.isPending}
-                  className="bee-btn bee-btn--primary text-xs"
-                >
-                  {t("bulk.apply")}
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={bulkSequence}
-                  onChange={(e) => setBulkSequence(e.target.value)}
-                  className="rounded-full border border-border bg-[var(--color-card)] px-3 py-1 text-xs outline-none"
-                >
-                  <option value="">{t("bulk.sendToSequence")}</option>
-                  {(sequencesResult?.data ?? []).map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={applyBulkSequence}
-                  disabled={!bulkSequence || bulkEnroll.isPending}
-                  className="bee-btn bee-btn--primary inline-flex items-center gap-1 text-xs"
-                >
-                  <Workflow className="size-3.5" />
-                  {bulkEnroll.isPending ? t("bulk.sending") : t("bulk.apply")}
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelected(new Set())}
-                className="bee-btn-ghost ml-auto text-xs"
-              >
-                {t("bulk.cancelSelection")}
+              <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost">
+                <Upload className="size-3.5" />
+                {t("importButton")}
               </button>
             </div>
-          )}
-
-          <div className="bee-surface overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-xs">
-              <thead>
-                <tr className="border-b border-border text-micro uppercase tracking-wide text-muted-foreground">
-                  <th className="w-8 px-4 py-3">
-                    <input
-                      type="checkbox"
-                      checked={filtered.length > 0 && filtered.every((l) => selected.has(l.id))}
-                      onChange={toggleAllVisible}
-                      className="accent-[var(--color-chart-4)]"
-                      aria-label={t("table.selectAllVisible")}
-                    />
-                  </th>
-                  <th className="px-4 py-3 font-medium">{t("table.headers.name")}</th>
-                  <th className="px-4 py-3 font-medium">{t("table.headers.company")}</th>
-                  <th className="px-4 py-3 font-medium">{t("table.headers.title")}</th>
-                  <th className="px-4 py-3 font-medium">{t("table.headers.status")}</th>
-                  <th className="px-4 py-3 font-medium">{t("table.headers.intentScore")}</th>
-                  <th className="px-4 py-3 font-medium">{t("table.headers.data")}</th>
-                  <th className="px-4 py-3 font-medium" />
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
-                      {t("table.noMatch")}
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((lead) => {
-                    const company = lead.company_id ? companyById.get(lead.company_id) : undefined;
-                    const hasIssues = lead.validation_flags.length > 0 || lead.stale_risk;
-                    return (
-                      <tr key={lead.id} className="border-b border-border last:border-b-0 hover:bg-[var(--color-primary)]/10">
-                        <td className="px-4 py-3">
-                          <input
-                            type="checkbox"
-                            checked={selected.has(lead.id)}
-                            onChange={() => toggleOne(lead.id)}
-                            className="accent-[var(--color-chart-4)]"
-                            aria-label={t("table.selectRow", { name: lead.full_name })}
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <p className="font-medium text-foreground">{lead.full_name}</p>
-                          {lead.email && <p className="bee-micro">{lead.email}</p>}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {company ? (
-                            <Link
-                              href={`/dashboard/companies/${company.id}`}
-                              className="hover:text-[var(--color-text)] hover:underline"
-                            >
-                              {company.name}
-                            </Link>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">{lead.title ?? "—"}</td>
-                        <td className="px-4 py-3">
-                          <Badge variant="outline">{leadStatusLabels[lead.status]}</Badge>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge variant={scoreVariant(lead.score)} className="font-mono">
-                            {Math.round(lead.score)}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3">
-                          {hasIssues ? (
-                            <span
-                              title={[
-                                ...lead.validation_flags.map((f) => validationFlagLabels[f] ?? f),
-                                ...(lead.stale_risk ? [t("table.staleWarning")] : []),
-                              ].join(" · ")}
-                              className="text-micro text-[var(--color-text)]"
-                            >
-                              {lead.validation_flags.length > 0
-                                ? t("table.issues", { count: lead.validation_flags.length })
-                                : t("table.outdated")}
-                            </span>
-                          ) : (
-                            <span className="bee-micro">
-                              {lead.last_validated_at
-                                ? t("table.validatedAgo", { timeAgo: formatRelativeTime(lead.last_validated_at, locale) })
-                                : t("table.notValidated")}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => validateLead.mutate(lead.id)}
-                            disabled={validateLead.isPending}
-                            className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 bee-micro transition-colors hover:bg-[var(--color-primary)]/40 hover:text-foreground"
-                            title={t("table.validateTitle")}
-                          >
-                            <RefreshCw className="size-3" />
-                            {t("table.validate")}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
           </div>
-          {filtered.some((l) => l.company_id) && (
-            <p className="bee-caption">
-              {t("tip.prefix")}{" "}
-              <Link
-                href={demo ? "/probar/companies" : "/dashboard/companies"}
-                className="text-[var(--color-text)] hover:underline"
-              >
-                {t("tip.linkText")}
-              </Link>{" "}
-              {t("tip.suffix")}
-            </p>
-          )}
+        </header>
+      )}
+
+      <LeadImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
+
+      {showHeader && !loading && leads.length > 0 && (
+        <div className="mb-6">
+          <StatStrip cols={4}>
+            <StatTile label={t("metrics.total")} value={leads.length} hint={t("metrics.totalHint", { count: companyCount })} tone={TONE.market} />
+            <StatTile label={t("metrics.hot")} value={hotCount} progress={hotCount / leads.length} tone={TONE.urgency} />
+            <StatTile label={t("metrics.avgScore")} value={avgScore} progress={avgScore / 100} tone={TONE.forecast} />
+            <StatTile label={t("metrics.uncontacted")} value={uncontactedCount} progress={uncontactedCount / leads.length} tone={TONE.prepared} />
+          </StatStrip>
         </div>
       )}
+
+      <div className="bee-overview">
+        <OverviewCard
+          span={12}
+          title={t("table.title")}
+          caption={query || statusFilter !== "all" || staleOnly ? t("table.captionFiltered", { count: filtered.length, total: leads.length }) : t("table.caption", { count: leads.length })}
+          action={<ExportCsvButton rows={exportRows} filename="bee-leads.csv" columns={leadsExportColumns(t)} />}
+        >
+          {loading ? (
+            <Skeleton className="h-64" />
+          ) : leads.length === 0 ? (
+            <p className="bee-caption py-8 text-center">
+              {t("empty.title")} {t("empty.subtitle")}
+            </p>
+          ) : (
+            <>
+              {/* Filters: status as toggle pills, sort as the grey control, hygiene as one pill, saved views. */}
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <Pill pressed={statusFilter === "all"} onClick={() => setStatusFilter("all")}>
+                  {t("filters.allStatuses")}
+                </Pill>
+                {STATUS_OPTIONS.map((s) => (
+                  <Pill key={s} pressed={statusFilter === s} onClick={() => setStatusFilter(s)}>
+                    {leadStatusLabels[s]}
+                  </Pill>
+                ))}
+                <Pill pressed={staleOnly} onClick={() => setStaleOnly((v) => !v)}>
+                  {t("filters.staleOnlyLabel")}
+                </Pill>
+                <div className="ml-auto flex flex-wrap items-center gap-2">
+                  <label className="flex items-center gap-2">
+                    <span className="bee-caption whitespace-nowrap">{t("filters.sortLabel")}</span>
+                    <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)} className="bee-input w-auto">
+                      {SORT_OPTIONS.map((k) => (
+                        <option key={k} value={k}>
+                          {t(`filters.${k === "score_desc" ? "sortScoreDesc" : k === "score_asc" ? "sortScoreAsc" : k === "recent" ? "sortRecent" : "sortName"}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <SavedViewsControl page="leads" currentConfig={currentViewConfig} onApply={applyViewConfig} />
+                </div>
+              </div>
+
+              {selected.size > 0 && (
+                <div className="mb-3 flex flex-wrap items-center gap-2 border-y border-[var(--color-divider)] py-3">
+                  <p className="text-sm font-medium">{t("bulk.selected", { count: selected.size })}</p>
+                  <div className="flex items-center gap-2">
+                    <select value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value as LeadStatus | "")} className="bee-input w-auto" aria-label={t("bulk.changeStatusTo")}>
+                      <option value="">{t("bulk.changeStatusTo")}</option>
+                      {STATUS_OPTIONS.map((s) => (
+                        <option key={s} value={s}>
+                          {leadStatusLabels[s]}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={applyBulkStatus} disabled={!bulkStatus || bulkUpdate.isPending} className="bee-btn bee-btn--primary">
+                      {t("bulk.apply")}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select value={bulkAssignee} onChange={(e) => setBulkAssignee(e.target.value)} className="bee-input w-auto" aria-label={t("bulk.reassignTo")}>
+                      <option value="">{t("bulk.reassignTo")}</option>
+                      {(users ?? []).map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.full_name}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={applyBulkAssignee} disabled={!bulkAssignee || bulkUpdate.isPending} className="bee-btn bee-btn--primary">
+                      {t("bulk.apply")}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select value={bulkSequence} onChange={(e) => setBulkSequence(e.target.value)} className="bee-input w-auto" aria-label={t("bulk.sendToSequence")}>
+                      <option value="">{t("bulk.sendToSequence")}</option>
+                      {(sequencesResult?.data ?? []).map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={applyBulkSequence} disabled={!bulkSequence || bulkEnroll.isPending} className="bee-btn bee-btn--primary">
+                      {bulkEnroll.isPending ? t("bulk.sending") : t("bulk.apply")}
+                    </button>
+                  </div>
+                  <button type="button" onClick={() => setSelected(new Set())} className="bee-btn-ghost ml-auto">
+                    {t("bulk.cancelSelection")}
+                  </button>
+                </div>
+              )}
+
+              {filtered.length === 0 ? (
+                <p className="bee-caption py-8 text-center">{t("table.noMatch")}</p>
+              ) : (
+                <>
+                  <div className="bee-fill overflow-x-auto">
+                    <table className="w-full min-w-[720px] text-left text-sm">
+                      <thead>
+                        <tr>
+                          <Th className="w-8">
+                            <input type="checkbox" checked={allVisibleSelected} onChange={toggleAllVisible} className="accent-[var(--color-chart-4)]" aria-label={t("table.selectAllVisible")} />
+                          </Th>
+                          <Th>{t("table.headers.name")}</Th>
+                          <Th>{t("table.headers.company")}</Th>
+                          <Th>{t("table.headers.email")}</Th>
+                          <Th>{t("table.headers.source")}</Th>
+                          <Th>{t("table.headers.owner")}</Th>
+                          <Th align="right">{t("table.headers.data")}</Th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pagination.pageItems.map((lead) => {
+                          const company = lead.company_id ? companyById.get(lead.company_id) : undefined;
+                          const hasIssues = lead.validation_flags.length > 0 || lead.stale_risk;
+                          const owner = lead.assigned_to_user_id ? userNameById.get(lead.assigned_to_user_id) : undefined;
+                          const issueTitle = [...lead.validation_flags.map((f) => validationFlagLabels[f] ?? f), ...(lead.stale_risk ? [t("table.staleWarning")] : [])].join(" · ");
+                          return (
+                            <tr key={lead.id} className="border-b border-[var(--color-divider)] transition-colors last:border-b-0 hover:bg-[var(--color-primary)]/20">
+                              <Td>
+                                <input type="checkbox" checked={selected.has(lead.id)} onChange={() => toggleOne(lead.id)} className="accent-[var(--color-chart-4)]" aria-label={t("table.selectRow", { name: lead.full_name })} />
+                              </Td>
+                              <Td>
+                                <div className="flex min-w-0 items-center gap-3">
+                                  <InitialsDisc name={lead.full_name} />
+                                  <div className="min-w-0">
+                                    <p className="truncate font-medium">{lead.full_name}</p>
+                                    <p className="bee-caption truncate">{lead.title ?? t("table.noTitle")}</p>
+                                  </div>
+                                </div>
+                              </Td>
+                              <Td>
+                                {company ? (
+                                  <Link href={`${base}/companies/${company.id}`} className="block truncate hover:underline">
+                                    {company.name}
+                                  </Link>
+                                ) : (
+                                  <span className="bee-caption">—</span>
+                                )}
+                              </Td>
+                              <Td>{lead.email ? <span className="block truncate">{lead.email}</span> : <span className="bee-caption">—</span>}</Td>
+                              <Td>{lead.source ? <RowChip>{sourceLabel(lead.source)}</RowChip> : <span className="bee-caption">—</span>}</Td>
+                              <Td>{owner ? <span className="block truncate">{owner}</span> : <span className="bee-caption">{t("table.unassigned")}</span>}</Td>
+                              <Td align="right">
+                                <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                                  <span className="bee-micro" title={hasIssues ? issueTitle : undefined}>
+                                    {hasIssues
+                                      ? lead.validation_flags.length > 0
+                                        ? t("table.issues", { count: lead.validation_flags.length })
+                                        : t("table.outdated")
+                                      : lead.last_validated_at
+                                        ? t("table.validatedAgo", { timeAgo: formatRelativeTime(lead.last_validated_at, locale) })
+                                        : t("table.notValidated")}
+                                  </span>
+                                  <button type="button" onClick={() => validateLead.mutate(lead.id)} disabled={validateLead.isPending} className="bee-btn-text bee-micro h-auto px-1" title={t("table.validateTitle")}>
+                                    {t("table.validate")}
+                                  </button>
+                                </div>
+                              </Td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <PaginationBar
+                    page={pagination.page}
+                    pageSize={pagination.pageSize}
+                    totalPages={pagination.totalPages}
+                    totalItems={pagination.totalItems}
+                    onPageChange={pagination.goToPage}
+                    onPageSizeChange={pagination.changePageSize}
+                    itemLabel={t("table.itemLabel")}
+                  />
+                </>
+              )}
+            </>
+          )}
+        </OverviewCard>
+
+        <LeadDuplicatesPanel />
+      </div>
     </div>
   );
 }
