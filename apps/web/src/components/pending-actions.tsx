@@ -6,56 +6,35 @@
  * person says yes. Nothing here executes without that explicit approval.
  */
 
-import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import {
-  Bell,
-  CalendarDays,
-  ChevronDown,
-  ChevronUp,
-  CircleCheck,
-  CircleX,
-  Clock,
-  Database,
-  Mail,
-  MessageSquare,
-  RotateCw,
-  ShieldCheck,
-  Webhook,
-  type LucideIcon,
-} from "lucide-react";
+import { useState } from "react";
 
-import { DATA, mix } from "@/components/charts/palette";
+import { TONE } from "@/components/charts/palette";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { LiveBadge } from "@/components/live-badge";
-import { StatusChip, type StatusTone } from "@/components/status-chip";
-import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyLine, RowsSkeleton, StateChip, StateWord, useFittedRows, ViewAllButton, type DotLevel } from "@/features/control/components/primitives";
 import { useApproveAction, usePendingActions, useRejectAction } from "@/hooks/queries/use-pending-actions";
 import type { Locale } from "@/i18n/locales";
 import { formatDate } from "@/lib/i18n/format";
 import type { PendingAction } from "@/lib/types";
 
-const ACTION_TYPE_ICONS: Record<string, LucideIcon> = {
-  send_email: Mail,
-  linkedin_message: MessageSquare,
-  crm_update: Database,
-  book_meeting: CalendarDays,
-  slack_notify: Bell,
-  webhook_call: Webhook,
-};
+/** The queue is what wants a person: magenta. Waiting is the full hue,
+ *  moving is 70, done is 45, and anything closed without going out is
+ *  REST — the word says which. */
+const HUE = TONE.urgency;
 
-const KNOWN_TYPES = new Set(Object.keys(ACTION_TYPE_ICONS));
+const KNOWN_TYPES = new Set(["send_email", "linkedin_message", "crm_update", "book_meeting", "slack_notify", "webhook_call"]);
 
-// Mirrors the translated `status.*` keys — a plain set so an unrecognized
+// Mirrors the translated `status.*` keys — a plain map so an unrecognized
 // backend status (the enum can grow) falls back to the raw value instead of
 // a missing-key error.
-const STATUS_META: Record<string, { tone: StatusTone; icon: LucideIcon }> = {
-  pending_approval: { tone: "attention", icon: Clock },
-  approved: { tone: "ok", icon: CircleCheck },
-  executing: { tone: "ok", icon: RotateCw },
-  completed: { tone: "ok", icon: CircleCheck },
-  rejected: { tone: "neutral", icon: CircleX },
-  failed: { tone: "failed", icon: CircleX },
+const STATUS_LEVEL: Record<string, DotLevel> = {
+  pending_approval: 100,
+  approved: 70,
+  executing: 70,
+  completed: 45,
+  rejected: "rest",
+  failed: "rest",
 };
 
 const STATUS_ORDER: Record<string, number> = {
@@ -67,13 +46,18 @@ const STATUS_ORDER: Record<string, number> = {
   rejected: 5,
 };
 
-interface PendingActionCardProps {
+/** Row height contract with useFittedRows: two lines + padding. */
+const ROW_PX = 57;
+
+function PendingActionRow({
+  action,
+  onApprove,
+  onReject,
+}: {
   action: PendingAction;
   onApprove: (id: string) => Promise<unknown>;
   onReject: (id: string) => Promise<unknown>;
-}
-
-function PendingActionCard({ action, onApprove, onReject }: PendingActionCardProps) {
+}) {
   const locale = useLocale() as Locale;
   const t = useTranslations("probarNetworkBrandControl.pendingActions");
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
@@ -89,78 +73,47 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
   }
 
   const isPending = action.status === "pending_approval";
-  const meta = STATUS_META[action.status] ?? { tone: "neutral" as StatusTone, icon: Clock };
-  const statusLabel = STATUS_META[action.status]
-    ? t(`status.${action.status}` as "status.pending_approval")
-    : action.status.replace(/_/g, " ");
-  const TypeIcon = ACTION_TYPE_ICONS[action.action_type] ?? Clock;
-  const typeLabel = KNOWN_TYPES.has(action.action_type)
-    ? t(`types.${action.action_type}` as "types.send_email")
-    : action.action_type.replace(/_/g, " ");
+  const statusLabel = action.status in STATUS_LEVEL ? t(`status.${action.status}` as "status.pending_approval") : action.status.replace(/_/g, " ");
+  const typeLabel = KNOWN_TYPES.has(action.action_type) ? t(`types.${action.action_type}` as "types.send_email") : action.action_type.replace(/_/g, " ");
+  const meta = [typeLabel, action.retry_count > 0 ? t("retryCount", { count: action.retry_count }) : null, action.approved_by ? `${t("approvedBy", { name: action.approved_by })}${action.approved_at ? ` · ${formatDate(action.approved_at, locale)}` : ""}` : null]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <li className="bee-bento bee-bento-pad space-y-3" style={isPending ? { background: mix(DATA.honey, 6) } : undefined}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full" style={{ background: mix(DATA.honey, 20) }}>
-            <TypeIcon className="size-4 text-[var(--color-text)]" strokeWidth={1.75} aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <p className="bee-micro">{typeLabel}</p>
-            <p className="text-sm font-semibold leading-snug">{action.title}</p>
-            {action.description && <p className="mt-0.5 truncate text-xs text-muted-foreground" title={action.description}>{action.description}</p>}
-          </div>
-        </div>
-        <StatusChip tone={meta.tone} icon={meta.icon} label={statusLabel} />
-      </div>
-
-      {action.preview && (
-        <div>
-          <button
-            type="button"
-            onClick={() => setShowPreview((v) => !v)}
-            aria-expanded={showPreview}
-            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-          >
-            {showPreview ? <ChevronUp className="size-3.5" aria-hidden /> : <ChevronDown className="size-3.5" aria-hidden />}
-            {showPreview ? t("hidePreview") : t("showPreview")}
-          </button>
-          {showPreview && (
-            // Full content, never clipped mid-sentence: this is what a
-            // person reads before an irreversible approve/reject decision.
-            // max-h caps one card's footprint; the box scrolls past it.
-            <div className="mt-2 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-[var(--radius-md)] border border-border bg-background p-3 text-xs leading-relaxed">
-              {action.preview}
-            </div>
-          )}
-        </div>
-      )}
-
-      {action.retry_count > 0 && (
-        <p className="flex items-center gap-1.5 bee-micro">
-          <RotateCw className="size-3" aria-hidden />
-          {t("retryCount", { count: action.retry_count })}
+    <li className="bee-row flex-wrap justify-between sm:flex-nowrap">
+      <div className="min-w-0 flex-1 basis-40">
+        <p className="truncate text-sm font-medium leading-snug" title={action.description ?? undefined}>
+          {action.title}
         </p>
-      )}
-
+        <p className="truncate bee-micro">
+          {meta}
+          {action.preview && (
+            <>
+              {" · "}
+              <button type="button" onClick={() => setShowPreview((v) => !v)} aria-expanded={showPreview} className="font-medium text-[var(--color-text)] hover:underline">
+                {showPreview ? t("hidePreview") : t("showPreview")}
+              </button>
+            </>
+          )}
+        </p>
+      </div>
+      <StateWord hue={HUE} level={STATUS_LEVEL[action.status] ?? "rest"}>
+        {statusLabel}
+      </StateWord>
       {isPending && (
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => run("approve")} disabled={!!loading} className="bee-btn bee-btn--primary">
-            <CircleCheck className="size-3.5" aria-hidden />
+        <span className="flex shrink-0 gap-1.5">
+          <button type="button" onClick={() => run("approve")} disabled={!!loading} className="bee-btn-ghost text-xs">
             {loading === "approve" ? t("approving") : t("approve")}
           </button>
-          <button type="button" onClick={() => run("reject")} disabled={!!loading} className="bee-btn-ghost">
-            <CircleX className="size-3.5" aria-hidden />
+          <button type="button" onClick={() => run("reject")} disabled={!!loading} className="bee-btn-ghost text-xs">
             {loading === "reject" ? t("rejecting") : t("reject")}
           </button>
-        </div>
+        </span>
       )}
-
-      {action.approved_by && (
-        <p className="bee-micro">
-          {t("approvedBy", { name: action.approved_by })}
-          {action.approved_at && ` · ${formatDate(action.approved_at, locale)}`}
-        </p>
+      {showPreview && action.preview && (
+        // Full content, never clipped mid-sentence: this is what a person
+        // reads before an irreversible approve/reject decision.
+        <div className="basis-full whitespace-pre-wrap rounded-[var(--radius-md)] bg-[var(--color-background)] p-3 text-xs leading-relaxed">{action.preview}</div>
       )}
     </li>
   );
@@ -172,56 +125,42 @@ export function PendingActionsPanel() {
   const approve = useApproveAction();
   const reject = useRejectAction();
 
-  const actions = [...(result?.data ?? [])].sort(
-    (a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9),
-  );
+  const actions = [...(result?.data ?? [])].sort((a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9));
   const pendingCount = actions.filter((a) => a.status === "pending_approval").length;
+  const [listRef, rows, fit] = useFittedRows(actions, ROW_PX);
 
   return (
     <OverviewCard
       span={6}
       title={t("title")}
       caption={t("caption")}
+      className={fit.expanded ? undefined : "lg:h-[22rem]!"}
       action={
         <div className="flex shrink-0 items-center gap-2">
           <LiveBadge live={result?.live ?? false} />
           {pendingCount > 0 && (
-            <span className="rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums" style={{ background: mix(DATA.honey, 30) }}>
+            <StateChip hue={HUE} level={45}>
               {t("pendingCount", { count: pendingCount })}
-            </span>
+            </StateChip>
           )}
         </div>
       }
     >
       {isLoading ? (
-        <div className="space-y-2">
-          {[1, 2].map((i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
-          ))}
-        </div>
+        <RowsSkeleton rows={3} />
       ) : actions.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
-          <CircleCheck className="size-5 text-[var(--color-text)]" aria-hidden />
-          <p className="text-sm">{t("emptyTitle")}</p>
-          <p className="bee-micro">{t("emptySubtitle")}</p>
-        </div>
+        <EmptyLine>{t("emptyTitle")}</EmptyLine>
       ) : (
-        <ul className="max-h-[34rem] space-y-2 overflow-y-auto overscroll-contain pr-1">
-          {actions.map((action) => (
-            <PendingActionCard
-              key={action.id}
-              action={action}
-              onApprove={(id) => approve.mutateAsync({ id, approvedBy: "CEO" })}
-              onReject={(id) => reject.mutateAsync({ id })}
-            />
-          ))}
-        </ul>
+        <>
+          <ul ref={listRef} className={fit.expanded ? "bee-fill min-h-0" : "bee-fill min-h-0 overflow-hidden"}>
+            {rows.map((action) => (
+              <PendingActionRow key={action.id} action={action} onApprove={(id) => approve.mutateAsync({ id, approvedBy: "CEO" })} onReject={(id) => reject.mutateAsync({ id })} />
+            ))}
+          </ul>
+          <ViewAllButton hidden={fit.hidden} expanded={fit.expanded} onToggle={fit.toggle} />
+        </>
       )}
-
-      <p className="mt-3 flex items-start gap-1.5 bee-micro">
-        <ShieldCheck className="mt-px size-3.5 shrink-0" aria-hidden />
-        {t("safetyGate")}
-      </p>
+      <p className="mt-2 bee-micro">{t("safetyGate")}</p>
     </OverviewCard>
   );
 }

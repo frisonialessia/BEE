@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { mix } from "@/components/charts/palette";
+import { REST, mix } from "@/components/charts/palette";
 import { cn } from "@/lib/utils";
 
 /**
@@ -10,8 +10,9 @@ import { cn } from "@/lib/utils";
  * tag here looks like a StatTile label anywhere else in BEE.
  */
 
-/** Tinted pill with a dot — StatTile's label-chip recipe. `muted` is for
- *  things the voice must NOT do (forbidden phrases): struck through, dot faded. */
+/** Tinted pill with a dot — StatTile's label-chip recipe; strength 0 sits on
+ *  the page grey. `muted` is for things the voice must NOT do (forbidden
+ *  phrases): struck through, dot faded. */
 export function Chip({
   tone,
   strength = 20,
@@ -34,7 +35,7 @@ export function Chip({
         muted ? "text-[var(--color-text-muted)] line-through" : "text-[var(--color-text)]",
         className,
       )}
-      style={{ background: mix(tone, strength) }}
+      style={{ background: strength <= 0 ? REST : mix(tone, strength) }}
     >
       {dot && <span className="size-1.5 shrink-0 rounded-full" style={{ background: tone, opacity: muted ? 0.45 : 1 }} />}
       <span className="truncate">{children}</span>
@@ -46,7 +47,7 @@ export function Chip({
 export function Meter({ value, tone, className }: { value: number; tone: string; className?: string }) {
   const v = Math.max(0, Math.min(1, value));
   return (
-    <div className={cn("h-1.5 w-full overflow-hidden rounded-full", className)} style={{ background: mix(tone, 12) }} aria-hidden>
+    <div className={cn("h-1.5 w-full overflow-hidden rounded-full", className)} style={{ background: REST }} aria-hidden>
       <div className="h-full rounded-full" style={{ width: `${v * 100}%`, background: tone }} />
     </div>
   );

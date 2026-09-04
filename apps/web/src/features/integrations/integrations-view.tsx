@@ -2,20 +2,22 @@
 
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { CheckCircle2, Cloud, Download, Kanban, Mail, Plug, Users, XCircle } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { TONE } from "@/components/charts/palette";
 import { OverviewCard } from "@/components/dashboard/overview-card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyLine, StateChip, StateWord } from "@/features/control/components/primitives";
+import { Field } from "@/features/crm/drawer/primitives";
 import { BiFeedSection } from "@/features/integrations/bi-feed-section";
 import { DailyDigestSection } from "@/features/integrations/daily-digest-section";
 import { InboundSignalsSection } from "@/features/integrations/inbound-signals-section";
 import { MarketSourcesSection } from "@/features/integrations/market-sources-section";
 import { OutboundWebhooksSection } from "@/features/team/outbound-webhooks-section";
+import type { Locale } from "@/i18n/locales";
 import { useIsDemoMode } from "@/lib/demo/mode";
+import { formatRelativeTime } from "@/lib/i18n/format";
 import { useAuth } from "@/providers/auth-provider";
 import {
   useConnectOAuthProvider,
@@ -27,6 +29,10 @@ import {
 } from "@/hooks/queries/use-integrations";
 import type { IntegrationStatus, OAuthProvider, SalesforceImportSummary } from "@/lib/api/integrations";
 
+/** Connections are surfaces, not signals: lavender. Connected is the hue
+ *  at 45 % behind ink text, not connected is the page grey. */
+const HUE = TONE.calm;
+
 const CONNECTED_LABELS: Record<string, string> = {
   gmail: "Gmail",
   linkedin: "LinkedIn",
@@ -35,19 +41,9 @@ const CONNECTED_LABELS: Record<string, string> = {
   jira: "Jira",
 };
 
-// One icon per provider, a generic fallback for whatever's added next
-// (see the Integrations view's own comment on why this stays a lookup
-// instead of a per-provider hardcoded JSX block). Categories drive the
-// section a provider's card lands under — see IntegrationStatus.category
-// on the backend (app.api.v1.endpoints.integrations.list_integrations).
-const PROVIDER_ICONS: Record<string, LucideIcon> = {
-  gmail: Mail,
-  linkedin: Users,
-  salesforce: Cloud,
-  hubspot: Cloud,
-  jira: Kanban,
-};
-const DEFAULT_PROVIDER_ICON: LucideIcon = Plug;
+// Categories drive the order the provider cards land in — see
+// IntegrationStatus.category on the backend
+// (app.api.v1.endpoints.integrations.list_integrations).
 const CATEGORY_ORDER = ["crm", "email", "social", "automation", "bi", "pm"] as const;
 
 /** Reads the one-time ?connected=<provider> / ?integration_error=... query
@@ -70,9 +66,7 @@ function useOAuthCallbackToast() {
       toast.success(t("connectedToast", { label: CONNECTED_LABELS[connected] ?? connected }));
     }
     if (error) {
-      toast.error(
-        t.has(`callbackErrors.${error}`) ? t(`callbackErrors.${error}`) : t("callbackErrors.generic"),
-      );
+      toast.error(t.has(`callbackErrors.${error}`) ? t(`callbackErrors.${error}`) : t("callbackErrors.generic"));
     }
 
     const url = new URL(window.location.href);
@@ -82,7 +76,6 @@ function useOAuthCallbackToast() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
-
 
 /** Server `detail` sentences are Spanish; translate by `detail_code` when the
  * code is known to this build, otherwise show the sentence as-is. */
@@ -95,10 +88,16 @@ function useIntegrationDetail() {
   };
 }
 
-function OAuthProviderRow({
+/**
+ * One account, one white card: name, what connecting it changes (one
+ * line), the state as a chip, when it was connected, and the one action —
+ * Conectar or Desconectar — as a ghost button. Provider-specific extras
+ * (import the CRM, the Jira project) sit under it as quiet text actions.
+ */
+function ProviderCard({
   provider,
   label,
-  icon: Icon,
+  category,
   connectedCopy,
   disconnectedCopy,
   status,
@@ -107,16 +106,15 @@ function OAuthProviderRow({
 }: {
   provider: OAuthProvider;
   label: string;
-  icon: LucideIcon;
+  category: string;
   connectedCopy: (accountLabel: string) => string;
   disconnectedCopy: string;
   status: IntegrationStatus;
   canManage: boolean;
-  /** Extra content shown only while connected — e.g. the "Importar CRM"
-   * action Salesforce gets that Gmail/LinkedIn don't. */
   children?: ReactNode;
 }) {
   const t = useTranslations("workspace.integrations");
+  const locale = useLocale() as Locale;
   const detailOf = useIntegrationDetail();
   const connect = useConnectOAuthProvider(provider);
   const disconnect = useDisconnectOAuthProvider(provider);
@@ -139,66 +137,48 @@ function OAuthProviderRow({
     }
   }
 
-  return (
-    <div className="bee-surface bee-bento-pad">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-            <Icon className="size-4 stroke-[1.5] text-[var(--color-text)]" />
-          </div>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm font-semibold">{label}</p>
-              <Badge variant={status.connected ? "success" : "outline"}>
-                {status.connected ? t("connected") : t("notConnected")}
-              </Badge>
-            </div>
-            <p className="bee-caption mt-1">
-              {status.connected ? connectedCopy(status.account_email ?? t("defaultAccountLabel")) : disconnectedCopy}
-            </p>
-            {status.last_error && (
-              <p className="mt-1 text-micro text-[var(--color-text)]">
-                {status.last_error} {t("lastErrorSuffix")}
-              </p>
-            )}
-            {detailOf(status) && !status.connected && <p className="bee-caption mt-1">{detailOf(status)}</p>}
-          </div>
-        </div>
+  const detail = detailOf(status);
 
+  return (
+    <OverviewCard span={4} title={label} caption={category}>
+      <div className="bee-fill flex flex-col gap-3">
+        <p className="line-clamp-3 text-sm">{status.connected ? connectedCopy(status.account_email ?? t("defaultAccountLabel")) : disconnectedCopy}</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <StateChip hue={HUE} level={status.connected ? 45 : "rest"}>
+            {status.connected ? t("connected") : t("notConnected")}
+          </StateChip>
+          <span className="bee-caption truncate">
+            {status.connected_at ? t("card.connectedWhen", { when: formatRelativeTime(status.connected_at, locale) }) : t("card.neverConnected")}
+          </span>
+        </div>
+        {status.last_error && (
+          <p className="bee-caption">
+            {status.last_error} {t("lastErrorSuffix")}
+          </p>
+        )}
+        {detail && !status.connected && <p className="bee-caption">{detail}</p>}
+        {status.connected && children}
         {canManage && (
-          <div className="shrink-0">
+          <div className="mt-auto pt-1">
             {status.connected ? (
-              <button
-                type="button"
-                onClick={handleDisconnect}
-                disabled={disconnect.isPending}
-                className="bee-btn-ghost text-xs"
-              >
+              <button type="button" onClick={handleDisconnect} disabled={disconnect.isPending} className="bee-btn-ghost text-xs">
                 {disconnect.isPending ? t("disconnecting") : t("disconnect")}
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={handleConnect}
-                disabled={connect.isPending}
-                className="bee-btn bee-btn--primary text-xs"
-              >
+              <button type="button" onClick={handleConnect} disabled={connect.isPending} className="bee-btn-ghost text-xs">
                 {connect.isPending ? t("redirecting") : t("connectPrefix", { label })}
               </button>
             )}
           </div>
         )}
       </div>
-      {status.connected && children}
-    </div>
+    </OverviewCard>
   );
 }
 
 function summarizeImport(t: ReturnType<typeof useTranslations>, summary: SalesforceImportSummary, label: string): string {
   const total =
-    summary.companies.created + summary.companies.updated +
-    summary.leads.created + summary.leads.updated +
-    summary.opportunities.created + summary.opportunities.updated;
+    summary.companies.created + summary.companies.updated + summary.leads.created + summary.leads.updated + summary.opportunities.created + summary.opportunities.updated;
   if (total === 0) return t("import.noNew");
   return t("import.summary", {
     label,
@@ -208,31 +188,17 @@ function summarizeImport(t: ReturnType<typeof useTranslations>, summary: Salesfo
   });
 }
 
-/** Shared body for the "importar CRM" button — Salesforce's and
+/** Shared body for the "importar CRM" action — Salesforce's and
  * HubSpot's importers return the exact same summary shape (see
  * SalesforceImportSummary / HubSpotImportSummary), so only the mutation
  * hook underneath differs; each provider gets a one-line wrapper below
  * that calls its own hook and hands the result here. */
-function CrmImportButtonBody({
-  isPending,
-  onImport,
-}: {
-  isPending: boolean;
-  onImport: () => Promise<void>;
-}) {
+function CrmImportButtonBody({ isPending, onImport }: { isPending: boolean; onImport: () => Promise<void> }) {
   const t = useTranslations("workspace.integrations");
   return (
-    <div className="mt-3 flex items-center gap-2 border-t border-[var(--color-divider)] pt-3">
-      <button
-        type="button"
-        onClick={onImport}
-        disabled={isPending}
-        className="bee-btn-ghost inline-flex items-center gap-2 text-xs"
-      >
-        <Download className="size-3.5" />
-        {isPending ? t("import.importing") : t("import.button")}
-      </button>
-    </div>
+    <button type="button" onClick={onImport} disabled={isPending} className="bee-btn-text self-start text-xs">
+      {isPending ? t("import.importing") : t("import.button")}
+    </button>
   );
 }
 
@@ -244,9 +210,7 @@ function SalesforceImportButton() {
     try {
       const summary = await importFromSalesforce.mutateAsync();
       if (summary.errors.length > 0) {
-        toast.warning(
-          `${summarizeImport(t, summary, "Salesforce")} ${t("import.withErrorsPrefix")} ${summary.errors.join(" · ")}`,
-        );
+        toast.warning(`${summarizeImport(t, summary, "Salesforce")} ${t("import.withErrorsPrefix")} ${summary.errors.join(" · ")}`);
       } else {
         toast.success(summarizeImport(t, summary, "Salesforce"));
       }
@@ -266,9 +230,7 @@ function HubSpotImportButton() {
     try {
       const summary = await importFromHubSpot.mutateAsync();
       if (summary.errors.length > 0) {
-        toast.warning(
-          `${summarizeImport(t, summary, "HubSpot")} ${t("import.withErrorsPrefix")} ${summary.errors.join(" · ")}`,
-        );
+        toast.warning(`${summarizeImport(t, summary, "HubSpot")} ${t("import.withErrorsPrefix")} ${summary.errors.join(" · ")}`);
       } else {
         toast.success(summarizeImport(t, summary, "HubSpot"));
       }
@@ -283,7 +245,7 @@ function HubSpotImportButton() {
 /** The one setting opportunity-stage sync needs beyond the OAuth
  * connection itself — which Jira project JiraSyncHandler creates issues
  * in (see app.services.workflow_orchestrator.handlers on the backend).
- * Shown as a small inline form under the connected Jira row instead of a
+ * A small inline field under the connected Jira card instead of a
  * Connect-time prompt, since BEE has no way to list an org's Jira
  * projects without an extra API scope this integration doesn't ask for —
  * the project key is typed in by hand, same as pasting any other
@@ -307,48 +269,42 @@ function JiraConfigForm({ status }: { status: IntegrationStatus }) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="mt-3 flex items-center gap-2 border-t border-[var(--color-divider)] pt-3"
-    >
-      <input
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder={t("projectKeyPlaceholder")}
-        className="w-40 rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-      />
-      <button
-        type="submit"
-        disabled={!value.trim() || setProjectKey.isPending}
-        className="bee-btn-ghost text-xs"
-      >
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+      <Field label={t("projectKeyLabel")} hint={detailOf(status) ?? undefined}>
+        <input value={value} onChange={(e) => setValue(e.target.value)} placeholder={t("projectKeyPlaceholder")} className="bee-input" />
+      </Field>
+      <button type="submit" disabled={!value.trim() || setProjectKey.isPending} className="bee-btn-text self-start text-xs">
         {setProjectKey.isPending ? t("saving") : t("saveProjectKey")}
       </button>
-      <span className="bee-micro">{detailOf(status)}</span>
     </form>
   );
 }
 
-function ServerChannelRow({ status }: { status: IntegrationStatus }) {
+/** Server-wide channels (SMTP, X): one credential for the whole
+ *  deployment, read-only here so it is clear they are another thing. */
+function ServerChannelsCard({ channels }: { channels: IntegrationStatus[] }) {
   const t = useTranslations("workspace.integrations.serverChannels");
   const detailOf = useIntegrationDetail();
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-[var(--color-divider)] py-3 last:border-b-0">
-      <div className="flex items-center gap-4">
-        {status.connected ? (
-          <CheckCircle2 className="size-4 shrink-0 text-[var(--color-text)]" />
-        ) : (
-          <XCircle className="size-4 shrink-0 text-muted-foreground" />
-        )}
-        <div>
-          <p className="text-xs font-medium">{status.label}</p>
-          <p className="bee-caption">{detailOf(status)}</p>
-        </div>
-      </div>
-      <Badge variant={status.connected ? "success" : "outline"} className="text-micro">
-        {status.connected ? t("connected") : t("mock")}
-      </Badge>
-    </div>
+    <OverviewCard span={4} title={t("title")} caption={t("caption")}>
+      {channels.length === 0 ? (
+        <EmptyLine>{t("empty")}</EmptyLine>
+      ) : (
+        <ul className="bee-fill flex min-h-0 flex-col justify-around">
+          {channels.map((status) => (
+            <li key={status.provider} className="bee-row justify-between">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{status.label}</p>
+                <p className="truncate bee-micro">{detailOf(status)}</p>
+              </div>
+              <StateWord hue={HUE} level={status.connected ? 100 : "rest"}>
+                {status.connected ? t("connected") : t("mock")}
+              </StateWord>
+            </li>
+          ))}
+        </ul>
+      )}
+    </OverviewCard>
   );
 }
 
@@ -357,8 +313,11 @@ function ServerChannelRow({ status }: { status: IntegrationStatus }) {
  *  compartir el relay SMTP / el token de LinkedIn del servidor. Email
  *  (SMTP) y X siguen siendo credenciales del servidor completo, no por
  *  cuenta — se muestran aparte, de solo lectura, para que quede claro que
- *  son otra cosa (ver app.services.omnichannel). */
-/** `showHeader=false` when embedded as the Conexiones tab of Control. */
+ *  son otra cosa (ver app.services.omnichannel). Every box is a card in
+ *  the same 12-column grid the rest of BEE uses: one span-4 card per
+ *  account, then the webhook-shaped connections (inbound signals, market
+ *  sources, the daily digest, BI feeds, outbound webhooks).
+ *  `showHeader=false` when embedded as the Conexiones tab of Control. */
 export function IntegrationsView({ showHeader = true }: { showHeader?: boolean } = {}) {
   const t = useTranslations("workspace.integrations");
   useOAuthCallbackToast();
@@ -375,16 +334,15 @@ export function IntegrationsView({ showHeader = true }: { showHeader?: boolean }
   const orgProviders = statuses.filter((s) => s.scope === "organization");
   const serverChannels = statuses.filter((s) => s.scope === "server");
 
-  // Grouped by category (falling back to a single "otras" bucket for
-  // anything uncategorized) instead of three hand-picked provider blocks
-  // — this is the actual point of the redesign: a 4th/5th CRM connector
-  // (see the roadmap this shipped alongside) needs a new entry in
+  // Ordered by category (uncategorized last) instead of hand-picked
+  // provider blocks — a 4th/5th CRM connector needs a new entry in
   // list_integrations, never a new JSX block here.
-  const categorized = CATEGORY_ORDER.map((category) => ({
-    category,
-    providers: orgProviders.filter((s) => s.category === category),
-  })).filter((group) => group.providers.length > 0);
-  const uncategorized = orgProviders.filter((s) => !CATEGORY_ORDER.includes(s.category as (typeof CATEGORY_ORDER)[number]));
+  const rank = (s: IntegrationStatus) => {
+    const i = CATEGORY_ORDER.indexOf(s.category as (typeof CATEGORY_ORDER)[number]);
+    return i === -1 ? CATEGORY_ORDER.length : i;
+  };
+  const ordered = [...orgProviders].sort((a, b) => rank(a) - rank(b));
+  const categoryLabel = (s: IntegrationStatus) => (s.category && t.has(`categories.${s.category}`) ? t(`categories.${s.category}`) : t("categories.other"));
 
   return (
     <div>
@@ -399,106 +357,64 @@ export function IntegrationsView({ showHeader = true }: { showHeader?: boolean }
       )}
 
       {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-          <Skeleton className="h-40" />
+        <div className="bee-overview">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="rounded-[var(--radius-lg)]" style={{ gridColumn: "span 4" }} />
+          ))}
         </div>
       ) : (
-        <div className="space-y-4">
-          {[...categorized, ...(uncategorized.length > 0 ? [{ category: null, providers: uncategorized }] : [])].map(
-            ({ category, providers }) => (
-              <section key={category ?? "other"} className="space-y-4">
-                <p className="bee-eyebrow">
-                  {category ? t(`categories.${category}`) : t("categories.other")}
-                </p>
-                {providers.map((status) => {
-                  const provider = status.provider as OAuthProvider;
-                  const Icon = PROVIDER_ICONS[status.provider] ?? DEFAULT_PROVIDER_ICON;
-                  return (
-                    <OAuthProviderRow
-                      key={status.provider}
-                      provider={provider}
-                      label={status.label}
-                      icon={Icon}
-                      status={status}
-                      canManage={canManage}
-                      connectedCopy={(account) =>
-                        t.has(`${status.provider}.connectedCopy`)
-                          ? t(`${status.provider}.connectedCopy`, { account })
-                          : t("genericConnectedCopy", { label: status.label, account })
-                      }
-                      disconnectedCopy={
-                        t.has(`${status.provider}.disconnectedCopy`)
-                          ? t(`${status.provider}.disconnectedCopy`)
-                          : t("genericDisconnectedCopy", { label: status.label })
-                      }
-                    >
-                      {status.provider === "salesforce" && canManage && <SalesforceImportButton />}
-                      {status.provider === "hubspot" && canManage && <HubSpotImportButton />}
-                      {status.provider === "jira" && canManage && <JiraConfigForm status={status} />}
-                    </OAuthProviderRow>
-                  );
-                })}
-              </section>
-            ),
+        <div className="bee-overview">
+          {ordered.map((status) => {
+            const provider = status.provider as OAuthProvider;
+            return (
+              <ProviderCard
+                key={status.provider}
+                provider={provider}
+                label={status.label}
+                category={categoryLabel(status)}
+                status={status}
+                canManage={canManage}
+                connectedCopy={(account) =>
+                  t.has(`${status.provider}.connectedCopy`) ? t(`${status.provider}.connectedCopy`, { account }) : t("genericConnectedCopy", { label: status.label, account })
+                }
+                disconnectedCopy={t.has(`${status.provider}.disconnectedCopy`) ? t(`${status.provider}.disconnectedCopy`) : t("genericDisconnectedCopy", { label: status.label })}
+              >
+                {status.provider === "salesforce" && canManage && <SalesforceImportButton />}
+                {status.provider === "hubspot" && canManage && <HubSpotImportButton />}
+                {status.provider === "jira" && canManage && <JiraConfigForm status={status} />}
+              </ProviderCard>
+            );
+          })}
+          <ServerChannelsCard channels={serverChannels} />
+          {!canManage && (
+            <p className="bee-caption" style={{ gridColumn: "span 12" }}>
+              {t("manageNotice")}
+            </p>
           )}
-          {!canManage && <p className="bee-caption">{t("manageNotice")}</p>}
 
           {/* Señales entrantes — el flujo central del producto (webhook →
-             clasificación → oportunidad) no tenía ninguna superficie en la
-             UI: la URL solo vivía en /docs. Va primero entre las secciones
-             sin OAuth porque es lo primero que una cuenta nueva necesita. */}
-          <section className="space-y-4">
-            <p className="bee-eyebrow">{t("categories.signals")}</p>
-            <InboundSignalsSection />
-          </section>
-
-          {/* Automatización — no es un proveedor OAuth más: n8n, Zapier,
-             Make, o cualquier sistema propio se conectan apuntando su nodo
-             "Webhook" a la URL que se genera aquí, no con un botón de
-             Conectar. Reutiliza el mismo componente que ya vive en Equipo
-             (misma data en vivo) — este es el lugar donde alguien buscando
-             "conectar n8n" en realidad tiene que aterrizar. */}
-          <section className="space-y-4">
-            <p className="bee-eyebrow">{t("categories.automation")}</p>
-            <p className="bee-caption">{t("automation.hint")}</p>
-            <OutboundWebhooksSection canManage={canManage} />
-          </section>
+             clasificación → oportunidad): la URL solo vivía en /docs. */}
+          <InboundSignalsSection span={8} />
 
           {/* Fuentes de mercado — the proactive scan's senses. Read-only:
              sources are deployment-wide, but a person should see why press
              and hiring signals arrive with no key and what Google adds. */}
-          <section className="space-y-4">
-            <p className="bee-eyebrow">{t("categories.marketSources")}</p>
-            <MarketSourcesSection />
-          </section>
+          <MarketSourcesSection span={4} />
 
           {/* Resumen diario — La jugada de hoy pushed to Slack/Teams. Lives
              here, next to the other webhook-shaped integrations, not in
              Equipo: it's a channel, not a people setting. */}
-          <section className="space-y-4">
-            <p className="bee-eyebrow">{t("categories.digest")}</p>
-            <DailyDigestSection canManage={canManage} />
-          </section>
+          <DailyDigestSection canManage={canManage} span={6} />
 
-          {/* Reportes y BI — same reasoning as Automatización right above:
-             Power BI/Tableau/Looker Studio don't do OAuth either, they take
-             a URL + a key pasted into their own "Web" data source dialog.
-             See BiFeedSection's own docstring. */}
-          <section className="space-y-4">
-            <p className="bee-eyebrow">{t("categories.bi")}</p>
-            <BiFeedSection canManage={canManage} />
-          </section>
+          {/* Reportes y BI — Power BI/Tableau/Looker Studio don't do OAuth,
+             they take a URL + a key pasted into their own "Web" data
+             source dialog. See BiFeedSection's own docstring. */}
+          <BiFeedSection canManage={canManage} span={6} />
 
-          <OverviewCard title={t("serverChannels.title")} caption={t("serverChannels.caption")}>
-            <div>
-              {serverChannels.map((s) => (
-                <ServerChannelRow key={s.provider} status={s} />
-              ))}
-            </div>
-          </OverviewCard>
+          {/* Automatización — n8n, Zapier, Make, o cualquier sistema propio
+             se conectan apuntando su nodo "Webhook" a la URL que se genera
+             aquí. Reutiliza el mismo componente que vive en Equipo. */}
+          <OutboundWebhooksSection canManage={canManage} />
         </div>
       )}
     </div>

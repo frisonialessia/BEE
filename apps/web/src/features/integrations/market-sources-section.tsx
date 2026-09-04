@@ -1,64 +1,48 @@
 "use client";
 
-import { Newspaper, Radar, Search, UserPlus } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { TONE } from "@/components/charts/palette";
 import { OverviewCard } from "@/components/dashboard/overview-card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyLine, RowsSkeleton, StateWord } from "@/features/control/components/primitives";
 import { useMarketSources } from "@/hooks/queries/use-market-sources";
-
-const SOURCE_ICONS: Record<string, LucideIcon> = {
-  gdelt: Newspaper,
-  hiring: UserPlus,
-  google_search: Search,
-};
 
 /**
  * "Fuentes de mercado" — the senses behind the proactive scan, and whether
  * each is live. Nothing here is configured from the UI (sources are
  * deployment-wide env vars); the point is that a person can see *why*
  * their accounts get press and hiring signals without a key, and what
- * turning on Google would add.
+ * turning on Google would add. One row per source, the state as a dot
+ * (lavender when live, page grey when it still needs a key) + word.
  */
-export function MarketSourcesSection() {
+export function MarketSourcesSection({ span = 12 }: { span?: 4 | 6 | 8 | 12 } = {}) {
   const t = useTranslations("workspace.integrations.marketSources");
   const { data, isLoading } = useMarketSources();
+  const sources = data?.sources ?? [];
 
   return (
-    <OverviewCard
-      title={t("title")}
-      caption={data?.scan_enabled ? t("subtitleEnabled", { hours: data.interval_hours }) : t("subtitleDisabled")}
-    >
+    <OverviewCard span={span} title={t("title")} caption={data?.scan_enabled ? t("subtitleEnabled", { hours: data.interval_hours }) : t("subtitleDisabled")}>
       {isLoading ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </div>
+        <RowsSkeleton rows={3} />
+      ) : sources.length === 0 ? (
+        <EmptyLine>{t("empty")}</EmptyLine>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {(data?.sources ?? []).map((source) => {
-            const Icon = SOURCE_ICONS[source.name] ?? Radar;
-            const live = source.configured;
+        <ul className="bee-fill flex min-h-0 flex-col justify-around">
+          {sources.map((source) => {
+            const known = t.has(`sources.${source.name}.label`);
             return (
-              <div key={source.name} className="bee-bento flex flex-col gap-2 p-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-2 text-sm font-semibold">
-                    <Icon className="size-4 text-muted-foreground" />
-                    {t(`sources.${source.name}.label`)}
-                  </span>
-                  <Badge variant={live ? "success" : "outline"}>{live ? t("live") : t("needsKey")}</Badge>
+              <li key={source.name} className="bee-row justify-between">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{known ? t(`sources.${source.name}.label`) : source.name}</p>
+                  <p className="truncate bee-micro">{known ? t(`sources.${source.name}.description`) : source.requires_credentials ? t("requiresCredentials") : t("keyless")}</p>
                 </div>
-                <p className="bee-caption">{t(`sources.${source.name}.description`)}</p>
-                <p className="bee-micro mt-auto text-muted-foreground">
-                  {source.requires_credentials ? t("requiresCredentials") : t("keyless")}
-                </p>
-              </div>
+                <StateWord hue={TONE.calm} level={source.configured ? 100 : "rest"} title={source.requires_credentials ? t("requiresCredentials") : t("keyless")}>
+                  {source.configured ? t("live") : t("needsKey")}
+                </StateWord>
+              </li>
             );
           })}
-        </div>
+        </ul>
       )}
     </OverviewCard>
   );

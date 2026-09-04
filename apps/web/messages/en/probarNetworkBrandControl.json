@@ -1,7 +1,7 @@
 {
   "network": {
     "eyebrow": "Network navigator",
-    "caption": "Warm-introduction paths — who knows whom before you go in cold",
+    "caption": "Who knows whom before you knock cold: the map of your network, your best connectors and the warmest path into a company",
     "panel": {
       "coverage": {
         "none": "No coverage",
@@ -18,12 +18,17 @@
       "direct": "Direct",
       "hops": "{count, plural, one {# hop} other {# hops}}",
       "stats": {
-        "totalConnections": "Total connections",
+        "totalConnections": "Contacts in your network",
         "firstDegree": "1st degree",
-        "companiesCovered": "Companies covered",
+        "companiesCovered": "Companies in reach",
         "avgStrength": "Average strength",
         "secondDegree": "2nd degree",
-        "further": "Further"
+        "further": "Further",
+        "firstDegreeHint": "{count, plural, one {# first-degree} other {# first-degree}}",
+        "strong": "Strong connections",
+        "strongHint": "Relationship of {min}/10 or more",
+        "companiesHint": "With at least one contact of yours",
+        "avgStrengthHint": "Average relationship across the network"
       },
       "pathFinderTitle": "Find introduction path",
       "targetDomainPlaceholder": "target-company.com",
@@ -43,7 +48,22 @@
         "titlePlaceholder": "Title (optional)",
         "relationshipStrength": "Relationship strength:",
         "adding": "Adding…",
-        "submit": "Add connection"
+        "submit": "Add connection",
+        "caption": "Add someone you know and BEE will count them when looking for paths",
+        "targetDomainLabel": "Company domain",
+        "targetCompanyLabel": "Company name",
+        "contactNameLabel": "Name",
+        "titleLabel": "Title",
+        "companyNameLabel": "Company",
+        "domainLabel": "Domain",
+        "strengthHint": "How comfortable you would be asking them for an intro",
+        "strengthLevels": {
+          "weak": "Acquaintance",
+          "medium": "Medium",
+          "strong": "Strong",
+          "veryStrong": "Very strong"
+        },
+        "cancel": "Clear"
       },
       "empty": {
         "title": "No network connections yet.",
@@ -58,7 +78,19 @@
       "copyAskTitle": "Copies the pre-written intro request",
       "requestIntro": "Ask for intro",
       "requestIntroTitle": "Opens an opportunity at {company} to work the intro",
-      "strengthTitle": "Relationship strength (1–10)"
+      "strengthTitle": "Relationship strength (1–10)",
+      "map": {
+        "title": "Relationship map",
+        "caption": "You at the centre; the closer and bigger the disc, the stronger the relationship. Same company, neighbouring discs",
+        "you": "You",
+        "selectHint": "Tap a contact to see the detail and ask for an intro"
+      },
+      "connectors": {
+        "title": "Strongest connectors",
+        "caption": "The people who bring you closest to other companies"
+      },
+      "interactions": "{count, plural, one {# interaction} other {# interactions}}",
+      "pathFinderHint": "Type a company's domain and BEE looks for who can introduce you"
     }
   },
   "brand": {
@@ -162,11 +194,13 @@
         "correctionsNone": "you haven't corrected a text yet",
         "audience": "Main audience",
         "audienceHint": "{letter} · {pct}% of your leads",
-        "audienceNone": "no leads with a classifiable title"
+        "audienceNone": "no leads with a classifiable title",
+        "templates": "Response templates",
+        "templatesHint": "of {count, plural, one {# saved fragment} other {# saved fragments}}"
       },
       "voice": {
         "title": "Your voice",
-        "caption": "How your writing sounds — BEE keeps to it in every text",
+        "caption": "How what you write sounds, what you talk about and what you avoid",
         "toneLabel": "Tone",
         "toneHint": "The words that describe the way you write",
         "sentenceLabel": "Sentence length",
@@ -189,13 +223,16 @@
       },
       "preview": {
         "caption": "Type a topic and compare: generic AI vs. your voice",
-        "needsProfile": "Set up your voice first (“Paste & extract”) to try the preview"
+        "needsProfile": "Set up your voice first (“Paste & extract”) to try the preview",
+        "topicLabel": "Topic",
+        "hint": "Type a topic and compare the generic version with yours"
       },
       "audience": {
         "title": "Your audience by style",
-        "caption": "DISC = 4 ways of communicating, read from each lead's title",
+        "caption": "How many leads fall in each style — hover for the number",
         "empty": "No leads with a title yet — BEE classifies every lead by title",
-        "footnote": "Estimated from title and industry, with the same rule BEE writes with"
+        "footnote": "Estimated from title and industry, with the same rule BEE writes with",
+        "barTitle": "{style} · {count} leads · {pct}%"
       },
       "disc": {
         "title": "How BEE adapts your message",
@@ -252,10 +289,12 @@
         "title": "Fragment library",
         "caption": "A fragment is a real text of yours that BEE reuses as a style reference",
         "count": "{count, plural, =0 {No fragments} one {# fragment} other {# fragments}}",
-        "needsProfile": "Set up your voice first — fragments live inside the profile"
+        "needsProfile": "Set up your voice first — fragments live inside the profile",
+        "formCaption": "A fragment is a real text of yours that BEE reuses as a style reference",
+        "tagsHint": "Comma-separated"
       },
       "extract": {
-        "title": "Paste & extract",
+        "title": "Your voice profile",
         "caption": "Paste your own emails or posts and BEE proposes your voice profile",
         "captionReplace": "Paste new texts to refresh your voice — saving replaces the current profile",
         "steps": {
@@ -271,7 +310,10 @@
         "forbiddenLabel": "Forbidden phrases",
         "forbiddenPlaceholder": "Phrases you never want to see (comma-separated)",
         "saveReplace": "Save and replace profile",
-        "savedNote": "Profile saved — the boxes above already show your new voice."
+        "savedNote": "Profile saved — the boxes above already show your new voice.",
+        "pasteLabel": "Paste your own writing",
+        "pasteHint": "At least a few sentences; BEE proposes the fields below",
+        "replaceNote": "Saving replaces the active profile"
       },
       "learning": {
         "title": "Style learning",
@@ -284,8 +326,19 @@
       "channels": {
         "title": "Channels",
         "caption": "Where BEE sends in your voice",
-        "empty": "No channels configured."
+        "empty": "No channels configured.",
+        "rateLimit": "{count} sends per day"
+      },
+      "radar": {
+        "title": "Your audience's DISC profile",
+        "caption": "The average shape of the people you write to, on its four dimensions",
+        "empty": "No leads with a title yet to estimate a profile",
+        "footnote": "Average over {count, plural, one {# lead} other {# leads}} with a title, with the same rule BEE writes to them with"
       }
+    },
+    "tabs": {
+      "profile": "Profile",
+      "templates": "Templates"
     }
   },
   "deepLearning": {
@@ -392,7 +445,9 @@
         "workerHint": "The process that analyzes every incoming signal"
       },
       "loadHint": "How much work is piled up right now",
-      "perHour": "{count, plural, one {# signal} other {# signals}}"
+      "perHour": "{count, plural, one {# signal} other {# signals}}",
+      "legend": "Signals received",
+      "noSignals": "No signal came in over the last 24 h"
     },
     "apiStatus": {
       "ariaLabel": "External APIs",
@@ -417,7 +472,8 @@
         "mock": "No real credentials: BEE uses sample data",
         "offline": "The source is not responding"
       },
-      "quotaLeft": "requests left"
+      "quotaLeft": "requests left",
+      "quota": "{left}/{total} per hour"
     },
     "anomalies": {
       "ariaLabel": "Conversion anomalies",
@@ -437,7 +493,8 @@
       "acknowledge": "Reviewed",
       "acknowledgeTitle": "Mark the alert as reviewed",
       "rates": "{rolling}% vs. base {baseline}%",
-      "sampleSize": "{count, plural, one {# case} other {# cases}}"
+      "sampleSize": "{count, plural, one {# case} other {# cases}}",
+      "openCount": "{count, plural, one {# open} other {# open}}"
     },
     "signalStream": {
       "ariaLabel": "Signal stream",
@@ -457,22 +514,30 @@
     },
     "stats": {
       "signals24h": "Ingest (24 h)",
-      "signals24hHint": "Signals that came in over the last day",
+      "signals24hHint": "Signals that came in over the last day, by hour",
       "activeSources": "Active sources",
       "activeSourcesHint": "of {total} connected sources delivering signals",
       "noSources": "No sources configured yet",
-      "queue": "In queue",
+      "queue": "Queued",
       "queueHint": "Signals waiting their turn to be processed",
       "errors": "Errors",
-      "errorsHintNone": "No failures while processing signals",
+      "errorsHintNone": "Nothing failed processing or on the way out",
       "errorsHintSome": "Signals that failed while being processed",
       "modelConfidence": "Model confidence",
       "modelConfidenceHint": "{count, plural, =0 {No decision pending review} one {# agent decision to review} other {# agent decisions to review}}",
-      "modelConfidenceHintNone": "No decisions logged yet"
+      "modelConfidenceHintNone": "No decisions logged yet",
+      "errorsHint": "{processing, plural, one {# while processing} other {# while processing}} · {stuck, plural, one {# unresolved outside} other {# unresolved outside}}",
+      "connections": "Active connections",
+      "connectionsHint": "of {total} accounts connected",
+      "noConnections": "No accounts to connect yet"
     },
     "tabs": {
       "health": "Health",
       "connections": "Connections"
+    },
+    "common": {
+      "viewAll": "View all (+{count})",
+      "viewLess": "View less"
     }
   },
   "resiliencePanel": {
@@ -547,7 +612,7 @@
         "reviewRequired": "need review",
         "avgConfidence": "average confidence"
       },
-      "reviewOnlyLabel": "Show only low-confidence decisions",
+      "reviewOnlyLabel": "Low confidence only",
       "emptyTitle": "No audit entries yet.",
       "emptySubtitle": "Agent decisions will show up here as BEE processes signals.",
       "title": "Decision log",
@@ -555,7 +620,8 @@
       "showLog": "Show log",
       "hideLog": "Hide log",
       "confidence": "{pct}% confidence",
-      "confidenceHint": "How sure BEE was when it made this decision"
+      "confidenceHint": "How sure BEE was when it made this decision",
+      "summaryLine": "{total, plural, one {# decision} other {# decisions}} · {review} to review · {pct}% average confidence"
     }
   },
   "pendingActions": {

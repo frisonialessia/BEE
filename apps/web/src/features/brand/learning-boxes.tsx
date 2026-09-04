@@ -4,29 +4,26 @@ import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { DATA, mix } from "@/components/charts/palette";
+import { REST, TONE, tint } from "@/components/charts/palette";
 import { OverviewCard } from "@/components/dashboard/overview-card";
-import { Chip, FormLabel } from "@/features/brand/brand-primitives";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Chip } from "@/features/brand/brand-primitives";
+import { EmptyLine, RowsSkeleton, StateWord, type DotLevel } from "@/features/control/components/primitives";
+import { Field, Pill } from "@/features/crm/drawer/primitives";
 import { acknowledgeAnomaly, checkAnomalies, getAnomalyAlerts, getStyleProfile, recordCorrection } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import type { AnomalyAlert, ChannelStatus, CorrectionOut, StyleProfileOut } from "@/lib/types";
+
+const HUE = TONE.urgency;
 
 // ── Style learning ───────────────────────────────────────────────────────────
 
 const ARTIFACT_TYPE_KEYS = ["email_draft", "meeting_agenda", "linkedin_message", "next_steps"] as const;
 
-/** Row 4, left — paste BEE's draft and your edit; BEE learns the rule. One hue: violet. */
-export function StyleLearningBox({
-  styleProfile,
-  onProfile,
-}: {
-  styleProfile: StyleProfileOut | null;
-  onProfile: (profile: StyleProfileOut | null) => void;
-}) {
+/** Paste BEE's draft and your edit; BEE learns the rule. The artifact type
+ *  is a row of pills, the two texts sit side by side. */
+export function StyleLearningBox({ styleProfile, onProfile }: { styleProfile: StyleProfileOut | null; onProfile: (profile: StyleProfileOut | null) => void }) {
   const t = useTranslations("probarNetworkBrandControl.deepLearning.correction");
   const tp = useTranslations("probarNetworkBrandControl.brand.page.learning");
-  const hue = DATA.violet;
 
   const [result, setResult] = useState<CorrectionOut | null>(null);
   const [loading, setLoading] = useState(false);
@@ -51,57 +48,37 @@ export function StyleLearningBox({
 
   return (
     <OverviewCard span={5} title={tp("title")} caption={tp("caption")}>
-      <div className="bee-fill flex flex-col gap-3">
-        <div>
-          <FormLabel htmlFor="brand-artifact-type">{t("artifactTypeLabel")}</FormLabel>
-          <select id="brand-artifact-type" value={artifactType} onChange={(e) => setArtifactType(e.target.value)} className="bee-input">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void handleSubmit();
+        }}
+        className="bee-fill flex flex-col gap-3"
+      >
+        <Field label={t("artifactTypeLabel")}>
+          <div className="flex flex-wrap gap-1.5">
             {ARTIFACT_TYPE_KEYS.map((key) => (
-              <option key={key} value={key}>
+              <Pill key={key} pressed={artifactType === key} fill={tint(HUE, 45)} onClick={() => setArtifactType(key)}>
                 {t(`artifactTypes.${key}`)}
-              </option>
+              </Pill>
             ))}
-          </select>
-        </div>
-
-        <div className="grid gap-2 sm:grid-cols-2">
-          <div>
-            <FormLabel htmlFor="brand-correction-original">{t("originalLabel")}</FormLabel>
-            <textarea
-              id="brand-correction-original"
-              value={original}
-              onChange={(e) => setOriginal(e.target.value)}
-              rows={4}
-              className="bee-input"
-              style={{ background: mix(hue, 6) }}
-            />
           </div>
-          <div>
-            <FormLabel htmlFor="brand-correction-edited">{t("editedLabel")}</FormLabel>
-            <textarea
-              id="brand-correction-edited"
-              value={edited}
-              onChange={(e) => setEdited(e.target.value)}
-              rows={4}
-              className="bee-input"
-              style={{ background: mix(hue, 16) }}
-            />
-          </div>
-        </div>
+        </Field>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => void handleSubmit()} disabled={loading} className="bee-btn text-xs">
-            {loading ? t("learning") : t("submit")}
-          </button>
-          <button type="button" onClick={() => setShowProfile((v) => !v)} className="bee-btn-text text-xs">
-            {t("viewFullProfile")}
-          </button>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label={t("originalLabel")}>
+            <textarea id="brand-correction-original" value={original} onChange={(e) => setOriginal(e.target.value)} rows={4} className="bee-input" />
+          </Field>
+          <Field label={t("editedLabel")}>
+            <textarea id="brand-correction-edited" value={edited} onChange={(e) => setEdited(e.target.value)} rows={4} className="bee-input" />
+          </Field>
         </div>
 
         {result && (
-          <div className="space-y-2 rounded-[var(--radius-md)] p-3" style={{ background: mix(hue, 10) }}>
+          <div className="space-y-2 rounded-[var(--radius-md)] p-3" style={{ background: REST }}>
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-sm font-semibold">{t("resultTitle")}</p>
-              <Chip tone={hue} strength={24}>
+              <Chip tone={HUE} strength={45}>
                 {t("versionBadge", { version: result.profile_version, count: result.total_corrections })}
               </Chip>
             </div>
@@ -110,7 +87,7 @@ export function StyleLearningBox({
                 <p className="bee-micro mb-1">{t("rulesLearnedTitle")}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {result.extracted_rules.map((rule) => (
-                    <Chip key={rule} tone={hue} strength={20}>
+                    <Chip key={rule} tone={HUE} strength={45}>
                       {rule.replace(/_/g, " ")}
                     </Chip>
                   ))}
@@ -123,81 +100,68 @@ export function StyleLearningBox({
 
         {showProfile &&
           (styleProfile && styleProfile.total_corrections > 0 ? (
-            <div className="space-y-2 rounded-[var(--radius-md)] border border-[var(--color-divider)] p-3">
+            <div className="space-y-2 rounded-[var(--radius-md)] p-3" style={{ background: REST }}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm font-semibold">{t("currentProfileTitle")}</span>
-                <span className="bee-micro">
-                  {t("profileStats", { authoritative: styleProfile.authoritative_rules_count, total: styleProfile.total_corrections })}
-                </span>
+                <span className="bee-micro">{t("profileStats", { authoritative: styleProfile.authoritative_rules_count, total: styleProfile.total_corrections })}</span>
               </div>
-              {styleProfile.style_summary ? (
-                <pre className="whitespace-pre-wrap font-mono text-xs">{styleProfile.style_summary}</pre>
-              ) : (
-                <p className="bee-micro">{t("needMoreCorrections")}</p>
-              )}
+              {styleProfile.style_summary ? <pre className="whitespace-pre-wrap font-mono text-xs">{styleProfile.style_summary}</pre> : <p className="bee-micro">{t("needMoreCorrections")}</p>}
             </div>
           ) : (
             <p className="bee-caption">{t("needMoreCorrections")}</p>
           ))}
-      </div>
+
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-1">
+          <button type="button" onClick={() => setShowProfile((v) => !v)} className="bee-btn-text text-xs">
+            {t("viewFullProfile")}
+          </button>
+          <button type="submit" disabled={loading} className="bee-btn bee-btn--primary">
+            {loading ? t("learning") : t("submit")}
+          </button>
+        </div>
+      </form>
     </OverviewCard>
   );
 }
 
 // ── Anomaly monitor ──────────────────────────────────────────────────────────
 
-/** Severity is one hue at four strengths — the most severe alert is the
- *  most saturated, never a second color. */
-const SEVERITY_STRENGTH: Record<string, number> = { critical: 100, high: 65, medium: 40, low: 22 };
+/** Severity is one hue at three intensities and the page grey. */
+const SEVERITY_LEVEL: Record<string, DotLevel> = { critical: 100, high: 70, medium: 45, low: "rest" };
 
 function AlertRow({ alert, onAcknowledge }: { alert: AnomalyAlert; onAcknowledge: (id: string) => void }) {
   const t = useTranslations("probarNetworkBrandControl.deepLearning.anomaly");
-  const hue = DATA.magenta;
-  const strength = SEVERITY_STRENGTH[alert.severity] ?? 22;
   const severityLabel = (["critical", "high", "medium", "low"] as const).includes(alert.severity) ? t(`severity.${alert.severity}`) : alert.severity;
 
   return (
-    <li className="space-y-2 rounded-[var(--radius-md)] p-3" style={{ background: mix(hue, Math.round(strength / 8)), borderLeft: `3px solid ${mix(hue, strength)}` }} title={alert.description}>
-      <div className="flex items-start gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold leading-tight">{alert.title}</p>
-          <p className="bee-micro mt-0.5 truncate">
-            {t("currentVsBase", {
-              rolling: (alert.rolling_rate * 100).toFixed(1),
-              baseline: (alert.baseline_rate * 100).toFixed(1),
-              deviation: alert.deviation_pct.toFixed(1),
-            })}
-          </p>
-        </div>
-        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium" style={{ background: mix(hue, Math.round(strength * 0.3)) }}>
-          <span className="size-1.5 rounded-full" style={{ background: mix(hue, strength) }} />
-          {severityLabel}
-        </span>
-      </div>
-      <div className="flex items-center justify-between gap-2">
-        <p className="bee-caption min-w-0 truncate" title={alert.recommendation}>
-          {alert.recommendation}
+    <li className="bee-row flex-wrap justify-between sm:flex-nowrap" title={alert.description}>
+      <div className="min-w-0 flex-1 basis-40">
+        <p className="truncate text-sm font-medium leading-tight">{alert.title}</p>
+        <p className="bee-micro truncate" title={alert.recommendation}>
+          {t("currentVsBase", { rolling: (alert.rolling_rate * 100).toFixed(1), baseline: (alert.baseline_rate * 100).toFixed(1), deviation: alert.deviation_pct.toFixed(1) })}
         </p>
-        {alert.status === "open" && (
-          <button type="button" onClick={() => onAcknowledge(alert.id)} className="bee-btn-ghost shrink-0 text-xs">
-            {t("acknowledge")}
-          </button>
-        )}
       </div>
+      <StateWord hue={HUE} level={SEVERITY_LEVEL[alert.severity] ?? "rest"}>
+        {severityLabel}
+      </StateWord>
+      {alert.status === "open" && (
+        <button type="button" onClick={() => onAcknowledge(alert.id)} className="bee-btn-ghost shrink-0 text-xs">
+          {t("acknowledge")}
+        </button>
+      )}
     </li>
   );
 }
 
-/** Row 4, middle — conversion drops per channel/sector. One hue: magenta. */
+/** Conversion drops per channel/sector. Not on the Voz de marca board any
+ *  more — Control › Salud shows the same alerts — but kept for any host
+ *  that wants the scan button. */
 export function AnomalyMonitorBox() {
   const t = useTranslations("probarNetworkBrandControl.deepLearning.anomaly");
   const tp = useTranslations("probarNetworkBrandControl.brand.page.anomaly");
-  const hue = DATA.magenta;
-  // Open alerts show on arrival — the box used to stay empty until a scan
-  // was run, even when alerts already existed. Keyed under the same family
-  // as Control's useOpenAnomalies (so its invalidations refresh this box
-  // too) but with its own suffix: this reads the full AnomalyAlert shape,
-  // Control reads a narrower one, and the two must not share a cache entry.
+  // Keyed under the same family as Control's useOpenAnomalies (so its
+  // invalidations refresh this box too) but with its own suffix: this
+  // reads the full AnomalyAlert shape, Control reads a narrower one.
   const alertsQuery = useQuery({
     queryKey: [...queryKeys.anomalies.all, "open", "full"] as const,
     queryFn: async () => getAnomalyAlerts({ status: "open" }),
@@ -224,7 +188,7 @@ export function AnomalyMonitorBox() {
 
   return (
     <OverviewCard
-      span={4}
+      span={6}
       title={tp("title")}
       caption={tp("caption")}
       action={
@@ -233,71 +197,59 @@ export function AnomalyMonitorBox() {
         </button>
       }
     >
-      <div className="bee-fill flex flex-col gap-2">
-        {summary && <p className="bee-micro">{summary}</p>}
-        {alertsQuery.isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-14" />
-            <Skeleton className="h-14" />
-          </div>
-        ) : alerts.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center py-6 text-center">
-            <span className="size-2.5 rounded-full" style={{ background: mix(hue, 45) }} />
-            <p className="mt-2 text-sm font-medium">{t("empty.title")}</p>
-            <p className="bee-caption mt-0.5">{t("empty.hint")}</p>
-          </div>
-        ) : (
-          <ul className="space-y-2">
-            {alerts.map((a) => (
-              <AlertRow key={a.id} alert={a} onAcknowledge={(id) => void handleAcknowledge(id)} />
-            ))}
-          </ul>
-        )}
-      </div>
+      {summary && <p className="bee-micro">{summary}</p>}
+      {alertsQuery.isLoading ? (
+        <RowsSkeleton rows={2} />
+      ) : alerts.length === 0 ? (
+        <EmptyLine>{t("empty.title")}</EmptyLine>
+      ) : (
+        <ul className="bee-fill min-h-0">
+          {alerts.map((a) => (
+            <AlertRow key={a.id} alert={a} onAcknowledge={(id) => void handleAcknowledge(id)} />
+          ))}
+        </ul>
+      )}
     </OverviewCard>
   );
 }
 
 // ── Channels ─────────────────────────────────────────────────────────────────
 
-const CHANNEL_ICONS: Record<string, string> = { email: "✉", linkedin: "in", twitter: "𝕏" };
 const CHANNEL_KEYS = ["email", "linkedin", "twitter"] as const;
 
-/** Row 4, right — where BEE can send in your voice. One hue: lavender. */
+/** Where BEE can send in your voice: one row per channel, the state as a
+ *  lavender dot (100 live, page grey simulated) + word. */
 export function ChannelsBox({ channels }: { channels: ChannelStatus[] }) {
   const t = useTranslations("probarNetworkBrandControl.brand.panel");
   const tp = useTranslations("probarNetworkBrandControl.brand.page.channels");
-  const hue = DATA.lavender;
-  const label = (channel: string) =>
-    (CHANNEL_KEYS as readonly string[]).includes(channel) ? t(`channelLabels.${channel as (typeof CHANNEL_KEYS)[number]}`) : channel;
+  const label = (channel: string) => ((CHANNEL_KEYS as readonly string[]).includes(channel) ? t(`channelLabels.${channel as (typeof CHANNEL_KEYS)[number]}`) : channel);
 
   return (
-    <OverviewCard span={3} title={tp("title")} caption={tp("caption")}>
-      <div className="bee-fill flex flex-col justify-evenly gap-2">
-        {channels.length === 0 && <p className="bee-caption py-6 text-center">{tp("empty")}</p>}
-        {channels.map((ch) => (
-          <div key={ch.channel} className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2" style={{ background: mix(hue, ch.mock ? 12 : 32) }}>
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-[var(--radius-sm)] text-xs font-bold" style={{ background: mix(hue, ch.mock ? 24 : 60) }}>
-              {CHANNEL_ICONS[ch.channel] ?? ch.channel[0]?.toUpperCase()}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{label(ch.channel)}</p>
-              <p className="bee-micro truncate">
+    <OverviewCard span={4} title={tp("title")} caption={tp("caption")}>
+      {channels.length === 0 ? (
+        <EmptyLine>{tp("empty")}</EmptyLine>
+      ) : (
+        <ul className="bee-fill flex min-h-0 flex-col justify-around">
+          {channels.map((ch) => (
+            <li key={ch.channel} className="bee-row justify-between">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{label(ch.channel)}</p>
+                <p className="truncate bee-micro">{ch.tokens_remaining != null ? t("tokensRemaining", { count: ch.tokens_remaining }) : tp("rateLimit", { count: ch.rate_limit.requests_per_day })}</p>
+              </div>
+              <StateWord hue={TONE.calm} level={ch.mock ? "rest" : 100}>
                 {ch.mock ? t("notConnected") : t("active")}
-                {ch.tokens_remaining != null && ` · ${t("tokensRemaining", { count: ch.tokens_remaining })}`}
-              </p>
-            </div>
-            <span className="size-2 shrink-0 rounded-full" style={{ background: ch.mock ? mix(hue, 40) : hue }} aria-hidden />
-          </div>
-        ))}
-        {channels.length > 0 && channels.every((c) => c.mock) && (
-          <p className="bee-micro">
-            {t.rich("allChannelsSimulated", {
-              integrations: (chunks) => <span className="font-medium text-[var(--color-text)]">{chunks}</span>,
-            })}
-          </p>
-        )}
-      </div>
+              </StateWord>
+            </li>
+          ))}
+        </ul>
+      )}
+      {channels.length > 0 && channels.every((c) => c.mock) && (
+        <p className="mt-2 shrink-0 bee-micro">
+          {t.rich("allChannelsSimulated", {
+            integrations: (chunks) => <span className="font-medium text-[var(--color-text)]">{chunks}</span>,
+          })}
+        </p>
+      )}
     </OverviewCard>
   );
 }

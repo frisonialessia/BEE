@@ -1,61 +1,31 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
-import { SystemStatStrip } from "./components/SystemStatStrip";
+import { PendingActionsPanel } from "@/components/pending-actions";
+import { AuditLogPanel, FailedEventsPanel } from "@/components/resilience-panel";
 
-interface ControlLayoutProps {
-  header: ReactNode;
-  /** Motor de señales — hourly ingest curve + connection/db/engine rows (SystemHealth). */
-  engine: ReactNode;
-  /** Cola de eventos fallidos — the DLQ (FailedEventsPanel). Wrapped to span 4. */
-  dlq: ReactNode;
-  /** Registro de decisiones — the agent audit trail (AuditLogPanel). Wrapped to span 4. */
-  audit: ReactNode;
-  /** Heading of the Resiliencia section (eyebrow + one-line subtitle). */
-  resilienceHeader: ReactNode;
-  /** Cola de ejecución — actions waiting for a person's OK (PendingActionsPanel). */
-  pending: ReactNode;
-  /** Anomalías de conversión (AnomaliesPanel). */
-  anomalies: ReactNode;
-  /** Fuentes de datos (ApiStatusPanel). */
-  apiStatus: ReactNode;
-  /** Actividad reciente (SignalStream). */
-  stream: ReactNode;
-  /** Pipeline de leads — stage counts + jump to CRM (LeadWorkspace). */
-  action: ReactNode;
-}
+import { AnomaliesPanel } from "./components/AnomaliesPanel";
+import { ApiStatusPanel } from "./components/ApiStatusPanel";
+import { SystemHealth } from "./components/SystemHealth";
 
 /**
- * Control — ONE health board instead of two tabs (Sistema, Resiliencia) that
- * repeated the queue depth and error counts in both strips. Same shell as
- * every other page: a 5-tile strip of headline numbers, then the 12-column
- * .bee-overview grid. Row 1 is the machine: signals per hour and the engine's
- * state, what failed on the way out (DLQ), and what the agents decided
- * (audit). Then the Resiliencia section — what needs a person: actions
- * waiting for an OK and conversion anomalies. Row 3 is where signals come
- * from, what just happened to them, and where the leads stand. The hive
- * moved to Señales › Intención (it is intent data, same source as the Dark
- * Funnel), so Control no longer repeats it.
+ * Salud — ONE board in the 12-column .bee-overview grid, read top to
+ * bottom: the machine (signals per hour and the engine's state beside
+ * where the signals come from), then what needs a person (actions waiting
+ * for an OK, conversion anomalies), then what went wrong on the way out
+ * and what the agents decided. The four headline numbers live on the tab
+ * strip above (SystemStatStrip, via MergedPageTabs' belowTabs). The
+ * activity stream and the lead pipeline used to be boxes here too; they
+ * repeat Señales and the CRM, so they are gone.
  *
  * `/dashboard/resilience` and `?tab=resilience` still land here: the old
- * tab param scrolls to the Resiliencia section instead of switching a tab.
+ * tab param scrolls to the execution queue instead of switching a tab.
  */
-export function ControlLayout({
-  header,
-  engine,
-  dlq,
-  audit,
-  resilienceHeader,
-  pending,
-  anomalies,
-  apiStatus,
-  stream,
-  action,
-}: ControlLayoutProps) {
+export function ControlLayout() {
   const searchParams = useSearchParams();
-  const resilienceRef = useRef<HTMLElement>(null);
+  const resilienceRef = useRef<HTMLDivElement>(null);
   const wantsResilience = searchParams.get("tab") === "resilience";
 
   useEffect(() => {
@@ -63,34 +33,15 @@ export function ControlLayout({
   }, [wantsResilience]);
 
   return (
-    <div className="space-y-4">
-      {header}
-      <SystemStatStrip />
-      <div className="bee-overview">
-        {engine}
-        <div style={{ gridColumn: "span 4" }} className="min-h-0">
-          {dlq}
-        </div>
-        <div style={{ gridColumn: "span 4" }} className="min-h-0">
-          {audit}
-        </div>
+    <div className="bee-overview">
+      <SystemHealth />
+      <ApiStatusPanel />
+      <div ref={resilienceRef} id="resilience" style={{ gridColumn: "span 6" }} className="min-h-0 scroll-mt-4">
+        <PendingActionsPanel />
       </div>
-
-      <section ref={resilienceRef} id="resilience" className="scroll-mt-4 space-y-4">
-        {resilienceHeader}
-        <div className="bee-overview">
-          {pending}
-          <div style={{ gridColumn: "span 6" }} className="min-h-0">
-            {anomalies}
-          </div>
-        </div>
-      </section>
-
-      <div className="bee-overview">
-        {apiStatus}
-        {stream}
-        {action}
-      </div>
+      <AnomaliesPanel />
+      <FailedEventsPanel />
+      <AuditLogPanel />
     </div>
   );
 }

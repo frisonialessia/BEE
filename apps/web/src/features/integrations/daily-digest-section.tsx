@@ -1,13 +1,14 @@
 "use client";
 
-import { Send } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { TONE, tint } from "@/components/charts/palette";
 import { OverviewCard } from "@/components/dashboard/overview-card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StateChip } from "@/features/control/components/primitives";
+import { Field, Pill } from "@/features/crm/drawer/primitives";
 import { useDigestSettings, useSendDigestNow, useUpdateDigestSettings } from "@/hooks/queries/use-digest";
 import type { DigestSettings } from "@/lib/api/digest";
 import { formatRelativeTime } from "@/lib/i18n/format";
@@ -21,17 +22,17 @@ const HOURS = Array.from({ length: 24 }, (_, h) => h);
  * only ever returns a hint), so the field starts empty and saving a new
  * value replaces the stored one; the hint under it says which is set.
  */
-export function DailyDigestSection({ canManage }: { canManage: boolean }) {
+export function DailyDigestSection({ canManage, span = 12 }: { canManage: boolean; span?: 4 | 6 | 8 | 12 }) {
   const { data, isLoading } = useDigestSettings();
   if (isLoading || !data) {
-    return <Skeleton className="h-40" />;
+    return <Skeleton className="rounded-[var(--radius-lg)]" style={{ gridColumn: `span ${span}` }} />;
   }
   // Keyed on the server state so a save (or another admin's change picked
   // up by a refetch) resets the form's local copy without an effect.
-  return <DigestForm key={`${data.hour_utc}-${data.enabled}-${data.webhook_url_hint ?? ""}`} data={data} canManage={canManage} />;
+  return <DigestForm key={`${data.hour_utc}-${data.enabled}-${data.webhook_url_hint ?? ""}`} data={data} canManage={canManage} span={span} />;
 }
 
-function DigestForm({ data, canManage }: { data: DigestSettings; canManage: boolean }) {
+function DigestForm({ data, canManage, span }: { data: DigestSettings; canManage: boolean; span: 4 | 6 | 8 | 12 }) {
   const t = useTranslations("workspace.integrations.digest");
   const locale = useLocale() as Locale;
   const update = useUpdateDigestSettings();
@@ -40,6 +41,7 @@ function DigestForm({ data, canManage }: { data: DigestSettings; canManage: bool
   const [webhookUrl, setWebhookUrl] = useState("");
   const [hour, setHour] = useState(data.hour_utc);
   const [enabled, setEnabled] = useState(data.enabled);
+  const on = data.enabled && data.webhook_configured;
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -66,84 +68,60 @@ function DigestForm({ data, canManage }: { data: DigestSettings; canManage: bool
 
   return (
     <OverviewCard
+      span={span}
       title={t("title")}
       caption={t("subtitle")}
       action={
-        <Badge variant={data.enabled && data.webhook_configured ? "success" : "outline"}>
-          {data.enabled && data.webhook_configured ? t("statusOn") : t("statusOff")}
-        </Badge>
+        <StateChip hue={TONE.calm} level={on ? 45 : "rest"}>
+          {on ? t("statusOn") : t("statusOff")}
+        </StateChip>
       }
     >
-      <div className="space-y-4">
-        <form onSubmit={handleSave} className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto_auto]">
-          <div className="min-w-0">
-            <label className="bee-micro font-medium" htmlFor="digest-webhook">
-              {t("webhookLabel")}
-            </label>
-            <input
-              id="digest-webhook"
-              type="url"
-              value={webhookUrl}
-              onChange={(e) => setWebhookUrl(e.target.value)}
-              placeholder={data.webhook_configured ? t("webhookSetPlaceholder", { hint: data.webhook_url_hint ?? "" }) : "https://hooks.slack.com/services/…"}
-              disabled={!canManage}
-              className="bee-input mt-1 w-full"
-            />
-          </div>
-          <div>
-            <label className="bee-micro font-medium" htmlFor="digest-hour">
-              {t("hourLabel")}
-            </label>
-            <select
-              id="digest-hour"
-              value={hour}
-              onChange={(e) => setHour(Number(e.target.value))}
-              disabled={!canManage}
-              className="bee-input mt-1"
-            >
+      <form onSubmit={handleSave} className="bee-fill flex flex-col gap-3">
+        <Field label={t("webhookLabel")}>
+          <input
+            id="digest-webhook"
+            type="url"
+            value={webhookUrl}
+            onChange={(e) => setWebhookUrl(e.target.value)}
+            placeholder={data.webhook_configured ? t("webhookSetPlaceholder", { hint: data.webhook_url_hint ?? "" }) : "https://hooks.slack.com/services/…"}
+            disabled={!canManage}
+            className="bee-input"
+          />
+        </Field>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <Field label={t("hourLabel")}>
+            <select id="digest-hour" value={hour} onChange={(e) => setHour(Number(e.target.value))} disabled={!canManage} className="bee-input">
               {HOURS.map((h) => (
                 <option key={h} value={h}>
                   {String(h).padStart(2, "0")}:00 UTC
                 </option>
               ))}
             </select>
-          </div>
-          <div className="flex items-end">
-            <label className="flex h-[var(--bee-control-h-primary)] items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={enabled}
-                onChange={(e) => setEnabled(e.target.checked)}
-                disabled={!canManage}
-                className="size-4 accent-[var(--color-cta)]"
-              />
-              {t("enabledLabel")}
-            </label>
-          </div>
-          {canManage && (
-            <div className="flex flex-wrap gap-2 sm:col-span-3">
-              <button type="submit" disabled={update.isPending} className="bee-btn bee-btn--primary">
-                {update.isPending ? t("saving") : t("save")}
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleSendNow()}
-                disabled={sendNow.isPending || !data.webhook_configured}
-                className="bee-btn-ghost"
-              >
-                <Send className="size-3.5" />
-                {sendNow.isPending ? t("sending") : t("sendNow")}
-              </button>
+          </Field>
+          <Field label={t("scheduleLabel")}>
+            <div className="flex gap-1.5">
+              <Pill pressed={enabled} fill={tint(TONE.calm, 45)} disabled={!canManage} onClick={() => setEnabled(true)}>
+                {t("enabledLabel")}
+              </Pill>
+              <Pill pressed={!enabled} fill={tint(TONE.calm, 45)} disabled={!canManage} onClick={() => setEnabled(false)}>
+                {t("pausedLabel")}
+              </Pill>
             </div>
-          )}
-        </form>
-
-        <p className="bee-caption">
-          {data.last_sent_at
-            ? t("lastSent", { when: formatRelativeTime(data.last_sent_at, locale) })
-            : t("neverSent")}
-        </p>
-      </div>
+          </Field>
+        </div>
+        <p className="bee-micro">{data.last_sent_at ? t("lastSent", { when: formatRelativeTime(data.last_sent_at, locale) }) : t("neverSent")}</p>
+        {canManage && (
+          <div className="mt-auto flex flex-wrap gap-2 pt-1">
+            <button type="button" onClick={() => void handleSendNow()} disabled={sendNow.isPending || !data.webhook_configured} className="bee-btn-ghost">
+              {sendNow.isPending ? t("sending") : t("sendNow")}
+            </button>
+            <button type="submit" disabled={update.isPending} className="bee-btn bee-btn--primary">
+              {update.isPending ? t("saving") : t("save")}
+            </button>
+          </div>
+        )}
+      </form>
     </OverviewCard>
   );
 }
