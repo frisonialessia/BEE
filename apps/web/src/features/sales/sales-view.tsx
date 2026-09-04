@@ -98,11 +98,11 @@ export function SalesView() {
           <BarsVsTarget
             points={model.months.slice(-6)}
             target={model.goal}
-            color={SALES.lime}
-            hitColor={SALES.won}
             targetLabel={model.goal ? t("monthly.goalLabel") : undefined}
             minHeight={200}
             formatValue={(v) => money(v)}
+            // Same reading as the Ventas box on Resumen: three greens by strength.
+            colorFor={(p, _i, max) => (p.value >= max * 0.66 ? SALES.won : p.value >= max * 0.33 ? SALES.lime : SALES.mint)}
           />
         </OverviewCard>
 
