@@ -118,17 +118,20 @@
     "howTo": {
       "title": "Cómo leer la matriz",
       "caption": "Dos ejes, cuatro zonas · corte en 50 / 50",
-      "axes": "Fit = qué tanto encaja la cuenta con tu ICP (industria, tamaño, país, cargo). Intención = el score de su señal más caliente ahora mismo."
+      "axes": "Fit = qué tanto encaja la cuenta con tu ICP · Intención = el score de su señal más caliente ahora mismo · corte en 50 / 50."
     },
     "lists": {
       "caption": "{count, plural, =1 {1 cuenta} other {# cuentas}} · ordenadas por intención",
       "fit": "Fit",
       "intent": "Intención"
+    },
+    "legend": {
+      "aria": "Elegir la zona de la matriz"
     }
   },
   "icpForm": {
     "title": "Perfil de Cliente Ideal (ICP)",
-    "subtitle": "Separa cada valor con comas. Deja una lista vacía si esa dimensión no te importa — no penaliza a nadie.",
+    "subtitle": "Qué cuentas y qué personas dentro de ellas cuentan como tu cliente ideal",
     "industries": {
       "label": "Industrias",
       "placeholder": "SaaS, Fintech, Logística…"
@@ -162,6 +165,7 @@
     "save": "Guardar",
     "saving": "Guardando…",
     "cancel": "Cancelar",
-    "saveError": "No se pudo guardar el ICP."
+    "saveError": "No se pudo guardar el ICP.",
+    "help": "Separa cada valor con comas o toca un valor ya en uso. Una lista vacía no penaliza a nadie."
   }
 }

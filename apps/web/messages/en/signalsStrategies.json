@@ -5,26 +5,51 @@
     "subtitle": "Market triggers — funding, hires, tech-stack adoption, and more",
     "live": "Live",
     "demo": "Demo data",
-    "totalCount": "{count} total",
-    "hotCount": "{count} high intent (≥75)",
     "loadError": "Error loading signals.",
     "emptyTitle": "No signals yet.",
     "emptySubtitle": "They appear automatically once you connect your market sources.",
-    "volumeTitle": "Signal volume",
-    "volumeSubtitle": "Detected per day, last 14 days",
     "itemLabel": "signals",
     "outerTabs": {
       "feed": "Feed",
       "priority": "Prioritization",
       "intent": "Intent"
     },
-    "mixTitle": "Signal mix",
-    "mixSubtitle": "By type, across every loaded signal"
+    "kpis": {
+      "recent": "Signals in 30 days",
+      "weekly": "vs. previous week",
+      "hot": "Hot signals",
+      "hotHint": "score ≥ 75 of {count} loaded",
+      "companies": "Companies with a signal",
+      "companiesHint": "with a signal in the last 30 days",
+      "peak": "Peak hour",
+      "peakValue": "{day} {hour} h",
+      "peakHint": "{count, plural, one {# signal} other {# signals}} in that hour",
+      "peakEmpty": "no activity yet"
+    },
+    "feed": {
+      "title": "Latest signals",
+      "caption": "{count, plural, one {# signal loaded} other {# signals loaded}} · newest first"
+    },
+    "mix": {
+      "title": "Mix by type",
+      "caption": "What kind of signal arrives, and from where",
+      "bySource": "By source",
+      "other": "Other",
+      "empty": "No signals yet.",
+      "aria": "Mix of {total} signals",
+      "tooltip": "{label} · {count} ({pct}%)",
+      "byIntensity": "By intensity",
+      "bands": {
+        "hot": "Hot (≥ 75)",
+        "warm": "Warm (50–74)",
+        "cool": "Cool (< 50)"
+      }
+    }
   },
   "strategies": {
     "eyebrow": "Playbooks",
     "title": "Strategies",
-    "subtitle": "One evidence line with numbers, three figures and the next step per opportunity — the full argument lives in the drawer",
+    "subtitle": "Battlecards ready to act on, and the arguments that close most",
     "live": "Live",
     "demo": "Demo data",
     "tabBattlecards": "Battlecards ({count})",
@@ -41,9 +66,8 @@
     "sampleLine": "Rates computed over {closed, plural, one {# closed deal} other {# closed deals}} in your account ({won, plural, one {# won} other {# won}})",
     "sampleLineEmpty": "No closed deals yet — win rates appear once the first one closes",
     "card": {
-      "scoreTitle": "Opportunity score (0–100)",
-      "hotLead": "Hot lead — intent confirmed",
-      "reviewRequired": "Low confidence: review before executing",
+      "hotLead": "intent confirmed",
+      "reviewRequired": "needs review",
       "evidence": {
         "cycle": " · avg cycle {days} d",
         "pattern": "{playbook} via {channel} on {signal}: {won} of {total} won in your history{days}",
@@ -52,30 +76,16 @@
         "none": "No history for “{signal}” yet · score {score} from a signal detected {time}",
         "noneHot": "No history for “{signal}” yet · score {score} from confirmed intent, signal {time}"
       },
-      "tiles": {
-        "score": "Score",
-        "winRate": "Win rate for this signal",
-        "days": "Days to close",
-        "sample": "{count, plural, one {# closed deal} other {# closed deals}}",
-        "noSample": "no sample",
-        "daysSub": "median, won deals"
-      },
-      "nextStepLabel": "Next step:",
-      "nextStep": "{action} via {channel}",
-      "nextStepLead": "{action} · {lead} via {channel}",
-      "openStrategyTitle": "Opens the strategy with the prepared message",
-      "scheduleMeeting": "Schedule a meeting"
+      "scoreLine": "score {score}",
+      "painLabel": "Pain it answers",
+      "open": "Open strategy",
+      "schedule": "Schedule"
     },
     "works": {
       "viaChannel": "{playbook} via {channel}",
       "anySignal": "Any signal",
       "noPatternYet": "The market is moving on “{signal}” but you haven't closed deals with that pattern yet",
-      "daysSub": "average, won",
-      "tiles": {
-        "market": "Market signals"
-      },
       "confidencePct": "{pct}% confidence",
-      "noInsight": "no market signal",
       "noInsightFor": "No active market signal for “{signal}” — the pattern rests on your closed deals alone",
       "confidence": {
         "low": "Low confidence",
@@ -83,41 +93,63 @@
         "high": "High confidence"
       },
       "emptyTitle": "Not enough closed deals or signals yet to learn what works.",
-      "emptySubtitle": "Once more opportunities close with the same playbook and channel, or TrendAnalyst detects a market pattern, it shows up here."
+      "emptySubtitle": "Once more opportunities close with the same playbook and channel, or TrendAnalyst detects a market pattern, it shows up here.",
+      "barsTitle": "Win rate by argument",
+      "barsEmpty": "No patterns yet — they appear once deals close with the same playbook and channel.",
+      "barsTooltip": "{pct}% win rate · {won} of {total} deals",
+      "barsMore": "+{count} more patterns in the list",
+      "listTitle": "Patterns and their market signal"
+    },
+    "kpis": {
+      "ready": "Battlecards ready",
+      "readyHint": "of {count} in total",
+      "coverage": "Deals with a battlecard",
+      "coverageHint": "{covered} of {open} open",
+      "bestArgument": "Best argument",
+      "bestArgumentHint": "{playbook} via {channel} · {count, plural, one {# deal} other {# deals}}",
+      "bestArgumentEmpty": "no patterns yet",
+      "topStage": "Stage with most deals",
+      "topStageHint": "in {stage}",
+      "topStageEmpty": "no open opportunities"
     }
   },
   "darkFunnel": {
-    "stageReadyToBuy": "Ready to buy",
-    "stageDecision": "Decision",
-    "stageConsideration": "Consideration",
-    "stageAwareness": "Awareness",
     "stageAll": "All",
-    "summaryHotLeads": "Hot leads",
-    "summaryReadyToBuy": "Ready to buy",
-    "summaryDecisionStage": "Decision stage",
-    "summarySignalsToday": "Signals today",
     "live": "Live",
     "demo": "Demo data",
-    "simulateToggle": "+ Simulate signal",
     "simulateFormTitle": "Simulate an intent signal",
     "domainPlaceholder": "company-domain.com",
     "keywordsPlaceholder": "keywords (comma-separated)",
     "submit": "Send signal",
     "submitting": "Sending…",
-    "hotBadge": "HOT",
-    "moreCount": "+{count} more",
-    "intentLabel": "Intent: ",
-    "signalCount": "{count, plural, one {# signal} other {# signals}}",
-    "lastLabel": "Last: ",
-    "emptyTitle": "No intent signals yet.",
-    "emptySubtitle": "Use the simulator above to send a test signal.",
-    "stageMixTitle": "Mix by buying stage",
-    "stageMixCaption": "Where today's hot leads sit",
-    "keywordsTitle": "What they research",
-    "keywordsCaption": "Most repeated intent keywords across hot leads",
     "hive": {
       "title": "Intent hive",
-      "caption": "Each cell is an account; the closer to the centre, the closer to buying. Click opens the account."
+      "caption": "Each cell is an account; the closer to the centre, the closer to buying. Click opens the account.",
+      "simulate": "Simulate signal",
+      "stageFilterAria": "Filter the hive by buying stage"
+    },
+    "simulate": {
+      "domain": "Company domain",
+      "keywords": "Keywords",
+      "type": "Signal type",
+      "help": "The signal goes through the same endpoint as real ones and shows up in the hive right away.",
+      "cancel": "Cancel"
+    },
+    "intentTypes": {
+      "pricing_view": "Pricing view",
+      "competitor_compare": "Competitor compare",
+      "review_visit": "Review visit",
+      "demo_watch": "Demo watch",
+      "product_trial": "Product trial",
+      "case_study_view": "Case study view",
+      "content_read": "Content read",
+      "job_posting": "Job posting",
+      "search": "Search",
+      "repeat_visit": "Repeat visit"
+    },
+    "activity": {
+      "title": "When the market arrives",
+      "caption": "Signals by day and hour, and the hourly profile"
     }
   }
 }

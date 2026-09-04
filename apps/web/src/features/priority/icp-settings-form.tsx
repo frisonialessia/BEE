@@ -4,6 +4,8 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { TONE, tint } from "@/components/charts/palette";
+import { Field, Pill } from "@/features/crm/drawer/primitives";
 import { useUpdateIcpCriteria } from "@/hooks/queries/use-icp";
 import type { IcpCriteria } from "@/lib/api/organizations";
 
@@ -16,6 +18,45 @@ function fromCsv(value: string): string[] {
     .split(",")
     .map((v) => v.trim())
     .filter(Boolean);
+}
+
+/** A comma-separated list field in the dialog language: caption label over
+ *  a grey `.bee-input`, and the values already in the data as toggle pills
+ *  that add or remove themselves from the list. */
+function ListField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  suggestions = [],
+}: {
+  label: string;
+  value: string;
+  onChange: (next: string) => void;
+  placeholder: string;
+  suggestions?: string[];
+}) {
+  const current = fromCsv(value);
+  const toggle = (item: string) => {
+    const has = current.includes(item);
+    onChange(toCsv(has ? current.filter((v) => v !== item) : [...current, item]));
+  };
+  return (
+    <div className="min-w-0">
+      <Field label={label}>
+        <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="bee-input" />
+      </Field>
+      {suggestions.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1.5">
+          {suggestions.map((s) => (
+            <Pill key={s} pressed={current.includes(s)} fill={tint(TONE.urgency, 45)} onClick={() => toggle(s)}>
+              {s}
+            </Pill>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** Formulario del Perfil de Cliente Ideal — listas separadas por coma.
@@ -67,123 +108,31 @@ export function IcpSettingsForm({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="mb-4 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-4"
-    >
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {t("title")}
-      </p>
-      <p className="bee-caption mb-3">{t("subtitle")}</p>
-
-      <div className="space-y-3">
-        <div>
-          <label className="text-xs font-medium text-muted-foreground">{t("industries.label")}</label>
-          <input
-            value={industries}
-            onChange={(e) => setIndustries(e.target.value)}
-            placeholder={t("industries.placeholder")}
-            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-          />
-          {suggestions.industries.length > 0 && (
-            <p className="mt-1 bee-micro">
-              {t("alreadyUsing", { values: suggestions.industries.join(", ") })}
-            </p>
-          )}
-        </div>
-        <div>
-          <label className="text-xs font-medium text-muted-foreground">{t("sizes.label")}</label>
-          <input
-            value={sizes}
-            onChange={(e) => setSizes(e.target.value)}
-            placeholder={t("sizes.placeholder")}
-            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-          />
-          {suggestions.sizes.length > 0 && (
-            <p className="mt-1 bee-micro">{t("alreadyUsing", { values: suggestions.sizes.join(", ") })}</p>
-          )}
-        </div>
-        <div>
-          <label className="text-xs font-medium text-muted-foreground">{t("countries.label")}</label>
-          <input
-            value={countries}
-            onChange={(e) => setCountries(e.target.value)}
-            placeholder={t("countries.placeholder")}
-            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-          />
-          {suggestions.countries.length > 0 && (
-            <p className="mt-1 bee-micro">
-              {t("alreadyUsing", { values: suggestions.countries.join(", ") })}
-            </p>
-          )}
-        </div>
-        <div>
-          <label className="text-xs font-medium text-muted-foreground">
-            {t("revenueRanges.label")}
-          </label>
-          <input
-            value={revenueRanges}
-            onChange={(e) => setRevenueRanges(e.target.value)}
-            placeholder={t("revenueRanges.placeholder")}
-            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-          />
-          {suggestions.revenueRanges.length > 0 && (
-            <p className="mt-1 bee-micro">
-              {t("alreadyUsing", { values: suggestions.revenueRanges.join(", ") })}
-            </p>
-          )}
-        </div>
-
-        {/* Buyer persona: no longer just "which accounts", also "who at
-         * that account" — cargo/seniority se validan contra los Leads
-         * reales de la cuenta, no contra la Company (ver computeFitScore). */}
-        <div className="border-t border-dashed border-border pt-3">
-          <p className="bee-micro font-medium uppercase tracking-wide text-muted-foreground">
-            {t("buyerPersonaLabel")}
-          </p>
-        </div>
-        <div>
-          <label className="text-xs font-medium text-muted-foreground">{t("jobTitles.label")}</label>
-          <input
-            value={jobTitles}
-            onChange={(e) => setJobTitles(e.target.value)}
-            placeholder={t("jobTitles.placeholder")}
-            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-          />
-        </div>
-        <div>
-          <label className="text-xs font-medium text-muted-foreground">{t("seniorities.label")}</label>
-          <input
-            value={seniorities}
-            onChange={(e) => setSeniorities(e.target.value)}
-            placeholder={t("seniorities.placeholder")}
-            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-          />
-          {suggestions.seniorities.length > 0 && (
-            <p className="mt-1 bee-micro">
-              {t("alreadyUsing", { values: suggestions.seniorities.join(", ") })}
-            </p>
-          )}
-        </div>
-        <div>
-          <label className="text-xs font-medium text-muted-foreground">
-            {t("techKeywords.label")}
-          </label>
-          <input
-            value={techKeywords}
-            onChange={(e) => setTechKeywords(e.target.value)}
-            placeholder={t("techKeywords.placeholder")}
-            className="mt-1 w-full rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <ListField label={t("industries.label")} value={industries} onChange={setIndustries} placeholder={t("industries.placeholder")} suggestions={suggestions.industries} />
+        <ListField label={t("sizes.label")} value={sizes} onChange={setSizes} placeholder={t("sizes.placeholder")} suggestions={suggestions.sizes} />
+        <ListField label={t("countries.label")} value={countries} onChange={setCountries} placeholder={t("countries.placeholder")} suggestions={suggestions.countries} />
+        <ListField label={t("revenueRanges.label")} value={revenueRanges} onChange={setRevenueRanges} placeholder={t("revenueRanges.placeholder")} suggestions={suggestions.revenueRanges} />
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
-        <button type="submit" disabled={updateIcp.isPending} className="bee-btn bee-btn--primary">
-          {updateIcp.isPending ? t("saving") : t("save")}
-        </button>
+      {/* Buyer persona: not just "which accounts", also "who at that
+          account" — cargo/seniority se validan contra los Leads reales de
+          la cuenta, no contra la Company (ver computeFitScore). */}
+      <p className="bee-caption border-t border-[var(--color-divider)] pt-4">{t("buyerPersonaLabel")}</p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <ListField label={t("jobTitles.label")} value={jobTitles} onChange={setJobTitles} placeholder={t("jobTitles.placeholder")} />
+        <ListField label={t("seniorities.label")} value={seniorities} onChange={setSeniorities} placeholder={t("seniorities.placeholder")} suggestions={suggestions.seniorities} />
+        <ListField label={t("techKeywords.label")} value={techKeywords} onChange={setTechKeywords} placeholder={t("techKeywords.placeholder")} />
+      </div>
+
+      <p className="bee-micro">{t("help")}</p>
+      <div className="flex items-center justify-end gap-2 border-t border-[var(--color-divider)] pt-4">
         <button type="button" onClick={onDone} className="bee-btn-ghost">
           {t("cancel")}
+        </button>
+        <button type="submit" disabled={updateIcp.isPending} className="bee-btn bee-btn--primary">
+          {updateIcp.isPending ? t("saving") : t("save")}
         </button>
       </div>
     </form>

@@ -2,8 +2,6 @@
 
 import { useLocale, useTranslations } from "next-intl";
 
-import { mix } from "@/components/charts/palette";
-import { CardTiles, formatDays, formatPct, signalHue, type CardTile } from "@/components/strategy/strategy-card";
 import type { Locale } from "@/i18n/locales";
 import type { SuccessPattern } from "@/lib/api/feedback";
 import { formatChannel, formatPlaybook, getSignalTypeLabels } from "@/lib/format";
@@ -43,18 +41,15 @@ export function pairPatternsWithInsights(patterns: SuccessPattern[], insights: M
   return items;
 }
 
-function WhatWorksCard({ item }: { item: WhatWorksItem }) {
+function WhatWorksRow({ item }: { item: WhatWorksItem }) {
   const locale = useLocale() as Locale;
   const t = useTranslations("signalsStrategies.strategies");
   const { pattern, insight } = item;
   const signalType = pattern?.signal_type ?? insight?.signal_type ?? null;
-  const hue = signalHue(signalType);
   const signalLabels: Record<string, string> = getSignalTypeLabels(locale);
   const signalLabel = signalType ? (signalLabels[signalType] ?? signalType) : t("works.anySignal");
 
-  const title = pattern
-    ? t("works.viaChannel", { playbook: formatPlaybook(pattern.playbook, locale), channel: formatChannel(pattern.channel, locale) })
-    : insight?.title ?? "";
+  const title = pattern ? t("works.viaChannel", { playbook: formatPlaybook(pattern.playbook, locale), channel: formatChannel(pattern.channel, locale) }) : (insight?.title ?? "");
 
   // Same evidence sentence a battlecard quotes, so the two tabs read alike.
   const evidenceLine = pattern
@@ -68,89 +63,52 @@ function WhatWorksCard({ item }: { item: WhatWorksItem }) {
       })
     : t("works.noPatternYet", { signal: signalLabel });
 
-  const tiles: CardTile[] = [
-    {
-      label: t("card.tiles.winRate"),
-      value: formatPct(pattern?.win_rate ?? null),
-      sub: pattern ? t("card.tiles.sample", { count: pattern.sample_size }) : t("card.tiles.noSample"),
-    },
-    {
-      label: t("card.tiles.days"),
-      value: formatDays(pattern?.avg_days_to_close ?? null),
-      sub: pattern?.avg_days_to_close != null ? t("works.daysSub") : t("card.tiles.noSample"),
-    },
-    {
-      label: t("works.tiles.market"),
-      value: insight ? String(insight.evidence_count) : "—",
-      sub: insight ? t("works.confidencePct", { pct: Math.round(insight.confidence * 100) }) : t("works.noInsight"),
-    },
-  ];
-
-  const confidence = pattern ? t(`works.confidence.${pattern.confidence}`) : null;
+  const aside = pattern ? t(`works.confidence.${pattern.confidence}`) : insight ? t("works.confidencePct", { pct: Math.round(insight.confidence * 100) }) : null;
 
   return (
-    <article className="bee-bento bee-bento-pad flex h-full flex-col gap-3" style={{ borderColor: mix(hue, 55, "var(--bee-card-border)") }}>
-      <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <h3 className="bee-card-title !mb-0 truncate" title={title}>{title}</h3>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <span className="inline-flex max-w-full items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium" style={{ background: mix(hue, 20) }}>
-              <span className="size-1.5 shrink-0 rounded-full" style={{ background: hue }} />
-              <span className="truncate">{signalLabel}</span>
-            </span>
-            {insight?.industry && <span className="bee-micro truncate">{insight.industry}</span>}
-          </div>
-        </div>
-        {confidence && (
-          <span className="shrink-0 rounded-full px-2.5 py-1 text-xs font-medium text-[var(--color-text)]" style={{ background: mix(hue, 32) }}>
-            {confidence}
-          </span>
-        )}
-      </header>
-
-      <p className="line-clamp-2 text-sm leading-snug" title={evidenceLine}>{evidenceLine}</p>
-
-      <CardTiles tiles={tiles} hue={hue} />
-
+    <li className="bee-row">
+      <div className="min-w-0 flex-1">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="min-w-0 flex-1 truncate text-sm font-medium" title={title}>
+          {title}
+        </p>
+        {aside && <span className="bee-micro shrink-0 whitespace-nowrap">{aside}</span>}
+      </div>
+      <p className="bee-caption mt-0.5 line-clamp-1" title={evidenceLine}>
+        {evidenceLine}
+      </p>
       {/* The market signal behind the pattern: what TrendAnalyst sees across
           the whole feed, and what it implies tactically. */}
-      <div className="mt-auto min-w-0 border-l-2 pl-3" style={{ borderColor: hue }}>
-        {insight ? (
-          <>
-            <p className="truncate text-xs font-medium" title={insight.title}>{insight.title}</p>
-            <p className="line-clamp-2 bee-micro" title={insight.tactical_implication ?? insight.description}>
-              {insight.tactical_implication ?? insight.description}
-            </p>
-          </>
-        ) : (
-          <p className="bee-micro">{t("works.noInsightFor", { signal: signalLabel })}</p>
-        )}
+      {insight && pattern ? (
+        <p className="bee-caption mt-0.5 line-clamp-2" title={insight.tactical_implication ?? insight.description}>
+          <span className="font-medium text-[var(--color-text)]">{insight.title}</span> — {insight.tactical_implication ?? insight.description}
+        </p>
+      ) : insight ? (
+        <p className="bee-caption line-clamp-2" title={insight.tactical_implication ?? insight.description}>
+          {insight.tactical_implication ?? insight.description}
+        </p>
+      ) : (
+        <p className="bee-micro">{t("works.noInsightFor", { signal: signalLabel })}</p>
+      )}
       </div>
-    </article>
+    </li>
   );
 }
 
-/** "Qué funciona" — one card per pattern, carrying the market signal behind
- *  it and the evidence it rests on. Replaces the two former tabs
- *  (Aprendizaje: patterns as rows; Mercado: insights as rows) that showed
- *  the two halves of the same answer on separate screens. */
+/** "Qué funciona" — one row per pattern, carrying the market signal behind
+ *  it and the evidence it rests on: hairline rows, no fills. */
 export function WhatWorksList({ items }: { items: WhatWorksItem[] }) {
   const t = useTranslations("signalsStrategies.strategies");
 
   if (items.length === 0) {
-    return (
-      <div className="bee-bento bee-bento-pad py-8 text-center">
-        <p className="text-sm text-muted-foreground">{t("works.emptyTitle")}</p>
-        <p className="bee-caption mt-1">{t("works.emptySubtitle")}</p>
-      </div>
-    );
+    return <p className="bee-caption">{t("works.emptyTitle")}</p>;
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 [grid-auto-rows:1fr]">
+    <ul className="bee-fill overflow-y-auto">
       {items.map((item) => (
-        <WhatWorksCard key={item.key} item={item} />
+        <WhatWorksRow key={item.key} item={item} />
       ))}
-    </div>
+    </ul>
   );
 }

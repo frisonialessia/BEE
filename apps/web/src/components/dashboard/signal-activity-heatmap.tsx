@@ -3,6 +3,7 @@
 import { Tooltip as TooltipPrimitive } from "radix-ui";
 import { useLocale, useTranslations } from "next-intl";
 
+import { REST, TONE, heat, tint } from "@/components/charts/palette";
 import { useBoxSize } from "@/components/charts/use-box-size";
 import { TooltipContent } from "@/components/ui/tooltip";
 import type { Locale } from "@/i18n/locales";
@@ -17,7 +18,8 @@ const PROFILE_LABEL_H = 18;
 
 /** Heatmap día × hora de cuándo llegan las señales de mercado — usa
  * `detected_at`, un dato que ya existe pero que hasta ahora no se
- * visualizaba así. Ver lib/signal-activity-grid.ts.
+ * visualizaba así. Ver lib/signal-activity-grid.ts. Una sola tonalidad,
+ * la miel del mercado, en tres pasos + gris (`heat`).
  *
  * Dos lecturas en una caja, ambas midiendo su espacio (use-box-size): la
  * cuadrícula día × hora arriba, con celdas cuadradas que se ajustan al
@@ -27,14 +29,19 @@ const PROFILE_LABEL_H = 18;
  * el tamaño estándar (1 unidad SVG = 1 px). */
 export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
   const t = useTranslations("dashboardOverview.activityHeatmap");
+  // The measured box must exist on the first render (use-box-size reads
+  // its ref once), so the empty state is decided here and the drawing
+  // mounts only with data.
+  if (signals.length === 0) return <p className="bee-caption">{t("empty")}</p>;
+  return <ActivityGrid signals={signals} />;
+}
+
+function ActivityGrid({ signals }: { signals: Signal[] }) {
+  const t = useTranslations("dashboardOverview.activityHeatmap");
   const locale = useLocale() as Locale;
   const dayLabels = getDayLabels(locale);
-  const [ref, { width: boxW }] = useBoxSize<HTMLDivElement>({ width: 480, height: 160 });
-  const [profileRef, { height: profileH }] = useBoxSize<HTMLDivElement>({ width: 480, height: 80 });
-
-  if (signals.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("empty")}</p>;
-  }
+  const [ref, { width: boxW }] = useBoxSize<HTMLDivElement>({ width: 320, height: 160 });
+  const [profileRef, { height: profileH }] = useBoxSize<HTMLDivElement>({ width: 320, height: 80 });
 
   const cells = computeActivityGrid(signals);
   const maxCount = Math.max(...cells.map((c) => c.count), 1);
@@ -54,12 +61,12 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
         <div ref={ref} className="w-full min-w-0">
           <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="block" role="img" aria-label={t("ariaLabel")}>
             {HOUR_MARKS.map((h) => (
-              <text key={h} x={LABEL_W + h * STEP + CELL / 2} y={HEADER_H - 6} textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
+              <text key={h} x={LABEL_W + h * STEP + CELL / 2} y={HEADER_H - 6} textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-text-muted)">
                 {h}h
               </text>
             ))}
             {dayLabels.map((label, day) => (
-              <text key={label} x={LABEL_W - 8} y={HEADER_H + day * STEP + CELL / 2 + 4} textAnchor="end" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
+              <text key={label} x={LABEL_W - 8} y={HEADER_H + day * STEP + CELL / 2 + 4} textAnchor="end" style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-text-muted)">
                 {label}
               </text>
             ))}
@@ -72,7 +79,7 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
         {/* Hour profile: the same 24 columns, as bars, filling the rest. */}
         <div ref={profileRef} className="min-h-0 w-full min-w-0 flex-1">
           <svg width={width} height={Math.max(profileH, PROFILE_LABEL_H + 24)} viewBox={`0 0 ${width} ${Math.max(profileH, PROFILE_LABEL_H + 24)}`} className="block" aria-hidden>
-            <text x={LABEL_W} y={12} style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-muted-foreground)">
+            <text x={LABEL_W} y={12} style={{ fontSize: "var(--bee-fs-body-2)" }} fill="var(--color-text-muted)">
               {t("hourProfile")}
             </text>
             {byHour.map((count, h) => {
@@ -87,8 +94,7 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
                       width={CELL}
                       height={barH}
                       rx={Math.min(3, CELL / 4)}
-                      fill="var(--color-chart-4)"
-                      fillOpacity={count === 0 ? 0.12 : isPeak ? 1 : 0.55}
+                      fill={isPeak ? TONE.market : heat(TONE.market, count / maxHour)}
                     />
                   </TooltipPrimitive.Trigger>
                   <TooltipContent>
@@ -103,11 +109,11 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
           </svg>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+        <div className="bee-caption flex flex-wrap items-center justify-between gap-2 border-t border-[var(--color-divider)] pt-3">
           <span>
             {peak ? (
               <>
-                {t("peakActivity")} <span className="font-medium text-foreground">{dayLabels[peak.day]} ~{peak.hour}h</span>
+                {t("peakActivity")} <span className="font-medium text-[var(--color-text)]">{dayLabels[peak.day]} ~{peak.hour}h</span>
               </>
             ) : (
               t("noActivity")
@@ -116,8 +122,8 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
           <span className="flex items-center gap-2">
             {t("less")}
             <span className="flex gap-1">
-              {[0.1, 0.35, 0.6, 0.85, 1].map((o) => (
-                <span key={o} className="size-2.5 rounded-sm" style={{ background: "var(--color-chart-4)", opacity: o }} />
+              {[REST, tint(TONE.market, 45), tint(TONE.market, 70), TONE.market].map((c) => (
+                <span key={c} className="size-2.5 rounded-sm" style={{ background: c, boxShadow: c === REST ? "inset 0 0 0 1px var(--color-divider)" : undefined }} />
               ))}
             </span>
             {t("more")}
@@ -143,11 +149,10 @@ function ActivitySquare({
 }) {
   const t = useTranslations("dashboardOverview.activityHeatmap");
   const dayLabels = getDayLabels(useLocale() as Locale);
-  const opacity = cell.count === 0 ? 0.08 : 0.18 + 0.82 * (cell.count / maxCount);
   return (
     <TooltipPrimitive.Root>
       <TooltipPrimitive.Trigger asChild>
-        <rect x={x} y={y} width={size} height={size} rx={Math.min(3, size / 4)} fill="var(--color-chart-4)" fillOpacity={opacity} />
+        <rect x={x} y={y} width={size} height={size} rx={Math.min(3, size / 4)} fill={heat(TONE.market, cell.count / maxCount)} />
       </TooltipPrimitive.Trigger>
       <TooltipContent>
         <p className="font-medium">

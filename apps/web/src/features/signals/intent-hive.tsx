@@ -11,14 +11,17 @@ import { useHiveLeads, useLeadBoard } from "@/hooks/queries/use-lead-board";
 import { cn } from "@/lib/utils";
 import type { HotLeadScore } from "@/types/extended";
 
-const STAGES = ["ready_to_buy", "decision", "consideration", "awareness"] as const;
-type Stage = (typeof STAGES)[number];
+/** The four buying stages, hot → cool — the order of the pills above the comb. */
+export const HIVE_STAGES = ["ready_to_buy", "decision", "consideration", "awareness"] as const;
+export type HiveStage = (typeof HIVE_STAGES)[number];
+const STAGES = HIVE_STAGES;
+type Stage = HiveStage;
 
 /** The ramp step each buying stage reads in the metrics under the comb —
  *  the same steps its cells tend to land on (hot centre → cool edge). */
-const STAGE_STEP: Record<Stage, number> = { ready_to_buy: 0, decision: 3, consideration: 7, awareness: 9 };
+export const STAGE_STEP: Record<Stage, number> = { ready_to_buy: 0, decision: 3, consideration: 7, awareness: 9 };
 
-function stageOf(lead: HotLeadScore): Stage {
+export function stageOf(lead: HotLeadScore): Stage {
   return (STAGES as readonly string[]).includes(lead.buying_stage) ? (lead.buying_stage as Stage) : "awareness";
 }
 

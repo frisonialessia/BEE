@@ -5,26 +5,51 @@
     "subtitle": "Triggers de mercado — funding, contrataciones, adopción tecnológica y más",
     "live": "En vivo",
     "demo": "Datos demo",
-    "totalCount": "{count} total",
-    "hotCount": "{count} alta intención (≥75)",
     "loadError": "Error al cargar señales.",
     "emptyTitle": "Aún no hay señales.",
     "emptySubtitle": "Aparecen automáticamente al conectar tus fuentes de mercado.",
-    "volumeTitle": "Volumen de señales",
-    "volumeSubtitle": "Detectadas por día, últimos 14 días",
     "itemLabel": "señales",
     "outerTabs": {
       "feed": "Feed",
       "priority": "Priorización",
       "intent": "Intención"
     },
-    "mixTitle": "Mezcla de señales",
-    "mixSubtitle": "Por tipo, todas las señales cargadas"
+    "kpis": {
+      "recent": "Señales en 30 días",
+      "weekly": "vs. semana anterior",
+      "hot": "Señales calientes",
+      "hotHint": "score ≥ 75 de {count} cargadas",
+      "companies": "Empresas con señal",
+      "companiesHint": "con una señal en los últimos 30 días",
+      "peak": "Hora pico",
+      "peakValue": "{day} {hour} h",
+      "peakHint": "{count, plural, one {# señal} other {# señales}} en esa hora",
+      "peakEmpty": "sin actividad todavía"
+    },
+    "feed": {
+      "title": "Últimas señales",
+      "caption": "{count, plural, one {# señal cargada} other {# señales cargadas}} · las más recientes primero"
+    },
+    "mix": {
+      "title": "Mezcla por tipo",
+      "caption": "Qué clase de señal llega, y por dónde",
+      "bySource": "Por fuente",
+      "other": "Otras",
+      "empty": "Sin señales todavía.",
+      "aria": "Mezcla de {total} señales",
+      "tooltip": "{label} · {count} ({pct}%)",
+      "byIntensity": "Por intensidad",
+      "bands": {
+        "hot": "Calientes (≥ 75)",
+        "warm": "Tibias (50–74)",
+        "cool": "Frías (< 50)"
+      }
+    }
   },
   "strategies": {
     "eyebrow": "Playbooks",
     "title": "Estrategias",
-    "subtitle": "Una evidencia con números, tres cifras y el siguiente paso por oportunidad — el argumento completo vive en el drawer",
+    "subtitle": "Battlecards listas para actuar y los argumentos que más cierran",
     "live": "En vivo",
     "demo": "Datos demo",
     "tabBattlecards": "Battlecards ({count})",
@@ -41,9 +66,8 @@
     "sampleLine": "Tasas calculadas sobre {closed, plural, one {# deal cerrado} other {# deals cerrados}} de tu cuenta ({won, plural, one {# ganado} other {# ganados}})",
     "sampleLineEmpty": "Sin deals cerrados todavía — las tasas de cierre aparecen al cerrar el primero",
     "card": {
-      "scoreTitle": "Score de la oportunidad (0–100)",
-      "hotLead": "Lead caliente — intención confirmada",
-      "reviewRequired": "Confianza baja: requiere revisión antes de ejecutar",
+      "hotLead": "intención confirmada",
+      "reviewRequired": "requiere revisión",
       "evidence": {
         "cycle": " · ciclo medio {days} d",
         "pattern": "{playbook} por {channel} en {signal}: {won} de {total} ganadas en tu histórico{days}",
@@ -52,30 +76,16 @@
         "none": "Sin histórico para «{signal}» todavía · score {score} por señal detectada {time}",
         "noneHot": "Sin histórico para «{signal}» todavía · score {score} por intención confirmada, señal {time}"
       },
-      "tiles": {
-        "score": "Score",
-        "winRate": "Cierre de esta señal",
-        "days": "Días a cierre",
-        "sample": "{count, plural, one {# deal cerrado} other {# deals cerrados}}",
-        "noSample": "sin muestra",
-        "daysSub": "mediana ganadas"
-      },
-      "nextStepLabel": "Siguiente paso:",
-      "nextStep": "{action} por {channel}",
-      "nextStepLead": "{action} · {lead} por {channel}",
-      "openStrategyTitle": "Abre la estrategia con el mensaje preparado",
-      "scheduleMeeting": "Agendar reunión"
+      "scoreLine": "score {score}",
+      "painLabel": "Dolor que resuelve",
+      "open": "Abrir estrategia",
+      "schedule": "Agendar"
     },
     "works": {
       "viaChannel": "{playbook} vía {channel}",
       "anySignal": "Cualquier señal",
       "noPatternYet": "El mercado se mueve en «{signal}» pero todavía no cerraste deals con ese patrón",
-      "daysSub": "promedio ganadas",
-      "tiles": {
-        "market": "Señales de mercado"
-      },
       "confidencePct": "{pct}% de confianza",
-      "noInsight": "sin señal de mercado",
       "noInsightFor": "Sin señal de mercado activa para «{signal}» — el patrón se sostiene solo en tus deals cerrados",
       "confidence": {
         "low": "Confianza baja",
@@ -83,41 +93,63 @@
         "high": "Confianza alta"
       },
       "emptyTitle": "Todavía no hay suficientes deals cerrados ni señales para aprender qué funciona.",
-      "emptySubtitle": "En cuanto se cierren más oportunidades con el mismo playbook y canal, o TrendAnalyst detecte un patrón de mercado, aparece aquí."
+      "emptySubtitle": "En cuanto se cierren más oportunidades con el mismo playbook y canal, o TrendAnalyst detecte un patrón de mercado, aparece aquí.",
+      "barsTitle": "Cierre por argumento",
+      "barsEmpty": "Sin patrones todavía — aparecen al cerrar deals con el mismo playbook y canal.",
+      "barsTooltip": "{pct}% de cierre · {won} de {total} deals",
+      "barsMore": "+{count} patrones más en la lista",
+      "listTitle": "Patrones y su señal de mercado"
+    },
+    "kpis": {
+      "ready": "Battlecards listas",
+      "readyHint": "de {count} en total",
+      "coverage": "Deals con battlecard",
+      "coverageHint": "{covered} de {open} abiertas",
+      "bestArgument": "Mejor argumento",
+      "bestArgumentHint": "{playbook} vía {channel} · {count, plural, one {# deal} other {# deals}}",
+      "bestArgumentEmpty": "sin patrones todavía",
+      "topStage": "Etapa con más deals",
+      "topStageHint": "en {stage}",
+      "topStageEmpty": "sin oportunidades abiertas"
     }
   },
   "darkFunnel": {
-    "stageReadyToBuy": "Listo para comprar",
-    "stageDecision": "Decisión",
-    "stageConsideration": "Consideración",
-    "stageAwareness": "Conocimiento",
     "stageAll": "Todas",
-    "summaryHotLeads": "Leads calientes",
-    "summaryReadyToBuy": "Listos para comprar",
-    "summaryDecisionStage": "Etapa de decisión",
-    "summarySignalsToday": "Señales de hoy",
     "live": "En vivo",
     "demo": "Datos demo",
-    "simulateToggle": "+ Simular señal",
     "simulateFormTitle": "Simular una señal de intención",
     "domainPlaceholder": "dominio-empresa.com",
     "keywordsPlaceholder": "palabras clave (separadas por coma)",
     "submit": "Enviar señal",
     "submitting": "Enviando…",
-    "hotBadge": "CALIENTE",
-    "moreCount": "+{count} más",
-    "intentLabel": "Intención: ",
-    "signalCount": "{count, plural, one {# señal} other {# señales}}",
-    "lastLabel": "Última: ",
-    "emptyTitle": "Todavía no hay señales de intención.",
-    "emptySubtitle": "Usa el simulador de arriba para enviar una señal de prueba.",
-    "stageMixTitle": "Mezcla por etapa de compra",
-    "stageMixCaption": "Dónde están los leads calientes hoy",
-    "keywordsTitle": "Qué investigan",
-    "keywordsCaption": "Palabras de intención más repetidas entre los leads calientes",
     "hive": {
       "title": "Colmena de intención",
-      "caption": "Cada celda es una cuenta; cuanto más al centro, más cerca de comprar. Clic abre la cuenta."
+      "caption": "Cada celda es una cuenta; cuanto más al centro, más cerca de comprar. Clic abre la cuenta.",
+      "simulate": "Simular señal",
+      "stageFilterAria": "Filtrar la colmena por etapa de compra"
+    },
+    "simulate": {
+      "domain": "Dominio de la empresa",
+      "keywords": "Palabras clave",
+      "type": "Tipo de señal",
+      "help": "La señal entra por el mismo endpoint que las reales y aparece en la colmena al instante.",
+      "cancel": "Cancelar"
+    },
+    "intentTypes": {
+      "pricing_view": "Vio precios",
+      "competitor_compare": "Comparó competidores",
+      "review_visit": "Visitó reseñas",
+      "demo_watch": "Vio una demo",
+      "product_trial": "Prueba del producto",
+      "case_study_view": "Leyó un caso",
+      "content_read": "Leyó contenido",
+      "job_posting": "Vacante publicada",
+      "search": "Búsqueda",
+      "repeat_visit": "Visita repetida"
+    },
+    "activity": {
+      "title": "Cuándo llega el mercado",
+      "caption": "Señales por día y hora, y el perfil por hora"
     }
   }
 }
