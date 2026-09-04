@@ -169,7 +169,7 @@ function SequenceBuilder({ onSaved }: { onSaved: () => void }) {
             {createSequence.isPending ? t("saving") : t("save")}
           </button>
           {createSequence.isError && (
-            <p className="text-micro text-[var(--color-chart-2)]">{t("saveError")}</p>
+            <p className="text-micro text-[var(--color-text)]">{t("saveError")}</p>
           )}
         </div>
       </div>

@@ -474,7 +474,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
                           {company ? (
                             <Link
                               href={`/dashboard/companies/${company.id}`}
-                              className="hover:text-[var(--color-chart-4)] hover:underline"
+                              className="hover:text-[var(--color-text)] hover:underline"
                             >
                               {company.name}
                             </Link>
@@ -498,7 +498,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
                                 ...lead.validation_flags.map((f) => validationFlagLabels[f] ?? f),
                                 ...(lead.stale_risk ? [t("table.staleWarning")] : []),
                               ].join(" · ")}
-                              className="text-micro text-[var(--color-chart-1)]"
+                              className="text-micro text-[var(--color-text)]"
                             >
                               {lead.validation_flags.length > 0
                                 ? t("table.issues", { count: lead.validation_flags.length })
@@ -536,7 +536,7 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
               {t("tip.prefix")}{" "}
               <Link
                 href={demo ? "/probar/companies" : "/dashboard/companies"}
-                className="text-[var(--color-chart-4)] hover:underline"
+                className="text-[var(--color-text)] hover:underline"
               >
                 {t("tip.linkText")}
               </Link>{" "}

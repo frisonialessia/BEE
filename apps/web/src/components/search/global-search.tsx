@@ -100,7 +100,7 @@ export function GlobalSearch({ className }: { className?: string }) {
                       }}
                       className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-[var(--color-primary)]/30"
                     >
-                      <Icon className="size-4 shrink-0 text-[var(--color-chart-4)]" />
+                      <Icon className="size-4 shrink-0 text-[var(--color-text)]" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-medium">{r.title}</p>
                         {r.subtitle && <p className="truncate bee-micro">{r.subtitle}</p>}

@@ -78,7 +78,7 @@ function CollapsibleSection({
           <Icon className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm font-semibold text-foreground">{title}</span>
           {badge && (
-            <span className="text-xs bg-[color-mix(in_srgb,var(--color-chart-6)_20%,var(--color-background))] text-[var(--color-chart-6)] px-2 py-1 rounded-sm font-medium">
+            <span className="text-xs bg-[color-mix(in_srgb,var(--color-chart-6)_20%,var(--color-background))] text-[var(--color-text)] px-2 py-1 rounded-sm font-medium">
               {badge}
             </span>
           )}
@@ -103,7 +103,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
     <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <Zap className="w-4 h-4 text-[var(--color-chart-6)]" />
+        <Zap className="w-4 h-4 text-[var(--color-text)]" />
         <h3 className="bee-card-title">
           {t("heading")}
         </h3>

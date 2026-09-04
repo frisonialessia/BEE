@@ -75,7 +75,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
                       // Tour target — the guided tour's closing step for
                       // /probar (see tour-steps.ts) points here.
                       data-tour="tour-create-account"
-                      className="bee-btn bee-btn--primary !bg-white !text-[var(--color-chart-4)] px-3 py-2 text-xs"
+                      className="bee-btn bee-btn--primary !bg-white !text-[var(--color-text)] px-3 py-2 text-xs"
                     >
                       {t("createAccount")}
                     </Link>

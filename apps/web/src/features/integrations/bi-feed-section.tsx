@@ -111,7 +111,7 @@ export function BiFeedSection({ canManage }: { canManage: boolean }) {
                       type="button"
                       onClick={() => revokeKey.mutate(k.id)}
                       disabled={revokeKey.isPending}
-                      className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-chart-2)]"
+                      className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-text)]"
                       aria-label={t("revokeAria")}
                     >
                       <Trash2 className="size-3.5" />

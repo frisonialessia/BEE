@@ -15,7 +15,8 @@
     "itemLabel": "señales",
     "outerTabs": {
       "feed": "Feed",
-      "priority": "Priorización"
+      "priority": "Priorización",
+      "intent": "Intención"
     },
     "mixTitle": "Mezcla de señales",
     "mixSubtitle": "Por tipo, todas las señales cargadas"
@@ -27,15 +28,16 @@
     "live": "En vivo",
     "demo": "Datos demo",
     "tabBattlecards": "Battlecards ({count})",
-    "tabPipeline": "Pipeline ({count})",
-    "tabLearning": "Aprendizaje ({count})",
-    "tabMarketInsights": "Mercado ({count})",
+    "tabWorks": "Qué funciona ({count})",
     "battlecardsEmptyTitle": "Aún no hay battlecards listas para acción.",
     "battlecardsEmptySubtitle": "Las señales deben enriquecerse primero.",
     "battlecardsItemLabel": "battlecards",
-    "pipelineItemLabel": "oportunidades",
-    "learningCaption": "Patrones reales de deals cerrados — hoy sesgan cada battlecard nueva",
-    "marketInsightsCaption": "Lo que TrendAnalyst detecta agregando todas las señales — afina cada battlecard por detrás",
+    "worksCaption": "Cada patrón real de deals cerrados con la señal de mercado que lo respalda — esto es lo que hoy sesga cada battlecard nueva",
+    "stageFilter": {
+      "aria": "Filtrar battlecards por etapa",
+      "all": "Todas las etapas",
+      "empty": "No hay battlecards en «{stage}» ahora mismo."
+    },
     "sampleLine": "Tasas calculadas sobre {closed, plural, one {# deal cerrado} other {# deals cerrados}} de tu cuenta ({won, plural, one {# ganado} other {# ganados}})",
     "sampleLineEmpty": "Sin deals cerrados todavía — las tasas de cierre aparecen al cerrar el primero",
     "card": {
@@ -63,12 +65,28 @@
       "nextStepLead": "{action} · {lead} por {channel}",
       "openStrategyTitle": "Abre la estrategia con el mensaje preparado",
       "scheduleMeeting": "Agendar reunión"
+    },
+    "works": {
+      "viaChannel": "{playbook} vía {channel}",
+      "anySignal": "Cualquier señal",
+      "noPatternYet": "El mercado se mueve en «{signal}» pero todavía no cerraste deals con ese patrón",
+      "daysSub": "promedio ganadas",
+      "tiles": {
+        "market": "Señales de mercado"
+      },
+      "confidencePct": "{pct}% de confianza",
+      "noInsight": "sin señal de mercado",
+      "noInsightFor": "Sin señal de mercado activa para «{signal}» — el patrón se sostiene solo en tus deals cerrados",
+      "confidence": {
+        "low": "Confianza baja",
+        "medium": "Confianza media",
+        "high": "Confianza alta"
+      },
+      "emptyTitle": "Todavía no hay suficientes deals cerrados ni señales para aprender qué funciona.",
+      "emptySubtitle": "En cuanto se cierren más oportunidades con el mismo playbook y canal, o TrendAnalyst detecte un patrón de mercado, aparece aquí."
     }
   },
   "darkFunnel": {
-    "eyebrow": "Motor de señales de intención",
-    "title": "Dark Funnel",
-    "subtitle": "Investigación anónima de alta intensidad — leads que investigan antes de convertir",
     "stageReadyToBuy": "Listo para comprar",
     "stageDecision": "Decisión",
     "stageConsideration": "Consideración",

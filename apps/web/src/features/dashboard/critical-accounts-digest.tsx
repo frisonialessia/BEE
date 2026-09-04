@@ -68,7 +68,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
           </p>
         </div>
         {battlecard.hot_lead && (
-          <span className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-chart-5)]/20 px-2 py-1 text-micro font-medium text-[var(--color-chart-5)]">
+          <span className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--color-chart-5)]/20 px-2 py-1 text-micro font-medium text-[var(--color-text)]">
             <Zap className="size-2.5" />
             {t("hotBadge")}
           </span>
@@ -166,7 +166,7 @@ function CriticalAccountRow({ battlecard }: { battlecard: Battlecard }) {
       {battlecard.hot_lead && (
         <Star
           aria-label={t("hotBadge")}
-          className="absolute right-2 top-2 size-3.5 fill-[var(--color-chart-1)] text-[var(--color-chart-1)]"
+          className="absolute right-2 top-2 size-3.5 fill-[var(--color-chart-1)] text-[var(--color-text)]"
         />
       )}
       <div className="min-w-0 flex-1 pr-3">
@@ -222,7 +222,7 @@ export function CriticalAccountsDigest({
   return (
     <section className="mb-4">
       <div className="mb-2 flex items-center gap-2">
-        <Rocket className="size-3.5 text-[var(--color-chart-5)]" />
+        <Rocket className="size-3.5 text-[var(--color-text)]" />
         <p className="bee-eyebrow">{t("title")}</p>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

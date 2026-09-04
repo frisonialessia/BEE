@@ -15,7 +15,7 @@ export function ProbarComingSoon({ label, icon: Icon }: { label: string; icon: L
   return (
     <div className="bee-bento bee-bento-pad flex flex-col items-center gap-4 py-8 text-center">
       <div className="flex size-12 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-        <Icon className="size-5 stroke-[1.5] text-[var(--color-chart-4)]" />
+        <Icon className="size-5 stroke-[1.5] text-[var(--color-text)]" />
       </div>
       <div>
         <h2 className="text-base font-semibold">{t("title", { label })}</h2>

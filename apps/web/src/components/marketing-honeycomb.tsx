@@ -178,7 +178,7 @@ function HexTooltip({
         transform: pointer.y > 90 ? "translateY(-100%)" : undefined,
       }}
     >
-      <p className="bee-eyebrow text-[var(--color-chart-5)]">
+      <p className="bee-eyebrow text-[var(--color-text)]">
         {t("temperature", { pct: Math.round(cell.heat * 100) })}
       </p>
       {lead ? (
@@ -190,7 +190,7 @@ function HexTooltip({
               {tStages(lead.stage)}
             </span>
             {cell.heat > HOT_THRESHOLD && (
-              <span className="rounded-md bg-[var(--color-primary)] px-1.5 py-0.5 text-[var(--color-chart-5)]">
+              <span className="rounded-md bg-[var(--color-primary)] px-1.5 py-0.5 text-[var(--color-text)]">
                 {t("hot")}
               </span>
             )}

@@ -170,7 +170,7 @@ export function QuotasSection({ users, teams, canManage }: { users: UserOut[]; t
                       type="button"
                       onClick={() => deleteQuota.mutate(q.id)}
                       disabled={deleteQuota.isPending}
-                      className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:text-[var(--color-chart-2)]"
+                      className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:text-[var(--color-text)]"
                       aria-label={t("deleteAria")}
                     >
                       <Trash2 className="size-3.5" />

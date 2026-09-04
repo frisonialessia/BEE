@@ -53,7 +53,7 @@ export default async function SeguridadPage() {
               const Icon = SECTION_ICONS[key];
               return (
                 <div key={key} className="bee-bento bee-bento-pad-lg">
-                  <Icon className="size-5 stroke-[1.5] text-[var(--color-chart-4)]" />
+                  <Icon className="size-5 stroke-[1.5] text-[var(--color-text)]" />
                   <h2 className="mt-3 text-sm font-semibold tracking-tight">
                     {t(`sections.${key}.title`)}
                   </h2>

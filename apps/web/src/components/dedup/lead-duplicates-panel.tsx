@@ -69,7 +69,7 @@ export function LeadDuplicatesPanel() {
   return (
     <div className="mb-4 rounded-[var(--radius-lg)] border border-[var(--color-chart-1)]/40 bg-[var(--color-chart-1)]/10 p-4">
       <div className="mb-3 flex items-center gap-2">
-        <AlertTriangle className="size-4 text-[var(--color-chart-1)]" />
+        <AlertTriangle className="size-4 text-[var(--color-text)]" />
         <p className="text-sm font-semibold">
           {t("heading", { count: groups.length })}
         </p>

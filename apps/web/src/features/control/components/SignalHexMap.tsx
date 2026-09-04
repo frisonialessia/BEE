@@ -56,7 +56,7 @@ function HiveTooltip({
         transform: "translateY(-100%)",
       }}
     >
-      <p className="bee-eyebrow text-[var(--color-chart-5)]">
+      <p className="bee-eyebrow text-[var(--color-text)]">
         {t("tooltip.closingTemperature", { temp: Math.round(cell.temperature) })}
       </p>
       <p className="mt-2 text-sm font-light leading-snug">
@@ -68,7 +68,7 @@ function HiveTooltip({
           {stageLabel(t, lead.buying_stage)}
         </span>
         {lead.is_hot && (
-          <span className="rounded-lg bg-[var(--color-primary)] px-2 py-1 text-[var(--color-chart-5)]">
+          <span className="rounded-lg bg-[var(--color-primary)] px-2 py-1 text-[var(--color-text)]">
             {t("tooltip.hot")}
           </span>
         )}
@@ -305,8 +305,8 @@ export function SignalHexMap({
         </div>
         <div className="flex flex-col items-end gap-2">
           <Link
-            href={`${base}/dark-funnel`}
-            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
+            href={`${base}/signals?tab=intent`}
+            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-text)] hover:underline"
           >
             {t("viewMore")}
             <ArrowUpRight className="size-3" />
@@ -335,12 +335,9 @@ export function SignalHexMap({
           measurement) would otherwise feed back into the card's min-content
           width — the ResizeObserver then measured *that* inflated width and
           the hive stayed 600px wide on a 375px phone (see /probar). */}
-      {/* Comb on the left, the funnel by stage on the right: the comb keeps
-          a readable cell size (layoutHiveCells caps the radius) and the
-          column uses the width the comb does not need — no oversized cells,
-          no empty band. */}
-      <div className="relative z-[1] flex min-h-0 flex-1 gap-4">
-      <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden" style={{ minHeight: height }}>
+      {/* The comb fills the box (layoutHiveCells caps the cell size so it is
+          never a handful of oversized cells); the stage metrics sit under it. */}
+      <div className="relative z-[1] min-h-0 min-w-0 flex-1 overflow-hidden" style={{ minHeight: height }}>
         {isLoading ? (
           <Skeleton className="h-full w-full rounded-lg" />
         ) : leads.length === 0 ? (
@@ -376,23 +373,23 @@ export function SignalHexMap({
         )}
       </div>
 
-
-        {stageStats.length > 0 && (
-          <div className="flex w-44 shrink-0 flex-col justify-evenly gap-2 border-l border-border pl-4">
-            {stageStats.map((s) => (
-              <div key={s.stage}>
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-sm">{s.label}</span>
-                  <span className="text-sm font-semibold tabular-nums">{s.count}</span>
-                </div>
-                <div className="mt-1 h-1.5 overflow-hidden rounded-full" style={{ background: "var(--color-primary)" }}>
-                  <div className="h-full rounded-full" style={{ width: `${s.pct}%`, background: s.color }} />
-                </div>
+      {/* Key metrics under the comb: one tile per buying stage, its own hue. */}
+      {stageStats.length > 0 && (
+        <div className="relative z-[1] mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+          {stageStats.map((s) => (
+            <div key={s.stage} className="rounded-[var(--radius-md)] px-3 py-2.5" style={{ background: `color-mix(in srgb, ${s.color} 14%, var(--color-card))` }}>
+              <p className="bee-caption truncate">{s.label}</p>
+              <div className="mt-1 flex items-baseline justify-between gap-2">
+                <span className="text-2xl font-bold leading-none tracking-tight tabular-nums">{s.count}</span>
+                <span className="bee-micro tabular-nums">{s.pct}%</span>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full" style={{ background: `color-mix(in srgb, ${s.color} 28%, var(--color-card))` }}>
+                <div className="h-full rounded-full" style={{ width: `${s.pct}%`, background: s.color }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

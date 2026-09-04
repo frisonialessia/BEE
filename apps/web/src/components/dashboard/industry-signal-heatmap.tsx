@@ -6,7 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useBoxSize } from "@/components/charts/use-box-size";
 import { TooltipContent } from "@/components/ui/tooltip";
 import type { Locale } from "@/i18n/locales";
-import { DATA, SALES } from "@/components/charts/palette";
+import { DATA, mix } from "@/components/charts/palette";
 import { computeIndustrySignalGrid, type IndustrySignalCell } from "@/lib/industry-signal-grid";
 import { getSignalTypeLabels } from "@/lib/format";
 import type { Company, Opportunity, Signal, SignalType } from "@/types/domain";
@@ -85,11 +85,10 @@ export function IndustrySignalHeatmap({
     .sort((a, b) => SIGNAL_ORDER.indexOf(a) - SIGNAL_ORDER.indexOf(b));
 
   const byKey = new Map(cells.map((c) => [`${c.industry}::${c.signalType}`, c]));
-  // Close rate is a sales reading, so the scale is the sales family: honey at
-  // 0 % (nothing closed yet) warming through mint and lime to the won green
-  // at 100 %. No indigo/lilac here — those belong to signals, not to money.
+  // Greens belong to the Ventas page only; here the close rate climbs through
+  // honey strengths, pale at 0 % to deep honey at 100 %.
   const color = (pct: number) => {
-    const stops: [number, string][] = [[0, DATA.honeyFill], [34, SALES.mint], [67, SALES.lime], [100, SALES.won]];
+    const stops: [number, string][] = [[0, mix(DATA.honey, 18)], [34, mix(DATA.honey, 45)], [67, DATA.honey], [100, "var(--color-chart-2)"]];
     const v = Math.max(0, Math.min(100, pct));
     for (let i = 1; i < stops.length; i++) {
       const [a, ca] = stops[i - 1];
@@ -99,7 +98,7 @@ export function IndustrySignalHeatmap({
         return `color-mix(in srgb, ${cb} ${k}%, ${ca})`;
       }
     }
-    return SALES.won;
+    return "var(--color-chart-2)";
   };
 
   const cols = Math.max(1, industries.length);

@@ -75,8 +75,9 @@ export function buildTourSteps(mode: TourMode, t: (key: string) => string): Tour
       placement: "right",
     },
     {
-      target: `${base}/dark-funnel`,
-      href: `${base}/dark-funnel`,
+      // Dark Funnel lives inside Señales now (tab Intención); the rail link is Señales.
+      target: `${base}/signals`,
+      href: `${base}/signals?tab=intent`,
       title: t("darkFunnel.title"),
       description: t("darkFunnel.description"),
       placement: "right",

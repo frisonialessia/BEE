@@ -61,7 +61,7 @@ export function InboundSignalsSection() {
             href={`${getApiBaseUrl()}/docs`}
             target="_blank"
             rel="noreferrer"
-            className="font-medium text-[var(--color-chart-4)] hover:underline"
+            className="font-medium text-[var(--color-text)] hover:underline"
           >
             {t("docsLink")}
           </a>

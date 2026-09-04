@@ -223,7 +223,7 @@ export function CompaniesList() {
               <>
                 <div className="flex items-center gap-4">
                   <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]">
-                    <Building2 className="size-4 text-[var(--color-chart-4)]" />
+                    <Building2 className="size-4 text-[var(--color-text)]" />
                   </span>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{company.name}</p>

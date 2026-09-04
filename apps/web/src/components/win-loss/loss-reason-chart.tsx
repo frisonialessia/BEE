@@ -34,7 +34,7 @@ export function LossReasonChart({ stats }: { stats: LossReasonStat[] }) {
               <TooltipTrigger asChild>
                 <div className="relative h-5 flex-1 overflow-hidden rounded-[var(--radius-sm)] bg-[var(--color-primary)]/20">
                   <div
-                    className="h-full rounded-[var(--radius-sm)] bg-[var(--color-chart-2)]/70 transition-[width] duration-300"
+                    className="h-full rounded-[var(--radius-sm)] bg-[var(--color-text-muted)]/40 transition-[width] duration-300"
                     style={{ width: `${Math.max((s.count / maxCount) * 100, 4)}%` }}
                   />
                 </div>

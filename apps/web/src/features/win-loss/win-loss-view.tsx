@@ -11,7 +11,7 @@ import type { Locale } from "@/i18n/locales";
 import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeWinLoss } from "@/lib/win-loss";
 import { LiveBadge } from "@/components/live-badge";
-import { DATA, SALES } from "@/components/charts/palette";
+import { DATA, mix } from "@/components/charts/palette";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 
@@ -67,18 +67,18 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
         <div className="space-y-4">
           {/* Misma tarjeta compacta que Dark Funnel — ver forecast-view.tsx's
            * propio comentario, mismo cambio acá. */}
-          {/* Won wears the three greens, lost stays honey — the same reading
-              as the CRM's Cerradas column and the Ventas page. */}
+          {/* Won wears honey (full → softer strengths), lost is ink at 40 % —
+              green belongs to Ventas and the CRM board only. */}
           <StatStrip cols={4}>
             <StatTile
               label={t("winLoss.kpis.winRate.label")}
               value={summary.winRate !== null ? `${Math.round(summary.winRate * 100)}%` : "—"}
               hint={t("winLoss.kpis.winRate.hint", { won: summary.won, total: summary.totalClosed })}
               progress={summary.winRate ?? undefined}
-              tone={SALES.won}
+              tone={DATA.honey}
             />
-            <StatTile label={t("winLoss.kpis.wonValue.label")} value={formatCurrencyUSD(summary.wonValue, locale)} hint={t("winLoss.kpis.wonValue.hint")} tone={SALES.lime} />
-            <StatTile label={t("winLoss.kpis.lostValue.label")} value={formatCurrencyUSD(summary.lostValue, locale)} hint={t("winLoss.kpis.lostValue.hint")} tone={DATA.honey} />
+            <StatTile label={t("winLoss.kpis.wonValue.label")} value={formatCurrencyUSD(summary.wonValue, locale)} hint={t("winLoss.kpis.wonValue.hint")} tone={mix(DATA.honey, 70)} />
+            <StatTile label={t("winLoss.kpis.lostValue.label")} value={formatCurrencyUSD(summary.lostValue, locale)} hint={t("winLoss.kpis.lostValue.hint")} tone={mix(DATA.muted, 40, "transparent")} />
             <StatTile
               label={t("winLoss.kpis.daysToClose.label")}
               value={summary.avgDaysToCloseWon !== null ? `${Math.round(summary.avgDaysToCloseWon)}d` : "—"}
@@ -91,7 +91,7 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
                     ? t("winLoss.kpis.daysToClose.hintNoWonHasLost", { days: Math.round(summary.avgDaysToCloseLost) })
                     : t("winLoss.kpis.daysToClose.hintNoWonNoLost")
               }
-              tone={SALES.mint}
+              tone={mix(DATA.honey, 45)}
             />
           </StatStrip>
 

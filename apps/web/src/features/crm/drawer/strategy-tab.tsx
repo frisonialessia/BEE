@@ -24,14 +24,15 @@ import { DATA } from "@/components/charts/palette";
 
 import { Chip } from "./primitives";
 
-function Tile({ icon: Icon, label, meta, body, hue }: { icon: LucideIcon; label: string; meta?: string; body: string; hue: string }) {
+// `hue` stays in the contract for callers; the icon is ink now (no colored text/icons).
+function Tile({ icon: Icon, label, meta, body }: { icon: LucideIcon; label: string; meta?: string; body: string; hue: string }) {
   const t = useTranslations("crm.drawer.strategy");
   const [more, setMore] = useState(false);
   const long = body.length > 160;
   return (
     <div className="flex flex-col gap-1.5 rounded-[var(--radius-lg)] border border-[var(--color-divider)] bg-[var(--color-card)] p-4">
       <div className="flex items-center gap-2">
-        <Icon className="size-3.5 stroke-[1.5]" style={{ color: hue }} />
+        <Icon className="size-3.5 stroke-[1.5]" />
         <p className="bee-caption font-medium">{label}</p>
         {meta && <span className="bee-caption ml-auto font-medium text-[var(--color-text)]">{meta}</span>}
       </div>

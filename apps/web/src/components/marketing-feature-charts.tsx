@@ -6,7 +6,7 @@ import { AreaChart } from "@/components/charts/area-chart";
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { Donut } from "@/components/charts/donut";
 import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
-import { DATA, mix, SALES } from "@/components/charts/palette";
+import { DATA, mix } from "@/components/charts/palette";
 import { ProgressRing } from "@/components/charts/progress-ring";
 import { StageTiles } from "@/components/charts/stage-tiles";
 import { MarketingHoneycomb } from "@/components/marketing-honeycomb";
@@ -26,13 +26,13 @@ import { MarketingHoneycomb } from "@/components/marketing-honeycomb";
 
 export type FeatureId = "senales" | "crm" | "estrategias" | "pronostico" | "ventas" | "calendario" | "control";
 
-/** Band hue by id — indigo → honey → lilac → magenta, and green for Ventas. */
+/** Band hue by id — indigo → honey → lilac → magenta (greens stay on the Ventas page). */
 export const FEATURE_HUE: Record<FeatureId, string> = {
   senales: DATA.indigo,
   crm: DATA.honey,
   estrategias: DATA.violet,
   pronostico: DATA.magenta,
-  ventas: SALES.won,
+  ventas: DATA.honey,
   calendario: DATA.indigo,
   control: DATA.honey,
 };
@@ -98,7 +98,7 @@ export function FeatureChart({ id }: { id: FeatureId }) {
             target={50}
             minHeight={160}
             formatValue={(v) => `${Math.round(v)} k`}
-            colorFor={(p) => (p.value >= 50 ? SALES.won : SALES.mint)}
+            colorFor={(p) => (p.value >= 50 ? DATA.honey : mix(DATA.honey, 45))}
           />
         </div>
       );

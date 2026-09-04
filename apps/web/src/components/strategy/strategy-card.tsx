@@ -30,12 +30,40 @@ const SIGNAL_HUE: Record<string, string> = {
   engagement: DATA.magenta,
 };
 
-function formatDays(days: number | null): string {
+/** The hue a strategy card wears for a given signal type — shared with the
+ *  "Qué funciona" cards so a pattern and the battlecards it backs match. */
+export function signalHue(signalType: string | null | undefined): string {
+  return (signalType && SIGNAL_HUE[signalType]) ?? DATA.lavender;
+}
+
+export function formatDays(days: number | null): string {
   return days === null ? "—" : String(Math.round(days));
 }
 
-function formatPct(rate: number | null): string {
+export function formatPct(rate: number | null): string {
   return rate === null ? "—" : `${Math.round(rate * 100)}%`;
+}
+
+export interface CardTile {
+  label: string;
+  value: string;
+  sub: string;
+}
+
+/** The three-tile row every strategy-family card carries: label, number,
+ *  one-line qualifier, all in the card's hue at a pale strength. */
+export function CardTiles({ tiles, hue }: { tiles: CardTile[]; hue: string }) {
+  return (
+    <dl className="grid grid-cols-3 gap-2">
+      {tiles.map((tile) => (
+        <div key={tile.label} className="min-w-0 rounded-[var(--radius-md)] px-2.5 py-2" style={{ background: mix(hue, 10) }}>
+          <dt className="bee-micro truncate">{tile.label}</dt>
+          <dd className="text-sm font-bold tabular-nums">{tile.value}</dd>
+          <dd className="bee-micro truncate">{tile.sub}</dd>
+        </div>
+      ))}
+    </dl>
+  );
 }
 
 /**
@@ -60,7 +88,7 @@ export function StrategyCard({
   const locale = useLocale() as Locale;
   const t = useTranslations("signalsStrategies.strategies.card");
   const { strategy, company, lead, signal } = card;
-  const hue = SIGNAL_HUE[signal.signal_type] ?? DATA.lavender;
+  const hue = signalHue(signal.signal_type);
   const signalLabels: Record<string, string> = getSignalTypeLabels(locale);
   const signalLabel = signalLabels[signal.signal_type] ?? signal.signal_type;
   const urgency = getUrgencyLabels(locale)[strategy.timing_window.urgency];
@@ -107,7 +135,7 @@ export function StrategyCard({
         channel: formatChannel(strategy.channel, locale),
       });
 
-  const tiles: { label: string; value: string; sub: string }[] = [
+  const tiles: CardTile[] = [
     { label: t("tiles.score"), value: String(score), sub: urgency },
     {
       label: t("tiles.winRate"),
@@ -130,7 +158,7 @@ export function StrategyCard({
         <div className="min-w-0 flex-1">
           <div className="flex min-w-0 items-center gap-2">
             <h3 className="bee-card-title !mb-0 truncate">{company.name ?? card.title}</h3>
-            {card.hot_lead && <Flame className="size-3.5 shrink-0" style={{ color: hue }} aria-label={t("hotLead")} />}
+            {card.hot_lead && <Flame className="size-3.5 shrink-0 text-[var(--color-text)]" aria-label={t("hotLead")} />}
             {card.manual_review_required && (
               <TriangleAlert className="size-3.5 shrink-0 text-[var(--color-text-muted)]" aria-label={t("reviewRequired")} />
             )}
@@ -159,15 +187,7 @@ export function StrategyCard({
         {evidenceLine}
       </p>
 
-      <dl className="grid grid-cols-3 gap-2">
-        {tiles.map((tile) => (
-          <div key={tile.label} className="min-w-0 rounded-[var(--radius-md)] px-2.5 py-2" style={{ background: mix(hue, 10) }}>
-            <dt className="bee-micro truncate">{tile.label}</dt>
-            <dd className="text-sm font-bold tabular-nums">{tile.value}</dd>
-            <dd className="bee-micro truncate">{tile.sub}</dd>
-          </div>
-        ))}
-      </dl>
+      <CardTiles tiles={tiles} hue={hue} />
 
       <p className="mt-auto truncate text-xs" title={nextStep}>
         <span className="font-medium">{t("nextStepLabel")}</span> {nextStep}

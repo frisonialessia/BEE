@@ -28,7 +28,7 @@ export default async function CareersPage() {
       <main className="flex-1">
         <section className="mx-auto w-full max-w-2xl px-6 py-16 text-center sm:py-24">
           <div className="mx-auto flex size-12 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-[var(--color-primary)]/40">
-            <Briefcase className="size-5 stroke-[1.5] text-[var(--color-chart-4)]" />
+            <Briefcase className="size-5 stroke-[1.5] text-[var(--color-text)]" />
           </div>
           <p className="bee-eyebrow mt-4">{t("eyebrow")}</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{t("heroTitle")}</h1>

@@ -78,7 +78,7 @@ export function CyclePredictionPanel({ opportunityId }: { opportunityId: string 
               <p className="text-xs text-muted-foreground">
                 {prediction.is_overdue ? t("daysOverdue") : t("daysRemaining")}
               </p>
-              <p className={`font-medium tabular-nums ${prediction.is_overdue ? "text-[var(--color-chart-2)]" : ""}`}>
+              <p className={`font-medium tabular-nums ${prediction.is_overdue ? "text-[var(--color-text)]" : ""}`}>
                 {prediction.is_overdue
                   ? t("days", { count: Math.abs(prediction.days_remaining ?? 0) })
                   : t("days", { count: prediction.days_remaining ?? 0 })}

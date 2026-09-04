@@ -157,8 +157,8 @@ export function BattlecardView({ card }: { card: Battlecard }) {
           <span
             className={cn(
               "ml-auto text-xs font-medium",
-              urgency === "immediate" && "text-[var(--color-chart-2)]",
-              urgency === "this_week" && "text-[var(--color-chart-1)]",
+              urgency === "immediate" && "text-[var(--color-text)]",
+              urgency === "this_week" && "text-[var(--color-text)]",
               (urgency === "this_month" || urgency === "watch") && "text-muted-foreground"
             )}
           >

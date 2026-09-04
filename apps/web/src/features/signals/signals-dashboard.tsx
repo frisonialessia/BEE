@@ -16,6 +16,7 @@ import { LiveBadge } from "@/components/live-badge";
 import { Donut } from "@/components/charts/donut";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-heatmap";
+import { DarkFunnelTab } from "@/components/dark-funnel-dashboard";
 import { getSignalTypeLabels } from "@/lib/format";
 
 /** Panel de señales — triggers de mercado del Signal Engine — con
@@ -115,6 +116,7 @@ export function SignalsDashboard() {
             label: t("outerTabs.priority"),
             content: <PriorityMatrixView showHeader={false} />,
           },
+          { value: "intent", label: t("outerTabs.intent"), content: <DarkFunnelTab /> },
         ]}
       />
     </div>

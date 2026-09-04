@@ -51,7 +51,7 @@ export function RescheduleDialog({
           <>
             <DialogHeader>
               <DialogTitle className="bee-display flex items-center gap-2 text-lg">
-                <CalendarClock className="size-4 shrink-0 text-[var(--color-chart-4)]" aria-hidden="true" />
+                <CalendarClock className="size-4 shrink-0 text-[var(--color-text)]" aria-hidden="true" />
                 {t("reschedule.title")}
               </DialogTitle>
               <DialogDescription>{t("reschedule.description")}</DialogDescription>

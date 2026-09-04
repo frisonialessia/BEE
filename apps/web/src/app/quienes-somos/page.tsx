@@ -42,7 +42,7 @@ export default async function QuienesSomosPage() {
                 const Icon = PRINCIPLE_ICONS[key];
                 return (
                   <div key={key} className="bee-bento bee-bento-pad-lg">
-                    <Icon className="size-5 stroke-[1.5] text-[var(--color-chart-4)]" />
+                    <Icon className="size-5 stroke-[1.5] text-[var(--color-text)]" />
                     <h3 className="mt-3 text-sm font-semibold tracking-tight">
                       {t(`principles.${key}.title`)}
                     </h3>
@@ -57,7 +57,7 @@ export default async function QuienesSomosPage() {
         <section className="mx-auto w-full max-w-3xl space-y-4 px-6 py-16 sm:py-20">
           <div className="bee-bento bee-bento-pad-lg">
             <div className="flex items-start gap-4">
-              <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[var(--color-chart-4)]" />
+              <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-[var(--color-text)]" />
               <div>
                 <h3 className="text-sm font-semibold">{t("smallTeamTitle")}</h3>
                 <p className="bee-caption mt-1.5">
@@ -78,7 +78,7 @@ export default async function QuienesSomosPage() {
 
           <div className="bee-bento bee-bento-pad-lg">
             <div className="flex items-start gap-4">
-              <Code2 className="mt-0.5 size-5 shrink-0 text-[var(--color-chart-4)]" />
+              <Code2 className="mt-0.5 size-5 shrink-0 text-[var(--color-text)]" />
               <div>
                 <h3 className="text-sm font-semibold">{t("openSourceTitle")}</h3>
                 <p className="bee-caption mt-1.5">{t("openSourceBody")}</p>

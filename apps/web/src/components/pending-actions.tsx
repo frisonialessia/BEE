@@ -201,7 +201,7 @@ export function PendingActionsPanel() {
         </div>
       ) : actions.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
-          <CircleCheck className="size-5 text-[var(--color-chart-4)]" aria-hidden />
+          <CircleCheck className="size-5 text-[var(--color-text)]" aria-hidden />
           <p className="text-sm">{t("emptyTitle")}</p>
           <p className="bee-micro">{t("emptySubtitle")}</p>
         </div>

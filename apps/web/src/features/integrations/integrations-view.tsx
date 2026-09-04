@@ -144,7 +144,7 @@ function OAuthProviderRow({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-4">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-            <Icon className="size-4 stroke-[1.5] text-[var(--color-chart-4)]" />
+            <Icon className="size-4 stroke-[1.5] text-[var(--color-text)]" />
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
@@ -157,7 +157,7 @@ function OAuthProviderRow({
               {status.connected ? connectedCopy(status.account_email ?? t("defaultAccountLabel")) : disconnectedCopy}
             </p>
             {status.last_error && (
-              <p className="mt-1 text-micro text-[var(--color-chart-2)]">
+              <p className="mt-1 text-micro text-[var(--color-text)]">
                 {status.last_error} {t("lastErrorSuffix")}
               </p>
             )}
@@ -336,7 +336,7 @@ function ServerChannelRow({ status }: { status: IntegrationStatus }) {
     <div className="flex items-center justify-between gap-4 border-b border-[var(--color-divider)] py-3 last:border-b-0">
       <div className="flex items-center gap-4">
         {status.connected ? (
-          <CheckCircle2 className="size-4 shrink-0 text-[var(--color-chart-3)]" />
+          <CheckCircle2 className="size-4 shrink-0 text-[var(--color-text)]" />
         ) : (
           <XCircle className="size-4 shrink-0 text-muted-foreground" />
         )}

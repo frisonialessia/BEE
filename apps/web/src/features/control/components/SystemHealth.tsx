@@ -1,14 +1,20 @@
 "use client";
 
 import { CircleCheck, CircleDashed, Pause, TriangleAlert, WifiOff } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
+import { AreaChart } from "@/components/charts/area-chart";
 import { DATA, mix } from "@/components/charts/palette";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { StatusWord, type StatusTone } from "@/components/status-chip";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSignalStream } from "@/hooks/queries/use-signal-stream";
 import { useSystemHealth } from "@/hooks/queries/use-system-health";
+import { localeTags, type Locale } from "@/i18n/locales";
 import type { WorkerHealth } from "@/types/control";
+
+const HOUR_MS = 60 * 60 * 1000;
+const HOURS = 24;
 
 const WORKER_META: Record<WorkerHealth["state"], { tone: StatusTone; icon: typeof CircleCheck }> = {
   idle: { tone: "ok", icon: CircleCheck },
@@ -42,14 +48,19 @@ function HealthRow({
 }
 
 /**
- * Salud del sistema — BEE's own moving parts, each as a plain label plus
- * icon + word: the connection to the API, the database, and the engine that
- * processes signals; then how loaded that engine is, as one meter, and the
- * three counters behind the strip's numbers. Polls every 10 s.
+ * Motor de señales — what came into the queue over the last 24 h, hour by
+ * hour (the real series the stream carries: one point per received signal),
+ * and the state of the three moving parts under it: the connection to the
+ * API, the database, and the engine that processes signals, with one meter
+ * for how loaded that engine is. The queue/processed/error counters that
+ * used to sit here are on the strip above — one place, not two. Polls every
+ * 10 s (health) and 8 s (stream).
  */
 export function SystemHealth() {
   const t = useTranslations("probarNetworkBrandControl.control.systemHealth");
+  const locale = useLocale() as Locale;
   const { data: result, isLoading, isError, dataUpdatedAt } = useSystemHealth();
+  const { data: stream, dataUpdatedAt: streamUpdatedAt } = useSignalStream();
   const snapshot = result?.data;
 
   if (isLoading) {
@@ -75,6 +86,22 @@ export function SystemHealth() {
     );
   }
 
+  // Signals received per hour, oldest → newest, from the stream's own
+  // webhook events. `dataUpdatedAt` as "now" keeps the render pure.
+  const now = streamUpdatedAt || dataUpdatedAt;
+  const hourLabel = new Intl.DateTimeFormat(localeTags[locale], { hour: "numeric" });
+  const buckets = Array.from({ length: HOURS }, (_, i) => {
+    const start = now - (HOURS - i) * HOUR_MS;
+    return { start, label: hourLabel.format(new Date(start + HOUR_MS)), value: 0 };
+  });
+  for (const e of stream?.data.events ?? []) {
+    if (e.stage !== "webhook") continue;
+    const age = now - new Date(e.timestamp).getTime();
+    if (age < 0 || age > HOURS * HOUR_MS) continue;
+    const idx = Math.min(HOURS - 1, Math.max(0, HOURS - 1 - Math.floor(age / HOUR_MS)));
+    buckets[idx].value += 1;
+  }
+
   const apiLive = snapshot.connectivity.live;
   const worker = snapshot.worker;
   const workerMeta = worker.running ? WORKER_META[worker.state] : WORKER_META.stopped;
@@ -91,7 +118,15 @@ export function SystemHealth() {
       caption={t("caption")}
       action={<span className="bee-micro whitespace-nowrap">{t("updated", { time: updatedLabel })}</span>}
     >
-      <ul className="divide-y divide-border">
+      <AreaChart
+        points={buckets.map((b) => ({ label: b.label, value: b.value }))}
+        color={DATA.indigo}
+        minHeight={120}
+        highlightLast={false}
+        formatValue={(v) => t("perHour", { count: Math.round(v) })}
+      />
+
+      <ul className="mt-2 divide-y divide-border">
         <HealthRow
           label={t("rows.api")}
           hint={apiLive ? (snapshot.connectivity.environment ?? t("unknownEnvironment")) : t("rows.apiHintDown")}
@@ -116,7 +151,7 @@ export function SystemHealth() {
       </ul>
 
       {/* One meter, one hue: how much work the engine has piled up. */}
-      <div className="mt-3">
+      <div className="mt-2">
         <div className="mb-1 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{t("loadLabel")}</p>
@@ -128,19 +163,6 @@ export function SystemHealth() {
           <div className="h-full rounded-full transition-all duration-500" style={{ width: `${load}%`, background: DATA.indigo }} />
         </div>
       </div>
-
-      <dl className="mt-3 grid grid-cols-3 gap-2">
-        {[
-          { key: "queue", value: worker.queue_depth },
-          { key: "processed", value: worker.processed_count },
-          { key: "errors", value: worker.error_count },
-        ].map((item) => (
-          <div key={item.key} className="rounded-[var(--radius-md)] px-3 py-2" style={{ background: mix(DATA.indigo, item.key === "errors" && item.value > 0 ? 28 : 10) }}>
-            <dt className="truncate bee-micro">{t(`counters.${item.key}`)}</dt>
-            <dd className="text-sm font-bold tabular-nums">{item.value}</dd>
-          </div>
-        ))}
-      </dl>
 
       {!apiLive && (
         <p className="mt-3 bee-micro">

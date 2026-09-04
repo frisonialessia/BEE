@@ -162,7 +162,7 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
   return (
     <section className="mb-4">
       <div className="mb-2 flex items-center gap-2">
-        <Sparkles className="size-3.5 text-[var(--color-chart-4)]" />
+        <Sparkles className="size-3.5 text-[var(--color-text)]" />
         <p className="bee-eyebrow">{t("title")}</p>
       </div>
       {loading ? (

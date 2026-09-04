@@ -41,16 +41,16 @@ function IllustrativeChart({ state }: { state: "final" | "hidden" | "in" | "done
     <svg viewBox={`0 0 ${W} ${H}`} className="bee-draw h-auto w-full" data-reveal={state} aria-hidden="true">
       <defs>
         <linearGradient id="bee-sales-fill" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor="var(--color-green-1)" stopOpacity="0.35" />
-          <stop offset="1" stopColor="var(--color-green-1)" stopOpacity="0" />
+          <stop offset="0" stopColor="var(--color-chart-2)" stopOpacity="0.35" />
+          <stop offset="1" stopColor="var(--color-chart-2)" stopOpacity="0" />
         </linearGradient>
       </defs>
       {[0.25, 0.5, 0.75].map((k) => (
         <line key={k} x1={padX} x2={W - padX} y1={H - padY - k * (H - padY * 2)} y2={H - padY - k * (H - padY * 2)} stroke="color-mix(in srgb, var(--color-text) 7%, transparent)" />
       ))}
       <path d={area} fill="url(#bee-sales-fill)" className="bee-draw__area" />
-      <polyline points={line} pathLength={1} fill="none" stroke="var(--color-green-1)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" className="bee-draw__line" />
-      <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r={5} fill="var(--color-green-1)" stroke="var(--color-card)" strokeWidth={2} className="bee-draw__dot" style={{ transformOrigin: `${pts[pts.length - 1][0]}px ${pts[pts.length - 1][1]}px` }} />
+      <polyline points={line} pathLength={1} fill="none" stroke="var(--color-chart-2)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" className="bee-draw__line" />
+      <circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r={5} fill="var(--color-chart-2)" stroke="var(--color-card)" strokeWidth={2} className="bee-draw__dot" style={{ transformOrigin: `${pts[pts.length - 1][0]}px ${pts[pts.length - 1][1]}px` }} />
     </svg>
   );
 }
@@ -77,14 +77,14 @@ export function MarketingSalesProof() {
                 <p className="text-sm font-semibold">{t("chart.title")}</p>
                 <p className="bee-caption">{t("chart.caption")}</p>
               </div>
-              <span className="rounded-full px-2 py-0.5 text-micro font-semibold text-[var(--color-text)]" style={{ background: "var(--color-green-3)" }}>
+              <span className="rounded-full px-2 py-0.5 text-micro font-semibold text-[var(--color-text)]" style={{ background: "var(--color-chart-3)" }}>
                 {t("chart.badge")}
               </span>
             </div>
             <IllustrativeChart state={chartState} />
             <div className="grid grid-cols-3 gap-3">
               {(["month", "clients", "goal"] as const).map((k, i) => (
-                <div key={k} className="rounded-[var(--radius-md)] p-3" style={{ background: ["var(--color-green-1)", "var(--color-green-2)", "var(--color-green-3)"][i] }}>
+                <div key={k} className="rounded-[var(--radius-md)] p-3" style={{ background: ["var(--color-chart-2)", "var(--color-chart-1)", "var(--color-chart-3)"][i] }}>
                   <p className="text-micro font-semibold uppercase tracking-wide text-[var(--color-text)]/80">{t(`chart.tiles.${k}.label`)}</p>
                   <p className="mt-1 text-lg font-bold tabular-nums text-[var(--color-text)]">
                     <CountUp text={t(`chart.tiles.${k}.value`)} duration={1200 + i * 200} />
@@ -97,8 +97,8 @@ export function MarketingSalesProof() {
 
           <Reveal stagger className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-5 lg:grid-cols-1">
             {REASONS.map((k, i) => (
-              <div key={k} className="bee-bento flex gap-3 p-4" style={{ background: i % 2 === 0 ? "color-mix(in srgb, var(--color-green-3) 55%, var(--color-card))" : "var(--color-card)" }}>
-                <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-[var(--color-text)]" style={{ background: "var(--color-green-1)" }}>
+              <div key={k} className="bee-bento flex gap-3 p-4" style={{ background: i % 2 === 0 ? "color-mix(in srgb, var(--color-chart-3) 55%, var(--color-card))" : "var(--color-card)" }}>
+                <span className="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-[var(--color-text)]" style={{ background: "var(--color-chart-2)" }}>
                   <Check className="size-3.5" strokeWidth={3} />
                 </span>
                 <div>
@@ -114,7 +114,7 @@ export function MarketingSalesProof() {
           <div className="grid grid-cols-[1fr_1fr] border-b border-border text-micro font-semibold uppercase tracking-wide sm:grid-cols-[1.2fr_1fr_1fr]">
             <div className="hidden px-5 py-3 text-muted-foreground sm:block">{t("compare.dimension")}</div>
             <div className="px-5 py-3 text-muted-foreground">{t("compare.crm")}</div>
-            <div className="px-5 py-3 text-[var(--color-text)]" style={{ background: "var(--color-green-3)" }}>{t("compare.bee")}</div>
+            <div className="px-5 py-3 text-[var(--color-text)]" style={{ background: "var(--color-chart-3)" }}>{t("compare.bee")}</div>
           </div>
           {ROWS.map((row) => (
             <div key={row} className="grid grid-cols-[1fr_1fr] border-b border-border text-sm last:border-b-0 sm:grid-cols-[1.2fr_1fr_1fr]">
@@ -123,8 +123,8 @@ export function MarketingSalesProof() {
                 <X className="mt-0.5 size-4 shrink-0 text-muted-foreground/70" />
                 <span>{t(`compare.rows.${row}.crm`)}</span>
               </div>
-              <div className="flex items-start gap-2 px-5 py-3 font-medium" style={{ background: "color-mix(in srgb, var(--color-green-3) 40%, var(--color-card))" }}>
-                <Check className="mt-0.5 size-4 shrink-0" style={{ color: "var(--color-green-1)" }} strokeWidth={3} />
+              <div className="flex items-start gap-2 px-5 py-3 font-medium" style={{ background: "color-mix(in srgb, var(--color-chart-3) 40%, var(--color-card))" }}>
+                <Check className="mt-0.5 size-4 shrink-0" style={{ color: "var(--color-chart-2)" }} strokeWidth={3} />
                 <span>{t(`compare.rows.${row}.bee`)}</span>
               </div>
             </div>
@@ -132,7 +132,7 @@ export function MarketingSalesProof() {
         </Reveal>
 
         <Reveal className="mt-8 flex flex-wrap items-center justify-center gap-3" delay={120}>
-          <Link href="/probar/sales" className="bee-btn text-sm font-semibold text-[var(--color-text)]" style={{ background: "var(--color-green-1)" }}>
+          <Link href="/probar/sales" className="bee-btn text-sm font-semibold text-[var(--color-text)]" style={{ background: "var(--color-chart-2)" }}>
             {t("cta")} <ArrowRight className="size-4" />
           </Link>
           <Link href="/register" className="bee-btn-ghost text-sm">

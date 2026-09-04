@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SALES } from "@/components/charts/palette";
+
 import type { DrawerTabKey } from "@/features/crm/opportunity-drawer-context";
 import type { Locale } from "@/i18n/locales";
 import type { CrmStage } from "@/lib/api/opportunities";
@@ -97,7 +97,7 @@ export function RightPane({
         </h2>
         <div className="flex flex-wrap items-center gap-2">
           {!closed && action && (
-            <button type="button" onClick={onPrimaryAction} className="bee-btn bee-btn--primary !text-sm" style={{ background: SALES.won, borderColor: SALES.won, color: "var(--color-card)" }}>
+            <button type="button" onClick={onPrimaryAction} className="bee-btn bee-btn--primary !text-sm">
               {formatNextBestAction(action, locale)}
             </button>
           )}

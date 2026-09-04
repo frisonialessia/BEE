@@ -1,5 +1,7 @@
 "use client";
 
+import { DATA, mix } from "@/components/charts/palette";
+
 import { useTranslations } from "next-intl";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -33,11 +35,11 @@ export function MeddicCorrelationChart({ stats }: { stats: MeddicBucketStat[] })
                 <div className="relative flex w-full flex-1 items-end justify-center rounded-t-[var(--radius-sm)] bg-[var(--color-primary)]/40">
                   <div
                     className="w-full rounded-t-[var(--radius-sm)] transition-[height] duration-300"
-                    // Bar height = deals in the bucket; its green = the win rate
-                    // (mint → lime → won green), so the label above and the color agree.
+                    // Bar height = deals in the bucket; its honey strength = the
+                    // win rate (full → soft), so the label above and the color agree.
                     style={{
                       height: `${Math.max(pct, total > 0 ? 4 : 0)}%`,
-                      background: (s.winRate ?? 0) >= 0.67 ? "var(--color-green-1)" : (s.winRate ?? 0) >= 0.34 ? "var(--color-green-2)" : "var(--color-green-3)",
+                      background: (s.winRate ?? 0) >= 0.67 ? DATA.honey : (s.winRate ?? 0) >= 0.34 ? mix(DATA.honey, 65) : mix(DATA.honey, 35),
                     }}
                   />
                 </div>

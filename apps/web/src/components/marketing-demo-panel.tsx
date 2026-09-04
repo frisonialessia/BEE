@@ -116,7 +116,7 @@ function SignalsView() {
               <span className="text-xs font-semibold tabular-nums">{row.value}</span>
             </div>
           ))}
-          <p className="flex items-center gap-1.5 text-micro text-[var(--color-chart-5)]">
+          <p className="flex items-center gap-1.5 text-micro text-[var(--color-text)]">
             <Flame className="size-3" />
             {t("hotLeads", { count: 3 })}
           </p>
@@ -172,7 +172,7 @@ function SignalsView() {
           <p className="bee-eyebrow">{t("signalFlowTitle")}</p>
           {SIGNAL_FEED.map((event) => (
             <div key={event.id} className="flex gap-2">
-              <div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--color-chart-4)]">
+              <div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--color-text)]">
                 <event.icon className="size-3" strokeWidth={1.75} />
               </div>
               <div className="min-w-0">
@@ -197,7 +197,7 @@ function SignalsView() {
           </div>
           <div className="flex items-center justify-between rounded-sm bg-[var(--color-primary)]/40 px-2.5 py-2">
             <span className="bee-kpi-tile__label">{t("signalsToday")}</span>
-            <span className="text-xs font-semibold text-[var(--color-chart-4)]">
+            <span className="text-xs font-semibold text-[var(--color-text)]">
               {t("signalsTodayValue", { detected: 24, new: 6 })}
             </span>
           </div>
@@ -387,7 +387,7 @@ function LeadsView() {
       </div>
 
       <div className="flex items-center gap-3 rounded-sm border border-dashed border-[var(--color-divider)] p-2.5">
-        <Flame className="size-4 shrink-0 text-[var(--color-chart-5)]" />
+        <Flame className="size-4 shrink-0 text-[var(--color-text)]" />
         <div className="min-w-0">
           <p className="bee-kpi-tile__label">{t("topScoreLabel")}</p>
           <p className="text-xs font-medium leading-snug">
@@ -506,7 +506,7 @@ function ForecastView() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="flex items-center gap-1.5 text-sm font-semibold">
-              <BarChart3 className="size-4 stroke-[1.25] text-[var(--color-chart-3)]" />
+              <BarChart3 className="size-4 stroke-[1.25] text-[var(--color-text)]" />
               {t("title")}
             </h3>
             <p className="bee-caption mt-0.5">{t("subtitle")}</p>
@@ -615,7 +615,7 @@ function ForecastView() {
         <span>{t("basedOn")}</span>
         <Link
           href="/funcionalidades#pronostico"
-          className="inline-flex shrink-0 items-center gap-1 font-medium text-[var(--color-chart-4)] hover:underline"
+          className="inline-flex shrink-0 items-center gap-1 font-medium text-[var(--color-text)] hover:underline"
         >
           {t("viewMore")} <ArrowUpRight className="size-3" />
         </Link>
@@ -676,9 +676,9 @@ export function MarketingDemoPanel() {
        * over the panel's ground so it reads as the frame of the shot. */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] bg-[var(--color-card)] px-4 py-2.5 sm:px-5">
         <div className="flex items-center gap-2">
-          <span className="size-2.5 rounded-full bg-[var(--color-green-1)]" aria-hidden />
-          <span className="size-2.5 rounded-full bg-[var(--color-green-2)]" aria-hidden />
-          <span className="size-2.5 rounded-full bg-[var(--color-green-3)]" aria-hidden />
+          <span className="size-2.5 rounded-full bg-[var(--color-chart-4)]" aria-hidden />
+          <span className="size-2.5 rounded-full bg-[var(--color-chart-6)]" aria-hidden />
+          <span className="size-2.5 rounded-full bg-[var(--color-primary)]" aria-hidden />
           <span className="bee-micro ml-2 hidden rounded-sm bg-[var(--color-primary)]/60 px-2 py-0.5 sm:inline">
             app.bee.io/dashboard
           </span>

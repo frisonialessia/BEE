@@ -466,7 +466,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)]">
-            <Building2 className="size-5 text-[var(--color-chart-4)]" />
+            <Building2 className="size-5 text-[var(--color-text)]" />
           </span>
           <div>
             <h1 className="bee-display">{company.name}</h1>
@@ -492,7 +492,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
               href={company.website}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-chart-4)] hover:underline"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-text)] hover:underline"
             >
               {t("website")}
               <ArrowUpRight className="size-3" />
@@ -569,7 +569,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
                         ].join(" · ")}
                       >
                         <AlertTriangle
-                          className="mt-1 size-3.5 shrink-0 text-[var(--color-chart-1)]"
+                          className="mt-1 size-3.5 shrink-0 text-[var(--color-text)]"
                           aria-label={t("contacts.incompleteAria")}
                         />
                       </span>

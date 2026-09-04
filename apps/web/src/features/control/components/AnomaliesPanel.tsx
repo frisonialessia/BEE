@@ -88,7 +88,7 @@ export function AnomaliesPanel() {
         </div>
       ) : alerts.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
-          <ShieldCheck className="size-5 text-[var(--color-chart-4)]" aria-hidden />
+          <ShieldCheck className="size-5 text-[var(--color-text)]" aria-hidden />
           <p className="text-sm">{t("empty")}</p>
           <p className="bee-micro">{t("emptyHint")}</p>
         </div>

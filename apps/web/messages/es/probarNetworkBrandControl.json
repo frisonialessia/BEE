@@ -338,7 +338,6 @@
   },
   "control": {
     "caption": "¿BEE está funcionando bien ahora mismo y qué necesita de ti?",
-    "overviewTab": "Sistema",
     "leadWorkspace": {
       "ariaLabel": "Espacio de leads",
       "eyebrow": "Zona de acción",
@@ -382,8 +381,8 @@
           "error": "Con errores"
         }
       },
-      "title": "Salud del sistema",
-      "caption": "Conexión, base de datos y motor de señales",
+      "title": "Motor de señales",
+      "caption": "Señales recibidas por hora en las últimas 24 h y estado de la conexión, la base de datos y el motor",
       "rows": {
         "api": "Conexión con BEE",
         "apiHintDown": "No se pudo llegar al servidor",
@@ -393,11 +392,7 @@
         "workerHint": "El proceso que analiza cada señal que entra"
       },
       "loadHint": "Cuánto trabajo tiene acumulado ahora",
-      "counters": {
-        "queue": "En cola",
-        "processed": "Procesadas",
-        "errors": "Errores"
-      }
+      "perHour": "{count, plural, one {# señal} other {# señales}}"
     },
     "apiStatus": {
       "ariaLabel": "APIs externas",
@@ -461,8 +456,8 @@
       }
     },
     "stats": {
-      "signals24h": "Señales (24 h)",
-      "signals24hHint": "Nuevas señales que entraron en el último día",
+      "signals24h": "Ingesta (24 h)",
+      "signals24hHint": "Señales que entraron en el último día",
       "activeSources": "Fuentes activas",
       "activeSourcesHint": "de {total} fuentes conectadas entregando señales",
       "noSources": "Todavía no hay fuentes configuradas",
@@ -470,7 +465,10 @@
       "queueHint": "Señales esperando turno para ser procesadas",
       "errors": "Errores",
       "errorsHintNone": "Ningún fallo al procesar señales",
-      "errorsHintSome": "Señales que fallaron al procesarse"
+      "errorsHintSome": "Señales que fallaron al procesarse",
+      "modelConfidence": "Confianza del modelo",
+      "modelConfidenceHint": "{count, plural, =0 {Ninguna decisión pendiente de revisión} one {# decisión de agentes a revisar} other {# decisiones de agentes a revisar}}",
+      "modelConfidenceHintNone": "Todavía no hay decisiones registradas"
     }
   },
   "resiliencePanel": {

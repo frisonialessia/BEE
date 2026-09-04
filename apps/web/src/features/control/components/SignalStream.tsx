@@ -95,7 +95,7 @@ export function SignalStream() {
 
   return (
     <OverviewCard
-      span={6}
+      span={4}
       title={t("title")}
       caption={t("caption")}
       action={

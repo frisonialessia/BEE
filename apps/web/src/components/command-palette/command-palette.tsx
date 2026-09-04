@@ -228,7 +228,7 @@ export function CommandPalette() {
             className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
           {brainSearching && debouncedQuery.trim().length >= 3 && (
-            <Sparkles className="size-3.5 shrink-0 animate-pulse text-[var(--color-chart-4)]" aria-hidden />
+            <Sparkles className="size-3.5 shrink-0 animate-pulse text-[var(--color-text)]" aria-hidden />
           )}
           <kbd className="shrink-0 rounded-[var(--radius-sm)] border border-border px-2 py-1 bee-micro">
             Esc
@@ -257,7 +257,7 @@ export function CommandPalette() {
                         active ? "bg-[var(--color-primary)]/40" : "hover:bg-[var(--color-primary)]/20"
                       }`}
                     >
-                      <Icon className="size-4 shrink-0 text-[var(--color-chart-4)]" />
+                      <Icon className="size-4 shrink-0 text-[var(--color-text)]" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-medium">{entry.label}</p>
                         {entry.sublabel && (

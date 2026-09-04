@@ -204,7 +204,7 @@ export function OutboundWebhooksSection({ canManage }: { canManage: boolean }) {
                         type="button"
                         onClick={() => deleteWebhook.mutate(w.id)}
                         disabled={deleteWebhook.isPending}
-                        className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-chart-2)]"
+                        className="rounded-[var(--radius-sm)] p-1 text-muted-foreground transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-text)]"
                         aria-label={t("deleteAria")}
                       >
                         <Trash2 className="size-3.5" />

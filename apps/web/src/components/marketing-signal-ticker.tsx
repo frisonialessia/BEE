@@ -31,7 +31,7 @@ function TickerContent({ items }: { items: readonly string[] }) {
             key={i}
             className="flex shrink-0 items-center gap-2 border-r border-[var(--color-divider)] px-6 py-3"
           >
-            <Icon className="size-3.5 shrink-0 text-[var(--color-chart-4)]" strokeWidth={1.75} />
+            <Icon className="size-3.5 shrink-0 text-[var(--color-text)]" strokeWidth={1.75} />
             <span className="whitespace-nowrap text-xs text-muted-foreground">{text}</span>
           </div>
         );

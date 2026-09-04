@@ -6,9 +6,7 @@
     "title": "Forecast",
     "subtitle": "Pipeline weighted by close probability, month over month, and which deals are at risk",
     "tabs": {
-      "forecast": "Forecast",
-      "overview": "Overview",
-      "simulator": "Scenario simulator"
+      "overview": "Overview"
     },
     "outerTabs": {
       "winLoss": "Win/Loss"
@@ -37,9 +35,20 @@
         "hint": "No date, overdue, or poorly qualified"
       }
     },
-    "byMonth": {
-      "title": "Forecast by month",
-      "caption": "Weighted and total pipeline, month over month"
+    "projection": {
+      "title": "Revenue projection",
+      "caption": "Cumulative weighted forecast, month over month, at your real close rate",
+      "captionFactor": "Same close rate on {factor}× today's open pipeline",
+      "lever": "If I prospect",
+      "factor": "×{factor}",
+      "scenarios": {
+        "conservative": "Conservative",
+        "conservativeHint": "{count, plural, =0 {No deals at risk} one {Without the # deal at risk} other {Without the # deals at risk}}",
+        "realistic": "Realistic",
+        "realisticHint": "Amount × close probability",
+        "optimistic": "Optimistic",
+        "optimisticHint": "Everything in progress closes"
+      }
     },
     "trend": {
       "title": "Closing trend",
@@ -62,13 +71,6 @@
         "fecha_vencida": "Close date overdue",
         "poco_calificada": "Poorly qualified for its stage"
       }
-    },
-    "byStage": {
-      "title": "Open pipeline by stage",
-      "caption": "Unweighted amount and number of opportunities in each stage",
-      "detected": "New",
-      "ready_to_action": "Ready to act",
-      "in_progress": "In progress"
     }
   },
   "trendsChart": {
@@ -105,52 +107,6 @@
         "hint": "Is someone inside pushing the purchase for us?"
       }
     }
-  },
-  "barChart": {
-    "tooltip": "{label}: {weighted} weighted out of {total} in pipeline ({count, plural, one {# opportunity} other {# opportunities}})",
-    "legendWeighted": "Weighted",
-    "legendTotal": "Total pipeline"
-  },
-  "simulator": {
-    "signalTypes": {
-      "funding_round": "Funding round",
-      "hiring_surge": "Hiring surge",
-      "executive_change": "Executive change",
-      "expansion": "Expansion",
-      "product_launch": "Product launch"
-    },
-    "channels": {
-      "email": "Email",
-      "linkedin": "LinkedIn",
-      "warm_intro": "Warm intro",
-      "twitter": "Twitter/X"
-    },
-    "variants": {
-      "conservative": "Conservative",
-      "realistic": "Realistic",
-      "optimistic": "Optimistic"
-    },
-    "perMonth": "{value}/mo",
-    "winRateSuffix": "{percent}% close rate",
-    "paramsTitle": "Scenario parameters",
-    "sectorPlaceholder": "Industry (e.g. fintech)",
-    "anyDiscStyle": "Any DISC style",
-    "discStyle": "Style {letter}",
-    "monthlySignalsLabel": "Target monthly signals: {value}",
-    "heatLabel": "Dark Funnel heat: {value}",
-    "repsLabel": "Additional reps: {value}",
-    "runButton": "Run scenario",
-    "runningButton": "Simulating…",
-    "errorMessage": "Couldn't run the simulation — try again.",
-    "emptyState": "Set up a scenario and run the simulation.",
-    "noHistoricalData": "No outcome history in your organization yet — these projections are generic industry estimates, not your real performance. Log your first outcomes (Win/Loss) to unlock projections based on your own data.",
-    "lowConfidence": "Low data confidence — only {count, plural, one {# historical outcome} other {# historical outcomes}} for this segment. Projections carry a wide margin of error.",
-    "defaultDealValue": "The deal value ({value}) is an industry estimate — there aren't enough closed deals with a real amount in this segment yet. Add the amount when qualifying each opportunity so this figure becomes yours.",
-    "effectiveWinRate": "Effective close rate: {percent}%",
-    "baseWinRate": "(base {percent}%)",
-    "keyDrivers": "Key drivers:",
-    "recommendedActions": "Recommended:",
-    "riskFactors": "Risks:"
   },
   "winLoss": {
     "title": "Win/Loss",

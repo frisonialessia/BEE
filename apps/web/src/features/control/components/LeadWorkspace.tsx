@@ -57,7 +57,7 @@ export function LeadWorkspace() {
           />
           {hotCount > 0 && (
             <p className="mt-3 flex items-center gap-1.5 text-xs">
-              <Flame className="size-3.5 text-[var(--color-chart-4)]" aria-hidden />
+              <Flame className="size-3.5 text-[var(--color-text)]" aria-hidden />
               {t("hotLeads", { count: hotCount })}
             </p>
           )}

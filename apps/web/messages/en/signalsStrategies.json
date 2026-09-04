@@ -15,7 +15,8 @@
     "itemLabel": "signals",
     "outerTabs": {
       "feed": "Feed",
-      "priority": "Prioritization"
+      "priority": "Prioritization",
+      "intent": "Intent"
     },
     "mixTitle": "Signal mix",
     "mixSubtitle": "By type, across every loaded signal"
@@ -27,15 +28,16 @@
     "live": "Live",
     "demo": "Demo data",
     "tabBattlecards": "Battlecards ({count})",
-    "tabPipeline": "Pipeline ({count})",
-    "tabLearning": "Learning ({count})",
-    "tabMarketInsights": "Market ({count})",
+    "tabWorks": "What works ({count})",
     "battlecardsEmptyTitle": "No battlecards ready for action yet.",
     "battlecardsEmptySubtitle": "Signals need to be enriched first.",
     "battlecardsItemLabel": "battlecards",
-    "pipelineItemLabel": "opportunities",
-    "learningCaption": "Real patterns from closed deals — they bias every new battlecard today",
-    "marketInsightsCaption": "What TrendAnalyst detects across all signals — it sharpens every battlecard behind the scenes",
+    "worksCaption": "Every real pattern from closed deals with the market signal behind it — this is what biases every new battlecard today",
+    "stageFilter": {
+      "aria": "Filter battlecards by stage",
+      "all": "All stages",
+      "empty": "No battlecards in “{stage}” right now."
+    },
     "sampleLine": "Rates computed over {closed, plural, one {# closed deal} other {# closed deals}} in your account ({won, plural, one {# won} other {# won}})",
     "sampleLineEmpty": "No closed deals yet — win rates appear once the first one closes",
     "card": {
@@ -63,12 +65,28 @@
       "nextStepLead": "{action} · {lead} via {channel}",
       "openStrategyTitle": "Opens the strategy with the prepared message",
       "scheduleMeeting": "Schedule a meeting"
+    },
+    "works": {
+      "viaChannel": "{playbook} via {channel}",
+      "anySignal": "Any signal",
+      "noPatternYet": "The market is moving on “{signal}” but you haven't closed deals with that pattern yet",
+      "daysSub": "average, won",
+      "tiles": {
+        "market": "Market signals"
+      },
+      "confidencePct": "{pct}% confidence",
+      "noInsight": "no market signal",
+      "noInsightFor": "No active market signal for “{signal}” — the pattern rests on your closed deals alone",
+      "confidence": {
+        "low": "Low confidence",
+        "medium": "Medium confidence",
+        "high": "High confidence"
+      },
+      "emptyTitle": "Not enough closed deals or signals yet to learn what works.",
+      "emptySubtitle": "Once more opportunities close with the same playbook and channel, or TrendAnalyst detects a market pattern, it shows up here."
     }
   },
   "darkFunnel": {
-    "eyebrow": "Intent Signal Engine",
-    "title": "Dark Funnel",
-    "subtitle": "High-intensity anonymous research — leads researching before they convert",
     "stageReadyToBuy": "Ready to buy",
     "stageDecision": "Decision",
     "stageConsideration": "Consideration",

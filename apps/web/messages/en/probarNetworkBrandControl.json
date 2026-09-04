@@ -338,7 +338,6 @@
   },
   "control": {
     "caption": "Is BEE running well right now, and what does it need from you?",
-    "overviewTab": "System",
     "leadWorkspace": {
       "ariaLabel": "Lead workspace",
       "eyebrow": "Action zone",
@@ -382,8 +381,8 @@
           "error": "With errors"
         }
       },
-      "title": "System health",
-      "caption": "Connection, database and signal engine",
+      "title": "Signal engine",
+      "caption": "Signals received per hour over the last 24 h, and the state of the connection, the database and the engine",
       "rows": {
         "api": "Connection to BEE",
         "apiHintDown": "The server could not be reached",
@@ -393,11 +392,7 @@
         "workerHint": "The process that analyzes every incoming signal"
       },
       "loadHint": "How much work is piled up right now",
-      "counters": {
-        "queue": "In queue",
-        "processed": "Processed",
-        "errors": "Errors"
-      }
+      "perHour": "{count, plural, one {# signal} other {# signals}}"
     },
     "apiStatus": {
       "ariaLabel": "External APIs",
@@ -461,8 +456,8 @@
       }
     },
     "stats": {
-      "signals24h": "Signals (24 h)",
-      "signals24hHint": "New signals that came in over the last day",
+      "signals24h": "Ingest (24 h)",
+      "signals24hHint": "Signals that came in over the last day",
       "activeSources": "Active sources",
       "activeSourcesHint": "of {total} connected sources delivering signals",
       "noSources": "No sources configured yet",
@@ -470,7 +465,10 @@
       "queueHint": "Signals waiting their turn to be processed",
       "errors": "Errors",
       "errorsHintNone": "No failures while processing signals",
-      "errorsHintSome": "Signals that failed while being processed"
+      "errorsHintSome": "Signals that failed while being processed",
+      "modelConfidence": "Model confidence",
+      "modelConfidenceHint": "{count, plural, =0 {No decision pending review} one {# agent decision to review} other {# agent decisions to review}}",
+      "modelConfidenceHintNone": "No decisions logged yet"
     }
   },
   "resiliencePanel": {

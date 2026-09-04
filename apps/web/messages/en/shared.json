@@ -25,50 +25,6 @@
     "generatorReasoning": "Generator's reasoning",
     "variant": "Variant: {arm}"
   },
-  "revenueSimulator": {
-    "heading": "Revenue simulator",
-    "caption": "Projects the impact of increasing outreach in a segment",
-    "confidence": {
-      "none": "No data yet",
-      "low": "Low confidence",
-      "medium": "Medium confidence",
-      "high": "High confidence"
-    },
-    "signalTypes": {
-      "funding_round": "Funding round",
-      "hiring": "Hiring increase",
-      "leadership_change": "Leadership change",
-      "tech_adoption": "Tech adoption",
-      "product_launch": "Product launch",
-      "expansion": "Expansion"
-    },
-    "form": {
-      "signal": "Signal",
-      "industry": "Industry",
-      "industryPlaceholder": "e.g. SaaS",
-      "multiplier": "Multiplier ({factor}×)"
-    },
-    "errors": {
-      "offline": "Couldn't connect to the BEE API. Make sure the backend is running.",
-      "failed": "Simulation failed. Try again."
-    },
-    "running": "Simulating…",
-    "runButton": "Simulate {factor}× outreach",
-    "realisticProjection": "Realistic projection",
-    "deals": "deals",
-    "vsBaseline": "vs baseline",
-    "topPlaybook": "Top playbook:",
-    "via": "via",
-    "stats": {
-      "winRate": "Win rate",
-      "pipeline": "Pipeline",
-      "dataPoints": "Data points"
-    },
-    "methodology": {
-      "show": "Show methodology",
-      "hide": "Hide methodology"
-    }
-  },
   "signalHexMap": {
     "sectionAriaLabel": "Signal hex map — hive closing-temperature heatmap",
     "canvasAriaLabel": "Hexagonal heatmap of {count} leads by closing temperature",

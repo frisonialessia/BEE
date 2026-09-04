@@ -25,50 +25,6 @@
     "generatorReasoning": "Razonamiento del generador",
     "variant": "Variante: {arm}"
   },
-  "revenueSimulator": {
-    "heading": "Simulador de ingresos",
-    "caption": "Proyecta el impacto de aumentar la prospección en un segmento",
-    "confidence": {
-      "none": "Sin datos aún",
-      "low": "Confianza baja",
-      "medium": "Confianza media",
-      "high": "Confianza alta"
-    },
-    "signalTypes": {
-      "funding_round": "Ronda de financiación",
-      "hiring": "Aumento de contrataciones",
-      "leadership_change": "Cambio de liderazgo",
-      "tech_adoption": "Adopción tecnológica",
-      "product_launch": "Lanzamiento de producto",
-      "expansion": "Expansión"
-    },
-    "form": {
-      "signal": "Señal",
-      "industry": "Industria",
-      "industryPlaceholder": "p. ej. SaaS",
-      "multiplier": "Multiplicador ({factor}×)"
-    },
-    "errors": {
-      "offline": "No se pudo conectar con la API de BEE. Asegúrate de que el backend esté en ejecución.",
-      "failed": "La simulación falló. Inténtalo de nuevo."
-    },
-    "running": "Simulando…",
-    "runButton": "Simular prospección {factor}×",
-    "realisticProjection": "Proyección realista",
-    "deals": "operaciones",
-    "vsBaseline": "vs línea base",
-    "topPlaybook": "Táctica principal:",
-    "via": "vía",
-    "stats": {
-      "winRate": "Tasa de éxito",
-      "pipeline": "Pipeline",
-      "dataPoints": "Puntos de datos"
-    },
-    "methodology": {
-      "show": "Mostrar metodología",
-      "hide": "Ocultar metodología"
-    }
-  },
   "signalHexMap": {
     "sectionAriaLabel": "Mapa hexagonal de señales — mapa de calor de la colmena",
     "canvasAriaLabel": "Mapa de calor hexagonal de {count} leads por temperatura de cierre",

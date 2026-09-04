@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { AreaChart } from "@/components/charts/area-chart";
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { Donut } from "@/components/charts/donut";
-import { DATA, SALES } from "@/components/charts/palette";
+import { DATA, mix as tint } from "@/components/charts/palette";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-heatmap";
 import { OverviewCard } from "@/components/dashboard/overview-card";
@@ -170,7 +170,7 @@ export function DashboardOverview({
             delta={sales.monthDelta}
             hint={sales.goal ? t("kpis.goalHint", { goal: money(sales.goal) }) : undefined}
             progress={sales.attainment ?? undefined}
-            tone={SALES.won}
+            tone={DATA.honey}
           />
           <StatTile
             label={t("kpis.openPipeline")}
@@ -196,21 +196,25 @@ export function DashboardOverview({
           of tiring them. "Cuándo llega el mercado" moved to Señales, where the
           day/hour pattern is used to plan prospecting. */}
       <div className="bee-overview">
-        {/* Hoy */}
+        {/* Central block: the hive — BEE's identity — with the stage metrics
+            under it; the day's plays at its side. */}
+        <SignalHexMap height={260} className="h-full lg:min-h-[32rem]!" style={{ gridColumn: "span 8" }} />
+
         <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")} className="lg:min-h-[32rem]!">
           <DecisionFeed embedded criticalAccounts={criticalAccounts} />
         </OverviewCard>
 
-        <OverviewCard span={4} title={tBrief("title")} caption={t("sections.brief.caption")} className="lg:min-h-[32rem]!">
+        {/* Hoy — what needs me, when, and who is closing. */}
+        <OverviewCard span={4} title={tBrief("title")} caption={t("sections.brief.caption")} className="lg:min-h-[26rem]!">
           <DailyBrief embedded />
         </OverviewCard>
 
         <OverviewCard
           span={4}
-          className="lg:min-h-[32rem]!"
+          className="lg:min-h-[26rem]!"
           title={tCalendar("widget.title")}
           action={
-            <Link href={`${base}/calendar`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
+            <Link href={`${base}/calendar`} className="bee-micro font-medium text-[var(--color-text)] hover:underline">
               {tCalendar("widget.viewAll")}
             </Link>
           }
@@ -218,13 +222,27 @@ export function DashboardOverview({
           <MyCalendarWidget embedded />
         </OverviewCard>
 
-        {/* Dinero */}
+        <OverviewCard
+          span={4}
+          className="lg:min-h-[26rem]!"
+          title={t("sections.ranking.title")}
+          caption={t("sections.ranking.caption")}
+          action={
+            <Link href={`${base}/sales`} className="bee-micro font-medium text-[var(--color-text)] hover:underline">
+              {t("sections.ranking.link")}
+            </Link>
+          }
+        >
+          <TeamGoalRanking days={90} limit={4} bars />
+        </OverviewCard>
+
+        {/* Dinero — closed by month, the funnel, where we close best. */}
         <OverviewCard
           span={5}
           title={t("sections.sales.title")}
           caption={sales.goal ? t("sections.sales.captionGoal", { goal: money(sales.goal) }) : t("sections.sales.caption")}
           action={
-            <Link href={`${base}/sales`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
+            <Link href={`${base}/sales`} className="bee-micro font-medium text-[var(--color-text)] hover:underline">
               {t("sections.sales.link")}
             </Link>
           }
@@ -236,7 +254,7 @@ export function DashboardOverview({
               points={sales.months}
               target={sales.goal}
               formatValue={(v) => money(v)}
-              colorFor={(p, _i, max) => (p.value >= max * 0.66 ? SALES.won : p.value >= max * 0.33 ? SALES.lime : SALES.mint)}
+              colorFor={(p, _i, max) => (p.value >= max * 0.66 ? DATA.honey : p.value >= max * 0.33 ? tint(DATA.honey, 65) : tint(DATA.honey, 40))}
             />
           )}
         </OverviewCard>
@@ -245,17 +263,12 @@ export function DashboardOverview({
           <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
         </OverviewCard>
 
-        <OverviewCard
-          span={4}
-          title={t("sections.ranking.title")}
-          caption={t("sections.ranking.caption")}
-          action={
-            <Link href={`${base}/sales`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
-              {t("sections.ranking.link")}
-            </Link>
-          }
-        >
-          <TeamGoalRanking days={90} limit={4} bars />
+        <OverviewCard span={4} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
+          <IndustrySignalHeatmap
+            opportunities={allOppsResult?.data ?? []}
+            signals={signals}
+            companies={companiesResult?.data ?? []}
+          />
         </OverviewCard>
 
         {/* Mercado — one box: volume by week on the left, mix by type on the right. */}
@@ -274,17 +287,6 @@ export function DashboardOverview({
               </div>
             </div>
           </div>
-        </OverviewCard>
-
-        {/* Apuntar */}
-        <SignalHexMap height={220} className="h-full" style={{ gridColumn: "span 6" }} />
-
-        <OverviewCard span={6} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
-          <IndustrySignalHeatmap
-            opportunities={allOppsResult?.data ?? []}
-            signals={signals}
-            companies={companiesResult?.data ?? []}
-          />
         </OverviewCard>
       </div>
     </>

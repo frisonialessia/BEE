@@ -494,7 +494,7 @@ function MiniMonthCalendar({
               onClick={() => onSelectDay(day)}
               className={`relative rounded-[var(--radius-sm)] py-1 text-xs transition-colors ${
                 isSelectedWeek ? "bg-[var(--color-chart-4)]/15" : "hover:bg-[var(--color-primary)]/30"
-              } ${inMonth ? "" : "text-muted-foreground"} ${isToday ? "font-bold text-[var(--color-chart-4)]" : ""}`}
+              } ${inMonth ? "" : "text-muted-foreground"} ${isToday ? "font-bold text-[var(--color-text)]" : ""}`}
             >
               {day.getDate()}
               {hasMeeting && (
@@ -679,9 +679,9 @@ function UpcomingEventCard({
       <p className="bee-eyebrow">{t("sidebar.upcomingEvent")}</p>
       <div className="mt-2 flex items-center gap-2">
         {meeting.meeting_url ? (
-          <Video className="size-4 shrink-0 text-[var(--color-chart-4)]" />
+          <Video className="size-4 shrink-0 text-[var(--color-text)]" />
         ) : (
-          <Users className="size-4 shrink-0 text-[var(--color-chart-4)]" />
+          <Users className="size-4 shrink-0 text-[var(--color-text)]" />
         )}
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{meeting.title}</p>
@@ -1324,7 +1324,7 @@ export function CalendarPage() {
                   <p className="bee-eyebrow">
                     {new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { weekday: "short" }).format(day)}
                   </p>
-                  <p className={`text-sm font-semibold ${isToday ? "text-[var(--color-chart-4)]" : ""}`}>
+                  <p className={`text-sm font-semibold ${isToday ? "text-[var(--color-text)]" : ""}`}>
                     {day.getDate()}
                   </p>
                 </button>
@@ -1517,7 +1517,7 @@ export function CalendarPage() {
                     href={detail.meeting_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex w-fit items-center gap-2 text-sm font-medium text-[var(--color-chart-4)] hover:underline"
+                    className="flex w-fit items-center gap-2 text-sm font-medium text-[var(--color-text)] hover:underline"
                   >
                     <Link2 className="size-3.5" />
                     {t("card.joinMeeting")}
@@ -1530,7 +1530,7 @@ export function CalendarPage() {
                       return (
                         <span
                           key={uid}
-                          className="flex size-7 items-center justify-center rounded-full bg-[var(--color-chart-4)]/20 text-micro font-semibold text-[var(--color-chart-4)]"
+                          className="flex size-7 items-center justify-center rounded-full bg-[var(--color-chart-4)]/20 text-micro font-semibold text-[var(--color-text)]"
                           title={u?.full_name}
                         >
                           {u ? initials(u.full_name) : "?"}

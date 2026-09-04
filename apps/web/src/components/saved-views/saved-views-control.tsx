@@ -150,7 +150,7 @@ export function SavedViewsControl<TConfig extends Record<string, unknown>>({
               <button
                 type="button"
                 onClick={() => setShowSaveForm(true)}
-                className="w-full rounded-[var(--radius-md)] px-2 py-2 text-left text-xs text-[var(--color-chart-4)] hover:bg-[var(--color-primary)]/25"
+                className="w-full rounded-[var(--radius-md)] px-2 py-2 text-left text-xs text-[var(--color-text)] hover:bg-[var(--color-primary)]/25"
               >
                 {t("saveCurrent")}
               </button>

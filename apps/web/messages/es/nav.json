@@ -19,7 +19,6 @@
     "priority": "Priorización",
     "signals": "Señales",
     "strategies": "Estrategias",
-    "darkFunnel": "Dark Funnel",
     "forecast": "Pronóstico",
     "winLoss": "Ganado/Perdido",
     "control": "Control",
@@ -27,7 +26,6 @@
     "brand": "Voz de marca",
     "sequences": "Secuencias",
     "integrations": "Integraciones",
-    "resilience": "Resiliencia",
     "team": "Equipo",
     "sales": "Ventas"
   }

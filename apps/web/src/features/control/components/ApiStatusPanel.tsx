@@ -77,7 +77,7 @@ export function ApiStatusPanel() {
   const snapshot = result?.data;
 
   return (
-    <OverviewCard span={6} title={t("title")} caption={t("caption")}>
+    <OverviewCard span={4} title={t("title")} caption={t("caption")}>
       {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (

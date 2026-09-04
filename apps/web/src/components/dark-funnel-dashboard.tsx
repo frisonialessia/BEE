@@ -15,6 +15,7 @@ import { scoreVariant } from "@/lib/format";
 import { formatDate } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
 import { LiveBadge } from "@/components/live-badge";
+import { SignalHexMap } from "@/features/control/components/SignalHexMap";
 
 // BEE's palette has no red — the heat gradient (hottest → coolest) maps onto
 // the chart accents instead: magenta (5, "hot"/success everywhere else in
@@ -60,9 +61,8 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
           <div className="flex items-center gap-2">
             {lead.is_hot && (
               <span
-                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-bold"
+                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-bold text-[var(--color-text)]"
                 style={{
-                  color: "var(--color-chart-2)",
                   borderColor: "var(--color-chart-2)",
                   background: "color-mix(in srgb, var(--color-chart-2) 15%, var(--color-background))",
                 }}
@@ -87,9 +87,8 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
             {Math.round(lead.research_intensity_score)}
           </Badge>
           <span
-            className="rounded-sm border px-2 py-0.5 text-xs font-medium"
+            className="rounded-sm border px-2 py-0.5 text-xs font-medium text-[var(--color-text)]"
             style={{
-              color: stage.varColor,
               borderColor: stage.varColor,
               background: `color-mix(in srgb, ${stage.varColor} 15%, var(--color-background))`,
             }}
@@ -125,6 +124,26 @@ function HotLeadCard({ lead }: { lead: HotLeadScore }) {
           <span>{t("lastLabel")}{formatDate(lead.last_signal_at, locale)}</span>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * "Intención" — the Dark Funnel as a tab of Señales, header-less (the page
+ * owns eyebrow/title/live badge). Same source as the feed: the intent
+ * signals the pipeline attaches to companies. The hive (SignalHexMap) sits
+ * on top as the one place it is drawn in detail — it used to be a third
+ * copy on Control. Mount it in signals-dashboard.tsx's MergedPageTabs as
+ *   { value: "intent", label: t("outerTabs.intent"), content: <DarkFunnelTab /> }
+ * so /dashboard/dark-funnel's redirect to ?tab=intent lands here.
+ */
+export function DarkFunnelTab() {
+  return (
+    <div className="space-y-4">
+      <div className="bee-overview">
+        <SignalHexMap height={240} maxLeads={200} className="h-full" style={{ gridColumn: "span 12" }} />
+      </div>
+      <DarkFunnelDashboard />
     </div>
   );
 }
@@ -235,6 +254,8 @@ export function DarkFunnelDashboard() {
           {["", "ready_to_buy", "decision", "consideration", "awareness"].map((stage) => (
             <button
               key={stage}
+              type="button"
+              aria-pressed={stageFilter === stage}
               onClick={() => setStageFilter(stage)}
               className={`bee-filter-tab ${stageFilter === stage ? "bee-filter-tab--active" : ""}`}
             >
@@ -245,6 +266,7 @@ export function DarkFunnelDashboard() {
         <div className="ml-auto flex items-center gap-2">
           <LiveBadge live={live} />
           <button
+            type="button"
             onClick={() => setShowSimulate((v) => !v)}
             className="bee-btn-ghost bee-btn-ghost--dashed"
           >

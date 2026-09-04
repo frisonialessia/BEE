@@ -31,7 +31,7 @@ export default async function TerminosPage() {
           </h1>
 
           <div className="mt-8 flex items-start gap-4 rounded-[var(--radius-md)] border border-dashed border-[var(--color-divider)] bg-[var(--color-primary)]/20 p-4">
-            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--color-chart-2)]" />
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--color-text)]" />
             <p className="bee-caption">{t("draftNotice")}</p>
           </div>
 

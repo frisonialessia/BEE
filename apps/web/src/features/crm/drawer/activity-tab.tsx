@@ -305,7 +305,7 @@ export function ActivityTab({
         <div className="bee-surface grid gap-4 p-4 sm:grid-cols-[1fr_auto]">
           <div className="min-w-0 leading-tight">
             <p className="flex min-w-0 items-center gap-2 text-sm">
-              <FileText className="size-4 shrink-0 stroke-[1.5]" style={{ color: hue }} />
+              <FileText className="size-4 shrink-0 stroke-[1.5]" />
               <span className="shrink-0 font-semibold tabular-nums">#{opportunity.id.slice(0, 6)}</span>
               <span className="truncate font-medium">{stripOpportunityTitlePrefix(opportunity.title)}</span>
             </p>

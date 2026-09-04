@@ -180,7 +180,7 @@ export function MessageLibrary() {
                   type="button"
                   onClick={() => deleteTemplate.mutate(tpl.id)}
                   disabled={deleteTemplate.isPending}
-                  className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 bee-micro transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-chart-2)]"
+                  className="inline-flex items-center gap-1 rounded-[var(--radius-sm)] px-2 py-1 bee-micro transition-colors hover:bg-[var(--color-chart-2)]/20 hover:text-[var(--color-text)]"
                 >
                   <Trash2 className="size-3" />
                   {t("delete")}

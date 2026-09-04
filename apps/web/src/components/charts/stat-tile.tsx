@@ -48,7 +48,7 @@ export function StatTile({
       </span>
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-lg font-bold leading-none tabular-nums [overflow-wrap:anywhere] sm:text-xl">{value}</p>
+          <p className="text-2xl font-bold leading-none tracking-tight tabular-nums [overflow-wrap:anywhere] md:text-3xl">{value}</p>
           {delta !== undefined ? (
             <DeltaChip value={delta} label={deltaLabel} tone={salesTone ? "sales" : tone} className="mt-1.5" />
           ) : hint ? (

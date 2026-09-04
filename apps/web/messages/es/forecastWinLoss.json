@@ -6,9 +6,7 @@
     "title": "Pronóstico",
     "subtitle": "Pipeline ponderado por probabilidad de cierre, mes a mes, y qué deals están en riesgo",
     "tabs": {
-      "forecast": "Pronóstico",
-      "overview": "Resumen",
-      "simulator": "Simulador de escenarios"
+      "overview": "Resumen"
     },
     "outerTabs": {
       "winLoss": "Ganado/Perdido"
@@ -37,9 +35,20 @@
         "hint": "Sin fecha, vencidas o poco calificadas"
       }
     },
-    "byMonth": {
-      "title": "Pronóstico por mes",
-      "caption": "Pipeline ponderado y total, mes a mes"
+    "projection": {
+      "title": "Proyección de ingresos",
+      "caption": "Pronóstico ponderado acumulado, mes a mes, con tu tasa de cierre real",
+      "captionFactor": "Mismo ritmo de cierre con {factor}× el pipeline abierto de hoy",
+      "lever": "Si prospecto",
+      "factor": "×{factor}",
+      "scenarios": {
+        "conservative": "Conservador",
+        "conservativeHint": "{count, plural, =0 {Sin deals en riesgo} one {Sin el # deal en riesgo} other {Sin los # deals en riesgo}}",
+        "realistic": "Realista",
+        "realisticHint": "Monto × probabilidad de cierre",
+        "optimistic": "Optimista",
+        "optimisticHint": "Todo lo que está en curso cierra"
+      }
     },
     "trend": {
       "title": "Tendencia de cierre",
@@ -62,13 +71,6 @@
         "fecha_vencida": "Fecha de cierre vencida",
         "poco_calificada": "Poco calificada para su etapa"
       }
-    },
-    "byStage": {
-      "title": "Pipeline abierto por etapa",
-      "caption": "Monto sin ponderar y número de oportunidades en cada etapa",
-      "detected": "Nuevas",
-      "ready_to_action": "Listas para acción",
-      "in_progress": "En curso"
     }
   },
   "trendsChart": {
@@ -105,52 +107,6 @@
         "hint": "¿Hay alguien adentro empujando la compra por nosotros?"
       }
     }
-  },
-  "barChart": {
-    "tooltip": "{label}: {weighted} ponderado de {total} en pipeline ({count, plural, one {# oportunidad} other {# oportunidades}})",
-    "legendWeighted": "Ponderado",
-    "legendTotal": "Pipeline total"
-  },
-  "simulator": {
-    "signalTypes": {
-      "funding_round": "Ronda de financiación",
-      "hiring_surge": "Aumento de contrataciones",
-      "executive_change": "Cambio de liderazgo",
-      "expansion": "Expansión",
-      "product_launch": "Lanzamiento de producto"
-    },
-    "channels": {
-      "email": "Email",
-      "linkedin": "LinkedIn",
-      "warm_intro": "Intro cálida",
-      "twitter": "Twitter/X"
-    },
-    "variants": {
-      "conservative": "Conservador",
-      "realistic": "Realista",
-      "optimistic": "Optimista"
-    },
-    "perMonth": "{value}/mes",
-    "winRateSuffix": "{percent}% de cierre",
-    "paramsTitle": "Parámetros del escenario",
-    "sectorPlaceholder": "Industria (ej. fintech)",
-    "anyDiscStyle": "Cualquier estilo DISC",
-    "discStyle": "Estilo {letter}",
-    "monthlySignalsLabel": "Señales mensuales objetivo: {value}",
-    "heatLabel": "Calor de Dark Funnel: {value}",
-    "repsLabel": "Reps adicionales: {value}",
-    "runButton": "Correr escenario",
-    "runningButton": "Simulando…",
-    "errorMessage": "No se pudo simular — intenta de nuevo.",
-    "emptyState": "Configura un escenario y corre la simulación.",
-    "noHistoricalData": "Sin historial de resultados en tu organización todavía — estas proyecciones son estimados genéricos de industria, no tu desempeño real. Registra tus primeros resultados (Ganado/Perdido) para desbloquear proyecciones basadas en tus propios datos.",
-    "lowConfidence": "Confianza de datos baja — solo {count, plural, one {# resultado histórico} other {# resultados históricos}} para este segmento. Las proyecciones tienen un margen de error amplio.",
-    "defaultDealValue": "El valor de deal ({value}) es un estimado de industria — todavía no hay suficientes deals cerrados con monto real en este segmento. Agrega el monto al calificar cada oportunidad para que esta cifra sea la tuya.",
-    "effectiveWinRate": "Tasa de cierre efectiva: {percent}%",
-    "baseWinRate": "(base {percent}%)",
-    "keyDrivers": "Impulsores clave:",
-    "recommendedActions": "Recomendado:",
-    "riskFactors": "Riesgos:"
   },
   "winLoss": {
     "title": "Ganado/Perdido",

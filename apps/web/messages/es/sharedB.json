@@ -55,24 +55,6 @@
     "intentAxis": "Intención →",
     "tooltip": "{name} — fit {fit}, intención {intent}"
   },
-  "successPatterns": {
-    "confidenceLabel": {
-      "low": "Confianza baja",
-      "medium": "Confianza media",
-      "high": "Confianza alta"
-    },
-    "emptyTitle": "Todavía no hay suficientes deals cerrados para aprender un patrón.",
-    "emptySubtitle": "En cuanto se cierren más oportunidades con el mismo playbook y canal, aparece aquí.",
-    "viaChannel": "{playbook} vía {channel}",
-    "dealsClosed": "{count, plural, one {# deal cerrado} other {# deals cerrados}}",
-    "avgDaysToClose": "{days} días promedio a cierre"
-  },
-  "marketInsights": {
-    "emptyTitle": "Todavía no hay suficientes señales para detectar un patrón de mercado.",
-    "emptySubtitle": "TrendAnalyst revisa el volumen de señales cada cierto número de ingestas — vuelve más tarde.",
-    "confidencePct": "{pct}% de confianza",
-    "evidenceCount": "{count, plural, one {basado en # señal} other {basado en # señales}}"
-  },
   "signalVolume": {
     "empty": "Sin señales todavía en esta ventana de tiempo.",
     "tooltip": "{label}: {count, plural, one {# señal} other {# señales}}",

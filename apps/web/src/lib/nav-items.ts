@@ -2,7 +2,6 @@ import {
   Building2,
   CalendarDays,
   Fingerprint,
-  Flame,
   KanbanSquare,
   LayoutDashboard,
   Lightbulb,
@@ -58,13 +57,14 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    // Signals/Priority and Forecast/Win-Loss, same "tabs, not two rows"
-    // treatment — see signals-dashboard.tsx / forecast-view.tsx.
+    // Signals/Priority/Dark Funnel and Forecast/Win-Loss, same "tabs, not
+    // rows" treatment — see signals-dashboard.tsx / forecast-view.tsx. The
+    // merged-away /dark-funnel still works as a redirect to
+    // /signals?tab=intent, see app/dashboard/dark-funnel/page.tsx.
     groupKey: "intelligence",
     items: [
       { href: "/dashboard/signals", icon: Radio, labelKey: "signals" },
       { href: "/dashboard/strategies", icon: Lightbulb, labelKey: "strategies" },
-      { href: "/dashboard/dark-funnel", icon: Flame, labelKey: "darkFunnel" },
       { href: "/dashboard/forecast", icon: TrendingUp, labelKey: "forecast" },
       { href: "/dashboard/sales", icon: Trophy, labelKey: "sales" },
     ],

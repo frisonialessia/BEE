@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
-import { DATA, SALES, mix } from "@/components/charts/palette";
+import { DATA, mix } from "@/components/charts/palette";
 import { ProgressRing } from "@/components/charts/progress-ring";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer, type DrawerCreatePreset } from "@/features/crm/opportunity-drawer-context";
@@ -814,8 +814,8 @@ function CreateForm({
             </div>
           </PaneSection>
 
-          {/* Monto — the one green box, same as view mode (SALES palette) */}
-          <div className="flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3" style={{ background: mix(SALES.mint, 60) }}>
+          {/* Monto — quiet lavender box, same as view mode; greens are Ventas-only */}
+          <div className="flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3" style={{ background: "var(--color-primary)" }}>
             <div className="min-w-0 flex-1 leading-tight">
               <p className="bee-caption font-medium text-[var(--color-text)]">{stageWord}</p>
               <div className="flex items-baseline gap-1.5">
@@ -847,7 +847,7 @@ function CreateForm({
                 )}
               </p>
             </div>
-            <select value={draft.opportunityType} onChange={(e) => update({ opportunityType: e.target.value as OpportunityType })} aria-label={t("typeLabel")} className="bee-input !h-8 !w-auto max-w-36 !text-sm" style={{ borderColor: SALES.won }}>
+            <select value={draft.opportunityType} onChange={(e) => update({ opportunityType: e.target.value as OpportunityType })} aria-label={t("typeLabel")} className="bee-input !h-8 !w-auto max-w-36 !text-sm">
               {OPPORTUNITY_TYPES.map((ot) => (
                 <option key={ot} value={ot}>
                   {opportunityTypeLabels[ot]}
@@ -974,7 +974,7 @@ function CreateForm({
                   points={monthly}
                   minHeight={120}
                   formatValue={(v) => formatMoney(v, "USD", locale, true)}
-                  colorFor={(p) => (p.current ? SALES.won : SALES.mint)}
+                  colorFor={(p) => (p.current ? DATA.honey : mix(DATA.honey, 45))}
                 />
               ) : (
                 <div className="bee-fill grid place-items-center rounded-[var(--radius-md)] border border-dashed border-[var(--color-divider)]">
@@ -1016,7 +1016,7 @@ function CreateForm({
             <div className="flex min-w-0 items-center gap-3">
               {savedAt && (
                 <>
-                  <span className="bee-caption truncate font-medium" style={{ color: mix(hue, 65, "var(--color-text)") }}>
+                  <span className="bee-caption truncate font-medium">
                     {t("draft.saved", { time: formatRelativeTime(savedAt, locale, new Date(now)) })}
                   </span>
                   <button type="button" onClick={discardDraft} className="bee-btn-text !text-sm">
@@ -1025,7 +1025,7 @@ function CreateForm({
                 </>
               )}
             </div>
-            <button type="submit" form={FORM_ID} disabled={!canSubmit} className="bee-btn bee-btn--primary !text-sm" style={{ background: SALES.won, borderColor: SALES.won, color: "var(--color-card)" }}>
+            <button type="submit" form={FORM_ID} disabled={!canSubmit} className="bee-btn bee-btn--primary !text-sm">
               {busy ? t("saving") : t("save")}
             </button>
           </div>

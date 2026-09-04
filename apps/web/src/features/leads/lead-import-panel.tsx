@@ -224,7 +224,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
               </p>
             )}
             {parseError && (
-              <p className="flex items-center gap-2 text-micro text-[var(--color-chart-2)]">
+              <p className="flex items-center gap-2 text-micro text-[var(--color-text)]">
                 <AlertCircle className="size-3.5 shrink-0" />
                 {parseError}
               </p>
@@ -277,7 +277,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
                 {result.skipped > 0 && ` · ${t("result.skippedRows", { count: result.skipped })}`}
               </p>
               {result.rows.some((r) => r.status === "error") && (
-                <ul className="mt-1 space-y-1 text-micro text-[var(--color-chart-2)]">
+                <ul className="mt-1 space-y-1 text-micro text-[var(--color-text)]">
                   {result.rows
                     .filter((r) => r.status === "error")
                     .slice(0, 10)
@@ -292,7 +292,7 @@ export function LeadImportPanel({ open, onClose }: { open: boolean; onClose: () 
           )}
 
           {importMutation.isError && (
-            <p className="flex items-center gap-2 text-micro text-[var(--color-chart-2)]">
+            <p className="flex items-center gap-2 text-micro text-[var(--color-text)]">
               <AlertCircle className="size-3.5 shrink-0" />
               {t("importError")}
             </p>

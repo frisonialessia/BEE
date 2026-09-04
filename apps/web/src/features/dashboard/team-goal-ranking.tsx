@@ -122,7 +122,12 @@ export function TeamGoalRanking({
                 {i === 0 && <Trophy className="size-3.5 shrink-0" style={{ color: sales ? SALES.won : DATA.honey }} />}
                 <span className="truncate">{rep.name}</span>
               </p>
-              <p className="bee-micro">{t("deals", { count: rep.deals })}{rep.attainment === null ? ` · ${t("noGoal")}` : ""}</p>
+              <p className="mt-0.5 flex items-center gap-1.5">
+                <span className="rounded-full px-2 py-0.5 bee-micro font-medium" style={{ background: sales ? mix(SALES.mint, 70) : mix(DATA.honey, 22) }}>
+                  {t("deals", { count: rep.deals })}
+                </span>
+                {rep.attainment === null && <span className="bee-micro">{t("noGoal")}</span>}
+              </p>
             </div>
             <span className="flex justify-center">{rep.attainment !== null && <ProgressRing value={rep.attainment} size={36} stroke={4} color={ringColor} />}</span>
             <span className="text-right text-sm font-bold tabular-nums">{formatMoney(rep.value, rep.currency, locale, true)}</span>

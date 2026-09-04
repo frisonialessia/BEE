@@ -46,7 +46,7 @@ export function buildNotifications({
       title: `Lead caliente: ${lead.company_name ?? lead.company_domain}`,
       description: `Temperatura de cierre ${Math.round(lead.research_intensity_score)}°`,
       timestamp: lead.last_signal_at ?? new Date(0).toISOString(),
-      href: "/dashboard/dark-funnel",
+      href: "/dashboard/signals?tab=intent",
     });
   }
 

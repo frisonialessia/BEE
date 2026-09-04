@@ -26,7 +26,7 @@ export function LookalikesPanel() {
   return (
     <div className="mb-4 rounded-[var(--radius-lg)] border border-[var(--color-chart-4)]/40 bg-[var(--color-chart-4)]/10 p-4">
       <div className="mb-1 flex items-center gap-2">
-        <Sparkles className="size-4 text-[var(--color-chart-4)]" />
+        <Sparkles className="size-4 text-[var(--color-text)]" />
         <p className="text-sm font-semibold">{t("heading", { count: companies.length })}</p>
       </div>
       <p className="bee-caption mb-3">{t("subtitle")}</p>
@@ -39,7 +39,7 @@ export function LookalikesPanel() {
           >
             <div className="flex items-start justify-between gap-2">
               <p className="truncate text-sm font-medium">{c.name}</p>
-              <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-4)]/20 px-2 py-1 text-micro font-medium text-[var(--color-chart-4)]">
+              <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-chart-4)]/20 px-2 py-1 text-micro font-medium text-[var(--color-text)]">
                 {Math.round(c.similarity * 100)}%
               </span>
             </div>

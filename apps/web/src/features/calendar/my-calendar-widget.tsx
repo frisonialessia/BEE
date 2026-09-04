@@ -95,10 +95,10 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
     <div className="bee-surface bee-bento-pad space-y-3">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <CalendarDays className="size-4 text-[var(--color-chart-4)]" />
+          <CalendarDays className="size-4 text-[var(--color-text)]" />
           <h2 className="bee-card-title">{t("widget.title")}</h2>
         </div>
-        <Link href={calendarHref} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
+        <Link href={calendarHref} className="bee-micro font-medium text-[var(--color-text)] hover:underline">
           {t("widget.viewAll")}
         </Link>
       </div>

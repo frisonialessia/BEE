@@ -130,7 +130,7 @@ export default function RegisterPage() {
             </div>
 
             {error && (
-              <p className="text-xs text-[var(--color-chart-2)]" role="alert">
+              <p className="text-xs text-[var(--color-text)]" role="alert">
                 {error}
               </p>
             )}

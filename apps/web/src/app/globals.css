@@ -17,7 +17,8 @@
   /* Two radii in the whole app: boxes (cards, panels, tiles) and controls
      (buttons, inputs, badges, chips). Every Tailwind rounded-* utility maps
      onto one of the two below, so no component can introduce a third. */
-  --radius-box: 16px;
+  /* Bento: floating 24 px cards, hairline border, one soft shadow. */
+  --radius-box: 24px;
   --radius-control: 12px;
   --radius-none: 0px;
   --radius-sm: var(--radius-control);
@@ -50,9 +51,9 @@
      pearl-grey ground by an ambient shadow, never a border — the border
      tokens stay defined (transparent, 0 width) so nothing else has to
      change to opt in. Signal/brief/stage fills stay as they are. */
-  --bee-card-border: transparent;
-  --bee-card-border-w: 0px;
-  --bee-shadow-card: 0 1px 2px rgba(20, 22, 31, 0.04), 0 10px 30px rgba(20, 22, 31, 0.06);
+  --bee-card-border: var(--color-border);
+  --bee-card-border-w: 1px;
+  --bee-shadow-card: 0 8px 30px rgba(0, 0, 0, 0.04);
   --bee-shadow-card-lift: 0 2px 4px rgba(20, 22, 31, 0.05), 0 16px 40px rgba(20, 22, 31, 0.09);
 
   /* The app's one strong, saturated action color — used for every primary
@@ -111,7 +112,7 @@
   --bee-gap-sm: var(--bee-gap);
   --bee-gap-md: var(--bee-gap);
   --bee-gap-lg: var(--bee-gap);
-  --bee-pad-surface: 1rem;
+  --bee-pad-surface: 1.5rem;
   --bee-pad-surface-lg: var(--bee-pad-surface);
   --bee-pad-item: 0.75rem;
 
@@ -235,13 +236,13 @@
    to sit *behind* dark text as a background wash, not to work *as* small
    uppercase text on white, where the unmixed pastel reads too washed out
    to serve as a legible label. */
-/* Pure brand tokens, never mixed toward ink: mixing honey with ink gave a
-   brown-gold and indigo with ink a purple that are not BEE's. */
-.bee-eyebrow--blue { color: var(--color-chart-4); }
-.bee-eyebrow--warm { color: var(--color-chart-2); }
-.bee-eyebrow--violet { color: var(--color-chart-6); }
-.bee-eyebrow--muted { color: var(--color-chart-5); }
-.bee-eyebrow--green { color: var(--color-green-1); }
+/* Text never carries a brand color in BEE: every eyebrow variant is the same
+   muted ink. The modifiers stay as no-ops so old call sites keep working. */
+.bee-eyebrow--blue { color: var(--color-text-muted); }
+.bee-eyebrow--warm { color: var(--color-text-muted); }
+.bee-eyebrow--violet { color: var(--color-text-muted); }
+.bee-eyebrow--muted { color: var(--color-text-muted); }
+.bee-eyebrow--green { color: var(--color-text-muted); }
 
 .bee-display {
   font-size: var(--bee-text-display);
@@ -419,7 +420,7 @@
 .bee-overview {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.5rem;
   align-items: stretch;
   grid-auto-rows: minmax(var(--bee-overview-row), auto);
 }
@@ -1572,7 +1573,7 @@
 
 /* Headline highlight: the key words in BEE's deeper honey (chart-2), the
    pure token — no mix toward ink, no marker, no underline. */
-.bee-hl { color: var(--color-chart-2); }
+.bee-hl { color: var(--color-text); }  /* no colored text anywhere in BEE */
 
 /* Demo panel: honey hairline filling across the active tab until the next
    auto-rotation (duration set inline from AUTO_ROTATE_MS). */

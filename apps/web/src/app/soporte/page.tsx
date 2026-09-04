@@ -31,7 +31,7 @@ export default async function SoportePage() {
       <main className="flex-1">
         <section className="mx-auto w-full max-w-3xl px-6 py-16 text-center sm:py-20">
           <div className="mx-auto flex size-12 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-[var(--color-primary)]/40">
-            <LifeBuoy className="size-5 stroke-[1.5] text-[var(--color-chart-4)]" />
+            <LifeBuoy className="size-5 stroke-[1.5] text-[var(--color-text)]" />
           </div>
           <p className="bee-eyebrow mt-4">{t("eyebrow")}</p>
           <h1 className="mx-auto mt-2 max-w-xl text-balance text-3xl font-bold tracking-tight sm:text-4xl">
@@ -55,7 +55,7 @@ export default async function SoportePage() {
                 href="#formulario"
                 className="bee-bento bee-bento-pad flex items-start gap-4 transition-colors hover:border-[var(--color-chart-4)]"
               >
-                <HelpCircle className="mt-0.5 size-5 shrink-0 text-[var(--color-chart-4)]" />
+                <HelpCircle className="mt-0.5 size-5 shrink-0 text-[var(--color-text)]" />
                 <div>
                   <p className="text-sm font-semibold">{t("faqCardTitle")}</p>
                   <p className="bee-caption mt-1">{t("faqCardBody")}</p>
@@ -67,7 +67,7 @@ export default async function SoportePage() {
                 rel="noreferrer"
                 className="bee-bento bee-bento-pad flex items-start gap-4 transition-colors hover:border-[var(--color-chart-4)]"
               >
-                <BookOpen className="mt-0.5 size-5 shrink-0 text-[var(--color-chart-4)]" />
+                <BookOpen className="mt-0.5 size-5 shrink-0 text-[var(--color-text)]" />
                 <div>
                   <p className="text-sm font-semibold">{t("apiDocsCardTitle")}</p>
                   <p className="bee-caption mt-1">{t("apiDocsCardBody")}</p>

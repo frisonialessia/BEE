@@ -1,7 +1,9 @@
 "use client";
 
+
 import { useTranslations } from "next-intl";
 
+import { DATA, mix } from "@/components/charts/palette";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { CompetitorStat } from "@/lib/win-loss";
 
@@ -29,13 +31,14 @@ export function CompetitorBreakdown({ stats }: { stats: CompetitorStat[] }) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="mt-1 flex h-1.5 overflow-hidden rounded-full bg-[var(--color-primary)]/20">
+                  {/* Won = honey, lost = ink at 40 % — no green outside Ventas/CRM. */}
                   <div
-                    className="h-full bg-[var(--color-green-1)] transition-[width] duration-300"
-                    style={{ width: `${winPct}%` }}
+                    className="h-full transition-[width] duration-300"
+                    style={{ width: `${winPct}%`, background: DATA.honey }}
                   />
                   <div
-                    className="h-full bg-[var(--color-chart-2)]/70 transition-[width] duration-300"
-                    style={{ width: `${100 - winPct}%` }}
+                    className="h-full transition-[width] duration-300"
+                    style={{ width: `${100 - winPct}%`, background: mix(DATA.muted, 40, "transparent") }}
                   />
                 </div>
               </TooltipTrigger>

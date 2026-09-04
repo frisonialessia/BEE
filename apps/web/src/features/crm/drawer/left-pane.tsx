@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { DATA, SALES, mix } from "@/components/charts/palette";
+import { DATA, mix } from "@/components/charts/palette";
 import { ProgressRing } from "@/components/charts/progress-ring";
 import type { Locale } from "@/i18n/locales";
 import { getOpportunityStatusLabels, getOpportunityTypeLabels } from "@/lib/format";
@@ -76,7 +76,7 @@ export function LeftPane({
       {(isHot || isClient || needsReview || type !== "new_logo") && (
         <div className="flex flex-wrap gap-1.5">
           {isHot && !closed && <Chip hue={DATA.honeyFill}>{t("tags.hot")}</Chip>}
-          {isClient && <Chip hue={SALES.mint}>{t("tags.client")}</Chip>}
+          {isClient && <Chip hue={DATA.lavender}>{t("tags.client")}</Chip>}
           {type !== "new_logo" && <Chip hue={DATA.lavender}>{typeLabels[type]}</Chip>}
           {needsReview && !closed && <Chip hue={DATA.lavender}>{t("tags.review")}</Chip>}
         </div>
@@ -128,8 +128,8 @@ export function LeftPane({
         </InfoRow>
       </PaneSection>
 
-      {/* ── Monto — money is the one green box (SALES palette) ──────── */}
-      <div className="flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3" style={{ background: mix(SALES.mint, 60) }}>
+      {/* ── Monto — a quiet lavender box; greens belong to the Ventas page ── */}
+      <div className="flex items-center gap-3 rounded-[var(--radius-lg)] px-4 py-3" style={{ background: "var(--color-primary)" }}>
         <div className="min-w-0 flex-1 leading-tight">
           <p className="bee-caption font-medium text-[var(--color-text)]">{stageWord}</p>
           <p className="text-lg font-bold tabular-nums">
@@ -140,7 +140,7 @@ export function LeftPane({
           )}
         </div>
         {!closed && (
-          <button type="button" onClick={onViewAmount} className="bee-btn-ghost !h-8 !text-sm" style={{ borderColor: SALES.won }}>
+          <button type="button" onClick={onViewAmount} className="bee-btn-ghost !h-8 !text-sm">
             {t("view")}
           </button>
         )}
@@ -190,7 +190,7 @@ export function LeftPane({
               points={monthly}
               minHeight={96}
               formatValue={(v) => formatMoney(v, "USD", locale, true)}
-              colorFor={(p) => (p.current ? SALES.won : SALES.mint)}
+              colorFor={(p) => (p.current ? DATA.honey : mix(DATA.honey, 45))}
             />
           </div>
         )}

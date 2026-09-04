@@ -1,5 +1,6 @@
-import { DarkFunnelView } from "@/features/dark-funnel/dark-funnel-view";
+import { redirect } from "next/navigation";
 
-export default function ProbarDarkFunnelPage() {
-  return <DarkFunnelView />;
+// See dashboard/dark-funnel/page.tsx's own comment.
+export default function ProbarDarkFunnelRedirectPage() {
+  redirect("/probar/signals?tab=intent");
 }

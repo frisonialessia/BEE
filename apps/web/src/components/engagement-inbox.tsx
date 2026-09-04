@@ -80,7 +80,7 @@ function EventCard({ event }: { event: EngagementEvent }) {
       {event.response_draft && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-xs font-medium text-[var(--color-chart-2)] hover:underline"
+          className="text-xs font-medium text-[var(--color-text)] hover:underline"
         >
           {expanded ? t("hideDraft") : t("showDraft")}
         </button>
@@ -90,7 +90,7 @@ function EventCard({ event }: { event: EngagementEvent }) {
         <div className="bee-bento p-4">
           <p className="whitespace-pre-wrap text-xs">{event.response_draft}</p>
           {event.pending_action_id && (
-            <p className="mt-2 text-xs font-medium text-[var(--color-chart-2)]">
+            <p className="mt-2 text-xs font-medium text-[var(--color-text)]">
               {t("waitingApproval")}
             </p>
           )}

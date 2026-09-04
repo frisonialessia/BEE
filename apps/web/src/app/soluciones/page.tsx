@@ -45,16 +45,16 @@ export default async function SolucionesPage() {
               return (
                 <div key={key} className="bee-bento bee-bento-pad-lg">
                   <div className="flex size-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-                    <Icon className="size-4.5 stroke-[1.5] text-[var(--color-chart-4)]" />
+                    <Icon className="size-4.5 stroke-[1.5] text-[var(--color-text)]" />
                   </div>
                   <h2 className="mt-3 text-base font-semibold tracking-tight">
                     {t(`useCases.${key}.audience`)}
                   </h2>
-                  <p className="bee-micro mt-2 uppercase tracking-wide text-[var(--color-chart-5)]">
+                  <p className="bee-micro mt-2 uppercase tracking-wide text-[var(--color-text)]">
                     {t("problemLabel")}
                   </p>
                   <p className="mt-1 text-sm leading-relaxed">{t(`useCases.${key}.pain`)}</p>
-                  <p className="bee-micro mt-3 uppercase tracking-wide text-[var(--color-chart-4)]">
+                  <p className="bee-micro mt-3 uppercase tracking-wide text-[var(--color-text)]">
                     {t("fitLabel")}
                   </p>
                   <p className="mt-1 text-sm leading-relaxed">{t(`useCases.${key}.fit`)}</p>

@@ -71,7 +71,7 @@ export function Leaderboard({
     <div className="bee-surface bee-bento-pad">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Trophy className="size-4 text-[var(--color-chart-1)]" />
+          <Trophy className="size-4 text-[var(--color-text)]" />
           <h2 className="bee-card-title">{t("title")}</h2>
         </div>
         {teamsWithMembers.length > 1 && (
@@ -108,7 +108,7 @@ export function Leaderboard({
                 >
                   {i + 1}
                 </span>
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-chart-4)]/20 text-xs font-semibold text-[var(--color-chart-4)]">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-chart-4)]/20 text-xs font-semibold text-[var(--color-text)]">
                   {initials(row.user.full_name)}
                 </span>
                 <div className="min-w-0 flex-1">
