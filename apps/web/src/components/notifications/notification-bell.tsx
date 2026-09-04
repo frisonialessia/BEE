@@ -74,7 +74,7 @@ export function NotificationBell() {
 
       {open && (
         <div className="bee-glass absolute right-0 top-full z-50 mt-2 max-h-[70vh] w-80 max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-[var(--radius-lg)]">
-          <div className="sticky top-0 border-b border-border bg-[var(--color-background)]/80 px-4 py-3 backdrop-blur">
+          <div className="sticky top-0 border-b border-border bg-[var(--color-background)] px-4 py-3">
             <p className="text-sm font-semibold">{t("title")}</p>
           </div>
           {isLoading ? (

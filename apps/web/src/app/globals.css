@@ -1330,12 +1330,15 @@
   to { opacity: 1; transform: translateY(-100%); }
 }
 
-/* ── Glass surfaces — translucent + blurred, only the existing palette ───── */
+/* ── Elevated dropdown/popover surfaces — solid, never see-through ────────
+   Used to be translucent + blurred ("glass"); whatever sat behind it (a
+   scrolled list, a long name) bled through and made its own text
+   unreadable — the notifications panel, the account menu and the global
+   search results all reported this. A dropdown floats above content, it
+   never needs to show it. */
 
 .bee-glass {
-  background: color-mix(in srgb, var(--color-card) 55%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background: var(--color-card);
   border: 1px solid var(--bee-card-border);
   box-shadow:
     inset 0 1px 0 0 color-mix(in srgb, white 45%, transparent),
@@ -1380,12 +1383,13 @@
    Pure BEE tokens throughout — card, border, primary (lavender); nothing
    mixed toward ink, no brand hue on a ground. */
 
-/* Floating navbar (marketing-header.tsx): translucent card over the page,
-   blurred, hairline border, the card shadow. */
+/* Floating navbar (marketing-header.tsx): solid card over the page —
+   used to be translucent/blurred, which read the same "content bleeds
+   through" problem as the app's dropdowns (Rule: no transparency
+   anywhere in BEE, see .bee-glass above). Hairline border, the card
+   shadow, nothing behind it shows through. */
 .bee-nav {
-  background: color-mix(in srgb, var(--color-card) 80%, transparent);
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  background: var(--color-card);
   border: 1px solid var(--color-border);
   box-shadow: var(--bee-shadow-card);
 }

@@ -64,7 +64,7 @@ export function GlobalSearch({ className }: { className?: string }) {
 
   return (
     <div ref={ref} className={cn("relative w-full min-w-0 max-w-sm", className)}>
-      <div className="flex items-center gap-2 rounded-full border border-border bg-[var(--color-card)]/60 px-3 py-2">
+      <div className="flex items-center gap-2 rounded-full border border-border bg-[var(--color-card)] px-3 py-2">
         <Search className="size-3.5 shrink-0 text-muted-foreground" />
         <input
           value={query}
