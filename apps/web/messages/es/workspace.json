@@ -474,6 +474,33 @@
     "card": {
       "connectedWhen": "Conectado {when}",
       "neverConnected": "Sin conectar todavía"
+    },
+    "comingSoon": {
+      "title": "Próximamente",
+      "caption": "En el roadmap, todavía no conectable",
+      "tag": "Pronto",
+      "items": {
+        "calendar": {
+          "label": "Google Calendar",
+          "category": "Calendario"
+        },
+        "whatsapp": {
+          "label": "WhatsApp Business",
+          "category": "Redes sociales"
+        },
+        "notion": {
+          "label": "Notion",
+          "category": "Notas y artefactos"
+        },
+        "drive": {
+          "label": "Google Drive",
+          "category": "Notas y artefactos"
+        },
+        "indeed": {
+          "label": "Indeed",
+          "category": "Fuentes de mercado"
+        }
+      }
     }
   },
   "team": {

@@ -474,6 +474,33 @@
     "card": {
       "connectedWhen": "Connected {when}",
       "neverConnected": "Not connected yet"
+    },
+    "comingSoon": {
+      "title": "Coming soon",
+      "caption": "On the roadmap, not connectable yet",
+      "tag": "Soon",
+      "items": {
+        "calendar": {
+          "label": "Google Calendar",
+          "category": "Calendar"
+        },
+        "whatsapp": {
+          "label": "WhatsApp Business",
+          "category": "Social"
+        },
+        "notion": {
+          "label": "Notion",
+          "category": "Notes & artifacts"
+        },
+        "drive": {
+          "label": "Google Drive",
+          "category": "Notes & artifacts"
+        },
+        "indeed": {
+          "label": "Indeed",
+          "category": "Market sources"
+        }
+      }
     }
   },
   "team": {

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { TONE } from "@/components/charts/palette";
+import { TONE, tint } from "@/components/charts/palette";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyLine, StateChip, StateWord } from "@/features/control/components/primitives";
@@ -45,6 +45,12 @@ const CONNECTED_LABELS: Record<string, string> = {
 // IntegrationStatus.category on the backend
 // (app.api.v1.endpoints.integrations.list_integrations).
 const CATEGORY_ORDER = ["crm", "email", "social", "automation", "bi", "pm"] as const;
+
+// Good next candidates from the roadmap (docs/ROADMAP.md, point 4) — real
+// data would come from `list_integrations` the day one of these ships; a
+// static list here is honest about it, never a "Conectar" button that
+// does nothing. Order matches the roadmap's own.
+const COMING_SOON = ["calendar", "whatsapp", "notion", "drive", "indeed"] as const;
 
 /** Reads the one-time ?connected=<provider> / ?integration_error=... query
  * params left by an OAuth callback redirect (see
@@ -308,6 +314,25 @@ function ServerChannelsCard({ channels }: { channels: IntegrationStatus[] }) {
   );
 }
 
+/** The good candidates from the roadmap that aren't built yet — plain
+ *  chips, no button, no status dot: never reads as connectable, only as
+ *  "coming". Same lavender hue as the rest of Conexiones. */
+function ComingSoonSection({ span = 4 }: { span?: 3 | 4 | 5 | 6 | 7 | 8 | 9 | 12 }) {
+  const t = useTranslations("workspace.integrations.comingSoon");
+  return (
+    <OverviewCard span={span} title={t("title")} caption={t("caption")}>
+      <ul className="flex flex-wrap content-start gap-2">
+        {COMING_SOON.map((key) => (
+          <li key={key} className="flex items-center gap-1.5 rounded-full py-1 pl-3 pr-1 text-sm font-medium" style={{ background: tint(TONE.calm, 45) }}>
+            {t(`items.${key}.label`)}
+            <span className="rounded-full bg-[var(--color-card)] px-2 py-0.5 bee-micro">{t("tag")}</span>
+          </li>
+        ))}
+      </ul>
+    </OverviewCard>
+  );
+}
+
 /** Integraciones — cada organización conecta sus propias cuentas de Gmail
  *  y LinkedIn (OAuth real, botón de conectar/desconectar) en vez de
  *  compartir el relay SMTP / el token de LinkedIn del servidor. Email
@@ -386,6 +411,7 @@ export function IntegrationsView({ showHeader = true }: { showHeader?: boolean }
             );
           })}
           <ServerChannelsCard channels={serverChannels} />
+          <ComingSoonSection />
           {!canManage && (
             <p className="bee-caption" style={{ gridColumn: "span 12" }}>
               {t("manageNotice")}
