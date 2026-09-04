@@ -18,6 +18,12 @@
     "text": "Fewer signals than your average this week — here are high-intent accounts to pick back up.",
     "empty": "Not enough hot accounts to suggest yet."
   },
+  "path": {
+    "title": "Milestone path",
+    "caption": "Team closes, no ceiling",
+    "aria": "Team close-milestone path — {total} closes so far",
+    "progress": "{current} of {next} to the next milestone"
+  },
   "milestone": {
     "messages": [
       "{count} closes on the team! A real milestone, not a random number.",

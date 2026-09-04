@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { AntiBurnoutCard } from "@/components/celebration/anti-burnout-card";
+import { MilestonePathCard } from "@/components/celebration/milestone-path-card";
 import { StreakBadge } from "@/components/celebration/streak-badge";
 import { useMilestoneCelebration } from "@/components/celebration/use-milestone-celebration";
 import { WeeklyRecapCard } from "@/components/celebration/weekly-recap-card";
@@ -289,6 +290,7 @@ export function DashboardOverview({
 
       <div className="bee-overview">
         <WeeklyRecapCard signals={weekly[7]} won={wonThisWeek} streakDays={streakDays} marketSlow={marketSlow} dailySignals={dailySignals} />
+        <MilestonePathCard totalWon={totalWon} />
         {marketSlow && <AntiBurnoutCard leads={burnoutLeads} />}
 
         {/* Hoy — the hive at the centre, the plays beside it. */}

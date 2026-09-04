@@ -18,6 +18,12 @@
     "text": "Menos señales que tu promedio esta semana — aquí tienes cuentas de alta intención para retomar.",
     "empty": "Aún no hay suficientes cuentas calientes para sugerir."
   },
+  "path": {
+    "title": "Camino de hitos",
+    "caption": "Cierres del equipo, sin techo",
+    "aria": "Camino de hitos de cierres del equipo — {total} cierres hasta hoy",
+    "progress": "{current} de {next} para el siguiente hito"
+  },
   "milestone": {
     "messages": [
       "¡{count} cierres en el equipo! Un hito real, no un número al azar.",
