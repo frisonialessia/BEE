@@ -6,38 +6,38 @@
     "title": "Forecast",
     "subtitle": "Pipeline weighted by close probability, month over month, and which deals are at risk",
     "tabs": {
-      "overview": "Overview"
+      "projection": "Projection"
     },
     "outerTabs": {
-      "winLoss": "Win/Loss"
+      "winLoss": "Won / lost"
     },
     "emptyState": {
       "title": "No opportunity has an estimated amount yet.",
       "subtitle": "Add the amount and expected close date from each opportunity's qualification panel to see the forecast."
     },
     "kpis": {
+      "quarter": {
+        "label": "Quarter forecast",
+        "hintHistorical": "{quarter} · at the real close rate",
+        "hintDefault": "{quarter} · by stage probability"
+      },
       "pipeline": {
         "label": "Open pipeline",
         "hint": "{count, plural, one {# open opportunity} other {# open opportunities}}"
       },
-      "weighted": {
-        "label": "Weighted forecast",
-        "hintHistorical": "Amount × real close probability (historical) or by stage",
-        "hintDefault": "Amount × close probability by stage"
-      },
       "won": {
         "label": "Won",
-        "hint": "Opportunities closed as won",
+        "hint": "Total closed as won",
         "goalHint": "of the team's {goal} goal this month"
       },
       "atRisk": {
         "label": "At risk",
-        "hint": "No date, overdue, or poorly qualified"
+        "hint": "{amount} with no date, overdue or poorly qualified"
       }
     },
     "projection": {
       "title": "Revenue projection",
-      "caption": "Cumulative weighted forecast, month over month, at your real close rate",
+      "caption": "Cumulative weighted forecast, month over month, by each stage's close probability",
       "captionFactor": "Same close rate on {factor}× today's open pipeline",
       "lever": "If I prospect",
       "factor": "×{factor}",
@@ -48,33 +48,26 @@
         "realisticHint": "Amount × close probability",
         "optimistic": "Optimistic",
         "optimisticHint": "Everything in progress closes"
-      }
-    },
-    "trend": {
-      "title": "Closing trend",
-      "caption": "Opportunities created per month (bar) and close rate of what was resolved that month (number above)"
-    },
-    "accuracy": {
-      "title": "Forecast accuracy",
-      "caption": "There's now enough history to compute the real close probability by score range, instead of the fixed one by stage — this is what's being used right now:",
-      "scoreLabel": "Score {start}-{end}",
-      "sampleSize": "{count, plural, one {# closed deal} other {# closed deals}}"
+      },
+      "captionHistorical": "Cumulative weighted forecast, month over month, at your real close rate by score",
+      "scenariosTitle": "Scenarios",
+      "scenariosCaption": "Three assumptions over the same open deals"
     },
     "atRiskSection": {
       "title": "Deals at risk",
-      "caption": "No close date, overdue, or with little information",
+      "caption": "No close date, overdue, or with little information — tap one to open it",
       "empty": "No open opportunity is at risk right now.",
       "noCompany": "No company",
-      "qualifiedPercent": "{percent}% qualified",
       "riskLabels": {
         "sin_fecha_de_cierre": "No close date",
         "fecha_vencida": "Close date overdue",
         "poco_calificada": "Poorly qualified for its stage"
-      }
+      },
+      "viewAll": "View all ({count})",
+      "showLess": "Show less",
+      "noAmount": "No amount",
+      "noDate": "No date"
     }
-  },
-  "trendsChart": {
-    "tooltip": "{label}: {created} created, {won} won, {lost} lost"
   },
   "qualification": {
     "title": "Qualification (MEDDIC)",
@@ -115,26 +108,13 @@
       "title": "No opportunity has been closed yet.",
       "subtitle": "Mark an opportunity as won or lost from its detail panel to start seeing the analysis here."
     },
-    "kpis": {
-      "winRate": {
-        "label": "Close rate",
-        "hint": "{won} won out of {total} closed"
-      },
-      "wonValue": {
-        "label": "Won value",
-        "hint": "Sum of amount on won deals"
-      },
-      "lostValue": {
-        "label": "Lost value",
-        "hint": "Sum of amount on lost deals"
-      },
-      "daysToClose": {
-        "label": "Days to close (won)",
-        "hintNoWonHasLost": "No won deals yet · {days}d lost on average",
-        "hintNoWonNoLost": "No closed deals with a recorded date",
-        "hintHasWonHasLost": "{days}d lost on average",
-        "hintHasWonNoLost": "Average on won deals"
-      }
+    "monthly": {
+      "title": "Won and lost by month",
+      "caption": "Closes over the last six months",
+      "captionRate": "{won} won out of {total} closed · {rate}% close rate",
+      "won": "Won",
+      "lost": "Lost",
+      "empty": "Nothing closed in the last six months."
     },
     "reasons": {
       "title": "Loss reasons",
@@ -143,24 +123,18 @@
     "competitors": {
       "title": "Competitors",
       "caption": "Who we're really competing against at close"
-    },
-    "meddic": {
-      "title": "MEDDIC qualification vs. outcome",
-      "caption": "Real close rate by how qualified the deal was — whether qualifying more actually translates into more won deals, or it's just a checklist with no impact"
     }
   },
   "lossReasonChart": {
     "empty": "No lost deals with a recorded reason yet.",
     "unspecified": "No reason recorded",
-    "tooltip": "{label}: {count, plural, one {# deal} other {# deals}} · {percent}% of what was lost"
+    "tooltip": "{label}: {count, plural, one {# deal} other {# deals}} · {percent}% of what was lost · {value}"
   },
   "competitorBreakdown": {
     "empty": "No competitor has been recorded on a close yet.",
     "record": "{wins} won · {losses} lost",
-    "tooltip": "{competitor}: {percent}% close rate over {count, plural, one {# deal} other {# deals}} faced"
-  },
-  "meddicChart": {
-    "empty": "Not enough closed deals with MEDDIC qualification yet.",
-    "tooltip": "{label}: {won} won, {lost} lost"
+    "tooltip": "{competitor}: {percent}% close rate over {count, plural, one {# deal} other {# deals}} faced",
+    "viewAll": "View all ({count})",
+    "showLess": "Show less"
   }
 }

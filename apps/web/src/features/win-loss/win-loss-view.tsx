@@ -1,119 +1,88 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 
+import { TONE, level } from "@/components/charts/palette";
+import { StackedBars, type StackedPoint } from "@/components/charts/stacked-bars";
+import { OverviewCard } from "@/components/dashboard/overview-card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CompetitorBreakdown } from "@/components/win-loss/competitor-breakdown";
 import { LossReasonChart } from "@/components/win-loss/loss-reason-chart";
-import { MeddicCorrelationChart } from "@/components/win-loss/meddic-correlation-chart";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import type { Locale } from "@/i18n/locales";
-import { formatCurrencyUSD } from "@/lib/i18n/format";
+import { computeMonthlyTrends } from "@/lib/trends";
 import { computeWinLoss } from "@/lib/win-loss";
-import { LiveBadge } from "@/components/live-badge";
-import { DATA, mix } from "@/components/charts/palette";
-import { StatStrip, StatTile } from "@/components/charts/stat-tile";
-import { OverviewCard } from "@/components/dashboard/overview-card";
 
 /** Ganado/Perdido — por qué se ganan y se pierden los deals, no solo cuántos.
  *  Todo calculado en el cliente a partir de las oportunidades ya cargadas
- *  (mismo patrón que Pronóstico/Tendencias) — nada nuevo del lado del
- *  backend salvo los dos campos que el rep llena al cerrar un deal
- *  (razón de pérdida, competidor) desde el panel del drawer.
+ *  (mismo patrón que Pronóstico) — nada nuevo del lado del backend salvo
+ *  los dos campos que el rep llena al cerrar un deal (razón de pérdida,
+ *  competidor) desde el panel del drawer.
  *
- * `showHeader=false` when embedded as a tab of the merged Forecast page
- * (see forecast-view.tsx) — the live/demo badge stays regardless. */
-export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
+ *  Three boxes: won vs lost by month (honey, six months), loss reasons by
+ *  rank (lilac), and the competitors we actually meet at close (rows).
+ *  The KPI strip is the page's, shared with the projection tab. */
+export function WinLossView() {
   const locale = useLocale() as Locale;
-  const t = useTranslations("forecastWinLoss");
+  const t = useTranslations("forecastWinLoss.winLoss");
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 300);
+  const [today] = useState(() => new Date());
 
-  const opportunities = oppsResult?.data ?? [];
-  const live = oppsResult?.live ?? false;
-  const summary = computeWinLoss(opportunities);
+  const opportunities = useMemo(() => oppsResult?.data ?? [], [oppsResult]);
+  const summary = useMemo(() => computeWinLoss(opportunities), [opportunities]);
+  const trends = useMemo(() => computeMonthlyTrends(opportunities, today, 6, locale), [opportunities, today, locale]);
+
+  // Won at full honey, lost at the softest level: parts[1] is always empty
+  // so StackedBars skips the middle intensity and never draws its legend
+  // entry (the legend below is ours, two dots).
+  const monthly = useMemo<StackedPoint[]>(
+    () => trends.map((p, i) => ({ label: p.label, parts: [p.won, 0, p.lost], current: i === trends.length - 1 })),
+    [trends],
+  );
+  const hasMonthly = trends.some((p) => p.won + p.lost > 0);
+  const monthlyLegend = [t("monthly.won"), "", t("monthly.lost")];
+
+  if (isLoading) return <Skeleton className="h-96 rounded-[var(--radius-lg)]" />;
+  if (summary.totalClosed === 0) return <p className="bee-caption py-8 text-center">{t("emptyState.title")}</p>;
+
+  const monthlyCaption =
+    summary.winRate !== null
+      ? t("monthly.captionRate", { won: summary.won, total: summary.totalClosed, rate: Math.round(summary.winRate * 100) })
+      : t("monthly.caption");
 
   return (
-    <div>
-      <header className={showHeader ? "mb-4" : "mb-4"}>
-        {showHeader && <p className="bee-eyebrow">{t("eyebrow")}</p>}
-        <div className={`flex flex-wrap items-start justify-between gap-4 ${showHeader ? "mt-1" : ""}`}>
-          {showHeader && (
-            <div>
-              <h1 className="bee-display">{t("winLoss.title")}</h1>
-              <p className="bee-caption mt-1">{t("winLoss.subtitle")}</p>
+    <div className="space-y-6">
+      <div className="bee-overview">
+        <OverviewCard span={6} title={t("monthly.title")} caption={monthlyCaption}>
+          {hasMonthly ? (
+            <div className="bee-fill flex min-h-0 flex-col gap-2">
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {[0, 2].map((k) => (
+                  <span key={k} className="bee-caption inline-flex items-center gap-1.5">
+                    <span className="size-2 rounded-full" style={{ background: level(TONE.market, k) }} />
+                    {monthlyLegend[k]}
+                  </span>
+                ))}
+              </div>
+              <StackedBars points={monthly} legend={monthlyLegend} tone={TONE.market} minHeight={160} showLegend={false} />
             </div>
+          ) : (
+            <p className="bee-caption py-6 text-center">{t("monthly.empty")}</p>
           )}
-          {showHeader && (
-            <LiveBadge live={live} className="ml-auto" />
-          )}
-        </div>
-      </header>
+        </OverviewCard>
+        <OverviewCard span={6} title={t("reasons.title")} caption={t("reasons.caption")}>
+          <LossReasonChart stats={summary.reasonBreakdown} />
+        </OverviewCard>
+      </div>
 
-      {isLoading ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-20" />
-            ))}
-          </div>
-          <Skeleton className="h-56" />
-        </div>
-      ) : summary.totalClosed === 0 ? (
-        <div className="bee-bento bee-bento-pad py-8 text-center">
-          <p className="text-sm text-muted-foreground">{t("winLoss.emptyState.title")}</p>
-          <p className="bee-caption mt-1">{t("winLoss.emptyState.subtitle")}</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {/* Misma tarjeta compacta que Dark Funnel — ver forecast-view.tsx's
-           * propio comentario, mismo cambio acá. */}
-          {/* Won wears honey (full → softer strengths), lost is ink at 40 % —
-              green belongs to Ventas and the CRM board only. */}
-          <StatStrip cols={4}>
-            <StatTile
-              label={t("winLoss.kpis.winRate.label")}
-              value={summary.winRate !== null ? `${Math.round(summary.winRate * 100)}%` : "—"}
-              hint={t("winLoss.kpis.winRate.hint", { won: summary.won, total: summary.totalClosed })}
-              progress={summary.winRate ?? undefined}
-              tone={DATA.honey}
-            />
-            <StatTile label={t("winLoss.kpis.wonValue.label")} value={formatCurrencyUSD(summary.wonValue, locale)} hint={t("winLoss.kpis.wonValue.hint")} tone={mix(DATA.honey, 70)} />
-            <StatTile label={t("winLoss.kpis.lostValue.label")} value={formatCurrencyUSD(summary.lostValue, locale)} hint={t("winLoss.kpis.lostValue.hint")} tone={mix(DATA.muted, 40, "transparent")} />
-            <StatTile
-              label={t("winLoss.kpis.daysToClose.label")}
-              value={summary.avgDaysToCloseWon !== null ? `${Math.round(summary.avgDaysToCloseWon)}d` : "—"}
-              hint={
-                summary.avgDaysToCloseWon !== null
-                  ? summary.avgDaysToCloseLost !== null
-                    ? t("winLoss.kpis.daysToClose.hintHasWonHasLost", { days: Math.round(summary.avgDaysToCloseLost) })
-                    : t("winLoss.kpis.daysToClose.hintHasWonNoLost")
-                  : summary.avgDaysToCloseLost !== null
-                    ? t("winLoss.kpis.daysToClose.hintNoWonHasLost", { days: Math.round(summary.avgDaysToCloseLost) })
-                    : t("winLoss.kpis.daysToClose.hintNoWonNoLost")
-              }
-              tone={mix(DATA.honey, 45)}
-            />
-          </StatStrip>
-
-          {/* items-start: Razones de pérdida y Competidores are variable-length
-              lists (one row per reason/competitor), not proportional charts —
-              without this the grid's default stretch forces the shorter list's
-              card to the taller one's height, leaving blank space below its
-              last row instead of just being its own natural height (same fix
-              already applied to the two Resumen heatmaps below). */}
-          <div className="bee-overview">
-            <OverviewCard span={6} title={t("winLoss.reasons.title")} caption={t("winLoss.reasons.caption")}>
-              <LossReasonChart stats={summary.reasonBreakdown} />
-            </OverviewCard>
-            <OverviewCard span={6} title={t("winLoss.competitors.title")} caption={t("winLoss.competitors.caption")}>
-              <CompetitorBreakdown stats={summary.competitorBreakdown} />
-            </OverviewCard>
-            <OverviewCard span={12} title={t("winLoss.meddic.title")} caption={t("winLoss.meddic.caption")}>
-              <MeddicCorrelationChart stats={summary.meddicCorrelation} />
-            </OverviewCard>
-          </div>
-        </div>
-      )}
+      {/* Competitors — a list, so its box is as tall as its rows (own grid
+          with auto rows: a 12-wide list must not reserve the 18rem floor). */}
+      <div className="bee-overview" style={{ gridAutoRows: "auto" }}>
+        <OverviewCard span={12} title={t("competitors.title")} caption={t("competitors.caption")}>
+          <CompetitorBreakdown stats={summary.competitorBreakdown} />
+        </OverviewCard>
+      </div>
     </div>
   );
 }

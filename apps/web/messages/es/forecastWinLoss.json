@@ -6,38 +6,38 @@
     "title": "Pronóstico",
     "subtitle": "Pipeline ponderado por probabilidad de cierre, mes a mes, y qué deals están en riesgo",
     "tabs": {
-      "overview": "Resumen"
+      "projection": "Proyección"
     },
     "outerTabs": {
-      "winLoss": "Ganado/Perdido"
+      "winLoss": "Ganado / perdido"
     },
     "emptyState": {
       "title": "Todavía no hay monto estimado en ninguna oportunidad.",
       "subtitle": "Agrega el monto y la fecha esperada de cierre desde el panel de calificación de cada oportunidad para ver el pronóstico."
     },
     "kpis": {
+      "quarter": {
+        "label": "Pronóstico del trimestre",
+        "hintHistorical": "{quarter} · con tasa de cierre real",
+        "hintDefault": "{quarter} · por probabilidad de etapa"
+      },
       "pipeline": {
         "label": "Pipeline abierto",
         "hint": "{count, plural, one {# oportunidad sin cerrar} other {# oportunidades sin cerrar}}"
       },
-      "weighted": {
-        "label": "Pronóstico ponderado",
-        "hintHistorical": "Monto × probabilidad real de cierre (histórico) o por etapa",
-        "hintDefault": "Monto × probabilidad de cierre por etapa"
-      },
       "won": {
         "label": "Ganado",
-        "hint": "Oportunidades cerradas como ganadas",
+        "hint": "Total cerrado como ganado",
         "goalHint": "de {goal} de meta del equipo este mes"
       },
       "atRisk": {
         "label": "En riesgo",
-        "hint": "Sin fecha, vencidas o poco calificadas"
+        "hint": "{amount} sin fecha, vencidos o poco calificados"
       }
     },
     "projection": {
       "title": "Proyección de ingresos",
-      "caption": "Pronóstico ponderado acumulado, mes a mes, con tu tasa de cierre real",
+      "caption": "Pronóstico ponderado acumulado, mes a mes, por probabilidad de cierre de cada etapa",
       "captionFactor": "Mismo ritmo de cierre con {factor}× el pipeline abierto de hoy",
       "lever": "Si prospecto",
       "factor": "×{factor}",
@@ -48,33 +48,26 @@
         "realisticHint": "Monto × probabilidad de cierre",
         "optimistic": "Optimista",
         "optimisticHint": "Todo lo que está en curso cierra"
-      }
-    },
-    "trend": {
-      "title": "Tendencia de cierre",
-      "caption": "Oportunidades creadas por mes (barra) y tasa de cierre de lo que se resolvió ese mes (número arriba)"
-    },
-    "accuracy": {
-      "title": "Precisión del pronóstico",
-      "caption": "Ya hay suficiente histórico para calcular la probabilidad de cierre real por rango de score, en vez de la fija por etapa — esto es lo que se está usando ahora mismo:",
-      "scoreLabel": "Score {start}-{end}",
-      "sampleSize": "{count, plural, one {# deal cerrado} other {# deals cerrados}}"
+      },
+      "captionHistorical": "Pronóstico ponderado acumulado, mes a mes, con tu tasa de cierre real por score",
+      "scenariosTitle": "Escenarios",
+      "scenariosCaption": "Tres supuestos sobre los mismos deals abiertos"
     },
     "atRiskSection": {
       "title": "Deals en riesgo",
-      "caption": "Sin fecha de cierre, vencidas o con poca información",
+      "caption": "Sin fecha de cierre, vencidas o con poca información — toca una para abrirla",
       "empty": "Ninguna oportunidad abierta está en riesgo por ahora.",
       "noCompany": "Sin empresa",
-      "qualifiedPercent": "{percent}% calificada",
       "riskLabels": {
         "sin_fecha_de_cierre": "Sin fecha de cierre",
         "fecha_vencida": "Fecha de cierre vencida",
         "poco_calificada": "Poco calificada para su etapa"
-      }
+      },
+      "viewAll": "Ver todo ({count})",
+      "showLess": "Ver menos",
+      "noAmount": "Sin monto",
+      "noDate": "Sin fecha"
     }
-  },
-  "trendsChart": {
-    "tooltip": "{label}: {created} creadas, {won} ganadas, {lost} perdidas"
   },
   "qualification": {
     "title": "Calificación (MEDDIC)",
@@ -115,26 +108,13 @@
       "title": "Todavía no hay ninguna oportunidad cerrada.",
       "subtitle": "Marca una oportunidad como ganada o perdida desde su panel de detalle para empezar a ver el análisis aquí."
     },
-    "kpis": {
-      "winRate": {
-        "label": "Tasa de cierre",
-        "hint": "{won} ganadas de {total} cerradas"
-      },
-      "wonValue": {
-        "label": "Valor ganado",
-        "hint": "Suma de monto en deals ganados"
-      },
-      "lostValue": {
-        "label": "Valor perdido",
-        "hint": "Suma de monto en deals perdidos"
-      },
-      "daysToClose": {
-        "label": "Días a cierre (ganados)",
-        "hintNoWonHasLost": "Sin ganados todavía · {days}d perdidos en promedio",
-        "hintNoWonNoLost": "Sin deals cerrados con fecha registrada",
-        "hintHasWonHasLost": "{days}d perdidos en promedio",
-        "hintHasWonNoLost": "Promedio en deals ganados"
-      }
+    "monthly": {
+      "title": "Ganadas y perdidas por mes",
+      "caption": "Cierres de los últimos seis meses",
+      "captionRate": "{won} ganadas de {total} cerradas · {rate}% de tasa de cierre",
+      "won": "Ganadas",
+      "lost": "Perdidas",
+      "empty": "Nada cerrado en los últimos seis meses."
     },
     "reasons": {
       "title": "Razones de pérdida",
@@ -143,24 +123,18 @@
     "competitors": {
       "title": "Competidores",
       "caption": "Contra quién competimos de verdad al cerrar"
-    },
-    "meddic": {
-      "title": "Calificación MEDDIC vs. resultado",
-      "caption": "Tasa de cierre real según qué tan calificado estaba el deal — si calificar más de verdad se traduce en más cierres ganados, o si es solo un checklist sin impacto"
     }
   },
   "lossReasonChart": {
     "empty": "Todavía no hay deals perdidos con razón registrada.",
     "unspecified": "Sin razón registrada",
-    "tooltip": "{label}: {count, plural, one {# deal} other {# deals}} · {percent}% de lo perdido"
+    "tooltip": "{label}: {count, plural, one {# deal} other {# deals}} · {percent}% de lo perdido · {value}"
   },
   "competitorBreakdown": {
     "empty": "Todavía no se registró ningún competidor en un cierre.",
-    "record": "{wins} ganadas · {losses} perdidas",
-    "tooltip": "{competitor}: {percent}% de tasa de cierre en {count, plural, one {# deal} other {# deals}} enfrentados"
-  },
-  "meddicChart": {
-    "empty": "Todavía no hay suficientes deals cerrados con calificación MEDDIC.",
-    "tooltip": "{label}: {won} ganadas, {lost} perdidas"
+    "record": "{wins, plural, one {# ganada} other {# ganadas}} · {losses, plural, one {# perdida} other {# perdidas}}",
+    "tooltip": "{competitor}: {percent}% de tasa de cierre en {count, plural, one {# deal} other {# deals}} enfrentados",
+    "viewAll": "Ver todo ({count})",
+    "showLess": "Ver menos"
   }
 }
