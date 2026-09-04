@@ -1693,6 +1693,13 @@
    the three blocks, the same gap the bento grid uses between cards. */
 .bee-page { display: flex; flex-direction: column; gap: 1.5rem; }
 .bee-page__kpis, .bee-page__body { min-width: 0; }
+/* .bee-page__body can hold more than one block now (Resumen stacks the
+   recap, Getting Started, the slow-market notice, the KPI strip and the
+   grid all as direct children) — without its own gap they touched with
+   no breathing room between them, unlike every other pair on the page
+   (which get .bee-page's own gap because they're its direct children).
+   Same 1.5rem, so the rhythm reads identical top to bottom. */
+.bee-page__body { display: flex; flex-direction: column; gap: 1.5rem; }
 .bee-page-head {
   display: flex;
   flex-wrap: wrap;

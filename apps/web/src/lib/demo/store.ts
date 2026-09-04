@@ -93,8 +93,12 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * DEMO_USERS below) so the Leaderboard and Calendario have someone to show —
  * a returning visitor on an older snapshot has every opportunity's
  * `assigned_to_user_id` still `null`, which reads as "no one on the team
- * has ever won a deal" instead of the sandbox just never having stamped it. */
-const SEED_VERSION = "13";
+ * has ever won a deal" instead of the sandbox just never having stamped it;
+ * `"14"` adds 3 more won seeds (s32-s34) closing 1/2/3 days ago and force-
+ * assigns them plus s15 (same-day close) to demo-user-1 — "Tu semana en
+ * BEE" reads real (a 4-day streak, real closes this week) instead of
+ * mostly zeros for whoever the sandbox shows as "you". */
+const SEED_VERSION = "14";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Which language the currently-stored seed was written in — separate from
@@ -198,6 +202,14 @@ export function demoFetchTeams(): TeamOut[] {
   return DEMO_TEAMS.map((t) => ({ currency: "USD", ...t }));
 }
 
+// This week's 4 closes (today, and 1/2/3 days ago — s15/s32/s33/s34 in
+// seed-history.ts) go to demo-user-1 specifically, not the rotation below
+// — whichever rep the rotation happened to hand them to, "you" in the
+// sandbox is always demo-user-1 (see account-menu-demo.tsx,
+// dashboard-overview.tsx), so without this override "Tu semana en BEE"
+// could easily land on a stranger's closes instead of its own.
+const THIS_WEEK_OPP_IDS = new Set(["demo-opp-s15", "demo-opp-s32", "demo-opp-s33", "demo-opp-s34"]);
+
 /** Deterministic (index-rotated, not random) so the same opportunity is
  * always "assigned to" the same demo rep across reloads until the next
  * reseed — a leaderboard that reshuffles on every refresh wouldn't read
@@ -210,6 +222,7 @@ function seedOpportunitiesWithReps(locale: Locale): Opportunity[] {
   let wonIdx = 0;
   return getSampleOpportunities(locale).map((opp, i) => {
     if (opp.assigned_to_user_id) return opp;
+    if (THIS_WEEK_OPP_IDS.has(opp.id)) return { ...opp, assigned_to_user_id: reps[0].id };
     const rep = opp.status === "won" ? reps[wonIdx++ % reps.length] : reps[i % reps.length];
     return { ...opp, assigned_to_user_id: rep.id };
   });

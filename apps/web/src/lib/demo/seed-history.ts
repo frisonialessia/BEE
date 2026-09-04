@@ -436,6 +436,15 @@ const SEEDS: SeedDef[] = [
   { id: "s25", company: "Nube Analítica", domain: "nubeanalitica.cl", industry: "Datos / Analytics", country: "Chile", signalType: "engagement", leadName: "Tomás Vidal", leadTitle: "Head of Growth", seniority: "director", amount: 28000, score: 67, daysAgoCreated: 150, outcome: "lost", cycleDays: 36, qualifiedCount: 2, lossReason: "budget", competitor: "Salesforce" },
   { id: "s26", company: "Pixel Forma", domain: "pixelforma.mx", industry: "Diseño de producto", country: "México", signalType: "funding_round", leadName: "Andrea Salcedo", leadTitle: "CEO", seniority: "c_level", amount: 23000, score: 70, daysAgoCreated: 188, outcome: "lost", cycleDays: 29, qualifiedCount: 3, lossReason: "product_fit", competitor: "Pipedrive" },
   { id: "s27", company: "Clínica Digital Sur", domain: "clinicadigitalsur.cl", industry: "Salud digital", country: "Chile", signalType: "funding_round", leadName: "Javier Rojas", leadTitle: "Director General", seniority: "c_level", amount: 44000, score: 81, daysAgoCreated: 230, outcome: "won", cycleDays: 52, qualifiedCount: 6 },
+  // s32-s34: three more wins closing 1/2/3 days ago (daysAgoCreated -
+  // cycleDays), on top of s15's same-day close — so "Tu semana en BEE"
+  // (dashboard-overview.tsx, force-assigned to demo-user-1 in
+  // seedOpportunitiesWithReps) has a real 4-day streak and real closes
+  // this week to show, instead of reading empty for whoever the sandbox
+  // shows as "you".
+  { id: "s32", company: "Vertice Robotics", domain: "verticerobotics.cl", industry: "Robótica", country: "Chile", signalType: "hiring", leadName: "Ignacia Bravo", leadTitle: "Gerente Comercial", seniority: "manager", amount: 26000, score: 71, daysAgoCreated: 31, outcome: "won", cycleDays: 30, qualifiedCount: 5 },
+  { id: "s33", company: "Corredor Fintech", domain: "corredorfintech.co", industry: "Fintech", country: "Colombia", signalType: "funding_round", leadName: "Natalia Prieto", leadTitle: "VP Growth", seniority: "vp", amount: 31000, score: 74, daysAgoCreated: 32, outcome: "won", cycleDays: 30, qualifiedCount: 6 },
+  { id: "s34", company: "Altamira BioTech", domain: "altamirabiotech.mx", industry: "Biotecnología", country: "México", signalType: "product_launch", leadName: "Emilio Guzmán", leadTitle: "Director Comercial", seniority: "director", amount: 19000, score: 68, daysAgoCreated: 33, outcome: "won", cycleDays: 30, qualifiedCount: 4 },
   // s19/s20: two more distinct named competitors, on lost reasons
   // ("price"/"product_fit") that are narratively compatible with "went with
   // a competitor instead" — unlike s05/s11's "no_decision"/"timing" losses,

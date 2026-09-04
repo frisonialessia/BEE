@@ -65,8 +65,10 @@ export function WeeklyRecapCard({
 }) {
   const t = useTranslations("celebration.recap");
 
-  if (signalsThisWeek === 0 && wonThisWeek === 0 && totalWon === 0) return null;
-
+  // Always rendered, even at all-zero — a brand-new rep's own week. The
+  // milestone path (a real 10 always sits at the start of the sequence)
+  // and three honest zeros read as "nothing yet", not as a hole in the
+  // page where the card should be.
   const caption = teamRank ? t("captionRank", { rank: teamRank.rank }) : t("caption");
 
   return (

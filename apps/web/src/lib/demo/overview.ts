@@ -18,7 +18,7 @@ import {
   demoFetchUsers,
 } from "@/lib/demo/store";
 import type { Quota } from "@/lib/api/quotas";
-import { computeQuotaActual } from "@/lib/quotas";
+import { computeQuotaActual, computeQuotaClients } from "@/lib/quotas";
 import type { DecisionCard, RevenueSimulation, TodayFeedOut } from "@/types/extended";
 
 const DISMISSED_KEY = "bee.demo.feedDismissed.v1";
@@ -339,10 +339,15 @@ export function demoRevenueSimulation(params: {
 
 /** Monthly goals for the current calendar month (goals are monthly, in the
  *  team's currency and/or in clients), sized off each rep's real won revenue
- *  this month: the first rep with a close this month is over her goal (the
- *  one green row Ventas is allowed), the rest are on pace, and the team as a
- *  whole sits under halfway — so the Brief and the rings have something true
- *  to say without every number being a round success. */
+ *  this month: the first rep with a close this month is over her *money*
+ *  goal (the one green row Ventas is allowed), the rest are on pace, and the
+ *  team as a whole sits under halfway — so the Brief and the rings have
+ *  something true to say without every number being a round success. Her
+ *  *deal-count* goal (the one "Tu semana en BEE" reads — see
+ *  weekly-recap-card.tsx) stays deliberately a couple ahead of what she's
+ *  actually closed this month instead of copying that same "already over"
+ *  shape: a manager's monthly target reads as motivating in progress
+ *  ("4 of 6"), not as a fraction that's already blown past ("4 of 1"). */
 export function demoFetchQuotas(): Quota[] {
   const users = demoFetchUsers();
   const teams = demoFetchTeams();
@@ -359,7 +364,8 @@ export function demoFetchQuotas(): Quota[] {
     const actual = computeQuotaActual(base, users, opportunities);
     if (actual > 0 && !starPicked) {
       starPicked = true;
-      return { ...base, target_amount: round(actual * 0.8), target_count: 1 };
+      const clients = computeQuotaClients(base, users, opportunities);
+      return { ...base, target_amount: round(actual * 0.8), target_count: clients + 2 };
     }
     return { ...base, target_amount: round(actual > 0 ? actual / 0.7 : 30_000) };
   });
