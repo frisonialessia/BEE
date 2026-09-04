@@ -20,7 +20,15 @@
     "rsvpQuestion": "¿Vas a \"{title}\"?",
     "rsvpAccept": "Sí",
     "rsvpDecline": "No",
-    "rsvpError": "No se pudo registrar tu respuesta — intenta de nuevo."
+    "rsvpError": "No se pudo registrar tu respuesta — intenta de nuevo.",
+    "weekTotal": "{hours} h · {count, plural, one {# reunión} other {# reuniones}} esta semana",
+    "byDay": "Por día",
+    "byContext": "Por tipo de cuenta",
+    "byAccount": "Cuentas con más tiempo",
+    "withLink": "{count} con link",
+    "unlinked": "{count} sin vincular al pipeline",
+    "minutes": "{minutes} min",
+    "hours": "{hours} h"
   },
   "widget": {
     "title": "Mi calendario",
@@ -65,7 +73,9 @@
     "updateError": "No se pudo actualizar la reunión — intenta de nuevo.",
     "deleteError": "No se pudo eliminar la reunión — intenta de nuevo.",
     "createSuccess": "Reunión creada.",
-    "deleteConfirm": "¿Eliminar esta reunión?"
+    "deleteConfirm": "¿Eliminar esta reunión?",
+    "colorGreen": "Verde — cierre o cliente",
+    "colorGreensHint": "Los verdes son para cierres y reuniones con clientes ganados."
   },
   "detail": {
     "with": "Con",

@@ -67,6 +67,11 @@
   --color-chart-4: #8a9eff;
   --color-chart-5: #d567ff;
   --color-chart-6: #c197ff;
+  /* Sales greens — Ventas, closed deals, and calendar events tagged as a
+     closing/client meeting. Nowhere else. */
+  --color-green-1: #52c871;
+  --color-green-2: #9cd147;
+  --color-green-3: #b4e8c5;
 
   --bee-font: Helvetica, "Helvetica Neue", Arial, sans-serif;
   --bee-bg: var(--color-background);
@@ -181,6 +186,9 @@
   --color-chart-3: var(--color-chart-3);
   --color-chart-4: var(--color-chart-4);
   --color-chart-5: var(--color-chart-5);
+  --color-green-1: var(--color-green-1);
+  --color-green-2: var(--color-green-2);
+  --color-green-3: var(--color-green-3);
   --font-sans: var(--bee-font);
   /* Tailwind text-* utilities resolve to the four sizes: xs → body-2,
      sm → body, base/lg → subtitle, xl/2xl/3xl → title. (4xl and up are

@@ -21,7 +21,11 @@ ClientContext = Literal["active_client", "hot_lead", "prospect", "new_contact"]
 # by hand). Token names resolving through the same CSS custom properties
 # the rest of the UI already uses (--color-chart-1..6), not raw hex, so a
 # theme change or dark mode never needs this list touched.
-MeetingColor = Literal["chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6"]
+MeetingColor = Literal[
+    "chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6",
+    # The sales greens (--color-green-1..3): a closing or client meeting.
+    "green-1", "green-2", "green-3",
+]
 
 AttendeeResponse = Literal["accepted", "declined"]
 

@@ -20,7 +20,15 @@
     "rsvpQuestion": "Are you coming to \"{title}\"?",
     "rsvpAccept": "Yes",
     "rsvpDecline": "No",
-    "rsvpError": "Couldn't record your response — try again."
+    "rsvpError": "Couldn't record your response — try again.",
+    "weekTotal": "{hours} h · {count, plural, one {# meeting} other {# meetings}} this week",
+    "byDay": "By day",
+    "byContext": "By account type",
+    "byAccount": "Accounts taking the most time",
+    "withLink": "{count} with a link",
+    "unlinked": "{count} not tied to the pipeline",
+    "minutes": "{minutes} min",
+    "hours": "{hours} h"
   },
   "widget": {
     "title": "My calendar",
@@ -65,7 +73,9 @@
     "updateError": "Couldn't update the meeting — try again.",
     "deleteError": "Couldn't delete the meeting — try again.",
     "createSuccess": "Meeting created.",
-    "deleteConfirm": "Delete this meeting?"
+    "deleteConfirm": "Delete this meeting?",
+    "colorGreen": "Green — closing or client",
+    "colorGreensHint": "Greens are for closings and meetings with won clients."
   },
   "detail": {
     "with": "With",

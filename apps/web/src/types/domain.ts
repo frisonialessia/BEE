@@ -398,7 +398,7 @@ export type MeetingClientContext = "active_client" | "hot_lead" | "prospect" | "
  * purely organizational (unlike MeetingClientContext). Token names, not
  * raw hex — resolve through the same --color-chart-1..6 custom properties
  * everything else already uses. Mirrors MeetingColor in schemas/meeting.py. */
-export type MeetingColor = "chart-1" | "chart-2" | "chart-3" | "chart-4" | "chart-5" | "chart-6";
+export type MeetingColor = "chart-1" | "chart-2" | "chart-3" | "chart-4" | "chart-5" | "chart-6" | "green-1" | "green-2" | "green-3";
 
 export interface Meeting {
   id: string;

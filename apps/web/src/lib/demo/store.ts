@@ -673,7 +673,7 @@ export function demoDeleteTask(taskId: string): void {
 // elsewhere in this file. User-added meetings persist locally same as
 // everything else here.
 
-const MEETINGS_KEY = "bee_demo_meetings_v1";
+const MEETINGS_KEY = "bee_demo_meetings_v2";
 const HOT_LEAD_SCORE_THRESHOLD = 75;
 
 /** Mirrors app.api.v1.endpoints.meetings._client_context on the backend —
@@ -719,9 +719,14 @@ function buildMeeting(partial: {
   attendeeUserIds?: string[];
   color?: Meeting["color"];
   attendeeResponses?: Meeting["attendee_responses"];
+  companyName?: string | null;
 }): Meeting {
   const opportunity = partial.opportunity;
   const lead = partial.lead ?? undefined;
+  const companyName =
+    partial.companyName ??
+    (opportunity?.company_id ? demoFetchCompanies().find((c) => c.id === opportunity.company_id)?.name ?? null : null) ??
+    (lead?.company_id ? demoFetchCompanies().find((c) => c.id === lead.company_id)?.name ?? null : null);
   return {
     id: partial.id,
     created_by_user_id: demoFetchUsers()[0].id,
@@ -737,7 +742,7 @@ function buildMeeting(partial: {
     color: partial.color ?? null,
     completed_at: null,
     created_at: new Date().toISOString(),
-    company_name: null,
+    company_name: companyName,
     contact_name: lead?.full_name ?? null,
     client_context: demoClientContext(opportunity, lead),
   };
@@ -821,6 +826,37 @@ function seedMeetings(locale: Locale): Meeting[] {
       meetingUrl: "https://meet.google.com/uvw-xyzz-123",
       opportunity: oppByType("new_logo") ?? anyOpp,
       attendeeUserIds: [users[1].id],
+    }),
+    // The two green ones — a closing meeting and a kickoff with a won
+    // client — so the sandbox shows what the sales greens are for.
+    buildMeeting({
+      id: "demo-meeting-6",
+      title: locale === "en" ? "Closing — contract signature" : "Cierre — firma de contrato",
+      purpose:
+        locale === "en"
+          ? "Final terms agreed; sign and hand off to onboarding."
+          : "Términos finales acordados; firmar y pasar a onboarding.",
+      dayOffset: 4,
+      hour: 12,
+      durationMinutes: 60,
+      meetingUrl: "https://meet.google.com/cie-rref-irm",
+      opportunity: opps.find((o) => o.status === "in_progress") ?? anyOpp,
+      attendeeUserIds: [users[0].id, users[1].id],
+      color: "green-1",
+    }),
+    buildMeeting({
+      id: "demo-meeting-7",
+      title: locale === "en" ? "Client kickoff — onboarding plan" : "Kickoff con cliente — plan de onboarding",
+      purpose:
+        locale === "en"
+          ? "First 30 days: owners, milestones, success metrics."
+          : "Primeros 30 días: responsables, hitos y métricas de éxito.",
+      dayOffset: 1,
+      hour: 15,
+      durationMinutes: 45,
+      opportunity: secondOpp,
+      attendeeUserIds: [users[0].id],
+      color: "green-3",
     }),
   ];
 }

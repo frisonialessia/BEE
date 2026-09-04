@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ChevronLeft, ChevronRight, Link2, Plus, Trash2, Users, Video } from "lucide-react";
+import { Building2, CheckCircle2, ChevronLeft, ChevronRight, Link2, Plus, Trash2, Users, Video } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -58,7 +58,7 @@ function eventFill(m: { color?: string | null; client_context?: MeetingClientCon
 const GRID_START_HOUR = 7;
 const GRID_END_HOUR = 20;
 const GRID_HOURS = Array.from({ length: GRID_END_HOUR - GRID_START_HOUR + 1 }, (_, i) => GRID_START_HOUR + i);
-const HOUR_HEIGHT = 56; // px per hour row
+const HOUR_HEIGHT = 84; // px per hour row — a 30-min block (42px) keeps its title, 45 min adds the time range, an hour adds the account
 
 /** Pixel top/height for one meeting block within the hour grid — clamped
  * to the visible window (a meeting outside business hours still shows,
@@ -247,6 +247,132 @@ const CLIENT_CONTEXT_ORDER: MeetingClientContext[] = ["active_client", "hot_lead
 // The organizational color picker in the create/edit form — every color
 // the app's chart palette defines, nothing calendar-specific invented.
 const MEETING_COLORS: MeetingColor[] = ["chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6"];
+// The three sales greens, offered apart: a closing meeting or a meeting
+// with a won client — the same family Ventas and the CRM's Cerradas use.
+const MEETING_GREENS: MeetingColor[] = ["green-1", "green-2", "green-3"];
+
+/** "10:00–10:45" — 24h and compact, so a range fits a narrow day column. */
+function rangeLabel(iso: string, durationMinutes: number, timeZone: string) {
+  const fmt = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone });
+  const start = new Date(iso);
+  return `${fmt.format(start)}–${fmt.format(new Date(start.getTime() + durationMinutes * 60_000))}`;
+}
+
+const WEEKDAY_INITIALS: Record<Locale, string[]> = { es: ["L", "M", "M", "J", "V", "S", "D"], en: ["M", "T", "W", "T", "F", "S", "S"] };
+
+/**
+ * Sidebar "Desglose de tiempo" — one glance at the week: hours and count,
+ * minutes per weekday (today in honey), the split by client context, the
+ * accounts that take the most time, and how many meetings have a link or
+ * no pipeline tie. All from the week's meetings already loaded.
+ */
+function TimeBreakdown({
+  meetings,
+  totals,
+  grandTotal,
+  days,
+  todayStr,
+  locale,
+  tz,
+}: {
+  meetings: Meeting[];
+  totals: Record<MeetingClientContext, number>;
+  grandTotal: number;
+  days: Date[];
+  todayStr: string;
+  locale: Locale;
+  tz: string;
+}) {
+  const t = useTranslations("calendar");
+  if (grandTotal === 0) return null;
+  const hours = Math.round((grandTotal / 60) * 10) / 10;
+  const byDay = days.map((d) => {
+    const key = d.toDateString();
+    return meetings.filter((m) => zonedFakeLocalDate(new Date(m.starts_at), tz).toDateString() === key).reduce((s, m) => s + m.duration_minutes, 0);
+  });
+  const maxDay = Math.max(1, ...byDay);
+  const byAccount = new Map<string, number>();
+  for (const m of meetings) {
+    const key = m.company_name ?? m.contact_name;
+    if (!key) continue;
+    byAccount.set(key, (byAccount.get(key) ?? 0) + m.duration_minutes);
+  }
+  const topAccounts = [...byAccount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const withLink = meetings.filter((m) => m.meeting_url).length;
+  const unlinked = meetings.filter((m) => !m.opportunity_id && !m.lead_id).length;
+  const fmtMinutes = (min: number) => (min >= 60 ? t("sidebar.hours", { hours: Math.round((min / 60) * 10) / 10 }) : t("sidebar.minutes", { minutes: min }));
+
+  return (
+    <div className="bee-surface bee-bento-pad space-y-4">
+      <div>
+        <p className="bee-eyebrow">{t("sidebar.timeBreakdown")}</p>
+        <p className="mt-1 text-sm font-semibold tabular-nums">{t("sidebar.weekTotal", { hours, count: meetings.length })}</p>
+      </div>
+
+      <div>
+        <p className="bee-micro mb-1.5">{t("sidebar.byDay")}</p>
+        <div className="flex items-end gap-1">
+          {byDay.map((min, i) => {
+            const isToday = days[i].toDateString() === todayStr;
+            return (
+              <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1" title={fmtMinutes(min)}>
+                <div className="w-full rounded-[3px]" style={{ height: Math.max(4, Math.round((min / maxDay) * 40)), background: min === 0 ? "color-mix(in srgb, var(--color-text) 6%, transparent)" : isToday ? "var(--color-chart-1)" : "var(--color-chart-4)" }} />
+                <span className={`bee-micro ${isToday ? "font-semibold text-[var(--color-text)]" : ""}`}>{WEEKDAY_INITIALS[locale][i]}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <p className="bee-micro">{t("sidebar.byContext")}</p>
+        {CLIENT_CONTEXT_ORDER.filter((key) => totals[key] > 0).map((key) => {
+          const pct = Math.round((totals[key] / grandTotal) * 100);
+          return (
+            <div key={key} className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="truncate bee-micro text-[var(--color-text)]">{t(`clientContext.${key}`)}</span>
+                <span className="shrink-0 bee-micro tabular-nums">{fmtMinutes(totals[key])} · {pct}%</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-[color-mix(in_srgb,var(--color-text)_6%,transparent)]">
+                <div className="h-full rounded-full" style={{ width: `${pct}%`, background: CLIENT_CONTEXT_BAR_COLOR[key] }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {topAccounts.length > 0 && (
+        <div>
+          <p className="bee-micro mb-1.5">{t("sidebar.byAccount")}</p>
+          <ul className="space-y-1">
+            {topAccounts.map(([name, min]) => (
+              <li key={name} className="flex items-center justify-between gap-2 text-xs">
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <Building2 className="size-3 shrink-0 text-muted-foreground" />
+                  <span className="truncate">{name}</span>
+                </span>
+                <span className="shrink-0 bee-micro tabular-nums">{fmtMinutes(min)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-1.5">
+        <span className="rounded-full bg-[color-mix(in_srgb,var(--color-chart-4)_18%,var(--color-card))] px-2 py-0.5 bee-micro text-[var(--color-text)]">
+          <Video className="mr-1 inline size-3 align-[-2px]" />
+          {t("sidebar.withLink", { count: withLink })}
+        </span>
+        {unlinked > 0 && (
+          <span className="rounded-full bg-[color-mix(in_srgb,var(--color-chart-1)_22%,var(--color-card))] px-2 py-0.5 bee-micro text-[var(--color-text)]">
+            {t("sidebar.unlinked", { count: unlinked })}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
@@ -538,40 +664,6 @@ function RsvpWidget({
           {t("sidebar.rsvpDecline")}
         </button>
       </div>
-    </div>
-  );
-}
-
-function TimeBreakdownBars({
-  totals,
-  grandTotal,
-}: {
-  totals: Record<MeetingClientContext, number>;
-  grandTotal: number;
-}) {
-  const t = useTranslations("calendar");
-  if (grandTotal === 0) return null;
-
-  return (
-    <div className="bee-surface bee-bento-pad space-y-3">
-      <p className="bee-eyebrow">{t("sidebar.timeBreakdown")}</p>
-      {CLIENT_CONTEXT_ORDER.filter((key) => totals[key] > 0).map((key) => {
-        const pct = Math.round((totals[key] / grandTotal) * 100);
-        return (
-          <div key={key} className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="bee-micro">{t(`clientContext.${key}`)}</span>
-              <span className="bee-micro">{pct}%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-[var(--color-card)]">
-              <div
-                className="h-full rounded-full"
-                style={{ width: `${pct}%`, background: CLIENT_CONTEXT_BAR_COLOR[key] }}
-              />
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
@@ -907,7 +999,7 @@ export function CalendarPage() {
             locale={locale}
             todayStr={today}
           />
-          <TimeBreakdownBars totals={timeBreakdown.totals} grandTotal={timeBreakdown.grandTotal} />
+          <TimeBreakdown meetings={meetings} totals={timeBreakdown.totals} grandTotal={timeBreakdown.grandTotal} days={days} todayStr={today} locale={locale} tz={tz} />
         </aside>
 
         <div className="lg:order-2">
@@ -1079,7 +1171,7 @@ export function CalendarPage() {
                         key={m.id}
                         type="button"
                         onClick={() => setDetail(m)}
-                        className="absolute flex flex-col gap-1 overflow-hidden rounded-md border p-2 text-left"
+                        className="absolute flex flex-col gap-0.5 overflow-hidden rounded-md border px-2 py-1.5 text-left"
                         style={{
                           top: pos.top,
                           height: pos.height,
@@ -1088,17 +1180,38 @@ export function CalendarPage() {
                           ...eventFill(m),
                         }}
                       >
-                        <p className="text-xs text-muted-foreground">{timeLabel(m.starts_at, locale, tz)}</p>
-                        <p className="line-clamp-2 text-xs font-medium leading-snug">{m.title}</p>
-                        <div className="mt-auto flex items-center gap-2 text-muted-foreground">
-                          {m.attendee_user_ids.length > 0 && (
-                            <span className="flex items-center gap-1">
-                              <Users className="size-3" />
-                              <span className="bee-micro">{m.attendee_user_ids.length}</span>
-                            </span>
-                          )}
-                          {m.meeting_url && <Video className="size-3" />}
-                        </div>
+                        {/* What fits, in order of what a rep needs first: the
+                            title always; the time range from ~56px; the account
+                            from ~84px; attendees/link from ~108px. A short block
+                            never hides the title behind the hour. */}
+                        <p className={`${pos.height >= 56 ? "line-clamp-2" : "truncate"} text-xs font-semibold leading-snug`} title={m.title}>
+                          {m.title}
+                        </p>
+                        {pos.height >= 56 && (
+                          <p className="truncate bee-micro tabular-nums">
+                            {rangeLabel(m.starts_at, m.duration_minutes, tz)} · {m.duration_minutes} min
+                          </p>
+                        )}
+                        {pos.height >= 84 && (m.company_name || m.contact_name) && (
+                          <p className="flex min-w-0 items-center gap-1 bee-micro">
+                            <Building2 className="size-3 shrink-0" />
+                            <span className="truncate">{m.company_name ?? m.contact_name}</span>
+                          </p>
+                        )}
+                        {pos.height >= 108 && (
+                          <div className="mt-auto flex items-center gap-2 text-muted-foreground">
+                            {m.attendee_user_ids.length > 0 && (
+                              <span className="flex items-center gap-1">
+                                <Users className="size-3" />
+                                <span className="bee-micro">{m.attendee_user_ids.length}</span>
+                              </span>
+                            )}
+                            {m.meeting_url && <Video className="size-3" />}
+                            {m.client_context && (
+                              <span className="ml-auto truncate bee-micro">{t(`clientContext.${m.client_context}`)}</span>
+                            )}
+                          </div>
+                        )}
                       </button>
                     );
                   })}
@@ -1353,8 +1466,20 @@ export function CalendarPage() {
                     style={{ background: `var(--color-${c})` }}
                   />
                 ))}
+                <span className="mx-1 h-5 w-px bg-[color-mix(in_srgb,var(--color-text)_14%,transparent)]" aria-hidden="true" />
+                {MEETING_GREENS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, color: c }))}
+                    aria-label={t("form.colorGreen")}
+                    aria-pressed={form.color === c}
+                    className={`size-6 rounded-full border-2 transition-transform ${form.color === c ? "scale-110 border-[var(--color-text)]" : "border-transparent"}`}
+                    style={{ background: `var(--color-${c})` }}
+                  />
+                ))}
               </div>
-              <p className="mt-1 bee-micro">{t("form.colorHint")}</p>
+              <p className="mt-1 bee-micro">{t("form.colorHint")} {t("form.colorGreensHint")}</p>
             </div>
 
             <DialogFooter className="mt-2 flex items-center justify-between gap-2 sm:justify-between">
