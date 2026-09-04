@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 
 import { AntiBurnoutCard } from "@/components/celebration/anti-burnout-card";
 import { StreakBadge } from "@/components/celebration/streak-badge";
+import { useMilestoneCelebration } from "@/components/celebration/use-milestone-celebration";
+import { WeeklyRecapCard } from "@/components/celebration/weekly-recap-card";
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { SALES, TONE } from "@/components/charts/palette";
 import { RANGE_MONTHS, RangePills, useTimeRange } from "@/components/charts/range-pills";
@@ -175,6 +177,15 @@ export function DashboardOverview({
     [hiveLeads],
   );
 
+  // The recap's "won" fact and the milestone celebration both read the
+  // team's own total — the same opportunities the ranking and Ventas use.
+  const wonThisWeek = useMemo(
+    () => (allOppsResult?.data ?? []).filter((o) => o.status === "won" && o.closed_at && now - new Date(o.closed_at).getTime() < WEEK_MS).length,
+    [allOppsResult, now],
+  );
+  const totalWon = useMemo(() => (allOppsResult?.data ?? []).filter((o) => o.status === "won").length, [allOppsResult]);
+  useMilestoneCelebration(totalWon);
+
   // Mercado: signals stacked by the three most common types — one bar a
   // week over a year, one a month when zoomed out to two or five years.
   const market = useMemo(() => {
@@ -264,6 +275,7 @@ export function DashboardOverview({
       <GettingStartedCard signalCount={signals.length} opportunityCount={allOppsResult?.data.length ?? 0} userCount={usersResult?.length ?? 0} />
 
       <div className="bee-overview">
+        <WeeklyRecapCard now={now} signals={weekly[7]} won={wonThisWeek} streakDays={streakDays} />
         {marketSlow && <AntiBurnoutCard leads={burnoutLeads} />}
 
         {/* Hoy — the hive at the centre, the plays beside it. */}

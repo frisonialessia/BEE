@@ -1848,3 +1848,26 @@
 @media (prefers-reduced-motion: reduce) {
   .bee-celebration-hex { animation: none; opacity: 0.9; }
 }
+
+/* A value that changes fills in instead of jumping — the ring's stroke
+   and a bar's height/y are the only two shapes in the app whose size
+   encodes a number, so both transition here, everywhere they're used. */
+.bee-progress-fill { transition: stroke-dashoffset 700ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.bee-bar-fill { transition: height 500ms ease, y 500ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  .bee-progress-fill, .bee-bar-fill { transition: none; }
+}
+
+/* A hive cell pulses once when its own heat actually changed since the
+   last render (honeycomb.tsx tracks this, not just a re-sort) — the
+   scale lives on the path, never the cell's <g>, so it never fights the
+   translate that places the cell. */
+@keyframes bee-hive-pulse-fill {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.bee-hive-pulse-path { transform-box: fill-box; transform-origin: center; animation: bee-hive-pulse-fill 550ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .bee-hive-pulse-path { animation: none; }
+}

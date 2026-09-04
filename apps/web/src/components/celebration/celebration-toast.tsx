@@ -79,3 +79,27 @@ export function useCelebrateWon() {
     toast.custom(() => <CelebrationContent title={deal.title} amount={deal.amount} locale={locale} />, { duration: 6000 });
   };
 }
+
+function MilestoneContent({ count }: { count: number }) {
+  const t = useTranslations("celebration.milestone");
+  const [message] = useState(() => {
+    const pool = t.raw("messages") as string[];
+    const pick = pool[Math.floor(Math.random() * pool.length)] ?? pool[0];
+    return pick.replace("{count}", String(count));
+  });
+  return (
+    <div className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-3 pr-4 shadow-[var(--bee-shadow-card-lift)]">
+      <BurstIcon />
+      <p className="text-sm font-semibold leading-snug">{message}</p>
+    </div>
+  );
+}
+
+/** Fires once, the first time the team's real total of won deals crosses
+ * one of a few round numbers — see `use-milestone-celebration.ts` for the
+ * (never re-celebrated, never guessed on a first-ever visit) detection. */
+export function useCelebrateMilestone() {
+  return (count: number) => {
+    toast.custom(() => <MilestoneContent count={count} />, { duration: 6000 });
+  };
+}

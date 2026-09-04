@@ -17,5 +17,20 @@
     "title": "Semana más lenta de lo normal",
     "text": "Menos señales que tu promedio esta semana — aquí tienes cuentas de alta intención para retomar.",
     "empty": "Aún no hay suficientes cuentas calientes para sugerir."
+  },
+  "milestone": {
+    "messages": [
+      "¡{count} cierres en el equipo! Un hito real, no un número al azar.",
+      "{count} operaciones ganadas — la constancia ya se nota.",
+      "Hito alcanzado: {count} cierres del equipo."
+    ]
+  },
+  "recap": {
+    "title": "Tu semana en BEE",
+    "caption": "Últimos 7 días",
+    "signals": "Señales",
+    "won": "Ganado",
+    "streak": "Racha",
+    "dismiss": "Cerrar"
   }
 }

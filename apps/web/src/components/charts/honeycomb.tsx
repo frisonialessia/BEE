@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { HIVE_RAMP, REST } from "@/components/charts/palette";
 import { useBoxSize } from "@/components/charts/use-box-size";
@@ -70,6 +70,31 @@ export function Honeycomb({
   const steps = HIVE_RAMP.length;
   const focus = selectedId ?? hover;
 
+  // A cell pulses once when its own heat genuinely changed since the last
+  // render (a real stage move, not a re-sort of the same data) — the
+  // reaction the comb was missing when a deal moves in the CRM.
+  const prevHeatRef = useRef<Map<string, number>>(new Map());
+  const [pulsing, setPulsing] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    const prev = prevHeatRef.current;
+    const changed = new Set<string>();
+    for (const item of sorted) {
+      const before = prev.get(item.id);
+      if (before !== undefined && Math.abs(before - item.heat) > 0.5) changed.add(item.id);
+    }
+    prevHeatRef.current = new Map(sorted.map((i) => [i.id, i.heat]));
+    if (changed.size === 0) return;
+    // Deferred a frame, not called synchronously in the effect body — the
+    // pulse is genuinely a reaction to an external change, not state React
+    // itself needs to keep in sync every render.
+    const raf = requestAnimationFrame(() => setPulsing(changed));
+    const timer = setTimeout(() => setPulsing(new Set()), 650);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+    };
+  }, [sorted]);
+
   if (sorted.length === 0) {
     return (
       <div ref={ref} className={cn("bee-fill relative grid w-full place-items-center", className)} style={{ minHeight }}>
@@ -111,7 +136,13 @@ export function Honeycomb({
               {/* Hovering/focusing one cell never dims the rest of the comb
                   — it just gets a small ink outline, the same one
                   :focus-visible already draws for keyboard focus. */}
-              <path d={hexagon} fill={fill} stroke={isFocus ? "var(--color-text)" : "var(--color-card)"} strokeWidth={isFocus ? 2 : 1}>
+              <path
+                className={cn(pulsing.has(item.id) && "bee-hive-pulse-path")}
+                d={hexagon}
+                fill={fill}
+                stroke={isFocus ? "var(--color-text)" : "var(--color-card)"}
+                strokeWidth={isFocus ? 2 : 1}
+              >
                 <title>{`${item.label}${item.caption ? ` · ${item.caption}` : ""}`}</title>
               </path>
               {item.mark && layout.radius >= 10 && (

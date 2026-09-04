@@ -72,7 +72,16 @@ export function BarsVsTarget({
           const hit = target ? p.value >= target : false;
           return (
             <g key={p.label}>
-              <rect x={x} y={y} width={bw} height={Math.max(h, p.value > 0 ? 4 : 1)} rx={4} fill={colorFor ? colorFor(p, i, maxBar) : hit ? hitColor : color} opacity={hover !== null && hover !== i ? 0.45 : colorFor || p.current || hit ? 1 : 0.55} />
+              <rect
+                className="bee-bar-fill"
+                x={x}
+                y={y}
+                width={bw}
+                height={Math.max(h, p.value > 0 ? 4 : 1)}
+                rx={4}
+                fill={colorFor ? colorFor(p, i, maxBar) : hit ? hitColor : color}
+                opacity={hover !== null && hover !== i ? 0.45 : colorFor || p.current || hit ? 1 : 0.55}
+              />
               {showLabel(i) && (
                 <text x={x + bw / 2} y={H - 7} fill="var(--color-text-muted)" textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }}>
                   {p.label}

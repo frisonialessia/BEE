@@ -22,6 +22,7 @@ export function ProgressRing({
     <svg width={size} height={size} role="img" aria-label={label ?? `${Math.round(value * 100)}%`} className="shrink-0">
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={track} strokeWidth={stroke} />
       <circle
+        className="bee-progress-fill"
         cx={size / 2}
         cy={size / 2}
         r={r}
@@ -29,7 +30,8 @@ export function ProgressRing({
         stroke={color}
         strokeWidth={stroke}
         strokeLinecap="round"
-        strokeDasharray={`${c * v} ${c}`}
+        strokeDasharray={c}
+        strokeDashoffset={c * (1 - v)}
         transform={`rotate(-90 ${size / 2} ${size / 2})`}
       />
       <text x="50%" y="50%" dy="0.35em" textAnchor="middle" fontSize={size >= 44 ? 11 : 9} fontWeight={700} fill="var(--color-text)">

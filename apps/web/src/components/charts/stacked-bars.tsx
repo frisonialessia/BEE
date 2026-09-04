@@ -88,7 +88,7 @@ export function StackedBars({
                   if (v <= 0) return null;
                   const h = (v / max) * area;
                   y -= h;
-                  return <rect key={k} x={x} y={y} width={bw} height={h} fill={level(tone, k)} />;
+                  return <rect key={k} className="bee-bar-fill" x={x} y={y} width={bw} height={h} fill={level(tone, k)} />;
                 })}
                 {i % every === 0 && (
                   <text x={x + bw / 2} y={H - 5} textAnchor={i === 0 ? "start" : "middle"} fill="var(--color-text-muted)" style={{ fontSize: "var(--bee-fs-body-2)" }}>

@@ -17,5 +17,20 @@
     "title": "Slower week than usual",
     "text": "Fewer signals than your average this week — here are high-intent accounts to pick back up.",
     "empty": "Not enough hot accounts to suggest yet."
+  },
+  "milestone": {
+    "messages": [
+      "{count} closes on the team! A real milestone, not a random number.",
+      "{count} deals won — the consistency is showing.",
+      "Milestone reached: {count} closes for the team."
+    ]
+  },
+  "recap": {
+    "title": "Your week in BEE",
+    "caption": "Last 7 days",
+    "signals": "Signals",
+    "won": "Won",
+    "streak": "Streak",
+    "dismiss": "Dismiss"
   }
 }
