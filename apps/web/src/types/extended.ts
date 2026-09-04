@@ -512,6 +512,8 @@ export interface HotLeadScore {
   is_hot: boolean;
   hot_since: string | null;
   alerted: boolean;
+  /** A person's override (0–100) set from the hive; null = as BEE computed it. */
+  manual_temperature: number | null;
   created_at: string;
 }
 

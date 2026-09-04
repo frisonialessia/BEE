@@ -127,7 +127,23 @@
       "decision": "Decidiendo",
       "consideration": "Considerando",
       "awareness": "Descubriendo"
-    }
+    },
+    "showing": "Mostrando las {shown} más calientes de {total}",
+    "manual": "ajustada a mano",
+    "open": "Abrir",
+    "openOpportunity": "Abrir oportunidad",
+    "openCompany": "Abrir empresa",
+    "openLead": "Abrir lead",
+    "createOpportunity": "Crear oportunidad",
+    "temperature": "Temperatura",
+    "cold": "Fría",
+    "warm": "Tibia",
+    "hot": "Caliente",
+    "reset": "Volver al valor de BEE",
+    "temperatureHint": "Mueve la cuenta en la colmena. BEE conserva su propio cálculo.",
+    "saved": "Temperatura guardada.",
+    "error": "No se pudo guardar la temperatura.",
+    "close": "Cerrar"
   },
   "colorDots": {
     "aria": "Color",

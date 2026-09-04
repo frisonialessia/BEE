@@ -217,6 +217,30 @@ class DarkFunnelService:
         scores = list(self.session.exec(stmt).all())
         return [HotLeadOut.model_validate(s) for s in scores]
 
+    def set_manual_temperature(
+        self,
+        score_id: uuid.UUID,
+        manual_temperature: float | None,
+        organization_id: uuid.UUID | None = None,
+    ) -> HotLeadOut | None:
+        """A person's override of one account's temperature, from the hive.
+
+        Scoped to the caller's organization like every read here: a row of
+        another tenant is simply "not found". Only the override changes —
+        the computed score, stage and hot flag stay what the signals say, so
+        clearing the override (``None``) restores BEE's own reading.
+        """
+        stmt = select(HotLeadScore).where(HotLeadScore.id == score_id)
+        stmt = _scope(stmt, HotLeadScore.organization_id, organization_id)
+        score = self.session.exec(stmt).first()
+        if score is None:
+            return None
+        score.manual_temperature = manual_temperature
+        self.session.add(score)
+        self.session.commit()
+        self.session.refresh(score)
+        return HotLeadOut.model_validate(score)
+
     def get_company_score(
         self, company_domain: str, organization_id: uuid.UUID | None = None
     ) -> HotLeadOut | None:

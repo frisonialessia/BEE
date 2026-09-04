@@ -132,3 +132,51 @@ class TestDarkFunnelOrgScoping:
             "/api/v1/dark-funnel/hot-leads/no-dedup-lead.com", headers=headers
         ).json()
         assert score["signal_count"] == 2
+
+
+class TestManualTemperature:
+    def test_set_and_clear_is_scoped_to_the_organization(self, client: TestClient) -> None:
+        a = _register(client, org_name="Org A", email="a-temp@example.com")
+        b = _register(client, org_name="Org B", email="b-temp@example.com")
+        ha, hb = _auth_headers(a["access_token"]), _auth_headers(b["access_token"])
+        _simulate(client, ha, "temp-a.example")
+        lead = client.get("/api/v1/dark-funnel/hot-leads", headers=ha).json()[0]
+        assert lead["manual_temperature"] is None
+
+        resp = client.patch(
+            f"/api/v1/dark-funnel/hot-leads/{lead['id']}/temperature",
+            json={"manual_temperature": 90},
+            headers=ha,
+        )
+        assert resp.status_code == 200, resp.text
+        assert resp.json()["manual_temperature"] == 90
+        # The computed score is untouched by the override.
+        assert resp.json()["research_intensity_score"] == lead["research_intensity_score"]
+
+        # Another organization cannot touch it.
+        other = client.patch(
+            f"/api/v1/dark-funnel/hot-leads/{lead['id']}/temperature",
+            json={"manual_temperature": 10},
+            headers=hb,
+        )
+        assert other.status_code == 404
+
+        cleared = client.patch(
+            f"/api/v1/dark-funnel/hot-leads/{lead['id']}/temperature",
+            json={"manual_temperature": None},
+            headers=ha,
+        )
+        assert cleared.status_code == 200
+        assert cleared.json()["manual_temperature"] is None
+
+    def test_rejects_out_of_range(self, client: TestClient) -> None:
+        a = _register(client, org_name="Org C", email="c-temp@example.com")
+        ha = _auth_headers(a["access_token"])
+        _simulate(client, ha, "temp-c.example")
+        lead = client.get("/api/v1/dark-funnel/hot-leads", headers=ha).json()[0]
+        resp = client.patch(
+            f"/api/v1/dark-funnel/hot-leads/{lead['id']}/temperature",
+            json={"manual_temperature": 140},
+            headers=ha,
+        )
+        assert resp.status_code == 422

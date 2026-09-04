@@ -127,7 +127,23 @@
       "decision": "Deciding",
       "consideration": "Considering",
       "awareness": "Discovering"
-    }
+    },
+    "showing": "Showing the {shown} hottest of {total}",
+    "manual": "set by hand",
+    "open": "Open",
+    "openOpportunity": "Open opportunity",
+    "openCompany": "Open company",
+    "openLead": "Open lead",
+    "createOpportunity": "Create opportunity",
+    "temperature": "Temperature",
+    "cold": "Cold",
+    "warm": "Warm",
+    "hot": "Hot",
+    "reset": "Back to BEE's value",
+    "temperatureHint": "Moves the account in the hive. BEE keeps its own reading.",
+    "saved": "Temperature saved.",
+    "error": "Could not save the temperature.",
+    "close": "Close"
   },
   "colorDots": {
     "aria": "Color",

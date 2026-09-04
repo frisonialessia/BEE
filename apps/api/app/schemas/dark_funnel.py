@@ -60,9 +60,17 @@ class HotLeadOut(BaseModel):
     is_hot: bool
     hot_since: datetime | None
     alerted: bool
+    # A person's override from the hive; None means "as BEE computed it".
+    manual_temperature: float | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class HotLeadTemperatureIn(BaseModel):
+    """Set (0-100) or clear (null) the manual temperature of a hot lead."""
+
+    manual_temperature: float | None = Field(default=None, ge=0, le=100)
 
 
 class DarkFunnelSummary(BaseModel):

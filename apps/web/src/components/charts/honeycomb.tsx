@@ -15,6 +15,18 @@ export interface HiveItem {
   caption?: string;
   /** A second line under the caption in the tooltip. */
   detail?: string;
+  /** CSS color of the tag a person picked for the account, drawn as a small dot. */
+  mark?: string | null;
+}
+
+/** Where a cell sits, handed back on selection so a menu can anchor to it. */
+export interface HiveCellAnchor {
+  x: number;
+  y: number;
+  radius: number;
+  /** Width of the hive box, to decide which side a menu opens on. */
+  width: number;
+  height: number;
 }
 
 /**
@@ -24,11 +36,16 @@ export interface HiveItem {
  * and the rest spiral outward; the fill walks HIVE_RAMP from the deep
  * honey centre to the lavender edge, by steps. Empty positions of the ring
  * in progress are drawn hollow so a young hive still reads as a comb.
- * Fills its box (use-box-size). Numbers only on hover.
+ *
+ * Every cell is keyed by its item, so when a temperature changes the cell
+ * slides to its new place and its fill crossfades (.bee-hive-cell) instead
+ * of the comb redrawing. Fills its box (use-box-size). Numbers only on
+ * hover; a click hands the item and its anchor to `onSelect`.
  */
 export function Honeycomb({
   items,
   onSelect,
+  selectedId = null,
   maxRadius = 26,
   minHeight = 200,
   className,
@@ -36,7 +53,9 @@ export function Honeycomb({
   ariaLabel,
 }: {
   items: HiveItem[];
-  onSelect?: (item: HiveItem) => void;
+  onSelect?: (item: HiveItem, anchor: HiveCellAnchor) => void;
+  /** The cell a menu is open for: drawn at full strength while the rest dim. */
+  selectedId?: string | null;
   maxRadius?: number;
   minHeight?: number;
   className?: string;
@@ -45,22 +64,25 @@ export function Honeycomb({
   ariaLabel?: string;
 }) {
   const [ref, { width: W, height: H }] = useBoxSize<HTMLDivElement>({ width: 600, height: minHeight });
-  const [hover, setHover] = useState<number | null>(null);
-  const sorted = useMemo(() => [...items].sort((a, b) => b.heat - a.heat), [items]);
+  const [hover, setHover] = useState<string | null>(null);
+  const sorted = useMemo(() => [...items].sort((a, b) => b.heat - a.heat || a.id.localeCompare(b.id)), [items]);
   const layout = useMemo(() => layoutRadialHive(sorted.length, W, H, { maxRadius }), [sorted.length, W, H, maxRadius]);
   const steps = HIVE_RAMP.length;
+  const focus = selectedId ?? hover;
 
   if (sorted.length === 0) {
     return (
-      <div ref={ref} className={cn("bee-fill grid w-full place-items-center", className)} style={{ minHeight }}>
+      <div ref={ref} className={cn("bee-fill relative grid w-full place-items-center", className)} style={{ minHeight }}>
         <EmptyComb width={Math.min(W, 260)} />
         {emptyHint && <p className="bee-caption absolute bottom-2 text-center">{emptyHint}</p>}
       </div>
     );
   }
 
-  const active = hover !== null ? sorted[hover] : null;
-  const activeCell = hover !== null ? layout.cells[hover] : null;
+  const hoverIndex = hover !== null && selectedId === null ? sorted.findIndex((s) => s.id === hover) : -1;
+  const active = hoverIndex >= 0 ? sorted[hoverIndex] : null;
+  const activeCell = hoverIndex >= 0 ? layout.cells[hoverIndex] : null;
+  const hexagon = hexagonPath(0, 0, layout.radius - 1);
 
   return (
     <div ref={ref} className={cn("bee-fill relative w-full", className)} style={{ minHeight }}>
@@ -71,21 +93,29 @@ export function Honeycomb({
         {layout.cells.map((c, i) => {
           const item = sorted[i];
           const fill = HIVE_RAMP[rampIndex(i, c.ring, sorted.length, steps)];
-          const dim = hover !== null && hover !== i;
+          const dim = focus !== null && focus !== item.id;
+          const anchor = { x: c.x, y: c.y, radius: layout.radius, width: W, height: H };
           return (
-            <path
+            <g
               key={item.id}
-              d={hexagonPath(c.x, c.y, layout.radius - 1)}
-              fill={fill}
-              stroke="var(--color-card)"
-              strokeWidth={1}
-              opacity={dim ? 0.55 : 1}
-              className={cn("transition-opacity duration-150", onSelect && "cursor-pointer")}
-              onMouseEnter={() => setHover(i)}
-              onClick={onSelect ? () => onSelect(item) : undefined}
+              className={cn("bee-hive-cell", onSelect && "cursor-pointer")}
+              style={{ transform: `translate(${c.x}px, ${c.y}px)` }}
+              opacity={dim ? 0.45 : 1}
+              tabIndex={onSelect ? 0 : undefined}
+              role={onSelect ? "button" : undefined}
+              aria-label={onSelect ? item.label : undefined}
+              onMouseEnter={() => setHover(item.id)}
+              onFocus={() => setHover(item.id)}
+              onClick={onSelect ? () => onSelect(item, anchor) : undefined}
+              onKeyDown={onSelect ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(item, anchor); } } : undefined}
             >
-              <title>{`${item.label}${item.caption ? ` · ${item.caption}` : ""}`}</title>
-            </path>
+              <path d={hexagon} fill={fill} stroke="var(--color-card)" strokeWidth={1}>
+                <title>{`${item.label}${item.caption ? ` · ${item.caption}` : ""}`}</title>
+              </path>
+              {item.mark && layout.radius >= 10 && (
+                <circle cx={0} cy={layout.radius * 0.45} r={Math.max(2, layout.radius * 0.16)} fill={item.mark} stroke="var(--color-card)" strokeWidth={1} />
+              )}
+            </g>
           );
         })}
       </svg>

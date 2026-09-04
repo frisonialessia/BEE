@@ -207,10 +207,22 @@ class HotLeadScore(TimestampMixin, table=True):
         description="Start of the 30-day rolling window used for score computation.",
     )
 
+    # ── Manual temperature ───────────────────────────────────────────────────
+    # A person's override of the computed score, set from the hive (0-100,
+    # or None to follow BEE again). The hive and the "in a buying window"
+    # KPI read ``effective_score``; the computed score is never touched, so
+    # clearing the override restores what BEE knows.
+    manual_temperature: float | None = Field(default=None, ge=0.0, le=100.0)
+
     # ── Hot lead flag ─────────────────────────────────────────────────────────
     is_hot: bool = Field(default=False, index=True)
     hot_since: datetime | None = Field(default=None)
     alerted: bool = Field(default=False, description="Whether the CEO was notified about this hot lead.")
+
+    @property
+    def effective_score(self) -> float:
+        """The score the hive draws: the person's override when set."""
+        return self.manual_temperature if self.manual_temperature is not None else self.research_intensity_score
 
     def score_to_stage(self) -> str:
         """Map the intensity score to a buying stage label."""

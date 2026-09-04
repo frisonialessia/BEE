@@ -596,6 +596,46 @@ export async function listDISCProfiles(): Promise<FetchResult<LeadPsychographic[
 
 // ─── DarkFunnelService ────────────────────────────────────────────────────────
 
+const DEMO_TEMPERATURES_KEY = "bee.demo.hiveTemperatures.v1";
+
+/** The sandbox's manual temperatures, one per hot lead id, in this browser. */
+function readDemoTemperatures(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(DEMO_TEMPERATURES_KEY) ?? "{}") as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * A person's override of one account's temperature, set from the hive —
+ * 0–100, or null to follow BEE's computed score again. In the sandbox it
+ * lives in this browser only, like every other demo edit.
+ */
+export async function setHotLeadTemperature(scoreId: string, manualTemperature: number | null): Promise<HotLeadScore> {
+  if (isDemoMode()) {
+    const overrides = readDemoTemperatures();
+    if (manualTemperature === null) delete overrides[scoreId];
+    else overrides[scoreId] = manualTemperature;
+    try {
+      window.localStorage.setItem(DEMO_TEMPERATURES_KEY, JSON.stringify(overrides));
+    } catch {
+      // Storage blocked — the optimistic update still shows the change.
+    }
+    const lead = getSampleHotLeads(getDemoLocale()).find((l) => l.id === scoreId);
+    if (!lead) throw new Error("Hot lead not found.");
+    return { ...lead, manual_temperature: manualTemperature };
+  }
+  const res = await beeFetch(`${API_URL}/api/v1/dark-funnel/hot-leads/${scoreId}/temperature`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ manual_temperature: manualTemperature }),
+  });
+  if (!res.ok) throw new Error(`API responded ${res.status}`);
+  return (await res.json()) as HotLeadScore;
+}
+
 export async function getDarkFunnelHotLeads(params?: {
   min_score?: number;
   buying_stage?: string;
@@ -607,7 +647,8 @@ export async function getDarkFunnelHotLeads(params?: {
     // the hive (SignalHexMap) and the Dark Funnel dashboard's lead list
     // must show the same accounts the summary tiles above them count,
     // filtered the same way the real endpoint would.
-    let leads = getSampleHotLeads(getDemoLocale());
+    const overrides = readDemoTemperatures();
+    let leads = getSampleHotLeads(getDemoLocale()).map((l) => (l.id in overrides ? { ...l, manual_temperature: overrides[l.id] } : l));
     if (params?.min_score !== undefined) {
       leads = leads.filter((l) => l.research_intensity_score >= params.min_score!);
     }

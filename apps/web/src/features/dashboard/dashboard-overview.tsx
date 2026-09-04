@@ -18,7 +18,7 @@ import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { DecisionFeed } from "@/features/dashboard/decision-feed";
 import { GettingStartedCard } from "@/features/dashboard/getting-started-card";
 import { TeamGoalRanking } from "@/features/dashboard/team-goal-ranking";
-import { IntentHive } from "@/features/signals/intent-hive";
+import { IntentHive, stageOf } from "@/features/signals/intent-hive";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useHiveLeads } from "@/hooks/queries/use-lead-board";
 import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -92,7 +92,7 @@ export function DashboardOverview({
   // Accounts in a buying window: ready to buy or hot, from the same leads
   // the hive draws.
   const hiveLeads = useMemo(() => hiveResult?.data ?? [], [hiveResult]);
-  const buyingWindow = hiveLeads.filter((l) => l.buying_stage === "ready_to_buy" || l.is_hot).length;
+  const buyingWindow = hiveLeads.filter((l) => stageOf(l) === "ready_to_buy" || (l.manual_temperature === null && l.is_hot)).length;
   const hotTrend = useMemo(() => {
     const byWeek = Array.from({ length: 8 }, () => 0);
     for (const l of hiveLeads) {
@@ -202,7 +202,7 @@ export function DashboardOverview({
       <div className="bee-overview">
         {/* Hoy — the hive at the centre, the plays beside it. */}
         <OverviewCard span={8} title={t("sections.hive.title")} caption={t("sections.hive.caption")} className="lg:min-h-[34rem]!" action={<CardLink href={`${base}/signals?tab=intent`}>{t("sections.hive.link")}</CardLink>}>
-          <IntentHive maxRadius={34} minHeight={300} />
+          <IntentHive maxRadius={34} minHeight={300} maxCells={200} />
         </OverviewCard>
         <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")} className="lg:min-h-[34rem]!">
           <DecisionFeed criticalAccounts={criticalAccounts} />

@@ -741,6 +741,7 @@ const namedHotLeadsEs: HotLeadScore[] = [
     is_hot: true,
     hot_since: new Date(Date.now() - 86400000).toISOString(),
     alerted: true,
+    manual_temperature: null,
     created_at: new Date().toISOString(),
   },
   {
@@ -757,6 +758,7 @@ const namedHotLeadsEs: HotLeadScore[] = [
     is_hot: true,
     hot_since: null,
     alerted: false,
+    manual_temperature: null,
     created_at: new Date().toISOString(),
   },
 ];
@@ -824,6 +826,7 @@ function genericHotLeads(): HotLeadScore[] {
     is_hot: i % 5 === 0,
     hot_since: i % 5 === 0 ? new Date().toISOString() : null,
     alerted: false,
+    manual_temperature: null,
     created_at: new Date().toISOString(),
   }));
 }

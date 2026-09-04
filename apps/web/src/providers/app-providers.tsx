@@ -25,7 +25,15 @@ export function AppProviders({ children }: AppProvidersProps) {
              useAuth() to identify/reset the PostHog user on login/logout. */}
           <PostHogProvider>
             {children}
-            <Toaster richColors closeButton position="top-right" />
+            {/* Ink on a white card, like every other message in BEE: no green or
+                red toasts — the words say what happened. */}
+            <Toaster
+              closeButton
+              position="top-right"
+              toastOptions={{
+                classNames: { toast: "!bg-[var(--color-card)] !text-[var(--color-text)] !border-[var(--color-divider)] !rounded-[var(--radius-md)] !shadow-[var(--bee-shadow-card-lift)]", description: "!text-[var(--color-text-muted)]" },
+              }}
+            />
           </PostHogProvider>
         </AuthProvider>
         {process.env.NODE_ENV === "development" ? (

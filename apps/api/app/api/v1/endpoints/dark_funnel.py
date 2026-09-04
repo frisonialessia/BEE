@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
 from app.api.deps import get_organization_id, require_organization_id
@@ -14,6 +14,7 @@ from app.schemas.dark_funnel import (
     DarkFunnelSignalOut,
     DarkFunnelSummary,
     HotLeadOut,
+    HotLeadTemperatureIn,
 )
 from app.services.dark_funnel import DarkFunnelService
 
@@ -107,6 +108,29 @@ def get_hot_leads(
         hot_only=hot_only,
         organization_id=organization_id,
     )
+
+
+@router.patch(
+    "/hot-leads/{score_id}/temperature",
+    response_model=HotLeadOut,
+    summary="Set or clear a person's manual temperature for a hot lead",
+)
+def set_hot_lead_temperature(
+    score_id: uuid.UUID,
+    body: HotLeadTemperatureIn,
+    svc: DarkFunnelService = Depends(_get_service),
+    organization_id: uuid.UUID = Depends(require_organization_id),
+) -> HotLeadOut:
+    """The hive's own edit: a person cools or heats an account by hand.
+
+    ``manual_temperature`` 0-100 overrides what the hive draws for that
+    account; ``null`` clears the override and the account follows BEE's
+    computed score again. The computed score itself never changes.
+    """
+    result = svc.set_manual_temperature(score_id, body.manual_temperature, organization_id)
+    if result is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hot lead not found.")
+    return result
 
 
 @router.get(
