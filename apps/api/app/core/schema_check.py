@@ -26,6 +26,12 @@ class SchemaStatus:
     code_head: str | None
     in_sync: bool
     error: str | None = None
+    # ``host:port/dbname`` of the database that was checked — never the
+    # credentials. When the deployment platform's ``DATABASE_URL`` points at
+    # a different server than the one an operator just migrated (2026-09-04:
+    # Supabase at 047, production still reporting 025), this is the one field
+    # that tells them *which* database to migrate.
+    db_target: str | None = None
 
     def as_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -53,6 +59,17 @@ def code_head_revision() -> str | None:
         return None
 
 
+def db_target(engine: Engine) -> str | None:
+    """``host:port/dbname`` of the engine, without username or password."""
+    try:
+        url = engine.url
+        host = url.host or "local"
+        port = f":{url.port}" if url.port else ""
+        return f"{host}{port}/{url.database or ''}"
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def db_revision(engine: Engine) -> str | None:
     if not inspect(engine).has_table("alembic_version"):
         return None
@@ -65,21 +82,25 @@ def check_schema(engine: Engine) -> SchemaStatus:
     """Compare DB revision with code head; cache and log the result."""
     global _LAST
     head = code_head_revision()
+    target = db_target(engine)
     try:
         db = db_revision(engine)
     except Exception as exc:  # noqa: BLE001
-        _LAST = SchemaStatus(db_version=None, code_head=head, in_sync=False, error=str(exc)[:200])
-        logger.warning("Schema check skipped — database unavailable: %s", exc)
+        _LAST = SchemaStatus(
+            db_version=None, code_head=head, in_sync=False, error=str(exc)[:200], db_target=target
+        )
+        logger.warning("Schema check skipped — database %s unavailable: %s", target, exc)
         return _LAST
     # No alembic_version table = a create_all()-provisioned dev/test DB:
     # nothing to compare, not drift.
     in_sync = head is None or db is None or db == head
-    _LAST = SchemaStatus(db_version=db, code_head=head, in_sync=in_sync)
+    _LAST = SchemaStatus(db_version=db, code_head=head, in_sync=in_sync, db_target=target)
     if not in_sync:
         logger.critical(
-            "SCHEMA DRIFT — database is at Alembic revision %s but this code expects %s. "
+            "SCHEMA DRIFT — database %s is at Alembic revision %s but this code expects %s. "
             "Requests touching newer columns will fail with 500 until `alembic upgrade head` "
-            "runs against this database (see DEPLOY_CHECKLIST.md §1 Database).",
+            "runs against THAT database (see DEPLOY_CHECKLIST.md §1 Database).",
+            target,
             db,
             head,
         )

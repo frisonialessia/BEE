@@ -32,6 +32,7 @@ def test_schema_check_reports_in_sync_when_no_alembic_table(engine) -> None:  # 
     # The test engine is create_all()-provisioned SQLite: no alembic_version
     # table. That must read as "nothing to compare", never as drift.
     status = check_schema(engine)
+    assert status.db_target is not None and "@" not in status.db_target
     assert status.db_version is None
     assert status.error is None
     assert status.in_sync is True
