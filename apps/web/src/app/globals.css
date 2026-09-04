@@ -725,12 +725,17 @@
  * perdía contra un fondo sólido del mismo tono. Un solo lugar para el
  * degradado y el halo — usado por el botón flotante, el header del panel
  * rápido, el hero de la página completa y los mini-avatares de burbuja. */
+/* The assistant's mark is one flat tone — the same indigo as the floating
+ * launcher and every primary CTA — not a gradient: BEE's surfaces are
+ * solid brand colors everywhere else, and the assistant should read as
+ * part of the same family, not as a separate "AI" brand. (Class name kept;
+ * three components use it.) */
 .bee-assistant-gradient {
-  background: linear-gradient(135deg, var(--color-chart-4), var(--color-chart-5));
+  background: var(--color-chart-4);
 }
 
 .bee-assistant-halo {
-  box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-chart-5) 15%, transparent);
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--color-chart-4) 15%, transparent);
 }
 
 /* The floating launcher itself — a solid fill in the same blue every
