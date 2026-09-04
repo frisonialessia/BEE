@@ -6,7 +6,7 @@ import type { IntroPath, NetworkConnection, NetworkQueryResult, NetworkStats } f
 import { addNetworkConnection, findIntroPaths, getNetworkConnections, getNetworkStats } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LiveBadge } from "@/components/live-badge";
-import { KpiStrip } from "@/components/metric-card";
+import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Donut } from "@/components/charts/donut";
 import { DATA } from "@/components/charts/palette";
@@ -189,18 +189,16 @@ export function NetworkNavigatorPanel() {
     <div className="space-y-4">
       {/* Stats row */}
       {stats && (
-        <div className="bee-overview">
-          <div style={{ gridColumn: "span 8" }}>
-            <KpiStrip
-              cols={2}
-              items={[
-                { label: t("stats.totalConnections"), value: stats.total_connections },
-                { label: t("stats.firstDegree"), value: stats.first_degree_count, progress: stats.total_connections ? stats.first_degree_count / stats.total_connections : undefined },
-                { label: t("stats.companiesCovered"), value: stats.companies_covered },
-                { label: t("stats.avgStrength"), value: `${stats.avg_relationship_strength}/10`, progress: stats.avg_relationship_strength / 10 },
-              ]}
-            />
-          </div>
+        <StatStrip cols={4}>
+          <StatTile label={t("stats.totalConnections")} value={stats.total_connections} tone={DATA.indigo} />
+          <StatTile label={t("stats.firstDegree")} value={stats.first_degree_count} tone={DATA.honey} progress={stats.total_connections ? stats.first_degree_count / stats.total_connections : undefined} />
+          <StatTile label={t("stats.companiesCovered")} value={stats.companies_covered} tone={DATA.magenta} />
+          <StatTile label={t("stats.avgStrength")} value={`${stats.avg_relationship_strength}/10`} tone={DATA.violet} progress={stats.avg_relationship_strength / 10} />
+        </StatStrip>
+      )}
+
+      <div className="bee-overview">
+        {stats && (
           <OverviewCard span={4} title={t("degreeTitle")} caption={t("degreeCaption")}>
             <Donut
               slices={[
@@ -219,12 +217,10 @@ export function NetworkNavigatorPanel() {
               </div>
             )}
           </OverviewCard>
-        </div>
-      )}
+        )}
 
       {/* Path finder */}
-      <div className="bee-bento bee-bento-pad space-y-3">
-        <h3 className="bee-card-title">{t("pathFinderTitle")}</h3>
+      <OverviewCard span={stats ? 8 : 12} title={t("pathFinderTitle")} className="space-y-3">
         <form onSubmit={handleFindPaths} className="flex flex-wrap gap-2">
           <input
             value={targetDomain}
@@ -273,6 +269,7 @@ export function NetworkNavigatorPanel() {
             </div>
           </div>
         )}
+      </OverviewCard>
       </div>
 
       {/* Add connection */}

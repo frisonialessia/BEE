@@ -67,6 +67,8 @@
     "emptyTitle": "Todavía no hay señales de intención.",
     "emptySubtitle": "Usa el simulador de arriba para enviar una señal de prueba.",
     "stageMixTitle": "Mezcla por etapa de compra",
-    "stageMixCaption": "Dónde están los leads calientes hoy"
+    "stageMixCaption": "Dónde están los leads calientes hoy",
+    "keywordsTitle": "Qué investigan",
+    "keywordsCaption": "Palabras de intención más repetidas entre los leads calientes"
   }
 }

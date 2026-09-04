@@ -764,17 +764,58 @@ const namedHotLeadsEs: HotLeadScore[] = [
 // doesn't silently also change the other.
 const namedHotLeadsEn: HotLeadScore[] = namedHotLeadsEs.map((lead) => ({ ...lead }));
 
+// The rest of the hive: the same companies the sandbox uses everywhere
+// else (Empresas, CRM, Señales), never a "Company 7" — a demo that names
+// accounts the visitor already met reads as one product, not as filler.
+const HIVE_COMPANIES: { name: string; domain: string }[] = [
+  { name: "Río Verde Logística", domain: "rioverdelog.com" },
+  { name: "Cumbre Salud", domain: "cumbresalud.co" },
+  { name: "Bright Retail Co", domain: "brightretail.com" },
+  { name: "Andina Fintech", domain: "andinafintech.pe" },
+  { name: "Solaris Manufactura", domain: "solarismfg.mx" },
+  { name: "Nimbus Cloud Systems", domain: "nimbuscloud.io" },
+  { name: "EduNova", domain: "edunova.mx" },
+  { name: "Horizonte Legal", domain: "horizontelegal.cl" },
+  { name: "Puerto Digital", domain: "puertodigital.mx" },
+  { name: "Meridian Health Group", domain: "meridianhealth.com" },
+  { name: "Terra Agro Analytics", domain: "terraagro.com.ar" },
+  { name: "Vega Real Estate Tech", domain: "vegaretech.mx" },
+  { name: "Kaizen Manufacturing", domain: "kaizenmfg.com" },
+  { name: "Onda Media Group", domain: "ondamedia.mx" },
+  { name: "Cobre Insurtech", domain: "cobreinsurtech.co" },
+  { name: "Silo Data Works", domain: "silodata.io" },
+  { name: "Raíz Educación", domain: "raizeducacion.mx" },
+  { name: "Vantage Studio", domain: "vantagestudio.mx" },
+  { name: "Bruma Analytics", domain: "brumaanalytics.com.ar" },
+  { name: "Fenix Wearables", domain: "fenixwearables.com" },
+];
+
+// Intent keywords in English by convention (what the crawler sees on the
+// web), rotated so the "Qué investigan" box has a real distribution.
+const HIVE_KEYWORDS = [
+  ["pricing", "sales intelligence"],
+  ["crm integration", "api docs"],
+  ["intent data", "lead scoring"],
+  ["competitor compare", "pricing"],
+  ["case study", "security review"],
+  ["demo", "onboarding"],
+  ["lead scoring", "pricing"],
+  ["intent data", "competitor compare"],
+];
+
+const HIVE_SIGNAL_TYPES = [["search"], ["search", "pricing_view"], ["pricing_view", "demo_watch"], ["competitor_compare"], ["review_visit", "search"], ["docs_visit"]];
+
 function genericHotLeads(): HotLeadScore[] {
-  return Array.from({ length: 38 }, (_, i) => ({
+  return HIVE_COMPANIES.map((c, i) => ({
     id: `h-gen-${i}`,
-    company_domain: `company-${i}.io`,
-    company_name: `Company ${i}`,
+    company_domain: c.domain,
+    company_name: c.name,
     lead_id: null,
     research_intensity_score: 20 + ((i * 17) % 75),
     buying_stage: (["awareness", "consideration", "decision", "ready_to_buy"] as const)[i % 4],
     signal_count: 1 + (i % 6),
-    signal_types_seen: ["search", "pricing_view"].slice(0, 1 + (i % 2)),
-    top_intent_keywords: ["intent", "research"],
+    signal_types_seen: HIVE_SIGNAL_TYPES[i % HIVE_SIGNAL_TYPES.length],
+    top_intent_keywords: HIVE_KEYWORDS[i % HIVE_KEYWORDS.length],
     last_signal_at: new Date(Date.now() - i * 3600000).toISOString(),
     is_hot: i % 5 === 0,
     hot_since: i % 5 === 0 ? new Date().toISOString() : null,

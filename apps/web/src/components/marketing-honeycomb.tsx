@@ -105,7 +105,10 @@ function buildGrid(): HexCell[] {
     for (let r = r1; r <= r2; r++) {
       const dist = (Math.abs(q) + Math.abs(q + r) + Math.abs(r)) / 2;
       const jitter = (hash01(q, r) - 0.5) * 0.35;
-      const heat = Math.min(1, Math.max(0, 1 - dist / RADIUS + jitter));
+      // Eased toward warm (pow < 1) so the middle rings reach indigo/lilac and
+      // the landing hive shows the whole palette, not a honey disc with a
+      // magenta dot in the centre.
+      const heat = Math.min(1, Math.max(0, Math.pow(Math.max(0, 1 - dist / RADIUS + jitter), 0.7)));
       // Hash distinto (offset de semilla) al del jitter de calor, para que
       // qué lead cae en qué celda no esté correlacionado con su temperatura.
       const leadIndex = Math.floor(hash01(q + 101, r - 37) * HEX_LEADS.length);

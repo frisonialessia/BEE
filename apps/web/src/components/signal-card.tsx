@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Locale } from "@/i18n/locales";
 import { formatRelativeTime } from "@/lib/i18n/format";
 import { signalFill, signalTone, TONE_CSS_VAR } from "@/lib/brand/colors";
-import { getSignalTagLabels, getSignalTypeLabels, scoreVariant } from "@/lib/format";
+import { formatSignalSource, getSignalTagLabels, getSignalTypeLabels, scoreVariant } from "@/lib/format";
 import type { Signal } from "@/lib/types";
 
 /** A single detected market signal in the Bento grid. */
@@ -20,7 +20,6 @@ export function SignalCard({ signal }: { signal: Signal }) {
   const signalTypeLabels = getSignalTypeLabels(locale);
   const signalTagLabels = getSignalTagLabels(locale);
   const tags = signal.analysis?.tags ?? [];
-  const primary = signal.analysis?.primary_analyzer;
   const bg = signalFill(signal.signal_type);
   const accent = TONE_CSS_VAR[signalTone(signal.signal_type)];
 
@@ -41,7 +40,7 @@ export function SignalCard({ signal }: { signal: Signal }) {
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline">{signalTypeLabels[signal.signal_type]}</Badge>
             <span className="bee-micro">
-              {formatRelativeTime(signal.detected_at, locale)} · {signal.source}
+              {formatRelativeTime(signal.detected_at, locale)} · {formatSignalSource(signal.source, locale)}
             </span>
           </div>
 
@@ -67,11 +66,10 @@ export function SignalCard({ signal }: { signal: Signal }) {
           )}
         </div>
 
+        {/* Score only — the analyzer id that used to sit under it repeated
+            the type badge in raw snake_case. */}
         <div className="flex shrink-0 flex-col items-end gap-1">
           <Badge variant={scoreVariant(signal.score)}>{Math.round(signal.score)}</Badge>
-          {primary && (
-            <span className="bee-micro">{primary}</span>
-          )}
         </div>
       </div>
     </article>

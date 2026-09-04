@@ -5,7 +5,8 @@ import { useLocale, useTranslations } from "next-intl";
 import type { DarkFunnelSummary, HotLeadScore } from "@/lib/types";
 import { getDarkFunnelHotLeads, getDarkFunnelSummary, ingestDarkFunnelSignal } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
-import { KpiStrip } from "@/components/metric-card";
+import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
+import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Donut } from "@/components/charts/donut";
 import { DATA } from "@/components/charts/palette";
@@ -159,6 +160,16 @@ export function DarkFunnelDashboard() {
   }, []);
 
   const filtered = stageFilter ? hotLeads.filter((l) => l.buying_stage === stageFilter) : hotLeads;
+  // What the hot leads are actually researching — the intent keywords the
+  // pipeline attached, counted across the list. Same data as the cards.
+  const topKeywords = (() => {
+    const counts = new Map<string, number>();
+    for (const lead of hotLeads) for (const k of lead.top_intent_keywords) counts.set(k, (counts.get(k) ?? 0) + 1);
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([label, value], i) => ({ label, value, color: [DATA.indigo, DATA.honey, DATA.magenta, DATA.violet, DATA.indigo, DATA.honey][i] }));
+  })();
 
   async function handleSimulate(e: React.FormEvent) {
     e.preventDefault();
@@ -190,28 +201,32 @@ export function DarkFunnelDashboard() {
     <div className="space-y-4">
       {/* Summary cards */}
       {summary && (
-        <div className="bee-overview">
-          <div style={{ gridColumn: "span 8" }}>
-            <KpiStrip
-              cols={2}
-              items={[
-                { label: t("summaryHotLeads"), value: summary.total_hot_leads, tone: "muted" },
-                { label: t("summaryReadyToBuy"), value: summary.ready_to_buy_count, tone: "warm" },
-                { label: t("summaryDecisionStage"), value: summary.decision_stage_count, tone: "blue" },
-                { label: t("summarySignalsToday"), value: summary.total_signals_today },
-              ]}
-            />
+        <>
+          <StatStrip cols={4}>
+            <StatTile label={t("summaryHotLeads")} value={summary.total_hot_leads} tone={DATA.magenta} />
+            <StatTile label={t("summaryReadyToBuy")} value={summary.ready_to_buy_count} tone={DATA.honey} progress={summary.total_hot_leads ? summary.ready_to_buy_count / summary.total_hot_leads : undefined} />
+            <StatTile label={t("summaryDecisionStage")} value={summary.decision_stage_count} tone={DATA.indigo} progress={summary.total_hot_leads ? summary.decision_stage_count / summary.total_hot_leads : undefined} />
+            <StatTile label={t("summarySignalsToday")} value={summary.total_signals_today} tone={DATA.violet} />
+          </StatStrip>
+          <div className="bee-overview">
+            <OverviewCard span={4} title={t("stageMixTitle")} caption={t("stageMixCaption")}>
+              <Donut
+                slices={[
+                  { label: t("stageReadyToBuy"), value: summary.ready_to_buy_count, color: DATA.honey },
+                  { label: t("stageDecision"), value: summary.decision_stage_count, color: DATA.indigo },
+                  { label: t("stageConsideration"), value: summary.consideration_stage_count, color: DATA.violet },
+                ]}
+              />
+            </OverviewCard>
+            <OverviewCard span={8} title={t("keywordsTitle")} caption={t("keywordsCaption")}>
+              {topKeywords.length === 0 ? (
+                <p className="bee-caption py-6 text-center">—</p>
+              ) : (
+                <HorizontalFunnel rows={topKeywords} />
+              )}
+            </OverviewCard>
           </div>
-          <OverviewCard span={4} title={t("stageMixTitle")} caption={t("stageMixCaption")}>
-            <Donut
-              slices={[
-                { label: t("stageReadyToBuy"), value: summary.ready_to_buy_count, color: DATA.honey },
-                { label: t("stageDecision"), value: summary.decision_stage_count, color: DATA.indigo },
-                { label: t("stageConsideration"), value: summary.consideration_stage_count, color: DATA.violet },
-              ]}
-            />
-          </OverviewCard>
-        </div>
+        </>
       )}
 
       {/* Controls */}

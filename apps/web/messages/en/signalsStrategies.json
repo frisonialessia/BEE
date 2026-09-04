@@ -67,6 +67,8 @@
     "emptyTitle": "No intent signals yet.",
     "emptySubtitle": "Use the simulator above to send a test signal.",
     "stageMixTitle": "Mix by buying stage",
-    "stageMixCaption": "Where today's hot leads sit"
+    "stageMixCaption": "Where today's hot leads sit",
+    "keywordsTitle": "What they research",
+    "keywordsCaption": "Most repeated intent keywords across hot leads"
   }
 }

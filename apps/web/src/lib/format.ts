@@ -422,3 +422,16 @@ export function formatGenerator(value: string | null | undefined, locale: Locale
   if (!value) return "";
   return (locale === "en" ? GENERATOR_EN : GENERATOR_ES)[value] ?? humanizeToken(value);
 }
+
+const SIGNAL_SOURCE_LABELS: Record<Locale, Record<string, string>> = {
+  es: { webhook: "Webhook", crawler: "Rastreo web", enrichment: "Enriquecimiento", api: "API", manual: "Manual", gdelt: "Prensa (GDELT)", lever: "Lever", greenhouse: "Greenhouse", linkedin: "LinkedIn", g2: "G2", google_search: "Google Search", demo: "Demo", partner: "Partner" },
+  en: { webhook: "Webhook", crawler: "Web crawl", enrichment: "Enrichment", api: "API", manual: "Manual", gdelt: "Press (GDELT)", lever: "Lever", greenhouse: "Greenhouse", linkedin: "LinkedIn", g2: "G2", google_search: "Google Search", demo: "Demo", partner: "Partner" },
+};
+
+/** Where a signal came from, as a word a seller reads — never the raw
+ *  connector id ("webhook", "crawler") the pipeline stores. */
+export function formatSignalSource(source: string | null | undefined, locale: Locale = defaultLocale): string {
+  if (!source) return "";
+  const key = source.toLowerCase();
+  return SIGNAL_SOURCE_LABELS[locale][key] ?? SIGNAL_SOURCE_LABELS.es[key] ?? humanizeToken(source);
+}
