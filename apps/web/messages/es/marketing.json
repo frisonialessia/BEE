@@ -48,21 +48,32 @@
     "guarantees": {
       "noHallucinations": {
         "title": "Cero alucinaciones",
-        "description": "Cada score y cada métrica sale de datos reales. Si no hay dato, el sistema muestra vacío — nunca lo inventa."
+        "description": "Cada score sale de un dato. Si no hay dato, queda vacío."
       },
       "humanApproval": {
         "title": "Aprobación humana siempre",
-        "description": "Ninguna acción externa — un email, un mensaje, una secuencia — se ejecuta sin luz verde explícita."
+        "description": "Nada se envía sin tu luz verde explícita."
       },
       "multiTenant": {
         "title": "Multi-tenant real",
-        "description": "Aislamiento estricto de datos por organización, de punta a punta, no una bandera opcional."
+        "description": "Tus datos, aislados de punta a punta por organización."
       },
       "secureByDesign": {
         "title": "Seguro desde el diseño",
-        "description": "Webhooks firmados con HMAC y secretos por entorno — las credenciales nunca tocan el código."
+        "description": "Webhooks firmados con HMAC; secretos fuera del código."
       }
     },
+    "trustCharts": {
+      "ringLabel": "scores con dato real",
+      "funnel": {
+        "prepared": "Preparadas",
+        "approved": "Aprobadas",
+        "sent": "Enviadas"
+      },
+      "donutSlice": "Tu organización",
+      "sparkLabel": "0 incidentes"
+    },
+    "trustNote": "Cifras ilustrativas del demo — no una cuenta real.",
     "sourcesLabel": "Fuentes reales:",
     "closingTitle": "Tu próximo cliente ya está mandando señales. La pregunta es si las estás viendo.",
     "closingCta": "Comenzar ahora"

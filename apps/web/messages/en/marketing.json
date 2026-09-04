@@ -48,21 +48,32 @@
     "guarantees": {
       "noHallucinations": {
         "title": "Zero hallucinations",
-        "description": "Every score and every metric comes from real data. When there's no data, the system shows empty — it never invents one."
+        "description": "Every score comes from data. No data, no number."
       },
       "humanApproval": {
         "title": "Human approval, always",
-        "description": "No external action — an email, a message, a sequence — ever fires without explicit go-ahead."
+        "description": "Nothing sends without your explicit go-ahead."
       },
       "multiTenant": {
         "title": "Real multi-tenancy",
-        "description": "Strict data isolation per organization, end to end — not an optional flag."
+        "description": "Your data, isolated end to end per organization."
       },
       "secureByDesign": {
         "title": "Secure by design",
-        "description": "HMAC-signed webhooks and per-environment secrets — credentials never touch the codebase."
+        "description": "HMAC-signed webhooks; secrets never in the code."
       }
     },
+    "trustCharts": {
+      "ringLabel": "scores backed by real data",
+      "funnel": {
+        "prepared": "Prepared",
+        "approved": "Approved",
+        "sent": "Sent"
+      },
+      "donutSlice": "Your organization",
+      "sparkLabel": "0 incidents"
+    },
+    "trustNote": "Illustrative demo figures — not a real account.",
     "sourcesLabel": "Real sources:",
     "closingTitle": "Your next customer is already sending signals. The question is whether you're seeing them.",
     "closingCta": "Get started"

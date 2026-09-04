@@ -1564,67 +1564,21 @@
   transition: opacity 300ms ease-out 1700ms, transform 400ms cubic-bezier(0.2, 0.7, 0.2, 1) 1700ms;
 }
 
-/* ── Before/after split handle (visitor-driven only) ─────────────────────── */
-.bee-split { padding-top: calc(var(--bee-pad-surface-lg) + 0.25rem); }
-.bee-split__track {
-  position: absolute;
-  left: var(--bee-pad-surface-lg);
-  right: var(--bee-pad-surface-lg);
-  top: var(--bee-pad-surface-lg);
-  height: 1.75rem;
-  cursor: ew-resize;
-  touch-action: none;
-}
-.bee-split__track::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 2px;
-  margin-top: -1px;
-  border-radius: 1px;
-  background: var(--color-divider);
-}
-.bee-split__handle {
-  position: absolute;
-  top: var(--bee-pad-surface-lg);
-  bottom: var(--bee-pad-surface-lg);
-  left: clamp(var(--bee-pad-surface-lg), var(--split, 0%), calc(100% - var(--bee-pad-surface-lg)));
-  width: 0;
-  cursor: ew-resize;
-  touch-action: none;
-  outline: none;
-  transition: left 120ms linear;
-}
-.bee-split__grip {
-  position: absolute;
-  top: 0.875rem;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  transform: translate(-50%, -50%);
-  border-radius: 9999px;
-  background: var(--color-card);
-  color: var(--color-chart-4);
-  box-shadow: var(--bee-shadow-card-lift), 0 0 0 1.5px color-mix(in srgb, var(--color-chart-4) 55%, transparent);
-  transition: box-shadow 200ms ease;
-}
-.bee-split__handle:focus-visible .bee-split__grip,
-.bee-split__handle:active .bee-split__grip { box-shadow: var(--bee-shadow-card-lift), 0 0 0 4px color-mix(in srgb, var(--color-chart-4) 30%, transparent); }
-.bee-split__line {
-  position: absolute;
-  top: 1.75rem;
-  bottom: 0;
-  left: -1px;
-  width: 2px;
-  border-radius: 1px;
-  background: color-mix(in srgb, var(--color-chart-4) 35%, transparent);
-}
-.bee-split__row { will-change: transform; }
+/* ── Trust cards: the dashboard charts play once on entry ─────────────────
+   Driven by the same data-reveal state as the card stagger (.bee-trust is
+   the stagger wrapper). While "hidden": ring/donut arcs empty, funnel bars
+   at zero width, sparkline clipped; on "in" each transitions to the value
+   the component already rendered. Selectors reach into the chart
+   components' own markup (second circle = the value arc; .h-5 > div = a
+   funnel bar) — kept here, next to the only place that uses them. */
+.bee-trust[data-reveal="hidden"] .bee-trust-ring circle:nth-of-type(2),
+.bee-trust[data-reveal="hidden"] .bee-trust-donut circle { stroke-dasharray: 0 1000; }
+.bee-trust-ring circle:nth-of-type(2),
+.bee-trust-donut circle { transition: stroke-dasharray 1200ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms; }
+.bee-trust[data-reveal="hidden"] .bee-trust-funnel .h-5 > div { width: 0 !important; }
+.bee-trust-funnel .h-5 > div { transition: width 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms, opacity 150ms ease; }
+.bee-trust[data-reveal="hidden"] .bee-trust-spark svg { clip-path: inset(0 100% 0 0); }
+.bee-trust-spark svg { transition: clip-path 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms; }
 
 /* ── FAQ answers that type themselves ─────────────────────────────────────
    The full answer owns the layout (transparent ink while typing, so the
@@ -1643,6 +1597,17 @@
 }
 @keyframes bee-caret { to { opacity: 0; } }
 
+/* ── Marketing pages: /contacto form card ────────────────────────────────
+   Honey focus ring on the form's inputs — scoped to the card so the
+   dashboard's .bee-input keeps its indigo focus. Unlayered, so it also wins
+   over the textarea's focus:border utility. */
+.bee-contact-card .bee-input:focus,
+.bee-contact-card textarea:focus {
+  outline: none;
+  border-color: var(--color-chart-1);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-chart-1) 35%, transparent);
+}
+
 /* Reduced motion: every rule above → final state, no transitions. */
 @media (prefers-reduced-motion: reduce) {
   .bee-reveal[data-reveal="hidden"],
@@ -1656,6 +1621,22 @@
   .bee-draw[data-reveal] .bee-draw__line { stroke-dasharray: none; stroke-dashoffset: 0; transition: none; }
   .bee-draw[data-reveal] .bee-draw__area { clip-path: none; transition: none; }
   .bee-draw[data-reveal] .bee-draw__dot { opacity: 1; transform: none; transition: none; }
-  .bee-split__handle,
-  .bee-split__row { transition: none; }
+  .bee-trust-ring circle,
+  .bee-trust-donut circle,
+  .bee-trust-funnel .h-5 > div,
+  .bee-trust-spark svg { transition: none; }
+}
+
+/* ── Opportunity drawer, "engine" size ─────────────────────────────────────
+   The CRM side panel is BEE's working surface (contact + account on the
+   left, pipeline + activity on the right), so it takes ~80% of the viewport
+   on desktop and the whole screen on phones. Same shell as .bee-drawer —
+   this only widens it; ambient shadow instead of a border, per Nácar. */
+.bee-drawer--wide {
+  width: min(80vw, 1360px);
+  border-left: none;
+  box-shadow: -24px 0 60px -30px color-mix(in srgb, var(--color-text) 35%, transparent);
+}
+@media (max-width: 1023px) {
+  .bee-drawer--wide { width: 100vw; }
 }

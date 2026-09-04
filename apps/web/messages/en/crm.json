@@ -99,7 +99,106 @@
       "title": "Execution artifacts",
       "unavailable": "Artifacts will be generated on the first request via the Executive Agent."
     },
-    "moveError": "Couldn't move the opportunity — try again."
+    "moveError": "Couldn't move the opportunity — try again.",
+    "newTitle": "New opportunity",
+    "create": "Create",
+    "of": "of",
+    "in": "in",
+    "prevInColumn": "Previous in column",
+    "nextInColumn": "Next in column",
+    "pipeline": "Pipeline",
+    "stage": "Stage",
+    "createdAgo": "created {time}",
+    "createdOn": "Created on {date}",
+    "noContact": "No contact",
+    "contact": {
+      "email": "Email",
+      "phone": "Phone",
+      "linkedin": "LinkedIn",
+      "source": "Source"
+    },
+    "company": "Company",
+    "noCompany": "No company",
+    "view": "View",
+    "expectedClose": "Close {date}",
+    "owner": "Owner",
+    "tags": {
+      "hot": "Hot lead",
+      "client": "Current client",
+      "review": "Manual review"
+    },
+    "account": {
+      "title": "Account",
+      "byStage": "{count} opportunities by stage",
+      "amounts": "Amounts by month",
+      "score": "Score"
+    },
+    "actions": {
+      "calendar": "Create meeting",
+      "more": "More actions",
+      "moveTo": "Move to",
+      "markWon": "Mark won",
+      "markLost": "Mark lost"
+    },
+    "stepper": {
+      "aria": "Pipeline stages",
+      "moveTo": "Move to {stage}"
+    },
+    "next": {
+      "action": "Next action",
+      "step": "Next step",
+      "none": "Nothing scheduled",
+      "meeting": "Meeting",
+      "task": "Task",
+      "date": "Next meeting"
+    },
+    "tabs": {
+      "aria": "Opportunity sections",
+      "activity": "Activity",
+      "meetings": "Meetings",
+      "strategy": "Strategy",
+      "tasks": "Tasks",
+      "notes": "Notes"
+    },
+    "activity": {
+      "signal": "Signal detected",
+      "created": "Opportunity created",
+      "strategy": "Strategy generated",
+      "confidence": "Confidence {pct}%",
+      "taskDone": "Task completed",
+      "meetingHeld": "Meeting held",
+      "meetingScheduled": "Meeting scheduled",
+      "closed": "Closed · {status}",
+      "expand": "Show detail",
+      "collapse": "Hide detail",
+      "empty": "No activity yet."
+    },
+    "meetings": {
+      "empty": "No meetings yet.",
+      "create": "Create meeting",
+      "title": "Title",
+      "when": "Date and time",
+      "duration": "Duration (min)",
+      "link": "Link",
+      "save": "Save",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "created": "Meeting created.",
+      "error": "Couldn't create the meeting.",
+      "held": "Held",
+      "join": "Join"
+    },
+    "strategy": {
+      "more": "More",
+      "less": "Less",
+      "why": "Why this strategy",
+      "cycle": "Cycle prediction",
+      "queued": "Prepared message",
+      "approveSend": "Approve and send",
+      "approving": "Sending…",
+      "approved": "Approved — BEE is sending it.",
+      "approveError": "Couldn't approve — try again."
+    }
   },
   "form": {
     "title": "New opportunity",
@@ -154,6 +253,8 @@
     "cancel": "Cancel",
     "successToast": "Opportunity created at {company} — strategy ready.",
     "successToastNewCompany": "{company} added to Companies and opportunity ready.",
-    "errorToast": "Could not create the opportunity — try again."
+    "errorToast": "Could not create the opportunity — try again.",
+    "contactSeniority": "Seniority",
+    "contactLinkedin": "LinkedIn"
   }
 }

@@ -4,6 +4,7 @@ import { Trophy } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
+import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { DATA, SALES, mix } from "@/components/charts/palette";
 import { ProgressRing } from "@/components/charts/progress-ring";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
@@ -31,12 +32,15 @@ export function TeamGoalRanking({
   month = false,
   sales = false,
   limit = 3,
+  bars = false,
 }: {
   days?: number;
   /** Rank by the current calendar month instead of trailing `days` — what Ventas uses so the ranking and the monthly goals share a period. */
   month?: boolean;
   sales?: boolean;
   limit?: number;
+  /** Resumen: a bar per rep under the list, so the box never ends in a gap. */
+  bars?: boolean;
 }) {
   const t = useTranslations("dashboardOverview.goalRanking");
   const locale = useLocale() as Locale;
@@ -80,8 +84,8 @@ export function TeamGoalRanking({
 
   if (rows.length === 0) return <p className="bee-caption py-6 text-center">{t("empty")}</p>;
 
-  return (
-    <ol className="flex flex-col gap-2">
+  const list = (
+    <ol className="flex flex-col justify-evenly gap-2">
       {rows.map((rep, i) => {
         const reached = rep.attainment !== null && rep.attainment >= 1;
         const ringColor = sales ? (reached ? SALES.won : SALES.lime) : DATA.honey;
@@ -107,5 +111,17 @@ export function TeamGoalRanking({
         );
       })}
     </ol>
+  );
+  if (!bars) return list;
+  return (
+    <div className="bee-fill flex flex-col gap-3">
+      {list}
+      <BarsVsTarget
+        points={rows.map((r) => ({ label: r.name.split(/\s+/)[0], value: r.value }))}
+        minHeight={72}
+        formatValue={(v) => formatMoney(v, rows[0]?.currency ?? "USD", locale, true)}
+        colorFor={(_p, i) => (sales ? RANK_TONE_SALES[i] ?? SALES.mint : RANK_TONE[i] ?? mix(DATA.honey, 35))}
+      />
+    </div>
   );
 }

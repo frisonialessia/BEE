@@ -76,8 +76,8 @@ function hash01(a: number, b: number): number {
 const SQRT_3 = 1.7320508075688772;
 
 // Etiquetas de etapa: `stage` referencia una clave de landing.stages (mismo
-// diccionario compartido que usan marketing-demo-panel.tsx y
-// marketing-before-after.tsx) — no un diccionario propio, para que las 4
+// diccionario compartido que usa marketing-demo-panel.tsx) — no un
+// diccionario propio, para que las 4
 // etiquetas de etapa tengan una sola fuente de traducción en toda la
 // landing, igual vocabulario que SignalHexMap/HiveTooltip en el dashboard.
 

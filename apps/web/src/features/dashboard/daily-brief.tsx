@@ -122,7 +122,7 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
       return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
     }
     return (
-      <ul className="flex flex-col gap-1">
+      <ul className="bee-fill flex flex-col justify-evenly gap-1">
         {items.slice(0, 5).map((item) => {
           const Icon = TONE_ICON[item.tone];
           return (

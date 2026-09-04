@@ -197,14 +197,14 @@ export function CriticalAccountsDigest({
       (b) => b.ready_to_action && today.getTime() - new Date(b.signal.detected_at).getTime() <= DAY_MS,
     )
     .sort((a, b) => b.score - a.score)
-    .slice(0, 4);
+    .slice(0, 5);
 
   if (embedded) {
     if (critical.length === 0) {
       return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
     }
     return (
-      <div className="grid grid-cols-1 gap-2">
+      <div className="bee-fill flex flex-col justify-evenly gap-2">
         {critical.map((b) => (
           <CriticalAccountRow key={b.opportunity_id} battlecard={b} />
         ))}

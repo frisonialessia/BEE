@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { ArrowRight, Lock, Mail, PlayCircle, Radio, Search, ShieldCheck, Star, UserCheck, Users } from "lucide-react";
+import { ArrowRight, Mail, PlayCircle, Search, Star, Users } from "lucide-react";
 
-import { MarketingBeforeAfter } from "@/components/marketing-before-after";
 import { MarketingCounters } from "@/components/marketing-counters";
 import { MarketingDemoPanel } from "@/components/marketing-demo-panel";
 import { MarketingFAQ } from "@/components/marketing-faq";
@@ -12,6 +11,7 @@ import { Reveal } from "@/components/marketing-motion";
 import { MarketingOrbit } from "@/components/marketing-orbit";
 import { MarketingSalesProof } from "@/components/marketing-sales-proof";
 import { MarketingSignalTicker } from "@/components/marketing-signal-ticker";
+import { MarketingTrustCards } from "@/components/marketing-trust-cards";
 
 /**
  * Landing pública — la primera pantalla que ve cualquier visitante antes de
@@ -24,8 +24,9 @@ import { MarketingSignalTicker } from "@/components/marketing-signal-ticker";
  * Order, and the reason for it — a visitor should know what BEE is within
  * two scrolls: the hero says it (headline, subtitle, CTAs, the four tilted
  * module cards as the module summary), the ticker shows the signals, the
- * Demo en vivo shows the product. Then the argument: Antes/después,
- * Ventas, why to trust it (with the real sources), FAQ, closing CTA. The
+ * Demo en vivo shows the product. Then the argument: Ventas, why to trust
+ * it (four guarantees as dashboard charts, plus the real sources), FAQ,
+ * closing CTA. The
  * module tour lives on /funcionalidades (linked from header and footer),
  * not here.
  *
@@ -40,21 +41,6 @@ import { MarketingSignalTicker } from "@/components/marketing-signal-ticker";
  * and none of it adds a fill: one background for the whole landing, the
  * hero's blurred atmosphere the only exception.
  */
-
-const GUARANTEE_ICONS = {
-  noHallucinations: ShieldCheck,
-  humanApproval: UserCheck,
-  multiTenant: Lock,
-  secureByDesign: Radio,
-} as const;
-const GUARANTEE_KEYS = ["noHallucinations", "humanApproval", "multiTenant", "secureByDesign"] as const;
-// Icon disc per row: a soft wash of the hue behind an ink mixed toward
-// --color-text (same recipe as .bee-eyebrow's modifiers) so it reads on
-// white. Written out in full rather than through a shared custom property:
-// Lightning CSS constant-folds a color-mix()-only custom property into every
-// CSS rule that reads it and drops the property itself, so a var() written
-// from inline style (invisible to that pass) would resolve to nothing.
-const GUARANTEE_HUES = ["var(--color-chart-4)", "var(--color-accent-warm)", "var(--color-chart-6)", "var(--color-chart-5)"] as const;
 
 /** The real signal sources and the outbound channel — LinkedIn/G2/Google
  * Search are the providers in apps/api/app/services/external_api/providers/,
@@ -209,63 +195,43 @@ export default async function Home() {
           <MarketingCounters />
         </section>
 
-        <MarketingBeforeAfter />
-
         <MarketingSalesProof />
 
-        {/* ── Por qué confiar — editorial block, no cards ───────────────── */}
+        {/* ── Por qué confiar — four guarantees, each as a dashboard chart ── */}
         <section id="features" className="border-t border-border">
           <div className="mx-auto w-full max-w-6xl px-6 py-12 lg:py-14">
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
-              <Reveal className="lg:col-span-5">
-                <p className="bee-eyebrow bee-eyebrow--warm">{t("guaranteesEyebrow")}</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("guaranteesTitle")}</h2>
-                <p className="bee-caption mt-3 max-w-md">{t("guaranteesSubtitle")}</p>
-              </Reveal>
+            <Reveal className="mx-auto max-w-2xl text-center">
+              <p className="bee-eyebrow bee-eyebrow--warm">{t("guaranteesEyebrow")}</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("guaranteesTitle")}</h2>
+              <p className="bee-caption mt-3">{t("guaranteesSubtitle")}</p>
+            </Reveal>
 
-              <Reveal as="ol" stagger className="divide-y divide-border border-y border-border lg:col-span-7">
-                {GUARANTEE_KEYS.map((key, i) => {
-                  const Icon = GUARANTEE_ICONS[key];
-                  const hue = GUARANTEE_HUES[i];
-                  return (
-                    <li key={key} className="grid grid-cols-[1.5rem_2rem_1fr] items-start gap-4 py-5">
-                      <span className="bee-micro pt-2 tabular-nums">0{i + 1}</span>
-                      <span
-                        className="flex size-8 items-center justify-center rounded-full"
-                        style={{ background: `color-mix(in srgb, ${hue} 20%, var(--color-card))`, color: `color-mix(in srgb, ${hue} 70%, var(--color-text) 30%)` }}
-                      >
-                        <Icon className="size-4 stroke-[1.5]" />
-                      </span>
-                      <div className="min-w-0">
-                        <h3 className="text-sm font-semibold tracking-tight">{t(`guarantees.${key}.title`)}</h3>
-                        <p className="bee-caption mt-1">{t(`guarantees.${key}.description`)}</p>
-                      </div>
-                    </li>
-                  );
-                })}
-                {/* Footer row: where the signals actually come from — the
-                 * same trust theme, the four real sources, one line. */}
-                <li className="grid grid-cols-[1.5rem_1fr] items-start gap-4 py-5">
-                  <span className="bee-micro pt-0.5 tabular-nums">0{GUARANTEE_KEYS.length + 1}</span>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-                    <span className="bee-micro">{t("sourcesLabel")}</span>
-                    {SOURCES.map((source, i) => (
-                      <span key={source.id} className="inline-flex items-center gap-2">
-                        {i > 0 && <span className="bee-micro" aria-hidden>·</span>}
-                        <span
-                          className="flex size-6 items-center justify-center rounded-full"
-                          style={{ background: `color-mix(in srgb, ${source.hue} 20%, var(--color-card))`, color: `color-mix(in srgb, ${source.hue} 70%, var(--color-text) 30%)` }}
-                          title={tSources(source.id)}
-                        >
-                          <source.icon className="size-3 stroke-[1.75]" />
-                        </span>
-                        <span className="text-sm font-medium">{source.name}</span>
-                      </span>
-                    ))}
-                  </div>
-                </li>
-              </Reveal>
+            <div className="mt-10">
+              <MarketingTrustCards />
             </div>
+
+            {/* Footer row: where the signals actually come from — the same
+             * trust theme, the four real sources, one line — plus the note
+             * that the figures above are demo values. */}
+            <Reveal className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-3" delay={120}>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <span className="bee-micro">{t("sourcesLabel")}</span>
+                {SOURCES.map((source, i) => (
+                  <span key={source.id} className="inline-flex items-center gap-2">
+                    {i > 0 && <span className="bee-micro" aria-hidden>·</span>}
+                    <span
+                      className="flex size-6 items-center justify-center rounded-full"
+                      style={{ background: `color-mix(in srgb, ${source.hue} 20%, var(--color-card))`, color: `color-mix(in srgb, ${source.hue} 70%, var(--color-text) 30%)` }}
+                      title={tSources(source.id)}
+                    >
+                      <source.icon className="size-3 stroke-[1.75]" />
+                    </span>
+                    <span className="text-sm font-medium">{source.name}</span>
+                  </span>
+                ))}
+              </div>
+              <p className="bee-micro">{t("trustNote")}</p>
+            </Reveal>
           </div>
         </section>
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { Code2, LogIn, Send } from "lucide-react";
 
 import { ContactForm } from "@/components/contact-form";
 import { MarketingFooter } from "@/components/marketing-footer";
@@ -17,7 +18,22 @@ export async function generateMetadata(): Promise<Metadata> {
  * de un formulario que solo simula un éxito. `source` (leído de la query)
  * deja registrado desde qué CTA llegó cada visitante, para que quien
  * triage estos leads vea qué parte de la página realmente convierte.
+ *
+ * Layout: two columns that start at the top and each wrap their content.
+ * The form card sits inside a plain wrapper on purpose — the global
+ * `.grid > .bee-bento { height: 100% }` rule would otherwise stretch it to
+ * the row and leave a tall empty white box under the fields. The card has
+ * a lavender header strip (eyebrow + one-line promise), honey focus rings
+ * on its inputs (.bee-contact-card in globals.css) and a plain primary
+ * submit. The three notes on the left are compact rows, one hue each.
  */
+
+const NOTES = [
+  { id: "afterSubmit", icon: Send, hue: "var(--color-chart-4)" },
+  { id: "haveAccount", icon: LogIn, hue: "var(--color-chart-1)" },
+  { id: "mvpNotice", icon: Code2, hue: "var(--color-chart-6)" },
+] as const;
+
 export default async function ContactoPage({
   searchParams,
 }: {
@@ -33,33 +49,41 @@ export default async function ContactoPage({
       <MarketingHeader />
 
       <main className="flex-1">
-        <section className="mx-auto w-full max-w-5xl px-6 py-16 sm:py-20">
+        <section className="mx-auto w-full max-w-5xl px-6 py-12 lg:py-14">
           <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
             <div>
               <p className="bee-eyebrow">{t("eyebrow")}</p>
-              <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-                {t("heroTitle")}
-              </h1>
+              <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{t("heroTitle")}</h1>
               <p className="bee-caption mt-4 max-w-sm text-base">{t("heroSubtitle")}</p>
 
-              <div className="mt-8 space-y-4">
-                <div className="bee-bento bee-bento-pad">
-                  <p className="text-sm font-semibold">{t("afterSubmitTitle")}</p>
-                  <p className="bee-caption mt-1.5">{t("afterSubmitBody")}</p>
-                </div>
-                <div className="bee-bento bee-bento-pad">
-                  <p className="text-sm font-semibold">{t("haveAccountTitle")}</p>
-                  <p className="bee-caption mt-1.5">{t("haveAccountBody")}</p>
-                </div>
-                <div className="bee-bento bee-bento-pad">
-                  <p className="text-sm font-semibold">{t("mvpNoticeTitle")}</p>
-                  <p className="bee-caption mt-1.5">{t("mvpNoticeBody")}</p>
-                </div>
-              </div>
+              <ul className="mt-8 divide-y divide-border border-y border-border">
+                {NOTES.map((note) => (
+                  <li key={note.id} className="flex items-start gap-3 py-4">
+                    <span
+                      className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full"
+                      style={{ background: `color-mix(in srgb, ${note.hue} 20%, var(--color-card))`, color: `color-mix(in srgb, ${note.hue} 70%, var(--color-text) 30%)` }}
+                    >
+                      <note.icon className="size-4 stroke-[1.5]" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">{t(`${note.id}Title`)}</p>
+                      <p className="bee-caption mt-1">{t(`${note.id}Body`)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            <div className="bee-bento bee-bento-pad-lg">
-              <ContactForm source={source} />
+            <div>
+              <div className="bee-contact-card bee-bento overflow-hidden p-0">
+                <div className="px-6 py-4" style={{ background: "var(--color-primary)" }}>
+                  <p className="bee-eyebrow bee-eyebrow--blue">{t("formEyebrow")}</p>
+                  <p className="mt-1 text-sm font-medium">{t("formPromise")}</p>
+                </div>
+                <div className="bee-bento-pad-lg">
+                  <ContactForm source={source} />
+                </div>
+              </div>
             </div>
           </div>
         </section>

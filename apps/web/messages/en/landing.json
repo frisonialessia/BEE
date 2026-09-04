@@ -214,20 +214,6 @@
       }
     }
   },
-  "beforeAfter": {
-    "eyebrow": "The same list, two outcomes",
-    "heading": "Same leads. The difference is what you do first.",
-    "withoutBee": "Without BEE",
-    "withBee": "With BEE",
-    "rawCaption": "Raw export — alphabetical order, no intent context.",
-    "noData": "— no data —",
-    "scoredCaption": "Prioritized by BEE — intent score, stage, and what to work first.",
-    "illustrativeNote": "Illustrative view — same scoring criteria as the rest of the live demo.",
-    "clickPromptBefore": "Click",
-    "clickPromptAfter": "to see the same list prioritized",
-    "sliderLabel": "Compare the list without BEE and with BEE",
-    "dragHint": "Drag the handle — or use the arrow keys — to move between the two lists."
-  },
   "integrations": {
     "items": {
       "linkedin": "Hiring signals and direct outreach",

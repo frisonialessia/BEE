@@ -214,20 +214,6 @@
       }
     }
   },
-  "beforeAfter": {
-    "eyebrow": "La misma lista, dos resultados",
-    "heading": "Los mismos leads. La diferencia es qué haces primero.",
-    "withoutBee": "Sin BEE",
-    "withBee": "Con BEE",
-    "rawCaption": "Export sin procesar — orden alfabético, sin contexto de intención.",
-    "noData": "— sin dato —",
-    "scoredCaption": "Priorizado por BEE — score de intención, etapa y qué atacar primero.",
-    "illustrativeNote": "Vista ilustrativa — mismo criterio de score que el resto del Demo en vivo.",
-    "clickPromptBefore": "Haz clic en",
-    "clickPromptAfter": "para ver la misma lista priorizada",
-    "sliderLabel": "Comparar la lista sin BEE y con BEE",
-    "dragHint": "Arrastra el control — o usa las flechas — para pasar de una lista a la otra."
-  },
   "integrations": {
     "items": {
       "linkedin": "Señales de contratación y alcance directo",

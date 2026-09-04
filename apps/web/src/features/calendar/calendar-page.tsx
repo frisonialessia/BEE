@@ -871,6 +871,32 @@ export function CalendarPage() {
     setFormOpen(true);
   }
 
+  function openCreatePrefilled(start: Date, title: string, opportunityId: string) {
+    setEditing(null);
+    setForm({ ...emptyForm(start), title, opportunityId });
+    setFormOpen(true);
+  }
+
+  // Deep link from a battlecard's calendar button (Estrategias):
+  // /calendar?new=1&opportunity=<id>&title=<company> opens the create dialog
+  // already linked to that opportunity, so the seller never re-types what
+  // BEE already knows. Read once after mount (window-only), then cleared
+  // from the URL so a refresh doesn't reopen the dialog.
+  useEffect(() => {
+    if (!mounted) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") !== "1") return;
+    const start = zonedFakeLocalDate(new Date(), tz);
+    start.setHours(10, 0, 0, 0);
+    // Same one-shot, browser-only read as the `mounted` flag above: the URL
+    // is the external system, the dialog state mirrors it once.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    openCreatePrefilled(start, params.get("title") ?? "", params.get("opportunity") ?? "");
+    window.history.replaceState(null, "", window.location.pathname);
+    // tz settles a frame after mount; the dialog should open once, on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted]);
+
   function openEdit(meeting: Meeting) {
     setDetail(null);
     setEditing(meeting);

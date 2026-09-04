@@ -2,54 +2,132 @@
   "funcionalidades": {
     "meta": {
       "title": "Features — BEE",
-      "description": "BEE's four engines: real-time signals, daily brief, revenue simulator, and multi-channel automation."
+      "description": "The product module by module: Signals, CRM, Strategies, Forecast, Sales, Calendar and Control — with the dashboard's real charts."
     },
     "eyebrow": "Platform",
-    "heroTitle": "Four engines, one workflow.",
+    "heroTitle": "The product, module by module.",
     "heroSubtitle": "Every capability here already runs in production — nothing below is a roadmap promise.",
-    "modules": {
+    "demoBadge": "Sample data",
+    "demoNote": "Every chart uses sample data from the demo — not a real account.",
+    "months": {
+      "m1": "Apr",
+      "m2": "May",
+      "m3": "Jun",
+      "m4": "Jul",
+      "m5": "Aug",
+      "m6": "Sep"
+    },
+    "sections": {
       "senales": {
-        "eyebrow": "Signal engine",
-        "title": "Real-time signals, without anyone having to go looking for them.",
-        "description": "BEE watches funding rounds, key hires, tech-stack changes, and buying-intent mentions across the open web — the moment they happen, not in a weekly digest.",
-        "points": [
-          "Continuous ingestion from public sources and B2B data providers.",
-          "Every signal is automatically enriched with the right company and contact.",
-          "Prioritized by intent score, not by order of arrival."
-        ]
+        "eyebrow": "Signals",
+        "title": "Every market signal, the moment it happens.",
+        "caption": "Funding rounds, hires and stack changes, ranked by intent.",
+        "chips": [
+          "Public sources",
+          "Automatic enrichment",
+          "Intent score"
+        ],
+        "chart": {
+          "title": "Intent hive"
+        }
       },
-      "brief": {
-        "eyebrow": "Daily brief",
-        "title": "An executive summary before your first call.",
-        "description": "Every morning, BEE puts together a brief with what actually changed in your pipeline since yesterday — new leads, accounts that heated up, overdue tasks — so you don't have to rebuild the context yourself.",
-        "points": [
-          "Zero cognitive friction: what matters on top, routine stuff below.",
-          "Generated from your account's real data, never a generic template.",
-          "Ready the moment you sign in, no extra setup."
-        ]
+      "crm": {
+        "eyebrow": "CRM",
+        "title": "A pipeline that fills itself.",
+        "caption": "Companies, leads and opportunities with the signal that created them.",
+        "chips": [
+          "Companies and contacts",
+          "Opportunities by stage",
+          "Full history"
+        ],
+        "chart": {
+          "title": "Opportunities by stage",
+          "new": "New",
+          "qualified": "Qualified",
+          "proposal": "Proposal",
+          "closing": "Closing"
+        }
       },
-      "simulador": {
-        "eyebrow": "Revenue simulator",
-        "title": "Project the impact of prospecting more, before you do it.",
-        "description": "The revenue simulator runs pipeline scenarios based on real buying intent from your lead base — not generic industry averages — so you decide how much to ramp up prospecting with data, not gut feel.",
-        "points": [
-          "Three scenarios (conservative, realistic, optimistic) per run.",
-          "A monthly trend curve, not just a final number.",
-          "The same engine BEE uses internally to prioritize accounts."
-        ]
+      "estrategias": {
+        "eyebrow": "Strategies",
+        "title": "The play, ready before you open the card.",
+        "caption": "Argument, channel and timing suggested for every signal.",
+        "chips": [
+          "Playbooks per signal",
+          "Recommended channel",
+          "Human approval"
+        ],
+        "chart": {
+          "title": "Recommended channel",
+          "email": "Email",
+          "linkedin": "LinkedIn",
+          "call": "Call"
+        }
       },
-      "automatizacion": {
-        "eyebrow": "Multi-channel automation",
-        "title": "Sequences that advance on their own — never without your approval.",
-        "description": "Design outreach sequences across email, LinkedIn, and more that adapt to how each lead responds. BEE prepares the next step; you give the go-ahead before anything sends.",
-        "points": [
-          "Reusable templates by playbook, channel, and signal type.",
-          "Auto-pause on risk signals (bounce, dropping interest).",
-          "No external action ever fires without explicit human approval."
-        ]
+      "pronostico": {
+        "eyebrow": "Forecast",
+        "title": "Project the quarter on real intent.",
+        "caption": "Conservative, realistic and optimistic scenarios over your pipeline.",
+        "chips": [
+          "Three scenarios",
+          "Monthly curve",
+          "Revenue simulator"
+        ],
+        "chart": {
+          "title": "Realistic projection",
+          "unit": "deals"
+        }
+      },
+      "ventas": {
+        "eyebrow": "Sales",
+        "title": "What you won, month by month, against target.",
+        "caption": "Per-person goals and live progress — green when beaten.",
+        "chips": [
+          "Monthly target",
+          "Per rep",
+          "Won vs. target"
+        ],
+        "chart": {
+          "title": "Won vs. target (k)",
+          "target": "Target"
+        }
+      },
+      "calendario": {
+        "eyebrow": "Calendar",
+        "title": "Every action, at its moment.",
+        "caption": "Meetings, follow-ups and due dates next to the lead behind them.",
+        "chips": [
+          "Weekly agenda",
+          "Automatic follow-ups",
+          "Zero overdue"
+        ],
+        "chart": {
+          "title": "This week",
+          "today": "Today",
+          "week": "This week",
+          "overdue": "Overdue",
+          "weekDone": "of the week completed"
+        }
+      },
+      "control": {
+        "eyebrow": "Control",
+        "title": "System status, in plain sight.",
+        "caption": "Ingestion, queue, active sources and model confidence in one panel.",
+        "chips": [
+          "Live ingestion",
+          "Active sources",
+          "Model confidence"
+        ],
+        "chart": {
+          "title": "Engine health",
+          "confidence": "Model confidence",
+          "queue": "Queue",
+          "facts": "Facts",
+          "errors": "Errors"
+        }
       }
     },
-    "closingTitle": "Ready to see these four engines working on your own pipeline?",
+    "closingTitle": "Ready to see these modules working on your own pipeline?",
     "ctaStart": "Get started",
     "ctaDemo": "Watch the live demo"
   },
@@ -195,12 +273,14 @@
     "eyebrow": "Contact",
     "heroTitle": "This is open source. Ask us anything you need.",
     "heroSubtitle": "BEE is an open-source project, not a sales pitch — write to us if you have specific questions about the platform or the code, and we'll reply within 24 business hours.",
+    "formEyebrow": "Write to us",
+    "formPromise": "We reply within 24 business hours.",
     "afterSubmitTitle": "What happens after you send this?",
     "afterSubmitBody": "A real message lands directly with our team — it gets logged, never silently dropped. We'll reach out at the email you leave here.",
     "haveAccountTitle": "Already have an account?",
     "haveAccountBody": "This form is for new organizations. If you already use BEE, sign in directly instead of writing to us here.",
     "mvpNoticeTitle": "This is an open-source MVP, not a sales pitch",
-    "mvpNoticeBody": "BEE isn't something we're selling you here — the code is open on GitHub, and this site is a public demo. If you're evaluating BEE to build your own commercial product, this form is a good place to ask questions; it isn't a sales funnel."
+    "mvpNoticeBody": "The code is open on GitHub and this site is a public demo. If you're evaluating BEE for your own product, this is the place to ask — it isn't a sales funnel."
   },
   "soporte": {
     "meta": {

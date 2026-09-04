@@ -174,10 +174,10 @@ export function ExtractVoiceBox({ profile, onSaved }: { profile: VoiceProfile | 
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => void handleSave()} disabled={saving || !name.trim()} className="bee-btn bee-btn--primary text-xs">
+              <button type="button" onClick={() => void handleSave()} disabled={saving || !name.trim()} className="bee-btn text-xs">
                 {saving ? t("saving") : profile ? tp("saveReplace") : t("submit")}
               </button>
-              <button type="button" onClick={() => setShowFields(false)} className="bee-btn text-xs">
+              <button type="button" onClick={() => setShowFields(false)} className="bee-btn-ghost text-xs">
                 {t("cancel")}
               </button>
             </div>

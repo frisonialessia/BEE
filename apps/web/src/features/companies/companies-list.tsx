@@ -15,7 +15,7 @@ import { useCompanies } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
-import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
+import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useIsDemoMode } from "@/lib/demo/mode";
 import { LiveBadge } from "@/components/live-badge";
 
@@ -42,7 +42,7 @@ export function CompaniesList() {
   const { data: leadsResult } = useLeads(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);
   const { data: signalsResult } = useSignals(200);
-  const [showNew, setShowNew] = useState(false);
+  const { openNew } = useOpportunityDrawer();
   const tLeads = useTranslations("companiesLeads.leadsDirectory");
   const demo = useIsDemoMode();
   // Read the clock once per mount, same as company-detail/crm-board — the
@@ -122,14 +122,12 @@ export function CompaniesList() {
             {/* One way to add anyone, anywhere in BEE: the same "Nueva
                 oportunidad" window the CRM uses (company + contact + deal
                 in one flow) — never a second form per page. */}
-            <button type="button" onClick={() => setShowNew(true)} className="bee-btn bee-btn--primary">
+            <button type="button" onClick={() => openNew()} className="bee-btn bee-btn--primary">
               {tLeads("newLeadButton")}
             </button>
           </div>
         </div>
       </header>
-
-      <NewOpportunityForm open={showNew} onClose={() => setShowNew(false)} />
 
       <MergedPageTabs
         defaultValue="companies"

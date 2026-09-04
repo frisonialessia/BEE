@@ -32,14 +32,6 @@ export function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
-/** Hermite smoothstep of v across [a, b] — the "no bounce" easing for any
- *  value that follows a control (the before/after handle's cross-fade). */
-export function smoothstep(a: number, b: number, v: number): number {
-  const t = clamp01((v - a) / (b - a));
-  return t * t * (3 - 2 * t);
-}
-
 type RevealState = "final" | "hidden" | "in" | "done";
 
 /**

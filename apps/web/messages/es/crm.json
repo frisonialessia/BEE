@@ -99,7 +99,106 @@
       "title": "Artefactos de ejecución",
       "unavailable": "Los artefactos se generarán en la primera solicitud vía Executive Agent."
     },
-    "moveError": "No se pudo mover la oportunidad — intenta de nuevo."
+    "moveError": "No se pudo mover la oportunidad — intenta de nuevo.",
+    "newTitle": "Nueva oportunidad",
+    "create": "Crear",
+    "of": "de",
+    "in": "en",
+    "prevInColumn": "Anterior en la columna",
+    "nextInColumn": "Siguiente en la columna",
+    "pipeline": "Pipeline",
+    "stage": "Etapa",
+    "createdAgo": "creada {time}",
+    "createdOn": "Creada el {date}",
+    "noContact": "Sin contacto",
+    "contact": {
+      "email": "Email",
+      "phone": "Teléfono",
+      "linkedin": "LinkedIn",
+      "source": "Fuente"
+    },
+    "company": "Empresa",
+    "noCompany": "Sin empresa",
+    "view": "Ver",
+    "expectedClose": "Cierre {date}",
+    "owner": "Responsable",
+    "tags": {
+      "hot": "Lead caliente",
+      "client": "Cliente actual",
+      "review": "Revisión manual"
+    },
+    "account": {
+      "title": "Cuenta",
+      "byStage": "{count} oportunidades por etapa",
+      "amounts": "Montos por mes",
+      "score": "Score"
+    },
+    "actions": {
+      "calendar": "Crear reunión",
+      "more": "Más acciones",
+      "moveTo": "Mover a",
+      "markWon": "Marcar ganada",
+      "markLost": "Marcar perdida"
+    },
+    "stepper": {
+      "aria": "Etapas del pipeline",
+      "moveTo": "Mover a {stage}"
+    },
+    "next": {
+      "action": "Siguiente acción",
+      "step": "Siguiente paso",
+      "none": "Sin programar",
+      "meeting": "Reunión",
+      "task": "Tarea",
+      "date": "Próxima cita"
+    },
+    "tabs": {
+      "aria": "Secciones de la oportunidad",
+      "activity": "Actividad",
+      "meetings": "Reuniones",
+      "strategy": "Estrategia",
+      "tasks": "Tareas",
+      "notes": "Notas"
+    },
+    "activity": {
+      "signal": "Señal detectada",
+      "created": "Oportunidad creada",
+      "strategy": "Estrategia generada",
+      "confidence": "Confianza {pct}%",
+      "taskDone": "Tarea completada",
+      "meetingHeld": "Reunión realizada",
+      "meetingScheduled": "Reunión programada",
+      "closed": "Cerrada · {status}",
+      "expand": "Ver detalle",
+      "collapse": "Ocultar detalle",
+      "empty": "Todavía no hay actividad."
+    },
+    "meetings": {
+      "empty": "Sin reuniones todavía.",
+      "create": "Crear reunión",
+      "title": "Título",
+      "when": "Fecha y hora",
+      "duration": "Duración (min)",
+      "link": "Enlace",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "cancel": "Cancelar",
+      "created": "Reunión creada.",
+      "error": "No se pudo crear la reunión.",
+      "held": "Realizada",
+      "join": "Unirse"
+    },
+    "strategy": {
+      "more": "Más",
+      "less": "Menos",
+      "why": "Por qué esta estrategia",
+      "cycle": "Predicción de ciclo",
+      "queued": "Mensaje preparado",
+      "approveSend": "Aprobar y enviar",
+      "approving": "Enviando…",
+      "approved": "Aprobado — BEE lo envía.",
+      "approveError": "No se pudo aprobar — intenta de nuevo."
+    }
   },
   "form": {
     "title": "Nueva oportunidad",
@@ -154,6 +253,8 @@
     "cancel": "Cancelar",
     "successToast": "Oportunidad creada en {company} — estrategia lista.",
     "successToastNewCompany": "{company} creada en Empresas y oportunidad lista.",
-    "errorToast": "No se pudo crear la oportunidad — intenta de nuevo."
+    "errorToast": "No se pudo crear la oportunidad — intenta de nuevo.",
+    "contactSeniority": "Seniority",
+    "contactLinkedin": "LinkedIn"
   }
 }

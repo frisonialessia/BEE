@@ -35,7 +35,7 @@ export function VoiceProfileBox({ profile }: { profile: VoiceProfile | null }) {
             </div>
           </div>
 
-          {profile.bio_summary && <p className="bee-caption line-clamp-2">{profile.bio_summary}</p>}
+          {profile.bio_summary && <p className="bee-caption truncate" title={profile.bio_summary}>{profile.bio_summary}</p>}
 
           <Field label={t("toneLabel")} hint={t("toneHint")}>
             <div className="mt-1 flex flex-wrap gap-1.5">
@@ -184,9 +184,7 @@ export function PreviewBox({ profile }: { profile: VoiceProfile | null }) {
               <p className="mt-1 text-sm">{preview.branded_version}</p>
             </div>
           </div>
-        ) : (
-          <p className="bee-caption">{t("hint")}</p>
-        )}
+        ) : null}
       </div>
     </OverviewCard>
   );

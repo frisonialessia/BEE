@@ -1,12 +1,12 @@
 "use client";
 
-import { CircleAlert, Info, Lightbulb, OctagonAlert, ShieldCheck, TriangleAlert } from "lucide-react";
+import { Check, CircleAlert, Info, OctagonAlert, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { StatusChip, type StatusTone } from "@/components/status-chip";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOpenAnomalies } from "@/hooks/queries/use-anomalies";
+import { useAcknowledgeAnomaly, useOpenAnomalies } from "@/hooks/queries/use-anomalies";
 import type { AnomalyAlert } from "@/lib/api/anomalies";
 
 const SEVERITY_META: Record<AnomalyAlert["severity"], { tone: StatusTone; icon: typeof Info }> = {
@@ -16,26 +16,46 @@ const SEVERITY_META: Record<AnomalyAlert["severity"], { tone: StatusTone; icon: 
   critical: { tone: "failed", icon: OctagonAlert },
 };
 
-function AlertRow({ alert }: { alert: AnomalyAlert }) {
+/** One alert, two lines, one action: what dropped and how much (the number
+ *  is the why), what BEE suggests (one line), and "Revisado" to close it.
+ *  The full description stays as the row's hover title. */
+function AlertRow({ alert, onAcknowledge, busy }: { alert: AnomalyAlert; onAcknowledge: (id: string) => void; busy: boolean }) {
   const t = useTranslations("probarNetworkBrandControl.control.anomalies");
   const meta = SEVERITY_META[alert.severity];
+  const deviation = Math.round(alert.deviation_pct);
 
   return (
-    <li className="py-3">
-      <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 flex-1 text-sm font-medium leading-snug">{alert.title}</p>
-        <StatusChip tone={meta.tone} icon={meta.icon} label={t(`severity.${alert.severity}`)} title={t("severityHint")} />
-      </div>
-      <p className="mt-1 text-xs text-muted-foreground">{alert.description}</p>
-      {alert.recommendation && (
-        <p className="mt-1.5 flex items-start gap-1.5 text-xs">
-          <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-[var(--color-text-muted)]" aria-hidden />
-          <span>
-            <span className="font-medium">{t("suggestion")} </span>
-            {alert.recommendation}
+    <li className="py-3" title={alert.description}>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <p className="min-w-0 truncate text-sm font-medium leading-snug">{alert.title}</p>
+          <StatusChip tone={meta.tone} icon={meta.icon} label={t(`severity.${alert.severity}`)} title={t("severityHint")} />
+        </div>
+        <span className="shrink-0 text-right">
+          <span className="block text-sm font-bold tabular-nums">
+            {deviation > 0 ? "+" : ""}
+            {deviation}%
           </span>
+          <span className="block bee-micro">
+            {t("rates", { rolling: Math.round(alert.rolling_rate * 100), baseline: Math.round(alert.baseline_rate * 100) })}
+          </span>
+        </span>
+      </div>
+      <div className="mt-1 flex items-center justify-between gap-3">
+        <p className="bee-caption min-w-0 flex-1 truncate" title={alert.recommendation}>
+          {alert.recommendation}
         </p>
-      )}
+        <button
+          type="button"
+          onClick={() => onAcknowledge(alert.id)}
+          disabled={busy}
+          className="bee-btn-ghost shrink-0 text-xs"
+          title={t("acknowledgeTitle")}
+        >
+          <Check className="size-3.5" aria-hidden />
+          {t("acknowledge")}
+        </button>
+      </div>
     </li>
   );
 }
@@ -43,12 +63,14 @@ function AlertRow({ alert }: { alert: AnomalyAlert }) {
 /**
  * Anomalías de conversión — drops in reply or close rate that fall outside
  * what's normal for this organization (overall, per channel or per sector),
- * detected by AnomalyDetector against its own history. Severity is an icon
- * + word; each alert carries BEE's suggestion in plain words.
+ * detected by AnomalyDetector against its own history. Every row carries the
+ * size of the drop as a number, one suggestion line, and the one action a
+ * person takes here: mark it reviewed.
  */
 export function AnomaliesPanel() {
   const t = useTranslations("probarNetworkBrandControl.control.anomalies");
   const { data: result, isLoading } = useOpenAnomalies();
+  const acknowledge = useAcknowledgeAnomaly();
   const alerts = result?.data ?? [];
 
   return (
@@ -73,7 +95,7 @@ export function AnomaliesPanel() {
       ) : (
         <ul className="max-h-[22rem] divide-y divide-border overflow-y-auto overscroll-contain">
           {alerts.map((alert) => (
-            <AlertRow key={alert.id} alert={alert} />
+            <AlertRow key={alert.id} alert={alert} busy={acknowledge.isPending} onAcknowledge={(id) => acknowledge.mutate(id)} />
           ))}
         </ul>
       )}

@@ -33,7 +33,7 @@ import { scoreVariant } from "@/lib/format";
  * fijos (nombres propios, scores, porcentajes) se quedan en los arrays de
  * este archivo, referenciados por `id` estable, y `useTranslations`
  * resuelve la copia por ese id — ver el patrón ya usado en
- * marketing-honeycomb.tsx/marketing-before-after.tsx para `stage`.
+ * marketing-honeycomb.tsx para `stage`.
  */
 
 const TABS = [
@@ -68,8 +68,7 @@ const ZONE_ACTIVITY = [{ id: "qualified" }, { id: "assigned" }] as const;
 
 // Mismo patrón que stageStats en SignalHexMap real (barra de color + %),
 // solo que con datos de ejemplo fijos en vez de calculados de useHiveLeads.
-// `id` referencia landing.stages (misma fuente que marketing-before-after.tsx
-// y marketing-honeycomb.tsx).
+// `id` referencia landing.stages (misma fuente que marketing-honeycomb.tsx).
 const STAGE_STATS = [
   { id: "ready_to_buy", pct: 28, color: "var(--color-chart-2)" },
   { id: "decision", pct: 34, color: "var(--color-chart-1)" },
@@ -610,7 +609,7 @@ function ForecastView() {
       <div className="flex items-center justify-between gap-3 border-t border-[var(--color-divider)] pt-3 text-micro text-muted-foreground">
         <span>{t("basedOn")}</span>
         <Link
-          href="/funcionalidades#simulador"
+          href="/funcionalidades#pronostico"
           className="inline-flex shrink-0 items-center gap-1 font-medium text-[var(--color-chart-4)] hover:underline"
         >
           {t("viewMore")} <ArrowUpRight className="size-3" />

@@ -9,7 +9,6 @@ import { AccountBriefPanel } from "@/components/companies/account-brief-panel";
 import { RelationshipMap } from "@/components/companies/relationship-map";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useCompany, useCompanyActivity, useScanCompany, useUpdateCompany } from "@/hooks/queries/use-companies";
 import { useBulkCreateLeads, useCreateLead, useLeads } from "@/hooks/queries/use-leads";
@@ -423,10 +422,9 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
   const { data: leadsResult } = useLeads(200);
   const { data: oppsResult } = useOpportunities(undefined, 200);
   const { data: signalsResult } = useSignals(200);
-  const { openOpportunity } = useOpportunityDrawer();
+  const { openOpportunity, openNew } = useOpportunityDrawer();
 
   const [showNewContact, setShowNewContact] = useState(false);
-  const [showNewOpportunity, setShowNewOpportunity] = useState(false);
 
   const company = companyResult?.data;
   const leads = (leadsResult?.data ?? []).filter((l) => l.company_id === companyId);
@@ -612,17 +610,12 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
           </h2>
           <button
             type="button"
-            onClick={() => setShowNewOpportunity((v) => !v)}
+            onClick={() => openNew({ companyId: company.id })}
             className="bee-btn-ghost text-xs"
           >
             {t("opportunities.addOpportunity")}
           </button>
         </div>
-        <NewOpportunityForm
-          open={showNewOpportunity}
-          onClose={() => setShowNewOpportunity(false)}
-          company={{ id: company.id, name: company.name, domain: company.domain }}
-        />
         {opportunities.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("opportunities.empty")}</p>
         ) : (

@@ -23,7 +23,7 @@
   "strategies": {
     "eyebrow": "Playbooks",
     "title": "Estrategias",
-    "subtitle": "Oportunidades enriquecidas con pain point, argumento de cierre y ventana de timing",
+    "subtitle": "Una evidencia con números, tres cifras y el siguiente paso por oportunidad — el argumento completo vive en el drawer",
     "live": "En vivo",
     "demo": "Datos demo",
     "tabBattlecards": "Battlecards ({count})",
@@ -32,11 +32,38 @@
     "tabMarketInsights": "Mercado ({count})",
     "battlecardsEmptyTitle": "Aún no hay battlecards listas para acción.",
     "battlecardsEmptySubtitle": "Las señales deben enriquecerse primero.",
-    "battlecardsHint": "Clic en una tarjeta para abrir el drawer de oportunidad",
     "battlecardsItemLabel": "battlecards",
     "pipelineItemLabel": "oportunidades",
-    "learningCaption": "Patrones de éxito reales, aprendidos de deals ya cerrados — lo que hoy sesga la generación de battlecards nuevas.",
-    "marketInsightsCaption": "Lo que TrendAnalyst detecta agregando todas las señales del mercado — esto ya afina cada battlecard nueva por detrás, aunque nunca se había mostrado acá."
+    "learningCaption": "Patrones reales de deals cerrados — hoy sesgan cada battlecard nueva",
+    "marketInsightsCaption": "Lo que TrendAnalyst detecta agregando todas las señales — afina cada battlecard por detrás",
+    "sampleLine": "Tasas calculadas sobre {closed, plural, one {# deal cerrado} other {# deals cerrados}} de tu cuenta ({won, plural, one {# ganado} other {# ganados}})",
+    "sampleLineEmpty": "Sin deals cerrados todavía — las tasas de cierre aparecen al cerrar el primero",
+    "card": {
+      "scoreTitle": "Score de la oportunidad (0–100)",
+      "hotLead": "Lead caliente — intención confirmada",
+      "reviewRequired": "Confianza baja: requiere revisión antes de ejecutar",
+      "evidence": {
+        "cycle": " · ciclo medio {days} d",
+        "pattern": "{playbook} por {channel} en {signal}: {won} de {total} ganadas en tu histórico{days}",
+        "typeIndustry": "{signal} en {industry}: {won} de {total} cerradas ganadas en tu histórico{days}",
+        "type": "{signal}: {won} de {total} cerradas ganadas en tu histórico{days}",
+        "none": "Sin histórico para «{signal}» todavía · score {score} por señal detectada {time}",
+        "noneHot": "Sin histórico para «{signal}» todavía · score {score} por intención confirmada, señal {time}"
+      },
+      "tiles": {
+        "score": "Score",
+        "winRate": "Cierre de esta señal",
+        "days": "Días a cierre",
+        "sample": "{count, plural, one {# deal cerrado} other {# deals cerrados}}",
+        "noSample": "sin muestra",
+        "daysSub": "mediana ganadas"
+      },
+      "nextStepLabel": "Siguiente paso:",
+      "nextStep": "{action} por {channel}",
+      "nextStepLead": "{action} · {lead} por {channel}",
+      "openStrategyTitle": "Abre la estrategia con el mensaje preparado",
+      "scheduleMeeting": "Agendar reunión"
+    }
   },
   "darkFunnel": {
     "eyebrow": "Motor de señales de intención",

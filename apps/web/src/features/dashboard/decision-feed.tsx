@@ -174,7 +174,7 @@ export function DecisionFeed({ embedded = false }: { embedded?: boolean } = {}) 
       return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
     }
     return (
-      <div className="grid grid-cols-1 content-start gap-2">
+      <div className="bee-fill flex flex-col justify-evenly gap-2">
         {cards.slice(0, 5).map((card) => (
           <Card key={card.id} card={card} />
         ))}

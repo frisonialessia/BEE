@@ -92,7 +92,7 @@ function DLQEventRow({
       </div>
 
       {event.last_error && open && (
-        <p className="text-xs">
+        <p className="truncate text-xs" title={event.last_error}>
           <span className="font-medium">{t("whatFailed")} </span>
           <span className="text-muted-foreground">{event.last_error}</span>
         </p>
@@ -100,7 +100,7 @@ function DLQEventRow({
 
       <div className="flex flex-wrap items-center gap-2">
         {canRetry && (
-          <button type="button" onClick={() => onRetry(event.id)} disabled={busy} className="bee-btn">
+          <button type="button" onClick={() => onRetry(event.id)} disabled={busy} className="bee-btn bee-btn--primary">
             <RotateCw className="size-3.5" aria-hidden />
             {t("retryNow")}
           </button>
@@ -285,7 +285,7 @@ function AuditEntryRow({ entry }: { entry: AuditEntry }) {
         <span className="shrink-0 bee-micro">{formatDateTime(entry.created_at, locale)}</span>
       </div>
 
-      {entry.strategy_reasoning && <p className="text-xs text-muted-foreground">{entry.strategy_reasoning}</p>}
+      {entry.strategy_reasoning && <p className="truncate text-xs text-muted-foreground" title={entry.strategy_reasoning}>{entry.strategy_reasoning}</p>}
 
       {(hasContext || hasMarket || entry.processing_ms) && (
         <button

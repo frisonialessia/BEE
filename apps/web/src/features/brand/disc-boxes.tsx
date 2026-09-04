@@ -114,7 +114,7 @@ export function DiscAdaptationBox({ mix: dm }: { mix: DiscMix }) {
           {pct !== null && <Chip tone={hue}>{t("shareOfLeads", { count: dm.counts[style], pct })}</Chip>}
         </div>
 
-        <p className="text-sm">{t(`styles.${style}.how`)}</p>
+        <p className="bee-caption truncate" title={t(`styles.${style}.how`)}>{t(`styles.${style}.how`)}</p>
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           <div className="rounded-[var(--radius-md)] px-3 py-2" style={{ background: mix(hue, 16) }}>

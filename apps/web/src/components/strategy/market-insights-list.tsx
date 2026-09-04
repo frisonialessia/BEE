@@ -1,7 +1,9 @@
 import { Layers, Repeat, Sparkles, TrendingUp, Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
+import type { Locale } from "@/i18n/locales";
+import { getSignalTypeLabels } from "@/lib/format";
 import type { InsightType, MarketInsight } from "@/types/extended";
 
 const INSIGHT_ICONS: Record<InsightType, typeof TrendingUp> = {
@@ -24,6 +26,8 @@ function confidenceVariant(confidence: number): "outline" | "warning" | "success
  *  context) but, until this component existed, was invisible to the CEO. */
 export function MarketInsightsList({ insights }: { insights: MarketInsight[] }) {
   const t = useTranslations("sharedB.marketInsights");
+  const locale = useLocale() as Locale;
+  const signalLabels: Record<string, string> = getSignalTypeLabels(locale);
 
   if (insights.length === 0) {
     return (
@@ -63,7 +67,7 @@ export function MarketInsightsList({ insights }: { insights: MarketInsight[] }) 
 
             <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {insight.industry && <Badge variant="outline">{insight.industry}</Badge>}
-              {insight.signal_type && <Badge variant="outline">{insight.signal_type}</Badge>}
+              {insight.signal_type && <Badge variant="outline">{signalLabels[insight.signal_type] ?? insight.signal_type}</Badge>}
               <span>{t("evidenceCount", { count: insight.evidence_count })}</span>
             </div>
           </div>

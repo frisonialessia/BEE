@@ -17,9 +17,6 @@
       },
       "direct": "Direct",
       "hops": "{count, plural, one {# hop} other {# hops}}",
-      "showDraft": "View draft introduction request",
-      "hideDraft": "Hide draft introduction request",
-      "copyToClipboard": "Copy to clipboard",
       "stats": {
         "totalConnections": "Total connections",
         "firstDegree": "1st degree",
@@ -36,7 +33,7 @@
       "pathsFound": "{count, plural, one {# path} other {# paths}} found to {company}",
       "noPathsFound": "No network paths found to {company}",
       "coverageLabel": "Coverage: {coverage}",
-      "coldOutreachFallback": "No warm introductions found. Use Dark Funnel signals to personalize the cold outreach.",
+      "coldOutreachFallback": "No warm intro — personalize the cold outreach with Dark Funnel signals",
       "connectionsTitle": "Network connections ({count})",
       "addConnection": "+ Add connection",
       "form": {
@@ -54,7 +51,14 @@
       },
       "showingOf": "Showing 15 of {count} connections",
       "degreeTitle": "How close your network is",
-      "degreeCaption": "Connections one step away, two, or further"
+      "degreeCaption": "Connections one step away, two, or further",
+      "pathFinderCaption": "Who brings you closer to a target company and how strong each path is",
+      "copyAsk": "Copy ask",
+      "copied": "Copied",
+      "copyAskTitle": "Copies the pre-written intro request",
+      "requestIntro": "Ask for intro",
+      "requestIntroTitle": "Opens an opportunity at {company} to work the intro",
+      "strengthTitle": "Relationship strength (1–10)"
     }
   },
   "brand": {
@@ -107,7 +111,6 @@
       "authorityTopics": "Authority topics",
       "preview": {
         "title": "See it in action",
-        "hint": "Type a topic and compare generic AI output against your own configured voice, side by side.",
         "topicPlaceholder": "e.g. our new pricing model",
         "button": "Preview",
         "previewing": "Generating…",
@@ -130,10 +133,10 @@
       "active": "active",
       "tokensRemaining": "{count} tokens remaining",
       "allChannelsSimulated": "Every channel is in simulated mode — connect them in <integrations>Integrations</integrations> to activate.",
-      "noProfile": "No voice profile set up yet. Set one up to enable AI content generation grounded in your brand.",
+      "noProfile": "No voice profile — create it below in “Paste & extract”",
       "library": {
         "title": "Saved fragments ({count})",
-        "empty": "No fragments yet — add one above to start grounding generated content in your voice.",
+        "empty": "No fragments — add the first one with “+ Add fragment”",
         "usedCount": "{count, plural, one {used # time} other {used # times}}",
         "neverUsed": "never used yet",
         "scoreLabel": "{score}% performance",
@@ -186,13 +189,13 @@
       },
       "preview": {
         "caption": "Type a topic and compare: generic AI vs. your voice",
-        "needsProfile": "Set up your voice first (below, “Paste & extract”) to try the preview."
+        "needsProfile": "Set up your voice first (“Paste & extract”) to try the preview"
       },
       "audience": {
         "title": "Your audience by style",
         "caption": "DISC = 4 ways of communicating, read from each lead's title",
-        "empty": "No leads with a title yet — BEE classifies every lead by title as it arrives.",
-        "footnote": "Estimated from each lead's title and industry, with the same rule BEE applies when writing to them."
+        "empty": "No leads with a title yet — BEE classifies every lead by title",
+        "footnote": "Estimated from title and industry, with the same rule BEE writes with"
       },
       "disc": {
         "title": "How BEE adapts your message",
@@ -249,7 +252,7 @@
         "title": "Fragment library",
         "caption": "A fragment is a real text of yours that BEE reuses as a style reference",
         "count": "{count, plural, =0 {No fragments} one {# fragment} other {# fragments}}",
-        "needsProfile": "Set up your voice first — fragments are saved inside the profile."
+        "needsProfile": "Set up your voice first — fragments live inside the profile"
       },
       "extract": {
         "title": "Paste & extract",
@@ -327,8 +330,6 @@
       "currentVsBase": "Current: {rolling}% vs. baseline {baseline}% ({deviation}%)",
       "acknowledge": "Acknowledge",
       "acknowledgeNote": "Reviewed from the panel",
-      "hideDetails": "Hide",
-      "showDetails": "Details and actions",
       "empty": {
         "title": "No open anomaly alerts.",
         "hint": "Run a scan to review current conversion health."
@@ -353,7 +354,7 @@
         "in_progress": "In Progress",
         "closed": "Closed"
       },
-      "caption": "How many opportunities sit in each stage, from detection to close."
+      "caption": "Opportunities per stage, from detected to closed"
     },
     "systemHealth": {
       "ariaLabel": "System health",
@@ -382,7 +383,7 @@
         }
       },
       "title": "System health",
-      "caption": "BEE's own moving parts: the connection, the database and the engine that processes signals.",
+      "caption": "Connection, database and signal engine",
       "rows": {
         "api": "Connection to BEE",
         "apiHintDown": "The server could not be reached",
@@ -407,7 +408,7 @@
       "webhookConfigured": "Tells us on its own when something is new",
       "webhookMissing": "Doesn't push updates: BEE has to go and ask",
       "title": "Data sources",
-      "caption": "Where signals come from. The quota is how many requests per hour are left before the source slows us down.",
+      "caption": "Where signals come from and how much hourly quota is left",
       "empty": "No sources connected yet.",
       "health": {
         "online": "Connected",
@@ -434,15 +435,19 @@
         "critical": "Critical"
       },
       "title": "Conversion anomalies",
-      "caption": "Drops in reply or close rate outside what's normal for your business, compared with your own history.",
+      "caption": "Reply or close-rate drops against your own history",
       "emptyHint": "BEE compares every channel and sector against its own history",
       "severityHint": "How big the drop is compared with normal",
-      "suggestion": "What to do:"
+      "suggestion": "What to do:",
+      "acknowledge": "Reviewed",
+      "acknowledgeTitle": "Mark the alert as reviewed",
+      "rates": "{rolling}% vs. base {baseline}%",
+      "sampleSize": "{count, plural, one {# case} other {# cases}}"
     },
     "signalStream": {
       "ariaLabel": "Signal stream",
       "title": "Recent activity",
-      "caption": "The latest signals that came in and what BEE did with each one. Ready ones open with a click.",
+      "caption": "Latest signals and what BEE did with each — ready ones open with a click",
       "readyCount": "{count, plural, one {# ready to act on} other {# ready to act on}}",
       "unavailable": "Could not read the activity.",
       "waiting": "Waiting for signals to come in.",
@@ -503,7 +508,7 @@
       "emptyTitleFiltered": "No events with status \"{status}\".",
       "emptySubtitle": "Everything BEE tried to do outside went through.",
       "title": "Failed event queue",
-      "caption": "Things BEE tried to do outside (send an email, notify the CRM) that didn't go through. BEE retries on its own; here you see what's still stuck.",
+      "caption": "What BEE tried to do outside and didn't go through — it retries on its own; here's what's stuck",
       "openCount": "{count, plural, one {# unresolved} other {# unresolved}}",
       "filterAria": "Filter by status",
       "statusHint": {
@@ -544,7 +549,7 @@
       "emptyTitle": "No audit entries yet.",
       "emptySubtitle": "Agent decisions will show up here as BEE processes signals.",
       "title": "Decision log",
-      "caption": "Every decision a BEE agent made and how confident it was. Use it to understand why BEE did something.",
+      "caption": "Every decision a BEE agent made and how confident it was",
       "showLog": "Show log",
       "hideLog": "Hide log",
       "confidence": "{pct}% confidence",
@@ -561,7 +566,7 @@
       "failed": "Failed"
     },
     "title": "Execution queue",
-    "caption": "Actions BEE drafted (an email, a message, a CRM change) that wait for your OK before going out.",
+    "caption": "Actions BEE drafted that wait for your OK before going out",
     "live": "Live",
     "demoData": "Demo data",
     "pendingCount": "{count, plural, one {# waiting for your OK} other {# waiting for your OK}}",

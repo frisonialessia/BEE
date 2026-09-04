@@ -89,7 +89,7 @@ export function StyleLearningBox({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => void handleSubmit()} disabled={loading} className="bee-btn bee-btn--primary text-xs">
+          <button type="button" onClick={() => void handleSubmit()} disabled={loading} className="bee-btn text-xs">
             {loading ? t("learning") : t("submit")}
           </button>
           <button type="button" onClick={() => setShowProfile((v) => !v)} className="bee-btn-text text-xs">
@@ -154,15 +154,14 @@ function AlertRow({ alert, onAcknowledge }: { alert: AnomalyAlert; onAcknowledge
   const t = useTranslations("probarNetworkBrandControl.deepLearning.anomaly");
   const hue = DATA.magenta;
   const strength = SEVERITY_STRENGTH[alert.severity] ?? 22;
-  const [expanded, setExpanded] = useState(false);
   const severityLabel = (["critical", "high", "medium", "low"] as const).includes(alert.severity) ? t(`severity.${alert.severity}`) : alert.severity;
 
   return (
-    <li className="space-y-2 rounded-[var(--radius-md)] p-3" style={{ background: mix(hue, Math.round(strength / 8)), borderLeft: `3px solid ${mix(hue, strength)}` }}>
+    <li className="space-y-2 rounded-[var(--radius-md)] p-3" style={{ background: mix(hue, Math.round(strength / 8)), borderLeft: `3px solid ${mix(hue, strength)}` }} title={alert.description}>
       <div className="flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold leading-tight">{alert.title}</p>
-          <p className="bee-micro mt-0.5">
+          <p className="truncate text-sm font-semibold leading-tight">{alert.title}</p>
+          <p className="bee-micro mt-0.5 truncate">
             {t("currentVsBase", {
               rolling: (alert.rolling_rate * 100).toFixed(1),
               baseline: (alert.baseline_rate * 100).toFixed(1),
@@ -175,31 +174,16 @@ function AlertRow({ alert, onAcknowledge }: { alert: AnomalyAlert; onAcknowledge
           {severityLabel}
         </span>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="bee-caption min-w-0 truncate" title={alert.recommendation}>
+          {alert.recommendation}
+        </p>
         {alert.status === "open" && (
-          <button type="button" onClick={() => onAcknowledge(alert.id)} className="bee-btn text-xs">
+          <button type="button" onClick={() => onAcknowledge(alert.id)} className="bee-btn-ghost shrink-0 text-xs">
             {t("acknowledge")}
           </button>
         )}
-        <button type="button" onClick={() => setExpanded((v) => !v)} className="bee-btn-text text-xs">
-          {expanded ? t("hideDetails") : t("showDetails")}
-        </button>
       </div>
-      {expanded && (
-        <div className="space-y-1 text-xs">
-          <p className="text-[var(--color-text-muted)]">{alert.description}</p>
-          {alert.suggested_actions.length > 0 && (
-            <ul className="space-y-1">
-              {alert.suggested_actions.map((a, i) => (
-                <li key={i} className="flex gap-1">
-                  <span>•</span>
-                  <span>{a}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
     </li>
   );
 }

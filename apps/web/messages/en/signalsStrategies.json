@@ -23,7 +23,7 @@
   "strategies": {
     "eyebrow": "Playbooks",
     "title": "Strategies",
-    "subtitle": "Opportunities enriched with pain point, closing argument, and timing window",
+    "subtitle": "One evidence line with numbers, three figures and the next step per opportunity — the full argument lives in the drawer",
     "live": "Live",
     "demo": "Demo data",
     "tabBattlecards": "Battlecards ({count})",
@@ -32,11 +32,38 @@
     "tabMarketInsights": "Market ({count})",
     "battlecardsEmptyTitle": "No battlecards ready for action yet.",
     "battlecardsEmptySubtitle": "Signals need to be enriched first.",
-    "battlecardsHint": "Click a card to open the opportunity drawer",
     "battlecardsItemLabel": "battlecards",
     "pipelineItemLabel": "opportunities",
-    "learningCaption": "Real success patterns, learned from deals already closed — what currently biases the generation of new battlecards.",
-    "marketInsightsCaption": "What TrendAnalyst detects by aggregating every market signal — this already sharpens each new battlecard behind the scenes, even though it was never shown here before."
+    "learningCaption": "Real patterns from closed deals — they bias every new battlecard today",
+    "marketInsightsCaption": "What TrendAnalyst detects across all signals — it sharpens every battlecard behind the scenes",
+    "sampleLine": "Rates computed over {closed, plural, one {# closed deal} other {# closed deals}} in your account ({won, plural, one {# won} other {# won}})",
+    "sampleLineEmpty": "No closed deals yet — win rates appear once the first one closes",
+    "card": {
+      "scoreTitle": "Opportunity score (0–100)",
+      "hotLead": "Hot lead — intent confirmed",
+      "reviewRequired": "Low confidence: review before executing",
+      "evidence": {
+        "cycle": " · avg cycle {days} d",
+        "pattern": "{playbook} via {channel} on {signal}: {won} of {total} won in your history{days}",
+        "typeIndustry": "{signal} in {industry}: {won} of {total} closed won in your history{days}",
+        "type": "{signal}: {won} of {total} closed won in your history{days}",
+        "none": "No history for “{signal}” yet · score {score} from a signal detected {time}",
+        "noneHot": "No history for “{signal}” yet · score {score} from confirmed intent, signal {time}"
+      },
+      "tiles": {
+        "score": "Score",
+        "winRate": "Win rate for this signal",
+        "days": "Days to close",
+        "sample": "{count, plural, one {# closed deal} other {# closed deals}}",
+        "noSample": "no sample",
+        "daysSub": "median, won deals"
+      },
+      "nextStepLabel": "Next step:",
+      "nextStep": "{action} via {channel}",
+      "nextStepLead": "{action} · {lead} via {channel}",
+      "openStrategyTitle": "Opens the strategy with the prepared message",
+      "scheduleMeeting": "Schedule a meeting"
+    }
   },
   "darkFunnel": {
     "eyebrow": "Intent Signal Engine",

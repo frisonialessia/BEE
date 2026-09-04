@@ -1,7 +1,7 @@
 import { useLocale, useTranslations } from "next-intl";
 
 import type { Locale } from "@/i18n/locales";
-import { formatChannel, formatPlaybook } from "@/lib/format";
+import { formatChannel, formatPlaybook, getSignalTypeLabels } from "@/lib/format";
 
 import { Badge } from "@/components/ui/badge";
 import type { SuccessPattern } from "@/lib/api/feedback";
@@ -19,6 +19,7 @@ const CONFIDENCE_VARIANT: Record<SuccessPattern["confidence"], "outline" | "warn
 export function SuccessPatternsList({ patterns }: { patterns: SuccessPattern[] }) {
   const t = useTranslations("sharedB.successPatterns");
   const locale = useLocale() as Locale;
+  const signalLabels: Record<string, string> = getSignalTypeLabels(locale);
 
   if (patterns.length === 0) {
     return (
@@ -45,7 +46,7 @@ export function SuccessPatternsList({ patterns }: { patterns: SuccessPattern[] }
               {t("viaChannel", { playbook: formatPlaybook(p.playbook, locale), channel: formatChannel(p.channel, locale) })}
             </p>
             <p className="bee-caption mt-1">
-              {p.signal_type} · {t("dealsClosed", { count: p.sample_size })}
+              {signalLabels[p.signal_type] ?? p.signal_type} · {t("dealsClosed", { count: p.sample_size })}
               {p.avg_days_to_close != null
                 ? ` · ${t("avgDaysToClose", { days: Math.round(p.avg_days_to_close) })}`
                 : ""}

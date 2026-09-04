@@ -143,7 +143,7 @@ export function FragmentLibraryBox({
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => void save()} disabled={saving || !content} className="bee-btn bee-btn--primary text-xs">
+                <button type="button" onClick={() => void save()} disabled={saving || !content} className="bee-btn text-xs">
                   {saving ? t("addFragmentForm.adding") : editingId ? t("library.saveEdit") : t("addFragmentForm.submit")}
                 </button>
                 <button type="button" onClick={cancel} className="bee-btn text-xs">
@@ -172,7 +172,7 @@ export function FragmentLibraryBox({
                         </Chip>
                       ))}
                     </div>
-                    <p className="mt-1.5 text-sm leading-relaxed break-words">{fragment.content}</p>
+                    <p className="mt-1.5 line-clamp-2 text-sm leading-snug break-words" title={fragment.content}>{fragment.content}</p>
                     <div className="mt-1.5 flex items-center gap-2">
                       <Meter value={fragment.performance_score ?? 0} tone={hue} className="w-20 shrink-0" />
                       <span className="bee-micro truncate">

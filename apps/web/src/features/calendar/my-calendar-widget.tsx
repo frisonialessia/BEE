@@ -61,7 +61,7 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
       <p className="bee-caption">{t("widget.empty")}</p>
     </div>
   ) : (
-    <ul className="space-y-2">
+    <ul className="bee-fill flex flex-col justify-evenly gap-2">
       {upcoming.map((m) => {
         const dotColor = m.color ? `var(--color-${m.color})` : CLIENT_CONTEXT_DOT[m.client_context ?? "new_contact"];
         return (

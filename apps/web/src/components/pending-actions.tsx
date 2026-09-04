@@ -108,7 +108,7 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
           <div className="min-w-0">
             <p className="bee-micro">{typeLabel}</p>
             <p className="text-sm font-semibold leading-snug">{action.title}</p>
-            {action.description && <p className="mt-0.5 text-xs text-muted-foreground">{action.description}</p>}
+            {action.description && <p className="mt-0.5 truncate text-xs text-muted-foreground" title={action.description}>{action.description}</p>}
           </div>
         </div>
         <StatusChip tone={meta.tone} icon={meta.icon} label={statusLabel} />

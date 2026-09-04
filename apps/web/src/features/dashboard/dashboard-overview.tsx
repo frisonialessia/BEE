@@ -177,18 +177,17 @@ export function DashboardOverview({
         userCount={usersResult?.length ?? 0}
       />
 
-      {/* One shell (OverviewCard), rows ordered by what a seller needs first:
-          sales, then today's work, then the market, then the hive and the
-          calendar, then the pattern behind the closes. Every chart gets a
-          box wide enough to read at the standard type size. What used to
+      {/* Option A: rows grouped by density so no box ends in a gap — two
+          charts, three short boxes, three lists of five, hive + market,
+          close-rate map + team. Every list spreads to its box; the ranking
+          finishes with one bar per rep. What used to
           sit below this grid (battlecards, revenue simulator, every
           signal) lives on its own page — Estrategias, Pronóstico, Señales —
           so this stays a summary, not the whole product on one screen. */}
       <div className="bee-overview">
-        {/* Row 1 — sales first: what we closed, who closed it, where the
-            pipeline stands. */}
+        {/* Row 1 — two charts: what we closed, what the market sent. */}
         <OverviewCard
-          span={5}
+          span={6}
           title={t("sections.sales.title")}
           caption={sales.goal ? t("sections.sales.captionGoal", { goal: money(sales.goal) }) : t("sections.sales.caption")}
           action={
@@ -211,24 +210,24 @@ export function DashboardOverview({
           )}
         </OverviewCard>
 
-        <OverviewCard
-          span={4}
-          title={t("sections.ranking.title")}
-          caption={t("sections.ranking.caption")}
-          action={
-            <Link href={`${base}/sales`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
-              {t("sections.ranking.link")}
-            </Link>
-          }
-        >
-          <TeamGoalRanking days={90} />
+        <OverviewCard span={6} title={t("sections.signalsWeekly.title")} caption={t("sections.signalsWeekly.caption")}>
+          <AreaChart points={weekly.map((w) => ({ label: w.label, value: w.count }))} color={DATA.indigo} />
         </OverviewCard>
 
+        {/* Row 2 — three short boxes: the funnel, the critical accounts, the mix. */}
         <OverviewCard span={3} title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
           <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
         </OverviewCard>
 
-        {/* Row 2 — today's work: the plays, the brief, the critical accounts. */}
+        <OverviewCard span={4} title={tCritical("title")} caption={t("sections.critical.caption")}>
+          <CriticalAccountsDigest battlecards={battlecards} today={new Date()} embedded />
+        </OverviewCard>
+
+        <OverviewCard span={5} title={t("sections.signalMix.title")} caption={t("sections.signalMix.caption")}>
+          <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
+        </OverviewCard>
+
+        {/* Row 3 — three lists of five: the plays, the brief, the calendar. */}
         <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")}>
           <DecisionFeed embedded />
         </OverviewCard>
@@ -236,26 +235,6 @@ export function DashboardOverview({
         <OverviewCard span={4} title={tBrief("title")} caption={t("sections.brief.caption")}>
           <DailyBrief embedded />
         </OverviewCard>
-
-        <OverviewCard span={4} title={tCritical("title")} caption={t("sections.critical.caption")}>
-          <CriticalAccountsDigest battlecards={battlecards} today={new Date()} embedded />
-        </OverviewCard>
-
-        {/* Row 3 — the market: volume, mix and timing, three charts of one size. */}
-        <OverviewCard span={4} title={t("sections.signalsWeekly.title")} caption={t("sections.signalsWeekly.caption")}>
-          <AreaChart points={weekly.map((w) => ({ label: w.label, value: w.count }))} color={DATA.indigo} />
-        </OverviewCard>
-
-        <OverviewCard span={4} title={t("sections.signalMix.title")} caption={t("sections.signalMix.caption")}>
-          <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
-        </OverviewCard>
-
-        <OverviewCard span={4} title={t("sections.activityHeatmap.title")} caption={t("sections.activityHeatmap.caption")}>
-          <SignalActivityHeatmap signals={signals} />
-        </OverviewCard>
-
-        {/* Row 4 — the hive, smaller, next to the calendar. */}
-        <SignalHexMap height={200} className="h-full" style={{ gridColumn: "span 8" }} />
 
         <OverviewCard
           span={4}
@@ -269,13 +248,33 @@ export function DashboardOverview({
           <MyCalendarWidget embedded />
         </OverviewCard>
 
-        {/* Row 5 — the pattern behind the closes. */}
-        <OverviewCard span={12} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
+        {/* Row 4 — the hive, smaller, and when the market shows up. */}
+        <SignalHexMap height={200} className="h-full" style={{ gridColumn: "span 7" }} />
+
+        <OverviewCard span={5} title={t("sections.activityHeatmap.title")} caption={t("sections.activityHeatmap.caption")}>
+          <SignalActivityHeatmap signals={signals} />
+        </OverviewCard>
+
+        {/* Row 5 — the pattern behind the closes, and the team. */}
+        <OverviewCard span={8} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
           <IndustrySignalHeatmap
             opportunities={allOppsResult?.data ?? []}
             signals={signals}
             companies={companiesResult?.data ?? []}
           />
+        </OverviewCard>
+
+        <OverviewCard
+          span={4}
+          title={t("sections.ranking.title")}
+          caption={t("sections.ranking.caption")}
+          action={
+            <Link href={`${base}/sales`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
+              {t("sections.ranking.link")}
+            </Link>
+          }
+        >
+          <TeamGoalRanking days={90} limit={4} bars />
         </OverviewCard>
       </div>
     </>
