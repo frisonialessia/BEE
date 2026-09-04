@@ -24,7 +24,9 @@
         "totalConnections": "Total connections",
         "firstDegree": "1st degree",
         "companiesCovered": "Companies covered",
-        "avgStrength": "Average strength"
+        "avgStrength": "Average strength",
+        "secondDegree": "2nd degree",
+        "further": "Further"
       },
       "pathFinderTitle": "Find introduction path",
       "targetDomainPlaceholder": "target-company.com",
@@ -50,7 +52,9 @@
         "title": "No network connections yet.",
         "hint": "Add connections to enable warm-introduction path search."
       },
-      "showingOf": "Showing 15 of {count} connections"
+      "showingOf": "Showing 15 of {count} connections",
+      "degreeTitle": "How close your network is",
+      "degreeCaption": "Connections one step away, two, or further"
     }
   },
   "brand": {

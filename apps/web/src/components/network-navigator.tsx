@@ -7,6 +7,8 @@ import { addNetworkConnection, findIntroPaths, getNetworkConnections, getNetwork
 import { Skeleton } from "@/components/ui/skeleton";
 import { LiveBadge } from "@/components/live-badge";
 import { KpiStrip } from "@/components/metric-card";
+import { Donut } from "@/components/charts/donut";
+import { DATA } from "@/components/charts/palette";
 
 // BEE has no green/blue/purple scales of its own — success maps to
 // var(--success) (chart-5, magenta), caution to var(--warning) (chart-1,
@@ -186,15 +188,39 @@ export function NetworkNavigatorPanel() {
     <div className="space-y-4">
       {/* Stats row */}
       {stats && (
-        <KpiStrip
-          cols={4}
-          items={[
-            { label: t("stats.totalConnections"), value: stats.total_connections },
-            { label: t("stats.firstDegree"), value: stats.first_degree_count },
-            { label: t("stats.companiesCovered"), value: stats.companies_covered },
-            { label: t("stats.avgStrength"), value: `${stats.avg_relationship_strength}/10` },
-          ]}
-        />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <KpiStrip
+              cols={2}
+              items={[
+                { label: t("stats.totalConnections"), value: stats.total_connections },
+                { label: t("stats.firstDegree"), value: stats.first_degree_count, progress: stats.total_connections ? stats.first_degree_count / stats.total_connections : undefined },
+                { label: t("stats.companiesCovered"), value: stats.companies_covered },
+                { label: t("stats.avgStrength"), value: `${stats.avg_relationship_strength}/10`, progress: stats.avg_relationship_strength / 10 },
+              ]}
+            />
+          </div>
+          <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-4">
+            <h3 className="bee-card-title">{t("degreeTitle")}</h3>
+            <p className="bee-caption mb-4">{t("degreeCaption")}</p>
+            <Donut
+              slices={[
+                { label: t("stats.firstDegree"), value: stats.first_degree_count, color: DATA.indigo },
+                { label: t("stats.secondDegree"), value: stats.second_degree_count, color: DATA.violet },
+                { label: t("stats.further"), value: Math.max(0, stats.total_connections - stats.first_degree_count - stats.second_degree_count), color: DATA.lavender },
+              ]}
+            />
+            {stats.top_industries.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {stats.top_industries.slice(0, 4).map((ind) => (
+                  <span key={ind} className="rounded-full bg-[color-mix(in_srgb,var(--color-chart-4)_16%,var(--color-card))] px-2 py-0.5 bee-micro text-[var(--color-text)]">
+                    {ind}
+                  </span>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       )}
 
       {/* Path finder */}

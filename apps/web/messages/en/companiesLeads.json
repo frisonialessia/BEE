@@ -40,6 +40,17 @@
         "contacts": "Contacts",
         "opportunities": "Opportunities"
       }
+    },
+    "portfolio": {
+      "total": "Companies",
+      "totalHint": "in your directory",
+      "withOpps": "With an opportunity",
+      "withContacts": "With contacts",
+      "industryTitle": "Mix by industry",
+      "industryCaption": "Where your portfolio concentrates",
+      "countryTitle": "By country",
+      "countryCaption": "The five geographies with the most accounts",
+      "other": "Other"
     }
   },
   "companyDetail": {
@@ -49,7 +60,9 @@
     "kpi": {
       "contacts": "Contacts",
       "opportunities": "Opportunities",
-      "signals": "Signals"
+      "signals": "Signals",
+      "contactsHint": "{count, plural, =0 {no hot leads} one {# hot lead} other {# hot leads}}",
+      "opportunitiesHint": "{amount} in open pipeline"
     },
     "accountBrief": {
       "heading": "Account research",
@@ -124,7 +137,11 @@
     "signals": {
       "heading": "Signals ({count})",
       "empty": "No signals for this company yet.",
-      "score": "Score {score}"
+      "score": "Score {score}",
+      "activityTitle": "Signal activity",
+      "activityCaption": "Signals detected per week, last 12 weeks",
+      "mixTitle": "Signal mix",
+      "mixCaption": "By type, across the account"
     },
     "owner": {
       "label": "Owner",

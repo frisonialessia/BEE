@@ -24,7 +24,9 @@
         "totalConnections": "Conexiones totales",
         "firstDegree": "1er grado",
         "companiesCovered": "Empresas cubiertas",
-        "avgStrength": "Fuerza promedio"
+        "avgStrength": "Fuerza promedio",
+        "secondDegree": "2do grado",
+        "further": "Más lejos"
       },
       "pathFinderTitle": "Buscar ruta de presentación",
       "targetDomainPlaceholder": "empresa-objetivo.com",
@@ -50,7 +52,9 @@
         "title": "Todavía no hay conexiones de red.",
         "hint": "Agrega conexiones para habilitar la búsqueda de rutas de presentación cálida."
       },
-      "showingOf": "Mostrando 15 de {count} conexiones"
+      "showingOf": "Mostrando 15 de {count} conexiones",
+      "degreeTitle": "Cercanía de tu red",
+      "degreeCaption": "Cuántas conexiones están a un paso, a dos o más"
     }
   },
   "brand": {

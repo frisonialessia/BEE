@@ -40,6 +40,17 @@
         "contacts": "Contactos",
         "opportunities": "Oportunidades"
       }
+    },
+    "portfolio": {
+      "total": "Empresas",
+      "totalHint": "en tu directorio",
+      "withOpps": "Con oportunidad",
+      "withContacts": "Con contactos",
+      "industryTitle": "Mezcla por industria",
+      "industryCaption": "Dónde se concentra tu cartera",
+      "countryTitle": "Por país",
+      "countryCaption": "Las cinco geografías con más cuentas",
+      "other": "Otras"
     }
   },
   "companyDetail": {
@@ -49,7 +60,9 @@
     "kpi": {
       "contacts": "Contactos",
       "opportunities": "Oportunidades",
-      "signals": "Señales"
+      "signals": "Señales",
+      "contactsHint": "{count, plural, =0 {sin leads calientes} one {# lead caliente} other {# leads calientes}}",
+      "opportunitiesHint": "{amount} en pipeline abierto"
     },
     "accountBrief": {
       "heading": "Investigación de cuenta",
@@ -124,7 +137,11 @@
     "signals": {
       "heading": "Señales ({count})",
       "empty": "Sin señales para esta empresa todavía.",
-      "score": "Score {score}"
+      "score": "Score {score}",
+      "activityTitle": "Actividad de señales",
+      "activityCaption": "Señales detectadas por semana, últimas 12 semanas",
+      "mixTitle": "Mezcla de señales",
+      "mixCaption": "Por tipo, toda la cuenta"
     },
     "owner": {
       "label": "Asignado a",

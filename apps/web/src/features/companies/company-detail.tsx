@@ -27,12 +27,16 @@ import {
   opportunityTypeVariant,
   stripOpportunityTitlePrefix,
 } from "@/lib/format";
-import { formatDate, formatRelativeTime } from "@/lib/i18n/format";
+import { formatCurrencyUSD, formatDate, formatRelativeTime } from "@/lib/i18n/format";
 import type { Locale } from "@/i18n/locales";
 import { parseCsv, pickColumn as pick } from "@/lib/csv";
 import { resizeImageToDataUrl } from "@/lib/image";
 import { computeRelationshipMap } from "@/lib/relationship-map";
 import { KpiStrip } from "@/components/metric-card";
+import { AreaChart } from "@/components/charts/area-chart";
+import { Donut } from "@/components/charts/donut";
+import { DATA } from "@/components/charts/palette";
+import { getSignalTypeLabels } from "@/lib/format";
 
 /** Owner display + reassign — visible to everyone, editable only by
  * OWNER/ADMIN/MANAGER (the roles that can already reassign a teammate's
@@ -428,6 +432,19 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
   const leads = (leadsResult?.data ?? []).filter((l) => l.company_id === companyId);
   const opportunities = (oppsResult?.data ?? []).filter((o) => o.company_id === companyId);
   const signals = (signalsResult?.data ?? []).filter((s) => s.company_id === companyId);
+  // Signal activity for this account: 12 weeks of counts and the mix by
+  // type — the account's pulse, not just a number of signals.
+  const weekMs = 7 * 86_400_000;
+  const [nowMs] = useState(() => Date.now());
+  const weekFmt = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "es-MX", { day: "numeric", month: "short" });
+  const signalWeeks = Array.from({ length: 12 }, (_, i) => {
+    const end = nowMs - (11 - i) * weekMs;
+    const start = end - weekMs;
+    return { label: weekFmt.format(new Date(end)), value: signals.filter((s) => { const ts = new Date(s.detected_at).getTime(); return ts > start && ts <= end; }).length };
+  });
+  const signalTypeLabels = getSignalTypeLabels(locale);
+  const signalMix = [...signals.reduce((m, s) => m.set(s.signal_type, (m.get(s.signal_type) ?? 0) + 1), new Map<string, number>()).entries()].map(([type, value]) => ({ label: signalTypeLabels[type as keyof typeof signalTypeLabels] ?? type, value }));
+  const pipelineAmount = opportunities.filter((o) => !["won", "lost", "dismissed"].includes(o.status)).reduce((sum, o) => sum + (o.amount ?? 0), 0);
 
   if (isLoading) {
     return (
@@ -493,11 +510,26 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
       <KpiStrip
         cols={3}
         items={[
-          { label: t("kpi.contacts"), value: leads.length },
-          { label: t("kpi.opportunities"), value: opportunities.length },
-          { label: t("kpi.signals"), value: signals.length },
+          { label: t("kpi.contacts"), value: leads.length, hint: t("kpi.contactsHint", { count: leads.filter((l) => l.score >= 75).length }) },
+          { label: t("kpi.opportunities"), value: opportunities.length, hint: pipelineAmount > 0 ? t("kpi.opportunitiesHint", { amount: formatCurrencyUSD(pipelineAmount, locale) }) : undefined },
+          { label: t("kpi.signals"), value: signals.length, trend: signalWeeks.map((w) => w.value) },
         ]}
       />
+
+      {signals.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-8">
+            <h3 className="bee-card-title">{t("signals.activityTitle")}</h3>
+            <p className="bee-caption mb-4">{t("signals.activityCaption")}</p>
+            <AreaChart points={signalWeeks} color={DATA.indigo} minHeight={150} />
+          </section>
+          <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-4">
+            <h3 className="bee-card-title">{t("signals.mixTitle")}</h3>
+            <p className="bee-caption mb-4">{t("signals.mixCaption")}</p>
+            <Donut slices={signalMix} otherLabel={locale === "es" ? "Otras" : "Other"} />
+          </section>
+        </div>
+      )}
 
       <AccountBriefPanel companyId={companyId} />
 

@@ -2,7 +2,7 @@
 
 import { Building2, Globe } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -98,6 +98,11 @@ function NewCompanyForm({ onDone }: { onDone: () => void }) {
  * account-record entities, previously two sidebar rows — see
  * lib/nav-items.ts. /dashboard/leads still exists as a redirect to
  * ?tab=leads, so no old link/bookmark breaks. */
+import { Donut } from "@/components/charts/donut";
+import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
+import { DATA } from "@/components/charts/palette";
+import { StatStrip, StatTile } from "@/components/charts/stat-tile";
+
 export function CompaniesList() {
   const t = useTranslations("companiesLeads.companiesList");
   const { data: companiesResult, isLoading } = useCompanies(100);
@@ -119,6 +124,26 @@ export function CompaniesList() {
     if (!opp.company_id) continue;
     oppCountByCompany.set(opp.company_id, (oppCountByCompany.get(opp.company_id) ?? 0) + 1);
   }
+
+  // The directory at a glance — where the accounts are, before the list.
+  const portfolio = useMemo(() => {
+    const byIndustry = new Map<string, number>();
+    const byCountry = new Map<string, number>();
+    for (const c of companies) {
+      if (c.industry) byIndustry.set(c.industry, (byIndustry.get(c.industry) ?? 0) + 1);
+      if (c.country) byCountry.set(c.country, (byCountry.get(c.country) ?? 0) + 1);
+    }
+    const countries = [...byCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const withOpps = companies.filter((c) => (oppCountByCompany.get(c.id) ?? 0) > 0).length;
+    const withContacts = companies.filter((c) => (leadCountByCompany.get(c.id) ?? 0) > 0).length;
+    return {
+      industries: [...byIndustry.entries()].map(([label, value]) => ({ label, value })),
+      countries: countries.map(([label, value], i) => ({ label, value, color: [DATA.indigo, DATA.violet, DATA.magenta, DATA.honey, DATA.lavender][i] })),
+      withOpps,
+      withContacts,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the count maps are rebuilt each render from the same query data
+  }, [companies, leadsResult, oppsResult]);
 
   const exportRows = companies.map((c) => ({
     nombre: c.name,
@@ -180,6 +205,32 @@ export function CompaniesList() {
                   />
                 </div>
                 {showNew && <NewCompanyForm onDone={() => setShowNew(false)} />}
+
+                {companies.length > 0 && (
+                  <div className="mb-4 space-y-4">
+                    <StatStrip cols={3}>
+                      <StatTile label={t("portfolio.total")} value={companies.length} hint={t("portfolio.totalHint")} tone={DATA.indigo} />
+                      <StatTile label={t("portfolio.withOpps")} value={portfolio.withOpps} progress={portfolio.withOpps / companies.length} tone={DATA.violet} />
+                      <StatTile label={t("portfolio.withContacts")} value={portfolio.withContacts} progress={portfolio.withContacts / companies.length} tone={DATA.magenta} />
+                    </StatStrip>
+                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+                      <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-5">
+                        <h3 className="bee-card-title">{t("portfolio.industryTitle")}</h3>
+                        <p className="bee-caption mb-4">{t("portfolio.industryCaption")}</p>
+                        <Donut slices={portfolio.industries} otherLabel={t("portfolio.other")} />
+                      </section>
+                      <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-7">
+                        <h3 className="bee-card-title">{t("portfolio.countryTitle")}</h3>
+                        <p className="bee-caption mb-4">{t("portfolio.countryCaption")}</p>
+                        {portfolio.countries.length === 0 ? (
+                          <p className="bee-caption py-6 text-center">—</p>
+                        ) : (
+                          <HorizontalFunnel rows={portfolio.countries} />
+                        )}
+                      </section>
+                    </div>
+                  </div>
+                )}
 
                 <LookalikesPanel />
                 <CompanyDuplicatesPanel />
