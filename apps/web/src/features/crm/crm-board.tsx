@@ -26,6 +26,12 @@ import type { Opportunity } from "@/types/domain";
 
 const COLUMN_MIN = 212;
 const CARD_H = 118;
+// The standard cap on a column's height: past this, the column scrolls in
+// place instead of stretching the page — a column of 90 closed deals used
+// to force every other column to that same height, since all five shared
+// one CSS grid with a row per card. ~5 cards on a short laptop screen, more
+// on a tall one, never more than a comfortable scroll.
+const COLUMN_MAX_H = "clamp(420px, calc(100vh - 340px), 760px)";
 const DAY_MS = 86_400_000;
 
 /**
@@ -80,7 +86,7 @@ function CrmCard({
   dragging,
   draggable,
   menuOpen,
-  style,
+  className,
   onOpen,
   onToggleMenu,
   onDragStart,
@@ -95,7 +101,7 @@ function CrmCard({
   dragging: boolean;
   draggable: boolean;
   menuOpen: boolean;
-  style: React.CSSProperties;
+  className?: string;
   onOpen: (id: string) => void;
   onToggleMenu: (id: string | null) => void;
   onDragStart?: (e: React.DragEvent, id: string) => void;
@@ -154,13 +160,14 @@ function CrmCard({
       onKeyDown={(e) => {
         if (e.key === "Enter") onOpen(opportunity.id);
       }}
-      style={{ ...style, background, height: CARD_H }}
+      style={{ background, height: CARD_H }}
       className={cn(
         "bee-kanban-card group relative z-10 grid min-w-0 cursor-pointer grid-rows-[34px_6px_28px] gap-y-2.5 rounded-[14px] px-3.5 pb-3 pt-3.5 text-left text-[var(--color-text)]",
         draggable && "cursor-grab active:cursor-grabbing",
         dragging && "z-20 -translate-y-0.5 rotate-[0.5deg] opacity-90 shadow-2xl ring-2 ring-[var(--color-chart-4)]",
         closed && !won && "opacity-70",
         menuOpen && "z-30",
+        className,
       )}
     >
       <Tooltip>
@@ -237,12 +244,12 @@ function CrmCard({
   );
 }
 
-function ColumnHeader({ stage, count, accent, style }: { stage: CrmStage | "closed"; count: number; accent: string; style: React.CSSProperties }) {
+function ColumnHeader({ stage, count, accent }: { stage: CrmStage | "closed"; count: number; accent: string }) {
   const t = useTranslations("crm.board");
   const pathname = usePathname();
   const priorityHref = pathname?.startsWith("/probar") ? "/probar/priority" : "/dashboard/priority";
   return (
-    <div style={{ ...style, borderTopColor: accent }} className="flex min-w-0 items-center gap-2 border-t-[3px] px-0.5 pb-3 pt-2.5">
+    <div style={{ borderTopColor: accent }} className="flex min-w-0 items-center gap-2 border-t-[3px] px-0.5 pb-3 pt-2.5">
       <h3 className="truncate text-[11px] font-semibold uppercase tracking-[.06em] text-muted-foreground">{t(`stages.${stage}`)}</h3>
       {stage !== "closed" && (
         <Tooltip>
@@ -349,69 +356,68 @@ export function CrmBoard() {
     ...CRM_STAGES.map((s) => ({ key: s.id, cards: stages[s.id] })),
     { key: "closed", cards: closed },
   ];
-  const rowCount = Math.max(1, ...columns.map((c) => c.cards.length));
 
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- closes an open card menu on any click outside it
     <div onClick={() => menuId && setMenuId(null)}>
       <div className="overflow-x-auto pb-2">
-        <div className="grid gap-x-3.5 gap-y-3" style={{ gridTemplateColumns: `repeat(5, minmax(${COLUMN_MIN}px, 1fr))`, gridTemplateRows: `auto repeat(${rowCount}, ${CARD_H}px)` }}>
-          {columns.map((col, c) => (
-            <ColumnHeader key={`h-${col.key}`} stage={col.key} count={col.cards.length} accent={STAGE_ACCENT[col.key]} style={{ gridColumn: c + 1, gridRow: 1 }} />
+        {/* Header row and column bodies share one grid (5 tracks); natural
+            source order — five headers then five bodies — puts them on
+            their own row without any explicit gridColumn/gridRow. Each
+            column's own card list scrolls independently past COLUMN_MAX_H,
+            so one long "Cerradas" column never stretches the other four. */}
+        <div className="grid gap-x-3.5 gap-y-3" style={{ gridTemplateColumns: `repeat(5, minmax(${COLUMN_MIN}px, 1fr))` }}>
+          {columns.map((col) => (
+            <ColumnHeader key={`h-${col.key}`} stage={col.key} count={col.cards.length} accent={STAGE_ACCENT[col.key]} />
           ))}
 
-          {/* Drop zones: one invisible cell per open column spanning every card row. */}
-          {columns.map((col, c) => {
+          {columns.map((col) => {
             const droppable = col.key !== "closed";
             return (
               // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- drop zone; keyboard path is each card's menu.
               <div
-                key={`bg-${col.key}`}
+                key={`col-${col.key}`}
                 onDragOver={droppable ? (e) => { e.preventDefault(); if (overStage !== col.key) setOverStage(col.key as CrmStage); } : undefined}
                 onDragLeave={droppable ? () => setOverStage((s) => (s === col.key ? null : s)) : undefined}
                 onDrop={droppable ? (e) => { e.preventDefault(); handleDrop(col.key as CrmStage); } : undefined}
-                className={cn("-m-1.5 rounded-[16px] transition-colors", overStage === col.key && "bg-[var(--color-chart-4)]/10 ring-2 ring-[var(--color-chart-4)]/40")}
-                style={{ gridColumn: c + 1, gridRow: `2 / span ${rowCount}` }}
-              />
+                className={cn("rounded-[16px] p-1.5 -m-1.5 transition-colors", overStage === col.key && "bg-[var(--color-chart-4)]/10 ring-2 ring-[var(--color-chart-4)]/40")}
+              >
+                <div className="flex flex-col gap-3 overflow-y-auto pr-0.5" style={{ maxHeight: COLUMN_MAX_H }}>
+                  {col.cards.length === 0 ? (
+                    <div
+                      style={{
+                        height: CARD_H,
+                        background: "repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-text) 5%, transparent) 0 6px, transparent 6px 14px)",
+                      }}
+                      className="relative z-10 grid shrink-0 place-items-center rounded-[14px] text-center"
+                    >
+                      <p className="bee-micro">{col.key === "closed" ? t("emptyClosed") : t("emptyColumn.title")}</p>
+                    </div>
+                  ) : (
+                    col.cards.map((opp) => (
+                      <CrmCard
+                        key={opp.id}
+                        opportunity={opp}
+                        meta={metaById.get(opp.id) ?? { company: null, owner: null }}
+                        accent={STAGE_ACCENT[col.key]}
+                        now={now}
+                        dragging={draggingId === opp.id}
+                        draggable={col.key !== "closed"}
+                        menuOpen={menuId === opp.id}
+                        className="shrink-0"
+                        onOpen={openOpportunity}
+                        onToggleMenu={setMenuId}
+                        onDragStart={col.key !== "closed" ? handleDragStart : undefined}
+                        onDragEnd={handleDragEnd}
+                        onDrop={col.key !== "closed" ? () => handleDrop(col.key as CrmStage) : undefined}
+                        onMove={col.key !== "closed" ? moveOpportunity : undefined}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
             );
           })}
-
-          {columns.map((col, c) =>
-            col.cards.length === 0 ? (
-              <div
-                key={`empty-${col.key}`}
-                style={{
-                  gridColumn: c + 1,
-                  gridRow: 2,
-                  height: CARD_H,
-                  background: "repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-text) 5%, transparent) 0 6px, transparent 6px 14px)",
-                }}
-                className="relative z-10 grid place-items-center rounded-[14px] text-center"
-              >
-                <p className="bee-micro">{col.key === "closed" ? t("emptyClosed") : t("emptyColumn.title")}</p>
-              </div>
-            ) : (
-              col.cards.map((opp, r) => (
-                <CrmCard
-                  key={opp.id}
-                  opportunity={opp}
-                  meta={metaById.get(opp.id) ?? { company: null, owner: null }}
-                  accent={STAGE_ACCENT[col.key]}
-                  now={now}
-                  dragging={draggingId === opp.id}
-                  draggable={col.key !== "closed"}
-                  menuOpen={menuId === opp.id}
-                  style={{ gridColumn: c + 1, gridRow: r + 2 }}
-                  onOpen={openOpportunity}
-                  onToggleMenu={setMenuId}
-                  onDragStart={col.key !== "closed" ? handleDragStart : undefined}
-                  onDragEnd={handleDragEnd}
-                  onDrop={col.key !== "closed" ? () => handleDrop(col.key as CrmStage) : undefined}
-                  onMove={col.key !== "closed" ? moveOpportunity : undefined}
-                />
-              ))
-            ),
-          )}
         </div>
       </div>
     </div>
