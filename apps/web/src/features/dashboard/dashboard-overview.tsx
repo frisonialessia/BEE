@@ -170,7 +170,7 @@ export function DashboardOverview({
 
         <OverviewCard span={3} title={t("sections.signalMix.title")} caption={t("sections.signalMix.caption")}>
           <div className="flex h-full min-w-0 items-center">
-            <Donut slices={mix} size={120} otherLabel={locale === "es" ? "Otras" : "Other"} />
+            <Donut slices={mix} size={100} otherLabel={locale === "es" ? "Otras" : "Other"} />
           </div>
         </OverviewCard>
 
