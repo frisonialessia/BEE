@@ -17,12 +17,13 @@ export function DeltaChip({
 }) {
   if (value === null || Number.isNaN(value)) return null;
   const up = value >= 0;
-  const color = up ? (tone === "sales" ? SALES.won : DATA.indigo) : DATA.honey;
+  // Ventas is greens-only: a drop there is mint with dark text, never honey.
+  const color = up ? (tone === "sales" ? SALES.won : DATA.indigo) : tone === "sales" ? "var(--color-text)" : DATA.honey;
   return (
     <span className={cn("inline-flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5", className)}>
       <span
         className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums"
-        style={{ background: mix(up ? (tone === "sales" ? SALES.won : DATA.indigo) : DATA.honey, 18), color }}
+        style={{ background: up ? mix(tone === "sales" ? SALES.won : DATA.indigo, 18) : tone === "sales" ? SALES.mint : mix(DATA.honey, 18), color }}
       >
         {up ? "▲" : "▼"} {Math.abs(Math.round(value * 100))}%
       </span>

@@ -15,6 +15,9 @@ import { formatMoney } from "@/lib/i18n/format";
 import { computeQuotaAttainment, isQuotaActive } from "@/lib/quotas";
 
 const RANK_TONE = [DATA.honey, DATA.indigo, DATA.violet];
+// Ventas is greens-only: the podium avatars go won → lime → mint, mint
+// with dark text so it still reads.
+const RANK_TONE_SALES = [SALES.won, SALES.lime, SALES.mint];
 
 /**
  * Ranking del equipo por ingresos ganados en el periodo, con el anillo de
@@ -81,11 +84,13 @@ export function TeamGoalRanking({
       {rows.map((rep, i) => {
         const reached = rep.attainment !== null && rep.attainment >= 1;
         const ringColor = sales ? (reached ? SALES.won : SALES.lime) : reached ? DATA.honey : DATA.indigo;
-        const bg = sales && reached ? mix(SALES.mint, 55) : i === 0 ? mix(DATA.honeyFill, 22) : undefined;
+        const bg = sales ? (reached ? mix(SALES.mint, 70) : i === 0 ? mix(SALES.mint, 40) : undefined) : i === 0 ? mix(DATA.honeyFill, 22) : undefined;
+        const avatar = sales ? RANK_TONE_SALES[i] ?? SALES.mint : RANK_TONE[i] ?? DATA.indigo;
+        const avatarText = sales && i >= 2 ? "var(--color-text)" : "#fff";
         return (
           <li key={rep.userId} className="flex items-center gap-3 rounded-[var(--radius-md)] px-3 py-2" style={bg ? { background: bg } : undefined}>
             <span className="bee-micro w-6 font-semibold text-[var(--color-text)]">#{i + 1}</span>
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: RANK_TONE[i] ?? DATA.indigo }}>
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: avatar, color: avatarText }}>
               {rep.name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("")}
             </span>
             <div className="min-w-0 flex-1">

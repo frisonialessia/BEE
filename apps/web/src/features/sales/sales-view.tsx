@@ -170,7 +170,7 @@ export function SalesView() {
                 </thead>
                 <tbody>
                   {model.ledger.map((row) => (
-                    <tr key={row.id} onClick={() => openOpportunity(row.id)} className="cursor-pointer border-t border-[color-mix(in_srgb,var(--color-text)_6%,transparent)] hover:bg-[var(--color-primary)]/20">
+                    <tr key={row.id} onClick={() => openOpportunity(row.id)} className="cursor-pointer border-t border-[color-mix(in_srgb,var(--color-text)_6%,transparent)] hover:bg-[#b4e8c5]/40">
                       <td className="bee-micro py-2 pr-3 whitespace-nowrap">{formatDate(row.closedAt, locale)}</td>
                       <td className="max-w-[16rem] truncate py-2 pr-3 font-medium">{row.title}</td>
                       <td className="py-2 pr-3">{row.company || "—"}</td>
