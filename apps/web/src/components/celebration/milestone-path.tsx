@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { mix, SALES, TONE } from "@/components/charts/palette";
+import { useBoxSize } from "@/components/charts/use-box-size";
 import { milestoneAt } from "@/lib/milestones";
 
 // Honey at the start, a genuine honey→mint bridge tone in the middle
@@ -14,7 +15,6 @@ import { milestoneAt } from "@/lib/milestones";
 const RAMP = [TONE.marketDeep, TONE.market, mix(TONE.market, 55, SALES.mint), SALES.mint, SALES.lime, SALES.won];
 
 const NODE_R = 13;
-const STEP_X = 62;
 const CY = 22;
 const VIEW_H = 44;
 // Just enough reached milestones to show the sweep, plus a couple ahead
@@ -48,8 +48,13 @@ export function MilestonePath({
 }) {
   const t = useTranslations("celebration.path");
   const [hover, setHover] = useState<number | null>(null);
+  // Same rule every chart in BEE follows (see use-box-size.ts): the chart
+  // fills the box it's actually given, it doesn't pick its own width and
+  // leave the rest of the row empty. Node spacing is derived from the
+  // measured width below, not a fixed step.
+  const [boxRef, { width: viewW }] = useBoxSize<HTMLDivElement>({ width: 260, height: VIEW_H });
 
-  const { nodes, allPath, reachedPath, viewW, nextMilestone } = useMemo(() => {
+  const { nodes, allPath, reachedPath, nextMilestone } = useMemo(() => {
     const behind: number[] = [];
     let i = 0;
     while (milestoneAt(i) < totalWon) {
@@ -72,11 +77,13 @@ export function MilestonePath({
     }
 
     const values = [...behindShown, current, ...ahead];
+    const pad = NODE_R + 5;
+    const span = Math.max(1, values.length - 1);
     const list = values.map((value, k) => ({
       value,
       reached: value <= totalWon,
       isCurrent: value === current,
-      x: 18 + k * STEP_X,
+      x: values.length === 1 ? viewW / 2 : pad + (k / span) * (viewW - pad * 2),
     }));
 
     const rampDenom = Math.max(1, behindShown.length - 1);
@@ -101,10 +108,9 @@ export function MilestonePath({
       nodes: list.map((n, k) => ({ ...n, fill: n.reached ? colorFor(k) : null })),
       allPath: all,
       reachedPath: reachedD,
-      viewW: 18 + (list.length - 1) * STEP_X + 18,
       nextMilestone: current,
     };
-  }, [totalWon]);
+  }, [totalWon, viewW]);
 
   function tooltipFor(n: (typeof nodes)[number]): string {
     if (n.reached) return t("nodeReached", { value: n.value });
@@ -118,7 +124,7 @@ export function MilestonePath({
           scroll, and a scroll container would clip the hover tooltip
           positioned above it (setting overflow-x forces overflow-y to
           "auto" too, per the CSS overflow spec). */}
-      <div className="relative min-w-0 flex-1">
+      <div ref={boxRef} className="relative min-w-0 flex-1">
         <svg width={viewW} height={VIEW_H} viewBox={`0 0 ${viewW} ${VIEW_H}`} role="img" aria-label={t("aria", { total: totalWon })} className="block">
           <path d={allPath} fill="none" stroke="var(--color-divider)" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 7" />
           {reachedPath && <path d={reachedPath} fill="none" stroke={SALES.won} strokeWidth={3} strokeLinecap="round" />}

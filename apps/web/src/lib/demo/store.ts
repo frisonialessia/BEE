@@ -97,8 +97,11 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * `"14"` adds 3 more won seeds (s32-s34) closing 1/2/3 days ago and force-
  * assigns them plus s15 (same-day close) to demo-user-1 — "Tu semana en
  * BEE" reads real (a 4-day streak, real closes this week) instead of
- * mostly zeros for whoever the sandbox shows as "you". */
-const SEED_VERSION = "14";
+ * mostly zeros for whoever the sandbox shows as "you"; `"15"` hands
+ * demo-user-1 the 48 bulk-history wins too, so her lifetime total clears
+ * 50 and the milestone path shows a full honey-to-green sweep instead of
+ * a single reached dot. */
+const SEED_VERSION = "15";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Which language the currently-stored seed was written in — separate from
@@ -223,6 +226,16 @@ function seedOpportunitiesWithReps(locale: Locale): Opportunity[] {
   return getSampleOpportunities(locale).map((opp, i) => {
     if (opp.assigned_to_user_id) return opp;
     if (THIS_WEEK_OPP_IDS.has(opp.id)) return { ...opp, assigned_to_user_id: reps[0].id };
+    // The 48 monthly bulk-history wins (historySeeds() in seed-history.ts,
+    // ids "hw1".."hw48") go to demo-user-1 as a block, not the round robin
+    // — her lifetime total needs to clear 50 for "Tu semana en BEE"'s
+    // milestone path to show 3 real reached nodes (10, 20, 50) and the
+    // full honey-to-green sweep across them, not just the one dot a
+    // quarter-share rotation left her with. The ~9 named, curated wins
+    // (Vantage Studio, Cumbre Salud…) keep the plain rotation below, so
+    // the other three reps still have real, visible wins of their own —
+    // this only concentrates the anonymous bulk history, not everything.
+    if (opp.status === "won" && opp.id.startsWith("demo-opp-hw")) return { ...opp, assigned_to_user_id: reps[0].id };
     const rep = opp.status === "won" ? reps[wonIdx++ % reps.length] : reps[i % reps.length];
     return { ...opp, assigned_to_user_id: rep.id };
   });

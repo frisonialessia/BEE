@@ -344,10 +344,10 @@ export function demoRevenueSimulation(params: {
  *  team as a whole sits under halfway — so the Brief and the rings have
  *  something true to say without every number being a round success. Her
  *  *deal-count* goal (the one "Tu semana en BEE" reads — see
- *  weekly-recap-card.tsx) stays deliberately a couple ahead of what she's
- *  actually closed this month instead of copying that same "already over"
- *  shape: a manager's monthly target reads as motivating in progress
- *  ("4 of 6"), not as a fraction that's already blown past ("4 of 1"). */
+ *  weekly-recap-card.tsx) is set to exactly what she's already closed this
+ *  month, on purpose: a full, green "4 of 4" reads as a goal actually met,
+ *  not a broken fraction past 100% (which a lower target would give) nor
+ *  a goal that's still open (which a higher one would). */
 export function demoFetchQuotas(): Quota[] {
   const users = demoFetchUsers();
   const teams = demoFetchTeams();
@@ -365,7 +365,7 @@ export function demoFetchQuotas(): Quota[] {
     if (actual > 0 && !starPicked) {
       starPicked = true;
       const clients = computeQuotaClients(base, users, opportunities);
-      return { ...base, target_amount: round(actual * 0.8), target_count: clients + 2 };
+      return { ...base, target_amount: round(actual * 0.8), target_count: Math.max(1, clients) };
     }
     return { ...base, target_amount: round(actual > 0 ? actual / 0.7 : 30_000) };
   });
