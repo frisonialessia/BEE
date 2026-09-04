@@ -41,6 +41,12 @@ import { useApproveAction } from "@/hooks/queries/use-pending-actions";
 import { useRowCapacity } from "@/components/charts/use-row-capacity";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DecisionCard, DecisionUrgency } from "@/types/extended";
+import type { Battlecard } from "@/types/domain";
+import { signalFill, signalTone, TONE_CSS_VAR } from "@/lib/brand/colors";
+import { getSignalTypeLabels } from "@/lib/format";
+import type { SignalType } from "@/lib/types";
+import { useLocale } from "next-intl";
+import type { Locale } from "@/i18n/locales";
 import { useDashboardBase } from "@/lib/demo/mode";
 
 // Tone lives in the contour, not the fill — only signal cards are colored.
@@ -70,7 +76,7 @@ function useExplanation(card: DecisionCard): { headline: string; reasoning: stri
   };
 }
 
-function Card({ card }: { card: DecisionCard }) {
+function Card({ card, style }: { card: DecisionCard; style?: React.CSSProperties }) {
   const t = useTranslations("dashboardOverview.decisionFeed");
   const { headline, reasoning } = useExplanation(card);
   const base = useDashboardBase();
@@ -110,7 +116,7 @@ function Card({ card }: { card: DecisionCard }) {
   }
 
   return (
-    <div className={`bee-bento relative flex items-center gap-3 px-3 py-2.5 pr-9 ${URGENCY_TONE[card.urgency]}`}>
+    <div className={`bee-bento relative flex items-center gap-3 px-3 py-2.5 pr-9 ${style ? "" : URGENCY_TONE[card.urgency]}`} style={style}>
       {/* X in the corner: dismiss. Small, quiet, never a full button. */}
       {card.kind === "opportunity" && card.opportunity_id && (
         <button
@@ -155,10 +161,43 @@ function Card({ card }: { card: DecisionCard }) {
 
 /** `embedded`: rendered inside an OverviewCard (which owns the title), as a
  *  vertical stack of up to five compact rows. */
-export function DecisionFeed({ embedded = false }: { embedded?: boolean } = {}) {
+/** `criticalAccounts`: the ready-to-act battlecards that used to have a box of
+ *  their own ("Cuentas críticas de hoy"). They answer the same question as
+ *  the plays — who do I talk to today — so on Resumen they are merged in as
+ *  urgent plays wearing their signal's fill, ahead of everything but a draft
+ *  waiting for approval. */
+export function DecisionFeed({ embedded = false, criticalAccounts = [] }: { embedded?: boolean; criticalAccounts?: Battlecard[] } = {}) {
   const t = useTranslations("dashboardOverview.decisionFeed");
+  const tCritical = useTranslations("dashboardOverview.criticalAccounts");
+  const locale = useLocale() as Locale;
   const { data, isLoading } = useTodayFeed();
-  const cards = data?.data.cards ?? [];
+  const feedCards = data?.data.cards ?? [];
+  const signalLabels = getSignalTypeLabels(locale);
+  const criticalCards: { card: DecisionCard; style: React.CSSProperties }[] = criticalAccounts
+    .filter((b) => !feedCards.some((c) => c.opportunity_id === b.opportunity_id))
+    .map((b) => ({
+      card: {
+        id: `critical-${b.opportunity_id}`,
+        kind: "opportunity",
+        company_name: b.company.name ?? null,
+        headline: `${b.company.name ?? b.lead.full_name ?? tCritical("unnamedAccount")} · ${signalLabels[b.signal.signal_type as SignalType] ?? b.signal.signal_type}`,
+        reasoning: b.signal.description || b.signal.title,
+        urgency: "high",
+        recommended_action: "call",
+        opportunity_id: b.opportunity_id,
+        pending_action_id: null,
+        score: b.signal.score / 100,
+      } as DecisionCard,
+      style: { background: signalFill(b.signal.signal_type, b.signal.score), borderColor: TONE_CSS_VAR[signalTone(b.signal.signal_type)] },
+    }));
+  const approvals = feedCards.filter((c) => c.pending_action_id);
+  const rest = feedCards.filter((c) => !c.pending_action_id);
+  const rows: { card: DecisionCard; style?: React.CSSProperties }[] = [
+    ...approvals.map((card) => ({ card })),
+    ...criticalCards,
+    ...rest.map((card) => ({ card })),
+  ];
+  const cards = feedCards;
   // Row = border 2 + py-2.5 (20) + micro (16) + one title line (18) + micro (16) → 72; gap-2 → 8.
   const [listRef, capacity] = useRowCapacity<HTMLDivElement>(72, 8, { min: 4, max: 10 });
 
@@ -173,13 +212,13 @@ export function DecisionFeed({ embedded = false }: { embedded?: boolean } = {}) 
   }
 
   if (embedded) {
-    if (cards.length === 0) {
+    if (rows.length === 0) {
       return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
     }
     return (
       <div ref={listRef} className="bee-fill flex flex-col justify-evenly gap-2 overflow-hidden">
-        {cards.slice(0, capacity).map((card) => (
-          <Card key={card.id} card={card} />
+        {rows.slice(0, capacity).map(({ card, style }) => (
+          <Card key={card.id} card={card} style={style} />
         ))}
       </div>
     );

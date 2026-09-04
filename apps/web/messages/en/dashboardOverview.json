@@ -14,7 +14,11 @@
       "hotLeads": "Hot leads",
       "hotLeadsHint": "buying intent",
       "avgScore": "Average score",
-      "weeklySignals": "signals/week"
+      "weeklySignals": "signals/week",
+      "wonMonth": "Won this month",
+      "goalHint": "goal {goal}",
+      "openPipeline": "Open pipeline",
+      "openPipelineHint": "{count, plural, one {# open opportunity} other {# open opportunities}}"
     },
     "itemLabels": {
       "battlecards": "battlecards",
@@ -73,6 +77,10 @@
         "goalLabel": "Goal",
         "link": "See Sales →",
         "empty": "No closes yet. The first one will show up here."
+      },
+      "market": {
+        "title": "Market",
+        "caption": "Signals per week and their mix by type, last 30 days"
       }
     }
   },

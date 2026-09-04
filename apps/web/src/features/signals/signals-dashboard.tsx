@@ -15,6 +15,7 @@ import { computeDailySignalVolume } from "@/lib/signal-trends";
 import { LiveBadge } from "@/components/live-badge";
 import { Donut } from "@/components/charts/donut";
 import { OverviewCard } from "@/components/dashboard/overview-card";
+import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-heatmap";
 import { getSignalTypeLabels } from "@/lib/format";
 
 /** Panel de señales — triggers de mercado del Signal Engine — con
@@ -25,6 +26,7 @@ import { getSignalTypeLabels } from "@/lib/format";
 export function SignalsDashboard() {
   const locale = useLocale() as Locale;
   const t = useTranslations("signalsStrategies.signals");
+  const tOverview = useTranslations("dashboardOverview.overview");
   const { data: result, isLoading, isError } = useSignals(200);
 
   const signals = result?.data ?? [];
@@ -76,6 +78,11 @@ export function SignalsDashboard() {
                   </OverviewCard>
                   <OverviewCard span={4} title={t("mixTitle")} caption={t("mixSubtitle")}>
                     <Donut slices={mixByType} otherLabel={locale === "es" ? "Otras" : "Other"} />
+                  </OverviewCard>
+                  {/* Moved here from Resumen: the day × hour pattern is a
+                      prospecting-planning tool, so it lives with the feed. */}
+                  <OverviewCard span={12} title={tOverview("sections.activityHeatmap.title")} caption={tOverview("sections.activityHeatmap.caption")} className="lg:min-h-[22rem]!">
+                    <SignalActivityHeatmap signals={signals} />
                   </OverviewCard>
                 </div>
 

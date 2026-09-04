@@ -11,10 +11,8 @@ import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { IndustrySignalHeatmap } from "@/components/dashboard/industry-signal-heatmap";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
-import { SignalActivityHeatmap } from "@/components/dashboard/signal-activity-heatmap";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SignalHexMap } from "@/features/control/components/SignalHexMap";
-import { CriticalAccountsDigest } from "@/features/dashboard/critical-accounts-digest";
 import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { DecisionFeed } from "@/features/dashboard/decision-feed";
 import { GettingStartedCard } from "@/features/dashboard/getting-started-card";
@@ -53,7 +51,6 @@ export function DashboardOverview({
   const [now] = useState(() => Date.now());
   const tFeed = useTranslations("dashboardOverview.decisionFeed");
   const tBrief = useTranslations("dashboardOverview.dailyBrief");
-  const tCritical = useTranslations("dashboardOverview.criticalAccounts");
   const tCalendar = useTranslations("calendar");
   const base = useDashboardBase();
   const { data: signalsResult, isLoading: signalsLoading } = useSignals();
@@ -65,7 +62,7 @@ export function DashboardOverview({
   const { data: quotasResult } = useQuotas();
 
   const signals = useMemo(() => signalsResult?.data ?? [], [signalsResult]);
-  const battlecards = battlecardsResult?.data ?? [];
+  const battlecards = useMemo(() => battlecardsResult?.data ?? [], [battlecardsResult]);
   const live = Boolean(signalsResult?.live || battlecardsResult?.live);
   // Incluye opps/users: sin esto, el Leaderboard alcanza a renderizar su
   // "todavía no hay ganadas" antes de que esas dos queries respondan —
@@ -73,13 +70,7 @@ export function DashboardOverview({
   const loading = signalsLoading || battlecardsLoading || oppsLoading || usersLoading;
 
 
-  const avgScore =
-    signals.length > 0
-      ? Math.round(signals.reduce((sum, s) => sum + s.score, 0) / signals.length)
-      : 0;
   const hotSignals = signals.filter((s) => s.score >= 75).length;
-  const readyCount = battlecards.filter((b) => b.ready_to_action).length;
-  const hotLeads = battlecards.filter((b) => b.hot_lead).length;
 
   // Weekly series (8 weeks) behind the tiles and the first chart, and the
   // 30-day mix by type for the donut — all from the signals already loaded.
@@ -124,6 +115,11 @@ export function DashboardOverview({
     [allOppsResult, teamsData, quotasResult, companiesResult, usersResult, locale, now],
   );
   const money = (v: number) => formatMoney(v, sales.currency, locale, true);
+  const openPipeline = useMemo(() => {
+    const open = (allOppsResult?.data ?? []).filter((o) => !["won", "lost", "dismissed"].includes(o.status));
+    return { count: open.length, amount: open.reduce((sum, o) => sum + (o.amount ?? 0), 0) };
+  }, [allOppsResult]);
+  const criticalAccounts = useMemo(() => battlecards.filter((b) => b.ready_to_action).sort((a, b) => b.score - a.score), [battlecards]);
   const weekDelta = (pick: (w: (typeof weekly)[number]) => number) => {
     const last = pick(weekly[7]);
     const prev = pick(weekly[6]);
@@ -162,14 +158,28 @@ export function DashboardOverview({
 
       </header>
 
-      {/* Stat tiles with an 8-week trend each — number, delta and shape,
-          never a bare figure. */}
+      {/* KPIs: two about the market, two about money — the first line already
+          mixes what is coming in with what is being closed. */}
       <div className="mb-4">
         <StatStrip cols={4}>
           <StatTile label={t("kpis.signals")} value={signals.length} delta={weekDelta((w) => w.count)} deltaLabel={t("kpis.weeklySignals")} trend={weekly.map((w) => w.count)} tone={DATA.indigo} />
           <StatTile label={t("kpis.hotSignals")} value={hotSignals} delta={weekDelta((w) => w.hot)} trend={weekly.map((w) => w.hot)} tone={DATA.honey} />
-          <StatTile label={t("kpis.ready")} value={readyCount} hint={t("kpis.hotLeads") + ` · ${hotLeads}`} tone={DATA.violet} progress={battlecards.length ? readyCount / battlecards.length : 0} />
-          <StatTile label={t("kpis.avgScore")} value={avgScore} delta={weekDelta((w) => w.avg)} trend={weekly.map((w) => w.avg)} tone={DATA.magenta} formatValue={(v) => String(Math.round(v))} />
+          <StatTile
+            label={t("kpis.wonMonth")}
+            value={sales.thisMonth.value}
+            formatValue={(v) => money(v)}
+            delta={sales.monthDelta}
+            hint={sales.goal ? t("kpis.goalHint", { goal: money(sales.goal) }) : undefined}
+            progress={sales.attainment ?? undefined}
+            tone={SALES.won}
+          />
+          <StatTile
+            label={t("kpis.openPipeline")}
+            value={openPipeline.amount}
+            formatValue={(v) => money(v)}
+            hint={t("kpis.openPipelineHint", { count: openPipeline.count })}
+            tone={DATA.violet}
+          />
         </StatStrip>
       </div>
 
@@ -179,64 +189,18 @@ export function DashboardOverview({
         userCount={usersResult?.length ?? 0}
       />
 
-      {/* Option A: rows grouped by density so no box ends in a gap — two
-          charts, three short boxes, three lists of five, hive + market,
-          close-rate map + team. Every list spreads to its box; the ranking
-          finishes with one bar per rep. What used to
-          sit below this grid (battlecards, revenue simulator, every
-          signal) lives on its own page — Estrategias, Pronóstico, Señales —
-          so this stays a summary, not the whole product on one screen. */}
+      {/* Four rows, one question each, read top to bottom:
+          Hoy      — what do I do today (plays incl. critical accounts · brief · calendar)
+          Dinero   — how is the money (won by month · funnel · team)
+          Mercado  — what the market sent (weekly signals with their mix, one box)
+          Apuntar  — where to aim (the hive of intent · where we close best)
+          Down from 13 boxes to 9 so the page tells the rep what to do instead
+          of tiring them. "Cuándo llega el mercado" moved to Señales, where the
+          day/hour pattern is used to plan prospecting. */}
       <div className="bee-overview">
-        {/* Row 1 — two charts: what we closed, what the market sent. */}
-        <OverviewCard
-          span={6}
-          title={t("sections.sales.title")}
-          caption={sales.goal ? t("sections.sales.captionGoal", { goal: money(sales.goal) }) : t("sections.sales.caption")}
-          action={
-            <Link href={`${base}/sales`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
-              {t("sections.sales.link")}
-            </Link>
-          }
-        >
-          {sales.won.length === 0 ? (
-            <p className="bee-caption py-8 text-center">{t("sections.sales.empty")}</p>
-          ) : (
-            <BarsVsTarget
-              points={sales.months}
-              target={sales.goal}
-              formatValue={(v) => money(v)}
-              // The three greens by strength: the best months in won green,
-              // the middle in lime, the rest in mint — one family, one box.
-              colorFor={(p, _i, max) => (p.value >= max * 0.66 ? SALES.won : p.value >= max * 0.33 ? SALES.lime : SALES.mint)}
-            />
-          )}
-        </OverviewCard>
-
-        <OverviewCard span={6} title={t("sections.signalsWeekly.title")} caption={t("sections.signalsWeekly.caption")}>
-          <AreaChart points={weekly.map((w) => ({ label: w.label, value: w.count }))} color={DATA.indigo} />
-        </OverviewCard>
-
-        {/* Row 2 — three short boxes: the funnel, the critical accounts, the mix. */}
-        <OverviewCard span={3} title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
-          <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
-        </OverviewCard>
-
-        <OverviewCard span={4} title={tCritical("title")} caption={t("sections.critical.caption")}>
-          <CriticalAccountsDigest battlecards={battlecards} today={new Date()} embedded />
-        </OverviewCard>
-
-        <OverviewCard span={5} title={t("sections.signalMix.title")} caption={t("sections.signalMix.caption")}>
-          <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
-        </OverviewCard>
-
-        {/* Row 3 — three lists that fill their box: the plays, the brief, the
-            calendar. The row is taller than the standard 18rem on purpose
-            (32rem, `!` because .bee-card's unlayered min-height:0 outranks a plain utility): each list measures its box and shows exactly as many rows
-            as fit (use-row-capacity) — at 1440px that is 5 plays, 7 brief
-            items and 7 meetings — so the boxes are always full and never
-            overflow. */}
+        {/* Hoy */}
         <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")} className="lg:min-h-[32rem]!">
-          <DecisionFeed embedded />
+          <DecisionFeed embedded criticalAccounts={criticalAccounts} />
         </OverviewCard>
 
         <OverviewCard span={4} title={tBrief("title")} caption={t("sections.brief.caption")} className="lg:min-h-[32rem]!">
@@ -256,20 +220,31 @@ export function DashboardOverview({
           <MyCalendarWidget embedded />
         </OverviewCard>
 
-        {/* Row 4 — the hive, smaller, and when the market shows up. */}
-        <SignalHexMap height={200} className="h-full" style={{ gridColumn: "span 7" }} />
-
-        <OverviewCard span={5} title={t("sections.activityHeatmap.title")} caption={t("sections.activityHeatmap.caption")}>
-          <SignalActivityHeatmap signals={signals} />
+        {/* Dinero */}
+        <OverviewCard
+          span={5}
+          title={t("sections.sales.title")}
+          caption={sales.goal ? t("sections.sales.captionGoal", { goal: money(sales.goal) }) : t("sections.sales.caption")}
+          action={
+            <Link href={`${base}/sales`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
+              {t("sections.sales.link")}
+            </Link>
+          }
+        >
+          {sales.won.length === 0 ? (
+            <p className="bee-caption py-8 text-center">{t("sections.sales.empty")}</p>
+          ) : (
+            <BarsVsTarget
+              points={sales.months}
+              target={sales.goal}
+              formatValue={(v) => money(v)}
+              colorFor={(p, _i, max) => (p.value >= max * 0.66 ? SALES.won : p.value >= max * 0.33 ? SALES.lime : SALES.mint)}
+            />
+          )}
         </OverviewCard>
 
-        {/* Row 5 — the pattern behind the closes, and the team. */}
-        <OverviewCard span={8} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
-          <IndustrySignalHeatmap
-            opportunities={allOppsResult?.data ?? []}
-            signals={signals}
-            companies={companiesResult?.data ?? []}
-          />
+        <OverviewCard span={3} title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
+          <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
         </OverviewCard>
 
         <OverviewCard
@@ -283,6 +258,35 @@ export function DashboardOverview({
           }
         >
           <TeamGoalRanking days={90} limit={4} bars />
+        </OverviewCard>
+
+        {/* Mercado — one box: volume by week on the left, mix by type on the right. */}
+        <OverviewCard span={12} title={t("sections.market.title")} caption={t("sections.market.caption")}>
+          <div className="bee-fill grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+            <div className="flex min-h-0 flex-col">
+              <p className="bee-caption mb-1">{t("sections.signalsWeekly.caption")}</p>
+              <div className="bee-fill min-h-[11rem]">
+                <AreaChart points={weekly.map((w) => ({ label: w.label, value: w.count }))} color={DATA.indigo} />
+              </div>
+            </div>
+            <div className="flex min-h-0 flex-col lg:border-l lg:border-border lg:pl-6">
+              <p className="bee-caption mb-1">{t("sections.signalMix.caption")}</p>
+              <div className="bee-fill min-h-[11rem]">
+                <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
+              </div>
+            </div>
+          </div>
+        </OverviewCard>
+
+        {/* Apuntar */}
+        <SignalHexMap height={220} className="h-full" style={{ gridColumn: "span 6" }} />
+
+        <OverviewCard span={6} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
+          <IndustrySignalHeatmap
+            opportunities={allOppsResult?.data ?? []}
+            signals={signals}
+            companies={companiesResult?.data ?? []}
+          />
         </OverviewCard>
       </div>
     </>
