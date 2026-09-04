@@ -1,6 +1,6 @@
 "use client";
 
-import { Compass, KanbanSquare, Lightbulb, Radio, TrendingUp, Users, type LucideIcon } from "lucide-react";
+import { Compass, KanbanSquare, Lightbulb, Radio, TrendingUp, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,11 +14,10 @@ import { useTour } from "@/features/tour/tour-context";
  * with Siguiente/Atrás — see tour-steps.ts for why this order. */
 const PREVIEW: { icon: LucideIcon; key: string }[] = [
   { icon: Radio, key: "signals" },
-  { icon: Compass, key: "priority" },
-  { icon: KanbanSquare, key: "pipeline" },
+  { icon: Compass, key: "darkFunnel" },
   { icon: Lightbulb, key: "strategy" },
+  { icon: KanbanSquare, key: "pipeline" },
   { icon: TrendingUp, key: "forecast" },
-  { icon: Users, key: "team" },
 ];
 
 export function OnboardingTourStep({ onDone }: { onDone: () => void }) {

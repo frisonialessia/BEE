@@ -88,7 +88,7 @@ function EnrollmentRows({ executions, sequences }: { executions: SequenceExecuti
   const t = useTranslations("workspace.sequences.active");
   const locale = useLocale() as Locale;
   const { data: leadsResult } = useLeads(300);
-  const { data: oppsResult } = useOpportunities(undefined, 700);
+  const { data: oppsResult } = useOpportunities(undefined, 2200);
   const [ref, capacity] = useRowCapacity<HTMLDivElement>(52, 0, { min: 5, max: 12 });
   const leadName = useMemo(() => new Map((leadsResult?.data ?? []).map((l) => [l.id, l.full_name])), [leadsResult]);
   const oppTitle = useMemo(() => new Map((oppsResult?.data ?? []).map((o) => [o.id, stripOpportunityTitlePrefix(o.title)])), [oppsResult]);

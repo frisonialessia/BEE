@@ -25,7 +25,7 @@ export function CrmView() {
   const { openNew } = useOpportunityDrawer();
   // Same query the board runs — one cache entry, so the badge and the
   // board always agree on whether the data is live.
-  const { data: oppsResult } = useOpportunities(undefined, 700);
+  const { data: oppsResult } = useOpportunities(undefined, 2200);
 
   return (
     <div>

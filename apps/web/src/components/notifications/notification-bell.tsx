@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+import { TONE, tint } from "@/components/charts/palette";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useRealtimeNotifications } from "@/hooks/use-realtime-notifications";
 import type { Locale } from "@/i18n/locales";
@@ -18,13 +19,16 @@ const KIND_ICON: Record<AppNotification["kind"], typeof Flame> = {
   review_required: AlertCircle,
 };
 
-const KIND_COLOR: Record<AppNotification["kind"], string> = {
-  // hot_signal used to be chart-2 (orange, the app's destructive color) —
-  // same "urgent, look now" meaning as hot_lead, which is magenta
-  // everywhere else in the app, so it gets the same color here too.
-  hot_lead: "var(--color-chart-5)",
-  hot_signal: "var(--color-chart-5)",
-  review_required: "var(--color-chart-1)",
+// Same tones TONE itself defines for these exact categories (see
+// palette.ts's own docstrings) — not a new palette, just pointing each
+// notification at the hue BEE already uses for that kind of thing
+// everywhere else, so the bell reads with the rest of the app instead of
+// its own invented scheme: a hot lead is urgency/priority, a hot signal is
+// market detection, a "needs review" is something BEE prepared.
+const KIND_TONE: Record<AppNotification["kind"], string> = {
+  hot_lead: TONE.urgency,
+  hot_signal: TONE.market,
+  review_required: TONE.prepared,
 };
 
 
@@ -96,7 +100,16 @@ export function NotificationBell() {
                         "flex items-start gap-4 px-4 py-3 text-left transition-colors hover:bg-[var(--color-primary)]/30",
                       )}
                     >
-                      <Icon className="mt-1 size-4 shrink-0" style={{ color: KIND_COLOR[n.kind] }} />
+                      {/* Color lives on the badge's tinted background, not
+                          the icon glyph — a directly-colored icon is the
+                          one thing BEE's palette rule never allows (see
+                          DESIGN_BRIEF.md rule 4). */}
+                      <span
+                        className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full"
+                        style={{ background: tint(KIND_TONE[n.kind], 45) }}
+                      >
+                        <Icon className="size-3.5 text-[var(--color-text)]" />
+                      </span>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-xs font-medium">{n.title}</p>
                         <p className="mt-1 line-clamp-2 bee-micro">

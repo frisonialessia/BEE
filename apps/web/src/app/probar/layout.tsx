@@ -1,6 +1,5 @@
 "use client";
 
-import { Compass } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
@@ -16,30 +15,11 @@ import { GlobalSearch } from "@/components/search/global-search";
 import { Badge } from "@/components/ui/badge";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
+import { TourIntroPopup } from "@/features/tour/tour-intro-popup";
 import { TourOverlay } from "@/features/tour/tour-overlay";
-import { TourProvider, useTour } from "@/features/tour/tour-context";
-import { buildTourSteps } from "@/features/tour/tour-steps";
+import { TourProvider } from "@/features/tour/tour-context";
 import { useScrollResetOnNavigate } from "@/hooks/use-scroll-reset-on-navigate";
 import { PROBAR_NAV_GROUPS } from "@/app/probar/nav-items";
-
-/** Manual re-entry point for the guided tour — the sandbox has no
- * first-visit onboarding dialog to launch it from (that's dashboard-only,
- * see onboarding-tour-step.tsx), so it needs its own always-visible
- * trigger. Lives inside TourProvider, same as TourOverlay itself. */
-function TourTriggerButton() {
-  const { start } = useTour();
-  const t = useTranslations("onboarding.tour");
-  return (
-    <button
-      type="button"
-      onClick={() => start(buildTourSteps("probar", (key) => t(`steps.${key}` as "steps.signals.title")))}
-      className="bee-btn-ghost ml-auto hidden items-center gap-2 px-3 py-2 text-xs sm:inline-flex"
-    >
-      <Compass className="size-3.5" />
-      {t("overlay.badge")}
-    </button>
-  );
-}
 
 /**
  * `/probar` — the no-login sandbox. Deliberately its own layout, not the
@@ -93,17 +73,16 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
               {/* Same shape as the real DashboardHeader — search, the
                   assistant, the team, notifications, account — so the
                   sandbox reads like someone's own organization, not a
-                  stripped-down preview. Only two swaps: the guided-tour
-                  button stands in for the dashboard's onboarding-replay
-                  button (this sandbox has no first-visit dialog to
-                  reopen), and the account menu is demo-sourced (no real
-                  session exists here to read from). */}
+                  stripped-down preview. Only one swap: the account menu
+                  is demo-sourced (no real session exists here to read
+                  from). The guided tour has no header button at all —
+                  see TourIntroPopup below, it offers itself once on a
+                  new visitor's own. */}
               <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 sm:gap-4 sm:px-5">
                 <MobileNavToggle />
                 <GlobalSearch className="max-w-[10rem] sm:max-w-xs md:max-w-sm" />
                 <Badge variant="warning" className="hidden shrink-0 sm:inline-flex">{tBadge("demo")}</Badge>
                 <div className="ml-auto flex items-center gap-2 sm:gap-4">
-                  <TourTriggerButton />
                   <AssistantHeaderLink />
                   <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
                   <div className="hidden items-center gap-4 lg:flex">
@@ -122,6 +101,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
             <OpportunityDrawer />
             <AskBeeFab />
             <TourOverlay />
+            <TourIntroPopup mode="probar" />
           </div>
         </MobileNavProvider>
       </OpportunityDrawerProvider>

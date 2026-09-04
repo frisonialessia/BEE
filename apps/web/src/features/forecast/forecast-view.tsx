@@ -47,7 +47,7 @@ const SCENARIO_LEVELS = [45, 70, 100] as const;
 export function ForecastView() {
   const locale = useLocale() as Locale;
   const t = useTranslations("forecastWinLoss");
-  const { data: oppsResult, isLoading } = useOpportunities(undefined, 700);
+  const { data: oppsResult, isLoading } = useOpportunities(undefined, 2200);
   const { data: companiesResult } = useCompanies(200);
   const { data: quotasResult } = useQuotas();
   const { data: users } = useUsers();

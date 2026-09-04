@@ -82,7 +82,7 @@ export function DashboardOverview({
   const { user: authUser } = useAuth();
   const { data: signalsResult, isLoading: signalsLoading } = useSignals();
   const { data: battlecardsResult, isLoading: battlecardsLoading } = useBattlecards();
-  const { data: allOppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 700);
+  const { data: allOppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 2200);
   const { data: usersResult, isLoading: usersLoading } = useUsers();
   const { data: companiesResult } = useCompanies(200);
   const { data: teamsData } = useTeams();

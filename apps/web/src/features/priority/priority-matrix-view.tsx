@@ -39,7 +39,7 @@ export function PriorityMatrixView() {
   const base = useDashboardBase();
   const { data: icpResult, isLoading: icpLoading } = useIcpCriteria();
   const { data: companiesResult, isLoading: companiesLoading } = useCompanies(300);
-  const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 700);
+  const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 2200);
   const { data: leadsResult, isLoading: leadsLoading } = useLeads(300);
   const { data: signalsResult, isLoading: signalsLoading } = useSignals(300);
   const [editingIcp, setEditingIcp] = useState(false);

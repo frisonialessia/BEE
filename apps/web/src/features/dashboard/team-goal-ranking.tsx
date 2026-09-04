@@ -46,7 +46,7 @@ export function TeamGoalRanking({
 }) {
   const t = useTranslations("dashboardOverview.goalRanking");
   const locale = useLocale() as Locale;
-  const { data: oppsResult } = useOpportunities(undefined, 700);
+  const { data: oppsResult } = useOpportunities(undefined, 2200);
   const { data: users } = useUsers();
   const { data: quotasResult } = useQuotas();
 

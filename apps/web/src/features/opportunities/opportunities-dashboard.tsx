@@ -38,7 +38,7 @@ import { formatCurrencyUSDCompact, formatDate } from "@/lib/i18n/format";
 export function OpportunitiesList() {
   const t = useTranslations("opportunitiesPriority.opportunities");
   const locale = useLocale() as Locale;
-  const { data: allOppsResult, isLoading } = useOpportunities(undefined, 700);
+  const { data: allOppsResult, isLoading } = useOpportunities(undefined, 2200);
   const { data: companiesResult } = useCompanies(200);
   const { data: users } = useUsers();
   const { openOpportunity } = useOpportunityDrawer();
@@ -239,7 +239,7 @@ export function BattlecardsGallery() {
 }
 
 export function PipelineFlowTab() {
-  const { data: allOppsResult, isLoading } = useOpportunities(undefined, 700);
+  const { data: allOppsResult, isLoading } = useOpportunities(undefined, 2200);
   if (isLoading) return <Skeleton className="h-64" />;
   return <PipelineFlow opportunities={allOppsResult?.data ?? []} />;
 }

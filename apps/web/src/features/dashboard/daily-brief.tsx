@@ -43,7 +43,7 @@ export function DailyBrief() {
   const resolveHref = (href: string) =>
     base === "/probar" && href.startsWith("/dashboard/team") ? "/probar/forecast" : href.replace(/^\/dashboard/, base);
   const { data: companiesResult, isLoading: companiesLoading } = useCompanies(300);
-  const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 700);
+  const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 2200);
   const { data: leadsResult, isLoading: leadsLoading } = useLeads(300);
   const { data: icpResult, isLoading: icpLoading } = useIcpCriteria();
   const { data: quotasResult, isLoading: quotasLoading } = useQuotas();

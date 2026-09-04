@@ -106,8 +106,11 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * of the sweep stopping short — but `"16"` itself shipped with a bug
  * (resetDemoData's own seeding call hadn't been updated to include them,
  * so it silently kept seeding the old, filler-less set); `"17"` is the
- * actual fix. */
-const SEED_VERSION = "17";
+ * actual fix; `"18"` raises the filler count so the same rep clears 2000,
+ * not just 500 — the path's honey-to-green sweep now reaches 500/1000
+ * reached and 2000 as the newest green node before the sequence keeps
+ * going into ungrounded territory (5000, 10000…). */
+const SEED_VERSION = "18";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Which language the currently-stored seed was written in — separate from
@@ -258,7 +261,7 @@ function seedOpportunitiesWithReps(locale: Locale): Opportunity[] {
 // window the rest of the history uses. Always demo-user-1's directly (set
 // at creation, not through the id-prefix rotation above) — same reasoning
 // as THIS_WEEK_OPP_IDS.
-const FILLER_WIN_COUNT = 460;
+const FILLER_WIN_COUNT = 1960;
 
 // Deliberately NOT demoFetchCompanies() — that goes through allBattlecards()
 // → loadJSON(BATTLECARDS_KEY, …), and this function is itself called from

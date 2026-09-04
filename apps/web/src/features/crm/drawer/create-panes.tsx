@@ -238,7 +238,7 @@ function CreateForm({
   const opportunityTypeLabels = getOpportunityTypeLabels(locale);
   const { user } = useAuth();
   const { data: users } = useUsers();
-  const { data: oppsResult } = useOpportunities(undefined, 700);
+  const { data: oppsResult } = useOpportunities(undefined, 2200);
   const { data: meetingsData } = useMeetings();
   const meetings = useMemo(() => meetingsData ?? [], [meetingsData]);
   const createCompany = useCreateCompany();

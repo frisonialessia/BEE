@@ -27,7 +27,7 @@ import { computeWinLoss } from "@/lib/win-loss";
 export function WinLossView() {
   const locale = useLocale() as Locale;
   const t = useTranslations("forecastWinLoss.winLoss");
-  const { data: oppsResult, isLoading } = useOpportunities(undefined, 700);
+  const { data: oppsResult, isLoading } = useOpportunities(undefined, 2200);
   const [today] = useState(() => new Date());
   const { range, months, setRange } = useTimeRange();
 

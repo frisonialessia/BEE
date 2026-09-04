@@ -36,7 +36,7 @@ export function OpportunityViewPanes({ opportunityId, initialTab }: { opportunit
   const { openOpportunity } = useOpportunityDrawer();
   const moveStage = useMoveOpportunityStage();
 
-  const { data: oppsResult, isLoading } = useOpportunities(undefined, 700);
+  const { data: oppsResult, isLoading } = useOpportunities(undefined, 2200);
   const { data: companiesResult } = useCompanies(300);
   const { data: leadsResult } = useLeads(200);
   const { data: signalsResult } = useSignals(200);

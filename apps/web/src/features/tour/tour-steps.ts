@@ -1,12 +1,14 @@
 /**
- * The 7-step content for the guided tour — shared between the real
- * dashboard and the /probar sandbox, since both use the same nav rail
- * (DashboardRail with groups swapped, see dashboard-rail.tsx) and tell
- * the same product story. Order is deliberate — the same "detect →
- * prioritize → act → predict" arc the old static onboarding list used,
- * plus the three areas that make BEE more than a CRM (Priorización's
- * Bandeja de Decisiones, Dark Funnel, Pronóstico) that a first click
- * through the nav rail would never surface on its own.
+ * The 5 tools + 1 closing step for the guided tour — shared between the
+ * real dashboard and the /probar sandbox, since both use the same nav
+ * rail (DashboardRail with groups swapped, see dashboard-rail.tsx) and
+ * tell the same product story. Re-picked from an earlier 6-tool cut that
+ * spent 3 of its steps highlighting the exact same nav item (Señales,
+ * Priorización and Dark Funnel all point at `/signals`) — these 5 are 5
+ * genuinely distinct destinations: Señales (detect) → Dark Funnel (the
+ * hidden-intent differentiator no plain CRM has) → Estrategias (BEE's
+ * own AI-written play, not a template) → CRM (where a rep executes) →
+ * Pronóstico (predict) — detect → uncover → decide → act → predict.
  *
  * Title/description text lives in messages/{locale}/onboarding.json under
  * `tour.steps.*` — this is a plain function, not a component, so it can't
@@ -50,21 +52,11 @@ export function buildTourSteps(mode: TourMode, t: (key: string) => string): Tour
       placement: "right",
     },
     {
-      // Priorización merged into Señales as a second tab (see
-      // signals-dashboard.tsx) — target must match the actual nav rail
-      // item (data-tour={href} in nav-items.ts) for the highlight to find
-      // it; href still deep-links to the right tab.
+      // Dark Funnel lives inside Señales now (tab Intención); the rail link is Señales.
       target: `${base}/signals`,
-      href: `${base}/signals?tab=priority`,
-      title: t("priority.title"),
-      description: t("priority.description"),
-      placement: "right",
-    },
-    {
-      target: `${base}/crm`,
-      href: `${base}/crm`,
-      title: t("pipeline.title"),
-      description: t("pipeline.description"),
+      href: `${base}/signals?tab=intent`,
+      title: t("darkFunnel.title"),
+      description: t("darkFunnel.description"),
       placement: "right",
     },
     {
@@ -75,11 +67,10 @@ export function buildTourSteps(mode: TourMode, t: (key: string) => string): Tour
       placement: "right",
     },
     {
-      // Dark Funnel lives inside Señales now (tab Intención); the rail link is Señales.
-      target: `${base}/signals`,
-      href: `${base}/signals?tab=intent`,
-      title: t("darkFunnel.title"),
-      description: t("darkFunnel.description"),
+      target: `${base}/crm`,
+      href: `${base}/crm`,
+      title: t("pipeline.title"),
+      description: t("pipeline.description"),
       placement: "right",
     },
     {

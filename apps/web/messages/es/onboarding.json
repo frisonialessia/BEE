@@ -24,14 +24,13 @@
     },
     "tourPreview": {
       "title": "Así funciona BEE",
-      "description": "Un recorrido guiado de 7 pasos, directo sobre el producto — te vamos mostrando cada lugar clave a medida que avanzás, en el orden que tiene sentido para tu primera vuelta.",
+      "description": "Un recorrido guiado de 6 pasos, directo sobre el producto — te vamos mostrando cada lugar clave a medida que avanzás, en el orden que tiene sentido para tu primera vuelta.",
       "preview": {
         "signals": "Señales",
-        "priority": "Priorización",
+        "darkFunnel": "Dark Funnel",
         "pipeline": "Pipeline",
         "strategy": "Estrategia",
-        "forecast": "Pronóstico",
-        "team": "Equipo"
+        "forecast": "Pronóstico"
       },
       "notNow": "Ahora no",
       "start": "Empezar el tour guiado"
@@ -43,32 +42,28 @@
         "title": "1. Señales",
         "description": "Todo arranca acá: lo que el mercado ya hizo público — una ronda, una contratación clave, un cambio de stack — antes de que nadie más lo note."
       },
-      "priority": {
-        "title": "2. Priorización",
-        "description": "La Bandeja de Decisiones cruza esas señales con qué tan bien encajan con tu ICP — para saber en cuál entrar primero, no perseguirlas todas por igual."
-      },
-      "pipeline": {
-        "title": "3. Pipeline (CRM)",
-        "description": "Cada oportunidad ya priorizada vive acá, en 5 etapas: Detectadas → Listas para actuar → Tu prioridad → En conversación → Cerradas. No son las de un CRM genérico (\"Nuevo, Abierto...\") — cada columna tiene su propio ícono \"?\" con lo que significa. Arrastrá una tarjeta para avanzarla."
-      },
-      "strategy": {
-        "title": "4. Estrategia",
-        "description": "Abrí una oportunidad y mirá la jugada que armó la IA: el argumento, el canal, el email — listo para mandar, no un molde genérico."
-      },
       "darkFunnel": {
-        "title": "5. Dark Funnel",
+        "title": "2. Dark Funnel",
         "description": "Intención de compra que nadie más ve: visitas anónimas, comparativas, investigación silenciosa — antes de que levanten la mano."
       },
+      "strategy": {
+        "title": "3. Estrategia",
+        "description": "Abrí una oportunidad y mirá la jugada que armó la IA: el argumento, el canal, el email — listo para mandar, no un molde genérico."
+      },
+      "pipeline": {
+        "title": "4. Pipeline (CRM)",
+        "description": "Cada oportunidad ya priorizada vive acá, en 5 etapas: Detectadas → Listas para actuar → Tu prioridad → En conversación → Cerradas. No son las de un CRM genérico (\"Nuevo, Abierto...\") — cada columna tiene su propio ícono \"?\" con lo que significa. Arrastrá una tarjeta para avanzarla."
+      },
       "forecast": {
-        "title": "6. Pronóstico",
+        "title": "5. Pronóstico",
         "description": "Qué va a cerrar este mes y qué está en riesgo — calculado desde el pipeline real, no una planilla aparte que alguien tiene que actualizar a mano."
       },
       "closingDashboard": {
-        "title": "7. Tu equipo",
+        "title": "6. Tu equipo",
         "description": "Desde acá invitás a tu equipo a colaborar en el mismo pipeline, cada quien con la visibilidad que le toca según su rol."
       },
       "closingProbar": {
-        "title": "7. Es tu turno",
+        "title": "6. Es tu turno",
         "description": "Esto era una vuelta rápida con datos de ejemplo. Creá tu cuenta gratis para conectar tus propias señales y ver a BEE trabajar con tu pipeline real."
       }
     },
