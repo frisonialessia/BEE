@@ -92,6 +92,34 @@ Encabezado con pestañas en la misma fila (`MergedPageTabs`).
     que existan más integraciones. Demo en vivo solo con Señales, pegada al
     hero, estilo Linear; Ventas al final explicando la diferencia contra CRMs
     y herramientas de intención.
+14. **Diseño defensivo — ninguna caja se deforma con datos reales.** Todo en
+    BEE llega de una API o del demo store, con textos de largo variable; el
+    layout nunca puede depender de que un nombre, un resumen o una lista
+    tengan un tamaño particular. Cuatro reglas, ya la base del sistema
+    (`.bee-card`, `.bee-overview`, `OverviewCard`) — exigirlas explícitamente
+    en cualquier componente nuevo o tocado, no solo en los que ya las siguen:
+    - **Alturas uniformes en grid**: `.bee-card` ya define `height:100%` y
+      `.bee-overview` ya es un grid — cualquier tarjeta nueva dentro de un
+      grid hereda ese estirado (`items-stretch` implícito) sin `min-height`
+      fijo ni "!h-auto" salvo que el contenido deba fijar su propia altura
+      (ver la nota en `marketing-sales.tsx`).
+    - **Truncado obligatorio en texto dinámico**: `truncate` en nombres de
+      cuenta/lead/empresa y una sola línea (ya así en `OverviewCard`,
+      `TeamGoalRanking`, `GlobalSearch`); `line-clamp-2` en resúmenes o
+      descripciones generadas que puedan variar en longitud (battlecards,
+      notificaciones). Nunca dejar que un string largo empuje la caja.
+    - **Scroll interno con tope, nunca una caja que crece sin límite**: una
+      lista que puede recibir más filas de las esperadas cap su propio
+      contenedor (`max-height` + `overflow-y-auto`) en vez de estirar la
+      tarjeta — patrón ya establecido en las columnas del CRM
+      (`clamp(420px, calc(100vh - 340px), 760px)`) y en el dropdown de
+      notificaciones (`max-h-[70vh] overflow-y-auto`). Aplicar el mismo
+      criterio a cualquier lista nueva (Brief, Últimas señales, Calendario).
+    - **Header · body · footer dentro de una tarjeta bento**: encabezado
+      fijo arriba (título/caption vía `OverviewCard`), el cuerpo variable en
+      `flex-1 min-h-0`, y cualquier pie (botón, avatar, cifra) anclado abajo
+      con `mt-auto` — para que ese pie quede a la misma altura entre
+      tarjetas de una fila sin importar cuánto cuerpo tenga cada una.
 
 ## 3. Qué se reutiliza tal cual (el "cerebro")
 
