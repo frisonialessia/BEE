@@ -94,7 +94,7 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * a returning visitor on an older snapshot has every opportunity's
  * `assigned_to_user_id` still `null`, which reads as "no one on the team
  * has ever won a deal" instead of the sandbox just never having stamped it. */
-const SEED_VERSION = "11";
+const SEED_VERSION = "12";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Which language the currently-stored seed was written in — separate from
@@ -204,10 +204,15 @@ export function demoFetchTeams(): TeamOut[] {
  * as real. */
 function seedOpportunitiesWithReps(locale: Locale): Opportunity[] {
   const reps = demoFetchUsers();
-  return getSampleOpportunities(locale).map((opp, i) => ({
-    ...opp,
-    assigned_to_user_id: opp.assigned_to_user_id ?? reps[i % reps.length].id,
-  }));
+  // Won deals rotate through the reps on their own counter: rotating the
+  // whole list by index happened to hand every recent win to two of the
+  // four reps, so the Ranking showed a team of two.
+  let wonIdx = 0;
+  return getSampleOpportunities(locale).map((opp, i) => {
+    if (opp.assigned_to_user_id) return opp;
+    const rep = opp.status === "won" ? reps[wonIdx++ % reps.length] : reps[i % reps.length];
+    return { ...opp, assigned_to_user_id: rep.id };
+  });
 }
 
 const load = () => loadJSON<Opportunity[]>(OPPORTUNITIES_KEY, seedOpportunitiesWithReps(getDemoLocale()));

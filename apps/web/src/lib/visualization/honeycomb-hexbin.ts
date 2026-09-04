@@ -120,6 +120,95 @@ export function leadsToPoints(
   });
 }
 
+const STAGE_ORDER = ["awareness", "consideration", "decision", "ready_to_buy"];
+const SQRT3 = Math.sqrt(3);
+
+/** Axial hex offsets in spiral order: the center, then ring 1, ring 2… so
+ *  the first N cells always form one solid, hive-shaped cluster. */
+function spiralOffsets(count: number): { q: number; r: number }[] {
+  const out = [{ q: 0, r: 0 }];
+  const dirs = [
+    { q: 1, r: 0 },
+    { q: 0, r: 1 },
+    { q: -1, r: 1 },
+    { q: -1, r: 0 },
+    { q: 0, r: -1 },
+    { q: 1, r: -1 },
+  ];
+  for (let ring = 1; out.length < count; ring++) {
+    let q = 0;
+    let r = -ring; // start at the top of the ring
+    for (let side = 0; side < 6 && out.length < count; side++) {
+      const d = dirs[(side + 2) % 6];
+      for (let step = 0; step < ring && out.length < count; step++) {
+        out.push({ q, r });
+        q += d.q;
+        r += d.r;
+      }
+    }
+  }
+  return out;
+}
+
+function ringsFor(count: number): number {
+  let k = 0;
+  while (1 + 3 * k * (k + 1) < count) k++;
+  return k;
+}
+
+/**
+ * Compact hive layout: every lead is one cell, cells sit edge to edge like
+ * a real comb. One cluster per buying stage, clusters side by side and
+ * touching (awareness → ready to buy, left to right), the hottest leads at
+ * each cluster's center. Replaces the scattered d3-hexbin placement whose
+ * jitter left cells floating apart — a hive with gaps between the combs
+ * read as "almost empty", not as a hive. Returns the radius that makes
+ * the whole comb fit the box, so the caller draws and hit-tests with it.
+ */
+export function layoutHiveCells(
+  leads: HotLeadScore[],
+  width: number,
+  height: number,
+  maxRadius = 28,
+): { cells: HiveHexCell[]; radius: number } {
+  if (leads.length === 0 || width <= 0 || height <= 0) return { cells: [], radius: maxRadius };
+  const groups = STAGE_ORDER.map((stage) =>
+    leads.filter((l) => l.buying_stage === stage).sort((a, b) => b.research_intensity_score - a.research_intensity_score),
+  );
+  // Leads in an unknown stage still get a cell, in the middle cluster.
+  const known = new Set(STAGE_ORDER);
+  groups[1].push(...leads.filter((l) => !known.has(l.buying_stage)));
+  const active = groups.filter((g) => g.length > 0);
+  const k = ringsFor(Math.max(...active.map((g) => g.length)));
+  const clusterCols = 2 * k + 1; // cells across one cluster
+  const clusterRows = 3 * k + 2; // in units of R: (2k) * 1.5R + 2R
+  const radius = Math.max(
+    7,
+    Math.min(maxRadius, (width - 12) / (active.length * clusterCols * SQRT3), (height - 8) / clusterRows),
+  );
+  const clusterW = clusterCols * SQRT3 * radius;
+  const totalW = clusterW * active.length;
+  const startX = (width - totalW) / 2 + clusterW / 2;
+  const cy = height / 2;
+  const cells: HiveHexCell[] = [];
+  active.forEach((group, gi) => {
+    const cx = startX + gi * clusterW;
+    const offsets = spiralOffsets(group.length);
+    group.forEach((lead, i) => {
+      const { q, r } = offsets[i];
+      cells.push({
+        x: cx + radius * SQRT3 * (q + r / 2),
+        y: cy + radius * 1.5 * r,
+        temperature: lead.research_intensity_score,
+        maxTemperature: lead.research_intensity_score,
+        count: 1,
+        leads: [lead],
+      });
+    });
+  });
+  return { cells, radius };
+}
+
 /** Aggregate lead points into hex bins via d3-hexbin. */
 export function binLeadPoints(points: LeadPoint[], radius: number): HiveHexCell[] {
   const generator = d3Hexbin<LeadPoint>()

@@ -51,7 +51,7 @@ function eventFill(m: { color?: string | null; client_context?: MeetingClientCon
   const hue = m.color ? `var(--color-${m.color})` : CLIENT_CONTEXT_HUE[m.client_context ?? "new_contact"];
   return {
     background: hue,
-    borderColor: `color-mix(in srgb, ${hue} 80%, var(--color-text))`,
+    borderColor: hue,
     color: "var(--color-text)",
   };
 }

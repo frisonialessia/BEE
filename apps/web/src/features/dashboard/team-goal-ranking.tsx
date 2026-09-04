@@ -72,11 +72,22 @@ export function TeamGoalRanking({
         const user = allUsers.find((u) => u.id === userId);
         const goal = quotas.find((q) => q.user_id === userId && isQuotaActive(q, today));
         const currency = teams.find((x) => x.id === user?.team_id)?.currency ?? teams[0]?.currency ?? "USD";
+        // Goals are monthly. Ranked by calendar month the ring is the plain
+        // month attainment; ranked over a trailing window the goal is scaled
+        // to that window (90 days ≈ 3 monthly goals) so the ring and the
+        // amount beside it speak about the same period.
+        const attainment = !goal
+          ? null
+          : month
+            ? computeQuotaAttainment(goal, allUsers, opportunities)
+            : goal.target_amount > 0
+              ? row.value / (goal.target_amount * (days / 30))
+              : null;
         return {
           userId,
           name: user?.full_name ?? t("unknown"),
           currency,
-          attainment: goal ? computeQuotaAttainment(goal, allUsers, opportunities) : null,
+          attainment,
           ...row,
         };
       });
@@ -85,7 +96,7 @@ export function TeamGoalRanking({
   if (rows.length === 0) return <p className="bee-caption py-6 text-center">{t("empty")}</p>;
 
   const list = (
-    <ol className="flex flex-col justify-evenly gap-2">
+    <ol className="flex flex-1 flex-col justify-evenly gap-2">
       {rows.map((rep, i) => {
         const reached = rep.attainment !== null && rep.attainment >= 1;
         const ringColor = sales ? (reached ? SALES.won : SALES.lime) : DATA.honey;

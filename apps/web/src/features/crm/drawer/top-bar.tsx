@@ -5,9 +5,9 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 /** The drawer's top bar: what's on the left changes with the mode
- *  (position in the column, or the create title); the right always ends
- *  with "Cerrar". */
-export function DrawerTopBar({ left, right }: { left: ReactNode; right?: ReactNode }) {
+ *  (position in the column, or the create title); the right ends with
+ *  "Cerrar" in view mode. */
+export function DrawerTopBar({ left, right, hideClose }: { left: ReactNode; right?: ReactNode; hideClose?: boolean }) {
   const t = useTranslations("crm.drawer");
   const { closeOpportunity } = useDrawerClose();
   return (
@@ -15,10 +15,14 @@ export function DrawerTopBar({ left, right }: { left: ReactNode; right?: ReactNo
       <div className="flex min-w-0 items-center gap-3">{left}</div>
       <div className="flex shrink-0 items-center gap-2">
         {right}
-        <button type="button" onClick={closeOpportunity} className="bee-btn-ghost text-xs">
-          <X className="size-3.5" />
-          {t("close")}
-        </button>
+        {/* Create mode owns its two actions (Cancelar · Guardar borrador) —
+            a third "Cerrar" there would be a second way to do the same. */}
+        {!hideClose && (
+          <button type="button" onClick={closeOpportunity} className="bee-btn-ghost text-xs">
+            <X className="size-3.5" />
+            {t("close")}
+          </button>
+        )}
       </div>
     </div>
   );

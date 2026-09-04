@@ -4,27 +4,18 @@ import { Building2, ExternalLink, Mail, Phone, Radio } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
-import { BarsVsTarget, type BarPoint } from "@/components/charts/bars-vs-target";
+import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { mix } from "@/components/charts/palette";
 import { ProgressRing } from "@/components/charts/progress-ring";
 import type { Locale } from "@/i18n/locales";
-import { localeTags } from "@/i18n/locales";
 import { getOpportunityStatusLabels, getOpportunityTypeLabels } from "@/lib/format";
 import { formatDate, formatMoney } from "@/lib/i18n/format";
 import type { UserOut } from "@/types/auth";
 import type { BattlecardCompany, BattlecardLead, Company, Lead, Opportunity } from "@/types/domain";
 
+import { countByStep, monthlyAmounts, segmentFill } from "./account-stats";
 import { Avatar, Chip, InfoRow, PaneSection } from "./primitives";
-import { STAGE_ACCENT, STEP_ORDER, isClosedStatus, stepOf, tint, type StepKey } from "./stage-meta";
-
-const MONTHS_BACK = 6;
-
-/** Segment color per step of the account bar — the stage's tone; won is
- *  the one green, lost/dismissed a neutral ink. */
-function segmentFill(step: StepKey, opps: Opportunity[]): string {
-  if (step !== "closed") return STAGE_ACCENT[step];
-  return opps.some((o) => o.status === "won") ? STAGE_ACCENT.closed : mix("var(--color-text)", 20);
-}
+import { STEP_ORDER, isClosedStatus, stepOf, tint } from "./stage-meta";
 
 /** Left pane: who (contact), where (company), how much (amount), who owns
  *  it, then the account's opportunities as charts — never prose. */
@@ -74,32 +65,14 @@ export function LeftPane({
   const closed = isClosedStatus(opportunity.status);
   const stageWord = closed ? tStage(`closedStatus.${opportunity.status as "won" | "lost" | "dismissed"}`) : tStage(`stages.${stepOf(opportunity.status)}`);
 
-  const byStep = useMemo(() => {
-    const counts = Object.fromEntries(STEP_ORDER.map((s) => [s, 0])) as Record<StepKey, number>;
-    for (const o of accountOpps) counts[stepOf(o.status)] += 1;
-    return counts;
-  }, [accountOpps]);
+  const byStep = useMemo(() => countByStep(accountOpps), [accountOpps]);
   const total = accountOpps.length;
 
-  const monthly = useMemo<BarPoint[]>(() => {
-    const fmt = new Intl.DateTimeFormat(localeTags[locale], { month: "short" });
-    const now = new Date();
-    const points: BarPoint[] = [];
-    for (let i = MONTHS_BACK - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${d.getMonth()}`;
-      const value = accountOpps.reduce((sum, o) => {
-        const c = new Date(o.created_at);
-        return `${c.getFullYear()}-${c.getMonth()}` === key ? sum + (o.amount ?? 0) : sum;
-      }, 0);
-      points.push({ label: fmt.format(d), value, current: i === 0 });
-    }
-    return points;
-  }, [accountOpps, locale]);
+  const monthly = useMemo(() => monthlyAmounts(accountOpps, locale), [accountOpps, locale]);
   const hasAmounts = monthly.some((p) => p.value > 0);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex min-h-full flex-col gap-5">
       {(isHot || isClient || needsReview || type !== "new_logo") && (
         <div className="flex flex-wrap gap-1.5">
           {isHot && !closed && <Chip hue={hue}>{t("tags.hot")}</Chip>}
@@ -186,6 +159,7 @@ export function LeftPane({
 
       {/* ── Cuenta: oportunidades como gráficos ──────────────────────── */}
       <PaneSection
+        className="flex flex-1 flex-col"
         title={t("account.title")}
         aside={
           <div className="flex items-center gap-2">
@@ -210,7 +184,7 @@ export function LeftPane({
         </ul>
 
         {hasAmounts && (
-          <div className="mt-4">
+          <div className="mt-4 flex flex-1 flex-col">
             <p className="bee-micro mb-1">{t("account.amounts")}</p>
             <BarsVsTarget
               points={monthly}

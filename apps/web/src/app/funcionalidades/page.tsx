@@ -52,7 +52,7 @@ export default async function FuncionalidadesPage() {
         <section className="mx-auto w-full max-w-6xl px-6 pb-12 lg:pb-14">
           {SECTIONS.map(({ id, icon: Icon }, i) => {
             const hue = FEATURE_HUE[id];
-            const ink = `color-mix(in srgb, ${hue} 70%, var(--color-text) 30%)`;
+            const ink = hue;
             const chips = t.raw(`sections.${id}.chips`) as string[];
             const flip = i % 2 === 1;
             return (

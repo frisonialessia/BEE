@@ -38,6 +38,7 @@ import { useState } from "react";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useDismissFromFeed, useTodayFeed } from "@/hooks/queries/use-priority-feed";
 import { useApproveAction } from "@/hooks/queries/use-pending-actions";
+import { useRowCapacity } from "@/components/charts/use-row-capacity";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { DecisionCard, DecisionUrgency } from "@/types/extended";
 import { useDashboardBase } from "@/lib/demo/mode";
@@ -128,7 +129,7 @@ function Card({ card }: { card: DecisionCard }) {
           critical-accounts rows use — a big button here only ate the copy. */}
       <div className="min-w-0 flex-1">
         <p className="bee-micro">{t(`urgency.${card.urgency}`)}</p>
-        <h4 className="line-clamp-2 text-sm font-semibold leading-snug tracking-tight">{headline}</h4>
+        <h4 className="line-clamp-1 text-sm font-semibold leading-snug tracking-tight">{headline}</h4>
         <p className="bee-micro line-clamp-1">{reasoning}</p>
       </div>
 
@@ -158,6 +159,8 @@ export function DecisionFeed({ embedded = false }: { embedded?: boolean } = {}) 
   const t = useTranslations("dashboardOverview.decisionFeed");
   const { data, isLoading } = useTodayFeed();
   const cards = data?.data.cards ?? [];
+  // Row = border 2 + py-2.5 (20) + micro (16) + one title line (18) + micro (16) → 72; gap-2 → 8.
+  const [listRef, capacity] = useRowCapacity<HTMLDivElement>(72, 8, { min: 4, max: 10 });
 
   if (isLoading) {
     return (
@@ -174,8 +177,8 @@ export function DecisionFeed({ embedded = false }: { embedded?: boolean } = {}) 
       return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
     }
     return (
-      <div className="bee-fill flex flex-col justify-evenly gap-2">
-        {cards.slice(0, 5).map((card) => (
+      <div ref={listRef} className="bee-fill flex flex-col justify-evenly gap-2 overflow-hidden">
+        {cards.slice(0, capacity).map((card) => (
           <Card key={card.id} card={card} />
         ))}
       </div>

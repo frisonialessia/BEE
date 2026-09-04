@@ -108,7 +108,7 @@ export function OpportunityViewPanes({ opportunityId, initialTab }: { opportunit
     return (
       <>
         <DrawerTopBar left={<p className="text-sm text-muted-foreground">{t("loading")}</p>} />
-        <div className="grid flex-1 gap-6 p-6 lg:grid-cols-[minmax(0,7fr)_minmax(0,13fr)]">
+        <div className="grid flex-1 gap-6 p-6 lg:grid-cols-[minmax(0,9fr)_minmax(0,16fr)]">
           <Skeleton className="h-80" />
           <Skeleton className="h-80" />
         </div>
@@ -135,7 +135,7 @@ export function OpportunityViewPanes({ opportunityId, initialTab }: { opportunit
           </>
         }
       />
-      <div className="min-h-0 flex-1 overflow-y-auto lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,13fr)] lg:overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto lg:grid lg:grid-cols-[minmax(0,9fr)_minmax(0,16fr)] lg:overflow-hidden">
         <div className="border-b border-[var(--color-divider)] px-4 py-5 sm:px-6 lg:overflow-y-auto lg:border-b-0 lg:border-r">
           <LeftPane
             opportunity={opportunity}
@@ -149,7 +149,7 @@ export function OpportunityViewPanes({ opportunityId, initialTab }: { opportunit
             onViewAmount={() => setTab("notes")}
           />
         </div>
-        <div className="px-4 py-5 sm:px-6 lg:overflow-y-auto">
+        <div className="flex flex-col px-4 py-5 sm:px-6 lg:overflow-y-auto">
           <RightPane
             opportunity={opportunity}
             companyName={companyName}

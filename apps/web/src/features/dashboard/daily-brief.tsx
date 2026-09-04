@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
+import { useRowCapacity } from "@/components/charts/use-row-capacity";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCompanies, useCompanyDuplicates } from "@/hooks/queries/use-companies";
 import { useLeadDuplicates, useLeads } from "@/hooks/queries/use-leads";
@@ -15,6 +16,8 @@ import { useSuccessPatterns } from "@/hooks/queries/use-feedback";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useQuotas } from "@/hooks/queries/use-quotas";
 import { useOverdueTasks } from "@/hooks/queries/use-tasks";
+import { useMeetings } from "@/hooks/queries/use-meetings";
+import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
 import { computeDailyBrief, type BriefTone } from "@/lib/daily-brief";
 import { useDashboardBase } from "@/lib/demo/mode";
@@ -74,6 +77,10 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
   const { data: anomaliesResult, isLoading: anomaliesLoading } = useOpenAnomalies();
   const { data: overdueTasksResult, isLoading: overdueTasksLoading } = useOverdueTasks();
   const { data: patternsResult, isLoading: patternsLoading } = useSuccessPatterns();
+  const { data: signalsResult } = useSignals(300);
+  const { data: meetings } = useMeetings();
+  // Row = py-2 (16) + text-sm line (20) + mt-0.5 (2) + micro line (16) → 54; gap-1 → 4.
+  const [listRef, capacity] = useRowCapacity<HTMLUListElement>(54, 4, { min: 4, max: 12 });
 
   // Este componente arma su propio set de queries (no comparte el gate de
   // loading de la página padre) — sin este chequeo, un usuario con conexión
@@ -106,6 +113,8 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
     anomalies: anomaliesResult?.data ?? [],
     overdueTasks: overdueTasksResult?.data ?? [],
     successPatterns: patternsResult?.data ?? [],
+    signals: signalsResult?.data ?? [],
+    meetings: meetings ?? [],
   }, tItems);
 
   if (embedded) {
@@ -122,8 +131,8 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
       return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
     }
     return (
-      <ul className="bee-fill flex flex-col justify-evenly gap-1">
-        {items.slice(0, 5).map((item) => {
+      <ul ref={listRef} className="bee-fill flex flex-col justify-evenly gap-1 overflow-hidden">
+        {items.slice(0, capacity).map((item) => {
           const Icon = TONE_ICON[item.tone];
           return (
             <li key={item.id}>
@@ -139,7 +148,8 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium">{item.title}</span>
-                  <span className="mt-0.5 block line-clamp-1 bee-micro">{item.description}</span>
+                  {/* No `block` here: it would override line-clamp's -webkit-box and let the line wrap. */}
+                  <span className="mt-0.5 line-clamp-1 bee-micro">{item.description}</span>
                 </span>
               </Link>
             </li>

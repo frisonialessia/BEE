@@ -227,17 +227,23 @@ export function DashboardOverview({
           <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
         </OverviewCard>
 
-        {/* Row 3 — three lists of five: the plays, the brief, the calendar. */}
-        <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")}>
+        {/* Row 3 — three lists that fill their box: the plays, the brief, the
+            calendar. The row is taller than the standard 18rem on purpose
+            (32rem, `!` because .bee-card's unlayered min-height:0 outranks a plain utility): each list measures its box and shows exactly as many rows
+            as fit (use-row-capacity) — at 1440px that is 5 plays, 7 brief
+            items and 7 meetings — so the boxes are always full and never
+            overflow. */}
+        <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")} className="lg:min-h-[32rem]!">
           <DecisionFeed embedded />
         </OverviewCard>
 
-        <OverviewCard span={4} title={tBrief("title")} caption={t("sections.brief.caption")}>
+        <OverviewCard span={4} title={tBrief("title")} caption={t("sections.brief.caption")} className="lg:min-h-[32rem]!">
           <DailyBrief embedded />
         </OverviewCard>
 
         <OverviewCard
           span={4}
+          className="lg:min-h-[32rem]!"
           title={tCalendar("widget.title")}
           action={
             <Link href={`${base}/calendar`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">

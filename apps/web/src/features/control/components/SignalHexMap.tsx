@@ -9,9 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useHiveLeads, useLeadBoard } from "@/hooks/queries/use-lead-board";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import {
-  binLeadPoints,
   findHexAt,
-  leadsToPoints,
+  layoutHiveCells,
   renderHiveCanvas,
   TEMPERATURE_COLORS,
   type HiveHexCell,
@@ -136,31 +135,11 @@ export function SignalHexMap({
     return map;
   }, [boardResult?.cards]);
 
-  const hexRadius = useMemo(() => {
-    if (leads.length > 150) return 14;
-    if (leads.length > 80) return 16;
-    // A sparse Dark Funnel (a handful of leads, common early on) used to
-    // draw at the same 18px radius as a mid-size one — small hexagons in a
-    // wide-open canvas read as "almost empty". Growing them further as the
-    // count drops keeps each cell visually substantial instead of shrinking
-    // it to match a data volume the canvas has plenty of room for.
-    if (leads.length > 20) return 18;
-    return 24;
-  }, [leads.length]);
+  // Cell size comes out of the layout below: the comb is sized to fill the
+  // box edge to edge, so the radius is whatever makes every cell fit.
 
-  // Spreading the jitter above (leadsToPoints) only redistributes leads
-  // *within* their fixed stage column — it can't fix the real emptiness,
-  // which is that 4 stage columns plotted across a wide hero card leave
-  // huge gaps between them no matter how the points inside each one are
-  // jittered. The landing mock never has this problem because its card is
-  // a fixed ~220px regardless of data. Capping the actual plotted width to
-  // the data volume (instead of always stretching to the card's full
-  // width) reproduces that density here too, and grows toward full width
-  // once there's enough real data to use it honestly.
-  const contentWidth = useMemo(() => {
-    if (leads.length === 0 || leads.length >= 60) return undefined;
-    return Math.max(300, 140 + leads.length * 26);
-  }, [leads.length]);
+  // The comb centers itself and grows to the box (layoutHiveCells), so no
+  // width cap is needed to keep a sparse hive dense.
 
   // Desglose por etapa — igual patrón que "Opened/Clicked/Converted" de un
   // dashboard de rendimiento: 3 cifras clave con su barra de color, calculadas
@@ -185,11 +164,10 @@ export function SignalHexMap({
     }));
   }, [leads, t]);
 
-  const cells = useMemo(() => {
-    if (leads.length === 0 || size.width <= 0) return [];
-    const points = leadsToPoints(leads, size.width, size.height, hexRadius);
-    return binLeadPoints(points, hexRadius);
-  }, [leads, size.width, size.height, hexRadius]);
+  const { cells, radius: hexRadius } = useMemo(
+    () => layoutHiveCells(leads, size.width, size.height),
+    [leads, size.width, size.height],
+  );
 
   const redraw = useCallback(
     (hoverCell: HiveHexCell | null, strength: number) => {
@@ -371,7 +349,6 @@ export function SignalHexMap({
           <div
             ref={containerRef}
             className="relative h-full w-full"
-            style={contentWidth ? { maxWidth: contentWidth, margin: "0 auto" } : undefined}
           >
             <canvas
               ref={canvasRef}

@@ -233,11 +233,13 @@
    to sit *behind* dark text as a background wash, not to work *as* small
    uppercase text on white, where the unmixed pastel reads too washed out
    to serve as a legible label. */
-.bee-eyebrow--blue { color: color-mix(in srgb, var(--color-chart-4) 75%, var(--color-text) 25%); }
-.bee-eyebrow--warm { color: color-mix(in srgb, var(--color-accent-warm) 70%, var(--color-text) 30%); }
-.bee-eyebrow--violet { color: color-mix(in srgb, var(--color-chart-6) 65%, var(--color-text) 35%); }
-.bee-eyebrow--muted { color: color-mix(in srgb, var(--color-chart-5) 70%, var(--color-text) 30%); }
-.bee-eyebrow--green { color: color-mix(in srgb, var(--color-green-1) 70%, var(--color-text) 30%); }
+/* Pure brand tokens, never mixed toward ink: mixing honey with ink gave a
+   brown-gold and indigo with ink a purple that are not BEE's. */
+.bee-eyebrow--blue { color: var(--color-chart-4); }
+.bee-eyebrow--warm { color: var(--color-chart-2); }
+.bee-eyebrow--violet { color: var(--color-chart-6); }
+.bee-eyebrow--muted { color: var(--color-chart-5); }
+.bee-eyebrow--green { color: var(--color-green-1); }
 
 .bee-display {
   font-size: var(--bee-text-display);
@@ -1633,7 +1635,7 @@
    on desktop and the whole screen on phones. Same shell as .bee-drawer —
    this only widens it; ambient shadow instead of a border, per Nácar. */
 .bee-drawer--wide {
-  width: min(80vw, 1360px);
+  width: min(1240px, 92vw);
   border-left: none;
   box-shadow: -24px 0 60px -30px color-mix(in srgb, var(--color-text) 35%, transparent);
 }

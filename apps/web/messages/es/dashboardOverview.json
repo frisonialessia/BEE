@@ -51,7 +51,7 @@
         "caption": "Lo que necesita tu atención hoy"
       },
       "critical": {
-        "caption": "Listas para actuar · últimas 24 h"
+        "caption": "Listas para actuar · las más recientes primero"
       },
       "signalsWeekly": {
         "title": "Señales por semana",
@@ -148,6 +148,39 @@
       "duplicates": {
         "title": "{count, plural, one {# posible duplicado} other {# posibles duplicados}}",
         "description": "Entre empresas y contactos — vale la pena fusionarlos"
+      },
+      "closingSoon": {
+        "title": "{count, plural, one {# cierre previsto esta semana} other {# cierres previstos esta semana}}",
+        "description": "USD {amount, number} en juego en los próximos 7 días"
+      },
+      "meetingsToday": {
+        "title": "{count, plural, one {# reunión hoy} other {# reuniones hoy}}"
+      },
+      "signalsToday": {
+        "title": "{count, plural, one {# señal nueva en 24 h} other {# señales nuevas en 24 h}}",
+        "description": "{hot, plural, =0 {ninguna caliente todavía} one {# caliente} other {# calientes}}"
+      },
+      "stalled": {
+        "title": "{count, plural, one {# deal sin movimiento} other {# deals sin movimiento}}",
+        "description": "14 días o más en conversación sin actividad nueva"
+      },
+      "wonWeek": {
+        "title": "{count, plural, one {# cierre ganado esta semana} other {# cierres ganados esta semana}}",
+        "description": "USD {amount, number} cerrados — ya cuentan en Ventas"
+      },
+      "nextMeeting": {
+        "title": "{days, plural, one {Próxima reunión mañana} other {Próxima reunión en # días}}"
+      },
+      "topSignal": {
+        "title": "Señal más fuerte de la semana · score {score}"
+      },
+      "openPipeline": {
+        "title": "{count, plural, one {# oportunidad abierta} other {# oportunidades abiertas}}",
+        "description": "USD {amount, number} en pipeline · {ready, plural, =0 {ninguna lista para actuar} one {# lista para actuar} other {# listas para actuar}}"
+      },
+      "wonMonth": {
+        "title": "{count, plural, one {# cierre ganado este mes} other {# cierres ganados este mes}}",
+        "description": "USD {amount, number} cerrados — ya cuentan en Ventas"
       }
     }
   },

@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2, Rocket, Star, Zap } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { useRowCapacity } from "@/components/charts/use-row-capacity";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useSequences, useStartSequenceExecution } from "@/hooks/queries/use-sequences";
 import type { Locale } from "@/i18n/locales";
@@ -192,19 +193,23 @@ export function CriticalAccountsDigest({
   embedded?: boolean;
 }) {
   const t = useTranslations("dashboardOverview.criticalAccounts");
-  const critical = battlecards
-    .filter(
-      (b) => b.ready_to_action && today.getTime() - new Date(b.signal.detected_at).getTime() <= DAY_MS,
-    )
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
+  // Row = border 2 + py-2.5 (20) + xs (16) + micro (16) → 54; gap-2 → 8.
+  const [listRef, capacity] = useRowCapacity<HTMLDivElement>(54, 8, { min: 3, max: 8 });
+  const ready = battlecards.filter((b) => b.ready_to_action);
+  const last24h = ready.filter((b) => today.getTime() - new Date(b.signal.detected_at).getTime() <= DAY_MS);
+  // The Resumen box fills itself: the last 24 h first, then the most recent
+  // ready accounts behind them, as many as the box has rows for. The
+  // standalone strip keeps the strict "moved today" reading.
+  const critical = embedded
+    ? [...last24h.sort((a, b) => b.score - a.score), ...ready.filter((b) => !last24h.includes(b)).sort((a, b) => b.signal.detected_at.localeCompare(a.signal.detected_at))].slice(0, capacity)
+    : last24h.sort((a, b) => b.score - a.score).slice(0, 5);
 
   if (embedded) {
     if (critical.length === 0) {
       return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
     }
     return (
-      <div className="bee-fill flex flex-col justify-evenly gap-2">
+      <div ref={listRef} className="bee-fill flex flex-col justify-evenly gap-2 overflow-hidden">
         {critical.map((b) => (
           <CriticalAccountRow key={b.opportunity_id} battlecard={b} />
         ))}

@@ -64,6 +64,14 @@ const COPY = {
       headline: title,
       reasoning: "La tasa de conversión de este segmento se salió de su rango histórico — vale la pena revisar antes de seguir invirtiendo ahí.",
     }),
+    closing: (c: string, days: number) => ({
+      headline: days === 0 ? `${c} cierra hoy` : `${c} cierra en ${days} días`,
+      reasoning: "La fecha de cierre está encima — confirma el siguiente paso con quien decide antes de que se corra.",
+    }),
+    qualify: (c: string, score: number) => ({
+      headline: `Califica a ${c} antes de que se enfríe`,
+      reasoning: `Entró con score ${score} y nadie la ha revisado — cinco minutos hoy valen más que una hora la próxima semana.`,
+    }),
     soon: "en las próximas 48 h",
     today: "hoy",
   },
@@ -87,6 +95,14 @@ const COPY = {
     anomaly: (title: string) => ({
       headline: title,
       reasoning: "This segment's conversion rate left its historical range — worth a look before investing more there.",
+    }),
+    closing: (c: string, days: number) => ({
+      headline: days === 0 ? `${c} closes today` : `${c} closes in ${days} days`,
+      reasoning: "The close date is on top of you — confirm the next step with the decision maker before it slips.",
+    }),
+    qualify: (c: string, score: number) => ({
+      headline: `Qualify ${c} before it cools off`,
+      reasoning: `It came in with score ${score} and nobody has looked yet — five minutes today beat an hour next week.`,
     }),
     soon: "in the next 48h",
     today: "today",
@@ -132,10 +148,13 @@ export function demoTodayFeed(): TodayFeedOut {
     break;
   }
 
-  const hot = opportunities
+  // Up to two buying-window plays: the Resumen box fills itself with as
+  // many rows as fit, so the feed carries more than one of each kind.
+  const hots = opportunities
     .filter((o) => !used.has(o.id) && (battlecards.get(o.id)?.hot_lead || o.score >= 75))
-    .sort((a, b) => b.score - a.score)[0];
-  if (hot) {
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2);
+  for (const hot of hots) {
     const name = companyOf(hot.title, battlecards.get(hot.id)?.company.name);
     cards.push({
       id: `feed-${hot.id}`,
@@ -149,6 +168,27 @@ export function demoTodayFeed(): TodayFeedOut {
       score: 0.9,
     });
     used.add(hot.id);
+  }
+
+  const closing = opportunities
+    .filter((o) => !used.has(o.id) && o.expected_close_date)
+    .map((o) => ({ o, days: Math.ceil((new Date(o.expected_close_date as string).getTime() - now) / 86_400_000) }))
+    .filter(({ days }) => days >= 0 && days <= 14)
+    .sort((a, b) => a.days - b.days)[0];
+  if (closing) {
+    const name = companyOf(closing.o.title, battlecards.get(closing.o.id)?.company.name);
+    cards.push({
+      id: `feed-${closing.o.id}`,
+      kind: "opportunity",
+      company_name: name,
+      ...copy.closing(name, closing.days),
+      urgency: "high",
+      recommended_action: "review",
+      opportunity_id: closing.o.id,
+      pending_action_id: null,
+      score: 0.8,
+    });
+    used.add(closing.o.id);
   }
 
   const upcoming = demoFetchMeetings()
@@ -176,12 +216,13 @@ export function demoTodayFeed(): TodayFeedOut {
     }
   }
 
-  const stalled = opportunities
+  const stalledList = opportunities
     .filter((o) => o.status === "in_progress" && !used.has(o.id))
     .map((o) => ({ o, days: Math.floor((now - new Date(o.updated_at ?? o.created_at).getTime()) / 86_400_000) }))
     .filter(({ days }) => days >= 10)
-    .sort((a, b) => b.days - a.days)[0];
-  if (stalled) {
+    .sort((a, b) => b.days - a.days)
+    .slice(0, 2);
+  for (const stalled of stalledList) {
     const name = companyOf(stalled.o.title, battlecards.get(stalled.o.id)?.company.name);
     cards.push({
       id: `feed-${stalled.o.id}`,
@@ -195,6 +236,28 @@ export function demoTodayFeed(): TodayFeedOut {
       score: 0.55,
     });
     used.add(stalled.o.id);
+  }
+
+  // Fresh opportunities nobody has qualified yet — up to two, so the box
+  // has a play for the new arrivals too.
+  const fresh = opportunities
+    .filter((o) => !used.has(o.id) && (o.status === "detected" || o.status === "prioritized") && now - new Date(o.created_at).getTime() <= 14 * 86_400_000)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2);
+  for (const o of fresh) {
+    const name = companyOf(o.title, battlecards.get(o.id)?.company.name);
+    cards.push({
+      id: `feed-${o.id}`,
+      kind: "opportunity",
+      company_name: name,
+      ...copy.qualify(name, Math.round(o.score)),
+      urgency: o.score >= 70 ? "medium" : "low",
+      recommended_action: "review",
+      opportunity_id: o.id,
+      pending_action_id: null,
+      score: 0.45,
+    });
+    used.add(o.id);
   }
 
   const anomaly = demoFetchOpenAnomalies().find((a) => a.severity === "high" || a.severity === "critical");
@@ -212,7 +275,7 @@ export function demoTodayFeed(): TodayFeedOut {
     });
   }
 
-  return { cards: cards.slice(0, 5), generated_at: new Date(now).toISOString() };
+  return { cards: cards.slice(0, 8), generated_at: new Date(now).toISOString() };
 }
 
 /** Same shape as RevenueSimulatorService: win rate from this dataset's

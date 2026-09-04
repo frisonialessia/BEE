@@ -85,12 +85,12 @@ export function RightPane({
   ];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-full flex-col gap-4">
       <header className="flex flex-col gap-3">
         <p className="bee-eyebrow truncate">
           {t("pipeline")} · {t("stage")}: {stageLabel} · {t("createdAgo", { time: formatRelativeTime(opportunity.created_at, locale) })}
         </p>
-        <h2 className="bee-display line-clamp-2 !text-[1.35rem]">
+        <h2 className="bee-display line-clamp-2">
           {companyName && <span>{companyName} · </span>}
           {headline}
         </h2>
@@ -146,8 +146,23 @@ export function RightPane({
 
       <DrawerTabs tabs={tabs} value={tab} onChange={onTabChange} hue={hue} ariaLabel={t("tabs.aria")} />
 
-      <div role="tabpanel" id={`drawer-panel-${tab}`} aria-labelledby={`drawer-tab-${tab}`} className="min-h-40 pb-6">
-        {tab === "activity" && <ActivityTab opportunity={opportunity} signal={signal} meetings={meetings} tasks={tasks} hue={hue} />}
+      <div role="tabpanel" id={`drawer-panel-${tab}`} aria-labelledby={`drawer-tab-${tab}`} className="min-h-40 flex-1 pb-6">
+        {tab === "activity" && (
+          <ActivityTab
+            opportunity={opportunity}
+            companyName={companyName}
+            signal={signal}
+            meetings={meetings}
+            tasks={tasks}
+            users={users}
+            hue={hue}
+            onCreateMeeting={() => {
+              onTabChange("meetings");
+              onMeetingCreateOpenChange(true);
+            }}
+            onEditAmount={() => onTabChange("notes")}
+          />
+        )}
         {tab === "meetings" && (
           <MeetingsTab
             opportunity={opportunity}

@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 
+import { useRowCapacity } from "@/components/charts/use-row-capacity";
 import { useMeetings } from "@/hooks/queries/use-meetings";
 import { resolveTimezone } from "@/lib/timezone";
 import { useAuth } from "@/providers/auth-provider";
@@ -19,7 +20,6 @@ const CLIENT_CONTEXT_DOT: Record<MeetingClientContext, string> = {
   new_contact: "var(--color-chart-5)",
 };
 
-const UPCOMING_LIMIT = 5;
 
 /**
  * "Mi calendario" — a compact personal upcoming-meetings list for the
@@ -42,6 +42,8 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
   const calendarHref = pathname?.startsWith("/probar") ? "/probar/calendar" : "/dashboard/calendar";
   const tz = resolveTimezone(user?.timezone);
 
+  // Row = border 2 + py-2 (16) + xs line (16) + micro line (16) → 50; gap-2 → 8.
+  const [listRef, capacity] = useRowCapacity<HTMLUListElement>(50, 8, { min: 5, max: 14 });
   const nowIso = useMemo(() => new Date().toISOString(), []);
   const { data: meetings, isLoading } = useMeetings({ startsAfter: nowIso });
 
@@ -50,8 +52,8 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
     const mine = user
       ? list.filter((m) => m.created_by_user_id === user.id || m.attendee_user_ids.includes(user.id))
       : list;
-    return mine.slice(0, UPCOMING_LIMIT);
-  }, [meetings, user]);
+    return mine.slice(0, capacity);
+  }, [meetings, user, capacity]);
 
   const list = isLoading ? (
     <p className="bee-caption">{t("page.loading")}</p>
@@ -61,7 +63,7 @@ export function MyCalendarWidget({ embedded = false }: { embedded?: boolean } = 
       <p className="bee-caption">{t("widget.empty")}</p>
     </div>
   ) : (
-    <ul className="bee-fill flex flex-col justify-evenly gap-2">
+    <ul ref={listRef} className="bee-fill flex flex-col justify-evenly gap-2 overflow-hidden">
       {upcoming.map((m) => {
         const dotColor = m.color ? `var(--color-${m.color})` : CLIENT_CONTEXT_DOT[m.client_context ?? "new_contact"];
         return (

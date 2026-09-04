@@ -61,7 +61,7 @@ export default async function ContactoPage({
                   <li key={note.id} className="flex items-start gap-3 py-4">
                     <span
                       className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full"
-                      style={{ background: `color-mix(in srgb, ${note.hue} 20%, var(--color-card))`, color: `color-mix(in srgb, ${note.hue} 70%, var(--color-text) 30%)` }}
+                      style={{ background: `color-mix(in srgb, ${note.hue} 20%, var(--color-card))`, color: note.hue }}
                     >
                       <note.icon className="size-4 stroke-[1.5]" />
                     </span>

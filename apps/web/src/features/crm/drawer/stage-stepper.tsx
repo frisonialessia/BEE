@@ -26,12 +26,16 @@ export function StageStepper({
   closedLabel,
   onMove,
   busy,
+  allowed,
 }: {
   status: OpportunityStatus;
   /** "Cliente" / "Perdida" / "Descartada" for a closed deal. */
   closedLabel: string | null;
   onMove: (stage: CrmStage) => void;
   busy?: boolean;
+  /** Create mode: only the stages a person may *start* a deal in are
+   *  click targets (BEE's own gate, "Listas para actuar", never is). */
+  allowed?: readonly CrmStage[];
 }) {
   const t = useTranslations("crm.drawer");
   const tStage = useTranslations("crm.board.stages");
@@ -69,7 +73,7 @@ export function StageStepper({
       {STEP_ORDER.map((step, i) => {
         const isCurrent = i === currentIdx;
         const label = step === "closed" && closedLabel ? closedLabel : tStage(step);
-        const clickable = step !== "closed" && !closed && !isCurrent;
+        const clickable = step !== "closed" && !closed && !isCurrent && (!allowed || allowed.includes(step as CrmStage));
         return (
           <button
             key={step}

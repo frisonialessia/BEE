@@ -51,7 +51,7 @@
         "caption": "What needs your attention today"
       },
       "critical": {
-        "caption": "Ready to action · last 24h"
+        "caption": "Ready to act · most recent first"
       },
       "signalsWeekly": {
         "title": "Signals per week",
@@ -148,6 +148,39 @@
       "duplicates": {
         "title": "{count, plural, one {# possible duplicate} other {# possible duplicates}}",
         "description": "Across companies and contacts — worth merging"
+      },
+      "closingSoon": {
+        "title": "{count, plural, one {# close expected this week} other {# closes expected this week}}",
+        "description": "USD {amount, number} at stake in the next 7 days"
+      },
+      "meetingsToday": {
+        "title": "{count, plural, one {# meeting today} other {# meetings today}}"
+      },
+      "signalsToday": {
+        "title": "{count, plural, one {# new signal in 24 h} other {# new signals in 24 h}}",
+        "description": "{hot, plural, =0 {none hot yet} one {# hot} other {# hot}}"
+      },
+      "stalled": {
+        "title": "{count, plural, one {# deal without movement} other {# deals without movement}}",
+        "description": "14+ days in conversation with no new activity"
+      },
+      "wonWeek": {
+        "title": "{count, plural, one {# deal won this week} other {# deals won this week}}",
+        "description": "USD {amount, number} closed — already counted in Ventas"
+      },
+      "nextMeeting": {
+        "title": "{days, plural, one {Next meeting tomorrow} other {Next meeting in # days}}"
+      },
+      "topSignal": {
+        "title": "Strongest signal this week · score {score}"
+      },
+      "openPipeline": {
+        "title": "{count, plural, one {# open opportunity} other {# open opportunities}}",
+        "description": "USD {amount, number} in pipeline · {ready, plural, =0 {none ready to act} one {# ready to act} other {# ready to act}}"
+      },
+      "wonMonth": {
+        "title": "{count, plural, one {# deal won this month} other {# deals won this month}}",
+        "description": "USD {amount, number} closed — already counted in Ventas"
       }
     }
   },
