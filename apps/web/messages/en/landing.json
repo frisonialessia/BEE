@@ -5,206 +5,83 @@
     "decision": "Decision",
     "ready_to_buy": "Ready to buy"
   },
-  "ticker": {
-    "ariaLabel": "Examples of market signals detected in real time — illustrative view",
-    "items": [
-      "Northwind Robotics raised a $40M Series C",
-      "Vantage Health is hiring 20 Account Executives",
-      "Solace Data named a new CRO",
-      "Anchor Freight reached a high closing temperature",
-      "Bright Path Analytics visited the pricing page",
-      "Fielder Logistics closed a Series B round",
-      "Cursive Systems posted 8 RevOps openings",
-      "Loom & Co opened a new regional office"
-    ]
-  },
   "demo": {
-    "tabs": {
-      "signals": "Signals",
-      "leads": "Leads",
-      "forecast": "Simulator"
+    "status": "Sample data",
+    "listTitle": "Signals",
+    "listToday": "Today · {count} new",
+    "signals": {
+      "northwind": "Raised a $40M Series C",
+      "anchor": "Visited pricing three times this week",
+      "solace": "Named a new CRO",
+      "vantage": "Is hiring 20 Account Executives",
+      "fielder": "Changed its data stack"
     },
-    "illustrativeNote": "Illustrative view — sample data, not a real account.",
-    "signalsView": {
-      "actionZoneTitle": "Action zone",
-      "actionZone": {
-        "detected": "Detected",
-        "enriching": "Enriching",
-        "ready": "Ready",
-        "inProgress": "In progress",
-        "closed": "Closed"
-      },
-      "hotLeads": "{count} hot leads",
-      "timeToFirstAction": "Time to 1st action",
-      "zoneConversion": "Zone conversion",
-      "recentActivity": "Recent activity",
-      "activity": {
-        "qualified": {
-          "text": "Aisha Bello moved to Qualified",
-          "time": "3h ago"
-        },
-        "assigned": {
-          "text": "Tom Reyes was assigned to an AE",
-          "time": "6h ago"
-        }
-      },
-      "nextActionLabel": "Suggested next action",
-      "nextActionReason": "Raised a $40M Series C — the moment of highest buying propensity.",
-      "hiveTitle": "Intent hive",
-      "cold": "Cold",
-      "hot": "Hot",
-      "signalFlowTitle": "Signal flow",
-      "feed": {
-        "webhook": {
-          "label": "Webhook received",
-          "title": "Northwind Robotics raised a $40M Series C",
-          "time": "2h ago"
-        },
-        "enriched": {
-          "label": "Enriched",
-          "title": "Vantage Health is hiring 20 AEs",
-          "time": "5h ago"
-        },
-        "strategy": {
-          "label": "Strategy ready",
-          "title": "Solace Data named a new CRO",
-          "time": "1d ago"
-        }
-      },
-      "signalsToday": "Signals today",
-      "signalsTodayValue": "{detected} detected · +{new} new",
-      "kpis": {
-        "ingestion": "Ingestion",
-        "ingestionActive": "Active",
-        "queue": "Queue",
-        "facts": "Facts",
-        "errors": "Errors",
-        "latency": "Latency",
-        "activeSources": "Active sources"
-      },
-      "externalApis": "External APIs",
-      "simulatedMode": "Simulated mode",
-      "lastSync": "Last sync",
-      "lastSyncValue": "3 min ago",
-      "nextRun": "Next run",
-      "nextRunValue": "in 12 min",
-      "modelConfidence": "Model confidence",
-      "intelligenceTitle": "Intelligence"
+    "times": {
+      "northwind": "2h ago",
+      "anchor": "4h ago",
+      "solace": "1d ago",
+      "vantage": "1d ago",
+      "fielder": "2d ago"
     },
-    "leadsView": {
-      "title": "Leads prioritized by score",
-      "statusTabs": {
-        "all": "All",
-        "new": "New",
-        "qualified": "Qualified",
-        "converted": "Converted"
-      },
-      "searchPlaceholder": "Search…",
-      "columns": {
-        "contact": "Contact",
-        "company": "Company",
-        "score": "Score",
-        "stage": "Stage"
-      },
-      "leads": {
-        "elena": {
-          "title": "VP Sales"
-        },
-        "marcus": {
-          "title": "Head of RevOps"
-        },
-        "priya": {
-          "title": "CRO"
-        },
-        "tom": {
-          "title": "Director of Ops"
-        },
-        "aisha": {
-          "title": "VP RevOps"
-        },
-        "diego": {
-          "title": "Head of Growth"
-        }
-      },
-      "emptyFiltered": "No lead matches that filter.",
-      "summary": "{count} of {total} leads · sorted by score",
-      "topScoreLabel": "Top score",
-      "topScoreDetail": "Score {score} · {stage} — priority to contact today.",
-      "statusDistribution": "Status distribution"
+    "types": {
+      "funding": "Funding",
+      "hiring": "Hiring",
+      "keyHire": "Key hire",
+      "stack": "Stack",
+      "intent": "Intent"
     },
-    "forecastView": {
-      "title": "Revenue simulator",
-      "subtitle": "Project the impact of increasing prospecting in a segment",
-      "highConfidence": "High confidence",
-      "signalLabel": "Signal",
-      "fundingRound": "Funding round",
-      "industryLabel": "Industry",
-      "industryPlaceholder": "e.g. SaaS",
-      "multiplierLabel": "Multiplier ({factor}×)",
-      "running": "Simulating…",
-      "runButton": "Run simulation {factor}×",
-      "scenarios": {
-        "conservative": "Conservative",
-        "realistic": "Realistic",
-        "optimistic": "Optimistic"
-      },
-      "months": [
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-        "Jan"
-      ],
-      "projectionLabel": "Realistic projection",
-      "operationsUnit": "deals",
-      "dealsCount": "{count} deals",
-      "projectionNote": "Raising prospecting {factor}× in this segment sustains the current close rate without overloading the team.",
-      "successRate": "Success rate",
-      "pipeline": "Pipeline",
-      "dataPoints": "Data points",
-      "avgSalesCycle": "Avg. sales cycle",
-      "avgSalesCycleValue": "34 days",
-      "avgTicket": "Avg. ticket",
-      "avgTicketValue": "USD 18,400",
-      "nextUpdate": "Next update",
-      "nextUpdateValue": "in 24h",
-      "basedOn": "Based on 312 buying-intent data points from the last 90 days.",
-      "viewMore": "View more"
-    },
-    "status": "Model · 94% confidence · sample data"
+    "hiveTitle": "Intent hive",
+    "cold": "Cold",
+    "hot": "Hot",
+    "weeklyTitle": "Signals per week",
+    "weeklyCaption": "Detected over the last eight weeks",
+    "week": "W{n}",
+    "signalsCount": "{count} signals",
+    "mixTitle": "Mix by type",
+    "mixCaption": "Which kind of signal arrives most",
+    "other": "Other"
   },
-  "counters": {
-    "note": "Figures from the demo above — sample data, not a real account. The connected sources are the product's own.",
-    "items": {
-      "signals": {
-        "label": "Facts analyzed today",
-        "value": "128",
-        "hint": "The demo's signal engine"
-      },
-      "plays": {
-        "label": "Plays ready to approve",
-        "value": "7",
-        "hint": "Action zone · Ready"
-      },
-      "confidence": {
-        "label": "Model confidence",
-        "value": "94%",
-        "hint": "Scoring backed by data"
-      },
-      "sources": {
-        "label": "Connected sources",
-        "value": "6",
-        "hint": "LinkedIn · G2 · Google · GDELT · jobs · web"
+  "features": {
+    "play": {
+      "card": {
+        "eyebrow": "Suggested play",
+        "headline": "Northwind Robotics · Series C",
+        "time": "2h ago",
+        "argument": "They just raised capital and are hiring sales: this is the moment of highest buying propensity. Open with how they scale the team without losing signal.",
+        "chips": {
+          "channel": "Email",
+          "timing": "This week",
+          "fit": "High fit"
+        },
+        "approve": "Approve",
+        "reject": "Reject",
+        "approvedNote": "Play approved · scheduled for Tuesday",
+        "rejectedNote": "Play discarded · BEE adjusts the next one",
+        "undo": "Undo"
       }
-    }
-  },
-  "integrations": {
-    "items": {
-      "linkedin": "Hiring signals and direct outreach",
-      "g2": "Buying-intent signals from reviews and comparisons",
-      "googleSearch": "Public mentions and tech-stack changes",
-      "email": "Sequences sent via SMTP, SendGrid, or Resend"
+    },
+    "execute": {
+      "card": {
+        "eyebrow": "Next steps",
+        "week": "This week",
+        "days": {
+          "d1": "Mon",
+          "d2": "Tue",
+          "d3": "Wed",
+          "d4": "Thu",
+          "d5": "Fri"
+        },
+        "steps": {
+          "email": "Email · Northwind",
+          "call": "Call · Vantage",
+          "followup": "Follow-up · Solace"
+        },
+        "when": {
+          "email": "Sent",
+          "call": "Thu 11:00",
+          "followup": "Fri"
+        }
+      }
     }
   },
   "faq": {
@@ -213,11 +90,11 @@
     "items": [
       {
         "question": "Where do the signals and scores come from?",
-        "answer": "From real public sources (LinkedIn, G2, Google Search) and your own pipeline data. If there isn't enough data for a score, the system shows it empty — it never invents a number to make the screen look complete."
+        "answer": "From public market signals and your own pipeline data. If there isn't enough data for a score, the system shows it empty — it never invents a number to make the screen look complete."
       },
       {
         "question": "Does BEE send messages on my behalf without me knowing?",
-        "answer": "No. No external action — an email, a LinkedIn message, a sequence — runs without explicit human approval. The system prepares the play; you decide if it goes out."
+        "answer": "No. No external action — an email, a message, a sequence — runs without explicit human approval. The system prepares the play; you decide if it goes out."
       },
       {
         "question": "Does my data mix with other accounts?",
@@ -291,74 +168,65 @@
     }
   },
   "sales": {
-    "eyebrow": "Closes",
+    "eyebrow": "Sales",
     "heading": "CRMs record sales. BEE closes them.",
-    "subheading": "Built so your team closes more than with any traditional CRM: BEE detects the signal before the lead exists, prepares the play, and learns from every close.",
+    "subheading": "A CRM stores what already happened and an intent tool hands you a list. BEE detects the signal before the lead exists, prepares the play and learns from every close.",
+    "rows": {
+      "origin": "Where the lead comes from",
+      "next": "Next step",
+      "priority": "Prioritization",
+      "close": "The close"
+    },
+    "columns": {
+      "crm": {
+        "title": "Traditional CRM",
+        "subtitle": "Records the pipeline your team already built.",
+        "origin": "Entered by the rep, once they found it.",
+        "next": "Each rep decides, at their own judgement.",
+        "priority": "By stage or by entry order.",
+        "close": "Reported at the end of the month."
+      },
+      "intent": {
+        "title": "Intent / enrichment tools",
+        "subtitle": "Tell you who might be interested.",
+        "origin": "A list of accounts with a score.",
+        "next": "Left to you: what to say and through which channel.",
+        "priority": "By activity volume, without fit to your ideal customer.",
+        "close": "Outside the tool; it doesn't learn from the outcome."
+      },
+      "bee": {
+        "title": "BEE",
+        "subtitle": "Detects, prepares the play and learns from every close.",
+        "origin": "The market signal, before the lead exists.",
+        "next": "The play, ready: argument, channel and timing.",
+        "priority": "By intent, fit and real activity.",
+        "close": "Every won or lost deal tunes the next play."
+      }
+    },
     "chart": {
-      "title": "Cumulative revenue",
-      "caption": "Won on top of won, twelve months",
-      "badge": "Sales",
-      "tiles": {
-        "month": {
-          "label": "Won this month",
-          "value": "+46k"
-        },
-        "clients": {
-          "label": "New clients",
-          "value": "2"
-        },
-        "goal": {
-          "label": "Monthly goal",
-          "value": "110%"
-        }
-      },
-      "note": "Illustrative view with demo data. The same greens you will see on your Sales page."
+      "title": "Won per month",
+      "caption": "Last six months",
+      "target": "Goal"
     },
-    "reasons": {
-      "earlier": {
-        "title": "You get there first",
-        "description": "A funding round, a key hire or a stack change becomes an opportunity in minutes, not after the lead has talked to three competitors."
-      },
-      "play": {
-        "title": "Every play comes ready",
-        "description": "Pain point, closing argument, channel and timing. The rep opens the card and acts; no research from scratch."
-      },
-      "priority": {
-        "title": "Prioritized by intent, not alphabetically",
-        "description": "BEE's score crosses the signal, fit with your ideal customer and real activity. Hot rises on its own."
-      },
-      "learn": {
-        "title": "Learns from every close",
-        "description": "Every won or lost deal tunes the next strategy: which channel, playbook and signal actually close in your market."
-      }
+    "months": {
+      "m1": "Mar",
+      "m2": "Apr",
+      "m3": "May",
+      "m4": "Jun",
+      "m5": "Jul",
+      "m6": "Aug"
     },
-    "compare": {
-      "dimension": "",
-      "crm": "Traditional CRM",
-      "bee": "BEE",
-      "rows": {
-        "signal": {
-          "dimension": "Where leads come from",
-          "crm": "Records what the team already found.",
-          "bee": "Detects what is about to happen in the market."
-        },
-        "play": {
-          "dimension": "Next step",
-          "crm": "The rep decides what to do and what to say.",
-          "bee": "BEE proposes the play with argument and channel."
-        },
-        "pipeline": {
-          "dimension": "Pipeline",
-          "crm": "Filled by hand, card by card.",
-          "bee": "Fills itself with qualified signals."
-        },
-        "goals": {
-          "dimension": "Goals",
-          "crm": "A report at the end of the month.",
-          "bee": "Per-person goals and live progress, green when beaten."
-        }
-      }
+    "simulator": {
+      "title": "If I prospect more, how much do I close?",
+      "caption": "Six-month projection by how much you raise prospecting.",
+      "groupAria": "Prospecting multiplier",
+      "factor": "If I prospect ×{factor}",
+      "deals": "{count} deals",
+      "totalLabel": "Over six months",
+      "lastLabel": "Pace by month six",
+      "note": "At ×{factor}, the close rate rises without overloading the team: BEE prioritizes what's hot and drops what doesn't fit."
     },
+    "illustrative": "Illustrative view with sample data.",
     "cta": "See Sales in the demo",
     "ctaSecondary": "Create a free account"
   }

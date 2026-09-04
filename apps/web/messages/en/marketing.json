@@ -37,91 +37,25 @@
   },
   "landing": {
     "eyebrow": "Sales Force Intelligence",
-    "heroTitle": "Autonomous sales intelligence that decides <hl>in real time.</hl>",
-    "heroSubtitle": "BEE watches the market, prioritizes your pipeline, and prepares your next move while you close — no friction, no fabricated data, never losing control of a single decision.",
+    "heroTitle": "Sales intelligence that decides in real time.",
+    "heroSubtitle": "BEE watches the market, prioritizes your pipeline and prepares the next play while you close.",
     "ctaStart": "Get started",
     "ctaTry": "Try without signing up",
-    "guaranteesEyebrow": "Why trust BEE",
-    "guaranteesTitle": "Built for high-performing sales teams.",
-    "guaranteesSubtitle": "Not promises — architectural guarantees behind every decision BEE makes on your behalf.",
-    "guarantees": {
-      "noHallucinations": {
-        "title": "Zero hallucinations",
-        "description": "Every score comes from data. No data, no number."
+    "demoCaption": "Illustrative view with sample data.",
+    "features": {
+      "signal": {
+        "title": "The signal arrives.",
+        "text": "A funding round, a key hire, a stack change. BEE detects it, scores it and places it in the hive before the lead exists."
       },
-      "humanApproval": {
-        "title": "Human approval, always",
-        "description": "Nothing sends without your explicit go-ahead."
+      "play": {
+        "title": "BEE prepares the play.",
+        "text": "Argument, channel and timing, ready on one card. The rep reads and decides; no research from scratch."
       },
-      "multiTenant": {
-        "title": "Real multi-tenancy",
-        "description": "Your data, isolated end to end per organization."
-      },
-      "secureByDesign": {
-        "title": "Secure by design",
-        "description": "HMAC-signed webhooks; secrets never in the code."
-      },
-      "sources": {
-        "title": "Real sources",
-        "description": "Six providers connected in the product today; the six below are on the roadmap, not in production."
+      "execute": {
+        "title": "You decide, BEE executes.",
+        "text": "Nothing goes out without your approval. With it, BEE schedules the next step, follows it up and learns from the outcome."
       }
     },
-    "trustCharts": {
-      "week": "Wk {n}",
-      "coverage": {
-        "real": "Backed by data",
-        "invented": "Invented",
-        "empty": "No data → empty"
-      },
-      "approval": {
-        "prepared": "Prepared",
-        "approved": "Approved",
-        "sent": "Sent",
-        "rejected": "Rejected",
-        "unit": "approved"
-      },
-      "tenant": {
-        "orgA": "Organization A",
-        "orgB": "Organization B",
-        "orgC": "Organization C",
-        "orgD": "Organization D",
-        "center": "{n} orgs",
-        "cross": "Cross-tenant queries",
-        "scoped": "Scoped by organization",
-        "isolated": "Isolated organizations"
-      },
-      "security": {
-        "signed": "HMAC-signed",
-        "rejected": "Signatures rejected",
-        "incidents": "Incidents",
-        "deliveries": "{count} verified deliveries",
-        "total": "Verified deliveries this week:",
-        "less": "Less",
-        "more": "More",
-        "aria": "Webhook deliveries by weekday and hour, every one HMAC-verified — illustrative view"
-      },
-      "sources": {
-        "live": "Live today · {count}",
-        "planned": "Coming soon · {count}",
-        "soon": "coming soon",
-        "unit": "signals",
-        "kinds": {
-          "linkedin": "Profiles and hiring",
-          "g2": "Reviews and buying intent",
-          "googleSearch": "Mentions and tech stack",
-          "gdelt": "World press, no API key",
-          "hiring": "Public job boards",
-          "website": "Enrichment from the domain",
-          "crunchbase": "Funding rounds",
-          "apollo": "Contacts and accounts",
-          "hubspot": "Sync with your CRM",
-          "salesforce": "Sync with your CRM",
-          "slack": "Team alerts",
-          "gmail": "Sending and replies"
-        }
-      }
-    },
-    "trustNote": "Illustrative demo figures — not a real account.",
     "closingTitle": "Your next customer is already sending signals. The question is whether you're seeing them.",
     "closingCta": "Get started"
   }

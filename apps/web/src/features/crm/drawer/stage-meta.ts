@@ -1,22 +1,25 @@
-import { SALES } from "@/components/charts/palette";
+import { mix } from "@/components/charts/palette";
 import type { CrmStage } from "@/lib/api/opportunities";
 import { CRM_STAGES } from "@/lib/crm-board";
 import { CLOSED_OPPORTUNITY_STATUSES, type Opportunity, type OpportunityStatus } from "@/types/domain";
 
 /**
- * One BEE tone per stage — a verbatim copy of `STAGE_ACCENT` in
- * `features/crm/crm-board.tsx` so a stage looks the same on the board and
- * inside the drawer. Honey for what BEE detects (new, ready), lilac and
- * indigo for what the team works (priority, conversation). Closed is the
- * one place with a sales green, and only for a WON deal.
+ * One BEE tone per stage inside the drawer. Honey for what BEE detects,
+ * lilac for what BEE prepared, magenta for what the team flagged, and the
+ * app's lavender for a conversation already open. No blue here — blue is
+ * the primary button's and nothing else's — and no green: greens belong
+ * to the Ventas page, so a won deal closes in the deeper honey.
  */
 export const STAGE_ACCENT: Record<CrmStage | "closed", string> = {
   detected: "var(--color-chart-3)",
-  ready_to_action: "var(--color-chart-1)",
-  prioritized: "var(--color-chart-6)",
-  in_progress: "var(--color-chart-4)",
-  closed: SALES.won,
+  ready_to_action: "var(--color-chart-6)",
+  prioritized: "var(--color-chart-5)",
+  in_progress: "var(--color-primary)",
+  closed: "var(--color-chart-1)",
 };
+
+/** A lost or dismissed deal closes in ink, never a red. */
+export const LOST_FILL = mix("var(--color-text)", 18);
 
 export type StepKey = CrmStage | "closed";
 
@@ -31,11 +34,10 @@ export function isClosedStatus(status: OpportunityStatus): boolean {
   return CLOSED_OPPORTUNITY_STATUSES.includes(status);
 }
 
-/** The single hue every block in the drawer mixes from — the stage's
- *  color while the deal is open, the sales green once it is won, and plain
- *  ink for a lost/dismissed one (never a red). */
+/** The single hue the drawer accents from — the stage's color while the
+ *  deal is open, honey once it is won, ink for a lost/dismissed one. */
 export function accentOf(opportunity: Pick<Opportunity, "status">): string {
-  if (opportunity.status === "won") return SALES.won;
-  if (isClosedStatus(opportunity.status)) return "var(--color-text)";
+  if (opportunity.status === "won") return STAGE_ACCENT.closed;
+  if (isClosedStatus(opportunity.status)) return LOST_FILL;
   return STAGE_ACCENT[opportunity.status as CrmStage];
 }

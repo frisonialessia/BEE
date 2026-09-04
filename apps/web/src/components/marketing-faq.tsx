@@ -8,9 +8,9 @@ import { prefersReducedMotion, Reveal } from "@/components/marketing-motion";
 
 /**
  * MarketingFAQ — objeciones reales de un evaluador B2B, respondidas con
- * las mismas garantías arquitectónicas que ya aparecen en GUARANTEES
- * (app/page.tsx) — no texto nuevo inventado para esta sección, sino la
- * versión en pregunta-respuesta de lo que el sistema ya sostiene.
+ * las garantías arquitectónicas que el sistema ya sostiene (scores solo
+ * con dato, aprobación humana, aislamiento por organización) — no texto
+ * nuevo inventado para esta sección. Nunca nombra fuentes ni proveedores.
  *
  * Las preguntas/respuestas viven en messages/{locale}/landing.json bajo
  * `faq.items` como un array de {question, answer} — se leen con `t.raw`
@@ -103,12 +103,12 @@ export function MarketingFAQ() {
   const items = t.raw("items") as FaqItem[];
 
   return (
-    <section className="mx-auto w-full max-w-3xl px-6 py-12 lg:py-14">
+    <section className="mx-auto w-full max-w-3xl px-6 py-20 lg:py-28">
       <Reveal className="mx-auto max-w-2xl text-center">
-        <p className="bee-eyebrow bee-eyebrow--violet">{t("eyebrow")}</p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("heading")}</h2>
+        <p className="bee-eyebrow">{t("eyebrow")}</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight">{t("heading")}</h2>
       </Reveal>
-      <Reveal stagger className="mt-8">
+      <Reveal stagger className="mt-10">
         {items.map((item) => (
           <FaqRow key={item.question} q={item.question} a={item.answer} />
         ))}

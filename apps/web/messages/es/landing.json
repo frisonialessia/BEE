@@ -5,206 +5,83 @@
     "decision": "Decisión",
     "ready_to_buy": "Listo para comprar"
   },
-  "ticker": {
-    "ariaLabel": "Ejemplos de señales de mercado detectadas en tiempo real — vista ilustrativa",
-    "items": [
-      "Northwind Robotics levantó una Serie C de USD 40M",
-      "Vantage Health está contratando 20 Account Executives",
-      "Solace Data nombró un nuevo CRO",
-      "Anchor Freight alcanzó temperatura de cierre alta",
-      "Bright Path Analytics visitó la página de pricing",
-      "Fielder Logistics cerró una ronda Serie B",
-      "Cursive Systems publicó 8 vacantes de RevOps",
-      "Loom & Co abrió una nueva oficina regional"
-    ]
-  },
   "demo": {
-    "tabs": {
-      "signals": "Señales",
-      "leads": "Leads",
-      "forecast": "Simulador"
+    "status": "Datos de ejemplo",
+    "listTitle": "Señales",
+    "listToday": "Hoy · {count} nuevas",
+    "signals": {
+      "northwind": "Levantó una Serie C de USD 40M",
+      "anchor": "Visitó pricing tres veces esta semana",
+      "solace": "Nombró un nuevo CRO",
+      "vantage": "Está contratando 20 Account Executives",
+      "fielder": "Cambió su stack de datos"
     },
-    "illustrativeNote": "Vista ilustrativa — datos de ejemplo, no una cuenta real.",
-    "signalsView": {
-      "actionZoneTitle": "Zona de acción",
-      "actionZone": {
-        "detected": "Detectadas",
-        "enriching": "Enriqueciendo",
-        "ready": "Listas",
-        "inProgress": "En progreso",
-        "closed": "Cerradas"
-      },
-      "hotLeads": "{count} leads calientes",
-      "timeToFirstAction": "Tiempo a 1ª acción",
-      "zoneConversion": "Conversión de zona",
-      "recentActivity": "Actividad reciente",
-      "activity": {
-        "qualified": {
-          "text": "Aisha Bello pasó a Calificado",
-          "time": "hace 3h"
-        },
-        "assigned": {
-          "text": "Tom Reyes fue asignado a un AE",
-          "time": "hace 6h"
-        }
-      },
-      "nextActionLabel": "Próxima acción sugerida",
-      "nextActionReason": "Levantó una Serie C de USD 40M — el momento de mayor propensión a comprar.",
-      "hiveTitle": "Colmena de intención",
-      "cold": "Frío",
-      "hot": "Caliente",
-      "signalFlowTitle": "Flujo de señales",
-      "feed": {
-        "webhook": {
-          "label": "Webhook recibido",
-          "title": "Northwind Robotics levantó una Serie C de USD 40M",
-          "time": "hace 2h"
-        },
-        "enriched": {
-          "label": "Enriquecida",
-          "title": "Vantage Health está contratando 20 AEs",
-          "time": "hace 5h"
-        },
-        "strategy": {
-          "label": "Estrategia lista",
-          "title": "Solace Data nombró un nuevo CRO",
-          "time": "hace 1d"
-        }
-      },
-      "signalsToday": "Señales hoy",
-      "signalsTodayValue": "{detected} detectadas · +{new} nuevas",
-      "kpis": {
-        "ingestion": "Ingesta",
-        "ingestionActive": "Activo",
-        "queue": "Cola",
-        "facts": "Hechos",
-        "errors": "Errores",
-        "latency": "Latencia",
-        "activeSources": "Fuentes activas"
-      },
-      "externalApis": "APIs externas",
-      "simulatedMode": "Modo simulado",
-      "lastSync": "Última sincronización",
-      "lastSyncValue": "hace 3 min",
-      "nextRun": "Próxima corrida",
-      "nextRunValue": "en 12 min",
-      "modelConfidence": "Confianza del modelo",
-      "intelligenceTitle": "Inteligencia"
+    "times": {
+      "northwind": "hace 2h",
+      "anchor": "hace 4h",
+      "solace": "hace 1d",
+      "vantage": "hace 1d",
+      "fielder": "hace 2d"
     },
-    "leadsView": {
-      "title": "Leads priorizados por score",
-      "statusTabs": {
-        "all": "Todos",
-        "new": "Nuevo",
-        "qualified": "Calificado",
-        "converted": "Convertido"
-      },
-      "searchPlaceholder": "Buscar…",
-      "columns": {
-        "contact": "Contacto",
-        "company": "Empresa",
-        "score": "Score",
-        "stage": "Etapa"
-      },
-      "leads": {
-        "elena": {
-          "title": "VP Sales"
-        },
-        "marcus": {
-          "title": "Head of RevOps"
-        },
-        "priya": {
-          "title": "CRO"
-        },
-        "tom": {
-          "title": "Director of Ops"
-        },
-        "aisha": {
-          "title": "VP RevOps"
-        },
-        "diego": {
-          "title": "Head of Growth"
-        }
-      },
-      "emptyFiltered": "Ningún lead coincide con ese filtro.",
-      "summary": "{count} de {total} leads · ordenado por score",
-      "topScoreLabel": "Score más alto",
-      "topScoreDetail": "Score {score} · {stage} — prioridad de contacto hoy.",
-      "statusDistribution": "Distribución por estado"
+    "types": {
+      "funding": "Ronda",
+      "hiring": "Contratación",
+      "keyHire": "Cargo clave",
+      "stack": "Stack",
+      "intent": "Intención"
     },
-    "forecastView": {
-      "title": "Simulador de ingresos",
-      "subtitle": "Proyecta el impacto de aumentar la prospección en un segmento",
-      "highConfidence": "Confianza alta",
-      "signalLabel": "Señal",
-      "fundingRound": "Ronda de financiación",
-      "industryLabel": "Industria",
-      "industryPlaceholder": "p. ej. SaaS",
-      "multiplierLabel": "Multiplicador ({factor}×)",
-      "running": "Simulando…",
-      "runButton": "Ejecutar simulación {factor}×",
-      "scenarios": {
-        "conservative": "Conservador",
-        "realistic": "Realista",
-        "optimistic": "Optimista"
-      },
-      "months": [
-        "Ago",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dic",
-        "Ene"
-      ],
-      "projectionLabel": "Proyección realista",
-      "operationsUnit": "operaciones",
-      "dealsCount": "{count} operaciones",
-      "projectionNote": "Subir la prospección {factor}× en este segmento sostiene el ritmo actual de cierre sin saturar al equipo.",
-      "successRate": "Tasa de éxito",
-      "pipeline": "Pipeline",
-      "dataPoints": "Puntos de datos",
-      "avgSalesCycle": "Ciclo de venta promedio",
-      "avgSalesCycleValue": "34 días",
-      "avgTicket": "Ticket promedio",
-      "avgTicketValue": "USD 18.400",
-      "nextUpdate": "Próxima actualización",
-      "nextUpdateValue": "en 24h",
-      "basedOn": "Basado en 312 puntos de intención de compra de los últimos 90 días.",
-      "viewMore": "Ver más"
-    },
-    "status": "Modelo · 94 % confianza · datos de ejemplo"
+    "hiveTitle": "Colmena de intención",
+    "cold": "Frío",
+    "hot": "Caliente",
+    "weeklyTitle": "Señales por semana",
+    "weeklyCaption": "Detectadas en las últimas ocho semanas",
+    "week": "S{n}",
+    "signalsCount": "{count} señales",
+    "mixTitle": "Mezcla por tipo",
+    "mixCaption": "Qué clase de señal llega más",
+    "other": "Otros"
   },
-  "counters": {
-    "note": "Cifras del demo de arriba — datos de ejemplo, no una cuenta real. Las fuentes conectadas sí son las del producto.",
-    "items": {
-      "signals": {
-        "label": "Hechos analizados hoy",
-        "value": "128",
-        "hint": "Motor de señales del demo"
-      },
-      "plays": {
-        "label": "Jugadas listas para aprobar",
-        "value": "7",
-        "hint": "Zona de acción · Listas"
-      },
-      "confidence": {
-        "label": "Confianza del modelo",
-        "value": "94 %",
-        "hint": "Scoring con dato real"
-      },
-      "sources": {
-        "label": "Fuentes conectadas",
-        "value": "6",
-        "hint": "LinkedIn · G2 · Google · GDELT · empleo · web"
+  "features": {
+    "play": {
+      "card": {
+        "eyebrow": "Jugada sugerida",
+        "headline": "Northwind Robotics · Serie C",
+        "time": "hace 2h",
+        "argument": "Acaban de levantar capital y están contratando ventas: es el momento de mayor propensión a comprar. Abre con cómo escalan el equipo sin perder señal.",
+        "chips": {
+          "channel": "Email",
+          "timing": "Esta semana",
+          "fit": "Encaje alto"
+        },
+        "approve": "Aprobar",
+        "reject": "Rechazar",
+        "approvedNote": "Jugada aprobada · agendada para el martes",
+        "rejectedNote": "Jugada descartada · BEE ajusta la siguiente",
+        "undo": "Deshacer"
       }
-    }
-  },
-  "integrations": {
-    "items": {
-      "linkedin": "Señales de contratación y alcance directo",
-      "g2": "Señales de intención de compra por reseñas y comparaciones",
-      "googleSearch": "Menciones públicas y cambios de stack tecnológico",
-      "email": "Envío de secuencias vía SMTP, SendGrid o Resend"
+    },
+    "execute": {
+      "card": {
+        "eyebrow": "Próximos pasos",
+        "week": "Esta semana",
+        "days": {
+          "d1": "Lun",
+          "d2": "Mar",
+          "d3": "Mié",
+          "d4": "Jue",
+          "d5": "Vie"
+        },
+        "steps": {
+          "email": "Email · Northwind",
+          "call": "Llamada · Vantage",
+          "followup": "Seguimiento · Solace"
+        },
+        "when": {
+          "email": "Enviado",
+          "call": "Jue 11:00",
+          "followup": "Vie"
+        }
+      }
     }
   },
   "faq": {
@@ -213,11 +90,11 @@
     "items": [
       {
         "question": "¿De dónde salen las señales y los scores?",
-        "answer": "De fuentes públicas reales (LinkedIn, G2, Google Search) y de tus propios datos de pipeline. Si no hay dato suficiente para un score, el sistema lo muestra vacío — nunca inventa un número para que la pantalla se vea completa."
+        "answer": "De señales públicas del mercado y de tus propios datos de pipeline. Si no hay dato suficiente para un score, el sistema lo muestra vacío — nunca inventa un número para que la pantalla se vea completa."
       },
       {
         "question": "¿BEE envía mensajes por mi cuenta sin que yo lo sepa?",
-        "answer": "No. Ninguna acción externa — un email, un mensaje de LinkedIn, una secuencia — se ejecuta sin aprobación humana explícita. El sistema prepara la jugada; tú decides si sale."
+        "answer": "No. Ninguna acción externa — un email, un mensaje, una secuencia — se ejecuta sin aprobación humana explícita. El sistema prepara la jugada; tú decides si sale."
       },
       {
         "question": "¿Mis datos se mezclan con los de otras cuentas?",
@@ -291,74 +168,65 @@
     }
   },
   "sales": {
-    "eyebrow": "Cierres",
+    "eyebrow": "Ventas",
     "heading": "Los CRM registran ventas. BEE las cierra.",
-    "subheading": "Hecho para que tu equipo cierre más que con cualquier CRM tradicional: BEE detecta la señal antes de que exista el lead, arma la jugada y aprende de cada cierre.",
+    "subheading": "Un CRM guarda lo que ya pasó y una herramienta de intent te da una lista. BEE detecta la señal antes de que exista el lead, arma la jugada y aprende de cada cierre.",
+    "rows": {
+      "origin": "Origen del lead",
+      "next": "Siguiente paso",
+      "priority": "Priorización",
+      "close": "Cierre"
+    },
+    "columns": {
+      "crm": {
+        "title": "CRM tradicional",
+        "subtitle": "Registra el pipeline que tu equipo ya construyó.",
+        "origin": "Lo carga el vendedor, cuando ya lo encontró.",
+        "next": "Lo decide cada vendedor, a su criterio.",
+        "priority": "Por etapa o por orden de carga.",
+        "close": "Se reporta al final del mes."
+      },
+      "intent": {
+        "title": "Herramientas de intent / enriquecimiento",
+        "subtitle": "Te dicen quién podría estar interesado.",
+        "origin": "Una lista de cuentas con un puntaje.",
+        "next": "Queda en tus manos: qué decir y por dónde.",
+        "priority": "Por volumen de actividad, sin encaje con tu cliente ideal.",
+        "close": "Fuera de la herramienta; no aprende del resultado."
+      },
+      "bee": {
+        "title": "BEE",
+        "subtitle": "Detecta, arma la jugada y aprende de cada cierre.",
+        "origin": "La señal del mercado, antes de que exista el lead.",
+        "next": "La jugada lista: argumento, canal y momento.",
+        "priority": "Por intención, encaje y actividad real.",
+        "close": "Cada deal ganado o perdido ajusta la siguiente jugada."
+      }
+    },
     "chart": {
-      "title": "Ingresos acumulados",
-      "caption": "Ganado sobre ganado, doce meses",
-      "badge": "Ventas",
-      "tiles": {
-        "month": {
-          "label": "Ganado este mes",
-          "value": "+46 k"
-        },
-        "clients": {
-          "label": "Clientes nuevos",
-          "value": "2"
-        },
-        "goal": {
-          "label": "Meta del mes",
-          "value": "110 %"
-        }
-      },
-      "note": "Vista ilustrativa con datos del demo. Los mismos verdes que verás en tu página de Ventas."
+      "title": "Ganado por mes",
+      "caption": "Últimos seis meses",
+      "target": "Meta"
     },
-    "reasons": {
-      "earlier": {
-        "title": "Llegas antes que nadie",
-        "description": "Una ronda, una contratación clave o un cambio de stack se convierten en oportunidad en minutos, no cuando el lead ya habló con tres competidores."
-      },
-      "play": {
-        "title": "Cada jugada viene armada",
-        "description": "Punto de dolor, argumento de cierre, canal y momento. El vendedor abre la tarjeta y actúa; no investiga desde cero."
-      },
-      "priority": {
-        "title": "Prioriza por intención, no por orden alfabético",
-        "description": "El score de BEE cruza señal, encaje con tu cliente ideal y actividad real. Lo caliente sube solo."
-      },
-      "learn": {
-        "title": "Aprende de cada cierre",
-        "description": "Cada deal ganado o perdido ajusta la siguiente estrategia: qué canal, qué playbook y qué señal cierran de verdad en tu mercado."
-      }
+    "months": {
+      "m1": "Mar",
+      "m2": "Abr",
+      "m3": "May",
+      "m4": "Jun",
+      "m5": "Jul",
+      "m6": "Ago"
     },
-    "compare": {
-      "dimension": "",
-      "crm": "CRM tradicional",
-      "bee": "BEE",
-      "rows": {
-        "signal": {
-          "dimension": "Origen del lead",
-          "crm": "Registra lo que el equipo ya encontró.",
-          "bee": "Detecta lo que está por pasar en el mercado."
-        },
-        "play": {
-          "dimension": "Siguiente paso",
-          "crm": "El vendedor decide qué hacer y qué decir.",
-          "bee": "BEE propone la jugada con argumento y canal."
-        },
-        "pipeline": {
-          "dimension": "Pipeline",
-          "crm": "Se llena a mano, tarjeta por tarjeta.",
-          "bee": "Se llena solo con señales calificadas."
-        },
-        "goals": {
-          "dimension": "Metas",
-          "crm": "Reporte al final del mes.",
-          "bee": "Metas por persona y avance en vivo, en verde cuando se superan."
-        }
-      }
+    "simulator": {
+      "title": "Si prospecto más, ¿cuánto cierro?",
+      "caption": "Proyección a seis meses según cuánto subes la prospección.",
+      "groupAria": "Multiplicador de prospección",
+      "factor": "Si prospecto ×{factor}",
+      "deals": "{count} operaciones",
+      "totalLabel": "En seis meses",
+      "lastLabel": "Ritmo al sexto mes",
+      "note": "Con ×{factor}, el ritmo de cierre sube sin saturar al equipo: BEE prioriza lo caliente y descarta lo que no encaja."
     },
+    "illustrative": "Vista ilustrativa con datos de ejemplo.",
     "cta": "Ver Ventas en el demo",
     "ctaSecondary": "Crear cuenta gratis"
   }

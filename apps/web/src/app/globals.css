@@ -1338,10 +1338,9 @@
 }
 @media (prefers-reduced-motion: reduce) { .bee-hex-breathe { animation: none; } }
 
-/* ── Landing shell: floating nav, hero wash, CTA lift, live dot ──────────
-   Pure BEE tokens throughout — card, border, primary (lavender), chart-1
-   (honey), chart-4 (indigo); nothing mixed toward ink, no blend of two
-   hues. */
+/* ── Landing shell: floating nav, hero wash, CTA lift ────────────────────
+   Pure BEE tokens throughout — card, border, primary (lavender); nothing
+   mixed toward ink, no brand hue on a ground. */
 
 /* Floating navbar (marketing-header.tsx): translucent card over the page,
    blurred, hairline border, the card shadow. */
@@ -1353,51 +1352,20 @@
   box-shadow: var(--bee-shadow-card);
 }
 
-/* Ethereal ground, hero only: a wash from a light lavender (the primary
-   token toward the page background) down to the page background, plus two
-   soft blurred blobs — lavender/indigo and honey — each one token. */
+/* Ground, hero only: a faint wash from the lavender primary token (toward
+   the page background) down to the page background. Nothing else — no
+   blobs, no brand hue. */
 .bee-hero-wash {
   position: absolute;
   inset: 0;
   pointer-events: none;
   overflow: hidden;
-  background: linear-gradient(to bottom, color-mix(in srgb, var(--color-primary) 55%, var(--color-background)), var(--color-background) 85%);
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--color-primary) 45%, var(--color-background)), var(--color-background) 85%);
 }
-.bee-hero-wash i {
-  position: absolute;
-  display: block;
-  border-radius: 50%;
-  filter: blur(80px);
-}
-.bee-hero-wash i:nth-child(1) { width: min(36rem, 90vw); height: 22rem; left: -8rem; top: -6rem; background: var(--color-chart-4); opacity: 0.28; }
-.bee-hero-wash i:nth-child(2) { width: min(30rem, 80vw); height: 20rem; right: -6rem; top: 4rem; background: var(--color-chart-1); opacity: 0.22; }
 
 /* CTA hover: a shadow lift only — colors stay the button's own. */
 .bee-cta-lift { transition: box-shadow 180ms ease, background-color 150ms ease, border-color 150ms ease; }
 .bee-cta-lift:hover { box-shadow: var(--bee-shadow-card-lift); }
-
-/* Live dot on the hero shot's window bar — indigo, with a slow ring. */
-.bee-live-dot {
-  position: relative;
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  background: var(--color-chart-4);
-}
-.bee-live-dot::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border-radius: 9999px;
-  border: 1.5px solid var(--color-chart-4);
-  animation: bee-live-ring 2.4s ease-out infinite;
-}
-@keyframes bee-live-ring {
-  0% { transform: scale(0.6); opacity: 0.8; }
-  70%, 100% { transform: scale(1.5); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) { .bee-live-dot::after { animation: none; opacity: 0.5; } }
 
 @keyframes bee-hex-pulse {
   0%, 100% { opacity: 0.35; transform: scale(1); }
@@ -1423,29 +1391,6 @@
 
 
 
-
-/* ── Ticker de señales — cinta horizontal en loop, puro CSS ─────────────── */
-
-.bee-ticker-track {
-  display: flex;
-  width: max-content;
-  animation: bee-ticker-scroll 32s linear infinite;
-}
-
-.bee-ticker-track:hover {
-  animation-play-state: paused;
-}
-
-@keyframes bee-ticker-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .bee-ticker-track {
-    animation: none;
-  }
-}
 
 @layer base {
   * { border-color: var(--border); }
@@ -1510,7 +1455,6 @@
      hydration and only to release it a moment later. No JS ⇒ nothing here
      ever hides anything.
    · One vocabulary: fade + 12px rise, 300–500 ms, ease-out, never bouncy.
-     The Ventas chart draw (1.6 s, once) is the one deliberate exception.
    · prefers-reduced-motion: the block at the end turns every rule off and
      pins each element to its final state.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -1546,10 +1490,6 @@
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@keyframes bee-grow-x {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
 
 /* Hero load-in: eyebrow → headline → subtitle → CTAs, 60 ms apart. The
    headline itself is excluded — its words carry their own rise below. */
@@ -1571,67 +1511,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Headline highlight: the key words in BEE's deeper honey (chart-2), the
-   pure token — no mix toward ink, no marker, no underline. */
-.bee-hl { color: var(--color-text); }  /* no colored text anywhere in BEE */
-
-/* Demo panel: honey hairline filling across the active tab until the next
-   auto-rotation (duration set inline from AUTO_ROTATE_MS). */
-.bee-tab-progress {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  height: 2px;
-  width: 100%;
-  transform-origin: 0 50%;
-  background: var(--color-chart-1);
-  animation: bee-grow-x 8s linear both;
-}
-
-/* Ventas chart draws itself once on entry: line via stroke-dashoffset
-   (pathLength="1"), area via clip-path, end dot pops last. Greens stay the
-   chart's own. */
-.bee-draw[data-reveal="hidden"] .bee-draw__line { stroke-dasharray: 1; stroke-dashoffset: 1; }
-.bee-draw[data-reveal="hidden"] .bee-draw__area { clip-path: inset(0 100% 0 0); }
-.bee-draw[data-reveal="hidden"] .bee-draw__dot { opacity: 0; transform: scale(0.4); }
-.bee-draw[data-reveal="in"] .bee-draw__line {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 0;
-  transition: stroke-dashoffset 1600ms cubic-bezier(0.4, 0, 0.2, 1) 250ms;
-}
-.bee-draw[data-reveal="in"] .bee-draw__area {
-  clip-path: inset(0 0 0 0);
-  transition: clip-path 1600ms cubic-bezier(0.4, 0, 0.2, 1) 250ms;
-}
-.bee-draw[data-reveal="in"] .bee-draw__dot {
-  opacity: 1;
-  transform: scale(1);
-  transition: opacity 300ms ease-out 1700ms, transform 400ms cubic-bezier(0.2, 0.7, 0.2, 1) 1700ms;
-}
-
-/* ── Trust cards: the dashboard charts play once on entry ─────────────────
-   Driven by the same data-reveal state as the card stagger (.bee-trust is
-   the stagger wrapper). While "hidden": donut arcs empty, funnel bars at
-   zero width, vertical bars (BarsVsTarget and the source mini-bars) at
-   zero height, heat cells fully transparent; on "in" each transitions to
-   the value the component already rendered. Selectors reach into the
-   chart components' own markup (.h-5 > div = a funnel bar; rect = a bar or
-   a heat cell) — kept here, next to the only place that uses them. CSS
-   wins over SVG presentation attributes, so no !important is needed on
-   stroke-dasharray / fill-opacity. */
-.bee-trust[data-reveal="hidden"] .bee-trust-donut circle { stroke-dasharray: 0 1000; }
-.bee-trust-donut circle { transition: stroke-dasharray 1200ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms, opacity 150ms ease; }
-.bee-trust[data-reveal="hidden"] .bee-trust-funnel .h-5 > div { width: 0 !important; }
-.bee-trust-funnel .h-5 > div { transition: width 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms, opacity 150ms ease; }
-.bee-trust-bars rect {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-  transition: transform 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms, opacity 150ms ease;
-}
-.bee-trust[data-reveal="hidden"] .bee-trust-bars rect { transform: scaleY(0); }
-.bee-trust-heat rect { transition: fill-opacity 900ms ease 300ms; }
-.bee-trust[data-reveal="hidden"] .bee-trust-heat rect { fill-opacity: 0; }
-
 /* ── FAQ answers that type themselves ─────────────────────────────────────
    The full answer owns the layout (transparent ink while typing, so the
    height animation never sees the text change); the typed overlay sits on
@@ -1644,7 +1523,7 @@
   height: 0.95em;
   margin-left: 1px;
   vertical-align: -0.15em;
-  background: var(--color-chart-4);
+  background: var(--color-text);
   animation: bee-caret 900ms steps(2, start) infinite;
 }
 @keyframes bee-caret { to { opacity: 0; } }
@@ -1668,15 +1547,7 @@
   .bee-reveal--stagger[data-reveal="in"] > * { transition: none; }
   .bee-hero-in > *,
   .bee-hero-in .bee-word,
-  .bee-tab-progress,
   .bee-type__caret { animation: none; }
-  .bee-draw[data-reveal] .bee-draw__line { stroke-dasharray: none; stroke-dashoffset: 0; transition: none; }
-  .bee-draw[data-reveal] .bee-draw__area { clip-path: none; transition: none; }
-  .bee-draw[data-reveal] .bee-draw__dot { opacity: 1; transform: none; transition: none; }
-  .bee-trust-donut circle,
-  .bee-trust-funnel .h-5 > div,
-  .bee-trust-bars rect,
-  .bee-trust-heat rect { transition: none; }
 }
 
 /* ── Opportunity drawer, "engine" size ─────────────────────────────────────

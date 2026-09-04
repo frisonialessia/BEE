@@ -1,18 +1,17 @@
-import { mix } from "@/components/charts/palette";
 import type { BarPoint } from "@/components/charts/bars-vs-target";
 import type { Locale } from "@/i18n/locales";
 import { localeTags } from "@/i18n/locales";
 import type { Opportunity } from "@/types/domain";
 
-import { STAGE_ACCENT, STEP_ORDER, stepOf, type StepKey } from "./stage-meta";
+import { LOST_FILL, STAGE_ACCENT, STEP_ORDER, stepOf, type StepKey } from "./stage-meta";
 
 export const MONTHS_BACK = 6;
 
-/** Segment color per step of the account bar — the stage's tone; won is
- *  the one green, lost/dismissed a neutral ink. */
+/** Segment color per step of the account funnel — the stage's tone; the
+ *  closed step is honey when the account has a won deal, ink otherwise. */
 export function segmentFill(step: StepKey, opps: Pick<Opportunity, "status">[]): string {
   if (step !== "closed") return STAGE_ACCENT[step];
-  return opps.some((o) => o.status === "won") ? STAGE_ACCENT.closed : mix("var(--color-text)", 20);
+  return opps.some((o) => o.status === "won") ? STAGE_ACCENT.closed : LOST_FILL;
 }
 
 /** How many of the account's opportunities sit in each step. */

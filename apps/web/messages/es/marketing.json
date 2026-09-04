@@ -37,91 +37,25 @@
   },
   "landing": {
     "eyebrow": "Sales Force Intelligence",
-    "heroTitle": "Inteligencia comercial autónoma que decide <hl>en tiempo real.</hl>",
-    "heroSubtitle": "BEE vigila el mercado, prioriza tu pipeline y prepara la próxima jugada mientras tú cierras — sin fricción, sin datos inventados, sin perder el control de cada decisión.",
+    "heroTitle": "Inteligencia comercial que decide en tiempo real.",
+    "heroSubtitle": "BEE vigila el mercado, prioriza tu pipeline y prepara la próxima jugada mientras tú cierras.",
     "ctaStart": "Comenzar ahora",
     "ctaTry": "Probar sin registrarte",
-    "guaranteesEyebrow": "Por qué confiar en BEE",
-    "guaranteesTitle": "Diseñado para equipos comerciales de alto rendimiento.",
-    "guaranteesSubtitle": "No promesas — garantías de arquitectura que sostienen cada decisión que BEE toma por ti.",
-    "guarantees": {
-      "noHallucinations": {
-        "title": "Cero alucinaciones",
-        "description": "Cada score sale de un dato. Si no hay dato, queda vacío."
+    "demoCaption": "Vista ilustrativa con datos de ejemplo.",
+    "features": {
+      "signal": {
+        "title": "La señal llega.",
+        "text": "Una ronda, una contratación clave, un cambio de stack. BEE la detecta, la puntúa y la pone en la colmena antes de que exista el lead."
       },
-      "humanApproval": {
-        "title": "Aprobación humana siempre",
-        "description": "Nada se envía sin tu luz verde explícita."
+      "play": {
+        "title": "BEE arma la jugada.",
+        "text": "Argumento, canal y momento, listos en una tarjeta. El vendedor lee y decide; no investiga desde cero."
       },
-      "multiTenant": {
-        "title": "Multi-tenant real",
-        "description": "Tus datos, aislados de punta a punta por organización."
-      },
-      "secureByDesign": {
-        "title": "Seguro desde el diseño",
-        "description": "Webhooks firmados con HMAC; secretos fuera del código."
-      },
-      "sources": {
-        "title": "Fuentes reales",
-        "description": "Seis proveedores conectados hoy en el producto; los seis de abajo están en la hoja de ruta, no en producción."
+      "execute": {
+        "title": "Tú decides, BEE ejecuta.",
+        "text": "Nada sale sin tu aprobación. Con ella, BEE agenda el siguiente paso, lo sigue y aprende del resultado."
       }
     },
-    "trustCharts": {
-      "week": "Sem {n}",
-      "coverage": {
-        "real": "Con dato real",
-        "invented": "Inventados",
-        "empty": "Sin dato → vacío"
-      },
-      "approval": {
-        "prepared": "Preparadas",
-        "approved": "Aprobadas",
-        "sent": "Enviadas",
-        "rejected": "Rechazadas",
-        "unit": "aprobadas"
-      },
-      "tenant": {
-        "orgA": "Organización A",
-        "orgB": "Organización B",
-        "orgC": "Organización C",
-        "orgD": "Organización D",
-        "center": "{n} orgs",
-        "cross": "Consultas cruzadas",
-        "scoped": "Filtradas por organización",
-        "isolated": "Organizaciones aisladas"
-      },
-      "security": {
-        "signed": "Firmadas con HMAC",
-        "rejected": "Firmas rechazadas",
-        "incidents": "Incidentes",
-        "deliveries": "{count} entregas verificadas",
-        "total": "Entregas verificadas esta semana:",
-        "less": "Menos",
-        "more": "Más",
-        "aria": "Entregas de webhook por día de la semana y hora, todas verificadas con HMAC — vista ilustrativa"
-      },
-      "sources": {
-        "live": "En producción hoy · {count}",
-        "planned": "Próximamente · {count}",
-        "soon": "próximamente",
-        "unit": "señales",
-        "kinds": {
-          "linkedin": "Perfiles y contratación",
-          "g2": "Reseñas e intención de compra",
-          "googleSearch": "Menciones y stack tecnológico",
-          "gdelt": "Prensa mundial, sin API key",
-          "hiring": "Portales de empleo públicos",
-          "website": "Enriquecimiento desde el dominio",
-          "crunchbase": "Rondas de inversión",
-          "apollo": "Contactos y cuentas",
-          "hubspot": "Sincronización con tu CRM",
-          "salesforce": "Sincronización con tu CRM",
-          "slack": "Alertas al equipo",
-          "gmail": "Envío y respuestas"
-        }
-      }
-    },
-    "trustNote": "Cifras ilustrativas del demo — no una cuenta real.",
     "closingTitle": "Tu próximo cliente ya está mandando señales. La pregunta es si las estás viendo.",
     "closingCta": "Comenzar ahora"
   }
