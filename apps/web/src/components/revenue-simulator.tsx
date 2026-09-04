@@ -14,6 +14,7 @@ import { runRevenueSimulation } from "@/lib/api";
 import { CHART_PALETTE } from "@/lib/brand/colors";
 import type { RevenueSimulation, SimulatorScenario } from "@/lib/types";
 import { KpiStrip } from "@/components/metric-card";
+import { SALES } from "@/components/charts/palette";
 
 const SIGNAL_TYPE_VALUES = [
   "funding_round",
@@ -24,10 +25,12 @@ const SIGNAL_TYPE_VALUES = [
   "expansion",
 ] as const;
 
-const SCENARIO_BAR: Record<string, string> = {
-  Conservative: "bee-bar--3",
-  Realistic: "bee-bar--4",
-  Optimistic: "bee-bar--1",
+// The simulator projects won deals — the one place in Pronóstico where the
+// sales greens apply: mint → lime → won, conservative → optimistic.
+const SCENARIO_COLOR: Record<string, string> = {
+  Conservative: SALES.mint,
+  Realistic: SALES.lime,
+  Optimistic: SALES.won,
 };
 
 function ScenarioBar({
@@ -55,10 +58,7 @@ function ScenarioBar({
         )}
       </div>
       <div className="bee-bar-track">
-        <div
-          className={`bee-bar ${SCENARIO_BAR[scenario.label] ?? "bee-bar--2"}`}
-          style={{ width: `${pct}%` }}
-        />
+        <div className="bee-bar" style={{ width: `${pct}%`, background: SCENARIO_COLOR[scenario.label] ?? SALES.lime }} />
       </div>
     </div>
   );
@@ -215,7 +215,7 @@ export function RevenueSimulatorWidget() {
           <KpiStrip
             cols={3}
             items={[
-              { label: t("stats.winRate"), value: `${Math.round(result.historical_win_rate * 100)}%` },
+              { label: t("stats.winRate"), value: `${Math.round(result.historical_win_rate * 100)}%`, color: SALES.won, progress: result.historical_win_rate },
               { label: t("stats.pipeline"), value: result.current_pipeline_count },
               { label: t("stats.dataPoints"), value: result.sample_size },
             ]}

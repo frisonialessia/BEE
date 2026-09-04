@@ -25,6 +25,8 @@ export interface MetricItem {
   hint?: string;
   icon?: LucideIcon;
   tone?: "default" | "warm" | "muted" | "blue";
+  /** Exact tone (a palette token) when the tile carries a specific meaning — e.g. SALES.won on the one green KPI. */
+  color?: string;
   /** @deprecated kept for call sites; tiles take their tone from the series. */
   accent?: string;
   /** Daily series (e.g. last 7 days) — draws a mini trend on the right. */
@@ -46,7 +48,7 @@ const TONE_COLOR: Record<NonNullable<MetricItem["tone"]>, string | null> = {
   blue: DATA.indigo,
 };
 
-export function MetricCard({ label, value, hint, tone = "default", trend, progress, delta, deltaLabel, hideOnMobile, className, seriesIndex = 0 }: MetricItem & { seriesIndex?: number }) {
+export function MetricCard({ label, value, hint, tone = "default", color, trend, progress, delta, deltaLabel, hideOnMobile, className, seriesIndex = 0 }: MetricItem & { seriesIndex?: number }) {
   return (
     <StatTile
       label={label}
@@ -56,7 +58,7 @@ export function MetricCard({ label, value, hint, tone = "default", trend, progre
       progress={progress}
       delta={delta}
       deltaLabel={deltaLabel}
-      tone={TONE_COLOR[tone] ?? SERIES[seriesIndex % SERIES.length]}
+      tone={color ?? TONE_COLOR[tone] ?? SERIES[seriesIndex % SERIES.length]}
       className={cn(hideOnMobile && "hidden md:flex", className)}
     />
   );

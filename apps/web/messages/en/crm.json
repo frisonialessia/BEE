@@ -53,7 +53,8 @@
       "title": "No opportunities in the pipeline yet.",
       "hint": "As soon as a signal becomes an opportunity, it shows up here — or add the first one by hand."
     },
-    "moveError": "Couldn't move the opportunity — try again."
+    "moveError": "Couldn't move the opportunity — try again.",
+    "scoreTooltip": "BEE intent score: {score} of 100"
   },
   "drawer": {
     "closeOverlay": "Close detail panel",

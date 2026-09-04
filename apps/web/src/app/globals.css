@@ -1155,73 +1155,23 @@
 /* Kanban */
 .bee-kanban-card {
   position: relative;
-  border-radius: var(--radius-lg);
-  padding: 1rem 1rem 1rem 1.25rem;
+  border-radius: var(--radius-md);
   background: var(--color-card);
   border: var(--bee-card-border-w) solid var(--bee-card-border);
   box-shadow: var(--bee-shadow-card);
-  transition: border-color 120ms ease;
+  transition: box-shadow 150ms ease, transform 150ms ease;
 }
+.bee-kanban-card:hover { box-shadow: var(--bee-shadow-card-lift); }
 
-.bee-kanban-card::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.75rem;
-  bottom: 0.75rem;
-  width: 3px;
-  background: var(--color-chart-1);
-}
-
-.bee-kanban-card--chart-2::before { background: var(--color-chart-2); }
-.bee-kanban-card--chart-3::before { background: var(--color-chart-3); }
-.bee-kanban-card--chart-4::before { background: var(--color-chart-4); }
-.bee-kanban-card--chart-5::before { background: var(--color-chart-5); }
-.bee-kanban-card--chart-6::before { background: var(--color-chart-6); }
-
-.bee-kanban-card:hover {
-  box-shadow: var(--bee-shadow-card-lift);
-}
-
-/* CRM column fills — every stage carries its own BEE tone (see
-   STAGE_TONE in lib/crm-board.ts). A filled card drops the left accent
-   bar: the fill *is* the stage marker. "Cliente" (won) stays white with
-   the brand outline — a closed deal is a customer, not a colored stage —
-   and lost/dismissed go quiet in a neutral grey. */
-.bee-kanban-card[class*="bee-kanban-card--fill-"],
-.bee-kanban-card--client,
-.bee-kanban-card--muted {
-  padding-left: 1rem;
-}
-.bee-kanban-card[class*="bee-kanban-card--fill-"]::before,
-.bee-kanban-card--client::before,
-.bee-kanban-card--muted::before {
-  display: none;
-}
-.bee-kanban-card--fill-1 {
-  background: color-mix(in srgb, var(--color-chart-1) 34%, var(--color-card));
-  border-color: color-mix(in srgb, var(--color-chart-1) 60%, var(--color-card));
-}
-.bee-kanban-card--fill-3 {
-  background: color-mix(in srgb, var(--color-chart-3) 30%, var(--color-card));
-  border-color: color-mix(in srgb, var(--color-chart-3) 60%, var(--color-card));
-}
-.bee-kanban-card--fill-4 {
-  background: color-mix(in srgb, var(--color-chart-4) 26%, var(--color-card));
-  border-color: color-mix(in srgb, var(--color-chart-4) 55%, var(--color-card));
-}
-.bee-kanban-card--fill-6 {
-  background: color-mix(in srgb, var(--color-chart-6) 30%, var(--color-card));
-  border-color: color-mix(in srgb, var(--color-chart-6) 60%, var(--color-card));
-}
-.bee-kanban-card--client {
-  background: var(--color-card);
-  border-color: var(--color-chart-4);
-}
-.bee-kanban-card--muted {
-  background: color-mix(in srgb, var(--color-text) 5%, var(--color-card));
-  border-color: color-mix(in srgb, var(--color-text) 12%, var(--color-card));
-}
+/* Legacy stage fills — still read by the opportunities list's stage dots
+   through STAGE_TONE; the board itself is white cards with a 4px left
+   border (see features/crm/crm-board.tsx). */
+.bee-kanban-card--fill-1 { background: color-mix(in srgb, var(--color-chart-1) 34%, var(--color-card)); }
+.bee-kanban-card--fill-3 { background: color-mix(in srgb, var(--color-chart-3) 30%, var(--color-card)); }
+.bee-kanban-card--fill-4 { background: color-mix(in srgb, var(--color-chart-4) 26%, var(--color-card)); }
+.bee-kanban-card--fill-6 { background: color-mix(in srgb, var(--color-chart-6) 30%, var(--color-card)); }
+.bee-kanban-card--client { background: var(--color-card); }
+.bee-kanban-card--muted { background: color-mix(in srgb, var(--color-text) 5%, var(--color-card)); }
 .bee-kanban-col__bar {
   height: 4px;
   border-radius: 999px;

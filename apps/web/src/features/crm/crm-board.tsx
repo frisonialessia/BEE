@@ -1,187 +1,279 @@
 "use client";
 
-import { AlertCircle, ArrowUpRight, CircleHelp, Flame, Inbox } from "lucide-react";
+import {
+  Activity,
+  AlertCircle,
+  Banknote,
+  Building2,
+  CircleHelp,
+  Cpu,
+  FileText,
+  Globe,
+  Handshake,
+  Inbox,
+  Newspaper,
+  Radio,
+  Rocket,
+  Scale,
+  Star,
+  Store,
+  UserCog,
+  UserPlus,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
+import { SALES, mix } from "@/components/charts/palette";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
+import { useCompanies } from "@/hooks/queries/use-companies";
 import { useMoveOpportunityStage, useOpportunities } from "@/hooks/queries/use-opportunities";
+import { useSignals } from "@/hooks/queries/use-signals";
+import { useUsers } from "@/hooks/queries/use-users";
 import type { Locale } from "@/i18n/locales";
 import type { CrmStage } from "@/lib/api/opportunities";
-import { CRM_STAGES, STAGE_TONE, groupByCrmStage } from "@/lib/crm-board";
-import {
-  getOpportunityTypeLabels,
-  opportunityTypeVariant,
-  scoreVariant,
-  stripOpportunityTitlePrefix,
-} from "@/lib/format";
+import { CRM_STAGES, groupByCrmStage } from "@/lib/crm-board";
+import { getOpportunityTypeLabels, getSignalTypeLabels, stripOpportunityTitlePrefix } from "@/lib/format";
+import { formatMoney } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 import { ApiError } from "@/types/api";
-import type { Opportunity } from "@/types/domain";
+import type { Opportunity, SignalType } from "@/types/domain";
 import { LiveBadge } from "@/components/live-badge";
 
-function CrmCard({
-  opportunity,
-  dragging,
-  onOpen,
-  onDragStart,
-  onDragEnd,
-  onMove,
-}: {
-  opportunity: Opportunity;
-  dragging: boolean;
-  onOpen: (id: string) => void;
-  onDragStart: (e: React.DragEvent, id: string) => void;
-  onDragEnd: () => void;
-  onMove: (id: string, stage: CrmStage) => void;
-}) {
-  const t = useTranslations("crm.board");
-  const locale = useLocale() as Locale;
-  const strategy = opportunity.strategy;
-  const channel = strategy?.channel;
-  const nextAction = strategy?.next_best_action;
-  const isHot = Boolean((strategy as Record<string, unknown> | undefined)?.hot_lead);
-  const reviewRequired = Boolean(strategy?.manual_review_required);
-  const accent = STAGE_TONE[opportunity.status]?.fill ?? "";
-  const opportunityType = opportunity.opportunity_type ?? "new_logo";
-  const opportunityTypeLabels = getOpportunityTypeLabels(locale);
+/**
+ * The BEE brain on a card, without words: one small icon per signal type.
+ * The label lives in the tooltip; the rep learns the glyphs in a day.
+ */
+const SIGNAL_ICON: Record<SignalType, LucideIcon> = {
+  funding_round: Banknote,
+  funding_grant: Banknote,
+  hiring: UserPlus,
+  leadership_change: UserCog,
+  tech_adoption: Cpu,
+  product_launch: Rocket,
+  expansion: Globe,
+  franchise_expansion: Store,
+  merger_acquisition: Handshake,
+  news_mention: Newspaper,
+  engagement: Activity,
+  public_tender: FileText,
+  regulatory_change: Scale,
+  other: Radio,
+};
 
-  return (
-    <div
-      draggable
-      onDragStart={(e) => onDragStart(e, opportunity.id)}
-      onDragEnd={onDragEnd}
-      onClick={() => onOpen(opportunity.id)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") onOpen(opportunity.id);
-      }}
-      className={cn(
-        "bee-kanban-card group w-full cursor-grab text-left active:cursor-grabbing",
-        accent,
-        dragging && "opacity-40",
-      )}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <p className="line-clamp-2 text-sm font-medium leading-snug tracking-tight">
-          {stripOpportunityTitlePrefix(opportunity.title)}
-        </p>
-        <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-      </div>
+const COLUMN_MIN = 212;
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Badge variant={scoreVariant(opportunity.score)} className="font-mono text-micro">
-          {Math.round(opportunity.score)}
-        </Badge>
-        {opportunityType !== "new_logo" && (
-          <Badge variant={opportunityTypeVariant(opportunityType)} className="text-micro">
-            {opportunityTypeLabels[opportunityType]}
-          </Badge>
-        )}
-        {isHot && (
-          <span className="inline-flex items-center gap-1 text-micro text-[var(--color-chart-5)]">
-            <Flame className="size-3" />
-            {t("hot")}
-          </span>
-        )}
-        {reviewRequired && (
-          <AlertCircle className="size-3 text-[var(--color-chart-1)]" aria-label={t("reviewRequired")} />
-        )}
-      </div>
+/** Stage accent for the card's left border and score pill (brand tokens). */
+const STAGE_ACCENT: Record<CrmStage | "closed", string> = {
+  detected: "var(--color-chart-3)",
+  ready_to_action: "var(--color-chart-6)",
+  prioritized: "var(--color-chart-1)",
+  in_progress: "var(--color-chart-4)",
+  closed: SALES.won,
+};
 
-      {typeof nextAction === "string" && nextAction && (
-        <p className="mt-2 line-clamp-1 bee-micro font-medium">
-          {nextAction.replace(/_/g, " ")}
-        </p>
-      )}
-      {typeof channel === "string" && channel && (
-        <p className="mt-1 bee-eyebrow">{t("viaChannel", { channel })}</p>
-      )}
-
-      {/* Alternativa al drag-and-drop — el HTML5 drag nativo no funciona en
-          touch (celular/tablet), y sin esto no había NINGUNA forma de mover
-          una oportunidad de etapa desde esos dispositivos. stopPropagation
-          en click/pointerDown para que interactuar con el select no abra el
-          drawer (el onClick de la tarjeta) ni intente iniciar un drag. */}
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events --
-          onClick here only stops propagation to the parent card; it triggers no action of its own and
-          nothing here needs a keyboard equivalent — keyboard users reach the <select> below directly. */}
-      <div
-        className="mt-2.5 border-t border-border/60 pt-2"
-        onClick={(e) => e.stopPropagation()}
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        <select
-          value={opportunity.status}
-          onChange={(e) => onMove(opportunity.id, e.target.value as CrmStage)}
-          aria-label={t("moveToStage")}
-          className="w-full rounded-sm border border-border bg-background px-2 py-1 text-micro text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-        >
-          {CRM_STAGES.map((s) => (
-            <option key={s.id} value={s.id}>
-              {t("moveToOption", { stage: t(`stages.${s.id}`) })}
-            </option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
-function CrmColumn({
-  stage,
-  label,
-  cards,
-  draggingId,
+interface CardMeta {
+  company: string | null;
+  owner: string | null;
+  signalType: SignalType | null;
+  signalTitle: string | null;
+}
+
+/**
+ * One block of the grid: white, a 4px stage-colored left border, the title
+ * in text-sm, metadata in text-xs, the BEE score as a small pill and the
+ * signal as an icon. `flex h-full flex-col` so a row of cards is one clean
+ * horizontal line whatever each title's length.
+ */
+function CrmCard({
+  opportunity,
+  meta,
+  accent,
+  dragging,
+  draggable = true,
+  style,
   onOpen,
   onDragStart,
   onDragEnd,
   onDrop,
   onMove,
 }: {
-  stage: CrmStage;
-  label: string;
-  cards: Opportunity[];
-  draggingId: string | null;
+  opportunity: Opportunity;
+  meta: CardMeta;
+  accent: string;
+  dragging: boolean;
+  draggable?: boolean;
+  style: React.CSSProperties;
   onOpen: (id: string) => void;
-  onDragStart: (e: React.DragEvent, id: string) => void;
-  onDragEnd: () => void;
-  onDrop: (stage: CrmStage) => void;
-  onMove: (id: string, stage: CrmStage) => void;
+  onDragStart?: (e: React.DragEvent, id: string) => void;
+  onDragEnd?: () => void;
+  onDrop?: () => void;
+  onMove?: (id: string, stage: CrmStage) => void;
 }) {
   const t = useTranslations("crm.board");
-  const pathname = usePathname();
-  const [over, setOver] = useState(false);
-
-  // "Tu prioridad" is the one column BEE never fills on its own — nothing
-  // in the backend auto-promotes an opportunity into it (see stageHelp's
-  // own explainer). Pointing to Priorización's Bandeja de Decisiones from
-  // right here is what makes the distinction land instead of just being
-  // read once and forgotten: "if this isn't automatic, where's the
-  // automatic version?" answered in the same glance.
-  const priorityHref = pathname?.startsWith("/probar") ? "/probar/priority" : "/dashboard/priority";
+  const locale = useLocale() as Locale;
+  const strategy = opportunity.strategy;
+  const nextAction = strategy?.next_best_action;
+  const isHot = Boolean((strategy as Record<string, unknown> | undefined)?.hot_lead);
+  const reviewRequired = Boolean(strategy?.manual_review_required);
+  const opportunityType = opportunity.opportunity_type ?? "new_logo";
+  const typeLabels = getOpportunityTypeLabels(locale);
+  const signalType: SignalType = meta.signalType ?? "other";
+  const SignalIcon = SIGNAL_ICON[signalType] ?? Radio;
+  const signalLabel = getSignalTypeLabels(locale)[signalType] ?? signalType;
+  const won = opportunity.status === "won";
+  const closed = opportunity.status === "won" || opportunity.status === "lost" || opportunity.status === "dismissed";
 
   return (
-    <div className="flex w-[min(100%,280px)] shrink-0 flex-col">
-      <div className="bee-kanban-col__bar" style={{ background: STAGE_TONE[stage].bar }} aria-hidden="true" />
-      <div className="mb-1 flex shrink-0 items-baseline justify-between px-1">
-        <div className="flex items-center gap-1">
-          <h3 className="bee-eyebrow">{label}</h3>
+    <div
+      draggable={draggable}
+      onDragStart={draggable && onDragStart ? (e) => onDragStart(e, opportunity.id) : undefined}
+      onDragEnd={onDragEnd}
+      onDragOver={onDrop ? (e) => e.preventDefault() : undefined}
+      onDrop={
+        onDrop
+          ? (e) => {
+              e.preventDefault();
+              onDrop();
+            }
+          : undefined
+      }
+      onClick={() => onOpen(opportunity.id)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen(opportunity.id);
+      }}
+      style={{ ...style, borderLeftColor: closed && !won ? "var(--color-divider)" : accent }}
+      className={cn(
+        "bee-kanban-card group relative z-10 flex h-full min-w-0 cursor-pointer flex-col gap-2 border-l-4 p-3 text-left",
+        draggable && "cursor-grab active:cursor-grabbing",
+        dragging && "z-20 -translate-y-0.5 rotate-[0.5deg] opacity-90 shadow-2xl ring-2 ring-[var(--color-chart-4)]",
+        closed && !won && "opacity-70",
+      )}
+    >
+      {/* Title + BEE score */}
+      <div className="flex items-start justify-between gap-2">
+        <p className="line-clamp-2 min-w-0 text-sm font-semibold leading-snug">{stripOpportunityTitlePrefix(opportunity.title)}</p>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              className="shrink-0 rounded-full px-1.5 py-0.5 text-micro font-semibold tabular-nums"
+              style={{ background: mix(won ? SALES.mint : accent, won ? 100 : 22), color: "var(--color-text)" }}
+            >
+              {Math.round(opportunity.score)}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top">{t("scoreTooltip", { score: Math.round(opportunity.score) })}</TooltipContent>
+        </Tooltip>
+      </div>
+
+      {/* Metadata: account · owner · amount */}
+      <div className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground">
+        {meta.company && (
+          <span className="flex min-w-0 items-center gap-1">
+            <Building2 className="size-3 shrink-0" />
+            <span className="truncate">{meta.company}</span>
+          </span>
+        )}
+        {meta.owner && (
+          <span
+            className="flex size-5 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-[10px] font-semibold text-[var(--color-text)]"
+            title={meta.owner}
+            aria-label={meta.owner}
+          >
+            {initials(meta.owner)}
+          </span>
+        )}
+        {opportunity.amount !== null && opportunity.amount > 0 && (
+          <span
+            className={cn("ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-micro font-semibold tabular-nums text-[var(--color-text)]", won && "bg-[#b4e8c5]")}
+            style={won ? undefined : { background: "color-mix(in srgb, var(--color-text) 6%, var(--color-card))" }}
+          >
+            {formatMoney(opportunity.amount, "USD", locale, true)}
+          </span>
+        )}
+      </div>
+
+      {/* Signal glyph row: the brain, minimal */}
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="flex items-center gap-1">
+              <SignalIcon className="size-3.5" style={{ color: accent }} />
+              <span className="truncate">{signalLabel}</span>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{meta.signalTitle ?? signalLabel}</TooltipContent>
+        </Tooltip>
+        {opportunityType !== "new_logo" && <span className="truncate">· {typeLabels[opportunityType]}</span>}
+        <span className="ml-auto flex shrink-0 items-center gap-1.5">
+          {isHot && <Star aria-label={t("hot")} className="size-3.5 fill-[var(--color-chart-1)] text-[var(--color-chart-1)]" />}
+          {reviewRequired && <AlertCircle className="size-3.5 text-[var(--color-chart-2)]" aria-label={t("reviewRequired")} />}
+          {closed && (
+            <span
+              className="rounded-full px-1.5 py-0.5 text-micro font-semibold"
+              style={won ? { background: SALES.won, color: "#fff" } : { background: "color-mix(in srgb, var(--color-text) 8%, var(--color-card))" }}
+            >
+              {won ? t("closedStatus.won") : opportunity.status === "lost" ? t("closedStatus.lost") : t("closedStatus.dismissed")}
+            </span>
+          )}
+        </span>
+      </div>
+
+      {typeof nextAction === "string" && nextAction && !closed && (
+        <p className="line-clamp-1 bee-micro font-medium text-[var(--color-text)]">{nextAction.replace(/_/g, " ")}</p>
+      )}
+
+      {/* Touch/keyboard way to move — native drag has no touch equivalent. */}
+      {onMove && (
+        // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- only stops propagation so the select doesn't open the drawer.
+        <div className="mt-auto pt-1" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+          <select
+            value={opportunity.status}
+            onChange={(e) => onMove(opportunity.id, e.target.value as CrmStage)}
+            aria-label={t("moveToStage")}
+            className="w-full rounded-[var(--radius-sm)] bg-[color-mix(in_srgb,var(--color-text)_5%,var(--color-card))] px-2 py-1 text-micro text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
+          >
+            {CRM_STAGES.map((s) => (
+              <option key={s.id} value={s.id}>
+                {t("moveToOption", { stage: t(`stages.${s.id}`) })}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ColumnHeader({ stage, count, accent, style }: { stage: CrmStage | "closed"; count: number; accent: string; style: React.CSSProperties }) {
+  const t = useTranslations("crm.board");
+  const pathname = usePathname();
+  const priorityHref = pathname?.startsWith("/probar") ? "/probar/priority" : "/dashboard/priority";
+  return (
+    <div style={style} className="flex min-w-0 flex-col gap-0.5 px-1 pb-2">
+      <div className="flex items-center gap-2">
+        <span className="size-2 shrink-0 rounded-full" style={{ background: accent }} />
+        <h3 className="truncate text-xs font-semibold uppercase tracking-wide">{t(`stages.${stage}`)}</h3>
+        {stage !== "closed" && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
-                type="button"
-                aria-label={t("stageHelpAria")}
-                className="text-muted-foreground transition-colors hover:text-foreground"
-              >
+              <button type="button" aria-label={t("stageHelpAria")} className="text-muted-foreground transition-colors hover:text-foreground">
                 <CircleHelp className="size-3" />
               </button>
             </TooltipTrigger>
@@ -189,116 +281,83 @@ function CrmColumn({
               {t(`stageHelp.${stage}`)}
             </TooltipContent>
           </Tooltip>
-        </div>
-        <span className="font-mono bee-micro">{cards.length}</span>
+        )}
+        <span className="ml-auto text-sm font-light tabular-nums text-muted-foreground">{count}</span>
       </div>
-      <div className="mb-2.5 flex shrink-0 items-center justify-between gap-2 px-1">
-        <p className="bee-micro text-muted-foreground">{t(`stageSubtitles.${stage}`)}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="truncate bee-micro">{t(`stageSubtitles.${stage}`)}</p>
         {stage === "prioritized" && (
           <Link href={priorityHref} className="shrink-0 bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
             {t("prioritizedLink")}
           </Link>
         )}
       </div>
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions --
-          HTML5 drag-and-drop has no keyboard equivalent by design; the per-card <select> a few lines
-          up (see the comment above it) is this column's already-built, fully keyboard-accessible way
-          to move an opportunity between stages. */}
-      <div
-        onDragOver={(e) => {
-          e.preventDefault();
-          setOver(true);
-        }}
-        onDragLeave={() => setOver(false)}
-        onDrop={(e) => {
-          e.preventDefault();
-          setOver(false);
-          onDrop(stage);
-        }}
-        className={cn(
-          // No fixed/percentage height and no overflow-y-auto here anymore
-          // — the column grows with its own cards and the whole page
-          // scrolls, same as every other section (Resumen included),
-          // instead of being locked to viewport height with its own
-          // internal scrollbar. min-h keeps an empty column's "Sin
-          // oportunidades aquí" message from collapsing to nothing.
-          "flex min-h-[160px] flex-col gap-4 rounded-[var(--radius-lg)] border border-[var(--bee-card-border)] bg-[var(--color-card)] p-3 transition-colors",
-          over && "border-[var(--color-chart-4)] bg-[var(--color-chart-4)]/10",
-        )}
-      >
-        {cards.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-2 px-2 py-8 text-center">
-            <Inbox className="size-4 text-muted-foreground" />
-            <p className="bee-micro">{t("emptyColumn.title")}</p>
-            <p className="bee-micro">{t("emptyColumn.hint")}</p>
-          </div>
-        ) : (
-          cards.map((opp) => (
-            <CrmCard
-              key={opp.id}
-              opportunity={opp}
-              dragging={draggingId === opp.id}
-              onOpen={onOpen}
-              onDragStart={onDragStart}
-              onDragEnd={onDragEnd}
-              onMove={onMove}
-            />
-          ))
-        )}
-      </div>
     </div>
   );
 }
 
-/** CRM — el pipeline real, separado de "Oportunidades" (que se queda con
- *  battlecards y el flujo agregado). Arrastra una tarjeta entre etapas
- *  abiertas; ganar/perder sigue siendo una acción dedicada en el drawer
- *  (MEDDIC, razón de pérdida, competidor), nunca un simple drop — "Cerradas"
- *  es de solo lectura a propósito. */
+/**
+ * CRM — the real pipeline as one CSS grid: five columns (four open stages
+ * + Cerradas), every card a grid cell, so all cards on the same row share
+ * one height and the board reads as a solid grid, never a set of ragged
+ * lists. Drag a card between open stages; won/lost stays a dedicated
+ * action in the drawer (MEDDIC, loss reason, competitor), never a drop.
+ * Cerradas is the one place on the board with the green family: a won
+ * deal is a client.
+ */
 export function CrmBoard() {
   const t = useTranslations("crm.board");
-  const locale = useLocale() as Locale;
-  const opportunityTypeLabels = getOpportunityTypeLabels(locale);
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 300);
+  const { data: companiesResult } = useCompanies(300);
+  const { data: users } = useUsers();
+  const { data: signalsResult } = useSignals(300);
   const { openOpportunity } = useOpportunityDrawer();
   const moveStage = useMoveOpportunityStage();
   const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [overStage, setOverStage] = useState<CrmStage | null>(null);
   const [showNew, setShowNew] = useState(false);
 
-  const opportunities = oppsResult?.data ?? [];
+  const opportunities = useMemo(() => oppsResult?.data ?? [], [oppsResult]);
   const live = oppsResult?.live ?? false;
-  const { stages, closed } = groupByCrmStage(opportunities);
+  const { stages, closed } = useMemo(() => groupByCrmStage(opportunities), [opportunities]);
+  const metaById = useMemo(() => {
+    const companies = new Map((companiesResult?.data ?? []).map((c) => [c.id, c.name]));
+    const people = new Map((users ?? []).map((u) => [u.id, u.full_name]));
+    const signals = new Map((signalsResult?.data ?? []).map((sg) => [sg.id, sg]));
+    return new Map(
+      opportunities.map((o) => {
+        const sg = o.signal_id ? signals.get(o.signal_id) : undefined;
+        return [
+          o.id,
+          {
+            company: o.company_id ? companies.get(o.company_id) ?? null : null,
+            owner: o.assigned_to_user_id ? people.get(o.assigned_to_user_id) ?? null : null,
+            signalType: sg?.signal_type ?? null,
+            signalTitle: sg?.title ?? null,
+          } satisfies CardMeta,
+        ];
+      }),
+    );
+  }, [opportunities, companiesResult, users, signalsResult]);
 
   function handleDragStart(e: React.DragEvent, id: string) {
     e.dataTransfer.setData("text/plain", id);
     e.dataTransfer.effectAllowed = "move";
     setDraggingId(id);
   }
-
   function handleDragEnd() {
     setDraggingId(null);
+    setOverStage(null);
   }
-
-  // Compartida por el drop del drag-and-drop y por el <select> "Mover a" de
-  // cada CrmCard (la alternativa no-táctil-dependiente) — un solo camino
-  // para mover una oportunidad, no dos implementaciones que puedan divergir.
   function moveOpportunity(id: string, stage: CrmStage) {
     const current = opportunities.find((o) => o.id === id);
     if (!current || current.status === stage) return;
-
-    moveStage.mutate(
-      { id, stage },
-      {
-        onError: (err) => {
-          toast.error(err instanceof ApiError ? err.message : t("moveError"));
-        },
-      },
-    );
+    moveStage.mutate({ id, stage }, { onError: (err) => toast.error(err instanceof ApiError ? err.message : t("moveError")) });
   }
-
   function handleDrop(stage: CrmStage) {
     const id = draggingId;
     setDraggingId(null);
+    setOverStage(null);
     if (!id) return;
     moveOpportunity(id, stage);
   }
@@ -315,9 +374,9 @@ export function CrmBoard() {
 
   if (isLoading) {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-80 w-[280px] shrink-0 rounded-[var(--radius-lg)]" />
+      <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(5, minmax(${COLUMN_MIN}px, 1fr))` }}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-72 rounded-[var(--radius-lg)]" />
         ))}
       </div>
     );
@@ -337,85 +396,77 @@ export function CrmBoard() {
     );
   }
 
+  const columns: { key: CrmStage | "closed"; cards: Opportunity[] }[] = [
+    ...CRM_STAGES.map((s) => ({ key: s.id, cards: stages[s.id] })),
+    { key: "closed", cards: closed },
+  ];
+  const rowCount = Math.max(1, ...columns.map((c) => c.cards.length));
+
   return (
     <div>
       {header}
       {newForm}
 
-      {/* items-start (not the default items-stretch): each column sizes to
-          its own cards instead of all four being forced to match
-          whichever one has the most — that's what let the whole board's
-          height grow with real content and the page scroll normally,
-          instead of every column being locked to a shared fixed height
-          with its own internal scrollbar. */}
-      <div className="flex items-start gap-4 overflow-x-auto pb-2">
-        {CRM_STAGES.map((s) => (
-          <CrmColumn
-            key={s.id}
-            stage={s.id}
-            label={t(`stages.${s.id}`)}
-            cards={stages[s.id]}
-            draggingId={draggingId}
-            onOpen={openOpportunity}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDrop={handleDrop}
-            onMove={moveOpportunity}
-          />
-        ))}
+      {/* One grid for the whole board: row 1 = headers, rows 2..n = cards.
+          Cards placed by (column, row) so a row's cells share one height —
+          the "no holes" rule. Each column has a background cell spanning
+          every card row that doubles as the drop zone. */}
+      <div className="overflow-x-auto pb-2">
+        <div
+          className="grid gap-x-2.5 gap-y-2.5"
+          style={{ gridTemplateColumns: `repeat(5, minmax(${COLUMN_MIN}px, 1fr))`, gridTemplateRows: `auto repeat(${rowCount}, auto)` }}
+        >
+          {columns.map((col, c) => (
+            <ColumnHeader key={`h-${col.key}`} stage={col.key} count={col.cards.length} accent={STAGE_ACCENT[col.key]} style={{ gridColumn: c + 1, gridRow: 1 }} />
+          ))}
 
-        {/* Cerradas — solo lectura, ganar/perder es una acción dedicada, no un
-            drop. Ganadas son clientes: blanco con el contorno de marca;
-            perdidas y descartadas quedan en gris neutro. */}
-        <div className="flex h-full w-[min(100%,280px)] shrink-0 flex-col">
-          <div className="bee-kanban-col__bar" style={{ background: STAGE_TONE.won.bar }} aria-hidden="true" />
-          <div className="mb-1 flex shrink-0 items-baseline justify-between px-1">
-            <h3 className="bee-eyebrow">{t("stages.closed")}</h3>
-            <span className="font-mono bee-micro">{closed.length}</span>
-          </div>
-          <div className="mb-2.5 flex shrink-0 items-center px-1">
-            <p className="bee-micro text-muted-foreground">{t("stageSubtitles.closed")}</p>
-          </div>
-          <div className="flex h-full min-h-[220px] flex-1 flex-col gap-4 overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--bee-card-border)] bg-[var(--color-card)] p-4">
-            {closed.length === 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-2 px-2 py-8 text-center">
-                <p className="bee-micro">{t("emptyClosed")}</p>
+          {columns.map((col, c) => {
+            const droppable = col.key !== "closed";
+            return (
+              // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- column drop zone; keyboard path is each card's <select>.
+              <div
+                key={`bg-${col.key}`}
+                onDragOver={droppable ? (e) => { e.preventDefault(); if (overStage !== col.key) setOverStage(col.key as CrmStage); } : undefined}
+                onDragLeave={droppable ? () => setOverStage((s) => (s === col.key ? null : s)) : undefined}
+                onDrop={droppable ? (e) => { e.preventDefault(); handleDrop(col.key as CrmStage); } : undefined}
+                className={cn(
+                  "-m-1 rounded-[var(--radius-lg)] transition-colors",
+                  overStage === col.key ? "bg-[var(--color-chart-4)]/10 ring-2 ring-[var(--color-chart-4)]/40" : "bg-[color-mix(in_srgb,var(--color-text)_3%,transparent)]",
+                )}
+                style={{ gridColumn: c + 1, gridRow: `2 / span ${rowCount}` }}
+              />
+            );
+          })}
+
+          {columns.map((col, c) =>
+            col.cards.length === 0 ? (
+              <div
+                key={`empty-${col.key}`}
+                style={{ gridColumn: c + 1, gridRow: 2 }}
+                className="relative z-10 flex min-h-[72px] flex-col items-center justify-center gap-1 rounded-[var(--radius-lg)] border border-dashed border-[color-mix(in_srgb,var(--color-text)_14%,transparent)] px-3 py-3 text-center"
+              >
+                <Inbox className="size-3.5 text-muted-foreground" />
+                <p className="bee-micro">{col.key === "closed" ? t("emptyClosed") : t("emptyColumn.title")}</p>
               </div>
             ) : (
-              closed.map((opp) => (
-                <button
+              col.cards.map((opp, r) => (
+                <CrmCard
                   key={opp.id}
-                  type="button"
-                  onClick={() => openOpportunity(opp.id)}
-                  className={cn("bee-kanban-card group w-full text-left", STAGE_TONE[opp.status].fill)}
-                >
-                  <p className="line-clamp-2 text-sm font-medium leading-snug tracking-tight">
-                    {stripOpportunityTitlePrefix(opp.title)}
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Badge
-                      variant={opp.status === "won" ? "success" : "secondary"}
-                      className="text-micro"
-                    >
-                      {opp.status === "won"
-                        ? t("closedStatus.won")
-                        : opp.status === "lost"
-                          ? t("closedStatus.lost")
-                          : t("closedStatus.dismissed")}
-                    </Badge>
-                    {(opp.opportunity_type ?? "new_logo") !== "new_logo" && (
-                      <Badge
-                        variant={opportunityTypeVariant(opp.opportunity_type ?? "new_logo")}
-                        className="text-micro"
-                      >
-                        {opportunityTypeLabels[opp.opportunity_type ?? "new_logo"]}
-                      </Badge>
-                    )}
-                  </div>
-                </button>
+                  opportunity={opp}
+                  meta={metaById.get(opp.id) ?? { company: null, owner: null, signalType: null, signalTitle: null }}
+                  accent={STAGE_ACCENT[col.key]}
+                  dragging={draggingId === opp.id}
+                  draggable={col.key !== "closed"}
+                  style={{ gridColumn: c + 1, gridRow: r + 2 }}
+                  onOpen={openOpportunity}
+                  onDragStart={col.key !== "closed" ? handleDragStart : undefined}
+                  onDragEnd={handleDragEnd}
+                  onDrop={col.key !== "closed" ? () => handleDrop(col.key as CrmStage) : undefined}
+                  onMove={col.key !== "closed" ? moveOpportunity : undefined}
+                />
               ))
-            )}
-          </div>
+            ),
+          )}
         </div>
       </div>
     </div>
