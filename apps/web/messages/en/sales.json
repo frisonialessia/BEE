@@ -39,8 +39,30 @@
       "date": "Date",
       "deal": "Deal",
       "company": "Account",
+      "sector": "Sector",
       "owner": "Owner",
       "amount": "Amount"
+    },
+    "noMatch": "No closed deal matches the filters.",
+    "summary": "{count, plural, =1 {1 deal} other {# deals}} · {total}",
+    "showMore": "Show {count} more",
+    "filters": {
+      "year": "Year",
+      "allYears": "All years",
+      "owner": "Owner",
+      "allOwners": "All owners",
+      "sector": "Sector",
+      "allSectors": "All sectors",
+      "from": "From",
+      "to": "To",
+      "clear": "Clear filters"
     }
+  },
+  "sectors": {
+    "title": "Sales by sector",
+    "caption": "Won by account sector · last {months} months",
+    "empty": "No closed deals in this period yet.",
+    "noSector": "No sector",
+    "deals": "{count, plural, =1 {1 deal} other {# deals}}"
   }
 }

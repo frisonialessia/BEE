@@ -15,7 +15,6 @@ import { WinLossView } from "@/features/win-loss/win-loss-view";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useQuotas } from "@/hooks/queries/use-quotas";
-import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
 import type { Locale } from "@/i18n/locales";
 import { closeProbability, computeForecast } from "@/lib/forecast";
@@ -51,7 +50,6 @@ export function ForecastView() {
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 200);
   const { data: companiesResult } = useCompanies(200);
   const { data: quotasResult } = useQuotas();
-  const { data: teamsData } = useTeams();
   const { data: users } = useUsers();
   const [factor, setFactor] = useState<ProspectingFactor>(1);
   // Fixed at mount so the memos below key on a stable date, like Ventas.

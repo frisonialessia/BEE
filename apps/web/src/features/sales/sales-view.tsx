@@ -5,29 +5,31 @@ import { useMemo, useState } from "react";
 
 import { AreaChart } from "@/components/charts/area-chart";
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { SALES, mix } from "@/components/charts/palette";
+import { SALES } from "@/components/charts/palette";
 import { RangePills, useTimeRange } from "@/components/charts/range-pills";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { LiveBadge } from "@/components/live-badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { TeamGoalRanking } from "@/features/dashboard/team-goal-ranking";
+import { ClosedLedger } from "@/features/sales/closed-ledger";
+import { SectorBars } from "@/features/sales/sector-bars";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useQuotas } from "@/hooks/queries/use-quotas";
 import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
 import type { Locale } from "@/i18n/locales";
-import { formatAmount, formatDate, formatMoney } from "@/lib/i18n/format";
+import { formatAmount, formatMoney } from "@/lib/i18n/format";
 import { buildSalesModel } from "@/lib/sales-model";
 
 
 /**
  * Ventas — every closed deal since the organization exists. The one page
  * where the green family lives (#52C871 won · #9CD147 lime · #B4E8C5 mint):
- * cumulative revenue, monthly bars against the team goal, the ranking with
- * goal rings, and the ledger of every won deal.
+ * cumulative revenue, monthly bars against the team goal, then where the
+ * money came from (sectors) beside who closed it (the ranking), and at the
+ * bottom, on its own full row, the filterable ledger of every won deal.
  */
 export function SalesView() {
   const t = useTranslations("sales");
@@ -37,7 +39,6 @@ export function SalesView() {
   const { data: teamsData } = useTeams();
   const { data: quotasResult } = useQuotas();
   const { data: companiesResult } = useCompanies(300);
-  const { openOpportunity } = useOpportunityDrawer();
   const [now] = useState(() => Date.now());
   // One window for the whole page: a year by default, two or five on demand.
   const { range, months, setRange } = useTimeRange();
@@ -112,38 +113,15 @@ export function SalesView() {
           />
         </OverviewCard>
 
-        <OverviewCard span={4} title={t("ranking.title")} caption={t("ranking.caption")}>
-          <TeamGoalRanking month sales limit={5} />
+        <OverviewCard span={8} title={t("sectors.title")} caption={t("sectors.caption", { months })}>
+          <SectorBars sectors={model.sectors} />
         </OverviewCard>
-        <OverviewCard span={8} title={t("ledger.title")} caption={t("ledger.caption", { count: model.won.length })}>
-          {model.ledger.length === 0 ? (
-            <p className="bee-caption py-8 text-center">{t("ledger.empty")}</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[520px] text-sm">
-                <thead>
-                  <tr className="text-left">
-                    {(["date", "deal", "company", "owner", "amount"] as const).map((k) => (
-                      <th key={k} className="bee-micro pb-2 font-medium uppercase tracking-wide">{t(`ledger.cols.${k}`)}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {model.ledger.map((row) => (
-                    <tr key={row.id} onClick={() => openOpportunity(row.id)} className="cursor-pointer border-t border-[color-mix(in_srgb,var(--color-text)_6%,transparent)] hover:bg-[#b4e8c5]/40">
-                      <td className="bee-micro py-2 pr-3 whitespace-nowrap">{formatDate(row.closedAt, locale)}</td>
-                      <td className="max-w-[16rem] truncate py-2 pr-3 font-medium">{row.title}</td>
-                      <td className="py-2 pr-3">{row.company || "—"}</td>
-                      <td className="py-2 pr-3">{row.owner || "—"}</td>
-                      <td className="py-2 text-right font-semibold tabular-nums">
-                        <span className="rounded-full px-2 py-0.5" style={{ background: mix(SALES.mint, 60) }}>{money(row.amount, false)}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+        <OverviewCard span={4} title={t("ranking.title")} caption={t("ranking.caption")}>
+          <TeamGoalRanking month sales />
+        </OverviewCard>
+
+        <OverviewCard span={12} title={t("ledger.title")} caption={t("ledger.caption", { count: model.won.length })}>
+          <ClosedLedger rows={model.ledger} money={money} />
         </OverviewCard>
       </div>
     </div>

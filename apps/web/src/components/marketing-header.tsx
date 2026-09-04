@@ -44,7 +44,7 @@ export function MarketingHeader() {
 
         <div className="flex shrink-0 items-center gap-2">
           <span className="hidden sm:inline-flex">
-            <Link href="/login" className="bee-btn-text text-sm">
+            <Link href="/login" className="bee-btn bee-btn--secondary">
               {t("login")}
             </Link>
           </span>

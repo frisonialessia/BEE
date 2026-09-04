@@ -888,6 +888,7 @@
   transition: color 120ms ease;
 }
 .bee-btn-text:hover, .bee-btn-text:focus-visible { color: var(--color-text); text-decoration: underline; outline: none; }
+
 .bee-btn-text:disabled { opacity: 0.5; cursor: default; text-decoration: none; }
 
 /* Controls — micro-radius only
@@ -971,9 +972,11 @@
 
 .bee-btn--primary {
   background: var(--color-cta);
-  /* Ink on the blue, like every other letter in BEE: no text ever carries
-     a color, and white on this indigo read as a second color. */
-  color: var(--color-text);
+  /* White on the blue: the one place a letter is not ink, because ink on
+     this indigo had no contrast. The secondary button next to it wears the
+     same blue as text and outline on white (.bee-btn-ghost), so the pair
+     always reads as one action and its alternative. */
+  color: #fff;
   border-color: var(--color-cta);
 }
 
@@ -982,6 +985,15 @@
   border-color: var(--color-cta-hover);
   filter: brightness(0.94);
 }
+/* The secondary action beside a primary CTA on the marketing pages and in
+   page headers: a real button, white with the CTA blue as outline and
+   letters, never a bare link that reads as no button at all. */
+.bee-btn--secondary {
+  background: var(--color-card);
+  border-color: var(--color-cta);
+  color: var(--color-cta);
+}
+.bee-btn--secondary:hover:not(:disabled) { background: var(--color-primary); }
 
 .bee-btn-ghost {
   display: inline-flex;
@@ -998,14 +1010,33 @@
   white-space: nowrap;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
-  background: transparent;
-  border: 1px solid var(--color-divider);
+  /* The secondary action: never without a background. White, with the
+     blue of the primary button as outline and letters, so it is a real
+     button and still lighter than the filled one beside it. */
+  background: var(--color-card);
+  border: 1px solid var(--color-cta);
   font-size: var(--bee-fs-body-2);
-  font-weight: 500;
-  color: var(--color-text);
+  font-weight: 600;
+  color: var(--color-cta);
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
-.bee-btn-ghost:hover { background: var(--color-primary); }
+.bee-btn-ghost:hover { background: var(--color-primary); border-color: var(--color-cta); }
+.bee-btn-ghost:disabled { opacity: 0.5; }
+
+/* A .bee-btn-ghost used as a selector pill or a chip (period, stage,
+   owner, mode, icon buttons) is not the secondary action: neutral, ink on
+   white with the divider outline, and it fills lavender when pressed. */
+.bee-drawer-pill,
+.bee-btn-ghost.bee-btn--icon,
+.bee-btn-ghost--dashed,
+.bee-btn-ghost--active,
+.bee-btn-ghost--fill {
+  border-color: var(--color-divider);
+  color: var(--color-text);
+  font-weight: 500;
+}
+.bee-btn-ghost.bee-btn--icon:hover, .bee-drawer-pill:hover { background: var(--color-primary); border-color: var(--color-divider); }
 
 /* "Add slot" affordance (Simular señal, Agregar conexión) — same fixed
  * height/padding/type as .bee-btn-ghost, dashed border only to read as an
@@ -1596,7 +1627,7 @@
   filter: brightness(0.96);
 }
 .bee-drawer-pill:disabled { opacity: 0.45; cursor: default; }
-.bee-drawer-pill:disabled:hover { background: transparent; }
+.bee-drawer-pill:disabled:hover { background: var(--color-card); }
 
 .bee-drawer-dot {
   transition: transform 160ms ease, border-color 160ms ease;

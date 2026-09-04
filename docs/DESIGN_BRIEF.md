@@ -53,13 +53,18 @@ Encabezado con pestañas en la misma fila (`MergedPageTabs`).
    lavanda, `--color-text` tinta, `--color-card` blanco, `--color-background`).
    Nunca un color inventado ni mezclas de un tono con tinta (dan dorados y
    morados que no son BEE). Helper `mix(hue, pct)` solo hacia blanco.
-2. **Verde solo en Ventas** (y en las tarjetas cerradas del CRM y como opción
-   de color de cita en Calendario). En ninguna otra página.
-3. **Azul solo en botones** (`bee-btn--primary`). No en gráficas, links ni
-   chips.
-4. **Ningún texto ni icono lleva color**: todo en tinta (`--color-text`) o
-   tinta apagada (`--color-text-muted`). El color vive en marcas de gráfica,
-   fondos de chips, celdas y barras.
+2. **Verde solo en Ventas** (y en las tarjetas cerradas del CRM, como opción
+   de color de cita en Calendario, y en el Resumen en la caja Ventas, el
+   paso "Cliente" del embudo y el Ranking del equipo, que es dinero ganado).
+   En ninguna otra página.
+3. **Azul solo en botones**. El primario (`bee-btn--primary`) es azul con
+   letra blanca; el secundario (`bee-btn-ghost` / `bee-btn--secondary`) es
+   blanco con contorno y letra en el mismo azul. Nunca un botón sin fondo.
+   No en gráficas, links ni chips.
+4. **Ningún texto ni icono lleva color**, salvo la letra blanca del botón
+   primario y la letra azul del secundario: todo lo demás en tinta
+   (`--color-text`) o tinta apagada (`--color-text-muted`). El color vive
+   en marcas de gráfica, fondos de chips, celdas y barras.
 5. **Un color por caja/tema**: dentro de una caja, chip, barra, anillo y
    filas comparten el mismo tono a 100/70/45 %.
 6. **Fondos blancos** en todo el producto y la landing; el hero de la landing
@@ -157,11 +162,18 @@ sección 2:
   (StatStrip, StatTile), `components/dashboard/overview-card.tsx`
   (OverviewCard, CardLink), `.bee-page*`, `.bee-tile*`, `.bee-tabs*`,
   `.bee-row`, `.bee-dot` en `globals.css`.
-- **Ninguna letra de color**: el botón primario y las píldoras activas
-  llevan texto en tinta.
-- **Verdes en el Resumen, solo en dos cajas**: la caja Ventas (los tres
-  verdes por monto, como la página Ventas) y el paso "Cliente" del embudo,
-  que lleva los colores de las columnas del CRM.
+- **Letra de color solo en botones**: blanca en el primario, azul en el
+  secundario; las píldoras activas (lavanda) llevan texto en tinta.
+- **Verdes en el Resumen, solo en tres cajas**: la caja Ventas (los tres
+  verdes por monto, como la página Ventas), el paso "Cliente" del embudo,
+  que lleva los colores de las columnas del CRM, y el Ranking del equipo
+  (el #1 en el verde principal, el #2 en lima, el resto en menta; el mismo
+  ranking, con todo el equipo, vive en Ventas junto a Ventas por sector).
+- **Todos los cierres** cierra la página Ventas a todo lo ancho, con
+  filtros por año, responsable, sector y fechas, y el total de lo filtrado
+  en la propia caja.
+- **La colmena del sandbox y de la landing** dibuja 200 cuentas con nombre
+  propio (`HIVE_ACCOUNTS` en `lib/sample-data.ts`).
 - **Periodo en toda gráfica de tiempo**: un año por defecto, dos o cinco
   con `RangePills` (`components/charts/range-pills.tsx`); el sandbox trae
   cinco años de cierres y señales de origen.

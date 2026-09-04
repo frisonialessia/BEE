@@ -56,7 +56,7 @@ export default async function Home() {
                 <Link href="/probar" className="bee-btn bee-btn--primary bee-cta-lift">
                   {t("ctaStart")}
                 </Link>
-                <a href="#como-funciona" className="bee-btn-text text-sm">
+                <a href="#como-funciona" className="bee-btn bee-btn--secondary">
                   {t("ctaHow")}
                 </a>
               </div>
@@ -103,7 +103,7 @@ export default async function Home() {
               <Link href="/probar" className="bee-btn bee-btn--primary bee-cta-lift">
                 {t("closingCta")}
               </Link>
-              <Link href="/contacto?source=closing" className="bee-btn-text text-sm">
+              <Link href="/contacto?source=closing" className="bee-btn bee-btn--secondary">
                 {t("closingSecondary")}
               </Link>
             </div>

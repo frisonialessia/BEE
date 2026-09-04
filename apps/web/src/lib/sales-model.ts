@@ -29,7 +29,28 @@ export interface SalesModel {
   clientsDelta: number | null;
   goal: number | null;
   attainment: number | null;
-  ledger: { id: string; title: string; company: string; owner: string; amount: number; closedAt: string; type: string }[];
+  /** Won revenue by the account's sector inside the window, largest first. */
+  sectors: SalesSector[];
+  ledger: SalesLedgerRow[];
+}
+
+export interface SalesSector {
+  name: string;
+  value: number;
+  count: number;
+}
+
+export interface SalesLedgerRow {
+  id: string;
+  title: string;
+  company: string;
+  sector: string;
+  owner: string;
+  ownerId: string | null;
+  amount: number;
+  closedAt: string;
+  year: number;
+  type: string;
 }
 
 /**
@@ -96,17 +117,38 @@ export function buildSalesModel({
   const goal = teamGoal || userGoal || null;
   const attainment = goal ? thisMonth.value / goal : null;
 
-  const companyById = new Map(companies.map((c) => [c.id, c.name]));
+  const companyById = new Map(companies.map((c) => [c.id, c]));
   const userById = new Map(users.map((u) => [u.id, u.full_name]));
-  const ledger = won.slice(0, 60).map((o) => ({
-    id: o.id,
-    title: stripOpportunityTitlePrefix(o.title),
-    company: o.company_id ? companyById.get(o.company_id) ?? "" : "",
-    owner: o.assigned_to_user_id ? userById.get(o.assigned_to_user_id) ?? "" : "",
-    amount: o.amount ?? 0,
-    closedAt: o.closed_at as string,
-    type: o.opportunity_type ?? "new_logo",
-  }));
+  // Every won deal, newest first — the page filters and pages the list itself.
+  const ledger: SalesLedgerRow[] = won.map((o) => {
+    const company = o.company_id ? companyById.get(o.company_id) : undefined;
+    return {
+      id: o.id,
+      title: stripOpportunityTitlePrefix(o.title),
+      company: company?.name ?? "",
+      sector: company?.industry ?? "",
+      owner: o.assigned_to_user_id ? userById.get(o.assigned_to_user_id) ?? "" : "",
+      ownerId: o.assigned_to_user_id ?? null,
+      amount: o.amount ?? 0,
+      closedAt: o.closed_at as string,
+      year: new Date(o.closed_at as string).getFullYear(),
+      type: o.opportunity_type ?? "new_logo",
+    };
+  });
 
-  return { currency, won, total, avgTicket, avgCycle, months, cumulative, thisMonth, monthDelta, clientsDelta, goal, attainment, ledger };
+  // Where the money came from in the window: the sector of each won
+  // account, so the team sees which markets actually pay, not just who sold.
+  const windowStart = new Date(new Date(now).getFullYear(), new Date(now).getMonth() - (MONTHS - 1), 1).getTime();
+  const bySector = new Map<string, SalesSector>();
+  for (const row of ledger) {
+    if (new Date(row.closedAt).getTime() < windowStart) continue;
+    const name = row.sector;
+    const s = bySector.get(name) ?? { name, value: 0, count: 0 };
+    s.value += row.amount;
+    s.count += 1;
+    bySector.set(name, s);
+  }
+  const sectors = [...bySector.values()].sort((a, b) => b.value - a.value);
+
+  return { currency, won, total, avgTicket, avgCycle, months, cumulative, thisMonth, monthDelta, clientsDelta, goal, attainment, sectors, ledger };
 }

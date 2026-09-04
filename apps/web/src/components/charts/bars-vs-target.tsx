@@ -33,14 +33,17 @@ export function BarsVsTarget({
   targetLabel?: string;
   minHeight?: number;
   formatValue?: (v: number) => string;
-  /** Per-bar color (e.g. three strengths of one hue); overrides color/hitColor. */
-  colorFor?: (point: BarPoint, index: number, max: number) => string;
+  /** Per-bar color (e.g. three strengths of one hue); overrides color/hitColor.
+   *  `maxBar` is the tallest bar, not the target, so the peaks always earn
+   *  the strongest tone even in a period that never reached the goal. */
+  colorFor?: (point: BarPoint, index: number, maxBar: number) => string;
 }) {
   const [ref, { width: W, height: H }] = useBoxSize<HTMLDivElement>({ width: 600, height: minHeight });
   const [hover, setHover] = useState<number | null>(null);
   const padBottom = 24;
   const padTop = 22;
-  const max = Math.max(...points.map((p) => p.value), target ?? 0, 1);
+  const maxBar = Math.max(...points.map((p) => p.value), 1);
+  const max = Math.max(maxBar, target ?? 0);
   const n = Math.max(1, points.length);
   const slot = (W - 20) / n;
   const bw = Math.min(40, Math.max(2, slot * (slot < 14 ? 0.7 : 0.55)));
@@ -69,7 +72,7 @@ export function BarsVsTarget({
           const hit = target ? p.value >= target : false;
           return (
             <g key={p.label}>
-              <rect x={x} y={y} width={bw} height={Math.max(h, p.value > 0 ? 4 : 1)} rx={4} fill={colorFor ? colorFor(p, i, max) : hit ? hitColor : color} opacity={hover !== null && hover !== i ? 0.45 : colorFor || p.current || hit ? 1 : 0.55} />
+              <rect x={x} y={y} width={bw} height={Math.max(h, p.value > 0 ? 4 : 1)} rx={4} fill={colorFor ? colorFor(p, i, maxBar) : hit ? hitColor : color} opacity={hover !== null && hover !== i ? 0.45 : colorFor || p.current || hit ? 1 : 0.55} />
               {showLabel(i) && (
                 <text x={x + bw / 2} y={H - 7} fill="var(--color-text-muted)" textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }}>
                   {p.label}

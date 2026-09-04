@@ -5,40 +5,41 @@ import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
-import { REST, SALES, TONE, mix, tint } from "@/components/charts/palette";
+import { SALES, mix } from "@/components/charts/palette";
 import { ProgressRing } from "@/components/charts/progress-ring";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useQuotas } from "@/hooks/queries/use-quotas";
-import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
 import type { Locale } from "@/i18n/locales";
-import { formatMoney } from "@/lib/i18n/format";
+import { formatAmount } from "@/lib/i18n/format";
 import { computeQuotaAttainment, isQuotaActive } from "@/lib/quotas";
 
-// One hue per box — indigo, the team — at three intensities by rank
-// (greens on Ventas); past the podium, the page grey.
-const RANK_TONE = [TONE.forecast, tint(TONE.forecast, 70), tint(TONE.forecast, 45)];
-// Ventas is greens-only: the podium avatars go won → lime → mint, mint
-// with dark text so it still reads.
-const RANK_TONE_SALES = [SALES.won, SALES.lime, SALES.mint];
+// The ranking is about money won, so it is the one box outside Ventas
+// that wears the sales greens — the three together, by rank: whoever is
+// winning in the main green, the next in lime, everyone after in mint.
+const RANK_TONE = [SALES.won, SALES.lime, SALES.mint];
+const rankTone = (i: number) => RANK_TONE[Math.min(i, RANK_TONE.length - 1)];
 
 /**
  * Ranking del equipo por ingresos ganados en el periodo, con el anillo de
- * avance a la meta activa de cada persona (monto y/o clientes). En Ventas
- * (`sales`) la fila que supera su meta se pinta de verde; en cualquier
- * otra página el verde no aparece: el anillo lleno en miel ya lo dice.
+ * avance a la meta activa de cada persona (monto y/o clientes). Lista a
+ * todo el equipo, también a quien aún no cerró en el periodo, para que el
+ * Resumen y Ventas muestren a las mismas personas en el mismo orden; la
+ * fila que supera su meta se pinta de verde.
  */
 export function TeamGoalRanking({
   days = 30,
   month = false,
   sales = false,
-  limit = 3,
+  limit,
   bars = false,
 }: {
   days?: number;
   /** Rank by the current calendar month instead of trailing `days` — what Ventas uses so the ranking and the monthly goals share a period. */
   month?: boolean;
+  /** Kept for call sites; the ranking wears the sales greens everywhere. */
   sales?: boolean;
+  /** How many rows to show; omit to list the whole team. */
   limit?: number;
   /** Resumen: a bar per rep under the list, so the box never ends in a gap. */
   bars?: boolean;
@@ -48,12 +49,10 @@ export function TeamGoalRanking({
   const { data: oppsResult } = useOpportunities(undefined, 300);
   const { data: users } = useUsers();
   const { data: quotasResult } = useQuotas();
-  const { data: teamsData } = useTeams();
 
   const rows = useMemo(() => {
     const opportunities = oppsResult?.data ?? [];
     const quotas = quotasResult?.data ?? [];
-    const teams = teamsData ?? [];
     const allUsers = users ?? [];
     const today = new Date();
     const from = month ? new Date(today.getFullYear(), today.getMonth(), 1).getTime() : today.getTime() - days * 86_400_000;
@@ -66,13 +65,16 @@ export function TeamGoalRanking({
       row.deals += 1;
       byRep.set(o.assigned_to_user_id, row);
     }
+    // Everyone active on the team is in the ranking, with zero when they
+    // have not closed in the period — the Resumen and Ventas list the same
+    // people, and a rep without a win is visible, not missing.
+    for (const u of allUsers) if (u.is_active !== false && !byRep.has(u.id)) byRep.set(u.id, { value: 0, deals: 0 });
     return [...byRep.entries()]
-      .sort((a, b) => b[1].value - a[1].value)
-      .slice(0, limit)
+      .sort((a, b) => b[1].value - a[1].value || b[1].deals - a[1].deals)
+      .slice(0, limit ?? byRep.size)
       .map(([userId, row]) => {
         const user = allUsers.find((u) => u.id === userId);
         const goal = quotas.find((q) => q.user_id === userId && isQuotaActive(q, today));
-        const currency = teams.find((x) => x.id === user?.team_id)?.currency ?? teams[0]?.currency ?? "USD";
         // Goals are monthly. Ranked by calendar month the ring is the plain
         // month attainment; ranked over a trailing window the goal is scaled
         // to that window (90 days ≈ 3 monthly goals) so the ring and the
@@ -88,23 +90,21 @@ export function TeamGoalRanking({
           userId,
           name: user?.full_name ?? t("unknown"),
           avatarUrl: user?.avatar_url ?? null,
-          currency,
           attainment,
           ...row,
         };
       });
-  }, [oppsResult, quotasResult, teamsData, users, days, month, limit, t]);
+  }, [oppsResult, quotasResult, users, days, month, limit, t]);
+  void sales;
 
-  if (rows.length === 0) return <p className="bee-caption py-6 text-center">{t("empty")}</p>;
+  if (rows.length === 0 || rows.every((r) => r.deals === 0)) return <p className="bee-caption py-6 text-center">{t("empty")}</p>;
 
   const list = (
     <ol className="flex flex-1 flex-col justify-evenly">
       {rows.map((rep, i) => {
         const reached = rep.attainment !== null && rep.attainment >= 1;
-        const ringColor = sales ? (reached ? SALES.won : SALES.lime) : TONE.forecast;
-        const bg = sales ? (reached ? mix(SALES.mint, 70) : i === 0 ? mix(SALES.mint, 40) : undefined) : undefined;
-        const avatar = sales ? RANK_TONE_SALES[i] ?? SALES.mint : "var(--color-primary)";
-        const avatarText = "var(--color-text)";
+        const tone = rankTone(i);
+        const bg = reached ? mix(SALES.mint, 70) : undefined;
         return (
           // Fixed columns (# · avatar · name · ring · amount) so every rank,
           // ring and figure lines up down the list.
@@ -114,7 +114,7 @@ export function TeamGoalRanking({
               // eslint-disable-next-line @next/next/no-img-element -- avatar URLs come from the user's own profile, any host
               <img src={rep.avatarUrl} alt="" className="size-8 shrink-0 rounded-full object-cover" />
             ) : (
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold" style={{ background: avatar, color: avatarText }}>
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-[var(--color-text)]" style={{ background: tone }}>
                 {rep.name.split(/\s+/).slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "").join("")}
               </span>
             )}
@@ -124,14 +124,14 @@ export function TeamGoalRanking({
                 <span className="truncate">{rep.name}</span>
               </p>
               <p className="mt-0.5 flex items-center gap-1.5">
-                <span className="rounded-full px-2 py-0.5 bee-micro font-medium text-[var(--color-text)]" style={{ background: sales ? mix(SALES.mint, 70) : RANK_TONE[i] ?? REST }}>
+                <span className="rounded-full px-2 py-0.5 bee-micro font-medium text-[var(--color-text)]" style={{ background: mix(tone, 45) }}>
                   {t("deals", { count: rep.deals })}
                 </span>
                 {rep.attainment === null && <span className="bee-micro">{t("noGoal")}</span>}
               </p>
             </div>
-            <span className="flex justify-center">{rep.attainment !== null && <ProgressRing value={rep.attainment} size={36} stroke={4} color={ringColor} />}</span>
-            <span className="text-right text-sm font-bold tabular-nums">{formatMoney(rep.value, rep.currency, locale, true)}</span>
+            <span className="flex justify-center">{rep.attainment !== null && <ProgressRing value={rep.attainment} size={36} stroke={4} color={tone} />}</span>
+            <span className="text-right text-sm font-bold tabular-nums">{formatAmount(rep.value, locale)}</span>
           </li>
         );
       })}
@@ -144,8 +144,8 @@ export function TeamGoalRanking({
       <BarsVsTarget
         points={rows.map((r) => ({ label: r.name.split(/\s+/)[0], value: r.value }))}
         minHeight={72}
-        formatValue={(v) => formatMoney(v, rows[0]?.currency ?? "USD", locale, true)}
-        colorFor={(_p, i) => (sales ? RANK_TONE_SALES[i] ?? SALES.mint : RANK_TONE[i] ?? REST)}
+        formatValue={(v) => formatAmount(v, locale)}
+        colorFor={(_p, i) => rankTone(i)}
       />
     </div>
   );

@@ -39,8 +39,30 @@
       "date": "Fecha",
       "deal": "Deal",
       "company": "Cuenta",
+      "sector": "Sector",
       "owner": "Responsable",
       "amount": "Monto"
+    },
+    "noMatch": "Ningún cierre coincide con los filtros.",
+    "summary": "{count, plural, =1 {1 deal} other {# deals}} · {total}",
+    "showMore": "Mostrar {count} más",
+    "filters": {
+      "year": "Año",
+      "allYears": "Todos los años",
+      "owner": "Responsable",
+      "allOwners": "Todos los responsables",
+      "sector": "Sector",
+      "allSectors": "Todos los sectores",
+      "from": "Desde",
+      "to": "Hasta",
+      "clear": "Limpiar filtros"
     }
+  },
+  "sectors": {
+    "title": "Ventas por sector",
+    "caption": "Ganado por sector de la cuenta · últimos {months} meses",
+    "empty": "Todavía no hay cierres en este periodo.",
+    "noSector": "Sin sector",
+    "deals": "{count, plural, =1 {1 cierre} other {# cierres}}"
   }
 }

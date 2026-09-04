@@ -811,24 +811,70 @@ const HIVE_KEYWORDS = [
 
 const HIVE_SIGNAL_TYPES = [["search"], ["search", "pricing_view"], ["pricing_view", "demo_watch"], ["competitor_compare"], ["review_visit", "search"], ["docs_visit"]];
 
+/** How many accounts the sandbox hive watches — what a mid-size team's
+ *  Dark Funnel holds after a quarter, and the size the comb is tuned for. */
+export const HIVE_ACCOUNTS = 200;
+
+// Past the twenty accounts the rest of the sandbox knows, the hive fills
+// with companies named the way real ones are (a word and a trade), each
+// with its own domain, so a 200-cell comb never shows a numbered filler.
+const HIVE_WORDS = ["Aurora", "Delta", "Monte", "Sierra", "Faro", "Lumen", "Cedro", "Pampa", "Norte", "Vértice", "Orbe", "Tambo", "Selva", "Cobalto", "Ámbar", "Zafiro", "Nácar", "Brisa", "Atlas", "Nova", "Prisma", "Lira", "Ébano", "Trigo", "Coral", "Duna", "Aleph", "Cauce", "Fresno", "Granito", "Helio", "Junco", "Kumo", "Laurel", "Marea", "Nogal", "Ópalo", "Pino", "Quarzo", "Roble"];
+const HIVE_TRADES = ["Logística", "Salud", "Fintech", "Retail", "Software", "Energía", "Seguros", "Educación", "Construcción", "Alimentos", "Media", "Legal", "Biotech", "Cloud", "Analytics", "Textil", "Turismo", "Inmobiliaria", "Automotriz", "Farma", "Minería", "Consultoría"];
+const HIVE_TLDS = ["com", "mx", "co", "io", "cl", "pe", "com.ar", "es"];
+
+function slug(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function hiveCompanies(count: number): { name: string; domain: string }[] {
+  const out = [...HIVE_COMPANIES];
+  const seen = new Set(out.map((c) => c.name));
+  // Coprime strides over the two lists give every pair once before any repeats.
+  for (let i = 0; out.length < count; i += 1) {
+    const word = HIVE_WORDS[(i * 7) % HIVE_WORDS.length];
+    const trade = HIVE_TRADES[(i * 5 + Math.floor(i / HIVE_WORDS.length)) % HIVE_TRADES.length];
+    const name = `${word} ${trade}`;
+    if (seen.has(name)) continue;
+    seen.add(name);
+    out.push({ name, domain: `${slug(name)}.${HIVE_TLDS[i % HIVE_TLDS.length]}` });
+  }
+  return out.slice(0, count);
+}
+
+/** The buying stage BEE assigns for a research score — the backend's own thresholds. */
+function stageForScore(score: number): HotLeadScore["buying_stage"] {
+  return score >= 80 ? "ready_to_buy" : score >= 55 ? "decision" : score >= 30 ? "consideration" : "awareness";
+}
+
 function genericHotLeads(): HotLeadScore[] {
-  return HIVE_COMPANIES.map((c, i) => ({
-    id: `h-gen-${i}`,
-    company_domain: c.domain,
-    company_name: c.name,
-    lead_id: null,
-    research_intensity_score: 20 + ((i * 17) % 75),
-    buying_stage: (["awareness", "consideration", "decision", "ready_to_buy"] as const)[i % 4],
-    signal_count: 1 + (i % 6),
-    signal_types_seen: HIVE_SIGNAL_TYPES[i % HIVE_SIGNAL_TYPES.length],
-    top_intent_keywords: HIVE_KEYWORDS[i % HIVE_KEYWORDS.length],
-    last_signal_at: new Date(Date.now() - i * 3600000).toISOString(),
-    is_hot: i % 5 === 0,
-    hot_since: i % 5 === 0 ? new Date().toISOString() : null,
-    alerted: false,
-    manual_temperature: null,
-    created_at: new Date().toISOString(),
-  }));
+  const companies = hiveCompanies(HIVE_ACCOUNTS - namedHotLeadsEs.length);
+  return companies.map((c, i) => {
+    // Scores spread evenly over 20–95 with a coprime stride, so the comb
+    // fills every ramp step and the centre is not one lone hot cell.
+    const score = 20 + ((i * 37) % 76);
+    const hot = score >= 80;
+    return {
+      id: `h-gen-${i}`,
+      company_domain: c.domain,
+      company_name: c.name,
+      lead_id: null,
+      research_intensity_score: score,
+      buying_stage: stageForScore(score),
+      signal_count: 1 + (i % 6),
+      signal_types_seen: HIVE_SIGNAL_TYPES[i % HIVE_SIGNAL_TYPES.length],
+      top_intent_keywords: HIVE_KEYWORDS[i % HIVE_KEYWORDS.length],
+      last_signal_at: new Date(Date.now() - i * 3600000).toISOString(),
+      is_hot: hot,
+      hot_since: hot ? new Date(Date.now() - (i % 7) * 86400000).toISOString() : null,
+      alerted: false,
+      manual_temperature: null,
+      created_at: new Date().toISOString(),
+    };
+  });
 }
 
 export function getSampleHotLeads(locale: Locale = defaultLocale): HotLeadScore[] {
