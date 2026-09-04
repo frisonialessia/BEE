@@ -44,3 +44,56 @@ las píldoras de periodo; el sandbox carga cinco años de cierres.
 
 **Falta.** Arrastrar sobre la gráfica para acotar un rango a mano y
 comparar un periodo contra el anterior en la misma caja.
+
+## 4. Más conexiones — nuevos orígenes de señal y canales de salida
+
+**Hoy.** Control · Conexiones conecta, por OAuth real, cinco cuentas:
+Gmail, LinkedIn, Salesforce, HubSpot y Jira (`app/api/v1/endpoints/
+integrations.py`). BEE habla en la voz de la persona por tres canales
+(`omnichannel/providers/`): email, LinkedIn y X/Twitter. El cerebro de
+BEE ya escanea cinco fuentes de mercado (`services/external_api/
+providers/`): G2, búsqueda de Google, portales de contratación
+(Greenhouse · Lever), prensa (GDELT) y noticias de Google, más el sitio
+propio de la cuenta. Slack/Teams, los tableros de BI (Power BI, Tableau,
+Looker Studio) y n8n/Zapier/Make ya funcionan hoy sin conector dedicado —
+por webhook entrante o saliente, no por OAuth — así que técnicamente ya
+"conectan", aunque no aparezcan como tarjeta propia.
+
+**Cada conexión nueva entra por lo que le da de comer al cerebro, no por
+volumen de logos**: una fuente de datos que mejora un tipo de señal que
+BEE ya puntúa, un canal que la persona ya usa para vender, o un lugar
+donde el equipo ya guarda su trabajo.
+
+- **Calendario** (Google Calendar, Outlook) — la fricción más directa:
+  hoy el calendario de BEE es propio y no sincroniza con el que el
+  vendedor ya usa todos los días.
+- **WhatsApp Business** — un cuarto canal de salida, el más fuerte para
+  venta directa en LatAm; incorpora la misma forma que email/LinkedIn/X
+  en `omnichannel/providers/`.
+- **Datos de financiamiento** (Crunchbase, PitchBook) y **de stack
+  tecnológico** (BuiltWith) — no reemplazan la detección por texto que ya
+  existe, la hacen más precisa: menos falso positivo en los tipos de
+  señal `funding_round` y `tech_adoption`.
+- **Más portales de contratación** (Indeed, además de Greenhouse/Lever) y
+  **datos de mercado/divisa** (para el punto 1: tipos de cambio diarios).
+- **Notion / Google Drive** — para que un battlecard o un artefacto viva
+  también donde el equipo ya trabaja, no solo dentro de BEE.
+- **Reddit** — señal de comunidad/sentimiento; encaja como una fuente de
+  mercado más, no como canal de salida.
+
+**No entran, salvo que cambie el caso de uso**: herramientas sin relación
+con detectar una señal, preparar una jugada o cerrarla (p. ej. Figma,
+Monday.com — Jira ya cubre gestión de proyectos, Substack) — sumarlas
+solo por presencia visual en una página de integraciones no es la lógica
+que sigue este roadmap.
+
+**Landing.** Una fila "Conecta con tus herramientas" con los conectores
+reales (arriba) es fácil de justificar — no son promesas, ya funcionan.
+Pendiente de decidir: el estilo va contra la regla de "solo tinta y la
+paleta de BEE" que rige el resto de la landing — un logo real de
+Salesforce o Slack es a todo color por definición. Dos caminos: (a)
+insignias de solo texto/tinta, dentro de la regla, con menos impacto
+visual de "estamos conectados con todo"; (b) una excepción puntual y
+explícita a la regla del color, solo en esta fila, con los logos
+oficiales reales (no una aproximación) — pendiente de que el equipo lo
+decida y de conseguir los archivos de marca correctos si se elige (b).
