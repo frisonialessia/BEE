@@ -12,8 +12,17 @@ export const queryKeys = {
   },
   opportunities: {
     all: ["opportunities"] as const,
-    list: (status?: string) =>
-      [...queryKeys.opportunities.all, "list", status ?? "all"] as const,
+    // `limit` is part of the key on purpose: without it every caller of
+    // useOpportunities(status, N) — dashboard, CRM board, Ventas, the
+    // milestone path's own totals — shared ONE cache entry regardless of
+    // which N it asked for, and whichever component mounted first quietly
+    // decided the limit for everyone else too. A page that needs the full
+    // set (700) could silently end up with another page's smaller slice
+    // (100/200) if that one happened to fetch first — a real bug, not
+    // hypothetical, once the sandbox's own opportunity count grew past the
+    // smallest limit in use.
+    list: (status?: string, limit?: number) =>
+      [...queryKeys.opportunities.all, "list", status ?? "all", limit] as const,
     detail: (id: string) => [...queryKeys.opportunities.all, "detail", id] as const,
     battlecard: (id: string) =>
       [...queryKeys.opportunities.all, "battlecard", id] as const,

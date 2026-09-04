@@ -34,7 +34,7 @@ import { buildSalesModel } from "@/lib/sales-model";
 export function SalesView() {
   const t = useTranslations("sales");
   const locale = useLocale() as Locale;
-  const { data: oppsResult, isLoading } = useOpportunities(undefined, 300);
+  const { data: oppsResult, isLoading } = useOpportunities(undefined, 700);
   const { data: users } = useUsers();
   const { data: teamsData } = useTeams();
   const { data: quotasResult } = useQuotas();

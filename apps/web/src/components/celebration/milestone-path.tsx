@@ -144,7 +144,19 @@ export function MilestonePath({
   }
 
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-3">
+    // Full width (its own wrapped row, under WeeklyRecapCard's flex-wrap)
+    // below sm, back to sharing the row as flex-1 at sm and up — `min-w-0`
+    // together with `flex-1` alone let this shrink toward zero instead of
+    // ever wrapping (nothing forced a line break, since min-w-0 removes
+    // the min-content floor flex-wrap would otherwise trip on), so on a
+    // phone the whole path just vanished instead of dropping to its own
+    // line. `flex-wrap` here too: on a narrow phone even this own line is
+    // too tight for badges + the numeric road + the goal fraction side by
+    // side — better a short second line (badges on top, road + fraction
+    // below, still one compact block) than all three crushed unreadable
+    // into one. Same footprint either way — one or two more compact rows,
+    // never a taller card.
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-3 sm:w-auto sm:flex-1">
       {weeklyEvents && (weeklyEvents.leadsAdded > 0 || weeklyEvents.companiesAdded > 0 || weeklyEvents.activeMeetingsWeek) && (
         <div className="flex shrink-0 items-center gap-1.5">
           {weeklyEvents.leadsAdded > 0 && (
@@ -217,7 +229,11 @@ export function MilestonePath({
           scroll, and a scroll container would clip the hover tooltip
           positioned above it (setting overflow-x forces overflow-y to
           "auto" too, per the CSS overflow spec). */}
-      <div ref={boxRef} className="relative min-w-0 flex-1">
+      {/* min-w-[10rem], not min-w-0: this is what actually forces a wrap
+          onto its own line on a narrow phone — min-w-0 has no floor, so
+          flex-wrap never saw a reason to break the line and this whole
+          box just kept shrinking past legibility instead. */}
+      <div ref={boxRef} className="relative min-w-[10rem] flex-1">
         <svg width={viewW} height={VIEW_H} viewBox={`0 0 ${viewW} ${VIEW_H}`} role="img" aria-label={t("aria", { total: totalWon })} className="block">
           <path d={allPath} fill="none" stroke="var(--color-divider)" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 7" />
           {reachedPath && <path d={reachedPath} fill="none" stroke={SALES.won} strokeWidth={3} strokeLinecap="round" />}

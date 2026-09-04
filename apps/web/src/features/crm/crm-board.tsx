@@ -284,7 +284,7 @@ function ColumnHeader({ stage, count, accent }: { stage: CrmStage | "closed"; co
  */
 export function CrmBoard() {
   const t = useTranslations("crm.board");
-  const { data: oppsResult, isLoading } = useOpportunities(undefined, 300);
+  const { data: oppsResult, isLoading } = useOpportunities(undefined, 700);
   const { data: companiesResult } = useCompanies(300);
   const { data: users } = useUsers();
   const { openOpportunity } = useOpportunityDrawer();

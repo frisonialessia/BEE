@@ -113,7 +113,7 @@ export function QuotasSection({ users, teams, canManage }: { users: UserOut[]; t
   const t = useTranslations("workspace.team.quotas");
   const locale = useLocale() as Locale;
   const { data: quotasResult, isLoading: quotasLoading } = useQuotas();
-  const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 300);
+  const { data: oppsResult, isLoading: oppsLoading } = useOpportunities(undefined, 700);
   const deleteQuota = useDeleteQuota();
   const [showNew, setShowNew] = useState(false);
 

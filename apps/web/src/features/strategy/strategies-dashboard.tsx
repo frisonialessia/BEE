@@ -45,7 +45,7 @@ export function StrategiesDashboard() {
   const locale = useLocale() as Locale;
   const t = useTranslations("signalsStrategies.strategies");
   const { data: battlecardsResult, isLoading: loadingBattlecards } = useBattlecards();
-  const { data: allOppsResult, isLoading: loadingOpps } = useOpportunities(undefined, 200);
+  const { data: allOppsResult, isLoading: loadingOpps } = useOpportunities(undefined, 700);
   const { data: patternsResult, isLoading: loadingPatterns } = useSuccessPatterns();
   const { data: insightsResult, isLoading: loadingInsights } = useMarketInsights();
   // Evidence inputs: every signal (to map a closed deal back to its signal

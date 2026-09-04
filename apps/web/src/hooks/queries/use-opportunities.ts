@@ -18,7 +18,7 @@ import type { Opportunity, OpportunityStatus } from "@/types/domain";
 
 export function useOpportunities(status?: OpportunityStatus, limit = 50) {
   return useQuery({
-    queryKey: queryKeys.opportunities.list(status),
+    queryKey: queryKeys.opportunities.list(status, limit),
     queryFn: async () => fetchOpportunities(status, limit),
   });
 }

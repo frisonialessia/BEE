@@ -82,7 +82,7 @@ export function IntentHive({
 }) {
   const t = useTranslations("shared.intentHive");
   const { data: result, isLoading } = useHiveLeads(maxLeads);
-  const { data: oppsResult } = useOpportunities(undefined, 300);
+  const { data: oppsResult } = useOpportunities(undefined, 700);
   const { data: companiesResult } = useCompanies(300);
   const { openOpportunity, openNew } = useOpportunityDrawer();
   const setTemperature = useSetHiveTemperature();

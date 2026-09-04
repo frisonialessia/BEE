@@ -8,6 +8,6 @@ import type { TeamOut, UserOut } from "@/types/auth";
  *  scoreboard): won deals per rep, filterable by team, next to the quotas
  *  those numbers count against. */
 export function TeamLeaderboardSection({ users, teams }: { users: UserOut[]; teams: TeamOut[] }) {
-  const { data: oppsResult } = useOpportunities(undefined, 300);
+  const { data: oppsResult } = useOpportunities(undefined, 700);
   return <Leaderboard opportunities={oppsResult?.data ?? []} users={users} teams={teams} />;
 }
