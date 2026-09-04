@@ -93,14 +93,13 @@ export function Honeycomb({
         {layout.cells.map((c, i) => {
           const item = sorted[i];
           const fill = HIVE_RAMP[rampIndex(i, c.ring, sorted.length, steps)];
-          const dim = focus !== null && focus !== item.id;
+          const isFocus = focus === item.id;
           const anchor = { x: c.x, y: c.y, radius: layout.radius, width: W, height: H };
           return (
             <g
               key={item.id}
               className={cn("bee-hive-cell", onSelect && "cursor-pointer")}
               style={{ transform: `translate(${c.x}px, ${c.y}px)` }}
-              opacity={dim ? 0.45 : 1}
               tabIndex={onSelect ? 0 : undefined}
               role={onSelect ? "button" : undefined}
               aria-label={onSelect ? item.label : undefined}
@@ -109,7 +108,10 @@ export function Honeycomb({
               onClick={onSelect ? () => onSelect(item, anchor) : undefined}
               onKeyDown={onSelect ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(item, anchor); } } : undefined}
             >
-              <path d={hexagon} fill={fill} stroke="var(--color-card)" strokeWidth={1}>
+              {/* Hovering/focusing one cell never dims the rest of the comb
+                  — it just gets a small ink outline, the same one
+                  :focus-visible already draws for keyboard focus. */}
+              <path d={hexagon} fill={fill} stroke={isFocus ? "var(--color-text)" : "var(--color-card)"} strokeWidth={isFocus ? 2 : 1}>
                 <title>{`${item.label}${item.caption ? ` · ${item.caption}` : ""}`}</title>
               </path>
               {item.mark && layout.radius >= 10 && (
