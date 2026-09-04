@@ -3,7 +3,7 @@
     "view": {
       "eyebrow": "Secuencia dinámica · Engagement inteligente",
       "title": "Secuencias",
-      "subtitle": "Cadencias multicanal en curso, eventos entrantes que requieren respuesta, y el contenido con el que arrancarlas",
+      "subtitle": "Cadencias en curso y su contenido",
       "tabs": {
         "status": "Estado",
         "library": "Biblioteca de mensajes",
@@ -13,7 +13,7 @@
       }
     },
     "probarPage": {
-      "subtitle": "El contenido con el que arrancarlas y el flujo multicanal que las define — el estado en vivo y la bandeja de engagement necesitan una cuenta real."
+      "subtitle": "Contenido y flujos; el estado en vivo pide cuenta real"
     },
     "comingSoon": {
       "title": "{label} — no está simulado en este sandbox",

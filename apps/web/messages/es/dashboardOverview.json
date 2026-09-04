@@ -2,7 +2,7 @@
   "overview": {
     "eyebrow": "Inteligencia de señales",
     "title": "Resumen",
-    "subtitle": "Señales de mercado en tiempo real → battlecards CEO → cierre de deals",
+    "subtitle": "Señales, jugadas y cierres del día",
     "statusLive": "En vivo · API conectada",
     "statusDemo": "Demo · API desconectada",
     "kpis": {

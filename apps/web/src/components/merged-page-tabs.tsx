@@ -13,7 +13,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
  * BEE standard: the page header (eyebrow · title · caption) and the tab
  * strip share ONE row — header left, tabs + actions right — so the KPI
  * strip below (`belowTabs`) starts at the same height as on a page without
- * tabs. `actionsByTab` is for a control that belongs to one tab only.
+ * tabs. `actionsByTab` is the tab's one primary button: it sits right after
+ * the rail, and on a phone it fills the space to the right of the rail on
+ * the same line; `actions` are the secondary controls, on their own line
+ * on a phone, each at its natural width.
  */
 export function MergedPageTabs({
   tabs,
@@ -51,19 +54,17 @@ export function MergedPageTabs({
       <div className="bee-page-head">
         {header}
         <div className="bee-page-head__side">
-          <TabsList className="bee-tabs">
-            {tabs.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="bee-tabs__tab">
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {(actionsByTab?.[value] || actions) && (
-            <div className="bee-page-head__actions">
-              {actionsByTab?.[value]}
-              {actions}
-            </div>
-          )}
+          <div className="bee-page-head__rail">
+            <TabsList className="bee-tabs">
+              {tabs.map((tab) => (
+                <TabsTrigger key={tab.value} value={tab.value} className="bee-tabs__tab">
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {actionsByTab?.[value] && <div className="bee-page-head__primary">{actionsByTab[value]}</div>}
+          </div>
+          {actions && <div className="bee-page-head__actions bee-page-head__actions--under">{actions}</div>}
         </div>
       </div>
       {belowTabs && <div className="bee-page__kpis">{belowTabs}</div>}

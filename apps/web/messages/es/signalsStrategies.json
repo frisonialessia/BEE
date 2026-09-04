@@ -2,7 +2,7 @@
   "signals": {
     "eyebrow": "Motor de señales",
     "title": "Señales",
-    "subtitle": "Triggers de mercado — funding, contrataciones, adopción tecnológica y más",
+    "subtitle": "Funding, contrataciones, tecnología y más",
     "live": "En vivo",
     "demo": "Datos demo",
     "loadError": "Error al cargar señales.",
@@ -49,7 +49,7 @@
   "strategies": {
     "eyebrow": "Playbooks",
     "title": "Estrategias",
-    "subtitle": "Battlecards listas para actuar y los argumentos que más cierran",
+    "subtitle": "Battlecards listas y argumentos que cierran",
     "live": "En vivo",
     "demo": "Datos demo",
     "tabBattlecards": "Battlecards ({count})",

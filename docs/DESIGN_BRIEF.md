@@ -166,6 +166,14 @@ sección 2:
   píldora pulsada cuyo relleno sea un azul o morado fuerte (índigo, lila,
   magenta); azul en el secundario; las píldoras activas en lavanda o miel
   llevan texto en tinta.
+- **Subtítulos de página de diez palabras o menos** ("Tu pipeline, etapa
+  por etapa", "Pipeline ponderado y deals en riesgo"): dicen qué hay en la
+  página sin quitarle tiempo a quien la abre.
+- **Encabezado en móvil**: el riel de pestañas y el botón primario de la
+  página comparten una sola línea (riel a la izquierda, botón a la derecha,
+  a su tamaño); las acciones secundarias van debajo, cada una a su ancho,
+  nunca estiradas. `MergedPageTabs` lo resuelve solo: `actionsByTab` es el
+  botón primario, `actions` las secundarias.
 - **KPIs cortos**: título de una a tres palabras ("Señales", "Calientes",
   "Pipeline", "Trimestre") y descripción de pocas palabras; la cifra es la
   protagonista y nunca lleva divisa (la divisa del equipo vive en ajustes y

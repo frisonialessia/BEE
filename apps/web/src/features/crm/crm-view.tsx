@@ -2,8 +2,11 @@
 
 import { useTranslations } from "next-intl";
 
+import { LiveBadge } from "@/components/live-badge";
 import { MergedPageTabs } from "@/components/merged-page-tabs";
 import { CrmBoard } from "@/features/crm/crm-board";
+import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
+import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { OpportunitiesList } from "@/features/opportunities/opportunities-dashboard";
 
 /** CRM — four views of the same pipeline in one tab strip: Pipeline (the
@@ -18,6 +21,11 @@ import { OpportunitiesList } from "@/features/opportunities/opportunities-dashbo
  *  contenido y es la página completa la que hace scroll. */
 export function CrmView() {
   const t = useTranslations("crm.view");
+  const tBoard = useTranslations("crm.board");
+  const { openNew } = useOpportunityDrawer();
+  // Same query the board runs — one cache entry, so the badge and the
+  // board always agree on whether the data is live.
+  const { data: oppsResult } = useOpportunities(undefined, 300);
 
   return (
     <div>
@@ -30,6 +38,15 @@ export function CrmView() {
           </header>
         }
         defaultValue="pipeline"
+        actions={<LiveBadge live={oppsResult?.live ?? false} />}
+        actionsByTab={{
+          // Opens the same side panel as a card, empty — never a centered dialog.
+          pipeline: (
+            <button type="button" onClick={() => openNew()} className="bee-btn bee-btn--primary text-xs">
+              {tBoard("newOpportunity")}
+            </button>
+          ),
+        }}
         tabs={[
           { value: "pipeline", label: t("pipelineTab"), content: <CrmBoard /> },
           { value: "opportunities", label: t("opportunitiesTab"), content: <OpportunitiesList /> },

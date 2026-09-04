@@ -4,7 +4,7 @@
   "demoBadge": "Demo data",
   "forecast": {
     "title": "Forecast",
-    "subtitle": "Pipeline weighted by close probability, month over month, and which deals are at risk",
+    "subtitle": "Weighted pipeline and deals at risk",
     "tabs": {
       "projection": "Projection"
     },

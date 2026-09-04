@@ -3,7 +3,7 @@
     "view": {
       "eyebrow": "Dynamic sequence · Smart engagement",
       "title": "Sequences",
-      "subtitle": "Multichannel cadences in progress, incoming events that need a response, and the content to start them with",
+      "subtitle": "Cadences in progress and their content",
       "tabs": {
         "status": "Status",
         "library": "Message library",
@@ -13,7 +13,7 @@
       }
     },
     "probarPage": {
-      "subtitle": "The content to start them with, and the multichannel flow that defines them — live status and the engagement inbox need a real account."
+      "subtitle": "Content and flows; live status needs a real account"
     },
     "comingSoon": {
       "title": "{label} — not simulated in this sandbox",

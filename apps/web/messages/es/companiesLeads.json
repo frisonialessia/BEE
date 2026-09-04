@@ -3,7 +3,7 @@
   "companiesList": {
     "eyebrow": "Cuentas",
     "title": "Empresas",
-    "subtitle": "Cada empresa con sus contactos, oportunidades y señales en un solo lugar",
+    "subtitle": "Contactos, oportunidades y señales por empresa",
     "outerTabs": {
       "companies": "Directorio",
       "leads": "Leads"
@@ -204,7 +204,7 @@
   "leadsDirectory": {
     "eyebrow": "CRM",
     "title": "Leads",
-    "subtitle": "Todo el histórico de prospectos detectados, con puntaje de intención para saber a quién enfocar",
+    "subtitle": "Prospectos con puntaje de intención",
     "live": "En vivo",
     "demoData": "Datos demo",
     "importButton": "Importar prospectos",

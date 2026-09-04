@@ -23,7 +23,6 @@ import { formatMoney } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 import { ApiError } from "@/types/api";
 import type { Opportunity } from "@/types/domain";
-import { LiveBadge } from "@/components/live-badge";
 
 const COLUMN_MIN = 212;
 const CARD_H = 118;
@@ -281,7 +280,7 @@ export function CrmBoard() {
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 300);
   const { data: companiesResult } = useCompanies(300);
   const { data: users } = useUsers();
-  const { openOpportunity, openNew } = useOpportunityDrawer();
+  const { openOpportunity } = useOpportunityDrawer();
   const moveStage = useMoveOpportunityStage();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [overStage, setOverStage] = useState<CrmStage | null>(null);
@@ -289,7 +288,6 @@ export function CrmBoard() {
   const [now] = useState(() => Date.now());
 
   const opportunities = useMemo(() => oppsResult?.data ?? [], [oppsResult]);
-  const live = oppsResult?.live ?? false;
   const { stages, closed } = useMemo(() => groupByCrmStage(opportunities), [opportunities]);
   const metaById = useMemo(() => {
     const companies = new Map((companiesResult?.data ?? []).map((c) => [c.id, c.name]));
@@ -325,16 +323,6 @@ export function CrmBoard() {
     moveOpportunity(id, stage);
   }
 
-  const header = (
-    <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
-      <LiveBadge live={live} />
-      {/* Opens the same side panel as a card, empty — never a centered dialog. */}
-      <button type="button" onClick={() => openNew()} className="bee-btn bee-btn--primary text-xs">
-        {t("newOpportunity")}
-      </button>
-    </div>
-  );
-
   if (isLoading) {
     return (
       <div className="grid gap-3.5" style={{ gridTemplateColumns: `repeat(5, minmax(${COLUMN_MIN}px, 1fr))` }}>
@@ -348,7 +336,6 @@ export function CrmBoard() {
   if (opportunities.length === 0) {
     return (
       <div>
-        {header}
         <div className="bee-bento bee-bento-pad py-8 text-center">
           <Inbox className="mx-auto mb-2 size-5 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">{t("emptyState.title")}</p>
@@ -367,8 +354,6 @@ export function CrmBoard() {
   return (
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- closes an open card menu on any click outside it
     <div onClick={() => menuId && setMenuId(null)}>
-      {header}
-
       <div className="overflow-x-auto pb-2">
         <div className="grid gap-x-3.5 gap-y-3" style={{ gridTemplateColumns: `repeat(5, minmax(${COLUMN_MIN}px, 1fr))`, gridTemplateRows: `auto repeat(${rowCount}, ${CARD_H}px)` }}>
           {columns.map((col, c) => (

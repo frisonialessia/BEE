@@ -1,7 +1,7 @@
 {
   "network": {
     "eyebrow": "Network navigator",
-    "caption": "Who knows whom before you knock cold: the map of your network, your best connectors and the warmest path into a company",
+    "caption": "Who knows whom before you knock cold",
     "panel": {
       "coverage": {
         "none": "No coverage",
@@ -95,7 +95,7 @@
   },
   "brand": {
     "eyebrow": "Personal brand · Psychographic",
-    "caption": "Voice profile and style snippets, plus the DISC analysis that adapts every message",
+    "caption": "Your voice and each message's DISC",
     "panel": {
       "channelLabels": {
         "email": "Email",
@@ -390,7 +390,7 @@
     }
   },
   "control": {
-    "caption": "Is BEE running well right now, and what does it need from you?",
+    "caption": "How BEE is doing and what it needs",
     "leadWorkspace": {
       "ariaLabel": "Lead workspace",
       "eyebrow": "Action zone",

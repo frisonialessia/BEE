@@ -160,7 +160,7 @@ export function CompaniesList() {
         actions={
           <>
             <LiveBadge live={live} />
-            <div className="w-full sm:w-56">
+            <div className="w-44 sm:w-56">
               <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("searchPlaceholder")} aria-label={t("searchPlaceholder")} className="bee-input" />
             </div>
             <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost">

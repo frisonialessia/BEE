@@ -235,7 +235,7 @@ export function LeadsDirectory({
           <div className="bee-page-head__side">
             <div className="bee-page-head__actions">
               <LiveBadge live={live} />
-              <div className="w-full sm:w-56">
+              <div className="w-44 sm:w-56">
                 <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("filters.searchPlaceholder")} aria-label={t("filters.searchPlaceholder")} className="bee-input" />
               </div>
               <button type="button" onClick={() => setImportOpen(true)} className="bee-btn-ghost">

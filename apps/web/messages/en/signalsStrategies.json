@@ -2,7 +2,7 @@
   "signals": {
     "eyebrow": "Signal Engine",
     "title": "Signals",
-    "subtitle": "Market triggers — funding, hires, tech-stack adoption, and more",
+    "subtitle": "Funding, hires, tech adoption and more",
     "live": "Live",
     "demo": "Demo data",
     "loadError": "Error loading signals.",
@@ -49,7 +49,7 @@
   "strategies": {
     "eyebrow": "Playbooks",
     "title": "Strategies",
-    "subtitle": "Battlecards ready to act on, and the arguments that close most",
+    "subtitle": "Ready battlecards and the arguments that close",
     "live": "Live",
     "demo": "Demo data",
     "tabBattlecards": "Battlecards ({count})",

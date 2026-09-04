@@ -1,7 +1,7 @@
 {
   "eyebrow": "Inteligencia de ingresos",
   "title": "Ventas",
-  "subtitle": "Todo lo cerrado desde que existe la organización",
+  "subtitle": "Todo lo cerrado hasta hoy",
   "kpis": {
     "total": "Ganado histórico",
     "since": "{count, plural, =1 {1 cierre} other {# cierres}} en total",

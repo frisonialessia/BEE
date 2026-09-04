@@ -1,7 +1,7 @@
 {
   "eyebrow": "Revenue intelligence",
   "title": "Sales",
-  "subtitle": "Everything closed since the organization exists",
+  "subtitle": "Everything closed to date",
   "kpis": {
     "total": "Won all-time",
     "since": "{count, plural, =1 {1 deal} other {# deals}} in total",

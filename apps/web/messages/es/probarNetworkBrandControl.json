@@ -1,7 +1,7 @@
 {
   "network": {
     "eyebrow": "Navegador de red",
-    "caption": "Quién conoce a quién antes de tocar en frío: el mapa de tu red, tus mejores conectores y la ruta más cálida hacia una empresa",
+    "caption": "Quién conoce a quién antes de tocar en frío",
     "panel": {
       "coverage": {
         "none": "Sin cobertura",
@@ -95,7 +95,7 @@
   },
   "brand": {
     "eyebrow": "Marca personal · Psicográfico",
-    "caption": "Perfil de voz y fragmentos de estilo, más el análisis DISC que adapta cada mensaje",
+    "caption": "Tu voz y el DISC de cada mensaje",
     "panel": {
       "channelLabels": {
         "email": "Email",
@@ -390,7 +390,7 @@
     }
   },
   "control": {
-    "caption": "¿BEE está funcionando bien ahora mismo y qué necesita de ti?",
+    "caption": "Cómo va BEE y qué necesita de ti",
     "leadWorkspace": {
       "ariaLabel": "Espacio de leads",
       "eyebrow": "Zona de acción",

@@ -4,7 +4,7 @@
   "demoBadge": "Datos demo",
   "forecast": {
     "title": "Pronóstico",
-    "subtitle": "Pipeline ponderado por probabilidad de cierre, mes a mes, y qué deals están en riesgo",
+    "subtitle": "Pipeline ponderado y deals en riesgo",
     "tabs": {
       "projection": "Proyección"
     },

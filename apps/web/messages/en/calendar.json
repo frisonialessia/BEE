@@ -2,7 +2,7 @@
   "page": {
     "eyebrow": "Calendar",
     "title": "Calendar",
-    "caption": "Team meetings — each one tied to your real pipeline, not a separate agenda.",
+    "caption": "Meetings tied to your pipeline",
     "newMeeting": "+ New meeting",
     "today": "Today",
     "prevWeek": "Previous week",

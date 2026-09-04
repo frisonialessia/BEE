@@ -2,7 +2,7 @@
   "page": {
     "eyebrow": "Calendario",
     "title": "Calendario",
-    "caption": "Reuniones del equipo — cada una ligada a tu pipeline real, no una agenda aparte.",
+    "caption": "Reuniones ligadas a tu pipeline",
     "newMeeting": "+ Nueva reunión",
     "today": "Hoy",
     "prevWeek": "Semana anterior",

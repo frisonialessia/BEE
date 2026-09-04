@@ -1705,10 +1705,24 @@
   max-width: 100%;
 }
 .bee-page-head__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+/* The one primary action of the page (or of the active tab): on desktop it
+   follows the tab rail; on a phone it takes the free space to the right of
+   the rail, on the same line, at its natural size. */
+.bee-page-head__rail { display: flex; align-items: center; gap: 0.75rem; min-width: 0; max-width: 100%; }
+.bee-page-head__primary { display: flex; align-items: center; flex-shrink: 0; }
 @media (max-width: 639px) {
-  .bee-page-head__side { margin-left: 0; width: 100%; }
-  .bee-page-head__actions { width: 100%; }
-  .bee-page-head__actions > * { flex: 1 1 auto; }
+  .bee-page-head__side { margin-left: 0; width: 100%; gap: 0.5rem 0.75rem; }
+  /* Rail and primary button share one line that never breaks: the rail
+     gives way (it scrolls inside itself) and the button keeps its size at
+     the right edge. */
+  .bee-page-head__rail { width: 100%; flex-wrap: nowrap; }
+  .bee-page-head__rail .bee-tabs { flex: 0 1 auto; min-width: 0; justify-content: flex-start; }
+  .bee-page-head__rail .bee-tabs__tab { padding-inline: 0.625rem !important; }
+  .bee-page-head__primary { margin-left: auto; }
+  /* Secondary actions: a second line, right-aligned, every control at its
+     own width — never stretched to fill the row. */
+  .bee-page-head__actions { width: 100%; justify-content: flex-end; }
+  .bee-page-head__actions--under { justify-content: flex-start; }
 }
 
 /* Tabs in the header row: a white pill rail, the active tab in lavender
