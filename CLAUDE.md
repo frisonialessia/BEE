@@ -79,6 +79,12 @@ pnpm build
   extension-point pattern (`@register_analyzer`) used throughout.
 - Frontend: domain types live in `apps/web/src/types/domain.ts`, mirrored
   from `apps/api/app/schemas/`. Keep them in sync when either side changes.
+- Frontend design system: read `docs/DESIGN_BRIEF.md` before touching any
+  page. Colors only from `apps/web/src/components/charts/palette.ts`
+  (one hue per chart at 100/70/45 %, greens only on Ventas/CRM/Calendar,
+  no colored text), every page through `PageShell`/`MergedPageTabs` +
+  `StatStrip` + `.bee-overview`/`OverviewCard`, and one honeycomb
+  (`components/charts/honeycomb.tsx`).
 - Tests are hermetic (in-memory SQLite for the backend) — no external
   services required to run the suite. Run the full suite before pushing;
   most of this codebase's regressions have been caught this way.

@@ -135,3 +135,33 @@ oportunidad copiando la reunión; 2) Resumen; 3) Señales y Estrategias;
 - Verificación local que funcionó: `pnpm exec tsc --noEmit -p .`,
   `pnpm lint`, build y capturas con Playwright; auditoría de tonos fuera de
   paleta con un script de estilos computados (todas las rutas en 0).
+
+## 6. Estado del rediseño (2026-09-04, tarde)
+
+Todo el rediseño está en `main`, en seis commits (fases 1 a 5 y la
+limpieza). Reglas que quedaron fijadas en código, además de las de la
+sección 2:
+
+- **Paleta de trabajo**: `apps/web/src/components/charts/palette.ts`.
+  `TONE` asigna un tono a lo que representa cada gráfica (miel mercado,
+  lila lo que BEE prepara, magenta urgencia, índigo pronóstico y equipo,
+  lavanda calma); `tint(hue, 100 | 70 | 45)` y `level(hue, i)` dan las
+  tres intensidades hacia blanco y `REST` (gris de página) para lo demás;
+  `heat(hue, 0..1)` para celdas secuenciales; `HIVE_RAMP` para la colmena.
+- **Una sola colmena**: `components/charts/honeycomb.tsx` sobre
+  `lib/visualization/honeycomb-radial.ts` (espiral desde el centro, celdas
+  huecas para el anillo en curso). `features/signals/intent-hive.tsx` la
+  alimenta con datos reales. Nadie dibuja otra.
+- **Shell**: `components/dashboard/page-shell.tsx` (PageHeader, PageShell),
+  `components/merged-page-tabs.tsx`, `components/charts/stat-tile.tsx`
+  (StatStrip, StatTile), `components/dashboard/overview-card.tsx`
+  (OverviewCard, CardLink), `.bee-page*`, `.bee-tile*`, `.bee-tabs*`,
+  `.bee-row`, `.bee-dot` en `globals.css`.
+- **Ninguna letra de color**: el botón primario y las píldoras activas
+  llevan texto en tinta.
+- **Color elegido por la persona**: `components/color-dots.tsx` (seis tonos
+  BEE + tres verdes). Las oportunidades tienen `color` (migración 048).
+- **Auditoría**: un script de Playwright recorre cada ruta y comprueba que
+  todo color computado sea un token, una mezcla hacia blanco de un token o
+  un gris entre tinta y fondo; verdes solo en Ventas, CRM y Calendario.
+  Última corrida: 0 hallazgos en las 21 rutas.
