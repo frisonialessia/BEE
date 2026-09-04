@@ -5,10 +5,14 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { AskBeeFab } from "@/components/assistant/ask-bee-fab";
+import { AccountMenuDemo } from "@/components/dashboard/account-menu-demo";
+import { AssistantHeaderLink } from "@/components/dashboard/assistant-header-link";
 import { DashboardRail } from "@/components/dashboard/dashboard-rail";
 import { MobileNavProvider } from "@/components/dashboard/mobile-nav-context";
 import { MobileNavToggle } from "@/components/dashboard/mobile-nav-toggle";
-import { Logo } from "@/components/logo";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+import { TeamPresence } from "@/components/presence/presence-bar";
+import { GlobalSearch } from "@/components/search/global-search";
 import { Badge } from "@/components/ui/badge";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
@@ -86,13 +90,29 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
                 </div>
               </div>
 
-              <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 sm:px-5">
+              {/* Same shape as the real DashboardHeader — search, the
+                  assistant, the team, notifications, account — so the
+                  sandbox reads like someone's own organization, not a
+                  stripped-down preview. Only two swaps: the guided-tour
+                  button stands in for the dashboard's onboarding-replay
+                  button (this sandbox has no first-visit dialog to
+                  reopen), and the account menu is demo-sourced (no real
+                  session exists here to read from). */}
+              <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border px-3 sm:gap-4 sm:px-5">
                 <MobileNavToggle />
-                <Link href="/probar" aria-label={t("homeAria")} className="flex items-center gap-4">
-                  <Logo />
-                </Link>
-                <Badge variant="warning" className="hidden sm:inline-flex">{tBadge("demo")}</Badge>
-                <TourTriggerButton />
+                <GlobalSearch className="max-w-[10rem] sm:max-w-xs md:max-w-sm" />
+                <Badge variant="warning" className="hidden shrink-0 sm:inline-flex">{tBadge("demo")}</Badge>
+                <div className="ml-auto flex items-center gap-2 sm:gap-4">
+                  <TourTriggerButton />
+                  <AssistantHeaderLink />
+                  <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
+                  <div className="hidden items-center gap-4 lg:flex">
+                    <TeamPresence />
+                    <div className="h-6 w-px bg-border" aria-hidden />
+                  </div>
+                  <NotificationBell />
+                  <AccountMenuDemo />
+                </div>
               </header>
 
               <div className="bee-scroll" ref={scrollRef}>

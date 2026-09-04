@@ -70,6 +70,9 @@
   "teamStrip": {
     "members": "{count, plural, one {# en el equipo} other {# en el equipo}}"
   },
+  "accountMenuDemo": {
+    "exit": "Salir del sandbox"
+  },
   "liveBadge": {
     "live": "En vivo",
     "demo": "Datos demo"
