@@ -18,7 +18,7 @@ import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeForecast, qualificationScore } from "@/lib/forecast";
 import { computeMonthlyTrends } from "@/lib/trends";
 import { LiveBadge } from "@/components/live-badge";
-import { DATA, mix } from "@/components/charts/palette";
+import { DATA, SALES, mix } from "@/components/charts/palette";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { useQuotas } from "@/hooks/queries/use-quotas";
@@ -123,7 +123,8 @@ export function ForecastView() {
                     value={formatCurrencyUSD(forecast.wonValue, locale)}
                     hint={teamQuota ? t("forecast.kpis.won.goalHint", { goal: formatMoney(teamQuota.target_amount, currency, locale, true) }) : t("forecast.kpis.won.hint")}
                     progress={goalAttainment}
-                    tone={DATA.violet}
+                    // Won is the one green tile on this page — Ventas' reading.
+                    tone={SALES.won}
                   />
                   <StatTile
                     label={t("forecast.kpis.atRisk.label")}

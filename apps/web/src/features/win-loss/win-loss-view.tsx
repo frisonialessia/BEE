@@ -11,7 +11,8 @@ import type { Locale } from "@/i18n/locales";
 import { formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeWinLoss } from "@/lib/win-loss";
 import { LiveBadge } from "@/components/live-badge";
-import { KpiStrip } from "@/components/metric-card";
+import { DATA, SALES } from "@/components/charts/palette";
+import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 
 /** Ganado/Perdido — por qué se ganan y se pierden los deals, no solo cuántos.
@@ -66,31 +67,33 @@ export function WinLossView({ showHeader = true }: { showHeader?: boolean }) {
         <div className="space-y-4">
           {/* Misma tarjeta compacta que Dark Funnel — ver forecast-view.tsx's
            * propio comentario, mismo cambio acá. */}
-          <KpiStrip
-            cols={4}
-            items={[
-              {
-                label: t("winLoss.kpis.winRate.label"),
-                value: summary.winRate !== null ? `${Math.round(summary.winRate * 100)}%` : "—",
-                hint: t("winLoss.kpis.winRate.hint", { won: summary.won, total: summary.totalClosed }),
-                progress: summary.winRate ?? undefined,
-              },
-              { label: t("winLoss.kpis.wonValue.label"), value: formatCurrencyUSD(summary.wonValue, locale), hint: t("winLoss.kpis.wonValue.hint") },
-              { label: t("winLoss.kpis.lostValue.label"), value: formatCurrencyUSD(summary.lostValue, locale), hint: t("winLoss.kpis.lostValue.hint"), tone: "warm" },
-              {
-                label: t("winLoss.kpis.daysToClose.label"),
-                value: summary.avgDaysToCloseWon !== null ? `${Math.round(summary.avgDaysToCloseWon)}d` : "—",
-                hint:
-                  summary.avgDaysToCloseWon !== null
-                    ? summary.avgDaysToCloseLost !== null
-                      ? t("winLoss.kpis.daysToClose.hintHasWonHasLost", { days: Math.round(summary.avgDaysToCloseLost) })
-                      : t("winLoss.kpis.daysToClose.hintHasWonNoLost")
-                    : summary.avgDaysToCloseLost !== null
-                      ? t("winLoss.kpis.daysToClose.hintNoWonHasLost", { days: Math.round(summary.avgDaysToCloseLost) })
-                      : t("winLoss.kpis.daysToClose.hintNoWonNoLost"),
-              },
-            ]}
-          />
+          {/* Won wears the three greens, lost stays honey — the same reading
+              as the CRM's Cerradas column and the Ventas page. */}
+          <StatStrip cols={4}>
+            <StatTile
+              label={t("winLoss.kpis.winRate.label")}
+              value={summary.winRate !== null ? `${Math.round(summary.winRate * 100)}%` : "—"}
+              hint={t("winLoss.kpis.winRate.hint", { won: summary.won, total: summary.totalClosed })}
+              progress={summary.winRate ?? undefined}
+              tone={SALES.won}
+            />
+            <StatTile label={t("winLoss.kpis.wonValue.label")} value={formatCurrencyUSD(summary.wonValue, locale)} hint={t("winLoss.kpis.wonValue.hint")} tone={SALES.lime} />
+            <StatTile label={t("winLoss.kpis.lostValue.label")} value={formatCurrencyUSD(summary.lostValue, locale)} hint={t("winLoss.kpis.lostValue.hint")} tone={DATA.honey} />
+            <StatTile
+              label={t("winLoss.kpis.daysToClose.label")}
+              value={summary.avgDaysToCloseWon !== null ? `${Math.round(summary.avgDaysToCloseWon)}d` : "—"}
+              hint={
+                summary.avgDaysToCloseWon !== null
+                  ? summary.avgDaysToCloseLost !== null
+                    ? t("winLoss.kpis.daysToClose.hintHasWonHasLost", { days: Math.round(summary.avgDaysToCloseLost) })
+                    : t("winLoss.kpis.daysToClose.hintHasWonNoLost")
+                  : summary.avgDaysToCloseLost !== null
+                    ? t("winLoss.kpis.daysToClose.hintNoWonHasLost", { days: Math.round(summary.avgDaysToCloseLost) })
+                    : t("winLoss.kpis.daysToClose.hintNoWonNoLost")
+              }
+              tone={SALES.mint}
+            />
+          </StatStrip>
 
           {/* items-start: Razones de pérdida y Competidores are variable-length
               lists (one row per reason/competitor), not proportional charts —

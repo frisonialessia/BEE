@@ -30,7 +30,7 @@ export function CompetitorBreakdown({ stats }: { stats: CompetitorStat[] }) {
               <TooltipTrigger asChild>
                 <div className="mt-1 flex h-1.5 overflow-hidden rounded-full bg-[var(--color-primary)]/20">
                   <div
-                    className="h-full bg-[var(--success)] transition-[width] duration-300"
+                    className="h-full bg-[var(--color-green-1)] transition-[width] duration-300"
                     style={{ width: `${winPct}%` }}
                   />
                   <div
