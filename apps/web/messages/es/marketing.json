@@ -64,17 +64,17 @@
       "signal": {
         "n": "01",
         "title": "Llega la señal",
-        "text": "Una ronda, una contratación clave, un cambio de stack. BEE la detecta, la puntúa y la pone en la colmena antes de que exista el lead."
+        "text": "Una ronda, una contratación clave, un cambio de stack — BEE la puntúa y la coloca en la colmena."
       },
       "play": {
         "n": "02",
         "title": "BEE arma la jugada",
-        "text": "Argumento, objeción probable, canal y momento, listos en una tarjeta. El vendedor lee y decide; no investiga desde cero."
+        "text": "Argumento, canal y momento, listos en una tarjeta. El vendedor lee y decide."
       },
       "decide": {
         "n": "03",
         "title": "Tú decides",
-        "text": "Nada sale sin tu aprobación. Con ella, BEE agenda el siguiente paso, lo sigue y aprende de cada cierre."
+        "text": "Nada sale sin tu aprobación. BEE agenda, sigue y aprende de cada cierre."
       }
     },
     "closingText": "La pregunta es si las estás viendo.",

@@ -60,49 +60,6 @@
     "latestTitle": "Últimas señales",
     "latestCaption": "Lo más reciente que detectó BEE"
   },
-  "features": {
-    "play": {
-      "card": {
-        "eyebrow": "Jugada sugerida",
-        "headline": "Northwind Robotics · Serie C",
-        "time": "hace 2h",
-        "argument": "Acaban de levantar capital y están contratando ventas: es el momento de mayor propensión a comprar. Abre con cómo escalan el equipo sin perder señal.",
-        "chips": {
-          "channel": "Email",
-          "timing": "Esta semana",
-          "fit": "Encaje alto"
-        },
-        "approve": "Aprobar",
-        "reject": "Rechazar",
-        "approvedNote": "Jugada aprobada · agendada para el martes",
-        "rejectedNote": "Jugada descartada · BEE ajusta la siguiente",
-        "undo": "Deshacer"
-      }
-    },
-    "execute": {
-      "card": {
-        "eyebrow": "Próximos pasos",
-        "week": "Esta semana",
-        "days": {
-          "d1": "Lun",
-          "d2": "Mar",
-          "d3": "Mié",
-          "d4": "Jue",
-          "d5": "Vie"
-        },
-        "steps": {
-          "email": "Email · Northwind",
-          "call": "Llamada · Vantage",
-          "followup": "Seguimiento · Solace"
-        },
-        "when": {
-          "email": "Enviado",
-          "call": "Jue 11:00",
-          "followup": "Vie"
-        }
-      }
-    }
-  },
   "faq": {
     "eyebrow": "Preguntas frecuentes",
     "heading": "Antes de que preguntes.",
@@ -248,5 +205,31 @@
     "illustrative": "Vista ilustrativa con datos de ejemplo.",
     "cta": "Ver Ventas en el demo",
     "ctaSecondary": "Crear cuenta gratis"
+  },
+  "hero": {
+    "cards": {
+      "lead": {
+        "eyebrow": "Cuenta caliente"
+      },
+      "play": {
+        "eyebrow": "Jugada lista"
+      }
+    },
+    "stats": {
+      "items": {
+        "hive": {
+          "value": "200",
+          "label": "cuentas por colmena"
+        },
+        "history": {
+          "value": "5",
+          "label": "años de historial en Ventas"
+        },
+        "reply": {
+          "value": "24 h",
+          "label": "para responder tu mensaje"
+        }
+      }
+    }
   }
 }

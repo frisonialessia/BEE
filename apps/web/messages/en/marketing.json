@@ -64,17 +64,17 @@
       "signal": {
         "n": "01",
         "title": "The signal arrives",
-        "text": "A funding round, a key hire, a stack change. BEE detects it, scores it and places it in the hive before the lead exists."
+        "text": "A funding round, a key hire, a stack change — BEE scores it and places it in the hive."
       },
       "play": {
         "n": "02",
         "title": "BEE prepares the play",
-        "text": "Argument, likely objection, channel and timing, ready on one card. The rep reads and decides; no research from scratch."
+        "text": "Argument, channel and timing, ready on one card. The rep reads and decides."
       },
       "decide": {
         "n": "03",
         "title": "You decide",
-        "text": "Nothing goes out without your approval. With it, BEE schedules the next step, follows it up and learns from every close."
+        "text": "Nothing goes out without your approval. BEE schedules, follows up and learns from every close."
       }
     },
     "closingText": "The question is whether you are seeing them.",

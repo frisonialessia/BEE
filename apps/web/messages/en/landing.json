@@ -60,49 +60,6 @@
     "latestTitle": "Latest signals",
     "latestCaption": "The most recent things BEE detected"
   },
-  "features": {
-    "play": {
-      "card": {
-        "eyebrow": "Suggested play",
-        "headline": "Northwind Robotics · Series C",
-        "time": "2h ago",
-        "argument": "They just raised capital and are hiring sales: this is the moment of highest buying propensity. Open with how they scale the team without losing signal.",
-        "chips": {
-          "channel": "Email",
-          "timing": "This week",
-          "fit": "High fit"
-        },
-        "approve": "Approve",
-        "reject": "Reject",
-        "approvedNote": "Play approved · scheduled for Tuesday",
-        "rejectedNote": "Play discarded · BEE adjusts the next one",
-        "undo": "Undo"
-      }
-    },
-    "execute": {
-      "card": {
-        "eyebrow": "Next steps",
-        "week": "This week",
-        "days": {
-          "d1": "Mon",
-          "d2": "Tue",
-          "d3": "Wed",
-          "d4": "Thu",
-          "d5": "Fri"
-        },
-        "steps": {
-          "email": "Email · Northwind",
-          "call": "Call · Vantage",
-          "followup": "Follow-up · Solace"
-        },
-        "when": {
-          "email": "Sent",
-          "call": "Thu 11:00",
-          "followup": "Fri"
-        }
-      }
-    }
-  },
   "faq": {
     "eyebrow": "Frequently asked questions",
     "heading": "Before you ask.",
@@ -248,5 +205,31 @@
     "illustrative": "Illustrative view with sample data.",
     "cta": "See Sales in the demo",
     "ctaSecondary": "Create a free account"
+  },
+  "hero": {
+    "cards": {
+      "lead": {
+        "eyebrow": "Hot account"
+      },
+      "play": {
+        "eyebrow": "Play ready"
+      }
+    },
+    "stats": {
+      "items": {
+        "hive": {
+          "value": "200",
+          "label": "accounts per hive"
+        },
+        "history": {
+          "value": "5",
+          "label": "years of history in Sales"
+        },
+        "reply": {
+          "value": "24 h",
+          "label": "to reply to your message"
+        }
+      }
+    }
   }
 }
