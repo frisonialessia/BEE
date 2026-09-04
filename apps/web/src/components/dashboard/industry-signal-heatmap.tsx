@@ -68,9 +68,10 @@ export function IndustrySignalHeatmap({
 
   const totalByIndustry = new Map<string, number>();
   for (const c of cells) totalByIndustry.set(c.industry, (totalByIndustry.get(c.industry) ?? 0) + c.closedCount);
+  // Narrow boxes (span 4) take four columns so the last label is never clipped.
   const industries = [...totalByIndustry.entries()]
     .sort((a, b) => b[1] - a[1])
-    .slice(0, MAX_COLS)
+    .slice(0, boxW < 560 ? 4 : MAX_COLS)
     .map(([industry]) => industry);
 
   // Only rows that have a cell in one of the shown columns, and at most

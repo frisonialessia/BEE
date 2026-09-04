@@ -148,22 +148,12 @@ export function layoutHiveCells(
     (a, b) => stageIndex(a.buying_stage) - stageIndex(b.buying_stage) || b.research_intensity_score - a.research_intensity_score,
   );
   const n = sorted.length;
-  // Largest radius at which the comb fits both ways; the block then takes
-  // the box's proportions (wide box → wide comb) instead of one tall column.
-  let radius = 7;
-  let rows = 1;
-  let cols = n;
-  for (let R = maxRadius; R >= 7; R -= 0.5) {
-    const rowsFit = Math.max(1, Math.floor((height - 4 - 0.5 * R) / (1.5 * R)));
-    const colsFit = Math.max(1, Math.floor((width - 4) / (SQRT3 * R) - 0.5));
-    if (rowsFit * colsFit >= n || R <= 7) {
-      radius = R;
-      rows = Math.min(rowsFit, Math.ceil(n / colsFit));
-      cols = Math.ceil(n / rows);
-      break;
-    }
-  }
-  rows = Math.min(rows, n);
+  // Rows follow the box's proportions (a wide box gets a wide comb, a tall
+  // one a tall comb), then the radius is the largest that fits, capped so
+  // the comb never turns into a handful of oversized cells.
+  const rows = Math.max(1, Math.min(n, Math.round(Math.sqrt((n * height) / width / 0.87))));
+  const cols = Math.ceil(n / rows);
+  const radius = Math.max(7, Math.min(maxRadius, (height - 4) / (1.5 * rows + 0.5), (width - 4) / ((cols + 0.5) * SQRT3)));
   const combW = (cols + 0.5) * SQRT3 * radius;
   const combH = (rows - 1) * 1.5 * radius + 2 * radius;
   const x0 = (width - combW) / 2 + (SQRT3 * radius) / 2;

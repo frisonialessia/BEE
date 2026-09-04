@@ -30,6 +30,8 @@ interface SignalHexMapProps {
   /** Canvas height in CSS pixels. */
   height?: number;
   maxLeads?: number;
+  /** Largest hex radius (px); the central Resumen block allows bigger cells. */
+  maxRadius?: number;
 }
 
 function HiveTooltip({
@@ -106,6 +108,7 @@ export function SignalHexMap({
   style,
   height = 360,
   maxLeads = 200,
+  maxRadius = 30,
 }: SignalHexMapProps) {
   const t = useTranslations("shared.signalHexMap");
   const base = useDashboardBase();
@@ -166,8 +169,8 @@ export function SignalHexMap({
   }, [leads, t]);
 
   const { cells, radius: hexRadius } = useMemo(
-    () => layoutHiveCells(leads, size.width, size.height),
-    [leads, size.width, size.height],
+    () => layoutHiveCells(leads, size.width, size.height, maxRadius),
+    [leads, size.width, size.height, maxRadius],
   );
 
   const redraw = useCallback(

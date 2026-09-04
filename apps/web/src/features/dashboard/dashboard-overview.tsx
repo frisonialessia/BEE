@@ -198,7 +198,7 @@ export function DashboardOverview({
       <div className="bee-overview">
         {/* Central block: the hive — BEE's identity — with the stage metrics
             under it; the day's plays at its side. */}
-        <SignalHexMap height={260} className="h-full lg:min-h-[32rem]!" style={{ gridColumn: "span 8" }} />
+        <SignalHexMap height={260} maxRadius={42} className="h-full lg:min-h-[32rem]!" style={{ gridColumn: "span 8" }} />
 
         <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")} className="lg:min-h-[32rem]!">
           <DecisionFeed embedded criticalAccounts={criticalAccounts} />
