@@ -96,7 +96,6 @@ export function FeatureChart({ id }: { id: FeatureId }) {
           <BarsVsTarget
             points={[32, 38, 41, 45, 52, 58].map((value, i) => ({ label: months[i], value, current: i === 5 }))}
             target={50}
-            targetLabel={t("target")}
             minHeight={160}
             formatValue={(v) => `${Math.round(v)} k`}
             colorFor={(p) => (p.value >= 50 ? SALES.won : SALES.mint)}

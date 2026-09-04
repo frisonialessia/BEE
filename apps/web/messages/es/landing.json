@@ -5,26 +5,6 @@
     "decision": "Decisión",
     "ready_to_buy": "Listo para comprar"
   },
-  "orbit": {
-    "cards": {
-      "signals": {
-        "headline": "Detecta cada señal de mercado apenas ocurre",
-        "label": "Motor de señales"
-      },
-      "brief": {
-        "headline": "Tu resumen ejecutivo, listo cada mañana",
-        "label": "Brief del día"
-      },
-      "simulator": {
-        "headline": "Proyecta escenarios sobre intención de compra real",
-        "label": "Simulador de ingresos"
-      },
-      "automation": {
-        "headline": "Secuencias que avanzan solas, con tu aprobación",
-        "label": "Automatización"
-      }
-    }
-  },
   "ticker": {
     "ariaLabel": "Ejemplos de señales de mercado detectadas en tiempo real — vista ilustrativa",
     "items": [

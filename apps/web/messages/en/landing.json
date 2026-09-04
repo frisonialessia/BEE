@@ -5,26 +5,6 @@
     "decision": "Decision",
     "ready_to_buy": "Ready to buy"
   },
-  "orbit": {
-    "cards": {
-      "signals": {
-        "headline": "Catches every market signal the moment it happens",
-        "label": "Signal engine"
-      },
-      "brief": {
-        "headline": "Your executive brief, ready every morning",
-        "label": "Daily brief"
-      },
-      "simulator": {
-        "headline": "Project scenarios on real buying intent",
-        "label": "Revenue simulator"
-      },
-      "automation": {
-        "headline": "Sequences that move on their own, with your approval",
-        "label": "Automation"
-      }
-    }
-  },
   "ticker": {
     "ariaLabel": "Examples of market signals detected in real time — illustrative view",
     "items": [

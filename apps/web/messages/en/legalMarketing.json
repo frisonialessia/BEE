@@ -88,8 +88,7 @@
           "Won vs. target"
         ],
         "chart": {
-          "title": "Won vs. target (k)",
-          "target": "Target"
+          "title": "Won vs. target (k)"
         }
       },
       "calendario": {

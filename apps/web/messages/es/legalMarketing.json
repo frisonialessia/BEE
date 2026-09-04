@@ -88,8 +88,7 @@
           "Ganado vs. meta"
         ],
         "chart": {
-          "title": "Ganado vs. meta (k)",
-          "target": "Meta"
+          "title": "Ganado vs. meta (k)"
         }
       },
       "calendario": {

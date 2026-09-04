@@ -8,7 +8,6 @@ import { MarketingFAQ } from "@/components/marketing-faq";
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
 import { Reveal } from "@/components/marketing-motion";
-import { MarketingOrbit } from "@/components/marketing-orbit";
 import { MarketingSalesProof } from "@/components/marketing-sales-proof";
 import { MarketingSignalTicker } from "@/components/marketing-signal-ticker";
 import { MarketingTrustCards } from "@/components/marketing-trust-cards";
@@ -22,8 +21,8 @@ import { MarketingTrustCards } from "@/components/marketing-trust-cards";
  * social fabricada.
  *
  * Order, and the reason for it — a visitor should know what BEE is within
- * two scrolls: the hero says it (headline, subtitle, CTAs, the four tilted
- * module cards as the module summary), the ticker shows the signals, the
+ * two scrolls: the hero says it (headline, subtitle, CTAs — nothing
+ * floating around them), the ticker shows the signals, the
  * Demo en vivo shows the product. Then the argument: Ventas, why to trust
  * it (four guarantees as dashboard charts, plus the real sources), FAQ,
  * closing CTA. The
@@ -147,7 +146,7 @@ export default async function Home() {
         <section className="relative overflow-hidden">
           <HeroAtmosphere />
 
-          <div className="relative mx-auto w-full max-w-4xl px-6 pb-8 pt-16 text-center sm:pt-24">
+          <div className="relative mx-auto w-full max-w-4xl px-6 pb-16 pt-16 text-center sm:pb-20 sm:pt-24">
             {/* .bee-hero-in: eyebrow → headline (word by word) → subtitle →
              * CTAs rise in on load, 60 ms apart. */}
             <div className="bee-hero-in relative">
@@ -167,16 +166,6 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* pb-12/pt-2 here, not the pb-20/pt-10 you'd expect for this much
-           * visual breathing room — MarketingOrbit already reserves its own
-           * py-8 internally (needed so its tilted cards' overshoot doesn't
-           * get clipped, see the comment there), so stacking full padding
-           * here on top of that would double up and push the section much
-           * taller than intended. The four tilted cards are the module
-           * summary of this page; the full tour is /funcionalidades. */}
-          <div className="relative pb-12 pt-2 sm:pb-16">
-            <MarketingOrbit />
-          </div>
         </section>
 
         <MarketingSignalTicker />
