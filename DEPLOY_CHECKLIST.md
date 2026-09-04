@@ -9,26 +9,40 @@ Backend status after External Ingestion: **Ready**.
 
 ## 0. Lanzamiento MVP — lo que falta configurar hoy (2026-09-04)
 
-Estado tras el incidente del login: base de datos migrada a 047, RLS en las
-40 tablas, guardia de deriva de esquema en `/api/v1/health/ready` y `/status`,
+**Bloqueante único para el login:** el `DATABASE_URL` de `bee-api` en Vercel
+apunta a **Neon** (`ep-jolly-field-awhxt8aq-pooler.c-12.us-east-1.aws.neon.tech`,
+base `neondb`), y esa base está en la revisión Alembic `025`. El código
+espera `047`. Cada login da 500 hasta que esa base — no la de Supabase — se
+migre. `GET /api/v1/ready` lo muestra en vivo (503 con el detalle) y el log
+de arranque dice contra qué host se comprobó.
+
+Dos maneras de salir, elige una:
+
+| Opción | Qué hacer | Cuándo conviene |
+|--------|-----------|-----------------|
+| **A. Migrar Neon** (conserva los datos que ya hay ahí) | Neon → Dashboard → SQL Editor → pegar y ejecutar `neon-025-to-047.sql` (se genera con `cd apps/api && alembic upgrade 025_account_activity_events:head --sql`; empieza con `ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(128)` porque los ids de revisión superan los 32 caracteres). Después, GitHub → Settings → Secrets → Actions → `PRODUCTION_DATABASE_URL` = cadena **directa** de Neon (sin `-pooler`) para que el workflow migre solo en adelante. | Si las cuentas que ya se registraron en producción viven en Neon. |
+| **B. Apuntar a Supabase** (ya está en 047, con RLS y pgvector) | Vercel → `bee-api` → Environment Variables → `DATABASE_URL` = Supabase → Project Settings → Database → **Transaction pooler** (puerto 6543) + `?sslmode=require`; redeploy. Y el mismo secreto `PRODUCTION_DATABASE_URL` en GitHub con esa cadena. | Si Neon era una prueba y no hay datos que conservar. Una sola base: menos sorpresas. |
+
+Estado del resto tras el incidente: Supabase migrada a 047, RLS en las 40
+tablas, guardia de deriva de esquema en `/api/v1/ready` y `/api/v1/status`,
 errores 500 con JSON y CORS, y el workflow `.github/workflows/migrate.yml`
 que corre `alembic upgrade head` en cada push a main que toque migraciones.
-Lo que sigue solo se puede hacer desde las cuentas de Vercel / GitHub / Resend:
+Lo demás solo se puede hacer desde las cuentas de Vercel / GitHub / Resend:
 
 | Dónde | Variable | Valor |
 |-------|----------|-------|
-| GitHub → Settings → Secrets → Actions | `PRODUCTION_DATABASE_URL` | Supabase → Project Settings → Database → **Transaction pooler** (puerto 6543) + `?sslmode=require`. Sin este secreto el workflow de migraciones avisa y no hace nada. |
-| Vercel `bee-api` | `DATABASE_URL` | La misma cadena **pooled** (6543). La directa (5432) agota las 60 conexiones de Supabase con pocos usuarios simultáneos. |
-| Vercel `bee-api` | `VECTOR_STORE_BACKEND` | `pgvector` — la extensión y la tabla `vector_embeddings` ya existen en Supabase; hoy la memoria de Sales DNA se borra en cada arranque. |
+| GitHub → Settings → Secrets → Actions | `PRODUCTION_DATABASE_URL` | La cadena de la base elegida arriba. Sin este secreto el workflow de migraciones avisa y no hace nada. |
+| Vercel `bee-api` | `DATABASE_URL` | Cadena **pooled** de la base elegida. La conexión directa agota el límite de conexiones con pocos usuarios simultáneos. |
+| Vercel `bee-api` | `VECTOR_STORE_BACKEND` | `pgvector` — en Supabase la extensión y la tabla `vector_embeddings` ya existen; en Neon la migración 001 ya la creó (Neon soporta pgvector). Hoy la memoria de Sales DNA se borra en cada arranque. |
 | Vercel `bee-api` | `EMAIL_SMTP_HOST` / `EMAIL_SMTP_PORT` / `EMAIL_SMTP_USER` / `EMAIL_SMTP_PASSWORD` / `EMAIL_FROM_ADDRESS` | Con Resend: `smtp.resend.com` / `587` / `resend` / la API key `re_…` / `hola@<dominio verificado en Resend>`. Sin esto "recuperar contraseña" dice "revisa tu correo" y nunca llega nada. |
 | Vercel `bee-api` | `SENTRY_DSN` | DSN del proyecto en sentry.io. Sin él, cero visibilidad cuando algo falle a un cliente real. |
 | Vercel `bee-web` | `NEXT_PUBLIC_SENTRY_DSN` | Ídem para el frontend. |
 
 Comprobación en un minuto, después de guardar las variables y redeployar:
-`GET https://bee-api-two.vercel.app/api/v1/health/ready` debe responder
+`GET https://bee-api-two.vercel.app/api/v1/ready` debe responder
 `{"status":"ready"}` (503 si hay deriva de esquema), y `GET /api/v1/status`
-(con `X-API-Key`) debe mostrar `schema.in_sync: true` y
-`vector_store.backend: pgvector`.
+(con `X-API-Key`) debe mostrar `schema.in_sync: true`, `schema.db_target`
+con el host esperado y `vector_store.backend: pgvector`.
 
 ---
 
