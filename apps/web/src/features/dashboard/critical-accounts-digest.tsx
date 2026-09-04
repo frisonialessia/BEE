@@ -8,7 +8,7 @@ import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context"
 import { useSequences, useStartSequenceExecution } from "@/hooks/queries/use-sequences";
 import type { Locale } from "@/i18n/locales";
 import { signalFill, signalTone, TONE_CSS_VAR } from "@/lib/brand/colors";
-import { getSignalTypeLabels } from "@/lib/format";
+import { formatChannel, formatPlaybook, getSignalTypeLabels } from "@/lib/format";
 import type { SignalType } from "@/lib/types";
 import type { Battlecard } from "@/types/domain";
 
@@ -89,7 +89,7 @@ function CriticalAccountCard({ battlecard }: { battlecard: Battlecard }) {
         </p>
         <p className="mt-1 line-clamp-2 text-micro leading-relaxed">{battlecard.strategy.closing_argument}</p>
         <p className="mt-1 bee-micro">
-          {t("viaChannel", { playbook: battlecard.strategy.playbook, channel: battlecard.strategy.channel })}
+          {t("viaChannel", { playbook: formatPlaybook(battlecard.strategy.playbook, locale), channel: formatChannel(battlecard.strategy.channel, locale) })}
         </p>
       </div>
 

@@ -144,7 +144,10 @@ export function computePriorities(
 ): CompanyPriority[] {
   return companies
     .map((company) => {
-      const fit = computeFitScore(company, criteria, { leads: data.leads, signals: data.signals });
+      // The backend already scores fit (services/icp/fit_score.py) and stores
+      // it on the company; the client port is only the fallback for demo
+      // data and for companies not yet recomputed.
+      const fit = company.fit_score ?? computeFitScore(company, criteria, { leads: data.leads, signals: data.signals });
       if (fit === null) return null;
       const intent = computeIntentScore(company.id, data);
       return { company, fit, intent, quadrant: classifyQuadrant(fit, intent) };

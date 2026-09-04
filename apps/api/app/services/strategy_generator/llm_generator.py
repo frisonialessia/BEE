@@ -224,7 +224,7 @@ class LLMStrategyGenerator(StrategyGenerator):
             closing_argument=data["closing_argument"],
             timing_window=timing_window,
             playbook=data.get("playbook", "generic_outreach"),
-            next_best_action=data.get("next_best_action", "send_email"),
+            next_best_action=data.get("next_best_action", "reach_out"),
             channel=data.get("channel", "email"),
         )
 

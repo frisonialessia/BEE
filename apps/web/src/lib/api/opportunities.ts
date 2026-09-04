@@ -126,7 +126,8 @@ export async function fetchBattlecard(
 
 export async function fetchBattlecards(): Promise<FetchResult<Battlecard[]>> {
   try {
-    const { data: list } = await fetchOpportunities("ready_to_action");
+    const opps = await fetchOpportunities("ready_to_action");
+    const list = opps.data;
     // allSettled, not all: one opportunity's battlecard failing (a stale ID,
     // a transient 5xx) shouldn't throw away every other one that succeeded —
     // Promise.all would reject the whole batch and fall back to 100% demo
@@ -135,7 +136,8 @@ export async function fetchBattlecards(): Promise<FetchResult<Battlecard[]>> {
     const cards = settled
       .filter((r): r is PromiseFulfilledResult<FetchResult<Battlecard>> => r.status === "fulfilled")
       .map((r) => r.value.data);
-    return { data: cards, live: true };
+    // Live only if the list itself was live — demo battlecards are demo.
+    return { data: cards, live: opps.live };
   } catch {
     // Honest empty, not fabricated demo data — same convention as
     // fetchSignals/fetchOpportunities. In practice this catch is dead code

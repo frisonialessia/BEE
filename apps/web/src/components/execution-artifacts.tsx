@@ -1,5 +1,7 @@
 "use client";
 
+import { formatGenerator } from "@/lib/format";
+
 import { useState } from "react";
 import {
   Calendar,
@@ -13,7 +15,9 @@ import {
   AlertTriangle,
   Zap,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+
+import type { Locale } from "@/i18n/locales";
 
 import type { ArtifactBundle, ActionItem } from "@/lib/types";
 
@@ -92,6 +96,7 @@ function CollapsibleSection({
 
 export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
   const t = useTranslations("shared.executionArtifacts");
+  const locale = useLocale() as Locale;
   const { email_draft, meeting_structure, next_steps } = bundle;
 
   return (
@@ -103,7 +108,7 @@ export function ExecutionArtifacts({ bundle }: ExecutionArtifactsProps) {
           {t("heading")}
         </h3>
         <span className="text-xs text-muted-foreground">
-          {t("generatedBy", { generator: bundle.generator })}
+          {t("generatedBy", { generator: formatGenerator(bundle.generator, locale) })}
         </span>
       </div>
 

@@ -23,6 +23,7 @@
  * from (the `NEXT_LOCALE` cookie, via `getDemoLocale()`).
  */
 import { defaultLocale, type Locale } from "@/i18n/locales";
+import { ruleBasedStrategyFor } from "@/lib/strategy-rules";
 import type {
   Battlecard,
   BattlecardStrategy,
@@ -70,7 +71,7 @@ const TEMPLATES_ES: Record<SignalType, Template> = {
   hiring: {
     painPoint: (c) => `${c} está contratando para ventas más rápido de lo que su stack actual puede soportar — cada nueva contratación sin buenas señales tarda más en rampear.`,
     closingArgument: (c) => `Vi que ${c} está creciendo el equipo comercial — los equipos que crecen así de rápido suelen necesitar un sistema de priorización antes de que el ritmo de contratación supere al de resultados.`,
-    playbook: "hiring_signal_outreach",
+    playbook: "hiring_growth_outreach",
     channel: "linkedin",
     signalTitle: (c) => `${c} abrió varias posiciones comerciales`,
     signalDescription: "Múltiples vacantes de ventas/RevOps publicadas en las últimas semanas.",
@@ -78,7 +79,7 @@ const TEMPLATES_ES: Record<SignalType, Template> = {
   tech_adoption: {
     painPoint: (c) => `${c} migró parte de su stack recientemente — normalmente eso destapa huecos en cómo conectan señales de mercado con el equipo comercial.`,
     closingArgument: (c) => `Notamos que ${c} adoptó nueva tecnología en su stack — eso suele abrir una ventana corta para revisar qué más del proceso comercial vale la pena modernizar al mismo tiempo.`,
-    playbook: "tech_adoption_outreach",
+    playbook: "complementary_tech_pitch",
     channel: "email",
     signalTitle: (c) => `${c} adoptó nueva tecnología en su stack`,
     signalDescription: "Cambio de stack detectado — nuevas integraciones visibles públicamente.",
@@ -94,7 +95,7 @@ const TEMPLATES_ES: Record<SignalType, Template> = {
   product_launch: {
     painPoint: (c) => `${c} acaba de lanzar producto nuevo — eso normalmente dispara una ola de prospección para la que el equipo todavía no tiene proceso.`,
     closingArgument: (c) => `Felicitaciones por el lanzamiento — ${c} probablemente va a ver un pico de interés entrante que vale la pena priorizar bien desde el día uno.`,
-    playbook: "product_launch_outreach",
+    playbook: "generic_outreach",
     channel: "email",
     signalTitle: (c) => `${c} lanzó un producto nuevo`,
     signalDescription: "Lanzamiento público detectado — pico esperado de interés entrante.",
@@ -102,7 +103,7 @@ const TEMPLATES_ES: Record<SignalType, Template> = {
   engagement: {
     painPoint: (c) => `${c} lleva semanas interactuando con contenido de la categoría — interés genuino, pero sin un sistema que lo capture a tiempo se enfría.`,
     closingArgument: (c) => `${c} ha estado bastante activo investigando la categoría — vale la pena una conversación antes de que ese interés se disperse en otra prioridad.`,
-    playbook: "engagement_outreach",
+    playbook: "generic_outreach",
     channel: "email",
     signalTitle: (c) => `${c} muestra actividad de investigación sostenida`,
     signalDescription: "Múltiples interacciones con contenido de la categoría en las últimas semanas.",
@@ -110,7 +111,7 @@ const TEMPLATES_ES: Record<SignalType, Template> = {
   news_mention: {
     painPoint: (c) => `${c} salió en prensa por su crecimiento — la atención mediática suele traer más inbound del que el equipo comercial puede calificar a mano.`,
     closingArgument: (c) => `Vi la mención de ${c} en prensa — buen momento para asegurarse de que el inbound que eso genera no se pierda por falta de priorización.`,
-    playbook: "news_mention_outreach",
+    playbook: "generic_outreach",
     channel: "email",
     signalTitle: (c) => `${c} apareció en cobertura de prensa reciente`,
     signalDescription: "Mención en medios detectada — posible pico de inbound asociado.",
@@ -118,7 +119,7 @@ const TEMPLATES_ES: Record<SignalType, Template> = {
   expansion: {
     painPoint: (c) => `${c} está expandiendo operaciones — coordinar prioridades comerciales entre más equipos sin un sistema central es donde se empieza a perder consistencia.`,
     closingArgument: (c) => `Buen momento para hablar — ${c} está expandiendo justo cuando más importa tener un criterio compartido de a qué cuenta atacar primero.`,
-    playbook: "expansion_outreach",
+    playbook: "expansion_upsell_outreach",
     channel: "email",
     signalTitle: (c) => `${c} anunció expansión de operaciones`,
     signalDescription: "Nueva ubicación o mercado anunciado — indica nuevo presupuesto regional.",
@@ -185,7 +186,7 @@ const TEMPLATES_EN: Record<SignalType, Template> = {
   hiring: {
     painPoint: (c) => `${c} is hiring for sales faster than its current stack can support — every new hire without good signal takes longer to ramp.`,
     closingArgument: (c) => `Saw ${c} growing the sales team — teams growing this fast usually need a prioritization system before hiring pace outruns results.`,
-    playbook: "hiring_signal_outreach",
+    playbook: "hiring_growth_outreach",
     channel: "linkedin",
     signalTitle: (c) => `${c} opened several sales roles`,
     signalDescription: "Multiple sales/RevOps openings posted in the last few weeks.",
@@ -193,7 +194,7 @@ const TEMPLATES_EN: Record<SignalType, Template> = {
   tech_adoption: {
     painPoint: (c) => `${c} migrated part of its stack recently — that usually surfaces gaps in how market signal connects to the sales team.`,
     closingArgument: (c) => `We noticed ${c} adopted new technology in its stack — that tends to open a short window to review what else in the sales process is worth modernizing at the same time.`,
-    playbook: "tech_adoption_outreach",
+    playbook: "complementary_tech_pitch",
     channel: "email",
     signalTitle: (c) => `${c} adopted new technology in its stack`,
     signalDescription: "Stack change detected — new integrations visible publicly.",
@@ -209,7 +210,7 @@ const TEMPLATES_EN: Record<SignalType, Template> = {
   product_launch: {
     painPoint: (c) => `${c} just launched a new product — that usually triggers a wave of prospecting the team doesn't have a process for yet.`,
     closingArgument: (c) => `Congrats on the launch — ${c} is likely to see a spike in inbound interest worth prioritizing well from day one.`,
-    playbook: "product_launch_outreach",
+    playbook: "generic_outreach",
     channel: "email",
     signalTitle: (c) => `${c} launched a new product`,
     signalDescription: "Public launch detected — expected spike in inbound interest.",
@@ -217,7 +218,7 @@ const TEMPLATES_EN: Record<SignalType, Template> = {
   engagement: {
     painPoint: (c) => `${c} has been engaging with category content for weeks — genuine interest, but without a system to capture it in time, it cools off.`,
     closingArgument: (c) => `${c} has been quite active researching the category — worth a conversation before that interest gets diverted to another priority.`,
-    playbook: "engagement_outreach",
+    playbook: "generic_outreach",
     channel: "email",
     signalTitle: (c) => `${c} shows sustained research activity`,
     signalDescription: "Multiple interactions with category content in the last few weeks.",
@@ -225,7 +226,7 @@ const TEMPLATES_EN: Record<SignalType, Template> = {
   news_mention: {
     painPoint: (c) => `${c} made the press for its growth — media attention usually brings more inbound than the sales team can qualify by hand.`,
     closingArgument: (c) => `Saw ${c}'s press mention — good moment to make sure the inbound that generates doesn't get lost for lack of prioritization.`,
-    playbook: "news_mention_outreach",
+    playbook: "generic_outreach",
     channel: "email",
     signalTitle: (c) => `${c} appeared in recent press coverage`,
     signalDescription: "Media mention detected — possible associated inbound spike.",
@@ -233,7 +234,7 @@ const TEMPLATES_EN: Record<SignalType, Template> = {
   expansion: {
     painPoint: (c) => `${c} is expanding operations — coordinating sales priorities across more teams without a central system is where consistency starts to slip.`,
     closingArgument: (c) => `Good time to talk — ${c} is expanding right when having a shared view of which account to chase first matters most.`,
-    playbook: "expansion_outreach",
+    playbook: "expansion_upsell_outreach",
     channel: "email",
     signalTitle: (c) => `${c} announced operations expansion`,
     signalDescription: "New location or market announced — signals new regional budget.",
@@ -450,13 +451,17 @@ const OPPORTUNITY_TITLE_PREFIX: Record<Locale, string> = { es: "Oportunidad: ", 
 function buildStrategy(def: SeedDef, template: Template, createdAtIso: string, locale: Locale): BattlecardStrategy {
   const industry = translate(def.industry, locale);
   const country = translate(def.country, locale);
+  const rule = ruleBasedStrategyFor(def.signalType, def.score);
   return {
     pain_point: template.painPoint(def.company),
     closing_argument: template.closingArgument(def.company),
-    timing_window: { urgency: def.outcome === "ready_to_action" ? "immediate" : "this_week", reason: EVALUATION_WINDOW_REASON[locale], expires_at: null },
-    playbook: template.playbook,
-    next_best_action: "reach_out",
-    channel: template.channel,
+    // Exactly what the rule-based engine would emit for this signal type —
+    // see lib/strategy-rules.ts. The sandbox never shows a strategy the
+    // real generator would not produce.
+    timing_window: { urgency: rule.urgency, reason: EVALUATION_WINDOW_REASON[locale], expires_at: null },
+    playbook: rule.playbook,
+    next_best_action: rule.next_best_action,
+    channel: rule.channel,
     rationale: SCORE_RATIONALE[locale](def.score, def.company, industry, country),
     generator: "rule_based",
     generator_version: "1.0.0",
@@ -628,7 +633,9 @@ export function historicalBattlecards(locale: Locale = defaultLocale): Battlecar
       status: statusFor(def.outcome),
       opportunity_type: "new_logo",
       score: def.score,
-      ready_to_action: true,
+      // Only an open deal with a finished battlecard is "ready to act";
+      // a closed one is history (mirrors is_battlecard_complete + status).
+      ready_to_action: def.outcome === "ready_to_action" || def.outcome === "in_progress",
       hot_lead: def.score >= 75,
       manual_review_required: false,
       company: { name: def.company, domain: def.domain, industry: translate(def.industry, locale), country: translate(def.country, locale) },

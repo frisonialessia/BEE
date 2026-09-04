@@ -1,7 +1,11 @@
 "use client";
 
+import { formatGenerator } from "@/lib/format";
+
 import { AlertTriangle, Info } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+
+import type { Locale } from "@/i18n/locales";
 
 import { Badge } from "@/components/ui/badge";
 import { useStrategyReasoning } from "@/hooks/queries/use-audit";
@@ -37,6 +41,7 @@ export function WhyThisStrategyPanel({
   opportunityId: string;
 }) {
   const t = useTranslations("shared.whyThisStrategy");
+  const locale = useLocale() as Locale;
   const { strategy } = card;
   const { data: auditResult } = useStrategyReasoning(opportunityId);
   const auditEntry = auditResult?.data ?? null;
@@ -79,7 +84,7 @@ export function WhyThisStrategyPanel({
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <Badge variant="outline">
-          {strategy.generator} v{strategy.generator_version}
+          {formatGenerator(strategy.generator, locale)} v{strategy.generator_version}
         </Badge>
         {hasVariant && (
           <Badge variant="outline">

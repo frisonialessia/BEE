@@ -133,7 +133,7 @@ export function demoTodayFeed(): TodayFeedOut {
   }
 
   const hot = opportunities
-    .filter((o) => !used.has(o.id) && (battlecards.get(o.id)?.hot_lead || o.score >= 85))
+    .filter((o) => !used.has(o.id) && (battlecards.get(o.id)?.hot_lead || o.score >= 75))
     .sort((a, b) => b.score - a.score)[0];
   if (hot) {
     const name = companyOf(hot.title, battlecards.get(hot.id)?.company.name);
@@ -303,7 +303,11 @@ export function demoFetchQuotas(): Quota[] {
   for (const team of teams) {
     const base = { id: `demo-quota-${team.id}`, user_id: null, team_id: team.id, period_start: iso(start), period_end: iso(end), target_amount: 0, target_count: null };
     const actual = computeQuotaActual(base, users, opportunities);
-    quotas.push({ ...base, target_amount: round(actual > 0 ? actual / 0.45 : 100_000), target_count: 4 });
+    // Client target derived from what actually closed this month (twice
+    // that), so the count axis tells the same "under halfway" story as the
+    // amount axis instead of an asserted number no seed can reach.
+    const monthWins = opportunities.filter((o) => o.status === "won" && o.closed_at && o.closed_at.slice(0, 10) >= base.period_start && o.closed_at.slice(0, 10) <= base.period_end).length;
+    quotas.push({ ...base, target_amount: round(actual > 0 ? actual / 0.45 : 100_000), target_count: Math.max(2, monthWins * 2) });
   }
   return quotas;
 }

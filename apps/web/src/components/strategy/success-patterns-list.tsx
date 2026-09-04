@@ -1,4 +1,7 @@
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+
+import type { Locale } from "@/i18n/locales";
+import { formatChannel, formatPlaybook } from "@/lib/format";
 
 import { Badge } from "@/components/ui/badge";
 import type { SuccessPattern } from "@/lib/api/feedback";
@@ -15,6 +18,7 @@ const CONFIDENCE_VARIANT: Record<SuccessPattern["confidence"], "outline" | "warn
  *  si no hay historial suficiente la lista sale vacía. */
 export function SuccessPatternsList({ patterns }: { patterns: SuccessPattern[] }) {
   const t = useTranslations("sharedB.successPatterns");
+  const locale = useLocale() as Locale;
 
   if (patterns.length === 0) {
     return (
@@ -38,7 +42,7 @@ export function SuccessPatternsList({ patterns }: { patterns: SuccessPattern[] }
         >
           <div className="min-w-0">
             <p className="truncate text-xs font-semibold">
-              {t("viaChannel", { playbook: p.playbook, channel: p.channel })}
+              {t("viaChannel", { playbook: formatPlaybook(p.playbook, locale), channel: formatChannel(p.channel, locale) })}
             </p>
             <p className="bee-caption mt-1">
               {p.signal_type} · {t("dealsClosed", { count: p.sample_size })}

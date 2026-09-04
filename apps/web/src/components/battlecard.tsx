@@ -20,14 +20,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import type { Locale } from "@/i18n/locales";
 import { formatRelativeTime } from "@/lib/i18n/format";
-import {
-  getOpportunityTypeLabels,
-  getSignalTypeLabels,
-  getUrgencyLabels,
-  opportunityTypeVariant,
-  scoreVariant,
-  stripOpportunityTitlePrefix,
-} from "@/lib/format";
+import { formatChannel, formatGenerator, formatNextBestAction, formatPlaybook, getOpportunityTypeLabels, getSignalTypeLabels, getUrgencyLabels, opportunityTypeVariant, scoreVariant, stripOpportunityTitlePrefix } from "@/lib/format";
 import type { Battlecard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -76,7 +69,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
           </h2>
           <p className="text-xs text-muted-foreground">
             {t("signalDetected", { time: formatRelativeTime(signal.detected_at, locale) })}{" "}
-            <span className="font-medium">{strategy.generator}</span>
+            <span className="font-medium">{formatGenerator(strategy.generator, locale)}</span>
             {strategy.confidence_score !== undefined && (
               <span className="ml-2">
                 · {t("confidencePct", { pct: Math.round(strategy.confidence_score * 100) })}
@@ -149,7 +142,7 @@ export function BattlecardView({ card }: { card: Battlecard }) {
           <Zap className="size-4 stroke-[1.25]" style={{ color: "var(--color-chart-4)" }} />
           {t("sections.closingArgument")}
           <span className="ml-auto text-xs font-normal text-muted-foreground">
-            {t("via", { value: strategy.channel })}
+            {t("via", { value: formatChannel(strategy.channel, locale) })}
           </span>
         </h3>
         <blockquote className="mt-2 border-l-2 border-[var(--color-chart-4)] pl-3 text-sm italic leading-relaxed">
@@ -188,17 +181,17 @@ export function BattlecardView({ card }: { card: Battlecard }) {
           ) : (
             <Radio className="size-3 stroke-[1.25]" />
           )}
-          {String(strategy.next_best_action).replace(/_/g, " ")}
+          {formatNextBestAction(strategy.next_best_action, locale)}
         </span>
         <span className="inline-flex items-center gap-2 border border-border bg-primary px-3 py-2 text-xs">
-          {String(strategy.channel)}
+          {formatChannel(strategy.channel, locale)}
         </span>
         <span className="inline-flex items-center gap-2 border border-border bg-primary px-3 py-2 text-xs">
-          {String(strategy.playbook).replace(/_/g, " ")}
+          {formatPlaybook(strategy.playbook, locale)}
         </span>
         <span className="ml-auto inline-flex items-center gap-2 text-xs text-muted-foreground">
           <Bot className="size-3 stroke-[1.25]" />
-          {strategy.generator} v{strategy.generator_version}
+          {formatGenerator(strategy.generator, locale)} v{strategy.generator_version}
         </span>
       </div>
     </div>

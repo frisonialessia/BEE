@@ -19,7 +19,7 @@ export interface AnomalyAlert {
 }
 
 export async function fetchOpenAnomalies(): Promise<FetchResult<AnomalyAlert[]>> {
-  if (isDemoMode()) return { data: demoFetchOpenAnomalies(), live: true };
+  if (isDemoMode()) return { data: demoFetchOpenAnomalies(), live: false };
   try {
     const data = await apiFetch<AnomalyAlert[]>("/api/v1/analytics/anomalies?status=open", {
       cache: "no-store",

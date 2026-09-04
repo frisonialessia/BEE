@@ -39,7 +39,7 @@ import { useUsers } from "@/hooks/queries/use-users";
 import type { Locale } from "@/i18n/locales";
 import type { CrmStage } from "@/lib/api/opportunities";
 import { CRM_STAGES, groupByCrmStage } from "@/lib/crm-board";
-import { getOpportunityTypeLabels, getSignalTypeLabels, stripOpportunityTitlePrefix } from "@/lib/format";
+import { formatChannel, formatNextBestAction, getOpportunityTypeLabels, getSignalTypeLabels, stripOpportunityTitlePrefix } from "@/lib/format";
 import { formatMoney } from "@/lib/i18n/format";
 import { cn } from "@/lib/utils";
 import { ApiError } from "@/types/api";
@@ -236,7 +236,10 @@ function CrmCard({
       </div>
 
       {typeof nextAction === "string" && nextAction && !closed && (
-        <p className="line-clamp-1 bee-micro font-medium text-[var(--color-text)]">{nextAction.replace(/_/g, " ")}</p>
+        <p className="line-clamp-1 bee-micro font-medium text-[var(--color-text)]">
+          {formatNextBestAction(nextAction, locale)}
+          {typeof strategy?.channel === "string" && strategy.channel ? ` · ${formatChannel(strategy.channel, locale)}` : ""}
+        </p>
       )}
 
       {/* Touch/keyboard way to move — native drag has no touch equivalent. */}

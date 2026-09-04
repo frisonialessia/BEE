@@ -326,6 +326,8 @@ export interface OpportunityTaskUpdateIn {
 // ── CompanyOut ────────────────────────────────────────────────────────────────
 
 export interface Company {
+  /** ICP fit 0–100 computed by the backend (services/icp/fit_score.py); null until recomputed. */
+  fit_score?: number | null;
   id: string;
   organization_id: string | null;
   owner_user_id: string | null;

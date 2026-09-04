@@ -21,6 +21,7 @@
  * backend does.
  */
 import { defaultLocale, type Locale } from "@/i18n/locales";
+import { ruleBasedStrategyFor } from "@/lib/strategy-rules";
 import type {
   ArtifactBundle,
   Battlecard,
@@ -592,7 +593,8 @@ export function buildManualOpportunitySet(
   const flavor = SIGNAL_FLAVOR[locale][input.signal_type] ?? SIGNAL_FLAVOR[locale].other;
   const description = input.description.trim();
   const title = input.title?.trim() || t.defaultTitle(companyName);
-  const urgency = input.score >= 75 ? "immediate" : input.score >= 50 ? "this_week" : "this_month";
+  // Urgency comes from the signal type (rule_based.py), never from the score.
+  const urgency = ruleBasedStrategyFor(input.signal_type, input.score).urgency;
   const hotLead = input.score >= 75;
 
   const signal: Signal = {

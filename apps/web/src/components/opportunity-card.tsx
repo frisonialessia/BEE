@@ -5,13 +5,7 @@ import { useLocale } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import type { Locale } from "@/i18n/locales";
-import {
-  getOpportunityStatusLabels,
-  getOpportunityTypeLabels,
-  opportunityTypeVariant,
-  scoreVariant,
-  stripOpportunityTitlePrefix,
-} from "@/lib/format";
+import { formatChannel, formatNextBestAction, formatPlaybook, getOpportunityStatusLabels, getOpportunityTypeLabels, opportunityTypeVariant, scoreVariant, stripOpportunityTitlePrefix } from "@/lib/format";
 import type { Opportunity } from "@/lib/types";
 
 /** Oportunidad accionable: lead + señal + estrategia recomendada. */
@@ -57,17 +51,17 @@ export function OpportunityCard({ opportunity }: { opportunity: Opportunity }) {
         {strategy?.next_best_action && (
           <span className="inline-flex items-center gap-1 border border-border bg-primary px-2 py-1 font-medium">
             <ArrowUpRight className="size-3 stroke-[1.25]" />
-            {String(strategy.next_best_action).replace(/_/g, " ")}
+            {formatNextBestAction(strategy.next_best_action, locale)}
           </span>
         )}
         {strategy?.channel && (
           <span className="border border-border bg-background px-2 py-1 text-muted-foreground">
-            {String(strategy.channel)}
+            {formatChannel(strategy.channel, locale)}
           </span>
         )}
         {strategy?.playbook && (
           <span className="border border-border bg-background px-2 py-1 text-muted-foreground">
-            {String(strategy.playbook).replace(/_/g, " ")}
+            {formatPlaybook(strategy.playbook, locale)}
           </span>
         )}
       </div>

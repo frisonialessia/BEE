@@ -326,3 +326,99 @@ export function scoreColorVar(score: number): string {
   if (score >= 50) return "var(--warning)";
   return "var(--color-text-muted)";
 }
+
+
+// ── Strategy vocabulary ───────────────────────────────────────────────────
+// The values the strategy generator emits (rule_based.py, llm_prompt.py,
+// keyword_analyzers.py): next_best_action, channel, playbook. One map per
+// field so the UI never shows a raw token like "reach_out". Unknown values
+// (an LLM can add one) fall back to a humanized token, never to nothing.
+const NEXT_BEST_ACTION_ES: Record<string, string> = {
+  reach_out: "Contactar",
+  send_email: "Enviar email",
+  book_call: "Agendar llamada",
+  linkedin_connect: "Conectar en LinkedIn",
+  research: "Investigar la cuenta",
+  monitor: "Monitorear",
+  follow_up: "Dar seguimiento",
+  send_proposal: "Enviar propuesta",
+  schedule_demo: "Agendar demo",
+  warm_intro: "Pedir introducción",
+};
+const NEXT_BEST_ACTION_EN: Record<string, string> = {
+  reach_out: "Reach out",
+  send_email: "Send an email",
+  book_call: "Book a call",
+  linkedin_connect: "Connect on LinkedIn",
+  research: "Research the account",
+  monitor: "Monitor",
+  follow_up: "Follow up",
+  send_proposal: "Send a proposal",
+  schedule_demo: "Schedule a demo",
+  warm_intro: "Ask for an intro",
+};
+const CHANNEL_ES: Record<string, string> = { email: "Email", linkedin: "LinkedIn", phone: "Teléfono", warm_intro: "Introducción cálida", whatsapp: "WhatsApp", in_person: "En persona" };
+const CHANNEL_EN: Record<string, string> = { email: "Email", linkedin: "LinkedIn", phone: "Phone", warm_intro: "Warm intro", whatsapp: "WhatsApp", in_person: "In person" };
+// Playbooks are the rule-based generators' names (rule_based.py) plus the
+// two the LLM prompt allows on top (llm_prompt.py).
+const PLAYBOOK_ES: Record<string, string> = {
+  post_funding_outreach: "Post-financiación",
+  hiring_growth_outreach: "Crecimiento por contratación",
+  leadership_change_outreach: "Nuevo líder",
+  complementary_tech_pitch: "Tecnología complementaria",
+  expansion_upsell_outreach: "Expansión / upsell",
+  franchise_expansion_outreach: "Expansión de franquicia",
+  post_merger_consolidation_outreach: "Post-fusión",
+  public_tender_outreach: "Licitación pública",
+  regulatory_compliance_outreach: "Cumplimiento regulatorio",
+  funding_grant_outreach: "Subvención recibida",
+  generic_outreach: "Acercamiento general",
+  competitor_displacement: "Desplazar al competidor",
+  inbound_follow_up: "Seguimiento inbound",
+  renewal_risk_outreach: "Riesgo de renovación",
+};
+const PLAYBOOK_EN: Record<string, string> = {
+  post_funding_outreach: "Post-funding",
+  hiring_growth_outreach: "Hiring growth",
+  leadership_change_outreach: "New leader",
+  complementary_tech_pitch: "Complementary tech",
+  expansion_upsell_outreach: "Expansion / upsell",
+  franchise_expansion_outreach: "Franchise expansion",
+  post_merger_consolidation_outreach: "Post-merger",
+  public_tender_outreach: "Public tender",
+  regulatory_compliance_outreach: "Regulatory compliance",
+  funding_grant_outreach: "Grant received",
+  generic_outreach: "General outreach",
+  competitor_displacement: "Competitor displacement",
+  inbound_follow_up: "Inbound follow-up",
+  renewal_risk_outreach: "Renewal risk",
+};
+
+function humanizeToken(value: string): string {
+  const text = value.replace(/_/g, " ").trim();
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+export function formatNextBestAction(value: string | null | undefined, locale: Locale = defaultLocale): string {
+  if (!value) return "";
+  return (locale === "en" ? NEXT_BEST_ACTION_EN : NEXT_BEST_ACTION_ES)[value] ?? humanizeToken(value);
+}
+
+export function formatChannel(value: string | null | undefined, locale: Locale = defaultLocale): string {
+  if (!value) return "";
+  return (locale === "en" ? CHANNEL_EN : CHANNEL_ES)[value] ?? humanizeToken(value);
+}
+
+export function formatPlaybook(value: string | null | undefined, locale: Locale = defaultLocale): string {
+  if (!value) return "";
+  return (locale === "en" ? PLAYBOOK_EN : PLAYBOOK_ES)[value] ?? humanizeToken(value);
+}
+
+// Who produced a strategy: the rules engine or the LLM. A product name in
+// the UI, never the module name.
+const GENERATOR_ES: Record<string, string> = { rule_based: "Reglas de BEE", llm: "IA de BEE", llm_generator: "IA de BEE", hybrid: "Reglas + IA de BEE" };
+const GENERATOR_EN: Record<string, string> = { rule_based: "BEE rules", llm: "BEE AI", llm_generator: "BEE AI", hybrid: "BEE rules + AI" };
+export function formatGenerator(value: string | null | undefined, locale: Locale = defaultLocale): string {
+  if (!value) return "";
+  return (locale === "en" ? GENERATOR_EN : GENERATOR_ES)[value] ?? humanizeToken(value);
+}

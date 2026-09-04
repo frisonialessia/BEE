@@ -45,7 +45,7 @@ The model MUST return valid JSON matching this schema:
         "expires_at": "YYYY-MM-DD or null"
       },
       "playbook": "challenger|consultative|social_selling|warm_intro|...",
-      "next_best_action": "send_email|book_call|linkedin_connect|...",
+      "next_best_action": "reach_out|research|monitor|book_call|send_proposal|follow_up",
       "channel": "email|linkedin|warm_intro|phone"
     }
 """

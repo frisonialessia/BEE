@@ -126,7 +126,7 @@ function normalizeProviders(status: IngestionWorkerStatus): ProviderStatus[] {
 /** Fetch aggregated system health for the control dashboard. */
 export async function fetchSystemHealth(): Promise<FetchResult<SystemHealthSnapshot>> {
   if (isDemoMode()) {
-    return { live: true, data: { ...DEMO_SYSTEM_HEALTH, fetched_at: new Date().toISOString() } };
+    return { live: false, data: { ...DEMO_SYSTEM_HEALTH, fetched_at: new Date().toISOString() } };
   }
 
   const fetched_at = new Date().toISOString();
@@ -200,8 +200,8 @@ export async function fetchSignalStream(limit = 40): Promise<FetchResult<SignalS
       rate_limits: {},
     });
     return {
-      live: true,
-      data: { events, live: true, ready_count: countReadyEvents(events), fetched_at },
+      live: false,
+      data: { events, live: false, ready_count: countReadyEvents(events), fetched_at },
     };
   }
 
