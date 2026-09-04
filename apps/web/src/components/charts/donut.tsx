@@ -1,4 +1,7 @@
+"use client";
+
 import { SERIES } from "@/components/charts/palette";
+import { useBoxSize } from "@/components/charts/use-box-size";
 
 export interface DonutSlice {
   label: string;
@@ -10,21 +13,24 @@ export interface DonutSlice {
  *  slices in the fixed series order; the rest folds into "Otros". */
 export function Donut({
   slices,
-  size = 112,
+  size: sizeProp,
   centerLabel,
   otherLabel = "Otros",
 }: {
   slices: DonutSlice[];
+  /** Fixed diameter; omit to size from the box (clamped 96–176px). */
   size?: number;
   centerLabel?: string;
   otherLabel?: string;
 }) {
+  const [ref, box] = useBoxSize<HTMLDivElement>({ width: 320, height: 140 });
+  const size = sizeProp ?? Math.round(Math.max(96, Math.min(176, box.height - 8, box.width * 0.42)));
   const sorted = [...slices].filter((s) => s.value > 0).sort((a, b) => b.value - a.value);
   const top = sorted.slice(0, 4);
   const rest = sorted.slice(4).reduce((s, x) => s + x.value, 0);
   const parts = rest > 0 ? [...top, { label: otherLabel, value: rest, color: "var(--color-primary)" }] : top;
   const total = parts.reduce((s, p) => s + p.value, 0);
-  if (total === 0) return <p className="bee-caption py-6 text-center">—</p>;
+  if (total === 0) return <p ref={ref} className="bee-caption py-6 text-center">—</p>;
   const stroke = 12;
   const r = (size - stroke - 2) / 2;
   const c = 2 * Math.PI * r;
@@ -33,7 +39,7 @@ export function Donut({
     return acc;
   }, []);
   return (
-    <div className="flex w-full min-w-0 items-center gap-4">
+    <div ref={ref} className="bee-fill flex w-full min-w-0 items-center gap-4" style={{ minHeight: 120 }}>
       <svg width={size} height={size} className="shrink-0">
         {parts.map((p, i) => {
           const frac = p.value / total;
@@ -54,7 +60,7 @@ export function Donut({
             </circle>
           );
         })}
-        <text x="50%" y="50%" dy="0.35em" textAnchor="middle" fontSize={16} fontWeight={700} fill="var(--color-text)">
+        <text x="50%" y="50%" dy="0.35em" textAnchor="middle" fontWeight={700} fill="var(--color-text)" style={{ fontSize: size >= 140 ? "var(--bee-fs-subtitle)" : "var(--bee-fs-body)" }}>
           {centerLabel ?? total}
         </text>
       </svg>

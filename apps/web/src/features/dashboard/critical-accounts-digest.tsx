@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, CheckCircle2, Rocket, Zap } from "lucide-react";
+import { ArrowRight, CheckCircle2, Rocket, Star, Zap } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -153,13 +153,22 @@ function CriticalAccountRow({ battlecard }: { battlecard: Battlecard }) {
     <button
       type="button"
       onClick={() => openOpportunity(battlecard.opportunity_id)}
-      className="bee-bento flex w-full items-center gap-4 px-3 py-3 text-left transition-opacity hover:opacity-90"
+      className="bee-bento relative flex w-full items-center gap-3 px-3 py-2.5 text-left transition-opacity hover:opacity-90"
       style={{
         background: signalFill(battlecard.signal.signal_type),
         borderColor: TONE_CSS_VAR[signalTone(battlecard.signal.signal_type)],
       }}
     >
-      <div className="min-w-0 flex-1">
+      {/* A hot lead is a honey star in the corner — the fill already carries
+          the signal's color, so a word would only repeat it. Visual language,
+          not more text for the rep to read. */}
+      {battlecard.hot_lead && (
+        <Star
+          aria-label={t("hotBadge")}
+          className="absolute right-2 top-2 size-3.5 fill-[var(--color-chart-1)] text-[var(--color-chart-1)]"
+        />
+      )}
+      <div className="min-w-0 flex-1 pr-3">
         <p className="truncate text-xs font-semibold">
           {battlecard.company.name ?? battlecard.lead.full_name ?? t("unnamedAccount")}
         </p>
@@ -167,12 +176,6 @@ function CriticalAccountRow({ battlecard }: { battlecard: Battlecard }) {
           {signalLabel} · score {Math.round(battlecard.signal.score)}
         </p>
       </div>
-      {battlecard.hot_lead && (
-        <span className="flex shrink-0 items-center gap-1 text-micro font-medium text-[var(--color-chart-5)]">
-          <Zap className="size-3" />
-          {t("hotBadge")}
-        </span>
-      )}
       <ArrowRight className="size-3.5 shrink-0 text-muted-foreground" />
     </button>
   );

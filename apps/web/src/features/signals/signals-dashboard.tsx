@@ -86,9 +86,7 @@ export function SignalsDashboard() {
                   <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-4">
                     <h3 className="bee-card-title">{t("mixTitle")}</h3>
                     <p className="bee-caption mb-4">{t("mixSubtitle")}</p>
-                    <div className="flex min-w-0 flex-1 items-center">
-                      <Donut slices={mixByType} size={112} otherLabel={locale === "es" ? "Otras" : "Other"} />
-                    </div>
+                    <Donut slices={mixByType} otherLabel={locale === "es" ? "Otras" : "Other"} />
                   </section>
                 </div>
 

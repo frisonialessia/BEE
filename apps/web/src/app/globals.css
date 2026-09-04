@@ -435,7 +435,16 @@
   gap: 0.75rem;
   margin-bottom: 0.75rem;
 }
-.bee-card__body { min-height: 0; min-width: 0; flex: 1 1 auto; }
+.bee-card__body { min-height: 0; min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; }
+
+/* ── Charts fill their box ─────────────────────────────────────────────────
+   A row of cards stretches to its tallest member; a chart with a height of
+   its own would leave the rest of its card empty. So every chart (and any
+   content meant to fill a card — the brief's tiles, the funnel's rows) is
+   a .bee-fill: it takes whatever height the card body has left. Chart
+   components measure that box (use-box-size) and draw at that size. */
+.bee-fill { flex: 1 1 auto; min-height: 0; }
+.bee-surface > .bee-fill, .bee-bento > .bee-fill { height: 100%; }
 
 /* ── Equal heights in every card grid ─────────────────────────────────────
    A grid already stretches its cells; what breaks the row is a card that

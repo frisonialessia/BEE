@@ -138,7 +138,7 @@ export function SalesView() {
 
       <div className="bee-overview">
         <OverviewCard span={8} title={t("cumulative.title")} caption={t("cumulative.caption")}>
-          <AreaChart points={model.cumulative} color={SALES.won} height={170} formatValue={(v) => money(v)} />
+          <AreaChart points={model.cumulative} color={SALES.won} minHeight={200} formatValue={(v) => money(v)} />
         </OverviewCard>
         <OverviewCard span={4} title={t("monthly.title")} caption={model.goal ? t("monthly.captionGoal", { goal: money(model.goal) }) : t("monthly.caption")}>
           <BarsVsTarget
@@ -147,8 +147,7 @@ export function SalesView() {
             color={SALES.lime}
             hitColor={SALES.won}
             targetLabel={model.goal ? t("monthly.goalLabel") : undefined}
-            height={170}
-            width={320}
+            minHeight={200}
             formatValue={(v) => money(v)}
           />
         </OverviewCard>

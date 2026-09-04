@@ -113,7 +113,7 @@ export function DailyBrief({ embedded = false }: { embedded?: boolean } = {}) {
       return <p className="bee-caption py-8 text-center">{t("empty")}</p>;
     }
     return (
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="bee-fill grid grid-cols-1 auto-rows-fr gap-2 sm:grid-cols-2">
         {items.slice(0, 6).map((item) => {
           const Icon = TONE_ICON[item.tone];
           return (

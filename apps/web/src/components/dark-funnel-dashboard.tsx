@@ -204,16 +204,13 @@ export function DarkFunnelDashboard() {
           <section className="bee-surface bee-bento-pad flex flex-col lg:col-span-4">
             <h3 className="bee-card-title">{t("stageMixTitle")}</h3>
             <p className="bee-caption mb-4">{t("stageMixCaption")}</p>
-            <div className="flex min-w-0 flex-1 items-center">
-              <Donut
-                size={112}
+            <Donut
                 slices={[
                   { label: t("stageReadyToBuy"), value: summary.ready_to_buy_count, color: DATA.honey },
                   { label: t("stageDecision"), value: summary.decision_stage_count, color: DATA.indigo },
                   { label: t("stageConsideration"), value: summary.consideration_stage_count, color: DATA.violet },
                 ]}
               />
-            </div>
           </section>
         </div>
       )}

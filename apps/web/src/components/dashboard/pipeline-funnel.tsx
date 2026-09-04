@@ -41,7 +41,7 @@ export function PipelineFunnel({
   }
   const total = stages.reduce((s, x) => s + x.count, 0);
   return (
-    <div className={className ?? "flex h-full flex-col justify-center gap-3"}>
+    <div className={className ?? "bee-fill flex flex-col gap-3"}>
       <HorizontalFunnel rows={stages.map((s) => ({ label: STAGE_LABELS[s.key], value: s.count, color: STAGE_COLORS[s.key] }))} />
       <p className="bee-caption">{t("shareOfPipeline", { pct: total })}</p>
     </div>

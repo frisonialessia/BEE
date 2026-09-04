@@ -163,15 +163,13 @@ export function DashboardOverview({
         {/* Row 1 — the hive between two charts: signals per week on the
             left, the 30-day mix by type on the right. */}
         <OverviewCard span={3} title={t("sections.signalsWeekly.title")} caption={t("sections.signalsWeekly.caption")}>
-          <AreaChart points={weekly.map((w) => ({ label: w.label, value: w.count }))} color={DATA.indigo} height={190} width={320} />
+          <AreaChart points={weekly.map((w) => ({ label: w.label, value: w.count }))} color={DATA.indigo} />
         </OverviewCard>
 
         <SignalHexMap height={240} className="h-full" style={{ gridColumn: "span 6" }} />
 
         <OverviewCard span={3} title={t("sections.signalMix.title")} caption={t("sections.signalMix.caption")}>
-          <div className="flex h-full min-w-0 items-center">
-            <Donut slices={mix} size={100} otherLabel={locale === "es" ? "Otras" : "Other"} />
-          </div>
+          <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
         </OverviewCard>
 
         {/* Row 2 — the decisions: today's play, the daily brief, the funnel. */}

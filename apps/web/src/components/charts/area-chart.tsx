@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 
 import { DATA } from "@/components/charts/palette";
+import { useBoxSize } from "@/components/charts/use-box-size";
 
 export interface AreaPoint {
   label: string;
@@ -11,50 +12,53 @@ export interface AreaPoint {
 
 /**
  * One series over time with a soft fill, recessive grid, and a hover
- * crosshair + tooltip. Width is fluid (viewBox), height fixed.
+ * crosshair + tooltip. Fills its box (see use-box-size): width and height
+ * come from the card, `minHeight` only guards the empty-card case.
  */
 export function AreaChart({
   points,
   color = DATA.indigo,
-  height = 140,
+  minHeight = 140,
   formatValue = (v) => String(Math.round(v)),
   highlightLast = true,
-  width = 600,
 }: {
   points: AreaPoint[];
   color?: string;
-  height?: number;
+  minHeight?: number;
   formatValue?: (v: number) => string;
   highlightLast?: boolean;
-  /** viewBox width — use ~320 inside a narrow (3-column) box so labels stay legible. */
-  width?: number;
 }) {
   const id = useId();
   const [hover, setHover] = useState<number | null>(null);
+  const [ref, { width: W, height: H }] = useBoxSize<HTMLDivElement>({ width: 600, height: minHeight });
   if (points.length < 2) return <p className="bee-caption py-6 text-center">—</p>;
 
-  const W = width;
-  const H = height;
-  const padX = 12;
-  const padTop = 14;
-  const padBottom = 22;
+  const padX = 14;
+  const padTop = 16;
+  const padBottom = 24;
   const max = Math.max(...points.map((p) => p.value), 1);
   const step = (W - padX * 2) / (points.length - 1);
   const xy = points.map((p, i) => [padX + i * step, H - padBottom - (p.value / max) * (H - padTop - padBottom)] as const);
   const line = xy.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
   const area = `M${xy[0][0]},${H - padBottom} L${line.replace(/ /g, " L")} L${xy[xy.length - 1][0]},${H - padBottom} Z`;
   const active = hover ?? (highlightLast ? points.length - 1 : null);
+  // Skip labels that would collide: keep every k-th so each has ≥ 48px,
+  // and drop any that would touch the last label (always shown).
+  const every = Math.max(1, Math.ceil(48 / step));
+  const lastX = xy[xy.length - 1][0];
+  const showLabel = (i: number) => i === points.length - 1 || (i % every === 0 && lastX - xy[i][0] >= 48);
 
   return (
-    <div className="relative w-full">
+    <div ref={ref} className="bee-fill relative w-full" style={{ minHeight }}>
       <svg
+        width={W}
+        height={H}
         viewBox={`0 0 ${W} ${H}`}
-        className="h-auto w-full"
+        className="absolute inset-0 block"
         onMouseLeave={() => setHover(null)}
         onMouseMove={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
-          const x = ((e.clientX - rect.left) / rect.width) * W;
-          setHover(Math.max(0, Math.min(points.length - 1, Math.round((x - padX) / step))));
+          setHover(Math.max(0, Math.min(points.length - 1, Math.round((e.clientX - rect.left - padX) / step))));
         }}
       >
         <defs>
@@ -69,11 +73,20 @@ export function AreaChart({
         })}
         <path d={area} fill={`url(#${id}-g)`} />
         <polyline points={line} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-        {points.map((p, i) => (
-          <text key={p.label} x={xy[i][0]} y={H - 6} fontSize={10} fill="var(--color-text-muted)" textAnchor="middle">
-            {p.label}
-          </text>
-        ))}
+        {points.map((p, i) =>
+          showLabel(i) ? (
+            <text
+              key={p.label}
+              x={xy[i][0]}
+              y={H - 7}
+              fill="var(--color-text-muted)"
+              textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"}
+              style={{ fontSize: "var(--bee-fs-body-2)" }}
+            >
+              {p.label}
+            </text>
+          ) : null,
+        )}
         {active !== null && (
           <g>
             <line x1={xy[active][0]} x2={xy[active][0]} y1={padTop} y2={H - padBottom} stroke="var(--color-text)" strokeDasharray="3 3" opacity={0.35} />
@@ -86,7 +99,7 @@ export function AreaChart({
           className={`pointer-events-none absolute whitespace-nowrap rounded-[var(--radius-sm)] bg-[var(--color-text)] px-2 py-1 text-xs font-medium text-[var(--color-card)] ${
             xy[active][0] / W > 0.8 ? "-translate-x-full" : xy[active][0] / W < 0.2 ? "translate-x-0" : "-translate-x-1/2"
           }`}
-          style={{ left: `${(xy[active][0] / W) * 100}%`, top: `${Math.max(0, (xy[active][1] / H) * 100 - 22)}%` }}
+          style={{ left: xy[active][0], top: Math.max(0, xy[active][1] - 34) }}
         >
           {points[active].label} · {formatValue(points[active].value)}
         </div>
