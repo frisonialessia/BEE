@@ -425,6 +425,17 @@ const SEEDS: SeedDef[] = [
   // Silo Data Works is already a client (s17, won) — this is the expansion
   // the team pinned by hand for the week: the one card in "Tu prioridad".
   { id: "s21", company: "Silo Data Works", domain: "silodata.io", industry: "Datos / Analytics", country: "Estados Unidos", signalType: "expansion", leadName: "Taylor Brooks", leadTitle: "Head of Revenue", seniority: "director", amount: 39000, score: 81, daysAgoCreated: 3, outcome: "prioritized", qualifiedCount: 4, daysUntilClose: 45 },
+  // s22–s27: older closes that give "Dónde eres más fuerte" cells with two or
+  // three deals and a MIXED outcome (50 % / 67 %), so the honey→green scale
+  // shows its middle tones instead of only 0 % and 100 %. All closed more
+  // than 92 days ago: the CRM's Cerradas column keeps won / lime / mint on
+  // its first three cards, and Ventas gets bars in the older months.
+  { id: "s22", company: "Norte Metalúrgica", domain: "nortemetal.mx", industry: "Manufactura", country: "México", signalType: "hiring", leadName: "Gabriela Ortiz", leadTitle: "Directora Comercial", seniority: "director", amount: 21000, score: 58, daysAgoCreated: 170, outcome: "lost", cycleDays: 41, qualifiedCount: 2, lossReason: "timing", competitor: null },
+  { id: "s23", company: "Forja Industrial", domain: "forjaindustrial.com.co", industry: "Manufactura", country: "Colombia", signalType: "hiring", leadName: "Mauricio Herrera", leadTitle: "Gerente de Ventas", seniority: "manager", amount: 17500, score: 63, daysAgoCreated: 196, outcome: "won", cycleDays: 38, qualifiedCount: 5 },
+  { id: "s24", company: "Ruta Andina Cargo", domain: "rutaandina.pe", industry: "Logística", country: "Perú", signalType: "expansion", leadName: "Carla Quispe", leadTitle: "VP Comercial", seniority: "vp", amount: 32000, score: 72, daysAgoCreated: 210, outcome: "won", cycleDays: 47, qualifiedCount: 6 },
+  { id: "s25", company: "Nube Analítica", domain: "nubeanalitica.cl", industry: "Datos / Analytics", country: "Chile", signalType: "engagement", leadName: "Tomás Vidal", leadTitle: "Head of Growth", seniority: "director", amount: 28000, score: 67, daysAgoCreated: 150, outcome: "lost", cycleDays: 36, qualifiedCount: 2, lossReason: "budget", competitor: "Salesforce" },
+  { id: "s26", company: "Pixel Forma", domain: "pixelforma.mx", industry: "Diseño de producto", country: "México", signalType: "funding_round", leadName: "Andrea Salcedo", leadTitle: "CEO", seniority: "c_level", amount: 23000, score: 70, daysAgoCreated: 188, outcome: "lost", cycleDays: 29, qualifiedCount: 3, lossReason: "product_fit", competitor: "Pipedrive" },
+  { id: "s27", company: "Clínica Digital Sur", domain: "clinicadigitalsur.cl", industry: "Salud digital", country: "Chile", signalType: "funding_round", leadName: "Javier Rojas", leadTitle: "Director General", seniority: "c_level", amount: 44000, score: 81, daysAgoCreated: 230, outcome: "won", cycleDays: 52, qualifiedCount: 6 },
   // s19/s20: two more distinct named competitors, on lost reasons
   // ("price"/"product_fit") that are narratively compatible with "went with
   // a competitor instead" — unlike s05/s11's "no_decision"/"timing" losses,

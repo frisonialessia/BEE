@@ -65,6 +65,14 @@
       "won": "{count} won",
       "lost": "{count} lost",
       "dismissed": "{count} dismissed"
+    },
+    "byStage": {
+      "title": "By stage",
+      "caption": "How many, how much they add up to, how hot they run",
+      "stage": "Stage",
+      "count": "Opps",
+      "amount": "Amount",
+      "avgScore": "Avg score"
     }
   },
   "priority": {

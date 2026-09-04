@@ -2,21 +2,22 @@
 
 import { useTranslations } from "next-intl";
 
-import { HorizontalFunnel } from "@/components/charts/horizontal-funnel";
-import { DATA } from "@/components/charts/palette";
+import { DATA, mix } from "@/components/charts/palette";
 
 import { computeFunnelStages, type FunnelStage } from "@/lib/pipeline-funnel";
 import type { Opportunity } from "@/types/domain";
 
-/** Embudo con % del pipeline por etapa — conecta los 4 números sueltos del
- * KPI strip en una sola narrativa: dónde se concentra el pipeline hoy, no
- * solo cuánto hay en cada bucket. Ver lib/pipeline-funnel.ts. */
+/** Embudo de cierre — dónde está el pipeline hoy, en el menor espacio que
+ *  lo cuenta entero: una barra segmentada (una porción por etapa, ancho =
+ *  participación) y debajo cuatro tiles con conteo y porcentaje. Antes eran
+ *  cuatro filas finas que dejaban la caja medio vacía. Los colores son los
+ *  de las columnas del CRM, para que la etapa se lea igual en ambos lados.
+ *  Ver lib/pipeline-funnel.ts. */
 export function PipelineFunnel({
   opportunities,
   className,
 }: {
   opportunities: Opportunity[];
-  /** Kept for callers; the funnel is one column of thin bars now. */
   className?: string;
   compact?: boolean;
 }) {
@@ -41,8 +42,33 @@ export function PipelineFunnel({
   }
   const total = stages.reduce((s, x) => s + x.count, 0);
   return (
-    <div className={className ?? "bee-fill flex flex-col gap-3"}>
-      <HorizontalFunnel rows={stages.map((s) => ({ label: STAGE_LABELS[s.key], value: s.count, color: STAGE_COLORS[s.key] }))} />
+    <div className={className ?? "flex flex-col gap-3"}>
+      <div className="flex h-3 w-full overflow-hidden rounded-full" role="img" aria-label={t("shareOfPipeline", { pct: total })}>
+        {stages
+          .filter((s) => s.count > 0)
+          .map((s) => (
+            <span
+              key={s.key}
+              title={`${STAGE_LABELS[s.key]} · ${s.count}`}
+              className="h-full border-r-2 border-[var(--color-card)] last:border-r-0"
+              style={{ width: `${(s.count / total) * 100}%`, background: STAGE_COLORS[s.key] }}
+            />
+          ))}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {stages.map((s) => (
+          <div key={s.key} className="rounded-[var(--radius-md)] px-3 py-2" style={{ background: mix(STAGE_COLORS[s.key], 18) }}>
+            <p className="flex items-center gap-1.5 bee-micro text-[var(--color-text)]">
+              <span className="size-1.5 shrink-0 rounded-full" style={{ background: STAGE_COLORS[s.key] }} />
+              <span className="truncate">{STAGE_LABELS[s.key]}</span>
+            </p>
+            <p className="mt-0.5 text-sm font-bold tabular-nums">
+              {s.count}
+              <span className="ml-1.5 bee-micro font-medium">{total ? Math.round((s.count / total) * 100) : 0}%</span>
+            </p>
+          </div>
+        ))}
+      </div>
       <p className="bee-caption">{t("shareOfPipeline", { pct: total })}</p>
     </div>
   );

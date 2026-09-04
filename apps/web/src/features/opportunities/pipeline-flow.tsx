@@ -1,9 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
+
+import { SALES } from "@/components/charts/palette";
 import { OverviewCard } from "@/components/dashboard/overview-card";
+import type { Locale } from "@/i18n/locales";
+import { formatCurrencyUSDCompact } from "@/lib/i18n/format";
 import { KANBAN_COLUMNS, groupLeadCards, opportunityToLeadCard } from "@/lib/control/lead-board";
 import type { LeadColumnId } from "@/types/control";
 import type { Opportunity } from "@/types/domain";
@@ -53,10 +57,20 @@ function bandPath(x0: number, y0top: number, y0bot: number, x1: number, y1top: n
  */
 export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }) {
   const t = useTranslations("opportunitiesPriority.pipelineFlow");
-  const { segments, total, closedBreakdown } = useMemo(() => {
+  const locale = useLocale() as Locale;
+  const { segments, total, closedBreakdown, byStage } = useMemo(() => {
     const cards = opportunities.map(opportunityToLeadCard);
     const grouped = groupLeadCards(cards);
     const total = opportunities.length;
+    // Amount and average score per stage — the numbers the flow's widths
+    // don't show. Same grouping as the flow, so the two boxes always agree.
+    const oppById = new Map(opportunities.map((o) => [o.id, o]));
+    const byStage = KANBAN_COLUMNS.map((col) => {
+      const rows = (grouped[col.id] ?? []).map((c) => oppById.get(c.opportunity_id)).filter((o): o is Opportunity => Boolean(o));
+      const amount = rows.reduce((s, o) => s + (o.amount ?? 0), 0);
+      const avgScore = rows.length ? Math.round(rows.reduce((s, o) => s + o.score, 0) / rows.length) : null;
+      return { id: col.id, count: rows.length, amount, avgScore };
+    });
 
     const closedBreakdown = {
       won: opportunities.filter((o) => o.status === "won").length,
@@ -97,7 +111,7 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
       { segments: [] as FlowSegment[], cursorSource: 0, cursorTarget: 0 },
     );
 
-    return { segments, total, closedBreakdown };
+    return { segments, total, closedBreakdown, byStage };
   }, [opportunities]);
 
   if (total === 0) {
@@ -110,20 +124,8 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
 
   return (
     <div className="bee-overview">
-      <OverviewCard span={12} title={t("title", { count: total })} caption={t("eyebrow")}>
-        {/* lg:flex-row puts a real stage-by-stage breakdown beside the chart
-            instead of centering it alone in the full-width card — the maxWidth
-            cap below is still needed (see its own comment) so the diagram
-            can't fill a wide card on its own; the breakdown is what actually
-            uses the rest of the width now. */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-          {/* maxWidth caps this SVG at its own natural size (1 viewBox unit =
-              1px by design) — width="100%"/w-full alone stretches it to fill
-              whatever the card's width happens to be, and every fontSize below
-              is set in viewBox units, so the {count} · {label} text would scale
-              up right along with a wide card instead of staying a fixed size,
-              the same bug already fixed for the Colmena and the Industria×Señal
-              heatmap. Still shrinks to fit a narrow card/viewport. */}
+      <OverviewCard span={7} title={t("title", { count: total })} caption={t("eyebrow")}>
+        <div className="flex flex-col gap-4">
           <svg
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
             className="w-full shrink-0"
@@ -137,14 +139,7 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
             {segments.map((seg) => (
               <path
                 key={seg.id}
-                d={bandPath(
-                  SOURCE_X + BAR_W,
-                  seg.sourceTop,
-                  seg.sourceBottom,
-                  TARGET_X,
-                  seg.targetTop,
-                  seg.targetBottom,
-                )}
+                d={bandPath(SOURCE_X + BAR_W, seg.sourceTop, seg.sourceBottom, TARGET_X, seg.targetTop, seg.targetBottom)}
                 fill={COLUMN_COLOR[seg.id]}
                 opacity={0.28}
               />
@@ -176,38 +171,53 @@ export function PipelineFlow({ opportunities }: { opportunities: Opportunity[] }
             ))}
           </svg>
 
-          <div className="w-full flex-1 space-y-4">
-            <ul className="space-y-2">
-              {segments.map((seg) => (
-                <li key={seg.id} className="flex items-center justify-between gap-4">
-                  <span className="inline-flex items-center gap-2 text-xs">
-                    <span className="size-2.5 shrink-0 rounded-full" style={{ background: COLUMN_COLOR[seg.id] }} />
-                    {t(`columns.${seg.id}`)}
-                  </span>
-                  <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                    {seg.count} · {Math.round((seg.count / total) * 100)}%
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <div className="flex flex-wrap items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{t("closedBreakdown.label")}</span>
-              <span className="inline-flex items-center gap-2">
-                <span className="size-2 rounded-full" style={{ background: "var(--success)" }} />
-                {t("closedBreakdown.won", { count: closedBreakdown.won })}
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <span className="size-2 rounded-full" style={{ background: "var(--destructive)" }} />
-                {t("closedBreakdown.lost", { count: closedBreakdown.lost })}
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <span className="size-2 rounded-full bg-muted-foreground/40" />
-                {t("closedBreakdown.dismissed", { count: closedBreakdown.dismissed })}
-              </span>
-            </div>
+          <div className="flex flex-wrap items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
+            <span className="font-medium text-foreground">{t("closedBreakdown.label")}</span>
+            <span className="inline-flex items-center gap-2">
+              <span className="size-2 rounded-full" style={{ background: SALES.won }} />
+              {t("closedBreakdown.won", { count: closedBreakdown.won })}
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="size-2 rounded-full bg-muted-foreground/60" />
+              {t("closedBreakdown.lost", { count: closedBreakdown.lost })}
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="size-2 rounded-full bg-muted-foreground/30" />
+              {t("closedBreakdown.dismissed", { count: closedBreakdown.dismissed })}
+            </span>
           </div>
         </div>
+      </OverviewCard>
+
+      <OverviewCard span={5} title={t("byStage.title")} caption={t("byStage.caption")}>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left">
+              <th className="bee-micro pb-2 font-medium">{t("byStage.stage")}</th>
+              <th className="bee-micro pb-2 text-right font-medium">{t("byStage.count")}</th>
+              <th className="bee-micro pb-2 text-right font-medium">{t("byStage.amount")}</th>
+              <th className="bee-micro pb-2 text-right font-medium">{t("byStage.avgScore")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {byStage.map((row) => (
+              <tr key={row.id} className="border-t border-[color-mix(in_srgb,var(--color-text)_6%,transparent)]">
+                <td className="py-2 pr-2">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2.5 shrink-0 rounded-full" style={{ background: COLUMN_COLOR[row.id] }} />
+                    <span className="truncate">{t(`columns.${row.id}`)}</span>
+                  </span>
+                </td>
+                <td className="py-2 text-right font-semibold tabular-nums">
+                  {row.count}
+                  <span className="ml-1 bee-micro font-normal">{total ? Math.round((row.count / total) * 100) : 0}%</span>
+                </td>
+                <td className="py-2 text-right tabular-nums">{row.amount ? formatCurrencyUSDCompact(row.amount, locale) : "—"}</td>
+                <td className="py-2 text-right tabular-nums">{row.avgScore ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </OverviewCard>
     </div>
   );

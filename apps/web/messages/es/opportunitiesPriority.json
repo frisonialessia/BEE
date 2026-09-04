@@ -65,6 +65,14 @@
       "won": "{count} ganadas",
       "lost": "{count} perdidas",
       "dismissed": "{count} descartadas"
+    },
+    "byStage": {
+      "title": "Por etapa",
+      "caption": "Cuántas, cuánto suman y qué tan calientes van",
+      "stage": "Etapa",
+      "count": "Opps",
+      "amount": "Monto",
+      "avgScore": "Score medio"
     }
   },
   "priority": {

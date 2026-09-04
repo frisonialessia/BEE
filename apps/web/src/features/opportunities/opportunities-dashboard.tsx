@@ -7,7 +7,6 @@ import { useMemo, useState } from "react";
 import { BattlecardView } from "@/components/battlecard";
 import { PaginationBar } from "@/components/dashboard/pagination-bar";
 import { ExportCsvButton } from "@/components/export/export-csv-button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { PipelineFlow } from "@/features/opportunities/pipeline-flow";
@@ -17,7 +16,8 @@ import { useBattlecards, useOpportunities } from "@/hooks/queries/use-opportunit
 import { useUsers } from "@/hooks/queries/use-users";
 import type { Locale } from "@/i18n/locales";
 import { STAGE_TONE } from "@/lib/crm-board";
-import { scoreVariant, stripOpportunityTitlePrefix } from "@/lib/format";
+import { stripOpportunityTitlePrefix } from "@/lib/format";
+import { SALES, mix } from "@/components/charts/palette";
 import { formatCurrencyUSDCompact, formatDate } from "@/lib/i18n/format";
 
 /**
@@ -85,6 +85,9 @@ export function OpportunitiesList() {
 
   return (
     <div className="space-y-4">
+      {/* The stage flow used to be its own "Flujo" tab — one chart alone on a
+          page. It reads better as the summary above the list it describes. */}
+      <PipelineFlow opportunities={allOppsResult?.data ?? []} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <label className="relative block w-full max-w-xs">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -143,7 +146,7 @@ export function OpportunitiesList() {
                       <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                         <span
                           className="size-2 shrink-0 rounded-full"
-                          style={{ background: STAGE_TONE[o.status].bar }}
+                          style={{ background: o.status === "won" ? SALES.won : STAGE_TONE[o.status].bar }}
                           aria-hidden="true"
                         />
                         {t(`status.${o.status}`)}
@@ -157,9 +160,14 @@ export function OpportunitiesList() {
                       {o.expected_close_date ? formatDate(o.expected_close_date, locale) : "—"}
                     </td>
                     <td className="px-3 py-2.5 text-right">
-                      <Badge variant={scoreVariant(o.score)} className="font-mono text-micro">
+                      {/* The score wears the stage's own color (greens once won),
+                          so a row never mixes two hues. */}
+                      <span
+                        className="inline-block rounded-full px-2 py-0.5 font-mono text-micro font-semibold tabular-nums text-[var(--color-text)]"
+                        style={{ background: o.status === "won" ? SALES.mint : mix(STAGE_TONE[o.status].bar, 24) }}
+                      >
                         {Math.round(o.score)}
-                      </Badge>
+                      </span>
                     </td>
                   </tr>
                 ))}

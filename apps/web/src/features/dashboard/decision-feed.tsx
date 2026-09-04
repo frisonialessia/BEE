@@ -109,7 +109,7 @@ function Card({ card }: { card: DecisionCard }) {
   }
 
   return (
-    <div className={`bee-bento relative flex flex-col gap-2 p-4 pr-10 ${URGENCY_TONE[card.urgency]}`}>
+    <div className={`bee-bento relative flex items-center gap-3 px-3 py-2.5 pr-9 ${URGENCY_TONE[card.urgency]}`}>
       {/* X in the corner: dismiss. Small, quiet, never a full button. */}
       {card.kind === "opportunity" && card.opportunity_id && (
         <button
@@ -118,49 +118,42 @@ function Card({ card }: { card: DecisionCard }) {
           disabled={busy !== null}
           aria-label={t("dismiss")}
           title={t("dismiss")}
-          className="absolute right-2 top-2 flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[var(--color-primary)]/40 hover:text-foreground disabled:opacity-50"
+          className="absolute right-1.5 top-1.5 flex size-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-[var(--color-primary)]/40 hover:text-foreground disabled:opacity-50"
         >
-          <X className="size-3.5" />
+          <X className="size-3" />
         </button>
       )}
 
-      <div className="min-w-0">
-        <span className="bee-eyebrow">{t(`urgency.${card.urgency}`)}</span>
-        <h4 className="mt-1 line-clamp-1 text-sm font-semibold tracking-tight">{headline}</h4>
-        <p className="bee-caption mt-1 line-clamp-1">{reasoning}</p>
+      {/* The text gets the whole row; the action is the same small arrow the
+          critical-accounts rows use — a big button here only ate the copy. */}
+      <div className="min-w-0 flex-1">
+        <p className="bee-micro">{t(`urgency.${card.urgency}`)}</p>
+        <h4 className="line-clamp-2 text-sm font-semibold leading-snug tracking-tight">{headline}</h4>
+        <p className="bee-micro line-clamp-1">{reasoning}</p>
       </div>
 
-      {/* One arrow to act: approve when BEE prepared a play, open the
-          opportunity otherwise, the alerts for an anomaly. */}
-      <div className="mt-auto flex items-center justify-end pt-1">
-        {card.kind === "anomaly" ? (
-          <Link
-            href={`${base}/control?tab=resilience`}
-            aria-label={actionLabel}
-            title={actionLabel}
-            className="bee-btn bee-btn--primary bee-btn--icon"
-          >
-            <ArrowRight className="size-4" />
-          </Link>
-        ) : (
-          <button
-            type="button"
-            onClick={handleAct}
-            disabled={!canAct || busy !== null}
-            aria-label={actionLabel}
-            title={busy === "approve" ? t("approving") : actionLabel}
-            className="bee-btn bee-btn--primary bee-btn--icon"
-          >
-            {card.pending_action_id ? <CheckCircle2 className="size-4" /> : <ArrowRight className="size-4" />}
-          </button>
-        )}
-      </div>
+      {card.kind === "anomaly" ? (
+        <Link href={`${base}/control?tab=resilience`} aria-label={actionLabel} title={actionLabel} className="shrink-0 text-muted-foreground transition-colors hover:text-foreground">
+          <ArrowRight className="size-3.5" />
+        </Link>
+      ) : (
+        <button
+          type="button"
+          onClick={handleAct}
+          disabled={!canAct || busy !== null}
+          aria-label={actionLabel}
+          title={busy === "approve" ? t("approving") : actionLabel}
+          className="shrink-0 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+        >
+          {card.pending_action_id ? <CheckCircle2 className="size-3.5" /> : <ArrowRight className="size-3.5" />}
+        </button>
+      )}
     </div>
   );
 }
 
 /** `embedded`: rendered inside an OverviewCard (which owns the title), as a
- *  vertical stack of up to three cards that fills the box. */
+ *  vertical stack of up to five compact rows. */
 export function DecisionFeed({ embedded = false }: { embedded?: boolean } = {}) {
   const t = useTranslations("dashboardOverview.decisionFeed");
   const { data, isLoading } = useTodayFeed();
@@ -182,7 +175,7 @@ export function DecisionFeed({ embedded = false }: { embedded?: boolean } = {}) 
     }
     return (
       <div className="grid grid-cols-1 content-start gap-2">
-        {cards.slice(0, 3).map((card) => (
+        {cards.slice(0, 5).map((card) => (
           <Card key={card.id} card={card} />
         ))}
       </div>

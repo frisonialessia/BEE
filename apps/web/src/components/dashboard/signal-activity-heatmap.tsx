@@ -40,7 +40,7 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
 
   return (
     <TooltipPrimitive.Provider delayDuration={100}>
-      <div className="flex flex-col gap-4">
+      <div className="bee-fill flex flex-col gap-4">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           width="100%"
@@ -63,7 +63,7 @@ export function SignalActivityHeatmap({ signals }: { signals: Signal[] }) {
           ))}
         </svg>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <span>
             {peak ? (
               <>

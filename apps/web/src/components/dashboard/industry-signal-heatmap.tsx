@@ -26,7 +26,7 @@ const R = 20; // hex circumradius, px
 const HEX_W = Math.sqrt(3) * R;
 const HEX_H = 2 * R;
 const ROW_STEP = HEX_H * 0.75;
-const MAX_ROWS = 4;
+const MAX_ROWS = 5;
 const PAD = 10;
 const LABEL_W = 104;
 const HEADER_H = 66;
@@ -92,7 +92,7 @@ export function IndustrySignalHeatmap({
 
   return (
     <TooltipPrimitive.Provider delayDuration={100}>
-      <div className="flex flex-col gap-4">
+      <div className="bee-fill flex flex-col gap-4">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           width="100%"
@@ -177,7 +177,7 @@ export function IndustrySignalHeatmap({
           )}
         </svg>
 
-        <div className="flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
+        <div className="mt-auto flex items-center gap-2 border-t border-border pt-3 text-xs text-muted-foreground">
           <span>{t("legendLabel")}</span>
           <span className="h-2.5 w-24 rounded-full" style={{ background: `linear-gradient(to right, ${color(0)}, ${color(34)}, ${color(67)}, ${color(100)})` }} />
           <span>0%</span>
