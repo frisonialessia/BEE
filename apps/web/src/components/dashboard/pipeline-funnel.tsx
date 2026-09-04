@@ -2,16 +2,18 @@
 
 import { useTranslations } from "next-intl";
 
-import { REST, TONE, tint } from "@/components/charts/palette";
+import { REST, SALES } from "@/components/charts/palette";
 import { computeFunnelStages, type FunnelStage } from "@/lib/pipeline-funnel";
 import type { Opportunity } from "@/types/domain";
 
 /**
  * Embudo de cierre — where the pipeline stands today, in the least space
  * that tells it whole: one segmented bar (a slice per stage, width = share)
- * and under it a row per stage with count and share. One hue, lilac (what
- * BEE prepares), deeper the closer to a close; what already closed sits in
- * the page grey, out of the pipeline. See lib/pipeline-funnel.ts.
+ * and under it a row per stage with count and share. Each stage wears the
+ * color of its CRM column (light honey for what BEE detected, honey when
+ * the play is ready, indigo for a conversation open), and what closed
+ * wears the sales green — the funnel reads exactly like the board. See
+ * lib/pipeline-funnel.ts.
  */
 export function PipelineFunnel({ opportunities, className }: { opportunities: Opportunity[]; className?: string }) {
   const t = useTranslations("dashboardOverview.pipelineFunnel");
@@ -24,10 +26,10 @@ export function PipelineFunnel({ opportunities, className }: { opportunities: Op
     won: tClosedStatus("won"),
   };
   const FILL: Record<FunnelStage["key"], string> = {
-    detected: tint(TONE.prepared, 45),
-    ready_to_action: tint(TONE.prepared, 70),
-    in_progress: TONE.prepared,
-    won: REST,
+    detected: "var(--color-chart-3)",
+    ready_to_action: "var(--color-chart-1)",
+    in_progress: "var(--color-chart-4)",
+    won: SALES.won,
   };
   const stages = computeFunnelStages(opportunities);
   if (stages.every((s) => s.count === 0)) {
@@ -46,7 +48,7 @@ export function PipelineFunnel({ opportunities, className }: { opportunities: Op
       <ul className="flex flex-col">
         {stages.map((s) => (
           <li key={s.key} className="bee-row text-sm">
-            <span className="size-2.5 shrink-0 rounded-full" style={{ background: FILL[s.key], outline: s.key === "won" ? "1px solid var(--color-divider)" : undefined }} />
+            <span className="size-2.5 shrink-0 rounded-full" style={{ background: FILL[s.key] }} />
             <span className="min-w-0 flex-1 truncate">{LABELS[s.key]}</span>
             <span className="shrink-0 font-bold tabular-nums">{s.count}</span>
             <span className="w-9 shrink-0 text-right bee-caption tabular-nums">{total ? Math.round((s.count / total) * 100) : 0}%</span>

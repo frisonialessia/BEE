@@ -172,7 +172,7 @@
       "empty": "No signals for this company yet.",
       "score": "Score {score}",
       "activityTitle": "Signal activity",
-      "activityCaption": "Signals detected per week, last 12 weeks",
+      "activityCaption": "Signals detected per week or per month, by period",
       "mixTitle": "Signal mix",
       "mixCaption": "By type, across the account",
       "other": "Other",

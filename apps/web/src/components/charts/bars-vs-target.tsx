@@ -43,8 +43,12 @@ export function BarsVsTarget({
   const max = Math.max(...points.map((p) => p.value), target ?? 0, 1);
   const n = Math.max(1, points.length);
   const slot = (W - 20) / n;
-  const bw = Math.min(40, slot * 0.55);
+  const bw = Math.min(40, Math.max(2, slot * (slot < 14 ? 0.7 : 0.55)));
   const ty = target ? H - padBottom - (target / max) * (H - padTop - padBottom) : null;
+  // A label every k bars so labels never collide on a long series (five
+  // years = 60 bars); the last bar always keeps its label.
+  const every = Math.max(1, Math.ceil(40 / slot));
+  const showLabel = (i: number) => i === n - 1 || (i % every === 0 && n - 1 - i >= every);
   return (
     <div ref={ref} className="bee-fill relative w-full" style={{ minHeight }}>
       <svg
@@ -66,9 +70,11 @@ export function BarsVsTarget({
           return (
             <g key={p.label}>
               <rect x={x} y={y} width={bw} height={Math.max(h, p.value > 0 ? 4 : 1)} rx={4} fill={colorFor ? colorFor(p, i, max) : hit ? hitColor : color} opacity={hover !== null && hover !== i ? 0.45 : colorFor || p.current || hit ? 1 : 0.55} />
-              <text x={x + bw / 2} y={H - 7} fill="var(--color-text-muted)" textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }}>
-                {p.label}
-              </text>
+              {showLabel(i) && (
+                <text x={x + bw / 2} y={H - 7} fill="var(--color-text-muted)" textAnchor="middle" style={{ fontSize: "var(--bee-fs-body-2)" }}>
+                  {p.label}
+                </text>
+              )}
             </g>
           );
         })}

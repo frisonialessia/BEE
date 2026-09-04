@@ -82,10 +82,11 @@
       },
       "market": {
         "title": "Mercado",
-        "caption": "{count} señales en 84 días, por día y tipo",
         "other": "Otras",
         "link": "Ver Señales",
-        "empty": "Todavía no hay señales. Aparecen al conectar tus fuentes de mercado."
+        "empty": "Todavía no hay señales. Aparecen al conectar tus fuentes de mercado.",
+        "captionWeekly": "{count} señales en un año, por semana y tipo",
+        "captionMonthly": "{count} señales, por mes y tipo"
       },
       "hive": {
         "title": "Colmena de intención",

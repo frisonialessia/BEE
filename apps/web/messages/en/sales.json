@@ -16,13 +16,16 @@
   },
   "cumulative": {
     "title": "Cumulative revenue",
-    "caption": "Last 12 months, won on won"
+    "caption": "Last 12 months, won on won",
+    "captionRange": "Last {months} months, won on won"
   },
   "monthly": {
     "title": "Month by month",
     "caption": "Won per month",
     "captionGoal": "Won per month · goal {goal}",
-    "goalLabel": "Goal"
+    "goalLabel": "Goal",
+    "captionRange": "Won per month · last {months} months",
+    "captionGoalRange": "Won per month · {months} months · goal {goal}"
   },
   "ranking": {
     "title": "Team ranking",

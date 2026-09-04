@@ -159,5 +159,11 @@
       "green-2": "Lima",
       "green-3": "Menta"
     }
+  },
+  "range": {
+    "aria": "Periodo",
+    "1y": "1 año",
+    "2y": "2 años",
+    "5y": "5 años"
   }
 }

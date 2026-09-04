@@ -94,7 +94,7 @@ const ARTIFACTS_KEY = "bee_demo_artifacts_v1";
  * a returning visitor on an older snapshot has every opportunity's
  * `assigned_to_user_id` still `null`, which reads as "no one on the team
  * has ever won a deal" instead of the sandbox just never having stamped it. */
-const SEED_VERSION = "12";
+const SEED_VERSION = "13";
 const SEED_VERSION_KEY = "bee_demo_seed_version_v1";
 
 /** Which language the currently-stored seed was written in — separate from

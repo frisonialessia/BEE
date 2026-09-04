@@ -16,13 +16,16 @@
   },
   "cumulative": {
     "title": "Ingresos acumulados",
-    "caption": "Últimos 12 meses, ganado sobre ganado"
+    "caption": "Últimos 12 meses, ganado sobre ganado",
+    "captionRange": "Últimos {months} meses, ganado sobre ganado"
   },
   "monthly": {
     "title": "Mes a mes",
     "caption": "Ganado por mes",
     "captionGoal": "Ganado por mes · meta {goal}",
-    "goalLabel": "Meta"
+    "goalLabel": "Meta",
+    "captionRange": "Ganado por mes · últimos {months} meses",
+    "captionGoalRange": "Ganado por mes · {months} meses · meta {goal}"
   },
   "ranking": {
     "title": "Ranking del equipo",

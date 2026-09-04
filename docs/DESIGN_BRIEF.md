@@ -159,6 +159,14 @@ sección 2:
   `.bee-row`, `.bee-dot` en `globals.css`.
 - **Ninguna letra de color**: el botón primario y las píldoras activas
   llevan texto en tinta.
+- **Verdes en el Resumen, solo en dos cajas**: la caja Ventas (los tres
+  verdes por monto, como la página Ventas) y el paso "Cliente" del embudo,
+  que lleva los colores de las columnas del CRM.
+- **Periodo en toda gráfica de tiempo**: un año por defecto, dos o cinco
+  con `RangePills` (`components/charts/range-pills.tsx`); el sandbox trae
+  cinco años de cierres y señales de origen.
+- **KPIs sin divisa**: `formatAmount` en los tiles; la divisa del equipo se
+  configura en ajustes (ver `docs/ROADMAP.md`).
 - **Color elegido por la persona**: `components/color-dots.tsx` (seis tonos
   BEE + tres verdes). Las oportunidades tienen `color` (migración 048).
 - **Auditoría**: un script de Playwright recorre cada ruta y comprueba que

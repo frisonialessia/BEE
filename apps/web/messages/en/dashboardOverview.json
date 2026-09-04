@@ -82,10 +82,11 @@
       },
       "market": {
         "title": "Market",
-        "caption": "{count} signals in 84 days, by day and type",
         "other": "Other",
         "link": "See Signals",
-        "empty": "No signals yet. They appear once your market sources are connected."
+        "empty": "No signals yet. They appear once your market sources are connected.",
+        "captionWeekly": "{count} signals in a year, by week and type",
+        "captionMonthly": "{count} signals, by month and type"
       },
       "hive": {
         "title": "Intent hive",

@@ -159,5 +159,11 @@
       "green-2": "Lime",
       "green-3": "Mint"
     }
+  },
+  "range": {
+    "aria": "Period",
+    "1y": "1 year",
+    "2y": "2 years",
+    "5y": "5 years"
   }
 }

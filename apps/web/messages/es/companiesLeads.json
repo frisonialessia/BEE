@@ -172,7 +172,7 @@
       "empty": "Sin señales para esta empresa todavía.",
       "score": "Score {score}",
       "activityTitle": "Actividad de señales",
-      "activityCaption": "Señales detectadas por semana, últimas 12 semanas",
+      "activityCaption": "Señales detectadas por semana o por mes, según el periodo",
       "mixTitle": "Mezcla de señales",
       "mixCaption": "Por tipo, toda la cuenta",
       "other": "Otras",

@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { TONE, level } from "@/components/charts/palette";
+import { RangePills, useTimeRange } from "@/components/charts/range-pills";
 import { StackedBars, type StackedPoint } from "@/components/charts/stacked-bars";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,10 +29,11 @@ export function WinLossView() {
   const t = useTranslations("forecastWinLoss.winLoss");
   const { data: oppsResult, isLoading } = useOpportunities(undefined, 300);
   const [today] = useState(() => new Date());
+  const { range, months, setRange } = useTimeRange();
 
   const opportunities = useMemo(() => oppsResult?.data ?? [], [oppsResult]);
   const summary = useMemo(() => computeWinLoss(opportunities), [opportunities]);
-  const trends = useMemo(() => computeMonthlyTrends(opportunities, today, 6, locale), [opportunities, today, locale]);
+  const trends = useMemo(() => computeMonthlyTrends(opportunities, today, months, locale), [opportunities, today, months, locale]);
 
   // Won at full honey, lost at the softest level: parts[1] is always empty
   // so StackedBars skips the middle intensity and never draws its legend
@@ -54,7 +56,7 @@ export function WinLossView() {
   return (
     <div className="space-y-6">
       <div className="bee-overview">
-        <OverviewCard span={6} title={t("monthly.title")} caption={monthlyCaption}>
+        <OverviewCard span={6} title={t("monthly.title")} caption={monthlyCaption} action={<RangePills value={range} onChange={setRange} />}>
           {hasMonthly ? (
             <div className="bee-fill flex min-h-0 flex-col gap-2">
               <div className="flex flex-wrap gap-x-4 gap-y-1">

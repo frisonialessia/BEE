@@ -19,7 +19,7 @@ import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
 import type { Locale } from "@/i18n/locales";
 import { closeProbability, computeForecast } from "@/lib/forecast";
-import { formatCurrencyUSD, formatMoney } from "@/lib/i18n/format";
+import { formatAmount, formatCurrencyUSD } from "@/lib/i18n/format";
 import { computeQuotaActual, computeQuotaAttainment, isQuotaActive } from "@/lib/quotas";
 import { CLOSED_OPPORTUNITY_STATUSES } from "@/types/domain";
 
@@ -83,7 +83,6 @@ export function ForecastView() {
   // Meta activa del equipo (mensual, en la divisa del equipo) — el anillo
   // del tile "Ganado" mide contra ella; sin meta, el tile muestra la ayuda.
   const teamQuota = (quotasResult?.data ?? []).find((q) => q.team_id && isQuotaActive(q, today));
-  const currency = (teamsData ?? [])[0]?.currency ?? "USD";
   const wonThisPeriod = teamQuota ? computeQuotaActual(teamQuota, users ?? [], opportunities) : forecast.wonValue;
   const goalAttainment = teamQuota ? computeQuotaAttainment(teamQuota, users ?? [], opportunities) : undefined;
 
@@ -123,6 +122,8 @@ export function ForecastView() {
   }, [forecast, factor]);
 
   const money = (v: number) => formatCurrencyUSD(v, locale);
+  // KPI tiles carry the number alone: the team's currency lives in settings.
+  const amount = (v: number) => formatAmount(v, locale);
 
   const scenarioRows = [
     { key: "conservative", value: scenarios.conservative, hint: t("forecast.projection.scenarios.conservativeHint", { count: forecast.atRisk.length }) },
@@ -141,21 +142,21 @@ export function ForecastView() {
     <StatStrip cols={4}>
       <StatTile
         label={t("forecast.kpis.quarter.label")}
-        value={money(quarter.weighted)}
+        value={amount(quarter.weighted)}
         hint={hasHistoricalRates ? t("forecast.kpis.quarter.hintHistorical", { quarter: quarter.label }) : t("forecast.kpis.quarter.hintDefault", { quarter: quarter.label })}
         trend={quarter.trend}
         tone={TONE.forecast}
         formatValue={money}
       />
-      <StatTile label={t("forecast.kpis.pipeline.label")} value={money(forecast.pipelineValue)} hint={t("forecast.kpis.pipeline.hint", { count: forecast.openCount })} tone={TONE.prepared} />
+      <StatTile label={t("forecast.kpis.pipeline.label")} value={amount(forecast.pipelineValue)} hint={t("forecast.kpis.pipeline.hint", { count: forecast.openCount })} tone={TONE.prepared} />
       <StatTile
         label={t("forecast.kpis.won.label")}
-        value={money(wonThisPeriod)}
-        hint={teamQuota ? t("forecast.kpis.won.goalHint", { goal: formatMoney(teamQuota.target_amount, currency, locale, true) }) : t("forecast.kpis.won.hint")}
+        value={amount(wonThisPeriod)}
+        hint={teamQuota ? t("forecast.kpis.won.goalHint", { goal: amount(teamQuota.target_amount) }) : t("forecast.kpis.won.hint")}
         progress={goalAttainment}
         tone={TONE.market}
       />
-      <StatTile label={t("forecast.kpis.atRisk.label")} value={forecast.atRisk.length} hint={t("forecast.kpis.atRisk.hint", { amount: money(atRiskAmount) })} tone={TONE.urgency} />
+      <StatTile label={t("forecast.kpis.atRisk.label")} value={forecast.atRisk.length} hint={t("forecast.kpis.atRisk.hint", { amount: amount(atRiskAmount) })} tone={TONE.urgency} />
     </StatStrip>
   );
 

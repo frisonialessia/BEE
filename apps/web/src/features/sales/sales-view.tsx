@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { AreaChart } from "@/components/charts/area-chart";
 import { BarsVsTarget } from "@/components/charts/bars-vs-target";
 import { SALES, mix } from "@/components/charts/palette";
+import { RangePills, useTimeRange } from "@/components/charts/range-pills";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { OverviewCard } from "@/components/dashboard/overview-card";
 import { LiveBadge } from "@/components/live-badge";
@@ -18,10 +19,9 @@ import { useQuotas } from "@/hooks/queries/use-quotas";
 import { useTeams } from "@/hooks/queries/use-teams";
 import { useUsers } from "@/hooks/queries/use-users";
 import type { Locale } from "@/i18n/locales";
-import { formatDate, formatMoney } from "@/lib/i18n/format";
+import { formatAmount, formatDate, formatMoney } from "@/lib/i18n/format";
 import { buildSalesModel } from "@/lib/sales-model";
 
-const MONTHS = 12;
 
 /**
  * Ventas — every closed deal since the organization exists. The one page
@@ -39,6 +39,8 @@ export function SalesView() {
   const { data: companiesResult } = useCompanies(300);
   const { openOpportunity } = useOpportunityDrawer();
   const [now] = useState(() => Date.now());
+  // One window for the whole page: a year by default, two or five on demand.
+  const { range, months, setRange } = useTimeRange();
 
   const model = useMemo(
     () =>
@@ -50,12 +52,14 @@ export function SalesView() {
         users: users ?? [],
         locale,
         now,
-        months: MONTHS,
+        months,
       }),
-    [oppsResult, teamsData, quotasResult, companiesResult, users, locale, now],
+    [oppsResult, teamsData, quotasResult, companiesResult, users, locale, now, months],
   );
 
   const money = (v: number, compact = true) => formatMoney(v, model.currency, locale, compact);
+  // KPI tiles carry the number alone: the team's currency lives in settings.
+  const amount = (v: number) => formatAmount(v, locale);
   const live = oppsResult?.live ?? false;
 
   if (isLoading) {
@@ -76,27 +80,30 @@ export function SalesView() {
           <h1 className="bee-display mt-1">{t("title")}</h1>
           <p className="bee-caption mt-1">{t("subtitle")}</p>
         </div>
-        <LiveBadge live={live} />
+        <div className="flex flex-wrap items-center gap-3">
+          <RangePills value={range} onChange={setRange} />
+          <LiveBadge live={live} />
+        </div>
       </header>
 
       <StatStrip cols={4}>
-        <StatTile label={t("kpis.total")} value={money(model.total)} hint={t("kpis.since", { count: model.won.length })} trend={model.months.map((m) => m.value)} tone={SALES.won} formatValue={(v) => money(v)} />
-        <StatTile label={t("kpis.month")} value={money(model.thisMonth.value)} delta={model.monthDelta} deltaLabel={t("kpis.vsLastMonth")} salesTone tone={SALES.won} trend={model.months.slice(-8).map((m) => m.value)} formatValue={(v) => money(v)} />
+        <StatTile label={t("kpis.total")} value={amount(model.total)} hint={t("kpis.since", { count: model.won.length })} trend={model.months.map((m) => m.value)} tone={SALES.won} formatValue={(v) => money(v)} />
+        <StatTile label={t("kpis.month")} value={amount(model.thisMonth.value)} delta={model.monthDelta} deltaLabel={t("kpis.vsLastMonth")} salesTone tone={SALES.won} trend={model.months.slice(-8).map((m) => m.value)} formatValue={(v) => money(v)} />
         <StatTile label={t("kpis.clients")} value={model.thisMonth.count} delta={model.clientsDelta} deltaLabel={t("kpis.vsLastMonth")} salesTone tone={SALES.lime} trend={model.months.slice(-8).map((m) => m.count)} formatValue={(v) => String(Math.round(v))} />
         {model.goal ? (
-          <StatTile label={t("kpis.goal")} value={`${Math.round((model.attainment ?? 0) * 100)}%`} hint={t("kpis.goalOf", { goal: money(model.goal) })} progress={model.attainment ?? 0} tone={(model.attainment ?? 0) >= 1 ? SALES.won : SALES.lime} />
+          <StatTile label={t("kpis.goal")} value={`${Math.round((model.attainment ?? 0) * 100)}%`} hint={t("kpis.goalOf", { goal: amount(model.goal) })} progress={model.attainment ?? 0} tone={(model.attainment ?? 0) >= 1 ? SALES.won : SALES.lime} />
         ) : (
-          <StatTile label={t("kpis.ticket")} value={money(model.avgTicket)} hint={model.avgCycle === null ? t("kpis.noCycle") : t("kpis.cycle", { days: Math.round(model.avgCycle) })} tone={SALES.mint} />
+          <StatTile label={t("kpis.ticket")} value={amount(model.avgTicket)} hint={model.avgCycle === null ? t("kpis.noCycle") : t("kpis.cycle", { days: Math.round(model.avgCycle) })} tone={SALES.mint} />
         )}
       </StatStrip>
 
       <div className="bee-overview">
-        <OverviewCard span={8} title={t("cumulative.title")} caption={t("cumulative.caption")}>
+        <OverviewCard span={8} title={t("cumulative.title")} caption={t("cumulative.captionRange", { months })}>
           <AreaChart points={model.cumulative} color={SALES.won} minHeight={200} formatValue={(v) => money(v)} />
         </OverviewCard>
-        <OverviewCard span={4} title={t("monthly.title")} caption={model.goal ? t("monthly.captionGoal", { goal: money(model.goal) }) : t("monthly.caption")}>
+        <OverviewCard span={4} title={t("monthly.title")} caption={model.goal ? t("monthly.captionGoalRange", { months, goal: money(model.goal) }) : t("monthly.captionRange", { months })}>
           <BarsVsTarget
-            points={model.months.slice(-6)}
+            points={model.months}
             target={model.goal}
             minHeight={200}
             formatValue={(v) => money(v)}

@@ -595,6 +595,81 @@ function buildAmbientSignals(locale: Locale): Signal[] {
   });
 }
 
+// ── Five years of history ────────────────────────────────────────────────
+// Every chart in BEE shows a year by default and lets a person zoom out to
+// two or five, so the sandbox carries closed deals (and their origin
+// signals, battlecards and companies, all derived from SEEDS below) back to
+// sixty months ago. Deterministic: the same visitor always sees the same
+// past. Amounts grow slowly toward the present, one won deal a month and a
+// lost one every other month, so Ventas reads as a business that has been
+// closing for five years, not as a launch.
+const HISTORY_COMPANIES: { company: string; domain: string; industry: string; country: string; leadName: string; leadTitle: string }[] = [
+  { company: "Altiplano Software", domain: "altiplanosoft.bo", industry: "B2B SaaS", country: "Bolivia", leadName: "Marcela Quiroga", leadTitle: "Directora Comercial" },
+  { company: "Bahía Retail", domain: "bahiaretail.mx", industry: "Retail", country: "México", leadName: "Óscar Peña", leadTitle: "Gerente de Ventas" },
+  { company: "Cordillera Fintech", domain: "cordillerafin.cl", industry: "Fintech", country: "Chile", leadName: "Paula Arriagada", leadTitle: "VP Growth" },
+  { company: "Delta Logística", domain: "deltalog.com.ar", industry: "Logística", country: "Argentina", leadName: "Martín Sosa", leadTitle: "VP de Operaciones" },
+  { company: "Estuario Salud", domain: "estuariosalud.uy", industry: "Salud digital", country: "Uruguay", leadName: "Cecilia Ferreira", leadTitle: "CEO" },
+  { company: "Faro Analytics", domain: "faroanalytics.co", industry: "Datos / Analytics", country: "Colombia", leadName: "Julián Restrepo", leadTitle: "Head of Revenue" },
+  { company: "Granito Manufactura", domain: "granitomfg.mx", industry: "Manufactura", country: "México", leadName: "Lorena Ávila", leadTitle: "Directora Comercial" },
+  { company: "Huella EdTech", domain: "huellaedtech.pe", industry: "EdTech", country: "Perú", leadName: "Diego Cárdenas", leadTitle: "Director de Ventas" },
+  { company: "Istmo Cloud", domain: "istmocloud.pa", industry: "Infraestructura cloud", country: "Panamá", leadName: "Karla Moreno", leadTitle: "VP Sales" },
+  { company: "Jacarandá Media", domain: "jacarandamedia.mx", industry: "Medios", country: "México", leadName: "Rubén Castillo", leadTitle: "Director Comercial" },
+  { company: "Kilómetro Cero Cargo", domain: "km0cargo.cl", industry: "Logística", country: "Chile", leadName: "Antonia Reyes", leadTitle: "VP Comercial" },
+  { company: "Lumbre Insurtech", domain: "lumbreinsur.ar", industry: "Seguros", country: "Argentina", leadName: "Federico Lanz", leadTitle: "VP Growth" },
+  { company: "Mirador PropTech", domain: "miradorpt.mx", industry: "PropTech", country: "México", leadName: "Ximena Roldán", leadTitle: "Directora de Ventas" },
+  { company: "Nácar Legal", domain: "nacarlegal.co", industry: "LegalTech", country: "Colombia", leadName: "Esteban Vargas", leadTitle: "Socio Director" },
+  { company: "Oriente AgTech", domain: "orienteagtech.com.ar", industry: "AgTech", country: "Argentina", leadName: "Valeria Núñez", leadTitle: "Gerente General" },
+  { company: "Pampa Hardware", domain: "pampahw.com", industry: "Hardware", country: "Estados Unidos", leadName: "Samuel Ortiz", leadTitle: "Head of GTM" },
+];
+const HISTORY_SIGNAL_TYPES: SignalType[] = ["funding_round", "hiring", "tech_adoption", "expansion", "leadership_change", "product_launch", "engagement", "news_mention"];
+const HISTORY_LOSS: LossReason[] = ["budget", "price", "timing", "product_fit", "no_decision"];
+const HISTORY_COMPETITORS: (string | null)[] = ["Salesforce", "HubSpot", null, "Pipedrive", null];
+
+function historySeeds(): SeedDef[] {
+  const out: SeedDef[] = [];
+  for (let m = 13; m <= 60; m++) {
+    const yearsBack = m / 12;
+    // Amounts drift down toward the past (~9 % a year), with a mild
+    // seasonal bump around the end of each quarter.
+    const season = m % 3 === 0 ? 1.18 : 1;
+    const base = Math.round(((16000 + ((m * 7919) % 42000)) * season) / (1 + 0.09 * yearsBack) / 500) * 500;
+    const c = HISTORY_COMPANIES[m % HISTORY_COMPANIES.length];
+    const cycle = 24 + ((m * 13) % 27);
+    out.push({
+      id: `hw${m}`,
+      ...c,
+      signalType: HISTORY_SIGNAL_TYPES[m % HISTORY_SIGNAL_TYPES.length],
+      seniority: m % 3 === 0 ? "c_level" : m % 3 === 1 ? "vp" : "director",
+      amount: base,
+      score: 62 + ((m * 11) % 33),
+      daysAgoCreated: m * 30 + cycle + ((m * 5) % 9),
+      outcome: "won",
+      cycleDays: cycle,
+      qualifiedCount: 4 + (m % 3),
+    });
+    if (m % 2 === 0) {
+      const lc = HISTORY_COMPANIES[(m * 5 + 3) % HISTORY_COMPANIES.length];
+      const lcycle = 18 + ((m * 7) % 33);
+      out.push({
+        id: `hl${m}`,
+        ...lc,
+        signalType: HISTORY_SIGNAL_TYPES[(m + 3) % HISTORY_SIGNAL_TYPES.length],
+        seniority: m % 2 === 0 ? "director" : "manager",
+        amount: Math.round((12000 + ((m * 4391) % 36000)) / (1 + 0.09 * yearsBack) / 500) * 500,
+        score: 48 + ((m * 17) % 30),
+        daysAgoCreated: m * 30 + lcycle + 12,
+        outcome: "lost",
+        cycleDays: lcycle,
+        qualifiedCount: 1 + (m % 3),
+        lossReason: HISTORY_LOSS[m % HISTORY_LOSS.length],
+        competitor: HISTORY_COMPETITORS[m % HISTORY_COMPETITORS.length],
+      });
+    }
+  }
+  return out;
+}
+SEEDS.push(...historySeeds());
+
 export function historicalSignals(locale: Locale = defaultLocale): Signal[] {
   return [...buildOriginSignals(locale), ...buildIntermediateSignals(locale), ...buildAmbientSignals(locale)];
 }

@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { TONE } from "@/components/charts/palette";
+import { RangePills, useTimeRange } from "@/components/charts/range-pills";
 import { StackedBars, type StackedPoint } from "@/components/charts/stacked-bars";
 import { StatStrip, StatTile } from "@/components/charts/stat-tile";
 import { useRowCapacity } from "@/components/charts/use-row-capacity";
@@ -35,7 +36,6 @@ import { InitialsDisc, ListRow, RowChip } from "./table-bits";
 
 const DAY_MS = 86_400_000;
 const WEEK_MS = 7 * DAY_MS;
-const SIGNAL_WEEKS = 12;
 const SIGNAL_WINDOW_DAYS = 90;
 const CLOSED_STATUSES = ["won", "lost", "dismissed"];
 
@@ -213,6 +213,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
   const { data: meetingsData } = useMeetings();
   const { openOpportunity, openNew } = useOpportunityDrawer();
   const [nowMs] = useState(() => Date.now());
+  const signalRange = useTimeRange();
   const [contactsRef, contactsCapacity] = useRowCapacity<HTMLDivElement>(52, 0, { min: 4, max: 12 });
   const [signalsRef, signalsCapacity] = useRowCapacity<HTMLDivElement>(52, 0, { min: 4, max: 10 });
   const [oppsRef, oppsCapacity] = useRowCapacity<HTMLDivElement>(52, 0, { min: 4, max: 10 });
@@ -238,29 +239,42 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
   const signals90 = signals.filter((s) => new Date(s.detected_at).getTime() >= nowMs - SIGNAL_WINDOW_DAYS * DAY_MS);
   const meetingsHeld = meetings.filter((m) => m.completed_at).length;
 
-  // Twelve weeks of this account's signals, stacked by the three most
-  // common types — the account's pulse, in honey.
+  // This account's signals stacked by its three most common types — one
+  // bar a week over a year, one a month over two or five.
   const weekly = useMemo(() => {
     const counts = new Map<string, number>();
     for (const s of signals) counts.set(s.signal_type, (counts.get(s.signal_type) ?? 0) + 1);
     const top = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k);
-    const fmt = new Intl.DateTimeFormat(localeTags[locale], { day: "numeric", month: "short" });
-    const points: StackedPoint[] = [];
-    for (let i = SIGNAL_WEEKS - 1; i >= 0; i--) {
-      const end = nowMs - i * WEEK_MS;
-      const start = end - WEEK_MS;
+    const byWeek = signalRange.range === "1y";
+    const fmt = new Intl.DateTimeFormat(localeTags[locale], byWeek ? { day: "numeric", month: "short" } : { month: "short", year: "2-digit" });
+    const buckets: { from: number; to: number; label: string }[] = [];
+    if (byWeek) {
+      for (let i = 51; i >= 0; i--) {
+        const end = nowMs - i * WEEK_MS;
+        buckets.push({ from: end - WEEK_MS, to: end, label: fmt.format(new Date(end)) });
+      }
+    } else {
+      for (let i = signalRange.months - 1; i >= 0; i--) {
+        const d = new Date(nowMs);
+        d.setDate(1);
+        d.setHours(0, 0, 0, 0);
+        d.setMonth(d.getMonth() - i);
+        buckets.push({ from: d.getTime(), to: new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime(), label: fmt.format(d) });
+      }
+    }
+    const points: StackedPoint[] = buckets.map((b, i) => {
       const rows = signals.filter((s) => {
         const ts = new Date(s.detected_at).getTime();
-        return ts > start && ts <= end;
+        return ts > b.from && ts <= b.to;
       });
       const parts = top.map((k) => rows.filter((s) => s.signal_type === k).length);
       parts.push(rows.filter((s) => !top.includes(s.signal_type)).length);
-      points.push({ label: fmt.format(new Date(end)), parts, current: i === 0 });
-    }
+      return { label: b.label, parts, current: i === buckets.length - 1 };
+    });
     const legend = top.map((k) => signalTypeLabels[k as keyof typeof signalTypeLabels] ?? k);
     if (points.some((p) => p.parts[p.parts.length - 1] > 0)) legend.push(t("signals.other"));
-    return { points, legend, trend: points.map((p) => p.parts.reduce((s, v) => s + v, 0)) };
-  }, [signals, nowMs, locale, signalTypeLabels, t]);
+    return { points, legend, trend: points.slice(-8).map((p) => p.parts.reduce((s, v) => s + v, 0)) };
+  }, [signals, nowMs, locale, signalTypeLabels, t, signalRange.range, signalRange.months]);
 
   if (isLoading) {
     return (
@@ -316,7 +330,7 @@ export function CompanyDetail({ companyId }: { companyId: string }) {
     >
       <div className="bee-overview">
         {/* The account's pulse: 12 weeks of signals by type. */}
-        <OverviewCard span={8} title={t("signals.activityTitle")} caption={t("signals.activityCaption")}>
+        <OverviewCard span={8} title={t("signals.activityTitle")} caption={t("signals.activityCaption")} action={<RangePills value={signalRange.range} onChange={signalRange.setRange} />}>
           {signals.length === 0 ? (
             <p className="bee-caption py-8 text-center">{t("signals.empty")}</p>
           ) : (

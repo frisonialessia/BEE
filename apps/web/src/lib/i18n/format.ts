@@ -156,6 +156,19 @@ export function formatRelativeTime(iso: string, locale: Locale, now: Date = new 
 }
 
 /** Amount in the team's own currency (ISO 4217), compact when large. */
+/**
+ * An amount without its currency — the KPI tiles: the number is what
+ * matters and the team's currency is set once in settings, not repeated in
+ * every tile. Compact ("22 k") or full ("22,000").
+ */
+export function formatAmount(amount: number, locale: Locale, compact = true): string {
+  try {
+    return new Intl.NumberFormat(tag(locale), { notation: compact ? "compact" : "standard", maximumFractionDigits: compact ? 1 : 0 }).format(amount);
+  } catch {
+    return String(Math.round(amount));
+  }
+}
+
 export function formatMoney(amount: number, currency: string, locale: Locale, compact = false): string {
   try {
     return new Intl.NumberFormat(tag(locale), {
