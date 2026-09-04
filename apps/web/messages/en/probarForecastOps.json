@@ -1,6 +1,18 @@
 {
   "resilience": {
-    "eyebrow": "Audit · Failed events · Anomaly detector",
-    "subtitle": "System observability — agent decisions, failed retries, and strategy alerts"
+    "eyebrow": "Execution queue · Failed events · Decision log",
+    "subtitle": "What needs a person: actions waiting for your OK, failures BEE couldn't fix on its own and decisions to review",
+    "stats": {
+      "awaiting": "Waiting for your OK",
+      "awaitingHintSome": "Ready actions that won't go out until you approve",
+      "awaitingHintNone": "Nothing pending approval",
+      "retrying": "Failures to retry",
+      "retryingHint": "BEE retries them on its own",
+      "gaveUp": "Permanent failures",
+      "gaveUpHintSome": "BEE ran out of retries — they need a person",
+      "gaveUpHintNone": "BEE hasn't given up on anything",
+      "toReview": "Decisions to review",
+      "toReviewHint": "Agent decisions with low confidence"
+    }
   }
 }

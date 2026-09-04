@@ -4,8 +4,8 @@ import type { Locale } from "@/i18n/locales";
 
 /**
  * Reads the visitor's current language directly from the `NEXT_LOCALE`
- * cookie — the same cookie `i18n/actions.ts`' server action writes and
- * `i18n/request.ts` reads server-side for every other page. The demo data
+ * cookie — the cookie `proxy.ts` keeps in sync with the browser language
+ * and `i18n/request.ts` falls back to server-side. The demo data
  * layer (`lib/sample-data.ts`, `lib/demo/seed-history.ts`,
  * `lib/demo/templates.ts`, `lib/demo/store.ts`) is plain TypeScript, not
  * React components, so it can't call `useLocale()`; reading the cookie

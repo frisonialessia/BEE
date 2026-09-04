@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { SERIES } from "@/components/charts/palette";
 import { useBoxSize } from "@/components/charts/use-box-size";
 
@@ -24,6 +26,7 @@ export function Donut({
   otherLabel?: string;
 }) {
   const [ref, box] = useBoxSize<HTMLDivElement>({ width: 320, height: 140 });
+  const [hover, setHover] = useState<number | null>(null);
   const size = sizeProp ?? Math.round(Math.max(96, Math.min(150, box.height - 8, box.width * 0.4)));
   const sorted = [...slices].filter((s) => s.value > 0).sort((a, b) => b.value - a.value);
   const top = sorted.slice(0, 4);
@@ -39,7 +42,12 @@ export function Donut({
     return acc;
   }, []);
   return (
-    <div ref={ref} className="bee-fill flex w-full min-w-0 items-center gap-4" style={{ minHeight: 120 }}>
+    <div ref={ref} className="bee-fill relative flex w-full min-w-0 items-center gap-4" style={{ minHeight: 120 }}>
+      {hover !== null && parts[hover] && (
+        <div className="pointer-events-none absolute left-0 top-0 z-10 whitespace-nowrap rounded-[var(--radius-sm)] bg-[var(--color-text)] px-2 py-1 text-xs font-medium text-[var(--color-card)]">
+          {parts[hover].label} · {Math.round((parts[hover].value / total) * 100)}% · {parts[hover].value}
+        </div>
+      )}
       <svg width={size} height={size} className="shrink-0">
         {parts.map((p, i) => {
           const frac = p.value / total;
@@ -55,9 +63,10 @@ export function Donut({
               strokeDasharray={`${Math.max(0, c * frac - 2)} ${c}`}
               strokeDashoffset={-offsets[i]}
               transform={`rotate(-90 ${size / 2} ${size / 2})`}
-            >
-              <title>{`${p.label} · ${Math.round(frac * 100)}%`}</title>
-            </circle>
+              opacity={hover !== null && hover !== i ? 0.4 : 1}
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover(null)}
+            />
           );
         })}
         <text x="50%" y="50%" dy="0.35em" textAnchor="middle" fontWeight={700} fill="var(--color-text)" style={{ fontSize: size >= 140 ? "var(--bee-fs-subtitle)" : "var(--bee-fs-body)" }}>
@@ -66,7 +75,9 @@ export function Donut({
       </svg>
       <ul className="flex min-w-0 flex-1 flex-col gap-1">
         {parts.map((p, i) => (
-          <li key={p.label} className="flex min-w-0 items-center gap-2 text-xs">
+          // Hover-only enhancement: the same figure is already printed in the row.
+          // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
+          <li key={p.label} className="flex min-w-0 items-center gap-2 text-xs" onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
             <span className="size-2 shrink-0 rounded-full" style={{ background: p.color ?? SERIES[i % SERIES.length] }} />
             <span className="min-w-0 flex-1 truncate">{p.label}</span>
             <b className="shrink-0 pl-2 tabular-nums">{Math.round((p.value / total) * 100)}%</b>

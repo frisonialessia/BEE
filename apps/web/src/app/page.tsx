@@ -1,28 +1,13 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import {
-  ArrowRight,
-  Lock,
-  PlayCircle,
-  Radio,
-  ShieldCheck,
-  Share2,
-  Sparkles,
-  TrendingUp,
-  UserCheck,
-} from "lucide-react";
+import { ArrowRight, Lock, Mail, PlayCircle, Radio, Search, ShieldCheck, Star, UserCheck, Users } from "lucide-react";
 
 import { MarketingBeforeAfter } from "@/components/marketing-before-after";
 import { MarketingCounters } from "@/components/marketing-counters";
-import { MarketingCursorTrail } from "@/components/marketing-cursor-trail";
 import { MarketingDemoPanel } from "@/components/marketing-demo-panel";
 import { MarketingFAQ } from "@/components/marketing-faq";
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
-import { MarketingHeroSignals } from "@/components/marketing-hero-signals";
-import { MarketingHowItWorks } from "@/components/marketing-how-it-works";
-import { MarketingIntegrations } from "@/components/marketing-integrations";
-import { MagneticLink } from "@/components/marketing-magnetic";
 import { Reveal } from "@/components/marketing-motion";
 import { MarketingOrbit } from "@/components/marketing-orbit";
 import { MarketingSalesProof } from "@/components/marketing-sales-proof";
@@ -36,54 +21,25 @@ import { MarketingSignalTicker } from "@/components/marketing-signal-ticker";
  * apoya en garantías técnicas verificables del sistema en vez de prueba
  * social fabricada.
  *
- * i18n: this file's own copy (hero, módulos, garantías, CTA de cierre)
- * lives in messages/{locale}/marketing.json; every sub-component below
- * reads messages/{locale}/landing.json.
+ * Order, and the reason for it — a visitor should know what BEE is within
+ * two scrolls: the hero says it (headline, subtitle, CTAs, the four tilted
+ * module cards as the module summary), the ticker shows the signals, the
+ * Demo en vivo shows the product. Then the argument: Antes/después,
+ * Ventas, why to trust it (with the real sources), FAQ, closing CTA. The
+ * module tour lives on /funcionalidades (linked from header and footer),
+ * not here.
  *
- * Motion: the landing is a scroll story (see marketing-motion.tsx). Every
- * section reveals with the same fade + 12px rise, grids stagger their
- * children, figures count up, the Ventas chart draws itself and the
- * how-it-works section is a pinned sequence driven by scroll position.
- * All of it is progressive enhancement over this server-rendered final
- * state — no JS, no IntersectionObserver or prefers-reduced-motion all
- * get the finished page — and none of it adds a fill: one background for
- * the whole landing, the hero's blurred atmosphere the only exception.
+ * i18n: this file's own copy (hero, confianza, CTA de cierre) lives in
+ * messages/{locale}/marketing.json; every sub-component below reads
+ * messages/{locale}/landing.json.
+ *
+ * Motion is restraint: one plain fade + 12px rise per section (Reveal,
+ * staggered for lists), the chart drawing itself once, figures counting
+ * up once, and never more than one animated element per viewport. All of
+ * it is progressive enhancement over this server-rendered final state,
+ * and none of it adds a fill: one background for the whole landing, the
+ * hero's blurred atmosphere the only exception.
  */
-
-const MODULE_ICONS = { signals: Radio, brief: Sparkles, simulator: TrendingUp, automation: Share2 } as const;
-const MODULE_HREFS = {
-  signals: "/funcionalidades#senales",
-  brief: "/funcionalidades#brief",
-  simulator: "/funcionalidades#simulador",
-  automation: "/funcionalidades#automatizacion",
-} as const;
-const MODULE_TONES = {
-  signals: "bee-bento--primary",
-  brief: "bee-bento--warm",
-  simulator: "bee-bento--violet",
-  automation: "bee-bento--muted",
-} as const;
-// Stroke color for each module's icon + background motif — chart-4 (blue)
-// reads fine directly on its own wash, the other three need mixing toward
-// --color-text (same recipe as .bee-eyebrow's modifiers in globals.css) or
-// they wash out against their own tint. Written out in full rather than
-// through a shared custom property: Lightning CSS constant-folds a
-// color-mix()-only custom property into every CSS rule that reads it and
-// drops the property itself, so a var() written from inline style/JSX
-// (invisible to that optimization pass) resolves to nothing.
-const MODULE_STROKES = {
-  signals: "var(--color-chart-4)",
-  brief: "color-mix(in srgb, var(--color-accent-warm) 70%, var(--color-text) 30%)",
-  simulator: "color-mix(in srgb, var(--color-chart-6) 65%, var(--color-text) 35%)",
-  automation: "color-mix(in srgb, var(--color-chart-5) 70%, var(--color-text) 30%)",
-} as const;
-const MODULE_SPANS = {
-  signals: "bee-span-8",
-  brief: "bee-span-4",
-  simulator: "bee-span-4",
-  automation: "bee-span-8",
-} as const;
-const MODULE_KEYS = ["signals", "brief", "simulator", "automation"] as const;
 
 const GUARANTEE_ICONS = {
   noHallucinations: ShieldCheck,
@@ -92,31 +48,35 @@ const GUARANTEE_ICONS = {
   secureByDesign: Radio,
 } as const;
 const GUARANTEE_KEYS = ["noHallucinations", "humanApproval", "multiTenant", "secureByDesign"] as const;
-// Guarantees reads as a trust/security section, not a product tour — a
-// full-color wash there (the old GUARANTEE_TONES, reusing MODULE_TONES)
-// competes with Platform's cards for the same visual trick right above it.
-// Cards are white with a 3px accent bar instead (see .bee-bar-card in
-// globals.css); the accent still cycles through the same 4-tone order.
-const GUARANTEE_BAR_TONES = [
-  "bee-bar-card--primary",
-  "bee-bar-card--warm",
-  "bee-bar-card--violet",
-  "bee-bar-card--muted",
-] as const;
-const GUARANTEE_ICON_STROKES = [
-  "var(--color-chart-4)",
-  "color-mix(in srgb, var(--color-accent-warm) 70%, var(--color-text) 30%)",
-  "color-mix(in srgb, var(--color-chart-6) 65%, var(--color-text) 35%)",
-  "color-mix(in srgb, var(--color-chart-5) 70%, var(--color-text) 30%)",
+// Icon disc per row: a soft wash of the hue behind an ink mixed toward
+// --color-text (same recipe as .bee-eyebrow's modifiers) so it reads on
+// white. Written out in full rather than through a shared custom property:
+// Lightning CSS constant-folds a color-mix()-only custom property into every
+// CSS rule that reads it and drops the property itself, so a var() written
+// from inline style (invisible to that pass) would resolve to nothing.
+const GUARANTEE_HUES = ["var(--color-chart-4)", "var(--color-accent-warm)", "var(--color-chart-6)", "var(--color-chart-5)"] as const;
+
+/** The real signal sources and the outbound channel — LinkedIn/G2/Google
+ * Search are the providers in apps/api/app/services/external_api/providers/,
+ * email goes out via SMTP/SendGrid/Resend. Names are proper nouns (not
+ * translated); no third-party logos — the repo has none as assets and
+ * claiming affiliation is not ours to make. */
+const SOURCES = [
+  { id: "linkedin", name: "LinkedIn", icon: Users, hue: "var(--color-chart-4)" },
+  { id: "g2", name: "G2", icon: Star, hue: "var(--color-accent-warm)" },
+  { id: "googleSearch", name: "Google Search", icon: Search, hue: "var(--color-chart-6)" },
+  { id: "email", name: "Email", icon: Mail, hue: "var(--color-chart-5)" },
 ] as const;
 
-/** White glints over the landing — the only motion on the shared ground.
- * Fixed positions (no randomness: server and client must agree), each with
- * its own delay/duration so the twinkle never reads as a loop. */
+/** Faint white points over the landing — like distant stars, the only
+ * motion on the shared ground. Fixed positions (no randomness: server and
+ * client must agree), each with its own delay/duration so the twinkle
+ * never reads as a loop. [left%, top%, delay s, duration s]. */
 const SPARKLES = [
-  [6, 14, 0, 7.5], [22, 31, 1.8, 8.5], [41, 19, 3.1, 7], [58, 27, 0.9, 9], [77, 12, 2.4, 8],
-  [91, 34, 4.2, 7.5], [12, 52, 1.2, 8.8], [35, 61, 3.6, 7.2], [63, 55, 0.4, 9.4], [86, 63, 2.9, 8.1],
-  [8, 82, 3.9, 7.8], [29, 90, 1.5, 8.6], [52, 79, 4.6, 7.3], [72, 93, 0.7, 9.1], [95, 84, 2.1, 8.3],
+  [5, 9, 0, 11], [17, 26, 2.5, 13], [29, 7, 5, 12], [41, 21, 1.5, 14], [56, 12, 3.5, 11.5],
+  [68, 29, 6, 12.5], [83, 8, 0.8, 13.5], [94, 24, 4.2, 11], [9, 47, 2, 12], [24, 58, 5.5, 13],
+  [46, 44, 0.4, 14], [62, 52, 3, 11.5], [77, 46, 6.5, 12.5], [91, 60, 1.2, 13], [13, 76, 4.8, 11],
+  [33, 88, 0.2, 12.5], [51, 71, 2.8, 13.5], [70, 84, 5.2, 11.5], [86, 92, 3.8, 14], [97, 77, 1.8, 12],
 ] as const;
 
 function MarketingSparkles() {
@@ -144,16 +104,11 @@ function HeroAtmosphere() {
   );
 }
 
-// Per-word depth for the headline's word-by-word rise: each word comes up
-// from a slightly different distance/scale so the line doesn't read as one
-// block sliding in. Cycles by word index; values are px / scale factors.
-const WORD_RISE = ["18px", "26px", "14px", "22px"] as const;
-const WORD_SCALE = ["0.96", "0.93", "0.98", "0.95"] as const;
-
 /**
- * Headline split into animated words. The message is parsed here (not via
- * t.rich) because each WORD needs its own span: `<hl>…</hl>` marks the
- * highlighted phrase, whose words get their marker span and the last
+ * Headline split into words so they can rise in one after another (a
+ * calm 35 ms stagger, ≤ 600 ms in total — see .bee-word). The message is
+ * parsed here (not via t.rich) because each WORD needs its own span:
+ * `<hl>…</hl>` marks the highlighted phrase, whose words get the last
  * indices so they land last. Pure string work on the server — identical
  * output on the client, nothing to hydrate but static spans.
  */
@@ -173,7 +128,7 @@ function HeroHeadline({ raw }: { raw: string }) {
       return (
         <span key={`${pi}-${wi}`}>
           {wi > 0 && " "}
-          <span className="bee-word" style={{ "--i": i, "--wy": WORD_RISE[i % 4], "--ws": WORD_SCALE[i % 4] } as React.CSSProperties}>
+          <span className="bee-word" style={{ "--i": i } as React.CSSProperties}>
             {word}
           </span>
         </span>
@@ -192,58 +147,9 @@ function HeroHeadline({ raw }: { raw: string }) {
   return <>{nodes}</>;
 }
 
-/** Subtle background motif per module card — a corner flourish, not a
- * full-bleed pattern, so it survives the cards' variable content height
- * (fixed pixel size + the card's own overflow-hidden clip it cleanly on
- * short cards, instead of stretching/distorting like a viewBox scaled to
- * fill an unpredictable height would). Hidden below sm: at one column the
- * motif has no spare corner to sit in without crowding the text. */
-function ModuleMotif({ module: moduleKey }: { module: (typeof MODULE_KEYS)[number] }) {
-  const stroke = MODULE_STROKES[moduleKey];
-  const common = "pointer-events-none absolute hidden sm:block";
-  switch (moduleKey) {
-    case "signals":
-      // Radiating pulse — signals arriving.
-      return (
-        <svg className={`${common} -right-6 -top-8 size-40`} viewBox="0 0 160 160" fill="none" aria-hidden>
-          <circle cx="80" cy="80" r="18" style={{ stroke }} strokeWidth="1.5" opacity="0.35" />
-          <circle cx="80" cy="80" r="34" style={{ stroke }} strokeWidth="1.5" opacity="0.25" />
-          <circle cx="80" cy="80" r="50" style={{ stroke }} strokeWidth="1.5" opacity="0.15" />
-          <circle cx="80" cy="80" r="66" style={{ stroke }} strokeWidth="1.5" opacity="0.08" />
-        </svg>
-      );
-    case "brief":
-      // Sunrise arc — the morning brief.
-      return (
-        <svg className={`${common} -bottom-10 -right-4 size-36`} viewBox="0 0 144 144" fill="none" aria-hidden>
-          <path d="M-8 112a80 80 0 0 1 160 0" style={{ stroke }} strokeWidth="1.5" opacity="0.3" />
-          <circle cx="72" cy="112" r="20" style={{ fill: stroke }} opacity="0.14" />
-        </svg>
-      );
-    case "simulator":
-      // Ascending bars — the revenue projection.
-      return (
-        <svg className={`${common} -bottom-6 -right-4 size-32`} viewBox="0 0 128 128" fill="none" aria-hidden>
-          <rect x="76" y="82" width="13" height="38" rx="2" style={{ fill: stroke }} opacity="0.18" />
-          <rect x="96" y="62" width="13" height="58" rx="2" style={{ fill: stroke }} opacity="0.26" />
-          <rect x="116" y="34" width="13" height="86" rx="2" style={{ fill: stroke }} opacity="0.34" />
-        </svg>
-      );
-    case "automation":
-      // Connected nodes — sequences advancing on their own.
-      return (
-        <svg className={`${common} -right-6 -top-6 size-36`} viewBox="0 0 144 144" fill="none" aria-hidden>
-          <circle cx="96" cy="30" r="4" style={{ fill: stroke }} opacity="0.4" />
-          <circle cx="120" cy="58" r="4" style={{ fill: stroke }} opacity="0.4" />
-          <circle cx="96" cy="86" r="4" style={{ fill: stroke }} opacity="0.4" />
-          <path d="M96 30 96 86 M96 58 120 58" style={{ stroke }} strokeWidth="1.5" opacity="0.28" />
-        </svg>
-      );
-  }
-}
-
 export default async function Home() {
   const t = await getTranslations("marketing.landing");
+  const tSources = await getTranslations("landing.integrations.items");
 
   return (
     <div className="flex min-h-full flex-col bg-background">
@@ -254,18 +160,10 @@ export default async function Home() {
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
         <section className="relative overflow-hidden">
           <HeroAtmosphere />
-          {/* Pointer trail (xl+, mouse only): dots that drift to the nearest
-           * floating signal card. Before the text in DOM so it paints under it. */}
-          <MarketingCursorTrail />
 
           <div className="relative mx-auto w-full max-w-4xl px-6 pb-8 pt-16 text-center sm:pt-24">
-            {/* Floating signal cards in the side margins (xl+ only). Outside
-             * .bee-hero-in so the load-in stagger below doesn't fight their
-             * own parallax transform. */}
-            <MarketingHeroSignals />
-            {/* .bee-hero-in: eyebrow → headline → subtitle → CTAs rise in on
-             * load, 90 ms apart; the <hl> words get a honey marker that draws
-             * itself under them once the headline has landed. */}
+            {/* .bee-hero-in: eyebrow → headline (word by word) → subtitle →
+             * CTAs rise in on load, 60 ms apart. */}
             <div className="bee-hero-in relative">
               <p className="bee-eyebrow">{t("eyebrow")}</p>
               <h1 className="bee-headline mx-auto mt-5 max-w-3xl text-balance text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
@@ -273,9 +171,9 @@ export default async function Home() {
               </h1>
               <p className="bee-caption mx-auto mt-6 max-w-xl text-base sm:text-lg">{t("heroSubtitle")}</p>
               <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-                <MagneticLink href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary">
+                <Link href="/contacto?source=hero_primary" className="bee-btn bee-btn--primary">
                   {t("ctaStart")} <ArrowRight className="size-4" />
-                </MagneticLink>
+                </Link>
                 <Link href="/probar" className="bee-btn-ghost">
                   <PlayCircle className="size-4" /> {t("ctaTry")}
                 </Link>
@@ -288,7 +186,8 @@ export default async function Home() {
            * py-8 internally (needed so its tilted cards' overshoot doesn't
            * get clipped, see the comment there), so stacking full padding
            * here on top of that would double up and push the section much
-           * taller than intended. */}
+           * taller than intended. The four tilted cards are the module
+           * summary of this page; the full tour is /funcionalidades. */}
           <div className="relative pb-12 pt-2 sm:pb-16">
             <MarketingOrbit />
           </div>
@@ -297,7 +196,7 @@ export default async function Home() {
         <MarketingSignalTicker />
 
         {/* ── Vista previa del producto ───────────────────────────────────── */}
-        <section id="producto" className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
+        <section id="producto" className="mx-auto w-full max-w-6xl px-6 py-12 lg:py-14">
           <Reveal className="mx-auto max-w-2xl text-center">
             <p className="bee-eyebrow bee-eyebrow--blue">{t("demoEyebrow")}</p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("demoTitle")}</h2>
@@ -305,103 +204,82 @@ export default async function Home() {
           <Reveal className="mt-10" delay={100}>
             <MarketingDemoPanel />
           </Reveal>
-          {/* The demo's own figures, counting up — a recap of the panel
+          {/* The demo's own figures, counting up once — a recap of the panel
            * above, labelled as demo data, not a second set of statistics. */}
           <MarketingCounters />
         </section>
-
-        <MarketingHowItWorks />
 
         <MarketingBeforeAfter />
 
         <MarketingSalesProof />
 
-        {/* ── Módulos de valor ─────────────────────────────────────────────── */}
-        <section id="modulos" className="border-t border-border">
-          <div className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
-            <Reveal>
-              <p className="bee-eyebrow bee-eyebrow--blue">{t("modulesEyebrow")}</p>
-              <h2 className="mt-2 max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">
-                {t("modulesTitle")}
-              </h2>
-            </Reveal>
-            <Reveal stagger className="bee-bento-grid mt-10">
-              {MODULE_KEYS.map((key) => {
-                const Icon = MODULE_ICONS[key];
-                return (
-                  <Link
-                    key={key}
-                    href={MODULE_HREFS[key]}
-                    className={`${MODULE_SPANS[key]} bee-bento bee-bento-pad bee-glass--hover group relative block overflow-hidden ${MODULE_TONES[key]}`}
-                  >
-                    <ModuleMotif module={key} />
-                    <div className="relative flex h-full gap-4">
-                      <div className="flex size-11 shrink-0 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-                        <Icon className="size-5 stroke-[1.5]" style={{ color: MODULE_STROKES[key] }} />
-                      </div>
+        {/* ── Por qué confiar — editorial block, no cards ───────────────── */}
+        <section id="features" className="border-t border-border">
+          <div className="mx-auto w-full max-w-6xl px-6 py-12 lg:py-14">
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-16">
+              <Reveal className="lg:col-span-5">
+                <p className="bee-eyebrow bee-eyebrow--warm">{t("guaranteesEyebrow")}</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("guaranteesTitle")}</h2>
+                <p className="bee-caption mt-3 max-w-md">{t("guaranteesSubtitle")}</p>
+              </Reveal>
+
+              <Reveal as="ol" stagger className="divide-y divide-border border-y border-border lg:col-span-7">
+                {GUARANTEE_KEYS.map((key, i) => {
+                  const Icon = GUARANTEE_ICONS[key];
+                  const hue = GUARANTEE_HUES[i];
+                  return (
+                    <li key={key} className="grid grid-cols-[1.5rem_2rem_1fr] items-start gap-4 py-5">
+                      <span className="bee-micro pt-2 tabular-nums">0{i + 1}</span>
+                      <span
+                        className="flex size-8 items-center justify-center rounded-full"
+                        style={{ background: `color-mix(in srgb, ${hue} 20%, var(--color-card))`, color: `color-mix(in srgb, ${hue} 70%, var(--color-text) 30%)` }}
+                      >
+                        <Icon className="size-4 stroke-[1.5]" />
+                      </span>
                       <div className="min-w-0">
-                        <h3 className="text-sm font-semibold tracking-tight">{t(`modules.${key}.title`)}</h3>
-                        <p className="bee-caption mt-1.5">{t(`modules.${key}.description`)}</p>
-                        <span
-                          className="mt-3 inline-flex items-center gap-1 text-xs font-medium opacity-0 transition-opacity group-hover:opacity-100"
-                          style={{ color: MODULE_STROKES[key] }}
-                        >
-                          {t("modulesExplore")} <ArrowRight className="size-3" />
-                        </span>
+                        <h3 className="text-sm font-semibold tracking-tight">{t(`guarantees.${key}.title`)}</h3>
+                        <p className="bee-caption mt-1">{t(`guarantees.${key}.description`)}</p>
                       </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </Reveal>
-          </div>
-        </section>
-
-        <MarketingIntegrations />
-
-        {/* ── Autoridad / garantías del sistema ───────────────────────────── */}
-        <section id="features" className="mx-auto w-full max-w-6xl px-6 py-16 sm:py-20">
-          <Reveal className="mx-auto max-w-2xl text-center">
-            <p className="bee-eyebrow bee-eyebrow--warm">{t("guaranteesEyebrow")}</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("guaranteesTitle")}</h2>
-            <p className="bee-caption mt-3">{t("guaranteesSubtitle")}</p>
-          </Reveal>
-
-          {/* .bee-lock: each card's icon "clicks" (200 ms scale) as it
-           * reveals, and once all four are in, the connector behind them
-           * draws from the first accent bar to the last — visible in the
-           * gaps between cards, so the four bars read as one line. */}
-          <div className="bee-lock relative mt-10">
-            <span className="bee-lock-line" aria-hidden />
-            <Reveal stagger className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {GUARANTEE_KEYS.map((key, i) => {
-                const Icon = GUARANTEE_ICONS[key];
-                return (
-                  <div
-                    key={key}
-                    className={`bee-bento bee-bento-pad bee-bar-card bee-glass--hover ${GUARANTEE_BAR_TONES[i]}`}
-                  >
-                    <div className="bee-lock-icon flex size-10 items-center justify-center rounded-[var(--radius-md)] border border-[var(--color-divider)] bg-background">
-                      <Icon className="size-4.5 stroke-[1.5]" style={{ color: GUARANTEE_ICON_STROKES[i] }} />
-                    </div>
-                    <h3 className="mt-3 text-sm font-semibold tracking-tight">{t(`guarantees.${key}.title`)}</h3>
-                    <p className="bee-caption mt-1.5">{t(`guarantees.${key}.description`)}</p>
+                    </li>
+                  );
+                })}
+                {/* Footer row: where the signals actually come from — the
+                 * same trust theme, the four real sources, one line. */}
+                <li className="grid grid-cols-[1.5rem_1fr] items-start gap-4 py-5">
+                  <span className="bee-micro pt-0.5 tabular-nums">0{GUARANTEE_KEYS.length + 1}</span>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <span className="bee-micro">{t("sourcesLabel")}</span>
+                    {SOURCES.map((source, i) => (
+                      <span key={source.id} className="inline-flex items-center gap-2">
+                        {i > 0 && <span className="bee-micro" aria-hidden>·</span>}
+                        <span
+                          className="flex size-6 items-center justify-center rounded-full"
+                          style={{ background: `color-mix(in srgb, ${source.hue} 20%, var(--color-card))`, color: `color-mix(in srgb, ${source.hue} 70%, var(--color-text) 30%)` }}
+                          title={tSources(source.id)}
+                        >
+                          <source.icon className="size-3 stroke-[1.75]" />
+                        </span>
+                        <span className="text-sm font-medium">{source.name}</span>
+                      </span>
+                    ))}
                   </div>
-                );
-              })}
-            </Reveal>
+                </li>
+              </Reveal>
+            </div>
           </div>
         </section>
 
-        <MarketingFAQ />
+        <div className="border-t border-border">
+          <MarketingFAQ />
+        </div>
 
         {/* ── CTA de cierre ────────────────────────────────────────────────── */}
         <section className="border-t border-border">
-          <Reveal className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 py-16 text-center sm:py-20">
+          <Reveal className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 py-12 text-center lg:py-14">
             <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">{t("closingTitle")}</h2>
-            <MagneticLink href="/contacto?source=closing_cta" className="bee-btn bee-btn--primary">
+            <Link href="/contacto?source=closing_cta" className="bee-btn bee-btn--primary">
               {t("closingCta")} <ArrowRight className="size-4" />
-            </MagneticLink>
+            </Link>
           </Reveal>
         </section>
       </main>

@@ -2,8 +2,7 @@
   "header": {
     "features": "Funcionalidades",
     "login": "Iniciar sesión",
-    "tryFree": "Probar sin registrarte",
-    "backToTop": "Volver arriba"
+    "tryFree": "Probar sin registrarte"
   },
   "footer": {
     "tagline": "Inteligencia comercial autónoma para equipos de revenue que no tienen tiempo de buscar la señal — solo de actuar sobre ella.",
@@ -39,49 +38,10 @@
     "eyebrow": "Sales Force Intelligence",
     "heroTitle": "Inteligencia comercial autónoma que decide <hl>en tiempo real.</hl>",
     "heroSubtitle": "BEE vigila el mercado, prioriza tu pipeline y prepara la próxima jugada mientras tú cierras — sin fricción, sin datos inventados, sin perder el control de cada decisión.",
-    "heroSignals": {
-      "funding": {
-        "label": "Ronda de financiación",
-        "detail": "Northwind Robotics · Serie C · USD 40M"
-      },
-      "hire": {
-        "label": "Contratación clave",
-        "detail": "Solace Data nombró un nuevo CRO"
-      },
-      "stack": {
-        "label": "Cambio de stack",
-        "detail": "Fielder Logistics migró su CRM"
-      },
-      "intent": {
-        "label": "Pico de intención",
-        "detail": "Anchor Freight · temperatura 92°"
-      }
-    },
     "ctaStart": "Comenzar ahora",
     "ctaTry": "Probar sin registrarte",
     "demoEyebrow": "Demo en vivo",
     "demoTitle": "De la señal a la oportunidad — explora el panel tú mismo.",
-    "modulesEyebrow": "Plataforma",
-    "modulesTitle": "Cuatro motores, un solo flujo de trabajo.",
-    "modulesExplore": "Explorar",
-    "modules": {
-      "signals": {
-        "title": "Motor de señales en tiempo real",
-        "description": "Detecta rondas de financiamiento, contrataciones clave y cambios de stack tecnológico apenas ocurren — sin que nadie tenga que ir a buscarlos."
-      },
-      "brief": {
-        "title": "Brief del día",
-        "description": "Un resumen ejecutivo cada mañana con lo que de verdad importa en tu pipeline — cero fricción cognitiva antes de la primera llamada."
-      },
-      "simulator": {
-        "title": "Simulador de ingresos",
-        "description": "Proyecta escenarios de pipeline basados en intención de compra real — no en promedios genéricos del sector."
-      },
-      "automation": {
-        "title": "Automatización multicanal",
-        "description": "Diseña secuencias de alcance por email, LinkedIn y más que avanzan solas según cómo responde cada lead — siempre con tu aprobación antes de enviar nada."
-      }
-    },
     "guaranteesEyebrow": "Por qué confiar en BEE",
     "guaranteesTitle": "Diseñado para equipos comerciales de alto rendimiento.",
     "guaranteesSubtitle": "No promesas — garantías de arquitectura que sostienen cada decisión que BEE toma por ti.",
@@ -103,6 +63,7 @@
         "description": "Webhooks firmados con HMAC y secretos por entorno — las credenciales nunca tocan el código."
       }
     },
+    "sourcesLabel": "Fuentes reales:",
     "closingTitle": "Tu próximo cliente ya está mandando señales. La pregunta es si las estás viendo.",
     "closingCta": "Comenzar ahora"
   }

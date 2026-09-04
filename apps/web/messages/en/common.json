@@ -1,9 +1,4 @@
 {
-  "languageSwitcher": {
-    "label": "Language",
-    "es": "Español",
-    "en": "English"
-  },
   "probarBanner": {
     "title": "You're trying BEE with sample data",
     "subtitle": " — saved only in this browser, never in our database.",

@@ -1,173 +1,154 @@
 "use client";
 
-import { Activity, Database, Wifi, WifiOff } from "lucide-react";
+import { CircleCheck, CircleDashed, Pause, TriangleAlert, WifiOff } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { DATA, SERIES } from "@/components/charts/palette";
-import { StatTile } from "@/components/charts/stat-tile";
+import { DATA, mix } from "@/components/charts/palette";
+import { OverviewCard } from "@/components/dashboard/overview-card";
+import { StatusWord, type StatusTone } from "@/components/status-chip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSystemHealth } from "@/hooks/queries/use-system-health";
-import { cn } from "@/lib/utils";
 import type { WorkerHealth } from "@/types/control";
 
-function KpiCard({
+const WORKER_META: Record<WorkerHealth["state"], { tone: StatusTone; icon: typeof CircleCheck }> = {
+  idle: { tone: "ok", icon: CircleCheck },
+  busy: { tone: "ok", icon: CircleCheck },
+  stopped: { tone: "neutral", icon: Pause },
+  error: { tone: "attention", icon: TriangleAlert },
+};
+
+function HealthRow({
   label,
-  value,
-  warn,
-  index,
+  hint,
+  tone,
+  icon,
+  word,
 }: {
   label: string;
-  value: string;
-  warn?: boolean;
-  index: number;
+  hint: string;
+  tone: StatusTone;
+  icon: typeof CircleCheck;
+  word: string;
 }) {
-  // Same tile as every other KPI in the app (Resumen, Ventas, Pronóstico) —
-  // honey when the worker has errors; BEE warns in honey, never in red.
-  return <StatTile label={label} value={value} tone={warn ? DATA.honey : SERIES[index % SERIES.length]} />;
-}
-
-function WorkerKpis({ worker }: { worker: WorkerHealth }) {
-  const t = useTranslations("probarNetworkBrandControl.control.systemHealth");
-  const stateLabel = {
-    idle: t("worker.state.idle"),
-    busy: t("worker.state.busy"),
-    stopped: t("worker.state.stopped"),
-    error: t("worker.state.error"),
-  }[worker.state];
-
   return (
-    // grid-cols-2 fijo, no .bee-kpi-strip: esa clase usa auto-fit/minmax que
-    // en la columna angosta de Control salta entre 1, 2 y 4 columnas según
-    // el ancho exacto del viewport — mismo componente, layout distinto en
-    // cada resolución. Acá siempre son 4 tarjetas en un contenedor angosto,
-    // así que fijamos 2×2 para que sea predecible.
-    <div className="grid grid-cols-2 gap-4">
-      <KpiCard label={t("worker.ingestLabel")} value={worker.running ? stateLabel : t("worker.offValue")} index={0} />
-      <KpiCard label={t("worker.queueLabel")} value={String(worker.queue_depth)} index={1} />
-      {/* "Procesados" partía a mitad de palabra en la columna angosta de
-          Control (2 columnas × ~140px) — "Hechos" cabe en una sola línea
-          sin perder claridad junto al valor. */}
-      <KpiCard label={t("worker.processedLabel")} value={String(worker.processed_count)} index={2} />
-      <KpiCard
-        label={t("worker.errorsLabel")}
-        value={String(worker.error_count)}
-        index={3}
-        warn={worker.error_count > 0}
-      />
-    </div>
-  );
-}
-
-function HealthSkeleton() {
-  return (
-    <section className="bee-surface flex h-full flex-col bee-bento-pad">
-      <div className="grid flex-1 grid-cols-2 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-full rounded-lg" />
-        ))}
+    <li className="flex items-center justify-between gap-3 py-2">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium">{label}</p>
+        <p className="truncate bee-micro">{hint}</p>
       </div>
-    </section>
+      <StatusWord tone={tone} icon={icon} label={word} />
+    </li>
   );
 }
 
 /**
- * SystemHealth — API connectivity + IngestionWorker load, one of the
- * Control bento grid's top-row cards (see ControlLayout). Deliberately
- * scoped to just connectivity/worker KPIs now — external-provider status
- * used to live inside this same card but reads as a materially different
- * thing (an operational status widget vs. a per-integration status list)
- * and was making this card disproportionately tall next to its row
- * siblings; see ApiStatusPanel, its own bottom-row card, for that content.
- * Polls every 10s via TanStack Query.
+ * Salud del sistema — BEE's own moving parts, each as a plain label plus
+ * icon + word: the connection to the API, the database, and the engine that
+ * processes signals; then how loaded that engine is, as one meter, and the
+ * three counters behind the strip's numbers. Polls every 10 s.
  */
 export function SystemHealth() {
   const t = useTranslations("probarNetworkBrandControl.control.systemHealth");
   const { data: result, isLoading, isError, dataUpdatedAt } = useSystemHealth();
   const snapshot = result?.data;
-  const live = result?.live ?? false;
 
   if (isLoading) {
-    return <HealthSkeleton />;
+    return (
+      <OverviewCard span={4} title={t("title")} caption={t("caption")}>
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 rounded-lg" />
+          ))}
+        </div>
+      </OverviewCard>
+    );
   }
 
   if (isError || !snapshot) {
     return (
-      <section className="bee-surface flex h-full items-center bee-bento-pad">
-        <div className="flex items-center gap-2 text-destructive">
+      <OverviewCard span={4} title={t("title")} caption={t("caption")}>
+        <p className="flex items-center gap-2 py-6 text-sm text-muted-foreground">
           <WifiOff className="size-4" />
-          <p className="text-sm">{t("connectionError")}</p>
-        </div>
-      </section>
+          {t("connectionError")}
+        </p>
+      </OverviewCard>
     );
   }
 
+  const apiLive = snapshot.connectivity.live;
+  const worker = snapshot.worker;
+  const workerMeta = worker.running ? WORKER_META[worker.state] : WORKER_META.stopped;
+  const load = Math.min(100, Math.max(0, worker.load_pct));
   const updatedLabel = new Date(dataUpdatedAt).toLocaleTimeString(undefined, {
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
   });
 
   return (
-    // h-full: this card is now one of three equal-height siblings in the
-    // grid's top row (see ControlLayout/globals.css) — every sibling in
-    // that row stretches to the row's height by design, unlike the old
-    // single-column stack where a stretched card meant a lopsided one.
-    <section className="bee-surface flex h-full flex-col bee-bento-pad" aria-label={t("ariaLabel")}>
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="bee-eyebrow">{t("eyebrow")}</p>
-          <h2 className="mt-1 bee-card-title">
-            {live ? t("connected") : t("disconnected")}
-          </h2>
+    <OverviewCard
+      span={4}
+      title={t("title")}
+      caption={t("caption")}
+      action={<span className="bee-micro whitespace-nowrap">{t("updated", { time: updatedLabel })}</span>}
+    >
+      <ul className="divide-y divide-border">
+        <HealthRow
+          label={t("rows.api")}
+          hint={apiLive ? (snapshot.connectivity.environment ?? t("unknownEnvironment")) : t("rows.apiHintDown")}
+          tone={apiLive ? "ok" : "failed"}
+          icon={apiLive ? CircleCheck : WifiOff}
+          word={apiLive ? t("connected") : t("disconnected")}
+        />
+        <HealthRow
+          label={t("rows.db")}
+          hint={t("rows.dbHint")}
+          tone={snapshot.connectivity.db_ready ? "ok" : "failed"}
+          icon={snapshot.connectivity.db_ready ? CircleCheck : CircleDashed}
+          word={snapshot.connectivity.db_ready ? t("dbReady") : t("dbNotReady")}
+        />
+        <HealthRow
+          label={t("rows.worker")}
+          hint={t("rows.workerHint")}
+          tone={workerMeta.tone}
+          icon={workerMeta.icon}
+          word={worker.running ? t(`worker.state.${worker.state}`) : t("worker.offValue")}
+        />
+      </ul>
+
+      {/* One meter, one hue: how much work the engine has piled up. */}
+      <div className="mt-3">
+        <div className="mb-1 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{t("loadLabel")}</p>
+            <p className="truncate bee-micro">{t("loadHint")}</p>
+          </div>
+          <span className="text-sm font-bold tabular-nums">{load}%</span>
         </div>
-        <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-2">
-            {live ? (
-              <Wifi className="size-3.5 text-[var(--color-chart-4)]" />
-            ) : (
-              <WifiOff className="size-3.5" />
-            )}
-            {snapshot.connectivity.environment ?? t("unknownEnvironment")}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <Database className="size-3.5" />
-            {snapshot.connectivity.db_ready ? t("dbReady") : t("dbNotReady")}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <Activity className="size-3.5" />
-            {t("updated", { time: updatedLabel })}
-          </span>
+        <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: mix(DATA.indigo, 16) }}>
+          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${load}%`, background: DATA.indigo }} />
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col justify-center gap-4">
-        <WorkerKpis worker={snapshot.worker} />
-        {/* worker.load_pct was already in the API response and unused here
-         * — this card's only content used to be the 2×2 KPI grid above,
-         * which left a lot of empty vertical space next to its taller row
-         * siblings (Intent Hive, Anomalías). A real, already-available
-         * number filling real space, not a filler element. */}
-        <div>
-          <div className="mb-1 flex items-center justify-between bee-micro">
-            <span className="text-muted-foreground">{t("loadLabel")}</span>
-            <span className="font-mono font-medium text-foreground">{snapshot.worker.load_pct}%</span>
+      <dl className="mt-3 grid grid-cols-3 gap-2">
+        {[
+          { key: "queue", value: worker.queue_depth },
+          { key: "processed", value: worker.processed_count },
+          { key: "errors", value: worker.error_count },
+        ].map((item) => (
+          <div key={item.key} className="rounded-[var(--radius-md)] px-3 py-2" style={{ background: mix(DATA.indigo, item.key === "errors" && item.value > 0 ? 28 : 10) }}>
+            <dt className="truncate bee-micro">{t(`counters.${item.key}`)}</dt>
+            <dd className="text-sm font-bold tabular-nums">{item.value}</dd>
           </div>
-          <div className="bee-bar-track">
-            <div
-              className={cn("bee-bar", snapshot.worker.load_pct >= 80 ? "bee-bar--2" : "bee-bar--4")}
-              style={{ width: `${Math.min(100, Math.max(0, snapshot.worker.load_pct))}%` }}
-            />
-          </div>
-        </div>
-      </div>
+        ))}
+      </dl>
 
-      {!live && (
-        <p className="mt-4 text-xs text-muted-foreground">
+      {!apiLive && (
+        <p className="mt-3 bee-micro">
           {t("fallbackNoticePrefix")}{" "}
-          <code className="rounded bg-muted px-1 py-1">NEXT_PUBLIC_API_URL</code> {t("fallbackNoticeMiddle")}{" "}
-          <code className="rounded bg-muted px-1 py-1">.env.local</code>
+          <code className="rounded bg-muted px-1 py-0.5">NEXT_PUBLIC_API_URL</code> {t("fallbackNoticeMiddle")}{" "}
+          <code className="rounded bg-muted px-1 py-0.5">.env.local</code>
         </p>
       )}
-    </section>
+    </OverviewCard>
   );
 }

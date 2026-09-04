@@ -8,9 +8,10 @@ import { detectLocaleFromAcceptLanguage } from "@/i18n/detect-locale";
  * Renamed from `middleware.ts` in Next.js 16 — "the functionality remains
  * the same" (see `node_modules/next/dist/docs/.../proxy.md`).
  *
- * The one job this does: persist a first-time visitor's browser-language
- * preference as the `NEXT_LOCALE` cookie, the same cookie the language
- * switcher writes via `i18n/actions.ts`'s `setLocale()`.
+ * The one job this does: mirror the visitor's browser language
+ * (`Accept-Language`) into the `NEXT_LOCALE` cookie. There is no language
+ * switcher: BEE speaks the language the browser is set to, on the landing,
+ * the dashboard and the sandbox alike.
  *
  * `i18n/request.ts` already resolves cookie → `Accept-Language` → Spanish
  * for what to *render* — an English-browser visitor gets English UI chrome
@@ -27,15 +28,16 @@ import { detectLocaleFromAcceptLanguage } from "@/i18n/detect-locale";
  * points, ...) until they clicked the language switcher themselves.
  *
  * A proxy response CAN set cookies (unlike a Server Component render), so
- * this runs once, before rendering, and only when there's no cookie yet —
- * an explicit choice already on the cookie is never touched here.
+ * this runs before rendering and rewrites the cookie whenever the browser
+ * language differs from what it holds.
  */
 export function proxy(request: NextRequest): NextResponse {
   const response = NextResponse.next();
-  if (request.cookies.has(LOCALE_COOKIE)) return response;
 
+  // The language follows the browser, always: there is no switcher any more,
+  // so a cookie written under an older browser setting is simply refreshed.
   const detected = detectLocaleFromAcceptLanguage(request.headers.get("accept-language"));
-  if (!detected) return response;
+  if (!detected || request.cookies.get(LOCALE_COOKIE)?.value === detected) return response;
 
   response.cookies.set(LOCALE_COOKIE, detected, {
     maxAge: LOCALE_COOKIE_MAX_AGE,

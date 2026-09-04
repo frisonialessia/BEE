@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
-import { MarketingScrollGauge } from "@/components/marketing-scroll-gauge";
 
 /**
  * Cabecera pública — Iniciar sesión + Funcionalidades + Probar sin
@@ -43,9 +41,6 @@ export function MarketingHeader() {
          * fuerza su propio display. */}
         <nav className="flex shrink-0 items-center gap-2">
           <span className="hidden sm:inline-flex">
-            <LanguageSwitcher />
-          </span>
-          <span className="hidden sm:inline-flex">
             <Link href="/funcionalidades" className="bee-btn-ghost">
               {t("features")}
             </Link>
@@ -55,14 +50,9 @@ export function MarketingHeader() {
               {t("login")}
             </Link>
           </span>
-          <Link href="/probar" className="bee-btn bee-btn--primary bee-cta-glow">
+          <Link href="/probar" className="bee-btn bee-btn--primary">
             {t("tryFree")}
           </Link>
-          {/* Page-progress gauge — a small honeycomb that heats up as the
-           * visitor scrolls (see MarketingScrollGauge). The header is the
-           * only element on screen for the whole scroll story, so it is
-           * where "how far along am I" belongs; it doubles as back-to-top. */}
-          <MarketingScrollGauge />
         </nav>
       </div>
     </header>

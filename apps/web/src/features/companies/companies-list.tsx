@@ -11,10 +11,11 @@ import { CompanyDuplicatesPanel } from "@/components/dedup/company-duplicates-pa
 import { LookalikesPanel } from "@/components/lookalikes/lookalikes-panel";
 import { MergedPageTabs } from "@/components/merged-page-tabs";
 import { LeadsDirectory } from "@/features/leads/leads-directory";
-import { useCompanies, useCreateCompany } from "@/hooks/queries/use-companies";
+import { useCompanies } from "@/hooks/queries/use-companies";
 import { useLeads } from "@/hooks/queries/use-leads";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
+import { NewOpportunityForm } from "@/features/crm/new-opportunity-form";
 import { useIsDemoMode } from "@/lib/demo/mode";
 import { LiveBadge } from "@/components/live-badge";
 
@@ -22,80 +23,6 @@ import { LiveBadge } from "@/components/live-badge";
  * acting on, for the Directorio strip's fourth tile. */
 const RECENT_SIGNAL_WINDOW_DAYS = 30;
 
-function NewCompanyForm({ onDone }: { onDone: () => void }) {
-  const t = useTranslations("companiesLeads.companiesList.newCompanyForm");
-  const createCompany = useCreateCompany();
-  const [name, setName] = useState("");
-  const [domain, setDomain] = useState("");
-  const [industry, setIndustry] = useState("");
-  const [country, setCountry] = useState("");
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!name.trim()) return;
-    await createCompany.mutateAsync({
-      name: name.trim(),
-      domain: domain.trim() || undefined,
-      industry: industry.trim() || undefined,
-      country: country.trim() || undefined,
-    });
-    setName("");
-    setDomain("");
-    setIndustry("");
-    setCountry("");
-    onDone();
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      className="mb-4 rounded-[var(--radius-lg)] border border-dashed border-border bg-[var(--color-primary)]/25 p-4"
-    >
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {t("heading")}
-      </p>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder={t("namePlaceholder")}
-          required
-          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-        />
-        <input
-          value={domain}
-          onChange={(e) => setDomain(e.target.value)}
-          placeholder={t("domainPlaceholder")}
-          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-        />
-        <input
-          value={industry}
-          onChange={(e) => setIndustry(e.target.value)}
-          placeholder={t("industryPlaceholder")}
-          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-        />
-        <input
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-          placeholder={t("countryPlaceholder")}
-          className="rounded-[var(--radius-md)] border border-border bg-[var(--color-card)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[var(--color-chart-4)]"
-        />
-      </div>
-      <div className="mt-3 flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={!name.trim() || createCompany.isPending}
-          className="bee-btn bee-btn--primary"
-        >
-          {createCompany.isPending ? t("saving") : t("save")}
-        </button>
-        <button type="button" onClick={onDone} className="bee-btn-ghost">
-          {t("cancel")}
-        </button>
-      </div>
-    </form>
-  );
-}
 
 /** Empresas — la cuenta como unidad, con cuántos contactos y oportunidades tiene cada una. */
 /** Companies — the primary tab of the merged Companies+Leads page; Leads
@@ -116,10 +43,11 @@ export function CompaniesList() {
   const { data: oppsResult } = useOpportunities(undefined, 200);
   const { data: signalsResult } = useSignals(200);
   const [showNew, setShowNew] = useState(false);
+  const tLeads = useTranslations("companiesLeads.leadsDirectory");
+  const demo = useIsDemoMode();
   // Read the clock once per mount, same as company-detail/crm-board — the
   // React Compiler treats Date.now() in render as impure.
   const [nowMs] = useState(() => Date.now());
-  const demo = useIsDemoMode();
 
   const companies = companiesResult?.data ?? [];
   const live = companiesResult?.live ?? false;
@@ -191,19 +119,17 @@ export function CompaniesList() {
           </div>
           <div className="flex items-center gap-2">
             <LiveBadge live={live} />
-            {/* Available in the sandbox too — createCompany routes to the
-                local demoCreateCompany list there (see lib/api/companies.ts). */}
-            <button
-              type="button"
-              onClick={() => setShowNew((v) => !v)}
-              aria-expanded={showNew}
-              className="bee-btn bee-btn--primary"
-            >
-              {t("newCompanyButton")}
+            {/* One way to add anyone, anywhere in BEE: the same "Nueva
+                oportunidad" window the CRM uses (company + contact + deal
+                in one flow) — never a second form per page. */}
+            <button type="button" onClick={() => setShowNew(true)} className="bee-btn bee-btn--primary">
+              {tLeads("newLeadButton")}
             </button>
           </div>
         </div>
       </header>
+
+      <NewOpportunityForm open={showNew} onClose={() => setShowNew(false)} />
 
       <MergedPageTabs
         defaultValue="companies"
@@ -231,7 +157,6 @@ export function CompaniesList() {
                     ]}
                   />
                 </div>
-                {showNew && <NewCompanyForm onDone={() => setShowNew(false)} />}
 
                 {companies.length > 0 && (
                   <div className="mb-4 space-y-4">

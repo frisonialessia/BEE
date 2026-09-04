@@ -214,51 +214,6 @@
       }
     }
   },
-  "howItWorks": {
-    "eyebrow": "How it works",
-    "heading": "From signal to action, in four steps.",
-    "steps": {
-      "detect": {
-        "title": "1. Detect the signal",
-        "description": "BEE watches funding rounds, hires, and stack changes the moment they happen."
-      },
-      "enrich": {
-        "title": "2. Enrich and prioritize",
-        "description": "Every signal is enriched with the right company and contact, and ranked by intent score."
-      },
-      "prepare": {
-        "title": "3. Prepare the play",
-        "description": "The system builds the suggested next action — the message, the channel, the moment."
-      },
-      "approve": {
-        "title": "4. You approve",
-        "description": "Nothing goes out without explicit sign-off. You approve, adjust, or discard — the final call is always human."
-      }
-    },
-    "stage": {
-      "title": "One signal, end to end",
-      "scrollHint": "Scroll to advance",
-      "approveLabel": "Waiting for your approval",
-      "approvedLabel": "Approved · ready to send",
-      "note": "Illustrative sequence with the same sample data as the live demo.",
-      "detect": {
-        "label": "Signal detected",
-        "text": "Northwind Robotics raised a USD 40M Series C — webhook received 2 min ago."
-      },
-      "enrich": {
-        "label": "Enriched and prioritized",
-        "text": "Elena Cross · VP Sales · score 92 · Ready to buy. Moves to the top of the list."
-      },
-      "prepare": {
-        "label": "Suggested play",
-        "text": "Email Elena today: scale the sales team after the round. Argument, channel and timing, ready."
-      },
-      "approve": {
-        "label": "Your approval",
-        "text": "Nothing goes out without your go-ahead. Approve, adjust or discard."
-      }
-    }
-  },
   "beforeAfter": {
     "eyebrow": "The same list, two outcomes",
     "heading": "Same leads. The difference is what you do first.",
@@ -274,8 +229,6 @@
     "dragHint": "Drag the handle — or use the arrow keys — to move between the two lists."
   },
   "integrations": {
-    "eyebrow": "Connected to what you already use",
-    "heading": "Signals come from real sources.",
     "items": {
       "linkedin": "Hiring signals and direct outreach",
       "g2": "Buying-intent signals from reviews and comparisons",

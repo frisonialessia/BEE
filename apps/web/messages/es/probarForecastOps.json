@@ -1,6 +1,18 @@
 {
   "resilience": {
-    "eyebrow": "Auditoría · Eventos fallidos · Detector de anomalías",
-    "subtitle": "Observabilidad del sistema — decisiones de agentes, reintentos fallidos y alertas de estrategia"
+    "eyebrow": "Cola de ejecución · Eventos fallidos · Registro de decisiones",
+    "subtitle": "Lo que necesita una persona: acciones que esperan tu OK, fallos que BEE no pudo resolver solo y decisiones para revisar",
+    "stats": {
+      "awaiting": "Esperan tu OK",
+      "awaitingHintSome": "Acciones listas que no salen hasta que apruebes",
+      "awaitingHintNone": "Nada pendiente de aprobar",
+      "retrying": "Fallos por reintentar",
+      "retryingHint": "BEE los vuelve a intentar solo",
+      "gaveUp": "Fallos definitivos",
+      "gaveUpHintSome": "BEE agotó los reintentos — necesitan una persona",
+      "gaveUpHintNone": "BEE no se dio por vencido con nada",
+      "toReview": "Decisiones a revisar",
+      "toReviewHint": "Decisiones de agentes con baja confianza"
+    }
   }
 }

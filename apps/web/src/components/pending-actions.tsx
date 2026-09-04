@@ -1,144 +1,156 @@
 "use client";
 
 /**
- * PendingActionsPanel — AgentOrchestrator approval queue.
- * No action executes without explicit CEO approval.
+ * Cola de ejecución — the AgentOrchestrator approval queue: everything BEE
+ * drafted (an email, a LinkedIn note, a CRM update…) and is holding until a
+ * person says yes. Nothing here executes without that explicit approval.
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CheckCircle, Clock, Mail, XCircle } from "lucide-react";
+import {
+  Bell,
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  CircleCheck,
+  CircleX,
+  Clock,
+  Database,
+  Mail,
+  MessageSquare,
+  RotateCw,
+  ShieldCheck,
+  Webhook,
+  type LucideIcon,
+} from "lucide-react";
 
-import { approveAction, getPendingActions, rejectAction } from "@/lib/api";
+import { DATA, mix } from "@/components/charts/palette";
 import { OverviewCard } from "@/components/dashboard/overview-card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate } from "@/lib/i18n/format";
-import type { Locale } from "@/i18n/locales";
-import type { PendingAction } from "@/lib/types";
 import { LiveBadge } from "@/components/live-badge";
+import { StatusChip, type StatusTone } from "@/components/status-chip";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useApproveAction, usePendingActions, useRejectAction } from "@/hooks/queries/use-pending-actions";
+import type { Locale } from "@/i18n/locales";
+import { formatDate } from "@/lib/i18n/format";
+import type { PendingAction } from "@/lib/types";
 
-const ACTION_TYPE_ICONS: Record<string, React.ReactNode> = {
-  send_email: <Mail className="size-4 stroke-[1.25]" />,
+const ACTION_TYPE_ICONS: Record<string, LucideIcon> = {
+  send_email: Mail,
+  linkedin_message: MessageSquare,
+  crm_update: Database,
+  book_meeting: CalendarDays,
+  slack_notify: Bell,
+  webhook_call: Webhook,
 };
 
-// Mirrors the translated `status.*` keys — kept as a plain set (not read
-// from the messages themselves) just to know, without throwing, whether a
-// given backend status has a translation before asking next-intl for it;
-// an unrecognized status (the backend's status enum can grow) falls back
-// to the raw value instead of a missing-key error.
-const KNOWN_STATUSES = new Set([
-  "pending_approval",
-  "approved",
-  "rejected",
-  "executing",
-  "completed",
-  "failed",
-]);
+const KNOWN_TYPES = new Set(Object.keys(ACTION_TYPE_ICONS));
 
-const STATUS_STYLES: Record<string, string> = {
-  pending_approval: "bg-[color-mix(in_srgb,var(--color-chart-1)_25%,var(--color-background))]",
-  approved: "bg-[color-mix(in_srgb,var(--color-chart-5)_20%,var(--color-background))]",
-  rejected: "bg-[color-mix(in_srgb,var(--color-chart-2)_20%,var(--color-background))]",
-  executing: "bg-[color-mix(in_srgb,var(--color-chart-4)_20%,var(--color-background))]",
-  completed: "bg-primary",
-  failed: "bg-[color-mix(in_srgb,var(--color-chart-2)_20%,var(--color-background))]",
+// Mirrors the translated `status.*` keys — a plain set so an unrecognized
+// backend status (the enum can grow) falls back to the raw value instead of
+// a missing-key error.
+const STATUS_META: Record<string, { tone: StatusTone; icon: LucideIcon }> = {
+  pending_approval: { tone: "attention", icon: Clock },
+  approved: { tone: "ok", icon: CircleCheck },
+  executing: { tone: "ok", icon: RotateCw },
+  completed: { tone: "ok", icon: CircleCheck },
+  rejected: { tone: "neutral", icon: CircleX },
+  failed: { tone: "failed", icon: CircleX },
+};
+
+const STATUS_ORDER: Record<string, number> = {
+  pending_approval: 0,
+  executing: 1,
+  approved: 2,
+  failed: 3,
+  completed: 4,
+  rejected: 5,
 };
 
 interface PendingActionCardProps {
   action: PendingAction;
-  onApprove: (id: string) => Promise<void>;
-  onReject: (id: string) => Promise<void>;
+  onApprove: (id: string) => Promise<unknown>;
+  onReject: (id: string) => Promise<unknown>;
 }
 
 function PendingActionCard({ action, onApprove, onReject }: PendingActionCardProps) {
   const locale = useLocale() as Locale;
   const t = useTranslations("probarNetworkBrandControl.pendingActions");
   const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
-  async function handleApprove() {
-    setLoading("approve");
+  async function run(kind: "approve" | "reject") {
+    setLoading(kind);
     try {
-      await onApprove(action.id);
-    } finally {
-      setLoading(null);
-    }
-  }
-
-  async function handleReject() {
-    setLoading("reject");
-    try {
-      await onReject(action.id);
+      await (kind === "approve" ? onApprove(action.id) : onReject(action.id));
     } finally {
       setLoading(null);
     }
   }
 
   const isPending = action.status === "pending_approval";
-  const statusLabel = KNOWN_STATUSES.has(action.status)
+  const meta = STATUS_META[action.status] ?? { tone: "neutral" as StatusTone, icon: Clock };
+  const statusLabel = STATUS_META[action.status]
     ? t(`status.${action.status}` as "status.pending_approval")
     : action.status.replace(/_/g, " ");
+  const TypeIcon = ACTION_TYPE_ICONS[action.action_type] ?? Clock;
+  const typeLabel = KNOWN_TYPES.has(action.action_type)
+    ? t(`types.${action.action_type}` as "types.send_email")
+    : action.action_type.replace(/_/g, " ");
 
   return (
-    <div className="bee-bento bee-outline--blue bee-bento-pad space-y-2">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="shrink-0 text-muted-foreground">
-            {ACTION_TYPE_ICONS[action.action_type] ?? (
-              <Clock className="size-4 stroke-[1.25]" />
-            )}
+    <li className="bee-bento bee-bento-pad space-y-3" style={isPending ? { background: mix(DATA.honey, 6) } : undefined}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full" style={{ background: mix(DATA.honey, 20) }}>
+            <TypeIcon className="size-4 text-[var(--color-text)]" strokeWidth={1.75} aria-hidden />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{action.title}</p>
-            {action.description && (
-              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                {action.description}
-              </p>
-            )}
+            <p className="bee-micro">{typeLabel}</p>
+            <p className="text-sm font-semibold leading-snug">{action.title}</p>
+            {action.description && <p className="mt-0.5 text-xs text-muted-foreground">{action.description}</p>}
           </div>
         </div>
-        <span
-          className={`shrink-0 rounded-sm border border-border px-2 py-1 text-micro font-medium uppercase tracking-wide ${STATUS_STYLES[action.status] ?? "bg-background"}`}
-        >
-          {statusLabel}
-        </span>
+        <StatusChip tone={meta.tone} icon={meta.icon} label={statusLabel} />
       </div>
 
-      {action.preview && isPending && (
-        // Full content, never clipped mid-sentence: this is what a CEO
-        // reads before an irreversible approve/reject decision, so a
-        // scrollable box (not a hard line-clamp) is the floor here, not a
-        // nice-to-have. max-h caps how much vertical space one card can
-        // take in the queue; overflow-y-auto is what actually lets the
-        // rest of a long email be read instead of disappearing past it.
-        <div className="max-h-56 overflow-y-auto whitespace-pre-wrap rounded-sm border border-border bg-background p-3 font-mono text-xs leading-relaxed text-muted-foreground">
-          {action.preview}
+      {action.preview && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowPreview((v) => !v)}
+            aria-expanded={showPreview}
+            className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+          >
+            {showPreview ? <ChevronUp className="size-3.5" aria-hidden /> : <ChevronDown className="size-3.5" aria-hidden />}
+            {showPreview ? t("hidePreview") : t("showPreview")}
+          </button>
+          {showPreview && (
+            // Full content, never clipped mid-sentence: this is what a
+            // person reads before an irreversible approve/reject decision.
+            // max-h caps one card's footprint; the box scrolls past it.
+            <div className="mt-2 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-[var(--radius-md)] border border-border bg-background p-3 text-xs leading-relaxed">
+              {action.preview}
+            </div>
+          )}
         </div>
       )}
 
       {action.retry_count > 0 && (
-        <p className="text-xs" style={{ color: "var(--color-chart-2)" }}>
+        <p className="flex items-center gap-1.5 bee-micro">
+          <RotateCw className="size-3" aria-hidden />
           {t("retryCount", { count: action.retry_count })}
         </p>
       )}
 
       {isPending && (
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleApprove}
-            disabled={!!loading}
-            className="bee-btn bee-btn--primary"
-          >
-            <CheckCircle className="size-3.5" />
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => run("approve")} disabled={!!loading} className="bee-btn bee-btn--primary">
+            <CircleCheck className="size-3.5" aria-hidden />
             {loading === "approve" ? t("approving") : t("approve")}
           </button>
-          <button
-            type="button"
-            onClick={handleReject}
-            disabled={!!loading}
-            className="bee-btn-text"
-          >
-            <XCircle className="size-3.5" />
+          <button type="button" onClick={() => run("reject")} disabled={!!loading} className="bee-btn-ghost">
+            <CircleX className="size-3.5" aria-hidden />
             {loading === "reject" ? t("rejecting") : t("reject")}
           </button>
         </div>
@@ -147,42 +159,22 @@ function PendingActionCard({ action, onApprove, onReject }: PendingActionCardPro
       {action.approved_by && (
         <p className="bee-micro">
           {t("approvedBy", { name: action.approved_by })}
-          {action.approved_at &&
-            ` · ${formatDate(action.approved_at, locale)}`}
+          {action.approved_at && ` · ${formatDate(action.approved_at, locale)}`}
         </p>
       )}
-    </div>
+    </li>
   );
 }
 
 export function PendingActionsPanel() {
   const t = useTranslations("probarNetworkBrandControl.pendingActions");
-  const [actions, setActions] = useState<PendingAction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [live, setLive] = useState(false);
+  const { data: result, isLoading } = usePendingActions(20);
+  const approve = useApproveAction();
+  const reject = useRejectAction();
 
-  useEffect(() => {
-    getPendingActions(20).then((res) => {
-      setActions(res.data);
-      setLive(res.live);
-      setLoading(false);
-    });
-  }, []);
-
-  async function handleApprove(id: string) {
-    await approveAction(id, "CEO");
-    setActions((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "approved" as const } : a))
-    );
-  }
-
-  async function handleReject(id: string) {
-    await rejectAction(id);
-    setActions((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: "rejected" as const } : a))
-    );
-  }
-
+  const actions = [...(result?.data ?? [])].sort(
+    (a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9),
+  );
   const pendingCount = actions.filter((a) => a.status === "pending_approval").length;
 
   return (
@@ -192,57 +184,44 @@ export function PendingActionsPanel() {
       caption={t("caption")}
       action={
         <div className="flex shrink-0 items-center gap-2">
-          <LiveBadge live={live} />
+          <LiveBadge live={result?.live ?? false} />
           {pendingCount > 0 && (
-            <span
-              className="rounded-sm border border-border px-2 py-1 text-xs font-semibold"
-              style={{
-                background: "color-mix(in srgb, var(--color-chart-1) 25%, var(--color-background))",
-              }}
-            >
+            <span className="rounded-full px-2 py-0.5 text-xs font-semibold tabular-nums" style={{ background: mix(DATA.honey, 30) }}>
               {t("pendingCount", { count: pendingCount })}
             </span>
           )}
         </div>
       }
     >
-      <div className="space-y-4">
-        {loading ? (
-          <div className="space-y-2">
-            {[1, 2].map((i) => (
-              <Skeleton key={i} className="h-12 rounded-sm" />
-            ))}
-          </div>
-        ) : actions.length === 0 ? (
-          <div className="py-8 text-center">
-            <CheckCircle
-              className="mx-auto mb-2 size-6 stroke-[1.25]"
-              style={{ color: "var(--color-chart-5)" }}
+      {isLoading ? (
+        <div className="space-y-2">
+          {[1, 2].map((i) => (
+            <Skeleton key={i} className="h-24 rounded-lg" />
+          ))}
+        </div>
+      ) : actions.length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
+          <CircleCheck className="size-5 text-[var(--color-chart-4)]" aria-hidden />
+          <p className="text-sm">{t("emptyTitle")}</p>
+          <p className="bee-micro">{t("emptySubtitle")}</p>
+        </div>
+      ) : (
+        <ul className="max-h-[34rem] space-y-2 overflow-y-auto overscroll-contain pr-1">
+          {actions.map((action) => (
+            <PendingActionCard
+              key={action.id}
+              action={action}
+              onApprove={(id) => approve.mutateAsync({ id, approvedBy: "CEO" })}
+              onReject={(id) => reject.mutateAsync({ id })}
             />
-            <p className="text-xs text-muted-foreground">{t("emptyTitle")}</p>
-            <p className="mt-1 bee-micro">{t("emptySubtitle")}</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {actions.map((action) => (
-              <PendingActionCard
-                key={action.id}
-                action={action}
-                onApprove={handleApprove}
-                onReject={handleReject}
-              />
-            ))}
-          </div>
-        )}
+          ))}
+        </ul>
+      )}
 
-        <p className="flex items-center gap-2 bee-micro">
-          <span
-            className="inline-block size-1.5"
-            style={{ background: "var(--color-chart-1)" }}
-          />
-          {t("safetyGate")}
-        </p>
-      </div>
+      <p className="mt-3 flex items-start gap-1.5 bee-micro">
+        <ShieldCheck className="mt-px size-3.5 shrink-0" aria-hidden />
+        {t("safetyGate")}
+      </p>
     </OverviewCard>
   );
 }

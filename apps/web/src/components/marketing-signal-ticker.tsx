@@ -46,10 +46,6 @@ export async function MarketingSignalTicker() {
 
   return (
     <div
-      // data-ticker-band: the how-it-works story measures this band to
-      // "detach" its first item and fly it down onto the first stage chip
-      // (marketing-how-it-works.tsx). Marker only — no behaviour here.
-      data-ticker-band
       className="overflow-hidden border-y border-[var(--color-divider)] bg-[var(--color-primary)]/15"
       role="img"
       aria-label={t("ariaLabel")}

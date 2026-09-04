@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, RefreshCw, Search, Upload, Workflow } from "lucide-react";
+import { RefreshCw, Search, Upload, Workflow } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -16,7 +16,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeadImportPanel } from "@/features/leads/lead-import-panel";
-import { NewLeadForm } from "@/features/leads/new-lead-form";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useBulkUpdateLeads, useLeads, useValidateLead } from "@/hooks/queries/use-leads";
 import { useBulkEnrollLeadsInSequence, useSequences } from "@/hooks/queries/use-sequences";
@@ -79,7 +78,6 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
   const [bulkAssignee, setBulkAssignee] = useState("");
   const [bulkSequence, setBulkSequence] = useState("");
   const [importOpen, setImportOpen] = useState(false);
-  const [newLeadOpen, setNewLeadOpen] = useState(false);
 
   const currentViewConfig: LeadsViewConfig = { query, statusFilter, staleOnly, sortKey };
   function applyViewConfig(config: LeadsViewConfig) {
@@ -208,15 +206,6 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
               <Upload className="size-3.5" />
               {t("importButton")}
             </button>
-            <button
-              type="button"
-              onClick={() => setNewLeadOpen((v) => !v)}
-              aria-expanded={newLeadOpen}
-              className="bee-btn bee-btn--primary inline-flex items-center gap-2"
-            >
-              <Plus className="size-3.5" />
-              {t("newLeadButton")}
-            </button>
             <ExportCsvButton
               rows={exportRows}
               filename="bee-leads.csv"
@@ -239,7 +228,6 @@ export function LeadsDirectory({ showHeader = true }: { showHeader?: boolean } =
 
       <LeadDuplicatesPanel />
       <LeadImportPanel open={importOpen} onClose={() => setImportOpen(false)} />
-      {newLeadOpen && <NewLeadForm onDone={() => setNewLeadOpen(false)} />}
 
       {loading ? (
         <div className="space-y-4">

@@ -146,6 +146,143 @@
         "editFormTitle": "Editar fragmento de marca",
         "saveEdit": "Guardar cambios"
       }
+    },
+    "page": {
+      "stats": {
+        "fragments": "Fragmentos guardados",
+        "fragmentsHint": "{count, plural, =0 {BEE aún no los usó} one {BEE los usó # vez} other {BEE los usó # veces}}",
+        "performance": "Desempeño medio",
+        "performanceHint": "{count, plural, one {de # fragmento con datos} other {de # fragmentos con datos}}",
+        "performanceNone": "sin datos de desempeño todavía",
+        "corrections": "Correcciones aprendidas",
+        "correctionsHint": "v{version} · {count, plural, one {# regla firme} other {# reglas firmes}}",
+        "correctionsNone": "todavía no corregiste ningún texto",
+        "audience": "Audiencia principal",
+        "audienceHint": "{letter} · {pct}% de tus leads",
+        "audienceNone": "sin leads con cargo clasificable"
+      },
+      "voice": {
+        "title": "Tu voz",
+        "caption": "Cómo suena lo que escribes — BEE lo respeta en cada texto",
+        "toneLabel": "Tono",
+        "toneHint": "Las palabras que describen tu manera de escribir",
+        "sentenceLabel": "Largo de frase",
+        "sentenceValue": "≤ {count} palabras",
+        "emojisLabel": "Emojis",
+        "yes": "sí",
+        "no": "no",
+        "ctaLabel": "Cierre habitual",
+        "ctaHint": "La frase con la que pides el siguiente paso"
+      },
+      "topics": {
+        "title": "De qué hablas y qué evitas",
+        "caption": "Temas donde tu opinión pesa · frases que BEE nunca escribirá",
+        "topicsLabel": "Temas de autoridad",
+        "topicsHint": "BEE prioriza estos temas al proponer contenido",
+        "topicsEmpty": "Sin temas todavía — extráelos de tus textos abajo",
+        "forbiddenLabel": "Frases prohibidas",
+        "forbiddenHint": "Muletillas que no quieres ver en ningún borrador",
+        "forbiddenEmpty": "Ninguna todavía — BEE las detecta al extraer tu voz"
+      },
+      "preview": {
+        "caption": "Escribe un tema y compara: IA genérica vs. tu voz",
+        "needsProfile": "Configura tu voz primero (abajo, «Pegar y extraer») para probar el preview."
+      },
+      "audience": {
+        "title": "Tu audiencia por estilo",
+        "caption": "DISC = 4 maneras de comunicarse, según el cargo de cada lead",
+        "empty": "Sin leads con cargo todavía — BEE clasifica a cada lead por su cargo al llegar.",
+        "footnote": "Estimado desde el cargo y el sector de cada lead, con la misma regla que BEE usa al escribirles."
+      },
+      "disc": {
+        "title": "Cómo adapta BEE tu mensaje",
+        "caption": "Misma voz, distinto envoltorio — elige un estilo y mira qué cambia",
+        "toneLabel": "Tono",
+        "toneHint": "cómo suena",
+        "lengthLabel": "Largo",
+        "lengthHint": "cuánto texto",
+        "avoidLabel": "Evita",
+        "avoidHint": "lo que BEE quita",
+        "exampleLabel": "Apertura típica",
+        "shareOfLeads": "{count, plural, one {# lead} other {# leads}} · {pct}%",
+        "length": {
+          "short": "corto",
+          "medium": "medio",
+          "long": "largo"
+        },
+        "styles": {
+          "D": {
+            "name": "Dominante",
+            "who": "CEOs, fundadores y dirección comercial",
+            "how": "Va al grano y decide rápido: quiere el resultado en la primera línea.",
+            "tone": "directo",
+            "avoid": "rodeos, saludos largos, «solo quería…»",
+            "example": "Tu CAC está 40% por encima del sector. Así lo bajamos en 60 días."
+          },
+          "I": {
+            "name": "Influyente",
+            "who": "Marketing, marca, alianzas y comunidad",
+            "how": "Entusiasta y sociable: le mueven las ideas, la gente y la historia.",
+            "tone": "entusiasta",
+            "avoid": "tablas densas, informes largos, cifras sin historia",
+            "example": "Vi tu lanzamiento de la semana pasada — hay una idea que puede duplicar su alcance."
+          },
+          "S": {
+            "name": "Estable",
+            "who": "RR. HH., éxito de cliente, soporte y operaciones",
+            "how": "Paciente y prudente: valora la confianza y que nada cambie de golpe.",
+            "tone": "cálido",
+            "avoid": "urgencia, «disrumpir», presión para decidir ya",
+            "example": "Sin prisa: te cuento cómo equipos como el tuyo dieron el paso con calma."
+          },
+          "C": {
+            "name": "Analítico",
+            "who": "Ingeniería, finanzas, legal y datos",
+            "how": "Preciso y escéptico: quiere pruebas y fuentes antes de decidir.",
+            "tone": "analítico",
+            "avoid": "superlativos, «líder del sector», «confía en mí»",
+            "example": "Tres datos verificables sobre tu embudo, con la fuente de cada uno."
+          }
+        }
+      },
+      "library": {
+        "title": "Biblioteca de fragmentos",
+        "caption": "Un fragmento es un texto tuyo real que BEE reutiliza como referencia de estilo",
+        "count": "{count, plural, =0 {Sin fragmentos} one {# fragmento} other {# fragmentos}}",
+        "needsProfile": "Configura tu voz primero — los fragmentos se guardan dentro del perfil."
+      },
+      "extract": {
+        "title": "Pegar y extraer",
+        "caption": "Pega correos o posts tuyos y BEE propone tu perfil de voz",
+        "captionReplace": "Pega textos nuevos para actualizar tu voz — guardar reemplaza el perfil actual",
+        "steps": {
+          "paste": "Pega",
+          "review": "Revisa",
+          "save": "Guarda"
+        },
+        "proposedTitle": "Propuesta a partir de tu texto",
+        "manualTitle": "Perfil a mano",
+        "hideFields": "Ocultar campos",
+        "titleLabel": "Cargo",
+        "titlePlaceholder": "ej. CEO",
+        "forbiddenLabel": "Frases prohibidas",
+        "forbiddenPlaceholder": "Frases que no quieres ver (separadas por coma)",
+        "saveReplace": "Guardar y reemplazar perfil",
+        "savedNote": "Perfil guardado — las cajas de arriba ya muestran tu nueva voz."
+      },
+      "learning": {
+        "title": "Aprendizaje de estilo",
+        "caption": "Corrige un texto de BEE y aprende la regla para la próxima vez"
+      },
+      "anomaly": {
+        "title": "Monitor de anomalías",
+        "caption": "Avisa si la conversión de un canal cae frente a su histórico"
+      },
+      "channels": {
+        "title": "Canales",
+        "caption": "Desde dónde BEE envía con tu voz",
+        "empty": "Sin canales configurados."
+      }
     }
   },
   "deepLearning": {
@@ -199,12 +336,12 @@
     }
   },
   "control": {
-    "caption": "Kanban de acción · inteligencia hexagonal · métricas del sistema · resiliencia",
+    "caption": "¿BEE está funcionando bien ahora mismo y qué necesita de ti?",
     "overviewTab": "Sistema",
     "leadWorkspace": {
       "ariaLabel": "Espacio de leads",
       "eyebrow": "Zona de acción",
-      "title": "Espacio de leads",
+      "title": "Pipeline de leads",
       "demoOffline": "Demo / offline",
       "empty": "Sin señales activas en el pipeline todavía.",
       "hotLeads": "{count, plural, one {# lead caliente} other {# leads calientes}}",
@@ -215,7 +352,8 @@
         "ready_to_action": "Listas",
         "in_progress": "En progreso",
         "closed": "Cerradas"
-      }
+      },
+      "caption": "Cuántas oportunidades hay en cada etapa, desde que se detectan hasta que se cierran."
     },
     "systemHealth": {
       "ariaLabel": "Salud del sistema",
@@ -223,13 +361,13 @@
       "connected": "Conectado",
       "disconnected": "Sin conexión",
       "unknownEnvironment": "entorno desconocido",
-      "dbReady": "BD lista",
-      "dbNotReady": "BD no disponible",
+      "dbReady": "Lista",
+      "dbNotReady": "No disponible",
       "updated": "Actualizado {time}",
       "connectionError": "No se pudo conectar con la API de BEE — revisa NEXT_PUBLIC_API_URL",
       "fallbackNoticePrefix": "Mostrando estado de respaldo — inicia la API o configura",
       "fallbackNoticeMiddle": "en",
-      "loadLabel": "Carga del worker",
+      "loadLabel": "Carga del motor",
       "worker": {
         "ingestLabel": "Ingesta",
         "queueLabel": "Cola",
@@ -237,40 +375,97 @@
         "errorsLabel": "Errores",
         "offValue": "Apagado",
         "state": {
-          "idle": "Inactivo",
+          "idle": "En espera",
           "busy": "Procesando",
           "stopped": "Detenido",
           "error": "Con errores"
         }
+      },
+      "title": "Salud del sistema",
+      "caption": "Las piezas internas de BEE: la conexión, la base de datos y el motor que procesa señales.",
+      "rows": {
+        "api": "Conexión con BEE",
+        "apiHintDown": "No se pudo llegar al servidor",
+        "db": "Base de datos",
+        "dbHint": "Donde se guardan tus señales y oportunidades",
+        "worker": "Motor de señales",
+        "workerHint": "El proceso que analiza cada señal que entra"
+      },
+      "loadHint": "Cuánto trabajo tiene acumulado ahora",
+      "counters": {
+        "queue": "En cola",
+        "processed": "Procesadas",
+        "errors": "Errores"
       }
     },
     "apiStatus": {
       "ariaLabel": "APIs externas",
       "eyebrow": "APIs externas",
-      "unavailable": "APIs externas no disponible.",
+      "unavailable": "No se pudo leer el estado de las fuentes.",
       "configured": "API configurada",
       "mockMode": "Modo simulado",
-      "webhookConfigured": "Webhook ✓",
-      "webhookMissing": "Sin secreto"
+      "webhookConfigured": "Nos avisa sola cuando hay algo nuevo",
+      "webhookMissing": "No avisa sola: BEE tiene que ir a consultar",
+      "title": "Fuentes de datos",
+      "caption": "De dónde entran las señales. El cupo es cuántas consultas por hora quedan antes de que la fuente nos frene.",
+      "empty": "Todavía no hay fuentes conectadas.",
+      "health": {
+        "online": "Conectada",
+        "degraded": "Casi sin cupo",
+        "mock": "Simulada",
+        "offline": "Sin conexión"
+      },
+      "healthHint": {
+        "online": "Entrega señales con normalidad",
+        "degraded": "Queda menos del 10 % del cupo por hora — las consultas van a frenarse",
+        "mock": "Sin credenciales reales: BEE usa datos de muestra",
+        "offline": "La fuente no responde"
+      },
+      "quotaLeft": "consultas disponibles"
     },
     "anomalies": {
       "ariaLabel": "Anomalías de conversión",
       "eyebrow": "Anomalías",
       "empty": "Sin caídas de conversión fuera de lo normal",
       "severity": {
-        "low": "Baja",
+        "low": "Leve",
         "medium": "Media",
         "high": "Alta",
         "critical": "Crítica"
-      }
+      },
+      "title": "Anomalías de conversión",
+      "caption": "Caídas de respuesta o cierre fuera de lo normal para tu negocio, comparadas con tu histórico.",
+      "emptyHint": "BEE compara cada canal y sector con su propio histórico",
+      "severityHint": "Qué tan grande es la caída frente a lo normal",
+      "suggestion": "Qué hacer:"
     },
     "signalStream": {
       "ariaLabel": "Flujo de señales",
-      "title": "Flujo de señales",
-      "caption": "Webhook → Estrategia",
-      "readyCount": "{count, plural, one {# lista — clic para abrir} other {# listas — clic para abrir}}",
-      "unavailable": "Flujo no disponible.",
-      "waiting": "Esperando webhooks entrantes."
+      "title": "Actividad reciente",
+      "caption": "Las últimas señales que entraron y qué hizo BEE con cada una. Las listas se abren con un clic.",
+      "readyCount": "{count, plural, one {# lista para actuar} other {# listas para actuar}}",
+      "unavailable": "No se pudo leer la actividad.",
+      "waiting": "Esperando que entren señales.",
+      "liveHint": "Actualizándose en vivo",
+      "stages": {
+        "webhook": "Señal recibida",
+        "ingestion": "Analizada",
+        "enrichment": "Enriquecida con datos externos",
+        "strategy": "Estrategia generada",
+        "ready": "Lista para actuar"
+      }
+    },
+    "stats": {
+      "signals24h": "Señales (24 h)",
+      "signals24hHint": "Nuevas señales que entraron en el último día",
+      "activeSources": "Fuentes activas",
+      "activeSourcesHint": "de {total} fuentes conectadas entregando señales",
+      "noSources": "Todavía no hay fuentes configuradas",
+      "queue": "En cola",
+      "queueHint": "Señales esperando turno para ser procesadas",
+      "errors": "Errores",
+      "errorsHintNone": "Ningún fallo al procesar señales",
+      "errorsHintSome": "Señales que fallaron al procesarse"
     }
   },
   "resiliencePanel": {
@@ -280,7 +475,7 @@
     },
     "dlq": {
       "status": {
-        "pending": "Pendiente",
+        "pending": "Por reintentar",
         "retrying": "Reintentando",
         "resolved": "Resuelto",
         "permanently_failed": "Fallido"
@@ -290,9 +485,9 @@
       "hide": "Ocultar",
       "details": "Detalles",
       "retryNow": "Reintentar ahora",
-      "resolve": "Resolver",
+      "resolve": "Dar por resuelto",
       "resolvedManuallyReason": "Resuelto manualmente desde el panel",
-      "ceoAlerted": "⚠ CEO alertado",
+      "ceoAlerted": "Te avisamos",
       "type": "Tipo:",
       "created": "Creado:",
       "nextRetry": "Próximo reintento:",
@@ -305,8 +500,23 @@
         "dueNow": "Vencidos ahora"
       },
       "emptyTitleAll": "No hay eventos fallidos.",
-      "emptyTitleFiltered": "No hay eventos fallidos con estado \"{status}\".",
-      "emptySubtitle": "BEE está gestionando todas las acciones externas sin problemas."
+      "emptyTitleFiltered": "No hay eventos con estado \"{status}\".",
+      "emptySubtitle": "Todo lo que BEE intentó hacer afuera salió bien.",
+      "title": "Cola de eventos fallidos",
+      "caption": "Cosas que BEE intentó hacer afuera (mandar un email, avisar al CRM) y no salieron. BEE reintenta solo; aquí ves lo que sigue trabado.",
+      "openCount": "{count, plural, one {# sin resolver} other {# sin resolver}}",
+      "filterAria": "Filtrar por estado",
+      "statusHint": {
+        "pending": "BEE lo va a volver a intentar solo",
+        "retrying": "BEE lo está intentando otra vez ahora",
+        "resolved": "Ya no requiere nada",
+        "permanently_failed": "BEE agotó los reintentos — necesita una persona"
+      },
+      "whatFailed": "Qué falló:",
+      "nextRetryInline": "próximo intento {time}",
+      "attemptN": "Intento {n}",
+      "ceoAlertedHint": "BEE ya envió una alerta por este fallo",
+      "resolution": "Resolución:"
     },
     "audit": {
       "agentLabels": {
@@ -321,18 +531,24 @@
       },
       "reviewRequired": "Requiere revisión",
       "hide": "Ocultar",
-      "fullSnapshot": "Instantánea completa",
+      "fullSnapshot": "Ver detalle",
       "context": "Contexto",
       "marketDataUsed": "Datos de mercado utilizados",
       "processingMs": "{ms} ms de procesamiento",
       "stats": {
-        "total": "Total de decisiones",
-        "reviewRequired": "Requieren revisión",
-        "avgConfidence": "Confianza promedio"
+        "total": "decisiones",
+        "reviewRequired": "requieren revisión",
+        "avgConfidence": "confianza promedio"
       },
       "reviewOnlyLabel": "Mostrar solo decisiones de baja confianza",
       "emptyTitle": "Todavía no hay entradas de auditoría.",
-      "emptySubtitle": "Las decisiones de los agentes van a aparecer aquí a medida que BEE procese señales."
+      "emptySubtitle": "Las decisiones de los agentes van a aparecer aquí a medida que BEE procese señales.",
+      "title": "Registro de decisiones",
+      "caption": "Cada decisión que tomó un agente de BEE y con cuánta confianza. Sirve para entender por qué BEE hizo algo.",
+      "showLog": "Ver registro",
+      "hideLog": "Ocultar registro",
+      "confidence": "{pct} % de confianza",
+      "confidenceHint": "Qué tan segura estaba BEE al tomar esta decisión"
     }
   },
   "pendingActions": {
@@ -345,18 +561,28 @@
       "failed": "Fallido"
     },
     "title": "Cola de ejecución",
-    "caption": "Acciones en espera de aprobación antes de que BEE las ejecute externamente",
+    "caption": "Acciones que BEE preparó (un email, un mensaje, un cambio en el CRM) y esperan tu OK antes de salir.",
     "live": "En vivo",
     "demoData": "Datos demo",
-    "pendingCount": "{count} pendientes",
+    "pendingCount": "{count, plural, one {# espera tu OK} other {# esperan tu OK}}",
     "retryCount": "Reintento #{count}",
     "approving": "Aprobando…",
     "approve": "Aprobar",
     "rejecting": "Rechazando…",
     "reject": "Rechazar",
     "approvedBy": "Aprobado por {name}",
-    "emptyTitle": "No hay acciones pendientes.",
-    "emptySubtitle": "Los artefactos de ejecución aparecerán aquí cuando BEE los genere.",
-    "safetyGate": "Puerta de seguridad: ninguna acción se ejecuta sin la aprobación explícita del CEO."
+    "emptyTitle": "No hay nada esperando tu OK.",
+    "emptySubtitle": "Cuando BEE prepare una acción, va a aparecer aquí antes de ejecutarse.",
+    "safetyGate": "Nada sale de BEE sin que una persona lo apruebe.",
+    "showPreview": "Ver el mensaje",
+    "hidePreview": "Ocultar el mensaje",
+    "types": {
+      "send_email": "Email",
+      "linkedin_message": "Mensaje de LinkedIn",
+      "crm_update": "Cambio en el CRM",
+      "book_meeting": "Reunión",
+      "slack_notify": "Aviso en Slack",
+      "webhook_call": "Aviso a otra herramienta"
+    }
   }
 }

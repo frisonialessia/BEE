@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useInView } from "@/hooks/use-in-view";
 import { cn } from "@/lib/utils";
 
 /**
  * marketing-motion — the small set of scroll-motion primitives the public
- * landing is built from (Reveal, CountUp, useScrollProgress, onScrollFrame),
+ * landing is built from (Reveal, CountUp, useReveal),
  * so every section animates with the same timing (300–500 ms, ease-out,
  * never bouncy) instead of each component rolling its own.
  *
@@ -32,46 +32,12 @@ export function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/** Mouse-class pointer present (hover + fine). Pointer-only delights (magnetic
- *  CTAs, cursor trail) check this so touch devices get none of the work. */
-export function isFinePointer(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
-  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-}
-
-export const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
-/** Hermite smoothstep of v across [a, b] — the "no bounce" easing every
- *  scroll-scrubbed value here uses. */
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+/** Hermite smoothstep of v across [a, b] — the "no bounce" easing for any
+ *  value that follows a control (the before/after handle's cross-fade). */
 export function smoothstep(a: number, b: number, v: number): number {
   const t = clamp01((v - a) / (b - a));
   return t * t * (3 - 2 * t);
-}
-export const easeOutCubic = (t: number) => 1 - Math.pow(1 - clamp01(t), 3);
-
-/**
- * onScrollFrame — run `frame` once now and then at most once per animation
- * frame on scroll/resize (passive listeners, rAF-coalesced). Returns the
- * cleanup, so the idiom is `useEffect(() => onScrollFrame(() => …), [])`.
- * A plain function rather than a hook on purpose: the frame closure is
- * created inside the caller's effect, where reading refs is allowed.
- */
-export function onScrollFrame(frame: () => void): () => void {
-  let raf = 0;
-  const run = () => {
-    raf = 0;
-    frame();
-  };
-  const schedule = () => {
-    if (!raf) raf = requestAnimationFrame(run);
-  };
-  schedule();
-  window.addEventListener("scroll", schedule, { passive: true });
-  window.addEventListener("resize", schedule);
-  return () => {
-    window.removeEventListener("scroll", schedule);
-    window.removeEventListener("resize", schedule);
-    if (raf) cancelAnimationFrame(raf);
-  };
 }
 
 type RevealState = "final" | "hidden" | "in" | "done";
@@ -140,7 +106,7 @@ export function Reveal({
   className?: string;
   stagger?: boolean;
   delay?: number;
-  as?: "div" | "section" | "ul" | "li" | "p" | "header";
+  as?: "div" | "section" | "ul" | "ol" | "li" | "p" | "header";
 }) {
   const { ref, state } = useReveal<HTMLDivElement>({ settleMs: stagger ? 1400 : 700 });
   return (
@@ -238,45 +204,4 @@ export function CountUp({
       {label}
     </span>
   );
-}
-
-/**
- * useScrollProgress — 0..1 for how far the visitor has scrolled through a
- * section. Two regimes, chosen from the live CSS rather than a JS media
- * query so it can never disagree with the stylesheet:
- *
- *  - pinned (the inner `pin` element is `position: sticky`, i.e. the lg
- *    layout of the story section): progress is the pin's travel inside
- *    the tall section — 0 the moment it sticks, 1 when it unsticks.
- *  - flowing (mobile/tablet, no sticky): progress is how much of the
- *    section has crossed a line 85% down the viewport, so the last step
- *    lights up as the section's end scrolls past that line.
- *
- * Returns `null` until first measured — callers render the final state
- * for null, which is also what the server renders.
- */
-export function useScrollProgress<TSection extends HTMLElement, TPin extends HTMLElement>() {
-  const sectionRef = useRef<TSection>(null);
-  const pinRef = useRef<TPin>(null);
-  const [progress, setProgress] = useState<number | null>(null);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-    return onScrollFrame(() => {
-      const rect = section.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const pin = pinRef.current;
-      let p: number;
-      if (pin && getComputedStyle(pin).position === "sticky" && rect.height - pin.offsetHeight > 40) {
-        const pinRect = pin.getBoundingClientRect();
-        p = (pinRect.top - rect.top) / (rect.height - pinRect.height);
-      } else {
-        p = (vh * 0.85 - rect.top) / Math.max(rect.height, 1);
-      }
-      setProgress(clamp01(p));
-    });
-  }, []);
-
-  return { sectionRef, pinRef, progress };
 }

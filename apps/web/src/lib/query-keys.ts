@@ -37,6 +37,11 @@ export const queryKeys = {
   workflow: {
     tasks: (entityId?: string) => ["workflow", "tasks", entityId] as const,
     status: () => ["workflow", "status"] as const,
+    dlq: {
+      all: ["workflow", "dlq"] as const,
+      summary: () => [...queryKeys.workflow.dlq.all, "summary"] as const,
+      events: (limit?: number) => [...queryKeys.workflow.dlq.all, "events", limit] as const,
+    },
   },
   leads: {
     all: ["leads"] as const,
@@ -140,6 +145,9 @@ export const queryKeys = {
     all: ["audit-decisions"] as const,
     strategyReasoning: (opportunityId: string) =>
       [...queryKeys.auditDecisions.all, "strategy-reasoning", opportunityId] as const,
+    summary: () => [...queryKeys.auditDecisions.all, "summary"] as const,
+    list: (reviewOnly: boolean, limit?: number) =>
+      [...queryKeys.auditDecisions.all, "list", reviewOnly, limit] as const,
   },
   control: {
     all: ["control"] as const,

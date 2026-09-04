@@ -2,41 +2,33 @@
 
 import type { ReactNode } from "react";
 
+import { SystemStatStrip } from "./components/SystemStatStrip";
+
 interface ControlLayoutProps {
   header: ReactNode;
-  /** Top row, left — Zona de acción (Espacio de leads). */
+  /** Pipeline de leads — stage counts + jump to CRM (LeadWorkspace). */
   action: ReactNode;
-  /** Top row, center — Colmena de intención (SignalHexMap). */
+  /** Colmena de intención (SignalHexMap) — carries its own card shell. */
   hive: ReactNode;
-  /** Top row, right — Inteligencia (SystemHealth, connectivity + worker KPIs). */
+  /** Salud del sistema (SystemHealth). */
   intelligence: ReactNode;
-  /** Bottom row, left — Flujo de señales (SignalStream). */
+  /** Actividad reciente (SignalStream). */
   stream: ReactNode;
-  /** Bottom row, center — APIs externas (ApiStatusPanel). */
+  /** Fuentes de datos (ApiStatusPanel). */
   apiStatus: ReactNode;
-  /** Bottom row, right — Anomalías (AnomaliesPanel). */
+  /** Anomalías de conversión (AnomaliesPanel). */
   anomalies: ReactNode;
 }
 
 /**
- * Layout Control — a real 2×3 bento grid, not 3 unevenly-stacked columns.
- *
- * The previous layout (one row, three columns, several components stacked
- * per column) put widgets with very different natural content lengths
- * (a 5-row stage count next to a scrolling event feed) in direct
- * height competition — whichever had the least content read as broken
- * (a card with a large dead area) or the most content read as cramped
- * (clipped inside an undersized box), no matter how the CSS was tuned.
- *
- * Splitting into two rows groups widgets by actual weight instead: the top
- * row (Zona de acción, Colmena de intención, Inteligencia) are all
- * naturally compact — a stage count, a fixed-height hex grid, a KPI strip
- * — so stretching them to match each other looks intentional, not empty.
- * The bottom row (Flujo de señales, APIs externas, Anomalías) are the three
- * genuinely scrollable, content-length-varying widgets; grouped together
- * they can stretch to match *each other* instead of a much shorter
- * sibling, and each scrolls independently within its own equal-height
- * card when its own content runs long.
+ * Sistema tab — answers "is BEE healthy right now?" the same way every
+ * other page in the app answers its question: a 4-tile strip of headline
+ * numbers, then the 12-column .bee-overview grid (equal-height rows, one
+ * card shell per box). Row 1 is where signals come from and what just
+ * happened to them; row 2 is the machine's own health, the lead pipeline
+ * and anything abnormal; row 3 is the hive (its own shell, spans the row).
+ * Each box caps its list height and scrolls inside, so a long feed never
+ * stretches its row siblings into half-empty boxes.
  */
 export function ControlLayout({
   header,
@@ -48,17 +40,18 @@ export function ControlLayout({
   anomalies,
 }: ControlLayoutProps) {
   return (
-    <div className="bee-crm-control">
-      <header className="bee-crm-control__header">{header}</header>
-      <div className="bee-crm-control__row bee-crm-control__row--top">
-        <div className="bee-crm-control__cell">{action}</div>
-        <div className="bee-crm-control__cell">{hive}</div>
-        <div className="bee-crm-control__cell">{intelligence}</div>
-      </div>
-      <div className="bee-crm-control__row bee-crm-control__row--bottom">
-        <div className="bee-crm-control__cell">{stream}</div>
-        <div className="bee-crm-control__cell">{apiStatus}</div>
-        <div className="bee-crm-control__cell">{anomalies}</div>
+    <div className="space-y-4">
+      {header}
+      <SystemStatStrip />
+      <div className="bee-overview">
+        {apiStatus}
+        {stream}
+        {intelligence}
+        {action}
+        {anomalies}
+        <div style={{ gridColumn: "span 12" }} className="min-h-0">
+          {hive}
+        </div>
       </div>
     </div>
   );

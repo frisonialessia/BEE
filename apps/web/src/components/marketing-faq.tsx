@@ -18,7 +18,7 @@ import { prefersReducedMotion, Reveal } from "@/components/marketing-motion";
  * `q1`/`a1`... aplanados, porque el componente ya itera sobre un array.
  *
  * Answers type themselves in: when a row opens, roughly the first two
- * lines stream at ~30 ms/char and the rest appears at once — BEE
+ * lines stream at ~15 ms/char and the rest appears at once — BEE
  * "answering", the same way it drafts a strategy. The accordion's height
  * animation is untouched because the FULL answer is always in the layout
  * (rendered in transparent ink, still read by assistive tech) and the
@@ -27,7 +27,7 @@ import { prefersReducedMotion, Reveal } from "@/components/marketing-motion";
  * shows the answer at once.
  */
 
-const MS_PER_CHAR = 30;
+const MS_PER_CHAR = 15;
 
 function FaqRow({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -103,7 +103,7 @@ export function MarketingFAQ() {
   const items = t.raw("items") as FaqItem[];
 
   return (
-    <section className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-20">
+    <section className="mx-auto w-full max-w-3xl px-6 py-12 lg:py-14">
       <Reveal className="mx-auto max-w-2xl text-center">
         <p className="bee-eyebrow bee-eyebrow--violet">{t("eyebrow")}</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("heading")}</h2>

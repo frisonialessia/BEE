@@ -18,27 +18,23 @@ import { LOCALE_COOKIE } from "@/i18n/cookie";
  * URLs. A cookie carries the preference instead; every route works
  * identically in both languages.
  *
- * Resolution order: cookie (an explicit choice from the language switcher,
- * or the header-derived choice `proxy.ts` already wrote on this visitor's
- * first request) → `Accept-Language` header (belt-and-suspenders for the
- * rare request `proxy.ts`'s matcher doesn't cover) → `defaultLocale`
- * (Spanish). The cookie is set by the server action in `i18n/actions.ts`,
- * or by `proxy.ts` for a first-time visitor who hasn't touched the
- * switcher yet — see that file's docstring for why setting it there
- * (not here) is what makes the demo/sandbox seed data agree with the
- * language this function resolves.
+ * Resolution order: `Accept-Language` header (the browser's language — there
+ * is no switcher, the app follows the visitor) → the `NEXT_LOCALE` cookie
+ * `proxy.ts` keeps in sync with that header (fallback for the rare request
+ * without the header; it is also what the client-side demo data reads) →
+ * `defaultLocale` (Spanish).
  */
 export default getRequestConfig(async () => {
-  const cookieStore = await cookies();
-  const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value;
-
+  // Browser language first — BEE has no language switcher, the UI simply
+  // speaks what the browser is set to. The cookie (kept in sync by
+  // proxy.ts) is only the fallback for a request without the header.
   let locale: Locale = defaultLocale;
-  if (cookieLocale && isLocale(cookieLocale)) {
-    locale = cookieLocale;
+  const matched = detectLocaleFromAcceptLanguage((await headers()).get("accept-language"));
+  if (matched) {
+    locale = matched;
   } else {
-    const acceptLanguage = (await headers()).get("accept-language");
-    const matched = detectLocaleFromAcceptLanguage(acceptLanguage);
-    if (matched) locale = matched;
+    const cookieLocale = (await cookies()).get(LOCALE_COOKIE)?.value;
+    if (cookieLocale && isLocale(cookieLocale)) locale = cookieLocale;
   }
 
   return {

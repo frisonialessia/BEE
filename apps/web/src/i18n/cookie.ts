@@ -1,4 +1,4 @@
-/** Shared between the server action that writes it (`i18n/actions.ts`) and
+/** Shared between the proxy that writes it (`proxy.ts`) and
  * the request config that reads it (`i18n/request.ts`) — kept as its own
  * module (not inlined in either) since both `next/headers` (server-only)
  * and a `"use server"` action file can import a plain string constant

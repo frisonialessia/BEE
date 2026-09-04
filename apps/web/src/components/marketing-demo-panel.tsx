@@ -104,10 +104,7 @@ function SignalsView() {
        * Agrupando el contenido en 3 bloques lógicos por columna y
        * repartiendo con justify-between, el espacio sobrante se reparte
        * entre los bloques en vez de acumularse en uno solo. */}
-      {/* data-morph-target: where the hero's floating signal cards land
-       * (marketing-hero-signals.tsx) — 1 Zona de acción · 2 Colmena · 3
-       * Inteligencia. Measured live, never positioned by these. */}
-      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3" data-morph-target="1">
+      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3">
         <div className="space-y-2">
           <p className="bee-eyebrow">{t("actionZoneTitle")}</p>
           {ACTION_ZONE.map((row) => (
@@ -147,7 +144,7 @@ function SignalsView() {
         </div>
       </div>
 
-      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3" data-morph-target="2">
+      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3">
         <div>
           <div className="flex items-center justify-between">
             <p className="bee-eyebrow">{t("hiveTitle")}</p>
@@ -203,7 +200,7 @@ function SignalsView() {
         </div>
       </div>
 
-      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3" data-morph-target="3">
+      <div className="bee-bento bee-bento-pad flex flex-col justify-between gap-3">
         <div className="space-y-3">
           <p className="bee-eyebrow">{t("intelligenceTitle")}</p>
           <div className="grid grid-cols-2 gap-1.5">
@@ -629,13 +626,14 @@ const VIEWS: Record<TabId, () => React.ReactElement> = {
   forecast: ForecastView,
 };
 
-// Tabs auto-rotate this often while the panel is on screen and untouched.
-const AUTO_ROTATE_MS = 6000;
+// Tabs auto-rotate this often while the panel is on screen and untouched —
+// slow enough to read a tab, not a slideshow.
+const AUTO_ROTATE_MS = 8000;
 
 export function MarketingDemoPanel() {
   const t = useTranslations("landing.demo");
   const [tab, setTab] = useState<TabId>("signals");
-  // Auto-rotation: the three tabs cycle every 6 s so a visitor who only
+  // Auto-rotation: the three tabs cycle every 8 s so a visitor who only
   // scrolls still sees Señales, Leads and Simulador — but only while the
   // panel is actually in view (once: false — it resumes when scrolled back
   // to), never after the visitor has touched it (a click, a keypress, a
@@ -663,7 +661,6 @@ export function MarketingDemoPanel() {
   return (
     <div
       ref={ref}
-      data-morph-panel
       className="bee-glass overflow-hidden rounded-[var(--radius-lg)]"
       onPointerDownCapture={stopAuto}
       onKeyDownCapture={stopAuto}
@@ -687,7 +684,7 @@ export function MarketingDemoPanel() {
             >
               {t(`tabs.${tabItem.id}`)}
               {/* Honey hairline that fills across the active tab over the
-               * 6 s until the next rotation — keyed on the tab so it
+               * 8 s until the next rotation — keyed on the tab so it
                * restarts with every switch; gone once the visitor takes
                * over. */}
               {rotating && tab === tabItem.id && (
@@ -699,7 +696,7 @@ export function MarketingDemoPanel() {
       </div>
 
       {/* min-h evita que el panel salte de alto al cambiar de pestaña —
-       * mismo principio que DeepLearningPanel/ResiliencePanel en el
+       * mismo principio que ResiliencePanel (y el antiguo DeepLearningPanel) en el
        * dashboard real. Calibrado al contenido real de Simulador (~619px
        * medido con Playwright, clonando el nodo con min-height:0 para
        * leer su alto natural), la pestaña más alta de las tres — no un

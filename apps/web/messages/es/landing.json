@@ -214,51 +214,6 @@
       }
     }
   },
-  "howItWorks": {
-    "eyebrow": "Cómo funciona",
-    "heading": "De la señal a la acción, en cuatro pasos.",
-    "steps": {
-      "detect": {
-        "title": "1. Detecta la señal",
-        "description": "BEE vigila rondas de financiamiento, contrataciones y cambios de stack apenas ocurren."
-      },
-      "enrich": {
-        "title": "2. Enriquece y prioriza",
-        "description": "Cada señal se enriquece con la empresa y el contacto correcto, y se ordena por score de intención."
-      },
-      "prepare": {
-        "title": "3. Prepara la jugada",
-        "description": "El sistema arma la próxima acción sugerida — el mensaje, el canal, el momento."
-      },
-      "approve": {
-        "title": "4. Tú apruebas",
-        "description": "Nada sale sin luz verde explícita. Apruebas, ajustas o descartas — la decisión final es siempre humana."
-      }
-    },
-    "stage": {
-      "title": "Una señal, de punta a punta",
-      "scrollHint": "Desplázate para avanzar",
-      "approveLabel": "Esperando tu aprobación",
-      "approvedLabel": "Aprobada · lista para enviar",
-      "note": "Secuencia ilustrativa con los mismos datos de ejemplo del Demo en vivo.",
-      "detect": {
-        "label": "Señal detectada",
-        "text": "Northwind Robotics levantó una Serie C de USD 40M — webhook recibido hace 2 min."
-      },
-      "enrich": {
-        "label": "Enriquecida y priorizada",
-        "text": "Elena Cross · VP Sales · score 92 · Listo para comprar. Sube al primer lugar de la lista."
-      },
-      "prepare": {
-        "label": "Jugada sugerida",
-        "text": "Email a Elena hoy: escalar el equipo comercial tras la ronda. Argumento, canal y momento, listos."
-      },
-      "approve": {
-        "label": "Tu aprobación",
-        "text": "Nada sale sin tu luz verde. Apruebas, ajustas o descartas."
-      }
-    }
-  },
   "beforeAfter": {
     "eyebrow": "La misma lista, dos resultados",
     "heading": "Los mismos leads. La diferencia es qué haces primero.",
@@ -274,8 +229,6 @@
     "dragHint": "Arrastra el control — o usa las flechas — para pasar de una lista a la otra."
   },
   "integrations": {
-    "eyebrow": "Conectado con lo que ya usas",
-    "heading": "Las señales vienen de fuentes reales.",
     "items": {
       "linkedin": "Señales de contratación y alcance directo",
       "g2": "Señales de intención de compra por reseñas y comparaciones",

@@ -8,7 +8,6 @@ import { AskBeeFab } from "@/components/assistant/ask-bee-fab";
 import { DashboardRail } from "@/components/dashboard/dashboard-rail";
 import { MobileNavProvider } from "@/components/dashboard/mobile-nav-context";
 import { MobileNavToggle } from "@/components/dashboard/mobile-nav-toggle";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
@@ -94,7 +93,6 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
                 </Link>
                 <Badge variant="warning" className="hidden sm:inline-flex">{tBadge("demo")}</Badge>
                 <TourTriggerButton />
-                <LanguageSwitcher variant="subtle" className="hidden sm:inline-flex" />
               </header>
 
               <div className="bee-scroll" ref={scrollRef}>

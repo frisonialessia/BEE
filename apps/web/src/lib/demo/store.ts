@@ -2372,7 +2372,7 @@ export function demoCheckAnomalies(): AnomalyCheckResult {
 }
 
 /** Control's AnomaliesPanel uses a smaller subset of AnomalyAlert's fields
- * (lib/api/anomalies.ts) than Voz de marca's DeepLearningPanel does — same
+ * (lib/api/anomalies.ts) than Voz de marca's AnomalyMonitorBox does — same
  * underlying AnomalyDetector service, two different views of it. Derived
  * from the same seed data rather than a second, separately-maintained
  * dataset, so the two panels can never show contradictory anomalies. */

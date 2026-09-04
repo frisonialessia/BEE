@@ -65,7 +65,7 @@ const INDUSTRY_MODIFIERS: Record<string, [number, number, number, number]> = {
 
 const BASE_SCORE = 0.25;
 
-const STYLE_PREFERENCES: Record<
+export const STYLE_PREFERENCES: Record<
   Exclude<DISCStyle, "UNKNOWN">,
   { tone: string; length: string; avoid: string[] }
 > = {

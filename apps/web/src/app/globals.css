@@ -1243,81 +1243,6 @@
   font-family: var(--bee-font);
 }
 
-/* Control — a real 2×3 bento grid (see ControlLayout's docstring for why:
- * grouping widgets by natural content weight per row, instead of one row
- * of 3 columns each stacking widgets of very different lengths, is what
- * actually fixes "one card empty, another clipped" rather than endlessly
- * retuning heights within the old shape).
- *
- * Deliberately NOT height: calc(100vh - ...) — Control renders inside
- * .bee-scroll (app/dashboard/layout.tsx), which is already shorter than
- * 100vh (it sits below DashboardHeader/the demo banner) and already
- * scrolls with its own padding-bottom: 1.5rem, same as every other page.
- * A 100vh-based height here measured against the *browser* viewport, not
- * the actually-available space inside .bee-scroll — it overestimated by
- * exactly however tall that header chrome is, which is what was clipping
- * the bottom row's content flush against the browser edge with no visible
- * margin. Sizing to natural/explicit content height and letting
- * .bee-scroll do what it already does for every other page fixes both:
- * nothing gets clipped, and the page's normal bottom padding is what
- * "leaves the margin" — no special-casing needed here for that. */
-.bee-crm-control {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  font-family: var(--bee-font);
-}
-
-.bee-crm-control__header { flex-shrink: 0; }
-
-.bee-crm-control__row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.75rem;
-  min-height: 0;
-  /* align-items stays the grid default (stretch): every cell in a row
-   * matches that row's tallest natural content — the whole point of
-   * grouping by weight below. */
-}
-
-/* Zona de acción / Colmena de intención / Inteligencia: all three are
- * naturally compact (a stage count, a fixed-height hex grid, a KPI strip),
- * so this row sizes to its own content rather than being stretched. */
-.bee-crm-control__row--top {
-  flex-shrink: 0;
-}
-
-/* Flujo de señales / APIs externas / Anomalías: the three genuinely
- * scrollable, variable-length widgets carrying the page's actual
- * intelligence — an explicit shared height (not a flex:1 share of
- * whatever's left, which is what silently varied per viewport and per how
- * tall the top row happened to be) is what makes "all three measure the
- * same" hold on every screen, not just the one it was eyeballed against.
- * Each card scrolls independently within it when its own content runs
- * long; the row itself never grows past this, so it can never push into
- * .bee-scroll's own bottom padding. */
-.bee-crm-control__row--bottom {
-  height: 28rem;
-  flex-shrink: 0;
-}
-
-.bee-crm-control__cell {
-  min-height: 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-@media (max-width: 1100px) {
-  .bee-crm-control__row { grid-template-columns: minmax(0, 1fr); }
-  /* The 3 bottom-row cards stack in one column here — the row's own fixed
-   * 28rem (sized for 3 cards side by side) would squash all three into a
-   * third of that each. Let the row grow to fit its stacked cards, and
-   * give each card that same 28rem as its own height instead. */
-  .bee-crm-control__row--bottom { height: auto; }
-  .bee-crm-control__row--bottom .bee-crm-control__cell { height: 28rem; }
-}
-
 /* Drawer — flat, left border only */
 .bee-drawer-overlay {
   position: fixed;
@@ -1408,36 +1333,26 @@
 @media (prefers-reduced-motion: reduce) { .bee-hex-breathe { animation: none; } }
 
 /* ── Landing sparkles ─────────────────────────────────────────────────────
-   Small white glints drifting and twinkling over the one landing ground —
-   movement without a second background color. Positions are fixed in the
-   markup (MarketingSparkles), timing varies per glint. */
+   Faint white points over the one landing ground — 1–2px, no glow, a slow
+   twinkle to ~0.5 opacity, like distant stars. Positions are fixed in the
+   markup (MarketingSparkles), timing varies per point. */
 .bee-sparkles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
 .bee-sparkles i {
   position: absolute;
   display: block;
-  width: 6px;
-  height: 6px;
+  width: 2px;
+  height: 2px;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0 12px 4px rgba(255,255,255,.9), 0 0 2px 1px rgba(255,255,255,1);
   opacity: 0;
-  animation: bee-twinkle 7s ease-in-out infinite;
+  animation: bee-twinkle 12s ease-in-out infinite;
 }
-.bee-sparkles i::before {
-  /* four-point star */
-  content: "";
-  position: absolute;
-  inset: -7px;
-  background:
-    linear-gradient(#fff, #fff) center / 2px 100% no-repeat,
-    linear-gradient(#fff, #fff) center / 100% 2px no-repeat;
-  opacity: .8;
-}
+.bee-sparkles i:nth-child(odd) { width: 1px; height: 1px; }
 @keyframes bee-twinkle {
-  0%, 100% { opacity: 0; transform: translateY(0) scale(.6); }
-  45%, 55% { opacity: .95; transform: translateY(-10px) scale(1); }
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.5; }
 }
-@media (prefers-reduced-motion: reduce) { .bee-sparkles i { animation: none; opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { .bee-sparkles i { animation: none; opacity: 0.35; } }
 
 @keyframes bee-hex-pulse {
   0%, 100% { opacity: 0.35; transform: scale(1); }
@@ -1541,19 +1456,16 @@
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ── Landing motion ──
-   The public landing's scroll story (src/components/marketing-motion.tsx,
-   marketing-how-it-works.tsx, marketing-hero-signals.tsx, …).
-
-   Ground rules, so this block stays honest to the landing's design:
+   The public landing's motion (src/components/marketing-motion.tsx and the
+   marketing-* components). Restraint is the design:
    · Motion only — no section fills, no gradients on the ground, nothing the
-     palette does not already have. The only gradients are the story's 2px
-     track and the pointer-anchored highlight inside a hovered CTA.
+     palette does not already have.
    · The FINAL state is the default. The server renders fully visible
      content; JS "arms" an element (data-reveal="hidden") only after
      hydration and only to release it a moment later. No JS ⇒ nothing here
      ever hides anything.
-   · Timing: 300–500 ms, ease-out, never bouncy. The chart draw (1.6 s) and
-     the hero load-in are the two deliberate exceptions.
+   · One vocabulary: fade + 12px rise, 300–500 ms, ease-out, never bouncy.
+     The Ventas chart draw (1.6 s, once) is the one deliberate exception.
    · prefers-reduced-motion: the block at the end turns every rule off and
      pins each element to its final state.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -1567,7 +1479,7 @@
   transition-delay: var(--bee-reveal-delay, 0ms);
 }
 /* Stagger variant: the wrapper never moves, its direct children rise 80 ms
-   apart (up to 8 — the biggest grid on the page has 6). */
+   apart (up to 8 — the longest list on the page has 6). */
 .bee-reveal--stagger[data-reveal="hidden"],
 .bee-reveal--stagger[data-reveal="in"] { opacity: 1; transform: none; transition: none; }
 .bee-reveal--stagger[data-reveal="hidden"] > * { opacity: 0; transform: translateY(12px); }
@@ -1586,60 +1498,37 @@
 .bee-reveal--stagger > :nth-child(8) { --bee-stagger: 560ms; }
 
 @keyframes bee-rise {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
-}
-@keyframes bee-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 @keyframes bee-grow-x {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
 }
 
-/* Hero load-in: eyebrow → headline → subtitle → CTAs, 90 ms apart. */
-.bee-hero-in > * { animation: bee-rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-.bee-hero-in > :nth-child(2) { animation-delay: 90ms; }
-.bee-hero-in > :nth-child(3) { animation-delay: 180ms; }
-.bee-hero-in > :nth-child(4) { animation-delay: 270ms; }
+/* Hero load-in: eyebrow → headline → subtitle → CTAs, 60 ms apart. The
+   headline itself is excluded — its words carry their own rise below. */
+.bee-hero-in > * { animation: bee-rise 450ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.bee-hero-in > :nth-child(2) { animation-delay: 60ms; }
+.bee-hero-in > :nth-child(3) { animation-delay: 120ms; }
+.bee-hero-in > :nth-child(4) { animation-delay: 180ms; }
+.bee-hero-in > .bee-headline { animation: none; }
 
-/* Headline highlight: the key words in indigo (mixed toward --color-text so
-   the 60px heading clears 3:1 on the ground) over a pale-honey marker that
-   draws itself in once the headline has landed. */
-.bee-hl {
-  color: color-mix(in srgb, var(--color-chart-4) 72%, var(--color-text) 28%);
-  background: linear-gradient(transparent 64%, color-mix(in srgb, var(--color-chart-3) 60%, transparent) 64%) no-repeat 0 0 / 100% 100%;
-  padding: 0 0.08em;
-  margin: 0 -0.08em;
-  border-radius: 0.2em;
-  -webkit-box-decoration-break: clone;
-  box-decoration-break: clone;
+/* Word-by-word headline: each word rises 10px, 35 ms after the previous —
+   8 words ≈ 245 ms + 340 ms, under 600 ms in total. */
+.bee-word {
+  display: inline-block;
+  animation: bee-word-rise 340ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 35ms);
 }
-.bee-hero-in .bee-hl { animation: bee-marker 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 700ms both; }
-@keyframes bee-marker {
-  from { background-size: 0 100%; }
-  to { background-size: 100% 100%; }
+@keyframes bee-word-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* Hero signal cards: fade in after the headline, float on their own loop,
-   and lean toward the pointer / drift with scroll at per-card depth (the
-   --mx/--my/--sy custom properties are written by marketing-hero-signals). */
-.bee-hero-signals > .bee-hero-signal { animation: bee-fade 700ms ease-out 500ms both; }
-.bee-hero-signal {
-  transform: translate3d(
-    calc(var(--mx, 0) * var(--depth, 1) * 16px),
-    calc(var(--my, 0) * var(--depth, 1) * 12px - var(--sy, 0px) * var(--depth, 1) * 0.12),
-    0
-  );
-  transition: transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
-  will-change: transform;
-}
-.bee-hero-signal__float { animation: bee-float 7s ease-in-out infinite; }
-@keyframes bee-float {
-  0%, 100% { transform: translateY(0) rotate(-0.8deg); }
-  50% { transform: translateY(-10px) rotate(0.8deg); }
-}
+/* Headline highlight: the key words in magenta mixed toward --color-text
+   (≈4.2:1 on the ground). No marker, no underline. */
+.bee-hl { color: color-mix(in srgb, var(--color-chart-5) 70%, var(--color-text) 30%); }
 
 /* Demo panel: honey hairline filling across the active tab until the next
    auto-rotation (duration set inline from AUTO_ROTATE_MS). */
@@ -1651,208 +1540,31 @@
   width: 100%;
   transform-origin: 0 50%;
   background: var(--color-chart-1);
-  animation: bee-grow-x 6s linear both;
+  animation: bee-grow-x 8s linear both;
 }
 
-/* Primary CTA: soft honey glow + 1px lift on hover. Landing only (opt-in
-   class), so dashboard .bee-btn--primary buttons keep their flat hover. */
-.bee-cta-glow { transition: background 120ms ease, border-color 120ms ease, box-shadow 250ms ease, transform 250ms ease; }
-.bee-cta-glow:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow:
-    0 12px 28px -10px color-mix(in srgb, var(--color-chart-1) 75%, transparent),
-    0 0 0 4px color-mix(in srgb, var(--color-chart-3) 40%, transparent);
+/* Ventas chart draws itself once on entry: line via stroke-dashoffset
+   (pathLength="1"), area via clip-path, end dot pops last. Greens stay the
+   chart's own. */
+.bee-draw[data-reveal="hidden"] .bee-draw__line { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.bee-draw[data-reveal="hidden"] .bee-draw__area { clip-path: inset(0 100% 0 0); }
+.bee-draw[data-reveal="hidden"] .bee-draw__dot { opacity: 0; transform: scale(0.4); }
+.bee-draw[data-reveal="in"] .bee-draw__line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1600ms cubic-bezier(0.4, 0, 0.2, 1) 250ms;
+}
+.bee-draw[data-reveal="in"] .bee-draw__area {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 1600ms cubic-bezier(0.4, 0, 0.2, 1) 250ms;
+}
+.bee-draw[data-reveal="in"] .bee-draw__dot {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms ease-out 1700ms, transform 400ms cubic-bezier(0.2, 0.7, 0.2, 1) 1700ms;
 }
 
-/* Ventas chart, scrubbed by scroll (--draw 0..1 set inline; absent = final):
-   line via stroke-dashoffset (pathLength="1"), area via clip-path, end dot
-   once the curve is complete. Greens stay the chart's own. */
-.bee-draw .bee-draw__line { stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--draw, 1)); transition: stroke-dashoffset 120ms linear; }
-.bee-draw .bee-draw__area { clip-path: inset(0 calc((1 - var(--draw, 1)) * 100%) 0 0); transition: clip-path 120ms linear; }
-.bee-draw .bee-draw__dot { opacity: var(--dot, 1); transform: scale(var(--dot, 1)); transition: opacity 300ms ease-out, transform 400ms cubic-bezier(0.2, 0.7, 0.2, 1); }
-
-/* Hive cells: opacity now transitions too (storyline lights them up). */
-.bee-hex-cell { transition: stroke 100ms ease, stroke-width 100ms ease, opacity 500ms ease-out; }
-
-/* ── Story: señal → jugada → cierre (marketing-how-it-works.tsx) ──────────
-   lg+: the section is tall and its content pins; scroll position drives
-   which step is lit, the track fill, the hive and the stage chips. Below
-   lg nothing pins — the section flows and the same data attributes still
-   light the steps in order. */
-.bee-story { position: relative; }
-@media (min-width: 1024px) {
-  .bee-story { min-height: 260vh; }
-  .bee-story__pin {
-    position: sticky;
-    top: 4rem; /* header height */
-    min-height: calc(100vh - 4rem);
-    display: flex;
-    /* Centered in the viewport when it fits; `safe` keeps the top edge
-       reachable on a short screen instead of clipping it (plain `center`
-       overflows both ways). flex-start is the fallback for browsers that
-       don't know `safe`. */
-    align-items: flex-start;
-    align-items: safe center;
-  }
-}
-.bee-story__steps {
-  position: relative;
-  display: grid;
-  gap: 0.75rem;
-  margin: 0;
-  padding: 0 0 0 1.75rem;
-  list-style: none;
-}
-/* Vertical track beside the steps: divider grey, uncovered top-down by the
-   honey → deep honey → indigo → magenta fill (clip-path from --p). */
-.bee-story__track {
-  position: absolute;
-  left: 0.6rem;
-  top: 1.25rem;
-  bottom: 1.25rem;
-  width: 2px;
-  border-radius: 1px;
-  background: var(--color-divider);
-}
-.bee-story__track-fill {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(180deg, var(--color-chart-1), var(--color-chart-2) 35%, var(--color-chart-4) 68%, var(--color-chart-5));
-  clip-path: inset(0 0 calc((1 - var(--p, 1)) * 100%) 0);
-  transition: clip-path 300ms ease-out;
-}
-.bee-story__step { position: relative; transition: opacity 350ms ease-out; }
-.bee-story__step::before {
-  content: "";
-  position: absolute;
-  left: calc(-1.15rem - 4px);
-  top: 1.25rem;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--color-card);
-  border: 2px solid var(--color-divider);
-  transition: background 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
-}
-.bee-story__step[data-state="active"]::before,
-.bee-story__step[data-state="past"]::before { background: var(--step-color); border-color: var(--step-color); }
-.bee-story__step[data-state="active"]::before { box-shadow: 0 0 0 5px color-mix(in srgb, var(--step-color) 25%, transparent); }
-.bee-story__step[data-state="next"] { opacity: 0.5; }
-.bee-story__step[data-state="past"] { opacity: 0.8; }
-.bee-story__disc {
-  background: var(--color-primary);
-  color: var(--color-text-muted);
-  transition: background 300ms ease, color 300ms ease;
-}
-.bee-story__step[data-state="active"] .bee-story__disc,
-.bee-story__step[data-state="past"] .bee-story__disc {
-  background: color-mix(in srgb, var(--step-color) 24%, white);
-  color: color-mix(in srgb, var(--step-color) 78%, var(--color-text) 22%);
-}
-.bee-story__card { transition: box-shadow 350ms ease-out, transform 350ms ease-out; }
-.bee-story__step[data-state="active"] .bee-story__card { box-shadow: var(--bee-shadow-card-lift); transform: translateX(4px); }
-/* Stage chips: one per step, landing as its step lights. Until the client
-   has measured (no data-measured on the section) all four are shown. */
-.bee-story__chip { transition: opacity 400ms ease-out, transform 400ms ease-out, box-shadow 300ms ease; }
-.bee-story[data-measured] .bee-story__chip:not([data-shown]) { opacity: 0; transform: translateY(10px); }
-.bee-story__chip-dot { background: var(--step-color); }
-.bee-story__chip[data-current] {
-  box-shadow: var(--bee-shadow-card-lift), 0 0 0 1.5px color-mix(in srgb, var(--step-color) 55%, transparent);
-}
-.bee-story__approve {
-  background: var(--color-primary);
-  color: var(--color-text-muted);
-  transition: background 300ms ease, color 300ms ease;
-}
-.bee-story__approve[data-approved] {
-  background: color-mix(in srgb, var(--color-chart-5) 22%, white);
-  color: color-mix(in srgb, var(--color-chart-5) 75%, var(--color-text) 25%);
-}
-
-/* ── Word-by-word headline ────────────────────────────────────────────────
-   The h1 no longer rises as a block (.bee-hero-in animates its other
-   children); each word rises from its own depth (--wy/--ws) 55 ms after
-   the previous one, the <hl> words last — 8 words ≈ 385 ms + 480 ms, under
-   the 900 ms budget. The marker under the <hl> words follows at 750 ms. */
-.bee-hero-in > .bee-headline { animation: none; }
-.bee-word {
-  display: inline-block;
-  animation: bee-word-rise 480ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  animation-delay: calc(var(--i, 0) * 55ms);
-}
-@keyframes bee-word-rise {
-  from { opacity: 0; transform: translateY(var(--wy, 18px)) scale(var(--ws, 0.96)); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-.bee-hero-in .bee-hl { animation-delay: 750ms; }
-
-/* ── Header scroll gauge (replaces the progress bar) ──────────────────────── */
-.bee-scroll-gauge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--bee-control-h-primary);
-  height: var(--bee-control-h-primary);
-  flex-shrink: 0;
-  border-radius: 9999px;
-  color: inherit;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-.bee-scroll-gauge:hover { background: var(--color-primary); }
-.bee-scroll-gauge:focus-visible { outline: 2px solid var(--color-chart-4); outline-offset: 2px; }
-.bee-scroll-gauge__cell { transition: fill 300ms ease-out; }
-
-/* ── Hero → dashboard morph flight layer ──────────────────────────────────
-   Fixed, under the sticky header, shown only mid-flight; each ghost is a
-   copy of a hero card positioned by transform from its source rect. */
-.bee-hero-ghosts { position: fixed; inset: 0; z-index: 35; pointer-events: none; display: none; }
-.bee-hero-ghosts[data-active] { display: block; }
-.bee-hero-ghost { position: fixed; top: 0; left: 0; transform-origin: 0 0; will-change: transform, opacity; }
-
-/* ── Ticker → story "caught signal" ───────────────────────────────────────── */
-.bee-catch-ghost {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 35;
-  display: flex;
-  visibility: hidden; /* not display:none — it is measured (offsetWidth) before it shows */
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
-  border-radius: 9999px;
-  pointer-events: none;
-  will-change: transform, opacity;
-}
-.bee-catch-ghost[data-active] { visibility: visible; }
-
-/* ── Cursor trail canvas (hero, xl+ only) ─────────────────────────────────── */
-.bee-trail { position: absolute; inset: 0; display: none; pointer-events: none; }
-@media (min-width: 1280px) { .bee-trail { display: block; } }
-
-/* ── Magnetic primary CTAs ────────────────────────────────────────────────
-   --mx/--my (−1..1) and --gx/--gy (%) are written by MagneticLink from the
-   pointer. The lean is ≤4px; the glow is a honey highlight anchored at the
-   pointer plus a honey shadow thrown the same way. Hover-only, and the
-   hover rule re-states the CTA colour because .bee-btn--primary:hover uses
-   the `background` shorthand (which would clear the highlight). */
-.bee-magnetic {
-  transform: translate(calc(var(--mx, 0) * 4px), calc(var(--my, 0) * 4px));
-  transition: transform 250ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 250ms ease, background-color 120ms ease, border-color 120ms ease;
-  will-change: transform;
-}
-.bee-magnetic:hover:not(:disabled) {
-  background-color: var(--color-cta-hover);
-  background-image: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), color-mix(in srgb, var(--color-chart-3) 55%, transparent), transparent 62%);
-  box-shadow:
-    calc(var(--mx, 0) * 6px) calc(var(--my, 0) * 6px + 12px) 28px -10px color-mix(in srgb, var(--color-chart-1) 75%, transparent),
-    0 0 0 4px color-mix(in srgb, var(--color-chart-3) 40%, transparent);
-}
-
-/* ── Before/after split handle ────────────────────────────────────────────── */
+/* ── Before/after split handle (visitor-driven only) ─────────────────────── */
 .bee-split { padding-top: calc(var(--bee-pad-surface-lg) + 0.25rem); }
 .bee-split__track {
   position: absolute;
@@ -1910,49 +1622,9 @@
   left: -1px;
   width: 2px;
   border-radius: 1px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--color-chart-4) 55%, transparent), transparent);
+  background: color-mix(in srgb, var(--color-chart-4) 35%, transparent);
 }
 .bee-split__row { will-change: transform; }
-
-/* ── Guarantees lock in ───────────────────────────────────────────────────
-   Icon "click" as each card reveals (after its own stagger), and the
-   connector behind the cards — from the first accent bar to the last —
-   draws once the whole group is in. Horizontal on lg (4 columns), vertical
-   down the left edge on one column; hidden on the 2-column tablet grid. */
-.bee-reveal--stagger[data-reveal="in"] > * > .bee-lock-icon {
-  animation: bee-click 220ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  animation-delay: calc(var(--bee-stagger, 0ms) + 320ms);
-}
-@keyframes bee-click {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.18); }
-  100% { transform: scale(1); }
-}
-.bee-lock-line {
-  position: absolute;
-  z-index: 0;
-  border-radius: 1px;
-  background: linear-gradient(90deg, var(--color-chart-4), var(--color-accent-warm), var(--color-chart-6), var(--color-chart-5));
-  transform-origin: 0 0;
-  transition: transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 700ms;
-  left: 1.5px;
-  top: 0.875rem;
-  bottom: 0.875rem;
-  width: 2px;
-}
-.bee-lock > .bee-reveal { position: relative; z-index: 1; }
-.bee-lock:has(> .bee-reveal[data-reveal="hidden"]) .bee-lock-line { transform: scaleY(0); transition: none; }
-@media (min-width: 640px) and (max-width: 1023px) { .bee-lock-line { display: none; } }
-@media (min-width: 1024px) {
-  .bee-lock-line {
-    top: 50%;
-    bottom: auto;
-    height: 2px;
-    width: auto;
-    right: calc(25% - 0.75rem + 1.5px);
-  }
-  .bee-lock:has(> .bee-reveal[data-reveal="hidden"]) .bee-lock-line { transform: scaleX(0); }
-}
 
 /* ── FAQ answers that type themselves ─────────────────────────────────────
    The full answer owns the layout (transparent ink while typing, so the
@@ -1978,31 +1650,12 @@
   .bee-reveal[data-reveal="in"],
   .bee-reveal--stagger[data-reveal="in"] > * { transition: none; }
   .bee-hero-in > *,
-  .bee-hero-in .bee-hl,
   .bee-hero-in .bee-word,
-  .bee-hero-signal,
-  .bee-hero-signal__float,
   .bee-tab-progress,
-  .bee-lock-icon,
   .bee-type__caret { animation: none; }
-  .bee-hero-signal { transform: none; transition: none; }
-  .bee-draw .bee-draw__line { stroke-dasharray: none; stroke-dashoffset: 0; transition: none; }
-  .bee-draw .bee-draw__area { clip-path: none; transition: none; }
-  .bee-draw .bee-draw__dot { opacity: 1; transform: none; transition: none; }
-  .bee-lock-line { transform: none !important; transition: none; }
-  .bee-magnetic { transform: none !important; transition: background 120ms ease; }
-  .bee-magnetic:hover:not(:disabled) { box-shadow: none; background-image: none; }
+  .bee-draw[data-reveal] .bee-draw__line { stroke-dasharray: none; stroke-dashoffset: 0; transition: none; }
+  .bee-draw[data-reveal] .bee-draw__area { clip-path: none; transition: none; }
+  .bee-draw[data-reveal] .bee-draw__dot { opacity: 1; transform: none; transition: none; }
   .bee-split__handle,
-  .bee-split__row,
-  .bee-scroll-gauge__cell,
-  .bee-hex-cell,
-  .bee-cta-glow,
-  .bee-story__step,
-  .bee-story__step::before,
-  .bee-story__disc,
-  .bee-story__card,
-  .bee-story__chip,
-  .bee-story__approve,
-  .bee-story__track-fill { transition: none; }
-  .bee-cta-glow:hover:not(:disabled) { transform: none; }
+  .bee-split__row { transition: none; }
 }

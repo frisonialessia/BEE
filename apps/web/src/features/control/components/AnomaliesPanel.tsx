@@ -1,86 +1,82 @@
 "use client";
 
-import { AlertTriangle, ShieldCheck } from "lucide-react";
+import { CircleAlert, Info, Lightbulb, OctagonAlert, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { OverviewCard } from "@/components/dashboard/overview-card";
+import { StatusChip, type StatusTone } from "@/components/status-chip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpenAnomalies } from "@/hooks/queries/use-anomalies";
 import type { AnomalyAlert } from "@/lib/api/anomalies";
-import { cn } from "@/lib/utils";
 
-const SEVERITY_DOT: Record<AnomalyAlert["severity"], string> = {
-  low: "bg-[var(--color-text-muted)]/40",
-  medium: "bg-[var(--color-chart-1)]",
-  high: "bg-[var(--color-chart-2)]/80",
-  critical: "bg-[var(--color-chart-2)]",
+const SEVERITY_META: Record<AnomalyAlert["severity"], { tone: StatusTone; icon: typeof Info }> = {
+  low: { tone: "neutral", icon: Info },
+  medium: { tone: "attention", icon: CircleAlert },
+  high: { tone: "attention", icon: TriangleAlert },
+  critical: { tone: "failed", icon: OctagonAlert },
 };
 
 function AlertRow({ alert }: { alert: AnomalyAlert }) {
   const t = useTranslations("probarNetworkBrandControl.control.anomalies");
+  const meta = SEVERITY_META[alert.severity];
 
   return (
-    <div className="flex items-start gap-4 py-3">
-      <span
-        className={cn("mt-1 inline-block size-2 shrink-0 rounded-full", SEVERITY_DOT[alert.severity])}
-        aria-hidden
-      />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <p className="truncate text-sm font-medium tracking-tight">{alert.title}</p>
-          <span className="shrink-0 bee-micro">
-            {t(`severity.${alert.severity}`)}
-          </span>
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">{alert.description}</p>
-        <p className="mt-1 text-xs text-[var(--color-chart-4)]">{alert.recommendation}</p>
+    <li className="py-3">
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 flex-1 text-sm font-medium leading-snug">{alert.title}</p>
+        <StatusChip tone={meta.tone} icon={meta.icon} label={t(`severity.${alert.severity}`)} title={t("severityHint")} />
       </div>
-    </div>
+      <p className="mt-1 text-xs text-muted-foreground">{alert.description}</p>
+      {alert.recommendation && (
+        <p className="mt-1.5 flex items-start gap-1.5 text-xs">
+          <Lightbulb className="mt-0.5 size-3.5 shrink-0 text-[var(--color-text-muted)]" aria-hidden />
+          <span>
+            <span className="font-medium">{t("suggestion")} </span>
+            {alert.recommendation}
+          </span>
+        </p>
+      )}
+    </li>
   );
 }
 
 /**
- * AnomaliesPanel — anomalías de conversión detectadas por AnomalyDetector
- * (caída significativa en tasa de conversión general, por canal o por
- * sector vs. su línea base histórica). Vive en la columna de métricas de
- * Control junto a SystemHealth — es el mismo servicio, orientado a "algo
- * cambió en el pipeline", no a infraestructura.
+ * Anomalías de conversión — drops in reply or close rate that fall outside
+ * what's normal for this organization (overall, per channel or per sector),
+ * detected by AnomalyDetector against its own history. Severity is an icon
+ * + word; each alert carries BEE's suggestion in plain words.
  */
 export function AnomaliesPanel() {
   const t = useTranslations("probarNetworkBrandControl.control.anomalies");
   const { data: result, isLoading } = useOpenAnomalies();
   const alerts = result?.data ?? [];
 
-  if (isLoading) {
-    return <Skeleton className="h-full min-h-[200px] rounded-lg" />;
-  }
-
   return (
-    // h-full: one of three equal-height siblings in the grid's bottom row
-    // (see ControlLayout/globals.css) — the row itself claims the
-    // remaining viewport height, and this card stretches to match its
-    // Flujo de señales / APIs externas siblings rather than sizing to its
-    // own (often much shorter) content.
-    <section className="bee-surface flex h-full flex-col bee-bento-pad" aria-label={t("ariaLabel")}>
-      <div className="mb-1 flex shrink-0 items-center gap-2">
-        <AlertTriangle className="size-3.5 text-[var(--color-text-muted)]" />
-        <p className="bee-eyebrow">{t("eyebrow")}</p>
-      </div>
-      {alerts.length === 0 ? (
-        <p className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
-          <ShieldCheck className="size-3.5" />
-          {t("empty")}
-        </p>
+    <OverviewCard
+      span={4}
+      title={t("title")}
+      caption={t("caption")}
+      action={alerts.length > 0 ? <span className="text-sm font-bold tabular-nums">{alerts.length}</span> : undefined}
+    >
+      {isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 rounded-lg" />
+          ))}
+        </div>
+      ) : alerts.length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 py-8 text-center">
+          <ShieldCheck className="size-5 text-[var(--color-chart-4)]" aria-hidden />
+          <p className="text-sm">{t("empty")}</p>
+          <p className="bee-micro">{t("emptyHint")}</p>
+        </div>
       ) : (
-        // overscroll-contain: this card sits inside the independently
-        // scrollable bottom row (see globals.css) — without it, scrolling
-        // this list to its edge hands the leftover wheel delta to the row
-        // and the whole card jumps.
-        <div className="flex-1 divide-y divide-border overflow-y-auto overscroll-contain">
+        <ul className="max-h-[22rem] divide-y divide-border overflow-y-auto overscroll-contain">
           {alerts.map((alert) => (
             <AlertRow key={alert.id} alert={alert} />
           ))}
-        </div>
+        </ul>
       )}
-    </section>
+    </OverviewCard>
   );
 }

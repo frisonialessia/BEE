@@ -146,6 +146,143 @@
         "editFormTitle": "Edit brand fragment",
         "saveEdit": "Save changes"
       }
+    },
+    "page": {
+      "stats": {
+        "fragments": "Saved fragments",
+        "fragmentsHint": "{count, plural, =0 {not used by BEE yet} one {used by BEE # time} other {used by BEE # times}}",
+        "performance": "Average performance",
+        "performanceHint": "{count, plural, one {across # fragment with data} other {across # fragments with data}}",
+        "performanceNone": "no performance data yet",
+        "corrections": "Corrections learned",
+        "correctionsHint": "v{version} · {count, plural, one {# firm rule} other {# firm rules}}",
+        "correctionsNone": "you haven't corrected a text yet",
+        "audience": "Main audience",
+        "audienceHint": "{letter} · {pct}% of your leads",
+        "audienceNone": "no leads with a classifiable title"
+      },
+      "voice": {
+        "title": "Your voice",
+        "caption": "How your writing sounds — BEE keeps to it in every text",
+        "toneLabel": "Tone",
+        "toneHint": "The words that describe the way you write",
+        "sentenceLabel": "Sentence length",
+        "sentenceValue": "≤ {count} words",
+        "emojisLabel": "Emojis",
+        "yes": "yes",
+        "no": "no",
+        "ctaLabel": "Usual closing",
+        "ctaHint": "The line you use to ask for the next step"
+      },
+      "topics": {
+        "title": "What you talk about and what you avoid",
+        "caption": "Topics where your opinion carries weight · phrases BEE will never write",
+        "topicsLabel": "Authority topics",
+        "topicsHint": "BEE leans on these topics when proposing content",
+        "topicsEmpty": "No topics yet — extract them from your writing below",
+        "forbiddenLabel": "Forbidden phrases",
+        "forbiddenHint": "Filler you never want to see in a draft",
+        "forbiddenEmpty": "None yet — BEE spots them when extracting your voice"
+      },
+      "preview": {
+        "caption": "Type a topic and compare: generic AI vs. your voice",
+        "needsProfile": "Set up your voice first (below, “Paste & extract”) to try the preview."
+      },
+      "audience": {
+        "title": "Your audience by style",
+        "caption": "DISC = 4 ways of communicating, read from each lead's title",
+        "empty": "No leads with a title yet — BEE classifies every lead by title as it arrives.",
+        "footnote": "Estimated from each lead's title and industry, with the same rule BEE applies when writing to them."
+      },
+      "disc": {
+        "title": "How BEE adapts your message",
+        "caption": "Same voice, different wrapping — pick a style and see what changes",
+        "toneLabel": "Tone",
+        "toneHint": "how it sounds",
+        "lengthLabel": "Length",
+        "lengthHint": "how much text",
+        "avoidLabel": "Avoids",
+        "avoidHint": "what BEE strips out",
+        "exampleLabel": "Typical opener",
+        "shareOfLeads": "{count, plural, one {# lead} other {# leads}} · {pct}%",
+        "length": {
+          "short": "short",
+          "medium": "medium",
+          "long": "long"
+        },
+        "styles": {
+          "D": {
+            "name": "Dominant",
+            "who": "CEOs, founders and sales leadership",
+            "how": "Gets to the point and decides fast: wants the result in the first line.",
+            "tone": "direct",
+            "avoid": "preamble, long greetings, “just wanted to…”",
+            "example": "Your CAC is 40% above your sector. Here's how we bring it down in 60 days."
+          },
+          "I": {
+            "name": "Influential",
+            "who": "Marketing, brand, partnerships and community",
+            "how": "Enthusiastic and social: moved by ideas, people and the story.",
+            "tone": "enthusiastic",
+            "avoid": "dense tables, long reports, numbers without a story",
+            "example": "Saw your launch last week — there's one idea that could double its reach."
+          },
+          "S": {
+            "name": "Steady",
+            "who": "HR, customer success, support and operations",
+            "how": "Patient and careful: values trust and nothing changing all at once.",
+            "tone": "warm",
+            "avoid": "urgency, “disrupt”, pressure to decide now",
+            "example": "No rush: here's how teams like yours made the move at their own pace."
+          },
+          "C": {
+            "name": "Analytical",
+            "who": "Engineering, finance, legal and data",
+            "how": "Precise and skeptical: wants proof and sources before deciding.",
+            "tone": "analytical",
+            "avoid": "superlatives, “industry-leading”, “trust me”",
+            "example": "Three verifiable data points about your funnel, each with its source."
+          }
+        }
+      },
+      "library": {
+        "title": "Fragment library",
+        "caption": "A fragment is a real text of yours that BEE reuses as a style reference",
+        "count": "{count, plural, =0 {No fragments} one {# fragment} other {# fragments}}",
+        "needsProfile": "Set up your voice first — fragments are saved inside the profile."
+      },
+      "extract": {
+        "title": "Paste & extract",
+        "caption": "Paste your own emails or posts and BEE proposes your voice profile",
+        "captionReplace": "Paste new texts to refresh your voice — saving replaces the current profile",
+        "steps": {
+          "paste": "Paste",
+          "review": "Review",
+          "save": "Save"
+        },
+        "proposedTitle": "Proposed from your text",
+        "manualTitle": "Profile by hand",
+        "hideFields": "Hide fields",
+        "titleLabel": "Title",
+        "titlePlaceholder": "e.g. CEO",
+        "forbiddenLabel": "Forbidden phrases",
+        "forbiddenPlaceholder": "Phrases you never want to see (comma-separated)",
+        "saveReplace": "Save and replace profile",
+        "savedNote": "Profile saved — the boxes above already show your new voice."
+      },
+      "learning": {
+        "title": "Style learning",
+        "caption": "Correct a BEE text and it learns the rule for next time"
+      },
+      "anomaly": {
+        "title": "Anomaly monitor",
+        "caption": "Warns when a channel's conversion drops against its history"
+      },
+      "channels": {
+        "title": "Channels",
+        "caption": "Where BEE sends in your voice",
+        "empty": "No channels configured."
+      }
     }
   },
   "deepLearning": {
@@ -199,12 +336,12 @@
     }
   },
   "control": {
-    "caption": "Action kanban · hex intelligence · system metrics · resilience",
+    "caption": "Is BEE running well right now, and what does it need from you?",
     "overviewTab": "System",
     "leadWorkspace": {
       "ariaLabel": "Lead workspace",
       "eyebrow": "Action zone",
-      "title": "Lead workspace",
+      "title": "Lead pipeline",
       "demoOffline": "Demo / offline",
       "empty": "No active signals in the pipeline yet.",
       "hotLeads": "{count, plural, one {# hot lead} other {# hot leads}}",
@@ -215,7 +352,8 @@
         "ready_to_action": "Ready",
         "in_progress": "In Progress",
         "closed": "Closed"
-      }
+      },
+      "caption": "How many opportunities sit in each stage, from detection to close."
     },
     "systemHealth": {
       "ariaLabel": "System health",
@@ -223,13 +361,13 @@
       "connected": "Connected",
       "disconnected": "Disconnected",
       "unknownEnvironment": "unknown environment",
-      "dbReady": "DB ready",
-      "dbNotReady": "DB unavailable",
+      "dbReady": "Ready",
+      "dbNotReady": "Unavailable",
       "updated": "Updated {time}",
       "connectionError": "Couldn't connect to the BEE API — check NEXT_PUBLIC_API_URL",
       "fallbackNoticePrefix": "Showing fallback status — start the API or set",
       "fallbackNoticeMiddle": "in",
-      "loadLabel": "Worker load",
+      "loadLabel": "Engine load",
       "worker": {
         "ingestLabel": "Ingestion",
         "queueLabel": "Queue",
@@ -240,37 +378,94 @@
           "idle": "Idle",
           "busy": "Processing",
           "stopped": "Stopped",
-          "error": "Errors"
+          "error": "With errors"
         }
+      },
+      "title": "System health",
+      "caption": "BEE's own moving parts: the connection, the database and the engine that processes signals.",
+      "rows": {
+        "api": "Connection to BEE",
+        "apiHintDown": "The server could not be reached",
+        "db": "Database",
+        "dbHint": "Where your signals and opportunities are stored",
+        "worker": "Signal engine",
+        "workerHint": "The process that analyzes every incoming signal"
+      },
+      "loadHint": "How much work is piled up right now",
+      "counters": {
+        "queue": "In queue",
+        "processed": "Processed",
+        "errors": "Errors"
       }
     },
     "apiStatus": {
       "ariaLabel": "External APIs",
       "eyebrow": "External APIs",
-      "unavailable": "External APIs unavailable.",
+      "unavailable": "Could not read the sources' status.",
       "configured": "API configured",
       "mockMode": "Simulated mode",
-      "webhookConfigured": "Webhook ✓",
-      "webhookMissing": "No secret"
+      "webhookConfigured": "Tells us on its own when something is new",
+      "webhookMissing": "Doesn't push updates: BEE has to go and ask",
+      "title": "Data sources",
+      "caption": "Where signals come from. The quota is how many requests per hour are left before the source slows us down.",
+      "empty": "No sources connected yet.",
+      "health": {
+        "online": "Connected",
+        "degraded": "Almost out of quota",
+        "mock": "Simulated",
+        "offline": "Disconnected"
+      },
+      "healthHint": {
+        "online": "Delivering signals normally",
+        "degraded": "Less than 10% of the hourly quota left — requests will slow down",
+        "mock": "No real credentials: BEE uses sample data",
+        "offline": "The source is not responding"
+      },
+      "quotaLeft": "requests left"
     },
     "anomalies": {
       "ariaLabel": "Conversion anomalies",
       "eyebrow": "Anomalies",
       "empty": "No conversion drops outside the normal range",
       "severity": {
-        "low": "Low",
+        "low": "Mild",
         "medium": "Medium",
         "high": "High",
         "critical": "Critical"
-      }
+      },
+      "title": "Conversion anomalies",
+      "caption": "Drops in reply or close rate outside what's normal for your business, compared with your own history.",
+      "emptyHint": "BEE compares every channel and sector against its own history",
+      "severityHint": "How big the drop is compared with normal",
+      "suggestion": "What to do:"
     },
     "signalStream": {
       "ariaLabel": "Signal stream",
-      "title": "Signal stream",
-      "caption": "Webhook → Strategy",
-      "readyCount": "{count, plural, one {# ready — click to open} other {# ready — click to open}}",
-      "unavailable": "Stream unavailable.",
-      "waiting": "Waiting for incoming webhooks."
+      "title": "Recent activity",
+      "caption": "The latest signals that came in and what BEE did with each one. Ready ones open with a click.",
+      "readyCount": "{count, plural, one {# ready to act on} other {# ready to act on}}",
+      "unavailable": "Could not read the activity.",
+      "waiting": "Waiting for signals to come in.",
+      "liveHint": "Updating live",
+      "stages": {
+        "webhook": "Signal received",
+        "ingestion": "Analyzed",
+        "enrichment": "Enriched with external data",
+        "strategy": "Strategy generated",
+        "ready": "Ready to act on"
+      }
+    },
+    "stats": {
+      "signals24h": "Signals (24 h)",
+      "signals24hHint": "New signals that came in over the last day",
+      "activeSources": "Active sources",
+      "activeSourcesHint": "of {total} connected sources delivering signals",
+      "noSources": "No sources configured yet",
+      "queue": "In queue",
+      "queueHint": "Signals waiting their turn to be processed",
+      "errors": "Errors",
+      "errorsHintNone": "No failures while processing signals",
+      "errorsHintSome": "Signals that failed while being processed"
     }
   },
   "resiliencePanel": {
@@ -280,7 +475,7 @@
     },
     "dlq": {
       "status": {
-        "pending": "Pending",
+        "pending": "To retry",
         "retrying": "Retrying",
         "resolved": "Resolved",
         "permanently_failed": "Failed"
@@ -290,9 +485,9 @@
       "hide": "Hide",
       "details": "Details",
       "retryNow": "Retry now",
-      "resolve": "Resolve",
+      "resolve": "Mark resolved",
       "resolvedManuallyReason": "Manually resolved from the panel",
-      "ceoAlerted": "⚠ CEO alerted",
+      "ceoAlerted": "You were alerted",
       "type": "Type:",
       "created": "Created:",
       "nextRetry": "Next retry:",
@@ -305,8 +500,23 @@
         "dueNow": "Due now"
       },
       "emptyTitleAll": "No failed events.",
-      "emptyTitleFiltered": "No failed events with status \"{status}\".",
-      "emptySubtitle": "BEE is handling every external action without issues."
+      "emptyTitleFiltered": "No events with status \"{status}\".",
+      "emptySubtitle": "Everything BEE tried to do outside went through.",
+      "title": "Failed event queue",
+      "caption": "Things BEE tried to do outside (send an email, notify the CRM) that didn't go through. BEE retries on its own; here you see what's still stuck.",
+      "openCount": "{count, plural, one {# unresolved} other {# unresolved}}",
+      "filterAria": "Filter by status",
+      "statusHint": {
+        "pending": "BEE will try again on its own",
+        "retrying": "BEE is trying again right now",
+        "resolved": "Nothing left to do",
+        "permanently_failed": "BEE ran out of retries — needs a person"
+      },
+      "whatFailed": "What failed:",
+      "nextRetryInline": "next attempt {time}",
+      "attemptN": "Attempt {n}",
+      "ceoAlertedHint": "BEE already sent an alert about this failure",
+      "resolution": "Resolution:"
     },
     "audit": {
       "agentLabels": {
@@ -321,18 +531,24 @@
       },
       "reviewRequired": "Needs review",
       "hide": "Hide",
-      "fullSnapshot": "Full snapshot",
+      "fullSnapshot": "Show details",
       "context": "Context",
       "marketDataUsed": "Market data used",
       "processingMs": "{ms} ms processing",
       "stats": {
-        "total": "Total decisions",
-        "reviewRequired": "Need review",
-        "avgConfidence": "Avg. confidence"
+        "total": "decisions",
+        "reviewRequired": "need review",
+        "avgConfidence": "average confidence"
       },
       "reviewOnlyLabel": "Show only low-confidence decisions",
       "emptyTitle": "No audit entries yet.",
-      "emptySubtitle": "Agent decisions will show up here as BEE processes signals."
+      "emptySubtitle": "Agent decisions will show up here as BEE processes signals.",
+      "title": "Decision log",
+      "caption": "Every decision a BEE agent made and how confident it was. Use it to understand why BEE did something.",
+      "showLog": "Show log",
+      "hideLog": "Hide log",
+      "confidence": "{pct}% confidence",
+      "confidenceHint": "How sure BEE was when it made this decision"
     }
   },
   "pendingActions": {
@@ -345,18 +561,28 @@
       "failed": "Failed"
     },
     "title": "Execution queue",
-    "caption": "Actions waiting for approval before BEE executes them externally",
+    "caption": "Actions BEE drafted (an email, a message, a CRM change) that wait for your OK before going out.",
     "live": "Live",
     "demoData": "Demo data",
-    "pendingCount": "{count} pending",
+    "pendingCount": "{count, plural, one {# waiting for your OK} other {# waiting for your OK}}",
     "retryCount": "Retry #{count}",
     "approving": "Approving…",
     "approve": "Approve",
     "rejecting": "Rejecting…",
     "reject": "Reject",
     "approvedBy": "Approved by {name}",
-    "emptyTitle": "No pending actions.",
-    "emptySubtitle": "Execution artifacts will show up here as BEE generates them.",
-    "safetyGate": "Safety gate: no action executes without explicit CEO approval."
+    "emptyTitle": "Nothing is waiting for your OK.",
+    "emptySubtitle": "When BEE drafts an action it will show up here before it runs.",
+    "safetyGate": "Nothing leaves BEE without a person approving it.",
+    "showPreview": "Show the message",
+    "hidePreview": "Hide the message",
+    "types": {
+      "send_email": "Email",
+      "linkedin_message": "LinkedIn message",
+      "crm_update": "CRM change",
+      "book_meeting": "Meeting",
+      "slack_notify": "Slack notice",
+      "webhook_call": "Notice to another tool"
+    }
   }
 }

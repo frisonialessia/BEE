@@ -2,10 +2,10 @@
 
 import { AlertCircle, ArrowRight, CheckCircle2, Flame, GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 
-import { clamp01, onScrollFrame, prefersReducedMotion, Reveal, smoothstep } from "@/components/marketing-motion";
+import { prefersReducedMotion, Reveal, smoothstep } from "@/components/marketing-motion";
 import { Badge } from "@/components/ui/badge";
 import { scoreVariant } from "@/lib/format";
 
@@ -21,9 +21,8 @@ import { scoreVariant } from "@/lib/format";
  * The two states are the ends of ONE scrub, not a toggle: a split handle
  * (0 = Sin BEE … 100 = Con BEE) that the visitor drags, moves with the
  * keyboard (role="slider": ←/→ ±10, Home/End, PageUp/Down ±25) or hits
- * with the two labelled buttons — and that scroll drives on its own
- * while the card crosses the viewport, until the visitor touches it. As
- * the handle crosses the middle the rows physically reorder from
+ * with the two labelled buttons. Entirely visitor-driven — nothing moves
+ * on its own. As the handle crosses the middle the rows physically reorder from
  * alphabetical to score order with a FLIP animation (measure → invert →
  * play, transform only), while the "— sin dato —" labels cross-fade into
  * the stage/score badges. Server render = the raw state at 0, exactly
@@ -62,24 +61,10 @@ export function MarketingBeforeAfter() {
   const t = useTranslations("landing.beforeAfter");
   const tStages = useTranslations("landing.stages");
   const [split, setSplit] = useState(0); // 0 = sin BEE … 100 = con BEE
-  const [manual, setManual] = useState(false); // visitor took the handle
   const withBee = split >= 50;
   const cardRef = useRef<HTMLDivElement>(null);
   const rowEls = useRef(new Map<string, HTMLDivElement>());
   const lastTops = useRef(new Map<string, number>());
-
-  // Scroll drives the handle until the visitor touches it.
-  useEffect(() => {
-    const card = cardRef.current;
-    if (!card || manual || prefersReducedMotion()) return;
-    return onScrollFrame(() => {
-      const vh = window.innerHeight;
-      const top = card.getBoundingClientRect().top;
-      // 0 as the card's top enters at 85 % of the viewport, 100 once it
-      // has risen to 35 % — the reorder happens at the midpoint.
-      setSplit(Math.round(clamp01((vh * 0.85 - top) / (vh * 0.5)) * 100));
-    });
-  }, [manual]);
 
   // FLIP: rows keep their DOM key; when the order flips we measure where
   // each row was, where it is now, and play the difference as a transform.
@@ -102,10 +87,7 @@ export function MarketingBeforeAfter() {
     });
   }, [withBee]);
 
-  const set = (value: number) => {
-    setManual(true);
-    setSplit(Math.round(Math.min(100, Math.max(0, value))));
-  };
+  const set = (value: number) => setSplit(Math.round(Math.min(100, Math.max(0, value))));
 
   const fromPointer = (e: PointerEvent<HTMLElement>) => {
     const card = cardRef.current;
@@ -129,7 +111,7 @@ export function MarketingBeforeAfter() {
 
   return (
     <section className="border-t border-border">
-      <div className="mx-auto w-full max-w-4xl px-6 py-16 sm:py-20">
+      <div className="mx-auto w-full max-w-4xl px-6 py-12 lg:py-14">
         <Reveal className="mx-auto max-w-2xl text-center">
           <p className="bee-eyebrow bee-eyebrow--violet">{t("eyebrow")}</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{t("heading")}</h2>

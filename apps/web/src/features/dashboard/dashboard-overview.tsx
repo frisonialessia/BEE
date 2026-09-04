@@ -178,9 +178,9 @@ export function DashboardOverview({
       />
 
       {/* One shell (OverviewCard), rows paired by natural height so nothing
-          has to stretch: three charts of the same aspect on top, then the
-          hive next to the three decision cards (both ~380px), then three
-          short lists, then two lists, then the two heatmaps. What used to
+          has to stretch: three charts of the same aspect on top, the hive
+          full width, then four columns of "today", then calendar, ranking
+          and the close-rate map. What used to
           sit below this grid (battlecards, revenue simulator, every
           signal) lives on its own page — Estrategias, Pronóstico, Señales —
           so this stays a summary, not the whole product on one screen. */}
@@ -207,7 +207,6 @@ export function DashboardOverview({
             <BarsVsTarget
               points={sales.months}
               target={sales.goal}
-              targetLabel={sales.goal ? t("sections.sales.goalLabel") : undefined}
               formatValue={(v) => money(v)}
               // The three greens by strength: the best months in won green,
               // the middle in lime, the rest in mint — one family, one box.
@@ -220,29 +219,37 @@ export function DashboardOverview({
           <Donut slices={mix} otherLabel={locale === "es" ? "Otras" : "Other"} />
         </OverviewCard>
 
-        {/* Row 2 — the hive and today's three plays: both tall by nature. */}
-        <SignalHexMap height={260} className="h-full" style={{ gridColumn: "span 8" }} />
+        {/* Row 2 — the hive, full width. */}
+        <SignalHexMap height={240} className="h-full" style={{ gridColumn: "span 12" }} />
 
-        <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")}>
-          <DecisionFeed embedded />
-        </OverviewCard>
-
-        {/* Row 3 — three short lists: the brief, the funnel, critical accounts. */}
-        <OverviewCard span={4} title={tBrief("title")} caption={t("sections.brief.caption")}>
+        {/* Row 3 — four columns of "today": the brief, the five plays, the
+            funnel stacked over the critical accounts (the funnel is always
+            four stages, so it gets exactly the height it needs and the
+            accounts take the rest), and when the market shows up. */}
+        <OverviewCard span={3} title={tBrief("title")} caption={t("sections.brief.caption")}>
           <DailyBrief embedded />
         </OverviewCard>
 
-        <OverviewCard span={4} title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
-          <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
+        <OverviewCard span={3} title={tFeed("title")} caption={tFeed("eyebrow")}>
+          <DecisionFeed embedded />
         </OverviewCard>
 
-        <OverviewCard span={4} title={tCritical("title")} caption={t("sections.critical.caption")}>
-          <CriticalAccountsDigest battlecards={battlecards} today={new Date()} embedded />
+        <div className="grid grid-rows-[auto_minmax(0,1fr)] gap-4" style={{ gridColumn: "span 3" }}>
+          <OverviewCard span={12} className="!h-auto" title={t("sections.funnel.title")} caption={t("sections.funnel.caption")}>
+            <PipelineFunnel opportunities={allOppsResult?.data ?? []} />
+          </OverviewCard>
+          <OverviewCard span={12} title={tCritical("title")} caption={t("sections.critical.caption")}>
+            <CriticalAccountsDigest battlecards={battlecards} today={new Date()} embedded />
+          </OverviewCard>
+        </div>
+
+        <OverviewCard span={3} title={t("sections.activityHeatmap.title")} caption={t("sections.activityHeatmap.caption")}>
+          <SignalActivityHeatmap signals={signals} />
         </OverviewCard>
 
-        {/* Row 4 — people: calendar and team ranking. */}
+        {/* Row 4 — people and patterns: calendar, ranking, where you win. */}
         <OverviewCard
-          span={6}
+          span={3}
           title={tCalendar("widget.title")}
           action={
             <Link href={`${base}/calendar`} className="bee-micro font-medium text-[var(--color-chart-4)] hover:underline">
@@ -254,7 +261,7 @@ export function DashboardOverview({
         </OverviewCard>
 
         <OverviewCard
-          span={6}
+          span={4}
           title={t("sections.ranking.title")}
           caption={t("sections.ranking.caption")}
           action={
@@ -266,17 +273,12 @@ export function DashboardOverview({
           <TeamGoalRanking days={90} />
         </OverviewCard>
 
-        {/* Row 5 — the patterns. */}
-        <OverviewCard span={6} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
+        <OverviewCard span={5} title={t("sections.industryHeatmap.title")} caption={t("sections.industryHeatmap.caption")}>
           <IndustrySignalHeatmap
             opportunities={allOppsResult?.data ?? []}
             signals={signals}
             companies={companiesResult?.data ?? []}
           />
-        </OverviewCard>
-
-        <OverviewCard span={6} title={t("sections.activityHeatmap.title")} caption={t("sections.activityHeatmap.caption")}>
-          <SignalActivityHeatmap signals={signals} />
         </OverviewCard>
       </div>
     </>

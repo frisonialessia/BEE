@@ -1,9 +1,4 @@
 {
-  "languageSwitcher": {
-    "label": "Idioma",
-    "es": "Español",
-    "en": "English"
-  },
   "probarBanner": {
     "title": "Estás probando BEE con datos de ejemplo",
     "subtitle": " — guardados solo en este navegador, nunca en nuestra base de datos.",
