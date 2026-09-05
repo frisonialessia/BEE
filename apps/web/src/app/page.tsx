@@ -47,12 +47,11 @@ export default async function Home() {
         <HeroAtmosphere />
 
         <div className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center" style={{ marginTop: "clamp(0.25rem, 3vh, 2.5rem)" }}>
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 sm:px-3 sm:py-1"
-            style={{ background: "color-mix(in srgb, var(--color-chart-4) 14%, var(--color-card))" }}
-          >
-            <span className="bee-eyebrow bee-eyebrow--hero">{t("eyebrow")}</span>
-          </span>
+          {/* Plain auxiliary label, not a badge: a pill with its own
+              background wash competed visually with the H1 right below
+              it for "first thing you read" — a small, quiet uppercase
+              line reads as a category tag instead, exactly what it is. */}
+          <span className="bee-eyebrow bee-eyebrow--hero">{t("eyebrow")}</span>
           <h1 className="mt-4 text-balance text-[clamp(1.5rem,3.6vh+1rem,3.5rem)] font-semibold leading-[1.08] tracking-tight text-[var(--color-text)]">
             {t("heroTitle")}
           </h1>
