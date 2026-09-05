@@ -9,6 +9,7 @@ import { CommandPaletteProvider } from "@/components/command-palette/command-pal
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { DashboardRail } from "@/components/dashboard/dashboard-rail";
 import { MobileNavProvider } from "@/components/dashboard/mobile-nav-context";
+import { AssistantChatProvider } from "@/features/assistant/assistant-chat-context";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
 import { OnboardingIntro } from "@/features/onboarding/onboarding-intro";
@@ -47,6 +48,7 @@ export default function DashboardLayout({
   return (
     <TourProvider>
       <OnboardingProvider>
+        <AssistantChatProvider>
         <OpportunityDrawerProvider>
           <MobileNavProvider>
             <CommandPaletteProvider>
@@ -68,6 +70,7 @@ export default function DashboardLayout({
             </CommandPaletteProvider>
           </MobileNavProvider>
         </OpportunityDrawerProvider>
+        </AssistantChatProvider>
       </OnboardingProvider>
     </TourProvider>
   );

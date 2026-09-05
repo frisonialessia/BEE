@@ -3,13 +3,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 
+import { useAssistantConversations, useDeleteAssistantConversation } from "@/hooks/queries/use-assistant-conversations";
 import { useHiveLeads, useLeadBoard } from "@/hooks/queries/use-lead-board";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
 import { useSignals } from "@/hooks/queries/use-signals";
 import { useUsers } from "@/hooks/queries/use-users";
 import { getClientLocale } from "@/i18n/client-locale";
-import { chatWithAssistant, getAssistantStatus } from "@/lib/api/assistant";
-import type { AssistantToolCall } from "@/lib/api/assistant";
+import { chatWithAssistant, fetchAssistantConversation, getAssistantStatus } from "@/lib/api/assistant";
+import type { AssistantConversationSummary, AssistantToolCall } from "@/lib/api/assistant";
 import { routeAssistantMessage } from "@/lib/assistant/intent-router";
 import { useIsDemoMode } from "@/lib/demo/mode";
 
@@ -37,21 +38,27 @@ const MAX_HISTORY = 20;
 
 /**
  * Cerebro compartido del Asistente BEE — la página completa y el cuadro
- * flotante usan este mismo hook, así que responden igual sin duplicar
- * lógica.
+ * flotante usan este mismo hook (a través de AssistantChatProvider, ver
+ * assistant-chat-context.tsx, así que preguntar aquí o allá comparte el
+ * mismo hilo/conversación guardada, no dos independientes), así que
+ * responden igual sin duplicar lógica.
  *
  * Dos motores, una interfaz: cuando el despliegue tiene un proveedor de IA
  * (`GET /assistant/status` → available), cada mensaje va a
  * `POST /assistant/chat`, donde el modelo consulta (y, si se lo piden,
- * modifica) el pipeline real con herramientas acotadas a la organización.
+ * modifica) el pipeline real con herramientas acotadas a la organización —
+ * y esa misma llamada guarda el turno en `conversation_id` para que el
+ * historial sobreviva un refresh y aparezca en la lista de conversaciones.
  * Sin proveedor — o en el sandbox — se usa el motor de reglas local
  * (`routeAssistantMessage`) sobre los datos que la página ya cargó, igual
- * que antes. Si la llamada de red falla a mitad de conversación, esa
- * respuesta cae también al motor local en vez de dejar el hilo mudo.
+ * que antes; ese motor nunca guarda nada (no hay nada real que guardar). Si
+ * la llamada de red falla a mitad de conversación, esa respuesta cae
+ * también al motor local en vez de dejar el hilo mudo.
  */
 export function useAssistantChat() {
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [pending, setPending] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const isDemo = useIsDemoMode();
 
   const { data: status } = useQuery({
@@ -62,6 +69,9 @@ export function useAssistantChat() {
     retry: false,
   });
   const engine: AssistantEngine = !isDemo && status?.available ? "copilot" : "local";
+
+  const { data: conversations, isLoading: conversationsLoading } = useAssistantConversations(engine === "copilot");
+  const deleteConversationMutation = useDeleteAssistantConversation();
 
   const { data: signalsResult } = useSignals();
   const { data: oppsResult } = useOpportunities(undefined, 200);
@@ -104,8 +114,9 @@ export function useAssistantChat() {
         const history = [...current, userMessage]
           .slice(-MAX_HISTORY)
           .map((m) => ({ role: m.role, content: m.text }));
-        void chatWithAssistant(history, getClientLocale())
+        void chatWithAssistant(history, getClientLocale(), conversationId)
           .then((res) => {
+            setConversationId(res.conversation_id);
             setMessages((prev) => [
               ...prev,
               { id: nextId(), role: "assistant", text: res.reply, toolCalls: res.tool_calls },
@@ -118,8 +129,45 @@ export function useAssistantChat() {
         return current;
       });
     },
-    [engine, answerLocally],
+    [engine, answerLocally, conversationId],
   );
 
-  return { messages, send, pending, engine, model: status?.model ?? null };
+  const startNewConversation = useCallback(() => {
+    setMessages([]);
+    setConversationId(null);
+  }, []);
+
+  const openConversation = useCallback((id: string) => {
+    setPending(true);
+    void fetchAssistantConversation(id)
+      .then((detail) => {
+        setConversationId(detail.id);
+        setMessages(detail.messages.map((m) => ({ id: nextId(), role: m.role, text: m.content })));
+      })
+      .finally(() => setPending(false));
+  }, []);
+
+  const deleteConversation = useCallback(
+    (id: string) => {
+      deleteConversationMutation.mutate(id);
+      if (id === conversationId) startNewConversation();
+    },
+    [deleteConversationMutation, conversationId, startNewConversation],
+  );
+
+  return {
+    messages,
+    send,
+    pending,
+    engine,
+    model: status?.model ?? null,
+    conversationId,
+    conversations: conversations as AssistantConversationSummary[] | undefined,
+    conversationsLoading,
+    startNewConversation,
+    openConversation,
+    deleteConversation,
+  };
 }
+
+export type UseAssistantChat = ReturnType<typeof useAssistantChat>;

@@ -786,6 +786,14 @@
     "engine": {
       "copilot": "Copiloto con acceso a tu pipeline",
       "local": "Respuestas rápidas sobre los datos de esta vista"
+    },
+    "history": {
+      "title": "Historial",
+      "toggleAria": "Ver historial de conversaciones",
+      "new": "Nueva conversación",
+      "empty": "Aquí aparecerán tus conversaciones guardadas.",
+      "deleteAria": "Eliminar conversación",
+      "openAria": "Abrir conversación"
     }
   }
 }

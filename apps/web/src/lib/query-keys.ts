@@ -167,4 +167,9 @@ export const queryKeys = {
     hiveLeads: (limit?: number) =>
       [...queryKeys.control.all, "hive-leads", limit] as const,
   },
+  assistantConversations: {
+    all: ["assistant-conversations"] as const,
+    list: () => [...queryKeys.assistantConversations.all, "list"] as const,
+    detail: (id: string) => [...queryKeys.assistantConversations.all, "detail", id] as const,
+  },
 } as const;

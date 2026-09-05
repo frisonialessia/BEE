@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { ChatMessage } from "@/components/assistant/chat-message";
-import { useAssistantChat } from "@/features/assistant/use-assistant-chat";
+import { useAssistantChatContext } from "@/features/assistant/assistant-chat-context";
 
 /**
  * Cuadro flotante rápido — disponible en cualquier pantalla del dashboard
@@ -20,7 +20,7 @@ export function AskBeeFab() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const { messages, send, pending, engine } = useAssistantChat();
+  const { messages, send, pending, engine } = useAssistantChatContext();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

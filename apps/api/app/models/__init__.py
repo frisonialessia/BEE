@@ -9,6 +9,7 @@ from app.models.account_activity import AccountActivityEvent, AccountActivityEve
 from app.models.account_brief import AccountBrief
 from app.models.admin_audit_log import AdminAuditLog
 from app.models.anomaly import AnomalyAlert
+from app.models.assistant_conversation import AssistantConversation
 from app.models.audit_trail import AuditEntry
 from app.models.autopilot_config import AutopilotConfig
 from app.models.base import (
@@ -60,6 +61,7 @@ __all__ = [
     "AccountActivityEvent",
     "AccountActivityEventType",
     "AccountBrief",
+    "AssistantConversation",
     "Company",
     "ContactSubmission",
     "Lead",

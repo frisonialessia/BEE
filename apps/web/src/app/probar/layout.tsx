@@ -13,6 +13,7 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 import { TeamPresence } from "@/components/presence/presence-bar";
 import { GlobalSearch } from "@/components/search/global-search";
 import { Badge } from "@/components/ui/badge";
+import { AssistantChatProvider } from "@/features/assistant/assistant-chat-context";
 import { OpportunityDrawer } from "@/features/crm/opportunity-drawer";
 import { OpportunityDrawerProvider } from "@/features/crm/opportunity-drawer-context";
 import { TourIntroPopup } from "@/features/tour/tour-intro-popup";
@@ -41,6 +42,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
 
   return (
     <TourProvider>
+      <AssistantChatProvider>
       <OpportunityDrawerProvider>
         <MobileNavProvider>
           <div className="bee-app">
@@ -105,6 +107,7 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
           </div>
         </MobileNavProvider>
       </OpportunityDrawerProvider>
+      </AssistantChatProvider>
     </TourProvider>
   );
 }
