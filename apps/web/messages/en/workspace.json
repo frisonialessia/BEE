@@ -234,7 +234,7 @@
         "pending": "Pending"
       },
       "mockNoticePrefix": "All tasks run in simulated mode — connect your integrations in",
-      "mockNoticeHighlight": "Connections",
+      "mockNoticeHighlight": "Integrations",
       "mockNoticeSuffix": "to dispatch them live.",
       "recentTasks": "Recent tasks",
       "empty": {
@@ -320,6 +320,7 @@
     "connectPrefix": "Connect {label}",
     "defaultAccountLabel": "this account",
     "categories": {
+      "all": "All",
       "crm": "CRM",
       "email": "Email",
       "social": "Social",

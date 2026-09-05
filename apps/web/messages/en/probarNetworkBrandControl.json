@@ -164,7 +164,7 @@
       "notConnected": "not connected",
       "active": "active",
       "tokensRemaining": "{count} tokens remaining",
-      "allChannelsSimulated": "Every channel is in simulated mode — connect them in <connections>Connections</connections> to activate.",
+      "allChannelsSimulated": "Every channel is in simulated mode — connect them in <connections>Integrations</connections> to activate.",
       "noProfile": "No voice profile — create it below in “Paste & extract”",
       "library": {
         "title": "Saved fragments ({count})",
@@ -324,10 +324,11 @@
         "caption": "Warns when a channel's conversion drops against its history"
       },
       "channels": {
-        "title": "Channels",
+        "title": "Integrations",
         "caption": "Where BEE sends in your voice",
         "empty": "No channels configured.",
-        "rateLimit": "{count} sends per day"
+        "rateLimit": "{count} sends per day",
+        "comingSoonLabel": "Coming soon"
       },
       "radar": {
         "title": "Your audience's DISC profile",
@@ -533,7 +534,7 @@
     },
     "tabs": {
       "health": "Health",
-      "connections": "Connections"
+      "connections": "Integrations"
     },
     "common": {
       "viewAll": "View all (+{count})",

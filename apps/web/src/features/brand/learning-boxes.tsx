@@ -232,11 +232,19 @@ const CHANNEL_ICON: Record<(typeof CHANNEL_KEYS)[number], typeof Mail> = {
   twitter: XIcon,
 };
 
+// Same 5 candidates and order as IntegrationsView's own ComingSoonSection
+// (docs/ROADMAP.md, point 4) — one roadmap, read from the one namespace
+// both places already share, never a second invented list.
+const COMING_SOON = ["calendar", "whatsapp", "notion", "drive", "indeed"] as const;
+
 /** Where BEE can send in your voice: one row per channel, the state as a
- *  lavender dot (100 live, page grey simulated) + word. */
+ *  lavender dot (100 live, page grey simulated) + word — plus the same
+ *  roadmap "coming soon" chips the full Integraciones page shows, so a
+ *  visitor who never opens Control still sees what's next. */
 export function ChannelsBox({ channels }: { channels: ChannelStatus[] }) {
   const t = useTranslations("probarNetworkBrandControl.brand.panel");
   const tp = useTranslations("probarNetworkBrandControl.brand.page.channels");
+  const tSoon = useTranslations("workspace.integrations.comingSoon");
   const pathname = usePathname();
   const connectionsHref = pathname?.startsWith("/probar") ? "/probar/control?tab=connections" : "/dashboard/control?tab=connections";
   const label = (channel: string) => ((CHANNEL_KEYS as readonly string[]).includes(channel) ? t(`channelLabels.${channel as (typeof CHANNEL_KEYS)[number]}`) : channel);
@@ -278,6 +286,17 @@ export function ChannelsBox({ channels }: { channels: ChannelStatus[] }) {
           })}
         </p>
       )}
+      <div className="mt-3 shrink-0 space-y-1.5">
+        <p className="bee-micro">{tp("comingSoonLabel")}</p>
+        <ul className="flex flex-wrap gap-1.5">
+          {COMING_SOON.map((key) => (
+            <li key={key} className="flex items-center gap-1 rounded-full py-0.5 pl-2.5 pr-1 text-xs font-medium" style={{ background: tint(TONE.calm, 45) }}>
+              {tSoon(`items.${key}.label`)}
+              <span className="rounded-full bg-[var(--color-card)] px-1.5 py-0.5 bee-micro">{tSoon("tag")}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </OverviewCard>
   );
 }

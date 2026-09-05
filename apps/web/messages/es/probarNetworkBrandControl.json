@@ -164,7 +164,7 @@
       "notConnected": "sin conectar",
       "active": "activo",
       "tokensRemaining": "{count} tokens restantes",
-      "allChannelsSimulated": "Todos los canales están en modo simulado — conéctalos en <connections>Conexiones</connections> para activarlos.",
+      "allChannelsSimulated": "Todos los canales están en modo simulado — conéctalos en <connections>Integraciones</connections> para activarlos.",
       "noProfile": "Sin perfil de voz — créalo abajo en «Pegar y extraer»",
       "library": {
         "title": "Fragmentos guardados ({count})",
@@ -324,10 +324,11 @@
         "caption": "Avisa si la conversión de un canal cae frente a su histórico"
       },
       "channels": {
-        "title": "Canales",
+        "title": "Integraciones",
         "caption": "Desde dónde BEE envía con tu voz",
         "empty": "Sin canales configurados.",
-        "rateLimit": "{count} envíos por día"
+        "rateLimit": "{count} envíos por día",
+        "comingSoonLabel": "Próximamente"
       },
       "radar": {
         "title": "Perfil DISC de tu audiencia",
@@ -533,7 +534,7 @@
     },
     "tabs": {
       "health": "Salud",
-      "connections": "Conexiones"
+      "connections": "Integraciones"
     },
     "common": {
       "viewAll": "Ver todo (+{count})",

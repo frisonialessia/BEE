@@ -1,5 +1,6 @@
 "use client";
 
+import { Briefcase, Building2, Cloud, Mail, Ticket, type LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
@@ -45,6 +46,20 @@ const CONNECTED_LABELS: Record<string, string> = {
 // IntegrationStatus.category on the backend
 // (app.api.v1.endpoints.integrations.list_integrations).
 const CATEGORY_ORDER = ["crm", "email", "social", "automation", "bi", "pm"] as const;
+
+// A plain, generic mark per provider — never a brand's own logo (BEE
+// draws no icon in color; see palette rules), same reasoning as
+// ChannelsBox's own CHANNEL_ICON in learning-boxes.tsx. Salesforce and
+// HubSpot share Cloud/Building2 (both "a CRM in the cloud"), not because
+// they're the same thing, just because neither has a closer generic
+// lucide glyph than the other CRM connector already claimed.
+const PROVIDER_ICON: Record<OAuthProvider, LucideIcon> = {
+  gmail: Mail,
+  linkedin: Briefcase,
+  salesforce: Cloud,
+  hubspot: Building2,
+  jira: Ticket,
+};
 
 // Good next candidates from the roadmap (docs/ROADMAP.md, point 4) — real
 // data would come from `list_integrations` the day one of these ships; a
@@ -144,19 +159,27 @@ function ProviderCard({
   }
 
   const detail = detailOf(status);
+  const Icon = PROVIDER_ICON[provider];
 
   return (
-    <OverviewCard span={4} title={label} caption={category}>
-      <div className="bee-fill flex flex-col gap-3">
-        <p className="line-clamp-3 text-sm">{status.connected ? connectedCopy(status.account_email ?? t("defaultAccountLabel")) : disconnectedCopy}</p>
-        <div className="flex flex-wrap items-center gap-2">
+    <section className="bee-card" style={{ gridColumn: "span 4" }}>
+      <div className="bee-card__body flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-[var(--radius-md)]" style={{ background: tint(HUE, 45) }}>
+            <Icon className="size-5 text-[var(--color-text)]" aria-hidden />
+          </span>
           <StateChip hue={HUE} level={status.connected ? 45 : "rest"}>
             {status.connected ? t("connected") : t("notConnected")}
           </StateChip>
-          <span className="bee-caption truncate">
-            {status.connected_at ? t("card.connectedWhen", { when: formatRelativeTime(status.connected_at, locale) }) : t("card.neverConnected")}
-          </span>
         </div>
+        <div>
+          <p className="bee-card-title !mb-0">{label}</p>
+          <p className="bee-caption">{category}</p>
+        </div>
+        <p className="line-clamp-3 text-sm">{status.connected ? connectedCopy(status.account_email ?? t("defaultAccountLabel")) : disconnectedCopy}</p>
+        <span className="bee-caption truncate">
+          {status.connected_at ? t("card.connectedWhen", { when: formatRelativeTime(status.connected_at, locale) }) : t("card.neverConnected")}
+        </span>
         {status.last_error && (
           <p className="bee-caption">
             {status.last_error} {t("lastErrorSuffix")}
@@ -165,20 +188,20 @@ function ProviderCard({
         {detail && !status.connected && <p className="bee-caption">{detail}</p>}
         {status.connected && children}
         {canManage && (
-          <div className="mt-auto pt-1">
+          <div className="mt-auto flex justify-end pt-1">
             {status.connected ? (
               <button type="button" onClick={handleDisconnect} disabled={disconnect.isPending} className="bee-btn-ghost text-xs">
                 {disconnect.isPending ? t("disconnecting") : t("disconnect")}
               </button>
             ) : (
-              <button type="button" onClick={handleConnect} disabled={connect.isPending} className="bee-btn-ghost text-xs">
-                {connect.isPending ? t("redirecting") : t("connectPrefix", { label })}
+              <button type="button" onClick={handleConnect} disabled={connect.isPending} className="bee-btn-text text-xs font-medium">
+                {connect.isPending ? t("redirecting") : t("connectPrefix", { label })} →
               </button>
             )}
           </div>
         )}
       </div>
-    </OverviewCard>
+    </section>
   );
 }
 
@@ -369,6 +392,12 @@ export function IntegrationsView({ showHeader = true }: { showHeader?: boolean }
   const ordered = [...orgProviders].sort((a, b) => rank(a) - rank(b));
   const categoryLabel = (s: IntegrationStatus) => (s.category && t.has(`categories.${s.category}`) ? t(`categories.${s.category}`) : t("categories.other"));
 
+  // Present categories only — a filter tab for a category no provider
+  // actually has yet would just be a dead end.
+  const presentCategories = CATEGORY_ORDER.filter((c) => orgProviders.some((s) => s.category === c));
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const filtered = categoryFilter === "all" ? ordered : ordered.filter((s) => s.category === categoryFilter);
+
   return (
     <div>
       {showHeader && (
@@ -381,6 +410,28 @@ export function IntegrationsView({ showHeader = true }: { showHeader?: boolean }
         </header>
       )}
 
+      {presentCategories.length > 1 && (
+        <div className="mb-4 flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => setCategoryFilter("all")}
+            className={categoryFilter === "all" ? "bee-btn-ghost bee-btn-ghost--active text-xs" : "bee-btn-ghost text-xs"}
+          >
+            {t("categories.all")}
+          </button>
+          {presentCategories.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setCategoryFilter(c)}
+              className={categoryFilter === c ? "bee-btn-ghost bee-btn-ghost--active text-xs" : "bee-btn-ghost text-xs"}
+            >
+              {t(`categories.${c}`)}
+            </button>
+          ))}
+        </div>
+      )}
+
       {isLoading ? (
         <div className="bee-overview">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -389,7 +440,7 @@ export function IntegrationsView({ showHeader = true }: { showHeader?: boolean }
         </div>
       ) : (
         <div className="bee-overview">
-          {ordered.map((status) => {
+          {filtered.map((status) => {
             const provider = status.provider as OAuthProvider;
             return (
               <ProviderCard
