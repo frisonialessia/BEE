@@ -211,8 +211,23 @@
       "lead": {
         "eyebrow": "Cuenta caliente"
       },
+      "trend": {
+        "eyebrow": "Señales"
+      },
+      "hive": {
+        "eyebrow": "Colmena",
+        "live": "En vivo",
+        "aria": "Colmena de cuentas con intención de compra"
+      },
       "play": {
-        "eyebrow": "Jugada lista"
+        "eyebrow": "Jugada lista",
+        "text": "Canal, argumento y momento, listos para leer"
+      },
+      "sales": {
+        "eyebrow": "Cierres acelerados"
+      },
+      "streak": {
+        "eyebrow": "Racha del equipo"
       }
     },
     "differentiators": {

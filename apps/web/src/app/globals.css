@@ -333,6 +333,30 @@
 .bee-bento-pad { padding: var(--bee-pad-surface); }
 .bee-bento-pad-lg { padding: var(--bee-pad-surface-lg); }
 
+/* One small tile of the homepage hero's bento row (hero-bento.tsx) — same
+   recipe as .bee-card (stretches to the row's height) but with tight
+   padding/radius: five of these need to read as a coherent strip at
+   ~90-120px tall, not as five separate .bee-card boxes.
+   No `display`/`flex-direction` here on purpose — two of these tiles
+   toggle with Tailwind's `hidden sm:flex`, and this file's plain (un-
+   layered) rules always win a cascade tie against a layered Tailwind
+   utility, `hidden` included. Callers add `flex flex-col` themselves so
+   Tailwind fully owns `display`. */
+.bee-bento-mini {
+  min-height: 0;
+  height: 100%;
+  background: var(--color-card);
+  border: var(--bee-card-border-w) solid var(--bee-card-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--bee-shadow-card);
+  color: var(--color-text);
+  /* Fluid, not a breakpoint jump: a short viewport (see app/page.tsx's
+     own overflow-hidden) gets the tight end automatically, a tall one
+     gets real breathing room, with nothing to trip the cascade-layer
+     issue above. */
+  padding: clamp(0.6rem, 1.6vh, 1.1rem) clamp(0.65rem, 1.8vh, 1.2rem);
+}
+
 /* ── Icon chips — the accent lives in a small tinted icon box instead of
    the card fill (marketing-integrations.tsx: a directory of real signal
    sources reads more like a spec sheet on a white card than a set of

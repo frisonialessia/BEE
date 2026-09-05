@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { Logo } from "@/components/logo";
@@ -12,10 +12,13 @@ import { ApiError } from "@/types/api";
 export default function RegisterPage() {
   const t = useTranslations("auth.register");
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { register } = useAuth();
   const [organizationName, setOrganizationName] = useState("");
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  // Prefilled from the homepage's own hero form (`?email=`, a plain GET
+  // submit — see app/page.tsx) so typing it there isn't wasted.
+  const [email, setEmail] = useState(() => searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);

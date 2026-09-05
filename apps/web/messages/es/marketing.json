@@ -3,7 +3,8 @@
     "features": "Funcionalidades",
     "login": "Iniciar sesión",
     "tryFree": "Probar sin registrarte",
-    "contact": "Contacto"
+    "contact": "Contacto",
+    "docs": "Documentación"
   },
   "footer": {
     "tagline": "Inteligencia comercial autónoma para equipos de revenue que no tienen tiempo de buscar la señal — solo de actuar sobre ella.",
@@ -42,6 +43,12 @@
     "ctaStart": "Probar con datos de ejemplo",
     "ctaTry": "Probar sin registrarte",
     "demoCaption": "La página Señales de BEE con datos de ejemplo. Lo mismo que verás al entrar.",
+    "signup": {
+      "emailLabel": "Correo de trabajo",
+      "placeholder": "tu@empresa.com",
+      "cta": "Crear cuenta",
+      "orTry": "o prueba con datos de ejemplo, sin registro →"
+    },
     "features": {
       "signal": {
         "title": "La señal llega.",

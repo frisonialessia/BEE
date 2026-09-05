@@ -3,7 +3,8 @@
     "features": "Features",
     "login": "Sign in",
     "tryFree": "Try without signing up",
-    "contact": "Contact"
+    "contact": "Contact",
+    "docs": "Documentation"
   },
   "footer": {
     "tagline": "Autonomous sales intelligence for revenue teams who don't have time to go looking for the signal — only to act on it.",
@@ -42,6 +43,12 @@
     "ctaStart": "Try with sample data",
     "ctaTry": "Try without signing up",
     "demoCaption": "BEE's Signals page with sample data. Exactly what you see when you sign in.",
+    "signup": {
+      "emailLabel": "Work email",
+      "placeholder": "you@company.com",
+      "cta": "Create account",
+      "orTry": "or try sample data, no sign-up →"
+    },
     "features": {
       "signal": {
         "title": "The signal arrives.",

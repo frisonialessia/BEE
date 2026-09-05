@@ -211,8 +211,23 @@
       "lead": {
         "eyebrow": "Hot account"
       },
+      "trend": {
+        "eyebrow": "Signals"
+      },
+      "hive": {
+        "eyebrow": "Honeycomb",
+        "live": "Live",
+        "aria": "Honeycomb of accounts with buying intent"
+      },
       "play": {
-        "eyebrow": "Play ready"
+        "eyebrow": "Play ready",
+        "text": "Channel, argument and timing, ready to read"
+      },
+      "sales": {
+        "eyebrow": "Faster closes"
+      },
+      "streak": {
+        "eyebrow": "Team streak"
       }
     },
     "differentiators": {

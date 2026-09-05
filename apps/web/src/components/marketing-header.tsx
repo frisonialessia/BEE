@@ -2,13 +2,15 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { Logo } from "@/components/logo";
+import { getApiBaseUrl } from "@/lib/api/client";
 
 /**
  * Cabecera pública — barra flotante: sticky, centrada en el mismo
  * max-w-6xl que el resto de la landing, esquinas redondeadas, fondo de
  * tarjeta translúcido con blur y borde hairline (.bee-nav en globals.css,
  * puros tokens). Logo a la izquierda, enlaces limpios al centro
- * (Funcionalidades · Contacto), a la derecha "Iniciar sesión" como enlace
+ * (Funcionalidades · Contacto · Documentación — este último a los docs
+ * reales de la API, no una página inventada), a la derecha "Iniciar sesión" como enlace
  * de texto discreto y un único CTA sólido "Probar sin registrarte" — el
  * camino de cero fricción, el único que sigue visible mientras el
  * visitante scrollea.
@@ -40,6 +42,9 @@ export function MarketingHeader() {
           <Link href="/contacto" className="bee-btn-text text-sm">
             {t("contact")}
           </Link>
+          <a href={`${getApiBaseUrl()}/docs`} target="_blank" rel="noreferrer" className="bee-btn-text text-sm">
+            {t("docs")}
+          </a>
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">

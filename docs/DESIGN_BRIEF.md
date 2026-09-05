@@ -103,9 +103,33 @@ Encabezado con pestañas en la misma fila (`MergedPageTabs`).
     lateral (`.bee-drawer--wide`). Debe hablar el mismo idioma que "Nueva
     reunión" (inputs grises, píldoras, puntos, respuesta inmediata).
 13. **La landing no menciona fuentes conectadas** (LinkedIn, G2, etc.) hasta
-    que existan más integraciones. Demo en vivo solo con Señales, pegada al
-    hero, estilo Linear; Ventas al final explicando la diferencia contra CRMs
-    y herramientas de intención.
+    que existan más integraciones.
+    - **El home (`/`) es una sola pantalla, cero scroll** (2026-09-05,
+      pedido explícito de la fundadora sobre una referencia de otro SaaS):
+      `h-dvh max-h-dvh overflow-hidden`, título en `clamp()` en vez de
+      saltos por breakpoint para comprimirse en una ventana baja en vez de
+      desbordar. Todo lo que antes vivía en el scroll de home (demo en
+      vivo de Señales, "Cómo funciona", comparación de Ventas, FAQ) se
+      movió a `/funcionalidades` (ver `how-it-works.tsx`,
+      `marketing-sales.tsx`, `marketing-faq.tsx` ahí) — no se perdió
+      contenido, solo dejó de caber en una sola pantalla. Lo que queda en
+      home: titular, un bento de 5 piezas reales de BEE (`hero-bento.tsx`
+      — nunca fotos de stock) y un formulario de correo → `/register`
+      (RegisterPage lee `?email=` para precargarlo).
+    - Al mover `MarketingSales` a `/funcionalidades`, su gráfico de "Ganado
+      por mes" (los tres verdes, rule 2) sigue siendo el mismo dato —
+      `hero-bento.tsx` en home ahora muestra ESE MISMO número/color como
+      una de sus 5 tarjetas, así que la excepción de rule 2 cubre ambos
+      sitios, no solo `marketing-sales.tsx`.
+    - Gotcha de CSS a recordar: una clase propia (no-Tailwind, plana en
+      `globals.css`, fuera de cualquier `@layer`) siempre gana un empate de
+      cascada contra una utilidad de Tailwind en el MISMO elemento — CSS
+      trata las reglas sin `@layer` como una capa final implícita por
+      encima de todas las capas con nombre, sin importar el orden en el
+      archivo. Si una clase propia declara `display`, un `hidden sm:flex`
+      de Tailwind en ese mismo elemento no hace nada. Por eso
+      `.bee-bento-mini` no declara `display`/`flex-direction` — cada
+      tarjeta los trae como utilidades de Tailwind.
 14. **Diseño defensivo — ninguna caja se deforma con datos reales.** Todo en
     BEE llega de una API o del demo store, con textos de largo variable; el
     layout nunca puede depender de que un nombre, un resumen o una lista

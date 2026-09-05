@@ -1,12 +1,15 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
-import { Activity, ArrowRight, Briefcase, CalendarDays, Radio, Target, TrendingUp, Trophy } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
+import { Activity, Briefcase, CalendarDays, Radio, Target, TrendingUp, Trophy } from "lucide-react";
 
 import { FeatureChart, type FeatureId } from "@/components/marketing-feature-charts";
+import { HowItWorks } from "@/components/marketing/how-it-works";
+import { MarketingFAQ } from "@/components/marketing-faq";
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
+import { MarketingSales } from "@/components/marketing-sales";
 import { Reveal } from "@/components/marketing-motion";
+import type { Locale } from "@/i18n/locales";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("legalMarketing.funcionalidades.meta");
@@ -37,6 +40,7 @@ const SECTIONS: ReadonlyArray<{ id: FeatureId; icon: typeof Radio }> = [
 
 export default async function FuncionalidadesPage() {
   const t = await getTranslations("legalMarketing.funcionalidades");
+  const locale = (await getLocale()) as Locale;
 
   return (
     <div className="flex min-h-full flex-col bg-background">
@@ -49,7 +53,12 @@ export default async function FuncionalidadesPage() {
           <p className="bee-caption mx-auto mt-4 max-w-xl text-base">{t("heroSubtitle")}</p>
         </section>
 
-        <section className="mx-auto w-full max-w-6xl px-6 pb-12 lg:pb-14">
+        {/* "Cómo funciona" — se mudó aquí desde el home cuando la landing
+            pasó a una sola pantalla sin scroll (ver app/page.tsx). Antes de
+            la revisión módulo por módulo, para dar el panorama general. */}
+        <HowItWorks locale={locale} />
+
+        <section className="mx-auto w-full max-w-6xl px-6 pb-12 pt-12 lg:pb-14 lg:pt-14">
           {SECTIONS.map(({ id, icon: Icon }, i) => {
             const ink = "var(--color-text)";
             const chips = t.raw(`sections.${id}.chips`) as string[];
@@ -99,19 +108,12 @@ export default async function FuncionalidadesPage() {
           <p className="bee-micro mt-2 text-center">{t("demoNote")}</p>
         </section>
 
-        <section className="border-t border-border">
-          <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 py-12 text-center lg:py-14">
-            <h2 className="max-w-xl text-2xl font-semibold tracking-tight sm:text-3xl">{t("closingTitle")}</h2>
-            <div className="flex flex-wrap items-center justify-center gap-4">
-              <Link href="/contacto?source=funcionalidades" className="bee-btn bee-btn--primary">
-                {t("ctaStart")} <ArrowRight className="size-4" />
-              </Link>
-              <Link href="/#producto" className="bee-btn-ghost">
-                {t("ctaDemo")}
-              </Link>
-            </div>
-          </div>
-        </section>
+        {/* Ventas + FAQ — también se mudaron aquí desde el home; cada una
+            ya trae su propio cierre (simulador + CTAs, y el acordeón de
+            objeciones), así que no hace falta un tercer cierre genérico
+            después de esto. */}
+        <MarketingSales />
+        <MarketingFAQ />
       </main>
 
       <MarketingFooter />

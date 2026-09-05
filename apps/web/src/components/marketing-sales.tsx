@@ -10,8 +10,11 @@ import { SALES, TONE } from "@/components/charts/palette";
 import { Reveal } from "@/components/marketing-motion";
 
 /**
- * MarketingSales — the closing argument of the landing: "Los CRM registran
- * ventas. BEE las cierra." It argues the difference against the two things
+ * MarketingSales — the closing argument for /funcionalidades (moved there
+ * from the homepage when the landing became a single, scroll-free
+ * viewport — see app/page.tsx and hero-bento.tsx, which carries this same
+ * WON figure as one of its small cards): "Los CRM registran ventas. BEE
+ * las cierra." It argues the difference against the two things
  * a buyer already has — a CRM and an intent / enrichment tool — as three
  * cards side by side (not a table), four one-line facts each: where the
  * lead comes from, the next step, prioritization, the close. The BEE card
@@ -57,8 +60,12 @@ export function MarketingSales() {
   const points = projection(factor);
   const total = points.reduce((s, v) => s + v, 0);
 
+  // id "ventas-comparacion", not "ventas": /funcionalidades already has its
+  // own #ventas anchor on the per-module Ventas section, and this
+  // component now renders further down that same page — two elements
+  // can't share one id.
   return (
-    <section id="ventas" className="border-t border-border">
+    <section id="ventas-comparacion" className="border-t border-border">
       <div className="mx-auto w-full max-w-6xl px-6 py-20 lg:py-28">
         <Reveal className="max-w-3xl">
           <p className="bee-eyebrow">{t("eyebrow")}</p>

@@ -1,181 +1,96 @@
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { TONE, tint } from "@/components/charts/palette";
 import { HeroAtmosphere } from "@/components/marketing/hero-atmosphere";
-import { HeroPanel } from "@/components/marketing/hero-panel";
-import { LandingDemo } from "@/components/marketing/landing-demo";
-import { MarketingFAQ } from "@/components/marketing-faq";
-import { MarketingFooter } from "@/components/marketing-footer";
+import { HeroBento } from "@/components/marketing/hero-bento";
 import { MarketingHeader } from "@/components/marketing-header";
-import { Reveal } from "@/components/marketing-motion";
-import { MarketingSales } from "@/components/marketing-sales";
-import { getSignalTypeLabels } from "@/lib/format";
 import type { Locale } from "@/i18n/locales";
 
 /**
- * Landing pública — six blocks, one image:
- *   1. floating nav;
- *   2. hero — headline in ink, then one real, legible panel (HeroPanel:
- *      the hive + two counts, with two small badges anchored to its
- *      corners — never a fan of scattered cards) over HeroAtmosphere's hex
- *      watermark, then three mechanism differentiators (no numbers — what
- *      sets BEE apart from a CRM or an intent tool, not a vanity stat);
- *   3. the product — the Señales page drawn with BEE's own components over
- *      the sandbox's sample data (LandingDemo), appearing on scroll;
- *   4. three steps — the signal arrives · BEE prepares the play · you
- *      decide — as three cards, each with a small BEE graphic instead of
- *      a paragraph;
- *   5. Ventas — the difference against a CRM and against an intent tool,
- *      with the simulator on white (MarketingSales);
- *   6. FAQ, one closing line with the same button, footer.
+ * Landing pública — vista única, cero scroll. Antes esto era seis bloques
+ * a lo largo de una página larga (demo interactivo, "Cómo funciona",
+ * comparación de Ventas, FAQ); ese contenido no se perdió, se movió a
+ * /funcionalidades (ver how-it-works.tsx + MarketingSales + MarketingFAQ
+ * ahí) porque ya no cabe en una sola pantalla. Lo que queda aquí es
+ * exactamente lo que hace falta para entender qué es BEE y arrancar: el
+ * titular, el bento de cinco piezas reales de producto (hero-bento.tsx,
+ * nada de fotos de stock) y un único formulario — nombre de correo,
+ * "Crear cuenta" — que entra directo al registro real con el correo
+ * precargado (RegisterPage lee `?email=`), o el atajo al sandbox sin
+ * registro. Sin footer largo: un renglón de copyright con los dos enlaces
+ * legales que de otro modo quedarían sin ninguna entrada desde el home
+ * (el resto de /footer sigue accesible desde cualquier otra página
+ * pública).
  *
- * Color: text and icons are ink; blue only on buttons; brand hues only on
- * chart marks and chip backgrounds; every ground is the page background or
- * a white card, except the hero's faint lavender wash. Nothing names where
- * signals come from and no number is invented: HeroPanel and the demo read
- * the same sample data the sandbox uses.
+ * `h-dvh max-h-dvh overflow-hidden` en el contenedor raíz: la página nunca
+ * scrollea, en ningún viewport — el título usa un tamaño fluido
+ * (`clamp()`) en vez de saltos por breakpoint para comprimirse en vez de
+ * desbordar en una ventana baja. El bento reduce a tres tarjetas en
+ * teléfono (ver hero-bento.tsx) por ancho, no por alto.
+ *
+ * Color: texto e iconos en tinta; azul solo en el botón primario; los
+ * tonos BEE viven en el bento (ver su propio docstring). Ningún número
+ * inventado — todo sale de lib/sample-data.ts, igual que el resto del
+ * sandbox.
  */
-
-const STEPS = ["signal", "play", "decide"] as const;
-const HERO_DIFFERENTIATORS = ["lead", "play", "learn"] as const;
-// Three signal types the "signal" step's chip row shows — a sample, not
-// the full taxonomy (see lib/format.ts for the rest).
-const STEP_SIGNAL_TYPES = ["funding_round", "hiring", "tech_adoption"] as const;
-// The same three CRM-stage hues the pipeline funnel uses (Resumen, CRM
-// board) — the "decide" step narrows through the same colors a real
-// pipeline does.
-const STEP_FUNNEL_TONES = ["var(--color-chart-3)", "var(--color-chart-1)", "var(--color-chart-4)"];
-const STEP_FUNNEL_WIDTHS = [100, 62, 34];
-
 export default async function Home() {
   const t = await getTranslations("marketing.landing");
-  const tHero = await getTranslations("landing.hero.differentiators");
+  const tFooter = await getTranslations("marketing.footer");
   const locale = (await getLocale()) as Locale;
-  const signalTypeLabels = getSignalTypeLabels(locale);
+  const year = new Date().getUTCFullYear();
 
   return (
-    <div className="flex min-h-full flex-col bg-background">
+    <div className="flex h-dvh max-h-dvh flex-col overflow-hidden bg-background">
       <MarketingHeader />
 
-      <main className="relative flex-1">
-        {/* ── Hero + the product ──────────────────────────────────────── */}
-        <section className="relative -mt-[4.25rem] overflow-hidden pt-[4.25rem]">
-          <HeroAtmosphere />
-          <div className="relative mx-auto w-full max-w-3xl px-6 pb-4 pt-16 text-center sm:pt-24 lg:pb-8">
-            <div className="bee-hero-in relative">
-              <p className="bee-eyebrow">{t("eyebrow")}</p>
-              <h1 className="bee-headline mx-auto mt-5 text-balance text-4xl font-semibold leading-[1.05] tracking-tight text-[var(--color-text)] sm:text-5xl lg:text-6xl">
-                {t("heroTitle")}
-              </h1>
-              <p className="bee-caption mx-auto mt-6 max-w-xl text-base">{t("heroSubtitle")}</p>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                <Link href="/probar" className="bee-btn bee-btn--primary bee-cta-lift">
-                  {t("ctaStart")}
-                </Link>
-                <a href="#como-funciona" className="bee-btn bee-btn--secondary">
-                  {t("ctaHow")}
-                </a>
-              </div>
-            </div>
+      <main className="relative flex flex-1 min-h-0 flex-col items-center justify-center overflow-hidden px-4 sm:px-6">
+        <HeroAtmosphere />
 
-            <Reveal delay={80}>
-              <HeroPanel locale={locale} />
-            </Reveal>
+        <div className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center">
+          <p className="bee-eyebrow">{t("eyebrow")}</p>
+          <h1 className="mt-2 text-balance text-[clamp(1.5rem,3.6vh+1rem,3.5rem)] font-semibold leading-[1.08] tracking-tight text-[var(--color-text)]">
+            {t("heroTitle")}
+          </h1>
+          <p className="bee-caption mt-3 line-clamp-2 max-w-lg text-[clamp(0.8rem,1.5vh+0.35rem,1.125rem)]">
+            {t("heroSubtitle")}
+          </p>
 
-            <Reveal className="relative mt-12 grid grid-cols-1 gap-6 text-left sm:grid-cols-3 sm:gap-8 sm:text-center" delay={140}>
-              {HERO_DIFFERENTIATORS.map((key) => (
-                <div key={key}>
-                  <p className="text-base font-semibold leading-snug">{tHero(`${key}.title`)}</p>
-                  <p className="bee-caption mt-1 leading-snug">{tHero(`${key}.text`)}</p>
-                </div>
-              ))}
-            </Reveal>
-          </div>
+          <form action="/register" method="get" className="mt-5 flex w-full max-w-md flex-col gap-2 sm:mt-7 sm:flex-row sm:gap-2">
+            <label htmlFor="hero-email" className="sr-only">
+              {t("signup.emailLabel")}
+            </label>
+            <input
+              id="hero-email"
+              name="email"
+              type="email"
+              required
+              placeholder={t("signup.placeholder")}
+              className="bee-input h-10 flex-1"
+            />
+            <button type="submit" className="bee-btn bee-btn--primary bee-cta-lift h-10 shrink-0 justify-center">
+              {t("signup.cta")}
+            </button>
+          </form>
+          <Link href="/probar" className="bee-micro mt-2 hover:text-foreground">
+            {t("signup.orTry")}
+          </Link>
 
-          <div id="producto" className="relative mx-auto mt-6 w-full max-w-6xl px-4 pb-16 sm:px-6 lg:pb-24">
-            <Reveal delay={150}>
-              <div className="rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-card)] p-2 shadow-[0_24px_80px_-32px_rgba(34,34,34,0.25)] sm:p-3">
-                <LandingDemo />
-              </div>
-              <p className="bee-caption mt-4 text-center">{t("demoCaption")}</p>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ── Three steps, each with a small BEE graphic ──────────────── */}
-        <section id="como-funciona" className="border-t border-border">
-          <div className="mx-auto w-full max-w-6xl px-6 py-16 lg:py-24">
-            <Reveal>
-              <p className="bee-eyebrow">{t("steps.eyebrow")}</p>
-            </Reveal>
-            <Reveal stagger className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3" delay={60}>
-              {STEPS.map((step) => (
-                // No `!h-auto` here on purpose: the plain grid row's own
-                // stretch (.bee-card's height: 100%) equalizes the three
-                // cards to the tallest one's content, so a shorter step
-                // (fewer chips, no wrap) still ends flush with the others.
-                <div key={step} className="bee-card">
-                  <p className="bee-caption tabular-nums">{t(`steps.${step}.n`)}</p>
-                  <h2 className="mt-2 text-xl font-semibold tracking-tight">{t(`steps.${step}.title`)}</h2>
-                  <p className="mt-2.5 text-sm leading-relaxed text-[var(--color-text-muted)]">{t(`steps.${step}.text`)}</p>
-
-                  {step === "signal" && (
-                    <div className="mt-5 flex flex-wrap gap-1.5 border-t border-[var(--color-divider)] pt-4">
-                      {STEP_SIGNAL_TYPES.map((type) => (
-                        <span key={type} className="rounded-full px-2.5 py-1 text-xs font-medium text-[var(--color-text)]" style={{ background: tint(TONE.market, 45) }}>
-                          {signalTypeLabels[type]}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {step === "play" && (
-                    <div className="mt-5 border-t border-[var(--color-divider)] pt-4">
-                      <div className="flex gap-1.5" aria-hidden>
-                        {[1, 2, 3].map((i) => (
-                          <i key={i} className="h-1.5 flex-1 rounded-full" style={{ background: i < 3 ? "var(--color-text)" : "color-mix(in srgb, var(--color-text) 14%, transparent)" }} />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {step === "decide" && (
-                    <div className="mt-5 flex flex-col gap-1.5 border-t border-[var(--color-divider)] pt-4" aria-hidden>
-                      {STEP_FUNNEL_WIDTHS.map((w, i) => (
-                        <div key={i} className="h-2 rounded-full" style={{ width: `${w}%`, background: STEP_FUNNEL_TONES[i] }} />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ── Ventas: the difference ──────────────────────────────────── */}
-        <MarketingSales />
-
-        <MarketingFAQ />
-
-        {/* ── Closing ─────────────────────────────────────────────────── */}
-        <section className="border-t border-border">
-          <Reveal className="mx-auto w-full max-w-3xl px-6 py-20 text-center lg:py-28">
-            <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">{t("closingTitle")}</h2>
-            <p className="bee-caption mt-4 text-base">{t("closingText")}</p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <Link href="/probar" className="bee-btn bee-btn--primary bee-cta-lift">
-                {t("closingCta")}
-              </Link>
-              <Link href="/contacto?source=closing" className="bee-btn bee-btn--secondary">
-                {t("closingSecondary")}
-              </Link>
-            </div>
-          </Reveal>
-        </section>
+          <HeroBento locale={locale} />
+        </div>
       </main>
 
-      <MarketingFooter />
+      <footer className="shrink-0 border-t border-border px-4 py-2 text-center">
+        <p className="bee-micro">
+          {tFooter("copyright", { year })} ·{" "}
+          <Link href="/terminos" className="hover:text-foreground">
+            {tFooter("legalLinks.terms")}
+          </Link>{" "}
+          ·{" "}
+          <Link href="/privacidad" className="hover:text-foreground">
+            {tFooter("legalLinks.privacy")}
+          </Link>
+        </p>
+      </footer>
     </div>
   );
 }
