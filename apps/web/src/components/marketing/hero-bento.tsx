@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, Move } from "lucide-react";
+import { Eye } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
@@ -118,7 +118,6 @@ const SALES_TARGET = 50;
 export function HeroBento({ locale }: { locale: Locale }) {
   const t = useTranslations("landing.hero.cards");
   const tDiff = useTranslations("landing.hero.differentiators");
-  const tHero = useTranslations("landing.hero");
   const tConf = useTranslations("shared.cyclePrediction.confidence");
   const [now] = useState(() => Date.now());
   // A lower floor than the mobile collage's default: a wide-but-short
@@ -419,10 +418,6 @@ export function HeroBento({ locale }: { locale: Locale }) {
           rotated, dragged with a finger like the collage they're a piece
           of — see MobileCollage below for the actual drag mechanics. */}
       <div className="mt-8 w-full sm:hidden">
-        <p className="bee-micro mb-2 flex items-center gap-1">
-          <Move className="size-3" aria-hidden />
-          {tHero("dragHint")}
-        </p>
         <MobileCollage cards={MOBILE_CARDS} />
       </div>
 
