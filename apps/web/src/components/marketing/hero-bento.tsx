@@ -91,8 +91,8 @@ const SALES_TARGET = 50;
 // shrinking, so the cards read at their real size — on the common
 // desktop viewports: 1440×900 leaves it 505×1040 of room and 1366×768
 // leaves 392×1040, both above 390×845.
-const DESKTOP_DESIGN_H = 400;
-const DESKTOP_DESIGN_W = 1080;
+const DESKTOP_DESIGN_H = 415;
+const DESKTOP_DESIGN_W = 1200;
 const MOBILE_DESIGN_H = 320;
 const MOBILE_DESIGN_W = 370;
 
@@ -138,6 +138,7 @@ const MOBILE_DESIGN_W = 370;
  */
 export function HeroBento({ locale }: { locale: Locale }) {
   const t = useTranslations("landing.hero.cards");
+  const tDiff = useTranslations("landing.hero.differentiators");
   const tConf = useTranslations("shared.cyclePrediction.confidence");
   const [now] = useState(() => Date.now());
 
@@ -155,12 +156,11 @@ export function HeroBento({ locale }: { locale: Locale }) {
     }).length;
   });
   const maxWeekly = Math.max(...weeklyBuckets, 1);
-  // Honest delta: only shown when the first week had a real baseline to
-  // divide by — never a fabricated "+N%" against a zero.
-  const weeklyDeltaPct = weeklyBuckets[0] > 0 ? Math.round(((weeklyBuckets.at(-1)! - weeklyBuckets[0]) / weeklyBuckets[0]) * 100) : null;
 
   const hotLead = leads.find((l) => l.id === "h1") ?? leads[0];
-  const hiveItems = leads.slice(0, 19).map((l) => ({ id: l.id, heat: l.research_intensity_score, label: l.company_name ?? l.company_domain }));
+  const hiveCells = leads.map((l) => ({ id: l.id, heat: l.research_intensity_score, label: l.company_name ?? l.company_domain }));
+  const hiveItems = hiveCells.slice(0, 61);
+  const hiveItemsMobile = hiveCells.slice(0, 19);
 
   const maxSalesWon = Math.max(...SALES_WON, SALES_TARGET);
   // An early-period average as the base, the latest point as "with the
@@ -177,27 +177,31 @@ export function HeroBento({ locale }: { locale: Locale }) {
   const sourceTones = [TONE.market, TONE.forecast, TONE.prepared, TONE.urgency];
   const presentTypes = Array.from(new Set(signals.map((s) => s.signal_type))).slice(0, 4);
 
+  // Every card below sticks to the landing's four sizes — the H1 (page.tsx),
+  // .bee-kpi (24px) for a headline number, text-base (16px) for a headline
+  // word, and .bee-micro / text-xs (12px) for every label and line of body.
+  // Nothing else: a fifth size on a wall of small cards reads as noise.
+
+  // Desktop hive: a real comb, not a token one. 61 cells (four full rings)
+  // at a small radius is what makes it read as dense and finished — the
+  // same look the sandbox's Intent hive has, where the count is what does
+  // the work, not the cell size.
   const hiveInner = (
     <>
       <div className="flex w-full items-center justify-between gap-2">
         <p className="bee-micro truncate">{t("hive.eyebrow")}</p>
-        <span className="flex shrink-0 items-center gap-1">
+        <span className="flex shrink-0 items-center gap-1.5">
           <i className="size-1.5 animate-pulse rounded-full" style={{ background: TONE.urgency }} aria-hidden />
           <span className="bee-micro">{t("hive.live")}</span>
         </span>
       </div>
       <div className="mt-2 flex w-full flex-1 items-center justify-center">
-        <Honeycomb items={hiveItems} maxRadius={19} minHeight={170} ariaLabel={t("hive.aria")} />
+        <Honeycomb items={hiveItems} maxRadius={18} minHeight={150} ariaLabel={t("hive.aria")} />
       </div>
       <p className="bee-micro mt-2 w-full truncate">{t("hive.caption")}</p>
     </>
   );
 
-  // Same idea, smaller floor — the phone card gives the hive 130px total,
-  // not the desktop card's 176px, and Honeycomb's own `minHeight` is a
-  // hard floor it won't shrink under; without a smaller one here the
-  // card measurably overflowed its own box (caught by measuring
-  // scrollHeight vs clientHeight before this shipped, not by eye).
   const hiveInnerMobile = (
     <>
       <div className="flex w-full items-center justify-center gap-1.5">
@@ -205,26 +209,25 @@ export function HeroBento({ locale }: { locale: Locale }) {
         <p className="bee-micro truncate">{t("hive.eyebrow")}</p>
       </div>
       <div className="mt-1 flex w-full flex-1 items-center justify-center">
-        <Honeycomb items={hiveItems} maxRadius={13} minHeight={104} ariaLabel={t("hive.aria")} />
+        <Honeycomb items={hiveItemsMobile} maxRadius={12} minHeight={104} ariaLabel={t("hive.aria")} />
       </div>
       <p className="bee-micro mt-1 w-full leading-tight">{t("hive.caption")}</p>
     </>
   );
 
+  // Square: a label, one number, one line of context. Nothing else fits a
+  // square this size without crowding, and nothing else needs to.
   const trendInner = (
     <>
       <p className="bee-micro w-full truncate">{t("trend.eyebrow")}</p>
-      <p className="bee-kpi mt-1">{recentSignals}</p>
-      {weeklyDeltaPct !== null && (
-        <p className="bee-micro mt-0.5 w-full truncate">{t("trend.delta", { value: weeklyDeltaPct > 0 ? `+${weeklyDeltaPct}` : weeklyDeltaPct })}</p>
-      )}
-      <p className="bee-micro mt-0.5 w-full truncate">{t("trend.caption")}</p>
-      <div className="mt-auto flex h-7 w-full items-end gap-1" aria-hidden>
+      <p className="bee-kpi mt-auto">{recentSignals}</p>
+      <p className="bee-micro mt-1 w-full truncate">{t("trend.caption")}</p>
+      <div className="mt-auto flex h-9 w-full items-end gap-1" aria-hidden>
         {weeklyBuckets.map((v, i) => (
           <i
             key={i}
             className="flex-1 rounded-sm"
-            style={{ height: `${Math.max(15, (v / maxWeekly) * 100)}%`, background: i === weeklyBuckets.length - 1 ? TONE.marketDeep : TONE.market }}
+            style={{ height: `${Math.max(14, (v / maxWeekly) * 100)}%`, background: i === weeklyBuckets.length - 1 ? TONE.marketDeep : TONE.market }}
           />
         ))}
       </div>
@@ -235,7 +238,7 @@ export function HeroBento({ locale }: { locale: Locale }) {
     <>
       <p className="bee-micro w-full truncate">{t("window.eyebrow")}</p>
       <p className="mt-1.5 text-base font-bold leading-tight">{tConf(confidenceKey)}</p>
-      <p className="bee-micro mt-0.5 w-full truncate">{t("window.caption")}</p>
+      <p className="bee-micro mt-1 w-full leading-tight">{t("window.caption")}</p>
       <div className="mt-auto flex h-7 w-full items-end gap-1.5" aria-hidden>
         <i className="flex-1 rounded-sm" style={{ height: "35%", background: SALES.mint }} />
         <i className="flex-1 rounded-sm" style={{ height: "55%", background: SALES.mint }} />
@@ -245,13 +248,16 @@ export function HeroBento({ locale }: { locale: Locale }) {
     </>
   );
 
+  // A miniature of the real assistant rather than a sentence about it:
+  // what this card has to land is "the AI is ours", and a chat bubble
+  // with BEE's own mark says that before the label is even read.
   const playInner = (
     <>
       <p className="bee-micro w-full truncate">{t("play.eyebrow")}</p>
-      <div className="mt-2 flex w-full items-start gap-2 text-left">
+      <div className="mt-auto flex w-full items-start gap-2 text-left">
         <span
           className="flex size-6 shrink-0 items-center justify-center rounded-full"
-          style={{ background: "color-mix(in srgb, var(--color-chart-1) 30%, var(--color-card))" }}
+          style={{ background: "color-mix(in srgb, var(--color-chart-1) 32%, var(--color-card))" }}
           aria-hidden
         >
           <svg width="12" height="12" viewBox="-10 -10 20 20">
@@ -259,7 +265,7 @@ export function HeroBento({ locale }: { locale: Locale }) {
           </svg>
         </span>
         <span
-          className="flex-1 rounded-lg px-2 py-1.5"
+          className="flex-1 rounded-lg px-2.5 py-2"
           style={{ background: "color-mix(in srgb, var(--color-chart-4) 10%, var(--color-card))" }}
         >
           <span className="block text-xs leading-snug text-[var(--color-text)]">{t("play.text")}</span>
@@ -270,61 +276,142 @@ export function HeroBento({ locale }: { locale: Locale }) {
           </span>
         </span>
       </div>
+      <span className="mt-auto" aria-hidden />
     </>
   );
 
   const scoreInner = (
     <>
       <p className="bee-micro w-full truncate">{t("score.eyebrow")}</p>
-      <p className="bee-micro mt-0.5 w-full truncate">{t("score.sub")}</p>
-      <div className="mt-auto flex items-center gap-2.5">
-        <span
-          className="flex size-11 shrink-0 items-center justify-center rounded-full text-base font-bold tabular-nums text-white"
-          style={{ background: TONE.marketDeep }}
-        >
+      <span
+        className="mt-auto flex size-16 shrink-0 items-center justify-center rounded-full"
+        style={{ background: TONE.marketDeep }}
+      >
+        <span className="bee-kpi" style={{ color: "#fff" }}>
           {hotLead?.research_intensity_score ?? "—"}
         </span>
-        <div className="flex flex-col items-start gap-1.5">
-          <div className="flex gap-1" aria-hidden>
-            {presentTypes.map((type, i) => (
-              <i key={type} className="size-2 rounded-full" style={{ background: sourceTones[i] }} />
-            ))}
-          </div>
-          <p className="bee-micro text-left leading-tight">{t("score.caption")}</p>
-        </div>
+      </span>
+      <div className="mt-2 flex gap-1" aria-hidden>
+        {presentTypes.map((type, i) => (
+          <i key={type} className="size-2 rounded-full" style={{ background: sourceTones[i] }} />
+        ))}
+      </div>
+      <p className="bee-micro mt-auto w-full leading-tight">{t("score.caption")}</p>
+    </>
+  );
+
+  // Phone: the same dial one tier smaller. The desktop card gives the
+  // score a 64px disc because a square card's whole job is that number;
+  // a phone card is 100px tall in total and cannot hold one.
+  const scoreInnerMobile = (
+    <>
+      <p className="bee-micro w-full truncate">{t("score.eyebrow")}</p>
+      <span
+        className="mt-auto flex size-11 shrink-0 items-center justify-center rounded-full text-base font-bold tabular-nums"
+        style={{ background: TONE.marketDeep, color: "#fff" }}
+      >
+        {hotLead?.research_intensity_score ?? "—"}
+      </span>
+      <div className="mt-1.5 flex gap-1" aria-hidden>
+        {presentTypes.map((type, i) => (
+          <i key={type} className="size-2 rounded-full" style={{ background: sourceTones[i] }} />
+        ))}
       </div>
     </>
   );
 
-  // The real MilestonePath (celebration/milestone-path.tsx), miniaturized:
-  // dashed grey base, the honey→green ramp on the reached segment, numbered
-  // nodes, a dashed ring on the "current" one — the same illustrative
-  // 5/10/20/50/100 sweep this card always showed, just drawn as the actual
-  // component's own visual language instead of a plain row of dots.
+  // Square: the tone BEE writes in, then three lines of a drafted message.
+  // Skeleton lines, not lorem — the point is the shape of a written reply,
+  // and inventing a fake email body would be inventing customer content.
+  const voiceInner = (
+    <>
+      <p className="bee-micro w-full truncate">{t("voice.eyebrow")}</p>
+      <span
+        className="mt-2 inline-flex items-center gap-1.5 rounded-full px-2 py-1"
+        style={{ background: "color-mix(in srgb, var(--color-chart-6) 26%, var(--color-card))" }}
+      >
+        <i className="size-1.5 rounded-full" style={{ background: TONE.prepared }} aria-hidden />
+        <span className="bee-micro">{t("voice.tone")}</span>
+      </span>
+      <span className="mt-auto flex w-full flex-col gap-1.5" aria-hidden>
+        {[100, 88, 62].map((w, i) => (
+          <i key={i} className="h-1.5 rounded-full" style={{ width: `${w}%`, background: "color-mix(in srgb, var(--color-text) 12%, transparent)" }} />
+        ))}
+      </span>
+      <p className="bee-micro mt-2 w-full leading-tight">{t("voice.text")}</p>
+    </>
+  );
+
+  // "Aprende de cada cierre" as the curve it describes: the same six-month
+  // series Ventas charts, drawn as an area so the shape (it goes up, and
+  // keeps going up) is the whole message.
+  const LEARN_W = 168;
+  const LEARN_H = 44;
+  const learnMax = Math.max(...SALES_WON);
+  const learnPts = SALES_WON.map((v, i) => {
+    const x = (i / (SALES_WON.length - 1)) * LEARN_W;
+    const y = LEARN_H - (v / learnMax) * (LEARN_H - 6) - 3;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const learnInner = (
+    <>
+      <p className="bee-micro w-full truncate">{tDiff("learn.title")}</p>
+      <p className="bee-micro mt-1 w-full leading-tight">{tDiff("learn.text")}</p>
+      <svg width={LEARN_W} height={LEARN_H} viewBox={`0 0 ${LEARN_W} ${LEARN_H}`} className="mt-auto" aria-hidden>
+        <polygon points={`0,${LEARN_H} ${learnPts.join(" ")} ${LEARN_W},${LEARN_H}`} fill={SALES.mint} opacity={0.5} />
+        <polyline points={learnPts.join(" ")} fill="none" stroke={SALES.won} strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={LEARN_W} cy={Number(learnPts.at(-1)!.split(",")[1])} r={3.5} fill={SALES.won} stroke="#fff" strokeWidth={1.5} />
+      </svg>
+    </>
+  );
+
+  // "Tu red ya lo conoce": the warm path drawn as what it is — a couple of
+  // hops from someone you already know to the account, not a cold arrow.
+  const networkInner = (
+    <>
+      <p className="bee-micro w-full truncate">{t("network.eyebrow")}</p>
+      <p className="bee-micro mt-1 w-full leading-tight">{t("network.text")}</p>
+      <svg width="150" height="44" viewBox="0 0 150 44" className="mt-auto" aria-hidden>
+        <line x1={16} y1={22} x2={75} y2={12} stroke="var(--color-divider)" strokeWidth={1.5} />
+        <line x1={75} y1={12} x2={134} y2={22} stroke={TONE.prepared} strokeWidth={2} />
+        <line x1={16} y1={22} x2={75} y2={34} stroke="var(--color-divider)" strokeWidth={1.5} strokeDasharray="2 3" />
+        <line x1={75} y1={34} x2={134} y2={22} stroke="var(--color-divider)" strokeWidth={1.5} strokeDasharray="2 3" />
+        <circle cx={75} cy={12} r={6} fill={TONE.prepared} stroke="#fff" strokeWidth={1.5} />
+        <circle cx={75} cy={34} r={5} fill="var(--color-divider)" stroke="#fff" strokeWidth={1.5} />
+        <circle cx={16} cy={22} r={7} fill={TONE.marketDeep} stroke="#fff" strokeWidth={1.5} />
+        <path d={hexagonPath(134, 22, 8)} fill={SALES.won} stroke="#fff" strokeWidth={1.5} />
+      </svg>
+    </>
+  );
+
+  // The real MilestonePath (celebration/milestone-path.tsx), miniaturized
+  // but not shrunk into illegibility: this card is wide on purpose so the
+  // milestones read as a path you walk, which is the whole point of it
+  // not being a leaderboard row.
   const PATH_RAMP = [TONE.marketDeep, TONE.market, "color-mix(in srgb, " + TONE.market + " 55%, " + SALES.mint + ")", SALES.mint, SALES.lime, SALES.won];
   const pathValues = [5, 10, 20, 50, 100];
   const pathCurrentIdx = 3;
-  const PATH_W = 166;
-  const PATH_PAD = 12;
+  const PATH_W = 320;
+  const PATH_PAD = 20;
   const pathXs = pathValues.map((_, k) => PATH_PAD + (k / (pathValues.length - 1)) * (PATH_W - PATH_PAD * 2));
-  const pathAllD = `M${pathXs[0]},18` + pathXs.slice(1).map((x) => ` L${x},18`).join("");
-  const pathReachedD = `M${pathXs[0]},18` + pathXs.slice(1, pathCurrentIdx + 1).map((x) => ` L${x},18`).join("");
+  const pathAllD = `M${pathXs[0]},24` + pathXs.slice(1).map((x) => ` L${x},24`).join("");
+  const pathReachedD = `M${pathXs[0]},24` + pathXs.slice(1, pathCurrentIdx + 1).map((x) => ` L${x},24`).join("");
   const pathInner = (
     <>
       <p className="bee-micro w-full truncate">{t("path.eyebrow")}</p>
-      <p className="bee-micro mt-0.5 w-full leading-tight">{t("path.text")}</p>
-      <svg width={PATH_W} height="40" viewBox={`0 0 ${PATH_W} 40`} className="mt-auto" aria-hidden>
-        <path d={pathAllD} fill="none" stroke="var(--color-divider)" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
-        <path d={pathReachedD} fill="none" stroke={SALES.won} strokeWidth={3} strokeLinecap="round" />
+      <p className="bee-micro mt-0.5 w-full truncate">{t("path.text")}</p>
+      <svg width={PATH_W} height="48" viewBox={`0 0 ${PATH_W} 48`} className="mt-auto" aria-hidden>
+        <path d={pathAllD} fill="none" stroke="var(--color-divider)" strokeWidth={4} strokeLinecap="round" strokeDasharray="1 8" />
+        <path d={pathReachedD} fill="none" stroke={SALES.won} strokeWidth={4} strokeLinecap="round" />
         {pathValues.map((v, k) => {
           const reached = k <= pathCurrentIdx;
           const isCurrent = k === pathCurrentIdx;
           const fill = reached ? PATH_RAMP[Math.round((k / (pathValues.length - 2)) * (PATH_RAMP.length - 1))] : "#fff";
           return (
             <g key={v}>
-              {isCurrent && <circle cx={pathXs[k]} cy={18} r={12.5} fill="none" stroke={TONE.marketDeep} strokeWidth={1.5} strokeDasharray="2 3" />}
-              <circle cx={pathXs[k]} cy={18} r={isCurrent ? 9.5 : 8} fill={fill} stroke={reached ? "#fff" : "var(--color-divider)"} strokeWidth={1.5} strokeDasharray={reached ? undefined : "2 2"} />
-              <text x={pathXs[k]} y={20.5} textAnchor="middle" fontSize={7} fontWeight={700} fill={reached ? "#fff" : "var(--color-text-muted)"}>
+              {isCurrent && <circle cx={pathXs[k]} cy={24} r={17} fill="none" stroke={TONE.marketDeep} strokeWidth={1.5} strokeDasharray="3 4" />}
+              <circle cx={pathXs[k]} cy={24} r={isCurrent ? 13 : 11} fill={fill} stroke={reached ? "#fff" : "var(--color-divider)"} strokeWidth={2} strokeDasharray={reached ? undefined : "3 3"} />
+              <text x={pathXs[k]} y={28} textAnchor="middle" fontSize={12} fontWeight={700} fill={reached ? "#fff" : "var(--color-text-muted)"}>
                 {v}
               </text>
             </g>
@@ -334,18 +421,43 @@ export function HeroBento({ locale }: { locale: Locale }) {
     </>
   );
 
-  // Title + subtitle + chart, like every other card here: the same
-  // "what if I prospect more" question Ventas answers at full length,
-  // as two bars instead of a paragraph. Replaced a four-row CRM-vs-BEE
-  // list — four sentences at this size read as a wall of text, and the
-  // contrast they made is already the headline's job.
+  // Phone: the same milestones at a size a phone card can actually hold —
+  // the desktop path is 320px wide on purpose (the founder asked for it
+  // bigger), which simply does not fit a 178px card, and the subtitle
+  // needs a full line of its own that there is no room for here.
+  const PATH_W_M = 152;
+  const pathXsM = pathValues.map((_, k) => 14 + (k / (pathValues.length - 1)) * (PATH_W_M - 28));
+  const pathInnerMobile = (
+    <>
+      <p className="bee-micro w-full truncate">{t("path.eyebrow")}</p>
+      <svg width={PATH_W_M} height="36" viewBox={`0 0 ${PATH_W_M} 36`} className="mt-auto" aria-hidden>
+        <path d={`M${pathXsM[0]},18` + pathXsM.slice(1).map((x) => ` L${x},18`).join("")} fill="none" stroke="var(--color-divider)" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
+        <path d={`M${pathXsM[0]},18` + pathXsM.slice(1, pathCurrentIdx + 1).map((x) => ` L${x},18`).join("")} fill="none" stroke={SALES.won} strokeWidth={3} strokeLinecap="round" />
+        {pathValues.map((v, k) => {
+          const reached = k <= pathCurrentIdx;
+          const isCurrent = k === pathCurrentIdx;
+          const fill = reached ? PATH_RAMP[Math.round((k / (pathValues.length - 2)) * (PATH_RAMP.length - 1))] : "#fff";
+          return (
+            <g key={v}>
+              {isCurrent && <circle cx={pathXsM[k]} cy={18} r={14} fill="none" stroke={TONE.marketDeep} strokeWidth={1.5} strokeDasharray="2 3" />}
+              <circle cx={pathXsM[k]} cy={18} r={isCurrent ? 11 : 9.5} fill={fill} stroke={reached ? "#fff" : "var(--color-divider)"} strokeWidth={1.5} strokeDasharray={reached ? undefined : "2 2"} />
+              <text x={pathXsM[k]} y={22} textAnchor="middle" fontSize={12} fontWeight={700} fill={reached ? "#fff" : "var(--color-text-muted)"}>
+                {v}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </>
+  );
+
   const compareInner = (
     <>
       <p className="bee-micro w-full truncate">{t("compare.eyebrow")}</p>
-      <p className="bee-micro mt-0.5 w-full leading-tight">{t("compare.text")}</p>
-      <div className="mt-2 flex w-full flex-1 items-end justify-center gap-4" aria-hidden>
+      <p className="bee-micro mt-1 w-full leading-tight">{t("compare.text")}</p>
+      <div className="mt-auto flex w-full items-end justify-center gap-4" style={{ height: 56 }} aria-hidden>
         <div className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-          <i className="w-full rounded-sm" style={{ height: `${Math.max(18, (baseAvg / maxSalesWon) * 100)}%`, background: "color-mix(in srgb, var(--color-chart-4) 45%, white)" }} />
+          <i className="w-full rounded-sm" style={{ height: `${Math.max(18, (baseAvg / maxSalesWon) * 100)}%`, background: "color-mix(in srgb, var(--color-chart-4) 40%, white)" }} />
           <span className="bee-micro">{t("compare.base")}</span>
         </div>
         <div className="flex h-full flex-1 flex-col items-center justify-end gap-1">
@@ -356,45 +468,33 @@ export function HeroBento({ locale }: { locale: Locale }) {
     </>
   );
 
-  // Both collages are the same idea as the founder's reference: a tight
-  // cluster of floating cards around one bigger centre card, corners
-  // touching, everything centered as a single group — not a scatter
-  // spread across the page. The count came down from 12 to 7 (phone: 5)
-  // for one reason: 12 cards only fit in a no-scroll viewport by
-  // shrinking the whole cluster to ~55% scale, where nothing was
-  // readable. Fewer, bigger cards at scale 1 beat more cards at half
-  // size — the dropped ones (compare, voice, network, learn) all
-  // restated a differentiator that /funcionalidades already makes at
-  // full length.
-  //
-  // Sizes are measured, not guessed: each box fits its own content at
-  // its real wrapped height, with no line-clamp left to cap a paragraph
-  // below what its card can show (a clamp is a hard N-line cap that
-  // ignores spare room, which is how text kept disappearing here).
-  // Positions leave only corners overlapping — verified per text node
-  // with elementFromPoint, not by eye.
+  // Phone: the five the founder picked, wide-and-low — a phone leaves
+  // ~291px of height but ~358px of width, so the scale is driven by the
+  // dimension there is actually room in (see useFitScale).
   const MOBILE_CARDS = [
-    { id: "hive", node: hiveInnerMobile, top: 0, left: 0, width: 182, height: 172, rotate: 0, z: 20 },
-    { id: "score", node: scoreInner, top: 0, left: 192, width: 178, height: 92, rotate: 3, z: 23 },
+    { id: "hive", node: hiveInnerMobile, top: 0, left: 0, width: 182, height: 180, rotate: 0, z: 20 },
+    { id: "score", node: scoreInnerMobile, top: 0, left: 192, width: 178, height: 100, rotate: 3, z: 23 },
     { id: "play", node: playInner, top: 110, left: 192, width: 178, height: 104, rotate: -2, z: 22 },
-    { id: "window", node: windowInner, top: 192, left: 0, width: 182, height: 96, rotate: 4, z: 18 },
-    { id: "path", node: pathInner, top: 232, left: 192, width: 178, height: 88, rotate: 2, z: 17 },
+    { id: "window", node: windowInner, top: 196, left: 0, width: 182, height: 96, rotate: 4, z: 18 },
+    { id: "path", node: pathInnerMobile, top: 232, left: 192, width: 178, height: 88, rotate: 2, z: 17 },
   ] as const;
 
-  // Desktop: hive in the middle at roughly twice a satellite's size,
-  // six satellites ringing it. Designed at 845×390 so it renders at
-  // scale 1 (no shrinking at all) on the common desktop sizes —
-  // 1440×900 leaves 505px of height and 1040px of width for it, and
-  // 1366×768 leaves 392px — which is the whole point of the smaller
-  // card count.
+  // Desktop: a real bento — squares where a card is one number (Señales,
+  // el score, la voz), rectangles where it is a small chart, one wide
+  // strip for the milestone path, and the comb twice everything else's
+  // size at the centre. Designed at 1180×405 so it renders at scale 1 —
+  // no shrinking, real sizes — from 1366×768 up.
   const DESKTOP_CARDS = [
-    { id: "trend", node: trendInner, top: 0, left: 0, width: 300, height: 125, rotate: -3, z: 24, padding: "0.85rem 1rem" },
-    { id: "window", node: windowInner, top: 138, left: 12, width: 300, height: 125, rotate: 2, z: 18, padding: "0.85rem 1rem" },
-    { id: "path", node: pathInner, top: 276, left: 0, width: 300, height: 124, rotate: -2, z: 17, padding: "0.75rem 0.9rem" },
-    { id: "hive", node: hiveInner, top: 35, left: 340, width: 400, height: 330, rotate: 0, z: 20, padding: "1rem 1.15rem" },
-    { id: "score", node: scoreInner, top: 0, left: 780, width: 300, height: 125, rotate: 3, z: 23, padding: "0.85rem 1rem" },
-    { id: "play", node: playInner, top: 138, left: 768, width: 300, height: 125, rotate: -2, z: 22, padding: "0.85rem 1rem" },
-    { id: "compare", node: compareInner, top: 276, left: 780, width: 300, height: 124, rotate: 2, z: 16, padding: "0.75rem 0.9rem" },
+    { id: "trend", node: trendInner, top: 0, left: 0, width: 170, height: 170, rotate: -3, z: 24, padding: "0.9rem 1rem" },
+    { id: "score", node: scoreInner, top: 8, left: 185, width: 185, height: 170, rotate: 2, z: 23, padding: "0.9rem 1rem" },
+    { id: "window", node: windowInner, top: 190, left: 0, width: 170, height: 140, rotate: 3, z: 18, padding: "0.85rem 1rem" },
+    { id: "learn", node: learnInner, top: 195, left: 185, width: 200, height: 140, rotate: -2, z: 19, padding: "0.85rem 1rem" },
+    { id: "hive", node: hiveInner, top: 30, left: 410, width: 360, height: 255, rotate: 0, z: 20, padding: "1rem 1.15rem" },
+    { id: "path", node: pathInner, top: 300, left: 410, width: 360, height: 110, rotate: 0, z: 21, padding: "0.8rem 0.95rem" },
+    { id: "play", node: playInner, top: 0, left: 790, width: 200, height: 140, rotate: 3, z: 22, padding: "0.85rem 1rem" },
+    { id: "voice", node: voiceInner, top: 10, left: 1005, width: 170, height: 170, rotate: -2, z: 25, padding: "0.9rem 1rem" },
+    { id: "compare", node: compareInner, top: 155, left: 790, width: 200, height: 140, rotate: -3, z: 16, padding: "0.85rem 1rem" },
+    { id: "network", node: networkInner, top: 195, left: 1005, width: 190, height: 140, rotate: 2, z: 17, padding: "0.85rem 1rem" },
   ] as const;
 
   return (

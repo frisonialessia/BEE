@@ -40,11 +40,15 @@ export default async function Home() {
   const year = new Date().getUTCFullYear();
 
   return (
-    <div className="flex h-dvh max-h-dvh flex-col overflow-hidden bg-background">
+    <div className="relative flex h-dvh max-h-dvh flex-col overflow-hidden">
+      {/* The ground goes behind everything, header included — see
+          .bee-hero-wash. Starting it at <main> drew a hard line under the
+          floating nav where the two backgrounds met. */}
+      <HeroAtmosphere />
+
       <MarketingHeader />
 
-      <main className="relative flex flex-1 min-h-0 flex-col items-center justify-center overflow-hidden px-4 sm:px-6">
-        <HeroAtmosphere />
+      <main className="relative z-10 flex flex-1 min-h-0 flex-col items-center justify-center overflow-hidden px-4 sm:px-6">
 
         <div className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center" style={{ marginTop: "clamp(0.25rem, 3vh, 2.5rem)" }}>
           {/* Plain auxiliary label, not a badge: a pill with its own
@@ -55,7 +59,7 @@ export default async function Home() {
           <h1 className="mt-4 text-balance text-[clamp(1.5rem,3.6vh+1rem,3.5rem)] font-semibold leading-[1.08] tracking-tight text-[var(--color-text)]">
             {t("heroTitle")}
           </h1>
-          <p className="bee-caption mt-3 line-clamp-2 max-w-lg text-[clamp(0.8rem,1.5vh+0.35rem,1.125rem)]">
+          <p className="bee-caption mt-3 line-clamp-2 max-w-xl text-base">
             {t("heroSubtitle")}
           </p>
 
@@ -100,12 +104,12 @@ export default async function Home() {
             collage sitting in a narrow strip with dead space on both
             sides. The collage itself has no reading-width concern, so it
             gets its own, wider ceiling instead. */}
-        <div className="relative z-10 w-full max-w-[1160px]">
+        <div className="relative z-10 w-full max-w-[1240px]">
           <HeroBento locale={locale} />
         </div>
       </main>
 
-      <footer className="shrink-0 border-t border-border px-4 py-2 text-center">
+      <footer className="relative z-10 shrink-0 px-4 py-2 text-center">
         <p className="bee-micro">
           {tFooter("copyright", { year })} ·{" "}
           <Link href="/terminos" className="hover:text-foreground">

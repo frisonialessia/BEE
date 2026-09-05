@@ -29,7 +29,7 @@ export function MarketingHeader() {
   const t = useTranslations("marketing.header");
 
   return (
-    <header className="sticky top-0 z-40 px-4 pt-3 sm:px-6">
+    <header className="relative z-40 shrink-0 px-4 pt-3 sm:px-6">
       <div className="bee-nav mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-3 rounded-2xl px-4 sm:px-5">
         <Link href="/" aria-label="Inicio BEE" className="shrink-0">
           <Logo />
