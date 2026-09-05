@@ -212,22 +212,49 @@
         "eyebrow": "Cuenta caliente"
       },
       "trend": {
-        "eyebrow": "Señales"
+        "eyebrow": "Señales",
+        "delta": "{value}% esta semana"
       },
       "hive": {
-        "eyebrow": "Colmena",
+        "eyebrow": "Colmena de intención",
         "live": "En vivo",
         "aria": "Colmena de cuentas con intención de compra"
       },
       "play": {
-        "eyebrow": "Jugada lista",
-        "text": "Canal, argumento y momento, listos para leer"
+        "eyebrow": "Copiloto BEE",
+        "text": "Canal, argumento y momento, listos para leer",
+        "chat": "{company} tiene señal de compra. ¿Envío el follow-up?"
       },
-      "sales": {
-        "eyebrow": "Cierres acelerados"
+      "window": {
+        "eyebrow": "Ventana de compra"
       },
-      "streak": {
-        "eyebrow": "Racha del equipo"
+      "vigil": {
+        "eyebrow": "Vigilancia 24/7",
+        "live": "Escaneando",
+        "text": "BEE escanea el mercado sin parar y prepara la jugada. Tú solo la apruebas."
+      },
+      "score": {
+        "eyebrow": "Todo el mercado, un score",
+        "caption": "funding + hiring + stack + intención"
+      },
+      "path": {
+        "eyebrow": "Tu camino, no una tabla",
+        "text": "Cada señal cerrada suma — para ti, no para un ranking"
+      },
+      "compare": {
+        "eyebrow": "¿Qué pasa si...?",
+        "text": "Simula el impacto antes de invertir en prospección",
+        "base": "base",
+        "signal": "+señal"
+      },
+      "voice": {
+        "eyebrow": "Escribe con tu voz",
+        "tone": "tono: cercano",
+        "text": "Nunca vuelve a sonar a plantilla genérica"
+      },
+      "network": {
+        "eyebrow": "Tu red ya lo conoce",
+        "text": "El camino cálido ya existe en tu red — no un cold email más"
       }
     },
     "differentiators": {

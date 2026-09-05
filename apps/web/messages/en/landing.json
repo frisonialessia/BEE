@@ -212,22 +212,49 @@
         "eyebrow": "Hot account"
       },
       "trend": {
-        "eyebrow": "Signals"
+        "eyebrow": "Signals",
+        "delta": "{value}% this week"
       },
       "hive": {
-        "eyebrow": "Honeycomb",
+        "eyebrow": "Intent hive",
         "live": "Live",
         "aria": "Honeycomb of accounts with buying intent"
       },
       "play": {
-        "eyebrow": "Play ready",
-        "text": "Channel, argument and timing, ready to read"
+        "eyebrow": "BEE copilot",
+        "text": "Channel, argument and timing, ready to read",
+        "chat": "{company} has a buying signal. Send the follow-up?"
       },
-      "sales": {
-        "eyebrow": "Faster closes"
+      "window": {
+        "eyebrow": "Buying window"
       },
-      "streak": {
-        "eyebrow": "Team streak"
+      "vigil": {
+        "eyebrow": "Watching 24/7",
+        "live": "Scanning",
+        "text": "BEE scans the market non-stop and preps the play. You just approve it."
+      },
+      "score": {
+        "eyebrow": "The whole market, one score",
+        "caption": "funding + hiring + stack + intent"
+      },
+      "path": {
+        "eyebrow": "Your path, not a table",
+        "text": "Every closed signal adds up — for you, not a ranking"
+      },
+      "compare": {
+        "eyebrow": "What if...?",
+        "text": "Simulate the impact before investing in prospecting",
+        "base": "base",
+        "signal": "+signal"
+      },
+      "voice": {
+        "eyebrow": "Written in your voice",
+        "tone": "tone: warm",
+        "text": "Never sounds like a generic template again"
+      },
+      "network": {
+        "eyebrow": "Your network already knows them",
+        "text": "The warm path already exists in your network — not one more cold email"
       }
     },
     "differentiators": {
