@@ -120,13 +120,6 @@ export function HeroBento({ locale }: { locale: Locale }) {
   const tDiff = useTranslations("landing.hero.differentiators");
   const tConf = useTranslations("shared.cyclePrediction.confidence");
   const [now] = useState(() => Date.now());
-  // A lower floor than the mobile collage's default: a wide-but-short
-  // window (a landscape phone, 844×390 among the sizes this always gets
-  // checked against) leaves the desktop collage far less room relative
-  // to its taller 452px design than any real phone leaves the mobile
-  // one — this shipped with the shared default once and 5 of the 12
-  // cards clipped against the footer at exactly that size.
-  const { ref: desktopRef, scale: desktopScale } = useFitScale(DESKTOP_DESIGN_H, 0.08);
 
   const signals = getSampleSignals(locale);
   const leads = getSampleHotLeads(locale);
@@ -228,7 +221,7 @@ export function HeroBento({ locale }: { locale: Locale }) {
         <span className="bee-micro truncate">{t("vigil.live")}</span>
       </div>
       <p className="bee-micro mt-1.5">{t("vigil.eyebrow")}</p>
-      <p className="mt-0.5 line-clamp-2 text-[0.65rem] leading-tight text-[var(--color-text-muted)]">{t("vigil.text")}</p>
+      <p className="mt-0.5 line-clamp-2 text-xs leading-tight text-[var(--color-text-muted)]">{t("vigil.text")}</p>
     </>
   );
 
@@ -248,7 +241,7 @@ export function HeroBento({ locale }: { locale: Locale }) {
   const playInner = (
     <>
       <p className="bee-micro truncate">{t("play.eyebrow")}</p>
-      <p className="mt-1 line-clamp-2 text-[0.65rem] leading-tight text-[var(--color-text-muted)]">
+      <p className="mt-1 line-clamp-2 text-xs leading-tight text-[var(--color-text-muted)]">
         {hotLead ? t("play.chat", { company: hotLead.company_name ?? hotLead.company_domain }) : t("play.text")}
       </p>
       <div className="mt-auto flex gap-1 pt-1.5" aria-hidden>
@@ -295,7 +288,7 @@ export function HeroBento({ locale }: { locale: Locale }) {
   const pathInner = (
     <>
       <p className="bee-micro truncate">{t("path.eyebrow")}</p>
-      <p className="mt-1 line-clamp-1 text-[0.65rem] leading-tight text-[var(--color-text-muted)]">{t("path.text")}</p>
+      <p className="mt-1 line-clamp-1 text-xs leading-tight text-[var(--color-text-muted)]">{t("path.text")}</p>
       <svg width={PATH_W} height="36" viewBox={`0 0 ${PATH_W} 36`} className="mt-auto" aria-hidden>
         <path d={pathAllD} fill="none" stroke="var(--color-divider)" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
         <path d={pathReachedD} fill="none" stroke={SALES.won} strokeWidth={3} strokeLinecap="round" />
@@ -338,7 +331,7 @@ export function HeroBento({ locale }: { locale: Locale }) {
     <>
       <p className="bee-micro truncate">{t("voice.eyebrow")}</p>
       <span
-        className="mt-1 inline-flex w-fit items-center gap-1 rounded-full px-1.5 py-0.5 text-[0.6rem] font-semibold"
+        className="mt-1 inline-flex w-fit items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-semibold"
         style={{ background: "color-mix(in srgb, var(--color-chart-6) 30%, white)" }}
       >
         <i className="size-1 rounded-full" style={{ background: TONE.prepared }} />
@@ -412,6 +405,27 @@ export function HeroBento({ locale }: { locale: Locale }) {
     { id: "vigil", node: vigilInner, top: 182, left: 90, width: 138, height: 56, rotate: 2, z: 17 },
   ] as const;
 
+  // Desktop: the same 12 cards, spread ~1.3× wider than the old 720px
+  // design so the collage actually fills the wider column page.tsx now
+  // gives it (previously every card's left/width still reflected a
+  // narrower design, leaving dead space on both sides on a wide
+  // monitor) — top/height/rotate untouched, since those already fit
+  // DESKTOP_DESIGN_H correctly.
+  const DESKTOP_CARDS = [
+    { id: "hive", node: hiveInner, top: 80, left: 332, width: 273, height: 176, rotate: 0, z: 20, padding: "0.7rem 0.85rem" },
+    { id: "trend", node: trendInner, top: 16, left: 8, width: 153, height: 82, rotate: -7, z: 24, padding: "0.5rem 0.6rem" },
+    { id: "vigil", node: vigilInner, top: 0, left: 187, width: 174, height: 88, rotate: 3, z: 18, padding: "0.5rem 0.6rem" },
+    { id: "score", node: scoreInner, top: 2, left: 588, width: 174, height: 88, rotate: -4, z: 19, padding: "0.5rem 0.6rem" },
+    { id: "play", node: playInner, top: 26, left: 770, width: 159, height: 86, rotate: 5, z: 25, padding: "0.5rem 0.6rem" },
+    { id: "learn", node: learnInner, top: 126, left: 8, width: 146, height: 80, rotate: 4, z: 15, padding: "0.5rem 0.6rem" },
+    { id: "voice", node: voiceInner, top: 136, left: 770, width: 161, height: 90, rotate: -5, z: 23, padding: "0.5rem 0.6rem" },
+    { id: "window", node: windowInner, top: 224, left: 8, width: 153, height: 84, rotate: 6, z: 17, padding: "0.5rem 0.6rem" },
+    { id: "path", node: pathInner, top: 246, left: 182, width: 247, height: 90, rotate: -2, z: 22, padding: "0.5rem 0.6rem" },
+    { id: "compare", node: compareInner, top: 244, left: 588, width: 174, height: 82, rotate: 4, z: 16, padding: "0.5rem 0.6rem" },
+    { id: "network", node: networkInner, top: 222, left: 777, width: 156, height: 88, rotate: -3, z: 21, padding: "0.5rem 0.6rem" },
+    { id: "crm", node: crmInner, top: 336, left: 278, width: 369, height: 112, rotate: -1.5, z: 14, padding: "0.55rem 0.7rem" },
+  ] as const;
+
   return (
     <>
       {/* Phone: the 6 cards that read best at this size, scattered and
@@ -424,57 +438,11 @@ export function HeroBento({ locale }: { locale: Locale }) {
       {/* sm+: the full 12-card collage — one bigger centre card (the
           hive, BEE's own mark) with eleven tilted satellites scattered
           around it, corners just touching, matching the reference's
-          density instead of a tidy row. Wrapped in the same measured
-          scale-to-fit as the mobile collage (see useFitScale): a short
-          window (a laptop with the browser chrome eating into it, or a
-          landscape phone) needs this exactly as much as a short phone
-          does — caught the same way, by measuring, after this shipped
-          without it once and a short window clipped the last row
-          against the footer. */}
-      <div ref={desktopRef} className="relative mt-8 hidden w-full max-w-[720px] sm:block lg:mt-10" style={{ height: DESKTOP_DESIGN_H * desktopScale }}>
-        <div className="relative" style={{ height: DESKTOP_DESIGN_H, transform: `scale(${desktopScale})`, transformOrigin: "top left" }}>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 80, left: 255, width: 210, height: 176, padding: "0.7rem 0.85rem", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 20 }}>
-            {hiveInner}
-          </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 16, left: 6, width: 118, height: 82, padding: "0.5rem 0.6rem", transform: "rotate(-7deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 24 }}>
-            {trendInner}
-          </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 0, left: 144, width: 134, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(3deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 18 }}>
-            {vigilInner}
-          </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 2, left: 452, width: 134, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(-4deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 19 }}>
-            {scoreInner}
-          </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 26, left: 592, width: 122, height: 86, padding: "0.5rem 0.6rem", transform: "rotate(5deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 25 }}>
-            {playInner}
-          </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 126, left: 6, width: 112, height: 80, padding: "0.5rem 0.6rem", transform: "rotate(4deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 15 }}>
-            {learnInner}
-          </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 136, left: 592, width: 124, height: 90, padding: "0.5rem 0.6rem", transform: "rotate(-5deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 23 }}>
-            {voiceInner}
-          </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 224, left: 6, width: 118, height: 84, padding: "0.5rem 0.6rem", transform: "rotate(6deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 17 }}>
-            {windowInner}
-          </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 246, left: 140, width: 190, height: 90, padding: "0.5rem 0.6rem", transform: "rotate(-2deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 22 }}>
-            {pathInner}
-          </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 244, left: 452, width: 134, height: 82, padding: "0.5rem 0.6rem", transform: "rotate(4deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 16 }}>
-            {compareInner}
-          </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 222, left: 598, width: 120, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(-3deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 21 }}>
-            {networkInner}
-          </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 336, left: 214, width: 284, height: 112, padding: "0.55rem 0.7rem", transform: "rotate(-1.5deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 14 }}>
-            {crmInner}
-          </div>
-          {/* Decorative, matching the hex-icon idiom the old streak card
-              used — not a KPI, just the identity mark floating loose. */}
-          <svg width="20" height="20" viewBox="-10 -10 20 20" className="absolute" style={{ top: 172, left: 460, opacity: 0.5 }} aria-hidden>
-            <path d={hexagonPath(0, 0, 10)} fill={TONE.calm} />
-          </svg>
-        </div>
+          density instead of a tidy row. Genuinely draggable, same as the
+          phone version below — see DesktopCollage for the mechanics,
+          shared with MobileCollage's. */}
+      <div className="mt-8 hidden w-full max-w-[970px] sm:block lg:mt-10">
+        <DesktopCollage cards={DESKTOP_CARDS} />
       </div>
     </>
   );
@@ -505,7 +473,11 @@ function MobileCollage({ cards }: { cards: readonly MobileCard[] }) {
   const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const drag = useRef<{ id: string; startX: number; startY: number; baseX: number; baseY: number } | null>(null);
-  const { ref: wrapRef, scale } = useFitScale(MOBILE_DESIGN_H);
+  // Lower than useFitScale's own 0.55 default: the hero text column's
+  // top margin (see page.tsx) leaves a short phone (375×667) a little
+  // less room than the default floor assumed, clipping the collage's
+  // last row by a couple of pixels until this came down.
+  const { ref: wrapRef, scale } = useFitScale(MOBILE_DESIGN_H, 0.4);
 
   function handlePointerDown(id: string, e: ReactPointerEvent<HTMLDivElement>) {
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -562,6 +534,97 @@ function MobileCollage({ cards }: { cards: readonly MobileCard[] }) {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+interface DesktopCard extends MobileCard {
+  padding: string;
+}
+
+/**
+ * Desktop's version of the same drag: identical mechanics to
+ * MobileCollage (Pointer Events, per-card offset state, one active card
+ * lifted and de-rotated while held) — the user could drag the phone
+ * collage but not this one, which was the actual bug, not a design
+ * choice. No hint text here either, same as mobile: a scatter of cards
+ * that respond to a drag reads as draggable on its own.
+ *
+ * A much lower floor than the mobile collage's: a wide-but-short window
+ * (a landscape phone, 844×390 and 812×375 among the sizes this always
+ * gets checked against) leaves this collage far less room relative to
+ * its taller 452px design than any real phone leaves the mobile one —
+ * and the hero text column's own top margin (see page.tsx) eats further
+ * into that room. Pushed down to 0.01 (from an earlier 0.08) once
+ * extending it caught 5, then 1, of the 12 cards still clipping the
+ * footer at exactly those sizes; "tarjetas más chicas si hace falta" —
+ * never clip, even if the collage all but disappears at that one
+ * extreme aspect ratio.
+ */
+function DesktopCollage({ cards }: { cards: readonly DesktopCard[] }) {
+  const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({});
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const drag = useRef<{ id: string; startX: number; startY: number; baseX: number; baseY: number } | null>(null);
+  const { ref: wrapRef, scale } = useFitScale(DESKTOP_DESIGN_H, 0.01);
+
+  function handlePointerDown(id: string, e: ReactPointerEvent<HTMLDivElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const base = offsets[id] ?? { x: 0, y: 0 };
+    drag.current = { id, startX: e.clientX, startY: e.clientY, baseX: base.x, baseY: base.y };
+    setActiveId(id);
+  }
+  function handlePointerMove(e: ReactPointerEvent<HTMLDivElement>) {
+    const d = drag.current;
+    if (!d) return;
+    setOffsets((prev) => ({
+      ...prev,
+      [d.id]: { x: d.baseX + (e.clientX - d.startX) / scale, y: d.baseY + (e.clientY - d.startY) / scale },
+    }));
+  }
+  function handlePointerUp() {
+    drag.current = null;
+    setActiveId(null);
+  }
+
+  return (
+    <div ref={wrapRef} style={{ height: DESKTOP_DESIGN_H * scale }}>
+      <div className="relative" style={{ height: DESKTOP_DESIGN_H, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+        {cards.map((c) => {
+          const offset = offsets[c.id] ?? { x: 0, y: 0 };
+          const active = activeId === c.id;
+          return (
+            <div
+              key={c.id}
+              className="bee-bento-mini absolute flex touch-none flex-col"
+              style={{
+                top: c.top,
+                left: c.left,
+                width: c.width,
+                height: c.height,
+                padding: c.padding,
+                overflow: "hidden",
+                boxShadow: "var(--bee-shadow-card-lift)",
+                transform: `translate3d(${offset.x}px, ${offset.y}px, 0) rotate(${active ? 0 : c.rotate}deg)`,
+                transition: active ? "none" : "transform 180ms ease",
+                zIndex: active ? 60 : c.z,
+                cursor: active ? "grabbing" : "grab",
+              }}
+              onPointerDown={(e) => handlePointerDown(c.id, e)}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+            >
+              {c.node}
+            </div>
+          );
+        })}
+        {/* Decorative, matching the hex-icon idiom the old streak card
+            used — not a KPI and not draggable, just the identity mark
+            floating loose. */}
+        <svg width="20" height="20" viewBox="-10 -10 20 20" className="absolute" style={{ top: 172, left: 598, opacity: 0.5 }} aria-hidden>
+          <path d={hexagonPath(0, 0, 10)} fill={TONE.calm} />
+        </svg>
       </div>
     </div>
   );

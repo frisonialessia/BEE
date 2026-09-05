@@ -1,4 +1,3 @@
-import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 
@@ -47,12 +46,11 @@ export default async function Home() {
       <main className="relative flex flex-1 min-h-0 flex-col items-center justify-center overflow-hidden px-4 sm:px-6">
         <HeroAtmosphere />
 
-        <div className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center">
+        <div className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center" style={{ marginTop: "clamp(0.25rem, 3vh, 2.5rem)" }}>
           <span
             className="inline-flex items-center gap-1.5 rounded-full px-3 py-1"
             style={{ background: "color-mix(in srgb, var(--color-chart-4) 14%, var(--color-card))" }}
           >
-            <Sparkles className="size-3" aria-hidden />
             <span className="bee-eyebrow">{t("eyebrow")}</span>
           </span>
           <h1 className="mt-4 text-balance text-[clamp(1.5rem,3.6vh+1rem,3.5rem)] font-semibold leading-[1.08] tracking-tight text-[var(--color-text)]">
@@ -81,7 +79,15 @@ export default async function Home() {
           <Link href="/probar" className="bee-micro mt-2 hover:text-foreground">
             {t("signup.orTry")}
           </Link>
+        </div>
 
+        {/* The collage breaks out of the text column's max-w-3xl (768px) —
+            that width is a deliberate line-length cap for the headline and
+            paragraph, but on a wide monitor it left the whole 12-card
+            collage sitting in a narrow strip with dead space on both
+            sides. The collage itself has no reading-width concern, so it
+            gets its own, wider ceiling instead. */}
+        <div className="relative z-10 w-full max-w-[1040px]">
           <HeroBento locale={locale} />
         </div>
       </main>
