@@ -63,10 +63,17 @@ Encabezado con pestañas en la misma fila (`MergedPageTabs`).
    Y **Secuencias**: el fondo de una píldora de condición "contestó" y
    cualquier nodo de éxito (el lead respondió, se entregó a una persona)
    son verdes también — un lead que responde es la misma idea de "funcionó"
-   que un cierre, aunque no sea dinero todavía.
+   que un cierre, aunque no sea dinero todavía. El verde acá (y el azul de
+   la regla 3) es el mismo relleno **sólido** que ya usan las columnas del
+   tablero CRM (`crm-board.tsx` — "Cerradas" en verde lleno, "En
+   conversación" en azul lleno, texto negro directo encima, círculo blanco
+   para el avatar/icono) — nunca un tinte pálido al 10-20 % sobre blanco,
+   que es como terminó viéndose la primera vez y no leyó como un color de
+   BEE en absoluto.
 3. **Azul solo en botones** — con una excepción, **Secuencias**: el fondo
    de una píldora de condición "sin respuesta" es azul (chart-4/forecast),
-   la contraparte de la condición "contestó" en verde de arriba. El
+   la contraparte de la condición "contestó" en verde de arriba, mismo
+   relleno sólido que la nota de la regla 2. El
    primario (`bee-btn--primary`) es azul con letra blanca; el secundario
    (`bee-btn-ghost` / `bee-btn--secondary`) es blanco con contorno y letra
    en el mismo azul. Nunca un botón sin fondo. Fuera de esos dos casos, no
