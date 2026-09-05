@@ -56,14 +56,21 @@ Encabezado con pestañas en la misma fila (`MergedPageTabs`).
 2. **Verde solo en Ventas** (y en las tarjetas cerradas del CRM, como opción
    de color de cita en Calendario, y en el Resumen en la caja Ventas, el
    paso "Cliente" del embudo y el Ranking del equipo, que es dinero ganado).
-   En ninguna otra página, con una excepción: la gráfica "Ganado por mes"
+   En ninguna otra página, con dos excepciones: la gráfica "Ganado por mes"
    de la columna BEE en la landing (`marketing-sales.tsx`) es literalmente
    ese mismo dato de Ventas, así que lee igual — tres verdes por fuerza. El
    simulador de la misma sección no es dinero cerrado y se queda en miel.
-3. **Azul solo en botones**. El primario (`bee-btn--primary`) es azul con
-   letra blanca; el secundario (`bee-btn-ghost` / `bee-btn--secondary`) es
-   blanco con contorno y letra en el mismo azul. Nunca un botón sin fondo.
-   No en gráficas, links ni chips.
+   Y **Secuencias**: el fondo de una píldora de condición "contestó" y
+   cualquier nodo de éxito (el lead respondió, se entregó a una persona)
+   son verdes también — un lead que responde es la misma idea de "funcionó"
+   que un cierre, aunque no sea dinero todavía.
+3. **Azul solo en botones** — con una excepción, **Secuencias**: el fondo
+   de una píldora de condición "sin respuesta" es azul (chart-4/forecast),
+   la contraparte de la condición "contestó" en verde de arriba. El
+   primario (`bee-btn--primary`) es azul con letra blanca; el secundario
+   (`bee-btn-ghost` / `bee-btn--secondary`) es blanco con contorno y letra
+   en el mismo azul. Nunca un botón sin fondo. Fuera de esos dos casos, no
+   en gráficas, links ni chips.
 4. **Ningún texto ni icono lleva color**, salvo la letra blanca del botón
    primario y la letra azul del secundario: todo lo demás en tinta
    (`--color-text`) o tinta apagada (`--color-text-muted`). El color vive
