@@ -30,7 +30,16 @@ import { getSampleHotLeads, getSampleSignals } from "@/lib/sample-data";
  * reflowed layout, not stale React state) converge in practice within
  * 2-3 steps; committed to state once settled.
  */
-function useFitScale(designHeight: number, minScale = 0.55) {
+// `designWidth` is optional: desktop passes only a height (its collage is
+// tall-and-narrow enough relative to any real viewport that width was
+// never the tighter constraint), but the mobile collage is wide *and*
+// short — several of its cards need real width for a sentence to read
+// in 2-3 lines instead of clamping — so on a narrow phone the tighter
+// constraint is width, not height. Height-only fitting would let a
+// design like that render at scale 1 (plenty of vertical room) while
+// clipping sideways against `main`; passing designWidth here takes
+// whichever of the two ratios is smaller.
+function useFitScale(designHeight: number, minScale = 0.55, designWidth?: number) {
   const ref = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
@@ -42,8 +51,12 @@ function useFitScale(designHeight: number, minScale = 0.55) {
       let s = 1;
       for (let i = 0; i < 5; i++) {
         const boundary = el.closest("main")?.getBoundingClientRect().bottom ?? window.innerHeight;
-        const available = boundary - el.getBoundingClientRect().top - 10;
-        const next = Math.max(minScale, Math.min(1, available / designHeight));
+        const availableH = boundary - el.getBoundingClientRect().top - 10;
+        let next = Math.max(minScale, Math.min(1, availableH / designHeight));
+        if (designWidth) {
+          const availableW = (el.parentElement?.getBoundingClientRect().width ?? window.innerWidth) - 10;
+          next = Math.max(minScale, Math.min(next, availableW / designWidth));
+        }
         if (Math.abs(next - s) < 0.005 && i > 0) {
           s = next;
           break;
@@ -57,7 +70,7 @@ function useFitScale(designHeight: number, minScale = 0.55) {
     fit();
     window.addEventListener("resize", fit);
     return () => window.removeEventListener("resize", fit);
-  }, [designHeight, minScale]);
+  }, [designHeight, minScale, designWidth]);
 
   return { ref, scale };
 }
@@ -67,12 +80,19 @@ const WEEK_MS = 7 * DAY_MS;
 // The two collages' hand-placed "design" sizes — see useFitScale, which
 // scales each down to whatever room is actually available.
 const DESKTOP_DESIGN_H = 452;
-const MOBILE_DESIGN_H = 280;
-// The mobile cluster's actual width, used only to center it (see
-// MobileCollage): its own wrapper has no natural width otherwise, so the
-// cluster sat flush against the left edge with all the slack on the
-// right instead of split evenly on both sides.
-const MOBILE_DESIGN_W = 348;
+// Two rows, each card sized to its own measured content (see
+// MOBILE_CARDS) rather than a guess: several used to be narrower/
+// shorter than their real copy needed and silently lost text to their
+// own line-clamp/truncate. That measurement made a few cards
+// genuinely wide (a full sentence needs real width to read in 2-3
+// lines, not 6), which is why this canvas is wide relative to any
+// phone's screen — deliberately: useFitScale is given both this and
+// MOBILE_DESIGN_W below, so on an actual narrow phone the scale is
+// driven by *width*, not height, keeping the design short enough that
+// there's no vertical room being wasted while still shrinking exactly
+// as much as the screen's width demands.
+const MOBILE_DESIGN_H = 270;
+const MOBILE_DESIGN_W = 535;
 // Same illustrative shape as the Ventas comparison's own chart
 // (marketing-sales.tsx's WON/TARGET) — same data, same three-greens-by-
 // strength read, so a visitor who scrolls to /funcionalidades later sees
@@ -230,6 +250,25 @@ export function HeroBento({ locale }: { locale: Locale }) {
     </>
   );
 
+  // Mobile-only: same content, no line-clamp. `line-clamp-N` is a hard
+  // cap at N lines' worth of height regardless of how tall the card
+  // around it is — growing the mobile card's own height (as a first
+  // attempt at this did) never gave this paragraph more room, since the
+  // clamp itself doesn't respond to spare space. Removed here and the
+  // mobile card sized to the text's real wrapped height instead; left
+  // untouched on the shared vigilInner desktop still uses (already
+  // verified to fit there at its own, wider card).
+  const vigilInnerMobile = (
+    <>
+      <div className="flex items-center justify-between gap-1">
+        <Eye className="size-3.5 text-[var(--color-chart-4)]" aria-hidden />
+        <span className="bee-micro truncate">{t("vigil.live")}</span>
+      </div>
+      <p className="bee-micro mt-1.5">{t("vigil.eyebrow")}</p>
+      <p className="mt-0.5 text-xs leading-tight text-[var(--color-text-muted)]">{t("vigil.text")}</p>
+    </>
+  );
+
   const windowInner = (
     <>
       <p className="bee-micro truncate">{t("window.eyebrow")}</p>
@@ -247,6 +286,23 @@ export function HeroBento({ locale }: { locale: Locale }) {
     <>
       <p className="bee-micro truncate">{t("play.eyebrow")}</p>
       <p className="mt-1 line-clamp-2 text-xs leading-tight text-[var(--color-text-muted)]">
+        {hotLead ? t("play.chat", { company: hotLead.company_name ?? hotLead.company_domain }) : t("play.text")}
+      </p>
+      <div className="mt-auto flex gap-1 pt-1.5" aria-hidden>
+        {[1, 2, 3].map((i) => (
+          <i key={i} className="h-1.5 flex-1 rounded-full" style={{ background: i < 3 ? TONE.prepared : "color-mix(in srgb, var(--color-text) 14%, transparent)" }} />
+        ))}
+      </div>
+    </>
+  );
+
+  // Mobile-only: no line-clamp, same reasoning as vigilInnerMobile —
+  // the mobile card is sized to this text's real (measured) wrapped
+  // height instead of capping it.
+  const playInnerMobile = (
+    <>
+      <p className="bee-micro truncate">{t("play.eyebrow")}</p>
+      <p className="mt-1 text-xs leading-tight text-[var(--color-text-muted)]">
         {hotLead ? t("play.chat", { company: hotLead.company_name ?? hotLead.company_domain }) : t("play.text")}
       </p>
       <div className="mt-auto flex gap-1 pt-1.5" aria-hidden>
@@ -360,6 +416,17 @@ export function HeroBento({ locale }: { locale: Locale }) {
     </>
   );
 
+  // Mobile-only: no line-clamp, same reasoning as vigilInnerMobile —
+  // the mobile card is widened/heightened to fit both this title
+  // (truncate needs single-line room, not a clamp issue) and the body
+  // text's real wrapped height instead of capping it at 3 lines.
+  const learnInnerMobile = (
+    <>
+      <p className="bee-micro truncate">{tDiff("learn.title")}</p>
+      <p className="bee-micro mt-1 leading-tight">{tDiff("learn.text")}</p>
+    </>
+  );
+
   // Direct CRM comparison — a dash for the CRM row, a filled check for
   // BEE's, both sourced from the same real contrast Ventas already makes
   // ("Los CRM registran ventas. BEE las cierra."), just split into four
@@ -395,27 +462,37 @@ export function HeroBento({ locale }: { locale: Locale }) {
     </>
   );
 
-  // Phone: the same idea as the desktop collage — scattered, tilted,
-  // never a flat grid — sized to the design canvas (MOBILE_DESIGN_W ×
-  // MOBILE_DESIGN_H below), centered as one cluster (see MobileCollage)
-  // so a wider phone gets margin split evenly on both sides, never just
-  // on the right. Every card's box is sized to its own real content —
-  // play, learn and vigil used to be narrower/shorter than what their
-  // copy needs and lost text to their own overflow:hidden (a title
-  // ellipsis eating "Copiloto BEE", vigil's whole description line
-  // never rendering, learn's third line cut mid-word) — caught by eye,
-  // not by the clip-vs-main check, since a card fully inside main can
-  // still clip its own inner content. Genuinely draggable (pointer
-  // events, real offset state): a card that starts nudged behind a
-  // neighbour is one drag away from sitting in the clear, so the tight
-  // mobile fit never permanently hides one.
+  // Phone: same idea as the desktop collage — scattered, tilted, never
+  // a flat grid — arranged as two rows of three cards each rather than
+  // a free scatter, because several cards genuinely need real width
+  // for their sentence to read in 2-3 lines instead of clamping (see
+  // *InnerMobile below), and a scatter with no underlying structure
+  // either overlaps neighbours' text or balloons the canvas in every
+  // direction at once. Two short rows keeps the canvas WIDE instead —
+  // deliberately: useFitScale is given both MOBILE_DESIGN_W and -H, so
+  // on a narrow phone the scale is driven by width, not height, and
+  // this design is short enough that no vertical room goes to waste.
+  //
+  // Every box's width/height is sized from real measurements, not a
+  // guess: `.truncate` labels sized to their natural (unwrapped) single-
+  // line width, and the paragraphs that used to carry a line-clamp
+  // (play, vigil, learn — see *InnerMobile below) sized to their real
+  // wrapped height at that card's width. A card fully inside `main` can
+  // still lose its own text to `truncate`'s ellipsis or a line-clamp's
+  // hard cap — neither shows up in a check that only compares the
+  // card's box against main's bounds, which is why this was wrong
+  // twice already after only fixing that. Centered as one cluster (see
+  // MobileCollage) so a wider phone gets its margin split evenly on
+  // both sides. Genuinely draggable (pointer events, real offset
+  // state): a card that starts nudged behind a neighbour is one drag
+  // away from sitting in the clear.
   const MOBILE_CARDS = [
-    { id: "hive", node: hiveInnerMobile, top: 48, left: 102, width: 140, height: 130, rotate: 0, z: 20 },
-    { id: "trend", node: trendInner, top: 0, left: 4, width: 92, height: 64, rotate: -6, z: 22 },
-    { id: "play", node: playInner, top: 0, left: 204, width: 136, height: 88, rotate: 5, z: 23 },
-    { id: "window", node: windowInner, top: 182, left: 4, width: 92, height: 66, rotate: 6, z: 18 },
-    { id: "learn", node: learnInner, top: 176, left: 246, width: 98, height: 90, rotate: -4, z: 19 },
-    { id: "vigil", node: vigilInner, top: 182, left: 100, width: 140, height: 88, rotate: 2, z: 17 },
+    { id: "trend", node: trendInner, top: 0, left: 0, width: 92, height: 64, rotate: -6, z: 22 },
+    { id: "hive", node: hiveInnerMobile, top: 0, left: 106, width: 210, height: 130, rotate: 0, z: 20 },
+    { id: "play", node: playInnerMobile, top: 6, left: 330, width: 190, height: 92, rotate: 5, z: 23 },
+    { id: "window", node: windowInner, top: 140, left: 0, width: 135, height: 68, rotate: 6, z: 18 },
+    { id: "vigil", node: vigilInnerMobile, top: 146, left: 149, width: 190, height: 112, rotate: 2, z: 17 },
+    { id: "learn", node: learnInnerMobile, top: 140, left: 353, width: 170, height: 80, rotate: -4, z: 19 },
   ] as const;
 
   // Desktop: the same 12 cards, spread ~1.3× wider than the old 720px
@@ -486,11 +563,12 @@ function MobileCollage({ cards }: { cards: readonly MobileCard[] }) {
   const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const drag = useRef<{ id: string; startX: number; startY: number; baseX: number; baseY: number } | null>(null);
-  // Lower than useFitScale's own 0.55 default: the hero text column's
-  // top margin (see page.tsx) leaves a short phone (375×667) a little
-  // less room than the default floor assumed, clipping the collage's
-  // last row by a couple of pixels until this came down.
-  const { ref: wrapRef, scale } = useFitScale(MOBILE_DESIGN_H, 0.4);
+  // MOBILE_DESIGN_W passed too: this canvas is wider than any phone at
+  // its natural size (see MOBILE_DESIGN_H's comment), so on a narrow
+  // screen the tighter constraint is width, not height — height-only
+  // fitting would render it at scale 1 (there's plenty of vertical
+  // room) while it clipped sideways against `main`.
+  const { ref: wrapRef, scale } = useFitScale(MOBILE_DESIGN_H, 0.25, MOBILE_DESIGN_W);
 
   function handlePointerDown(id: string, e: ReactPointerEvent<HTMLDivElement>) {
     e.currentTarget.setPointerCapture(e.pointerId);
