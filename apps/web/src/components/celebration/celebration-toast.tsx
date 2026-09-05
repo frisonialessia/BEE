@@ -76,7 +76,11 @@ function CelebrationContent({ title, amount, locale }: { title: string; amount: 
 export function useCelebrateWon() {
   const locale = useLocale() as Locale;
   return (deal: { title: string; amount: number | null }) => {
-    toast.custom(() => <CelebrationContent title={deal.title} amount={deal.amount} locale={locale} />, { duration: 6000 });
+    // unstyled: true — otherwise Sonner's own default toast shell (a
+    // shadcn --radius corner, its own background/shadow) wraps this
+    // component's own rounded/bordered/shadowed card, showing as two
+    // nested boxes with two different corner radii.
+    toast.custom(() => <CelebrationContent title={deal.title} amount={deal.amount} locale={locale} />, { duration: 6000, unstyled: true });
   };
 }
 
@@ -100,6 +104,6 @@ function MilestoneContent({ count }: { count: number }) {
  * (never re-celebrated, never guessed on a first-ever visit) detection. */
 export function useCelebrateMilestone() {
   return (count: number) => {
-    toast.custom(() => <MilestoneContent count={count} />, { duration: 6000 });
+    toast.custom(() => <MilestoneContent count={count} />, { duration: 6000, unstyled: true });
   };
 }
