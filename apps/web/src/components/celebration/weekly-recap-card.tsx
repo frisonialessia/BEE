@@ -6,7 +6,35 @@ import { MilestonePath } from "@/components/celebration/milestone-path";
 import { DeltaChip } from "@/components/charts/delta-chip";
 import { TONE } from "@/components/charts/palette";
 import { OverviewCard } from "@/components/dashboard/overview-card";
+import { currentMilestoneIndex, milestoneAt } from "@/lib/milestones";
 import { hexagonPath } from "@/lib/visualization/honeycomb-radial";
+
+/** The fraction/label pair that used to sit at the end of the path's own
+ *  row — pulled out so it can sit right after "Ganado" on a phone instead
+ *  (see the mt-auto/order classes below), while staying at the end of
+ *  the row on a wider screen. Same two axes as before: a manager's
+ *  monthly target when one's active, else the next round number in the
+ *  rep's own lifetime sequence — never the same "next milestone" spliced
+ *  together (see milestone-path.tsx's own docstring on that bug). */
+function GoalFraction({ totalWon, monthlyGoal }: { totalWon: number; monthlyGoal: { current: number; target: number } | null }) {
+  const t = useTranslations("celebration.path");
+  const nextMilestone = milestoneAt(currentMilestoneIndex(totalWon));
+  return (
+    <div className="shrink-0 text-right sm:order-last sm:ml-auto">
+      {monthlyGoal ? (
+        <>
+          <p className="text-sm font-bold tabular-nums leading-tight">{t("goalFraction", { current: monthlyGoal.current, next: monthlyGoal.target })}</p>
+          <p className="bee-micro">{t("goalLabel")}</p>
+        </>
+      ) : (
+        <>
+          <p className="text-sm font-bold tabular-nums leading-tight">{t("goalFraction", { current: totalWon, next: nextMilestone })}</p>
+          <p className="bee-micro">{t("nextMilestoneLabel")}</p>
+        </>
+      )}
+    </div>
+  );
+}
 
 function StreakChip({ days }: { days: number }) {
   const t = useTranslations("celebration.streak");
@@ -94,8 +122,9 @@ export function WeeklyRecapCard({
         <StreakChip days={streakDays} />
         <StatMini label={t("signals")} value={signalsThisWeek} />
         <StatMini label={t("won")} value={wonThisWeek} delta={wonDelta} tone="sales" />
+        <GoalFraction totalWon={totalWon} monthlyGoal={monthlyGoal} />
         <div className="hidden h-8 w-px shrink-0 bg-[var(--color-divider)] sm:block" />
-        <MilestonePath totalWon={totalWon} monthlyGoal={monthlyGoal} weeklyEvents={weeklyEvents} />
+        <MilestonePath totalWon={totalWon} weeklyEvents={weeklyEvents} />
       </div>
     </OverviewCard>
   );

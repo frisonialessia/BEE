@@ -46,10 +46,12 @@ const AHEAD = 2;
  * monthly target (see quotas-section.tsx) and a lifetime round number
  * are different axes, and splicing one into the other as if they were
  * the same "next milestone" was a real bug caught before this shipped.
- * Instead, when a monthly goal is active, the fraction on the right
- * switches to it (this month's progress toward it) while the path keeps
- * showing the honest lifetime sweep. Hover (not a native `title`, which
- * can't be styled) shows what each node means.
+ * The goal-fraction label used to live here too, but on a phone it needs
+ * to sit up with the week's own numbers (right after "Ganado"), not down
+ * with the road — so WeeklyRecapCard renders it itself now, from the
+ * same `lib/milestones` this component still uses for the road's own
+ * sequence. Hover (not a native `title`, which can't be styled) shows
+ * what each node means.
  *
  * A short prelude of up to three event badges can sit before the numeric
  * spine — this week's real actions (a lead added, an organization added,
@@ -60,13 +62,9 @@ const AHEAD = 2;
  */
 export function MilestonePath({
   totalWon,
-  monthlyGoal = null,
   weeklyEvents,
 }: {
   totalWon: number;
-  /** This rep's wins so far this calendar month vs. their manager-set
-   *  monthly target (`Quota.target_count`) — independent of `totalWon`. */
-  monthlyGoal?: { current: number; target: number } | null;
   weeklyEvents?: WeeklyEvents;
 }) {
   const t = useTranslations("celebration.path");
@@ -79,7 +77,7 @@ export function MilestonePath({
   // measured width below, not a fixed step.
   const [boxRef, { width: viewW }] = useBoxSize<HTMLDivElement>({ width: 260, height: VIEW_H });
 
-  const { nodes, allPath, reachedPath, nextMilestone } = useMemo(() => {
+  const { nodes, allPath, reachedPath } = useMemo(() => {
     const behind: number[] = [];
     let i = 0;
     while (milestoneAt(i) < totalWon) {
@@ -141,7 +139,6 @@ export function MilestonePath({
       nodes: list.map((n, k) => ({ ...n, fill: n.colored ? colorFor(k) : null })),
       allPath: all,
       reachedPath: coloredD,
-      nextMilestone: current,
     };
   }, [totalWon, viewW]);
 
@@ -276,19 +273,6 @@ export function MilestonePath({
           >
             {tooltipFor(nodes[hover])}
           </div>
-        )}
-      </div>
-      <div className="shrink-0 text-right">
-        {monthlyGoal ? (
-          <>
-            <p className="text-sm font-bold tabular-nums leading-tight">{t("goalFraction", { current: monthlyGoal.current, next: monthlyGoal.target })}</p>
-            <p className="bee-micro">{t("goalLabel")}</p>
-          </>
-        ) : (
-          <>
-            <p className="text-sm font-bold tabular-nums leading-tight">{t("goalFraction", { current: totalWon, next: nextMilestone })}</p>
-            <p className="bee-micro">{t("nextMilestoneLabel")}</p>
-          </>
         )}
       </div>
     </div>
