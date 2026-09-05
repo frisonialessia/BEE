@@ -213,12 +213,14 @@
       },
       "trend": {
         "eyebrow": "Señales",
-        "delta": "{value}% esta semana"
+        "delta": "{value}% esta semana",
+        "caption": "últimas 4 semanas"
       },
       "hive": {
         "eyebrow": "Colmena de intención",
         "live": "En vivo",
-        "aria": "Colmena de cuentas con intención de compra"
+        "aria": "Colmena de cuentas con intención de compra",
+        "caption": "Cada celda, una cuenta con señal"
       },
       "play": {
         "eyebrow": "Copiloto BEE",
@@ -226,7 +228,8 @@
         "chat": "{company} tiene señal de compra. ¿Envío el follow-up?"
       },
       "window": {
-        "eyebrow": "Ventana de compra"
+        "eyebrow": "Ventana de compra",
+        "caption": "cuándo conviene entrar"
       },
       "vigil": {
         "eyebrow": "Vigilancia 24/7",
@@ -235,7 +238,8 @@
       },
       "score": {
         "eyebrow": "Todo el mercado, un score",
-        "caption": "funding + hiring + stack + intención"
+        "caption": "funding + hiring + stack + intención",
+        "sub": "de 0 a 100, en tiempo real"
       },
       "path": {
         "eyebrow": "Tu camino, no una tabla",

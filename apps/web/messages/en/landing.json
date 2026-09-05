@@ -213,12 +213,14 @@
       },
       "trend": {
         "eyebrow": "Signals",
-        "delta": "{value}% this week"
+        "delta": "{value}% this week",
+        "caption": "last 4 weeks"
       },
       "hive": {
         "eyebrow": "Intent hive",
         "live": "Live",
-        "aria": "Honeycomb of accounts with buying intent"
+        "aria": "Honeycomb of accounts with buying intent",
+        "caption": "Each cell is an account with a signal"
       },
       "play": {
         "eyebrow": "BEE copilot",
@@ -226,7 +228,8 @@
         "chat": "{company} has a buying signal. Send the follow-up?"
       },
       "window": {
-        "eyebrow": "Buying window"
+        "eyebrow": "Buying window",
+        "caption": "when it pays to reach out"
       },
       "vigil": {
         "eyebrow": "Watching 24/7",
@@ -235,7 +238,8 @@
       },
       "score": {
         "eyebrow": "The whole market, one score",
-        "caption": "funding + hiring + stack + intent"
+        "caption": "funding + hiring + stack + intent",
+        "sub": "0 to 100, in real time"
       },
       "path": {
         "eyebrow": "Your path, not a table",

@@ -1,6 +1,5 @@
 "use client";
 
-import { Eye } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
@@ -77,28 +76,25 @@ function useFitScale(designHeight: number, minScale = 0.55, designWidth?: number
 
 const DAY_MS = 86_400_000;
 const WEEK_MS = 7 * DAY_MS;
-// The two collages' hand-placed "design" sizes — see useFitScale, which
-// scales each down to whatever room is actually available.
-const DESKTOP_DESIGN_H = 452;
-// Two rows, each card sized to its own measured content (see
-// MOBILE_CARDS) rather than a guess: several used to be narrower/
-// shorter than their real copy needed and silently lost text to their
-// own line-clamp/truncate. That measurement made a few cards
-// genuinely wide (a full sentence needs real width to read in 2-3
-// lines, not 6), which is why this canvas is wide relative to any
-// phone's screen — deliberately: useFitScale is given both this and
-// MOBILE_DESIGN_W below, so on an actual narrow phone the scale is
-// driven by *width*, not height, keeping the design short enough that
-// there's no vertical room being wasted while still shrinking exactly
-// as much as the screen's width demands.
-const MOBILE_DESIGN_H = 270;
-const MOBILE_DESIGN_W = 535;
-// Same illustrative shape as the Ventas comparison's own chart
-// (marketing-sales.tsx's WON/TARGET) — same data, same three-greens-by-
-// strength read, so a visitor who scrolls to /funcionalidades later sees
-// the identical number, not a second invented one.
+// Same illustrative series as the Ventas comparison's own chart
+// (marketing-sales.tsx's WON/TARGET) — same data, so a visitor who opens
+// /funcionalidades later sees the identical numbers, not a second
+// invented set.
 const SALES_WON = [32, 38, 41, 45, 52, 58] as const;
 const SALES_TARGET = 50;
+// The two collages' hand-placed "design" sizes. useFitScale gets BOTH
+// dimensions for each, and uses whichever ratio is tighter — a cluster
+// this wide would otherwise render at scale 1 on a narrow screen
+// (plenty of vertical room) while clipping sideways against `main`.
+//
+// The desktop pair is chosen so the cluster renders at scale 1 — no
+// shrinking, so the cards read at their real size — on the common
+// desktop viewports: 1440×900 leaves it 505×1040 of room and 1366×768
+// leaves 392×1040, both above 390×845.
+const DESKTOP_DESIGN_H = 400;
+const DESKTOP_DESIGN_W = 1080;
+const MOBILE_DESIGN_H = 320;
+const MOBILE_DESIGN_W = 370;
 
 /**
  * The single-viewport homepage's one piece of "product, not paragraphs" —
@@ -142,7 +138,6 @@ const SALES_TARGET = 50;
  */
 export function HeroBento({ locale }: { locale: Locale }) {
   const t = useTranslations("landing.hero.cards");
-  const tDiff = useTranslations("landing.hero.differentiators");
   const tConf = useTranslations("shared.cyclePrediction.confidence");
   const [now] = useState(() => Date.now());
 
@@ -168,9 +163,8 @@ export function HeroBento({ locale }: { locale: Locale }) {
   const hiveItems = leads.slice(0, 19).map((l) => ({ id: l.id, heat: l.research_intensity_score, label: l.company_name ?? l.company_domain }));
 
   const maxSalesWon = Math.max(...SALES_WON, SALES_TARGET);
-  // Same illustrative pair as "¿Qué pasa si...?", read off the same
-  // SALES_WON series: an early-period average as the base, the latest
-  // point as "with the signal" — not a second invented dataset.
+  // An early-period average as the base, the latest point as "with the
+  // signal" — read off the same series, not a second invented pair.
   const baseAvg = Math.round((SALES_WON[0] + SALES_WON[1] + SALES_WON[2]) / 3);
   const withSignal = SALES_WON.at(-1)!;
 
@@ -185,17 +179,17 @@ export function HeroBento({ locale }: { locale: Locale }) {
 
   const hiveInner = (
     <>
-      <div className="flex items-center justify-between gap-1">
+      <div className="flex w-full items-center justify-between gap-2">
         <p className="bee-micro truncate">{t("hive.eyebrow")}</p>
         <span className="flex shrink-0 items-center gap-1">
           <i className="size-1.5 animate-pulse rounded-full" style={{ background: TONE.urgency }} aria-hidden />
           <span className="bee-micro">{t("hive.live")}</span>
         </span>
       </div>
-      <div className="mt-1 flex flex-1 items-center justify-center">
-        <Honeycomb items={hiveItems} maxRadius={13} minHeight={110} ariaLabel={t("hive.aria")} />
+      <div className="mt-2 flex w-full flex-1 items-center justify-center">
+        <Honeycomb items={hiveItems} maxRadius={19} minHeight={170} ariaLabel={t("hive.aria")} />
       </div>
-      {hotLead && <p className="mt-1 truncate text-center text-xs font-semibold">{hotLead.company_name ?? hotLead.company_domain}</p>}
+      <p className="bee-micro mt-2 w-full truncate">{t("hive.caption")}</p>
     </>
   );
 
@@ -206,28 +200,26 @@ export function HeroBento({ locale }: { locale: Locale }) {
   // scrollHeight vs clientHeight before this shipped, not by eye).
   const hiveInnerMobile = (
     <>
-      <div className="flex items-center justify-between gap-1">
+      <div className="flex w-full items-center justify-center gap-1.5">
+        <i className="size-1.5 shrink-0 animate-pulse rounded-full" style={{ background: TONE.urgency }} aria-hidden />
         <p className="bee-micro truncate">{t("hive.eyebrow")}</p>
-        <span className="flex shrink-0 items-center gap-1">
-          <i className="size-1.5 animate-pulse rounded-full" style={{ background: TONE.urgency }} aria-hidden />
-          <span className="bee-micro">{t("hive.live")}</span>
-        </span>
       </div>
-      <div className="mt-1 flex flex-1 items-center justify-center">
-        <Honeycomb items={hiveItems} maxRadius={9} minHeight={80} ariaLabel={t("hive.aria")} />
+      <div className="mt-1 flex w-full flex-1 items-center justify-center">
+        <Honeycomb items={hiveItems} maxRadius={13} minHeight={104} ariaLabel={t("hive.aria")} />
       </div>
-      {hotLead && <p className="mt-0.5 truncate text-center text-xs font-semibold">{hotLead.company_name ?? hotLead.company_domain}</p>}
+      <p className="bee-micro mt-1 w-full leading-tight">{t("hive.caption")}</p>
     </>
   );
 
   const trendInner = (
     <>
-      <p className="bee-micro truncate">{t("trend.eyebrow")}</p>
-      <p className="mt-1 text-lg font-bold tabular-nums leading-none">{recentSignals}</p>
+      <p className="bee-micro w-full truncate">{t("trend.eyebrow")}</p>
+      <p className="bee-kpi mt-1">{recentSignals}</p>
       {weeklyDeltaPct !== null && (
-        <p className="bee-micro mt-0.5 truncate">{t("trend.delta", { value: weeklyDeltaPct > 0 ? `+${weeklyDeltaPct}` : weeklyDeltaPct })}</p>
+        <p className="bee-micro mt-0.5 w-full truncate">{t("trend.delta", { value: weeklyDeltaPct > 0 ? `+${weeklyDeltaPct}` : weeklyDeltaPct })}</p>
       )}
-      <div className="mt-auto flex h-6 items-end gap-1" aria-hidden>
+      <p className="bee-micro mt-0.5 w-full truncate">{t("trend.caption")}</p>
+      <div className="mt-auto flex h-7 w-full items-end gap-1" aria-hidden>
         {weeklyBuckets.map((v, i) => (
           <i
             key={i}
@@ -239,41 +231,12 @@ export function HeroBento({ locale }: { locale: Locale }) {
     </>
   );
 
-  const vigilInner = (
-    <>
-      <div className="flex items-center justify-between gap-1">
-        <Eye className="size-3.5 text-[var(--color-chart-4)]" aria-hidden />
-        <span className="bee-micro truncate">{t("vigil.live")}</span>
-      </div>
-      <p className="bee-micro mt-1.5">{t("vigil.eyebrow")}</p>
-      <p className="mt-0.5 line-clamp-2 text-xs leading-tight text-[var(--color-text-muted)]">{t("vigil.text")}</p>
-    </>
-  );
-
-  // Mobile-only: same content, no line-clamp. `line-clamp-N` is a hard
-  // cap at N lines' worth of height regardless of how tall the card
-  // around it is — growing the mobile card's own height (as a first
-  // attempt at this did) never gave this paragraph more room, since the
-  // clamp itself doesn't respond to spare space. Removed here and the
-  // mobile card sized to the text's real wrapped height instead; left
-  // untouched on the shared vigilInner desktop still uses (already
-  // verified to fit there at its own, wider card).
-  const vigilInnerMobile = (
-    <>
-      <div className="flex items-center justify-between gap-1">
-        <Eye className="size-3.5 text-[var(--color-chart-4)]" aria-hidden />
-        <span className="bee-micro truncate">{t("vigil.live")}</span>
-      </div>
-      <p className="bee-micro mt-1.5">{t("vigil.eyebrow")}</p>
-      <p className="mt-0.5 text-xs leading-tight text-[var(--color-text-muted)]">{t("vigil.text")}</p>
-    </>
-  );
-
   const windowInner = (
     <>
-      <p className="bee-micro truncate">{t("window.eyebrow")}</p>
-      <p className="mt-1 text-base font-bold leading-none">{tConf(confidenceKey)}</p>
-      <div className="mt-auto flex h-6 items-end gap-1" aria-hidden>
+      <p className="bee-micro w-full truncate">{t("window.eyebrow")}</p>
+      <p className="mt-1.5 text-base font-bold leading-tight">{tConf(confidenceKey)}</p>
+      <p className="bee-micro mt-0.5 w-full truncate">{t("window.caption")}</p>
+      <div className="mt-auto flex h-7 w-full items-end gap-1.5" aria-hidden>
         <i className="flex-1 rounded-sm" style={{ height: "35%", background: SALES.mint }} />
         <i className="flex-1 rounded-sm" style={{ height: "55%", background: SALES.mint }} />
         <i className="flex-1 rounded-sm" style={{ height: "75%", background: SALES.lime }} />
@@ -284,51 +247,51 @@ export function HeroBento({ locale }: { locale: Locale }) {
 
   const playInner = (
     <>
-      <p className="bee-micro truncate">{t("play.eyebrow")}</p>
-      <p className="mt-1 line-clamp-2 text-xs leading-tight text-[var(--color-text-muted)]">
-        {hotLead ? t("play.chat", { company: hotLead.company_name ?? hotLead.company_domain }) : t("play.text")}
-      </p>
-      <div className="mt-auto flex gap-1 pt-1.5" aria-hidden>
-        {[1, 2, 3].map((i) => (
-          <i key={i} className="h-1.5 flex-1 rounded-full" style={{ background: i < 3 ? TONE.prepared : "color-mix(in srgb, var(--color-text) 14%, transparent)" }} />
-        ))}
-      </div>
-    </>
-  );
-
-  // Mobile-only: no line-clamp, same reasoning as vigilInnerMobile —
-  // the mobile card is sized to this text's real (measured) wrapped
-  // height instead of capping it.
-  const playInnerMobile = (
-    <>
-      <p className="bee-micro truncate">{t("play.eyebrow")}</p>
-      <p className="mt-1 text-xs leading-tight text-[var(--color-text-muted)]">
-        {hotLead ? t("play.chat", { company: hotLead.company_name ?? hotLead.company_domain }) : t("play.text")}
-      </p>
-      <div className="mt-auto flex gap-1 pt-1.5" aria-hidden>
-        {[1, 2, 3].map((i) => (
-          <i key={i} className="h-1.5 flex-1 rounded-full" style={{ background: i < 3 ? TONE.prepared : "color-mix(in srgb, var(--color-text) 14%, transparent)" }} />
-        ))}
+      <p className="bee-micro w-full truncate">{t("play.eyebrow")}</p>
+      <div className="mt-2 flex w-full items-start gap-2 text-left">
+        <span
+          className="flex size-6 shrink-0 items-center justify-center rounded-full"
+          style={{ background: "color-mix(in srgb, var(--color-chart-1) 30%, var(--color-card))" }}
+          aria-hidden
+        >
+          <svg width="12" height="12" viewBox="-10 -10 20 20">
+            <path d={hexagonPath(0, 0, 9)} fill={TONE.marketDeep} />
+          </svg>
+        </span>
+        <span
+          className="flex-1 rounded-lg px-2 py-1.5"
+          style={{ background: "color-mix(in srgb, var(--color-chart-4) 10%, var(--color-card))" }}
+        >
+          <span className="block text-xs leading-snug text-[var(--color-text)]">{t("play.text")}</span>
+          <span className="mt-1.5 flex gap-1" aria-hidden>
+            {[0, 1, 2].map((i) => (
+              <i key={i} className="size-1 animate-pulse rounded-full" style={{ background: TONE.prepared, animationDelay: `${i * 150}ms` }} />
+            ))}
+          </span>
+        </span>
       </div>
     </>
   );
 
   const scoreInner = (
     <>
-      <p className="bee-micro truncate">{t("score.eyebrow")}</p>
-      <div className="mt-1 flex gap-1" aria-hidden>
-        {presentTypes.map((type, i) => (
-          <i key={type} className="size-2 rounded-full" style={{ background: sourceTones[i] }} />
-        ))}
-      </div>
-      <div className="mt-auto flex items-center gap-1.5 pt-1">
+      <p className="bee-micro w-full truncate">{t("score.eyebrow")}</p>
+      <p className="bee-micro mt-0.5 w-full truncate">{t("score.sub")}</p>
+      <div className="mt-auto flex items-center gap-2.5">
         <span
-          className="flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+          className="flex size-11 shrink-0 items-center justify-center rounded-full text-base font-bold tabular-nums text-white"
           style={{ background: TONE.marketDeep }}
         >
           {hotLead?.research_intensity_score ?? "—"}
         </span>
-        <p className="bee-micro line-clamp-2 leading-tight">{t("score.caption")}</p>
+        <div className="flex flex-col items-start gap-1.5">
+          <div className="flex gap-1" aria-hidden>
+            {presentTypes.map((type, i) => (
+              <i key={type} className="size-2 rounded-full" style={{ background: sourceTones[i] }} />
+            ))}
+          </div>
+          <p className="bee-micro text-left leading-tight">{t("score.caption")}</p>
+        </div>
       </div>
     </>
   );
@@ -348,9 +311,9 @@ export function HeroBento({ locale }: { locale: Locale }) {
   const pathReachedD = `M${pathXs[0]},18` + pathXs.slice(1, pathCurrentIdx + 1).map((x) => ` L${x},18`).join("");
   const pathInner = (
     <>
-      <p className="bee-micro truncate">{t("path.eyebrow")}</p>
-      <p className="mt-1 line-clamp-1 text-xs leading-tight text-[var(--color-text-muted)]">{t("path.text")}</p>
-      <svg width={PATH_W} height="36" viewBox={`0 0 ${PATH_W} 36`} className="mt-auto" aria-hidden>
+      <p className="bee-micro w-full truncate">{t("path.eyebrow")}</p>
+      <p className="bee-micro mt-0.5 w-full leading-tight">{t("path.text")}</p>
+      <svg width={PATH_W} height="40" viewBox={`0 0 ${PATH_W} 40`} className="mt-auto" aria-hidden>
         <path d={pathAllD} fill="none" stroke="var(--color-divider)" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
         <path d={pathReachedD} fill="none" stroke={SALES.won} strokeWidth={3} strokeLinecap="round" />
         {pathValues.map((v, k) => {
@@ -371,149 +334,67 @@ export function HeroBento({ locale }: { locale: Locale }) {
     </>
   );
 
+  // Title + subtitle + chart, like every other card here: the same
+  // "what if I prospect more" question Ventas answers at full length,
+  // as two bars instead of a paragraph. Replaced a four-row CRM-vs-BEE
+  // list — four sentences at this size read as a wall of text, and the
+  // contrast they made is already the headline's job.
   const compareInner = (
     <>
-      <p className="bee-micro truncate">{t("compare.eyebrow")}</p>
-      <div className="mt-1 flex flex-1 items-end gap-3" aria-hidden>
-        <div className="flex flex-1 flex-col items-center gap-0.5">
-          <i className="w-full rounded-sm" style={{ height: `${Math.max(15, (baseAvg / maxSalesWon) * 100)}%`, background: "color-mix(in srgb, var(--color-chart-4) 55%, white)" }} />
+      <p className="bee-micro w-full truncate">{t("compare.eyebrow")}</p>
+      <p className="bee-micro mt-0.5 w-full leading-tight">{t("compare.text")}</p>
+      <div className="mt-2 flex w-full flex-1 items-end justify-center gap-4" aria-hidden>
+        <div className="flex h-full flex-1 flex-col items-center justify-end gap-1">
+          <i className="w-full rounded-sm" style={{ height: `${Math.max(18, (baseAvg / maxSalesWon) * 100)}%`, background: "color-mix(in srgb, var(--color-chart-4) 45%, white)" }} />
           <span className="bee-micro">{t("compare.base")}</span>
         </div>
-        <div className="flex flex-1 flex-col items-center gap-0.5">
-          <i className="w-full rounded-sm" style={{ height: `${Math.max(15, (withSignal / maxSalesWon) * 100)}%`, background: TONE.forecast }} />
+        <div className="flex h-full flex-1 flex-col items-center justify-end gap-1">
+          <i className="w-full rounded-sm" style={{ height: `${Math.max(18, (withSignal / maxSalesWon) * 100)}%`, background: TONE.forecast }} />
           <span className="bee-micro">{t("compare.signal")}</span>
         </div>
       </div>
-      <p className="bee-micro mt-1 line-clamp-1">{t("compare.text")}</p>
     </>
   );
 
-  const voiceInner = (
-    <>
-      <p className="bee-micro truncate">{t("voice.eyebrow")}</p>
-      <span
-        className="mt-1 inline-flex w-fit items-center gap-1 rounded-full px-1.5 py-0.5 text-xs font-semibold"
-        style={{ background: "color-mix(in srgb, var(--color-chart-6) 30%, white)" }}
-      >
-        <i className="size-1 rounded-full" style={{ background: TONE.prepared }} />
-        {t("voice.tone")}
-      </span>
-      <p className="bee-micro mt-auto line-clamp-2 leading-tight">{t("voice.text")}</p>
-    </>
-  );
-
-  const networkInner = (
-    <>
-      <p className="bee-micro truncate">{t("network.eyebrow")}</p>
-      <p className="bee-micro mt-1 line-clamp-3 leading-tight">{t("network.text")}</p>
-    </>
-  );
-
-  const learnInner = (
-    <>
-      <p className="bee-micro truncate">{tDiff("learn.title")}</p>
-      <p className="bee-micro mt-1 line-clamp-3 leading-tight">{tDiff("learn.text")}</p>
-    </>
-  );
-
-  // Mobile-only: no line-clamp, same reasoning as vigilInnerMobile —
-  // the mobile card is widened/heightened to fit both this title
-  // (truncate needs single-line room, not a clamp issue) and the body
-  // text's real wrapped height instead of capping it at 3 lines.
-  const learnInnerMobile = (
-    <>
-      <p className="bee-micro truncate">{tDiff("learn.title")}</p>
-      <p className="bee-micro mt-1 leading-tight">{tDiff("learn.text")}</p>
-    </>
-  );
-
-  // Direct CRM comparison — a dash for the CRM row, a filled check for
-  // BEE's, both sourced from the same real contrast Ventas already makes
-  // ("Los CRM registran ventas. BEE las cierra."), just split into four
-  // short rows instead of one paragraph so it reads at a glance this small.
-  const crmInner = (
-    <>
-      <p className="bee-micro truncate">{t("crm.eyebrow")}</p>
-      <div className="mt-1 flex flex-col justify-center gap-1">
-        {(
-          [
-            [t("crm.crmRow1"), false],
-            [t("crm.beeRow1"), true],
-            [t("crm.crmRow2"), false],
-            [t("crm.beeRow2"), true],
-          ] as const
-        ).map(([label, isBee], i) => (
-          <div key={i} className="flex items-center gap-1.5">
-            <span
-              className="flex size-3.5 shrink-0 items-center justify-center rounded-full"
-              style={{ background: isBee ? TONE.marketDeep : "var(--color-divider)" }}
-              aria-hidden
-            >
-              {isBee && (
-                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={3.5}>
-                  <path d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </span>
-            <span className="bee-micro truncate">{label}</span>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-
-  // Phone: same idea as the desktop collage — scattered, tilted, never
-  // a flat grid — arranged as two rows of three cards each rather than
-  // a free scatter, because several cards genuinely need real width
-  // for their sentence to read in 2-3 lines instead of clamping (see
-  // *InnerMobile below), and a scatter with no underlying structure
-  // either overlaps neighbours' text or balloons the canvas in every
-  // direction at once. Two short rows keeps the canvas WIDE instead —
-  // deliberately: useFitScale is given both MOBILE_DESIGN_W and -H, so
-  // on a narrow phone the scale is driven by width, not height, and
-  // this design is short enough that no vertical room goes to waste.
+  // Both collages are the same idea as the founder's reference: a tight
+  // cluster of floating cards around one bigger centre card, corners
+  // touching, everything centered as a single group — not a scatter
+  // spread across the page. The count came down from 12 to 7 (phone: 5)
+  // for one reason: 12 cards only fit in a no-scroll viewport by
+  // shrinking the whole cluster to ~55% scale, where nothing was
+  // readable. Fewer, bigger cards at scale 1 beat more cards at half
+  // size — the dropped ones (compare, voice, network, learn) all
+  // restated a differentiator that /funcionalidades already makes at
+  // full length.
   //
-  // Every box's width/height is sized from real measurements, not a
-  // guess: `.truncate` labels sized to their natural (unwrapped) single-
-  // line width, and the paragraphs that used to carry a line-clamp
-  // (play, vigil, learn — see *InnerMobile below) sized to their real
-  // wrapped height at that card's width. A card fully inside `main` can
-  // still lose its own text to `truncate`'s ellipsis or a line-clamp's
-  // hard cap — neither shows up in a check that only compares the
-  // card's box against main's bounds, which is why this was wrong
-  // twice already after only fixing that. Centered as one cluster (see
-  // MobileCollage) so a wider phone gets its margin split evenly on
-  // both sides. Genuinely draggable (pointer events, real offset
-  // state): a card that starts nudged behind a neighbour is one drag
-  // away from sitting in the clear.
+  // Sizes are measured, not guessed: each box fits its own content at
+  // its real wrapped height, with no line-clamp left to cap a paragraph
+  // below what its card can show (a clamp is a hard N-line cap that
+  // ignores spare room, which is how text kept disappearing here).
+  // Positions leave only corners overlapping — verified per text node
+  // with elementFromPoint, not by eye.
   const MOBILE_CARDS = [
-    { id: "trend", node: trendInner, top: 0, left: 0, width: 92, height: 64, rotate: -6, z: 22 },
-    { id: "hive", node: hiveInnerMobile, top: 0, left: 106, width: 210, height: 130, rotate: 0, z: 20 },
-    { id: "play", node: playInnerMobile, top: 6, left: 330, width: 190, height: 92, rotate: 5, z: 23 },
-    { id: "window", node: windowInner, top: 140, left: 0, width: 135, height: 68, rotate: 6, z: 18 },
-    { id: "vigil", node: vigilInnerMobile, top: 146, left: 149, width: 190, height: 112, rotate: 2, z: 17 },
-    { id: "learn", node: learnInnerMobile, top: 140, left: 353, width: 170, height: 80, rotate: -4, z: 19 },
+    { id: "hive", node: hiveInnerMobile, top: 0, left: 0, width: 182, height: 172, rotate: 0, z: 20 },
+    { id: "score", node: scoreInner, top: 0, left: 192, width: 178, height: 92, rotate: 3, z: 23 },
+    { id: "play", node: playInner, top: 110, left: 192, width: 178, height: 104, rotate: -2, z: 22 },
+    { id: "window", node: windowInner, top: 192, left: 0, width: 182, height: 96, rotate: 4, z: 18 },
+    { id: "path", node: pathInner, top: 232, left: 192, width: 178, height: 88, rotate: 2, z: 17 },
   ] as const;
 
-  // Desktop: the same 12 cards, spread ~1.3× wider than the old 720px
-  // design so the collage actually fills the wider column page.tsx now
-  // gives it (previously every card's left/width still reflected a
-  // narrower design, leaving dead space on both sides on a wide
-  // monitor) — top/height/rotate untouched, since those already fit
-  // DESKTOP_DESIGN_H correctly.
+  // Desktop: hive in the middle at roughly twice a satellite's size,
+  // six satellites ringing it. Designed at 845×390 so it renders at
+  // scale 1 (no shrinking at all) on the common desktop sizes —
+  // 1440×900 leaves 505px of height and 1040px of width for it, and
+  // 1366×768 leaves 392px — which is the whole point of the smaller
+  // card count.
   const DESKTOP_CARDS = [
-    { id: "hive", node: hiveInner, top: 80, left: 332, width: 273, height: 176, rotate: 0, z: 20, padding: "0.7rem 0.85rem" },
-    { id: "trend", node: trendInner, top: 16, left: 8, width: 153, height: 82, rotate: -7, z: 24, padding: "0.5rem 0.6rem" },
-    { id: "vigil", node: vigilInner, top: 0, left: 187, width: 174, height: 88, rotate: 3, z: 18, padding: "0.5rem 0.6rem" },
-    { id: "score", node: scoreInner, top: 2, left: 588, width: 174, height: 88, rotate: -4, z: 19, padding: "0.5rem 0.6rem" },
-    { id: "play", node: playInner, top: 26, left: 770, width: 159, height: 86, rotate: 5, z: 25, padding: "0.5rem 0.6rem" },
-    { id: "learn", node: learnInner, top: 126, left: 8, width: 146, height: 80, rotate: 4, z: 15, padding: "0.5rem 0.6rem" },
-    { id: "voice", node: voiceInner, top: 136, left: 770, width: 161, height: 90, rotate: -5, z: 23, padding: "0.5rem 0.6rem" },
-    { id: "window", node: windowInner, top: 224, left: 8, width: 153, height: 84, rotate: 6, z: 17, padding: "0.5rem 0.6rem" },
-    { id: "path", node: pathInner, top: 246, left: 182, width: 247, height: 90, rotate: -2, z: 22, padding: "0.5rem 0.6rem" },
-    { id: "compare", node: compareInner, top: 244, left: 588, width: 174, height: 82, rotate: 4, z: 16, padding: "0.5rem 0.6rem" },
-    { id: "network", node: networkInner, top: 222, left: 777, width: 156, height: 88, rotate: -3, z: 21, padding: "0.5rem 0.6rem" },
-    { id: "crm", node: crmInner, top: 336, left: 278, width: 369, height: 112, rotate: -1.5, z: 14, padding: "0.55rem 0.7rem" },
+    { id: "trend", node: trendInner, top: 0, left: 0, width: 300, height: 125, rotate: -3, z: 24, padding: "0.85rem 1rem" },
+    { id: "window", node: windowInner, top: 138, left: 12, width: 300, height: 125, rotate: 2, z: 18, padding: "0.85rem 1rem" },
+    { id: "path", node: pathInner, top: 276, left: 0, width: 300, height: 124, rotate: -2, z: 17, padding: "0.75rem 0.9rem" },
+    { id: "hive", node: hiveInner, top: 35, left: 340, width: 400, height: 330, rotate: 0, z: 20, padding: "1rem 1.15rem" },
+    { id: "score", node: scoreInner, top: 0, left: 780, width: 300, height: 125, rotate: 3, z: 23, padding: "0.85rem 1rem" },
+    { id: "play", node: playInner, top: 138, left: 768, width: 300, height: 125, rotate: -2, z: 22, padding: "0.85rem 1rem" },
+    { id: "compare", node: compareInner, top: 276, left: 780, width: 300, height: 124, rotate: 2, z: 16, padding: "0.75rem 0.9rem" },
   ] as const;
 
   return (
@@ -531,7 +412,7 @@ export function HeroBento({ locale }: { locale: Locale }) {
           density instead of a tidy row. Genuinely draggable, same as the
           phone version below — see DesktopCollage for the mechanics,
           shared with MobileCollage's. */}
-      <div className="mt-8 hidden w-full max-w-[970px] sm:block lg:mt-10">
+      <div className="mt-8 hidden w-full justify-center sm:flex lg:mt-10">
         <DesktopCollage cards={DESKTOP_CARDS} />
       </div>
     </>
@@ -618,7 +499,7 @@ function MobileCollage({ cards }: { cards: readonly MobileCard[] }) {
           return (
             <div
               key={c.id}
-              className="bee-bento-mini absolute flex touch-none flex-col"
+              className="bee-bento-mini absolute flex touch-none flex-col items-center text-center"
               style={{
                 top: c.top,
                 left: c.left,
@@ -673,7 +554,7 @@ function DesktopCollage({ cards }: { cards: readonly DesktopCard[] }) {
   const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const drag = useRef<{ id: string; startX: number; startY: number; baseX: number; baseY: number } | null>(null);
-  const { ref: wrapRef, scale } = useFitScale(DESKTOP_DESIGN_H, 0.01);
+  const { ref: wrapRef, scale } = useFitScale(DESKTOP_DESIGN_H, 0.03, DESKTOP_DESIGN_W);
 
   function handlePointerDown(id: string, e: ReactPointerEvent<HTMLDivElement>) {
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -695,15 +576,20 @@ function DesktopCollage({ cards }: { cards: readonly DesktopCard[] }) {
   }
 
   return (
-    <div ref={wrapRef} style={{ height: DESKTOP_DESIGN_H * scale }}>
-      <div className="relative" style={{ height: DESKTOP_DESIGN_H, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+    // Explicit width + flexShrink:0 + a top-center origin, same as
+    // MobileCollage: the cards are absolutely placed from left:0, so
+    // without a real width to center the box would sit flush left, and
+    // a top-LEFT scale origin would pull the cluster leftwards again
+    // every time it shrinks.
+    <div ref={wrapRef} style={{ height: DESKTOP_DESIGN_H * scale, width: DESKTOP_DESIGN_W, flexShrink: 0 }}>
+      <div className="relative" style={{ height: DESKTOP_DESIGN_H, transform: `scale(${scale})`, transformOrigin: "top center" }}>
         {cards.map((c) => {
           const offset = offsets[c.id] ?? { x: 0, y: 0 };
           const active = activeId === c.id;
           return (
             <div
               key={c.id}
-              className="bee-bento-mini absolute flex touch-none flex-col"
+              className="bee-bento-mini absolute flex touch-none flex-col items-center text-center"
               style={{
                 top: c.top,
                 left: c.left,

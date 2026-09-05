@@ -100,7 +100,7 @@ export default async function Home() {
             collage sitting in a narrow strip with dead space on both
             sides. The collage itself has no reading-width concern, so it
             gets its own, wider ceiling instead. */}
-        <div className="relative z-10 w-full max-w-[1040px]">
+        <div className="relative z-10 w-full max-w-[1160px]">
           <HeroBento locale={locale} />
         </div>
       </main>
