@@ -24,7 +24,7 @@
     },
     "tourPreview": {
       "title": "Así funciona BEE",
-      "description": "Un recorrido guiado de 6 pasos, directo sobre el producto — te vamos mostrando cada lugar clave a medida que avanzás, en el orden que tiene sentido para tu primera vuelta.",
+      "description": "Un recorrido guiado de 6 pasos, directo sobre el producto — te vamos mostrando cada lugar clave a medida que avanzas, en el orden que tiene sentido para tu primera vuelta.",
       "preview": {
         "signals": "Señales",
         "darkFunnel": "Dark Funnel",
@@ -40,7 +40,7 @@
     "steps": {
       "signals": {
         "title": "1. Señales",
-        "description": "Todo arranca acá: lo que el mercado ya hizo público — una ronda, una contratación clave, un cambio de stack — antes de que nadie más lo note."
+        "description": "Todo arranca aquí: lo que el mercado ya hizo público — una ronda, una contratación clave, un cambio de stack — antes de que nadie más lo note."
       },
       "darkFunnel": {
         "title": "2. Dark Funnel",
@@ -48,11 +48,11 @@
       },
       "strategy": {
         "title": "3. Estrategia",
-        "description": "Abrí una oportunidad y mirá la jugada que armó la IA: el argumento, el canal, el email — listo para mandar, no un molde genérico."
+        "description": "Abre una oportunidad y mira la jugada que armó la IA: el argumento, el canal, el email — listo para mandar, no un molde genérico."
       },
       "pipeline": {
         "title": "4. Pipeline (CRM)",
-        "description": "Cada oportunidad ya priorizada vive acá, en 5 etapas: Detectadas → Listas para actuar → Tu prioridad → En conversación → Cerradas. No son las de un CRM genérico (\"Nuevo, Abierto...\") — cada columna tiene su propio ícono \"?\" con lo que significa. Arrastrá una tarjeta para avanzarla."
+        "description": "Cada oportunidad ya priorizada vive aquí, en 5 etapas: Detectadas → Listas para actuar → Tu prioridad → En conversación → Cerradas. No son las de un CRM genérico (\"Nuevo, Abierto...\") — cada columna tiene su propio ícono \"?\" con lo que significa. Arrastra una tarjeta para avanzarla."
       },
       "forecast": {
         "title": "5. Pronóstico",
@@ -60,11 +60,11 @@
       },
       "closingDashboard": {
         "title": "6. Tu equipo",
-        "description": "Desde acá invitás a tu equipo a colaborar en el mismo pipeline, cada quien con la visibilidad que le toca según su rol."
+        "description": "Desde aquí invitas a tu equipo a colaborar en el mismo pipeline, cada quien con la visibilidad que le toca según su rol."
       },
       "closingProbar": {
         "title": "6. Es tu turno",
-        "description": "Esto era una vuelta rápida con datos de ejemplo. Creá tu cuenta gratis para conectar tus propias señales y ver a BEE trabajar con tu pipeline real."
+        "description": "Esto era una vuelta rápida con datos de ejemplo. Crea tu cuenta gratis para conectar tus propias señales y ver a BEE trabajar con tu pipeline real."
       }
     },
     "overlay": {

@@ -136,7 +136,7 @@
         "nextMeetingLabel": "Próxima cita",
         "pipelineStageLabel": "Etapa del pipeline",
         "pipelineStageNone": "Ninguna — solo guardar el contacto",
-        "pipelineStageHint": "Si elegís una etapa, se crea también una oportunidad en el CRM.",
+        "pipelineStageHint": "Si eliges una etapa, se crea también una oportunidad en el CRM.",
         "pipelineStageOptions": {
           "detected": "Nuevas",
           "prioritized": "Tu prioridad",

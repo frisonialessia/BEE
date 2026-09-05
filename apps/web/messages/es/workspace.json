@@ -17,7 +17,7 @@
     },
     "comingSoon": {
       "title": "{label} — no está simulado en este sandbox",
-      "description": "Esta herramienta funciona por completo en una cuenta real, con tus propios datos. Acá todavía no la armamos como demo — para no mostrarte algo que no es de verdad.",
+      "description": "Esta herramienta funciona por completo en una cuenta real, con tus propios datos. Aquí todavía no la armamos como demo — para no mostrarte algo que no es de verdad.",
       "createAccount": "Crear cuenta gratis",
       "backToSignals": "Volver a Señales"
     },
@@ -551,7 +551,7 @@
       "body": "Desactiva tu cuenta de forma permanente — se cerrará tu sesión y no podrás volver a iniciar sesión. Nada de lo que quedaste registrado (leads, oportunidades, actividad pasada) se elimina.",
       "button": "Eliminar mi cuenta",
       "confirmTitle": "¿Estás seguro?",
-      "confirmBody": "Esto no se puede deshacer desde acá.",
+      "confirmBody": "Esto no se puede deshacer desde aquí.",
       "confirmButton": "Sí, eliminar permanentemente",
       "cancel": "Cancelar",
       "ownerBlocked": "El OWNER de la organización todavía no puede eliminar su propia cuenta — la transferencia de titularidad no está soportada. Contacta a soporte.",
@@ -641,7 +641,7 @@
       "statusOff": "No participa",
       "explainer": "Nunca se comparte información en bruto: ni nombres de empresas, ni contactos, ni el contenido de una señal. Solo estadísticas agregadas (tipo de señal + industria → tasa de éxito) y solo una vez que al menos varias organizaciones distintas contribuyeron al mismo grupo — nunca antes.",
       "toggleLabel": "Participar en la inteligencia federada",
-      "optedInToast": "Ahora participás en la inteligencia federada.",
+      "optedInToast": "Ahora participas en la inteligencia federada.",
       "optedOutToast": "Dejaste de participar en la inteligencia federada.",
       "saveError": "No se pudo actualizar la configuración."
     },
