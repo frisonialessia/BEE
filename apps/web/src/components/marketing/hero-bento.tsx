@@ -280,15 +280,41 @@ export function HeroBento({ locale }: { locale: Locale }) {
     </>
   );
 
+  // The real MilestonePath (celebration/milestone-path.tsx), miniaturized:
+  // dashed grey base, the honey→green ramp on the reached segment, numbered
+  // nodes, a dashed ring on the "current" one — the same illustrative
+  // 5/10/20/50/100 sweep this card always showed, just drawn as the actual
+  // component's own visual language instead of a plain row of dots.
+  const PATH_RAMP = [TONE.marketDeep, TONE.market, "color-mix(in srgb, " + TONE.market + " 55%, " + SALES.mint + ")", SALES.mint, SALES.lime, SALES.won];
+  const pathValues = [5, 10, 20, 50, 100];
+  const pathCurrentIdx = 3;
+  const PATH_W = 166;
+  const PATH_PAD = 12;
+  const pathXs = pathValues.map((_, k) => PATH_PAD + (k / (pathValues.length - 1)) * (PATH_W - PATH_PAD * 2));
+  const pathAllD = `M${pathXs[0]},18` + pathXs.slice(1).map((x) => ` L${x},18`).join("");
+  const pathReachedD = `M${pathXs[0]},18` + pathXs.slice(1, pathCurrentIdx + 1).map((x) => ` L${x},18`).join("");
   const pathInner = (
     <>
       <p className="bee-micro truncate">{t("path.eyebrow")}</p>
-      <p className="mt-1 line-clamp-2 text-[0.65rem] leading-tight text-[var(--color-text-muted)]">{t("path.text")}</p>
-      <div className="mt-auto flex gap-1 pt-1.5" aria-hidden>
-        {[TONE.marketDeep, TONE.market, "color-mix(in srgb, " + TONE.market + " 55%, " + SALES.mint + ")", SALES.lime, SALES.won].map((c, i) => (
-          <i key={i} className="size-1.5 flex-1 rounded-full" style={{ background: c, maxWidth: 10 }} />
-        ))}
-      </div>
+      <p className="mt-1 line-clamp-1 text-[0.65rem] leading-tight text-[var(--color-text-muted)]">{t("path.text")}</p>
+      <svg width={PATH_W} height="36" viewBox={`0 0 ${PATH_W} 36`} className="mt-auto" aria-hidden>
+        <path d={pathAllD} fill="none" stroke="var(--color-divider)" strokeWidth={3} strokeLinecap="round" strokeDasharray="1 6" />
+        <path d={pathReachedD} fill="none" stroke={SALES.won} strokeWidth={3} strokeLinecap="round" />
+        {pathValues.map((v, k) => {
+          const reached = k <= pathCurrentIdx;
+          const isCurrent = k === pathCurrentIdx;
+          const fill = reached ? PATH_RAMP[Math.round((k / (pathValues.length - 2)) * (PATH_RAMP.length - 1))] : "#fff";
+          return (
+            <g key={v}>
+              {isCurrent && <circle cx={pathXs[k]} cy={18} r={12.5} fill="none" stroke={TONE.marketDeep} strokeWidth={1.5} strokeDasharray="2 3" />}
+              <circle cx={pathXs[k]} cy={18} r={isCurrent ? 9.5 : 8} fill={fill} stroke={reached ? "#fff" : "var(--color-divider)"} strokeWidth={1.5} strokeDasharray={reached ? undefined : "2 2"} />
+              <text x={pathXs[k]} y={20.5} textAnchor="middle" fontSize={7} fontWeight={700} fill={reached ? "#fff" : "var(--color-text-muted)"}>
+                {v}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
     </>
   );
 
@@ -412,40 +438,40 @@ export function HeroBento({ locale }: { locale: Locale }) {
           against the footer. */}
       <div ref={desktopRef} className="relative mt-8 hidden w-full max-w-[720px] sm:block lg:mt-10" style={{ height: DESKTOP_DESIGN_H * desktopScale }}>
         <div className="relative" style={{ height: DESKTOP_DESIGN_H, transform: `scale(${desktopScale})`, transformOrigin: "top left" }}>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 80, left: 255, width: 210, height: 176, padding: "0.7rem 0.85rem", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 20 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 80, left: 255, width: 210, height: 176, padding: "0.7rem 0.85rem", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 20 }}>
             {hiveInner}
           </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 16, left: 6, width: 118, height: 82, padding: "0.5rem 0.6rem", transform: "rotate(-7deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 24 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 16, left: 6, width: 118, height: 82, padding: "0.5rem 0.6rem", transform: "rotate(-7deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 24 }}>
             {trendInner}
           </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 0, left: 144, width: 134, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(3deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 18 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 0, left: 144, width: 134, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(3deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 18 }}>
             {vigilInner}
           </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 2, left: 452, width: 134, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(-4deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 19 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 2, left: 452, width: 134, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(-4deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 19 }}>
             {scoreInner}
           </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 26, left: 592, width: 122, height: 86, padding: "0.5rem 0.6rem", transform: "rotate(5deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 25 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 26, left: 592, width: 122, height: 86, padding: "0.5rem 0.6rem", transform: "rotate(5deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 25 }}>
             {playInner}
           </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 126, left: 6, width: 112, height: 80, padding: "0.5rem 0.6rem", transform: "rotate(4deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 15 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 126, left: 6, width: 112, height: 80, padding: "0.5rem 0.6rem", transform: "rotate(4deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 15 }}>
             {learnInner}
           </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 136, left: 592, width: 124, height: 90, padding: "0.5rem 0.6rem", transform: "rotate(-5deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 23 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 136, left: 592, width: 124, height: 90, padding: "0.5rem 0.6rem", transform: "rotate(-5deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 23 }}>
             {voiceInner}
           </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 224, left: 6, width: 118, height: 84, padding: "0.5rem 0.6rem", transform: "rotate(6deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 17 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 224, left: 6, width: 118, height: 84, padding: "0.5rem 0.6rem", transform: "rotate(6deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 17 }}>
             {windowInner}
           </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 246, left: 140, width: 164, height: 76, padding: "0.5rem 0.6rem", transform: "rotate(-2deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 22 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 246, left: 140, width: 190, height: 90, padding: "0.5rem 0.6rem", transform: "rotate(-2deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 22 }}>
             {pathInner}
           </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 244, left: 452, width: 134, height: 82, padding: "0.5rem 0.6rem", transform: "rotate(4deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 16 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 244, left: 452, width: 134, height: 82, padding: "0.5rem 0.6rem", transform: "rotate(4deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 16 }}>
             {compareInner}
           </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 222, left: 598, width: 120, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(-3deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 21 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 222, left: 598, width: 120, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(-3deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 21 }}>
             {networkInner}
           </div>
-          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 336, left: 214, width: 284, height: 112, padding: "0.55rem 0.7rem", transform: "rotate(-1.5deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 14 }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 336, left: 214, width: 284, height: 112, padding: "0.55rem 0.7rem", transform: "rotate(-1.5deg)", overflow: "hidden", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 14 }}>
             {crmInner}
           </div>
           {/* Decorative, matching the hex-icon idiom the old streak card
