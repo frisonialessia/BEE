@@ -255,6 +255,13 @@
       "network": {
         "eyebrow": "Tu red ya lo conoce",
         "text": "El camino cálido ya existe en tu red — no un cold email más"
+      },
+      "crm": {
+        "eyebrow": "CRM vs. BEE",
+        "crmRow1": "Actúa cuando ya existe el lead",
+        "beeRow1": "Actúa sobre la señal, antes del lead",
+        "crmRow2": "Te da una lista",
+        "beeRow2": "Te arma la jugada y aprende de cada cierre"
       }
     },
     "dragHint": "Arrastra las tarjetas",

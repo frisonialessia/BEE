@@ -11,8 +11,63 @@ import { hexagonPath } from "@/lib/visualization/honeycomb-radial";
 import type { Locale } from "@/i18n/locales";
 import { getSampleHotLeads, getSampleSignals } from "@/lib/sample-data";
 
+/**
+ * Fit a fixed-design-size collage into whatever room is actually left
+ * above the footer — the page is cero-scroll (see app/page.tsx), so on a
+ * short window `main`'s own overflow-hidden would otherwise silently
+ * clip the collage's last row instead of the page scrolling for it (this
+ * shipped without it once already, caught by measuring, not by eye, at
+ * both a short desktop window and a short phone). Same "measure the real
+ * box, don't assume a fixed one" rule use-box-size.ts already applies to
+ * every chart — here for a plain DOM scatter instead of an SVG, and
+ * scaling the whole collage (not reflowing it) since it was hand-placed
+ * at one fixed size.
+ *
+ * Iterates: `main` centers its whole column (justify-center), so
+ * shrinking the collage moves *where* it sits, which invalidates a
+ * measurement taken before that move. A few passes of measure→resize
+ * (mutating the DOM directly so each pass sees the last one's real,
+ * reflowed layout, not stale React state) converge in practice within
+ * 2-3 steps; committed to state once settled.
+ */
+function useFitScale(designHeight: number, minScale = 0.55) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    function fit() {
+      const el = ref.current;
+      const inner = el?.firstElementChild as HTMLElement | null;
+      if (!el || !inner) return;
+      let s = 1;
+      for (let i = 0; i < 5; i++) {
+        const boundary = el.closest("main")?.getBoundingClientRect().bottom ?? window.innerHeight;
+        const available = boundary - el.getBoundingClientRect().top - 10;
+        const next = Math.max(minScale, Math.min(1, available / designHeight));
+        if (Math.abs(next - s) < 0.005 && i > 0) {
+          s = next;
+          break;
+        }
+        s = next;
+        el.style.height = `${designHeight * s}px`;
+        inner.style.transform = `scale(${s})`;
+      }
+      setScale(s);
+    }
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [designHeight, minScale]);
+
+  return { ref, scale };
+}
+
 const DAY_MS = 86_400_000;
 const WEEK_MS = 7 * DAY_MS;
+// The two collages' hand-placed "design" sizes — see useFitScale, which
+// scales each down to whatever room is actually available.
+const DESKTOP_DESIGN_H = 452;
+const MOBILE_DESIGN_H = 252;
 // Same illustrative shape as the Ventas comparison's own chart
 // (marketing-sales.tsx's WON/TARGET) — same data, same three-greens-by-
 // strength read, so a visitor who scrolls to /funcionalidades later sees
@@ -66,6 +121,13 @@ export function HeroBento({ locale }: { locale: Locale }) {
   const tHero = useTranslations("landing.hero");
   const tConf = useTranslations("shared.cyclePrediction.confidence");
   const [now] = useState(() => Date.now());
+  // A lower floor than the mobile collage's default: a wide-but-short
+  // window (a landscape phone, 844×390 among the sizes this always gets
+  // checked against) leaves the desktop collage far less room relative
+  // to its taller 452px design than any real phone leaves the mobile
+  // one — this shipped with the shared default once and 5 of the 12
+  // cards clipped against the footer at exactly that size.
+  const { ref: desktopRef, scale: desktopScale } = useFitScale(DESKTOP_DESIGN_H, 0.08);
 
   const signals = getSampleSignals(locale);
   const leads = getSampleHotLeads(locale);
@@ -275,10 +337,38 @@ export function HeroBento({ locale }: { locale: Locale }) {
     </>
   );
 
-  const leadInner = (
+  // Direct CRM comparison — a dash for the CRM row, a filled check for
+  // BEE's, both sourced from the same real contrast Ventas already makes
+  // ("Los CRM registran ventas. BEE las cierra."), just split into four
+  // short rows instead of one paragraph so it reads at a glance this small.
+  const crmInner = (
     <>
-      <p className="bee-micro truncate">{tDiff("lead.title")}</p>
-      <p className="bee-micro mt-1 line-clamp-2 leading-tight">{tDiff("lead.text")}</p>
+      <p className="bee-micro truncate">{t("crm.eyebrow")}</p>
+      <div className="mt-1 flex flex-col justify-center gap-1">
+        {(
+          [
+            [t("crm.crmRow1"), false],
+            [t("crm.beeRow1"), true],
+            [t("crm.crmRow2"), false],
+            [t("crm.beeRow2"), true],
+          ] as const
+        ).map(([label, isBee], i) => (
+          <div key={i} className="flex items-center gap-1.5">
+            <span
+              className="flex size-3.5 shrink-0 items-center justify-center rounded-full"
+              style={{ background: isBee ? TONE.marketDeep : "var(--color-divider)" }}
+              aria-hidden
+            >
+              {isBee && (
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={3.5}>
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            <span className="bee-micro truncate">{label}</span>
+          </div>
+        ))}
+      </div>
     </>
   );
 
@@ -313,49 +403,57 @@ export function HeroBento({ locale }: { locale: Locale }) {
       {/* sm+: the full 12-card collage — one bigger centre card (the
           hive, BEE's own mark) with eleven tilted satellites scattered
           around it, corners just touching, matching the reference's
-          density instead of a tidy row. */}
-      <div className="relative mt-8 hidden w-full max-w-[720px] sm:block lg:mt-10" style={{ height: 336 }}>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 80, left: 255, width: 210, height: 176, padding: "0.7rem 0.85rem", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 20 }}>
-          {hiveInner}
+          density instead of a tidy row. Wrapped in the same measured
+          scale-to-fit as the mobile collage (see useFitScale): a short
+          window (a laptop with the browser chrome eating into it, or a
+          landscape phone) needs this exactly as much as a short phone
+          does — caught the same way, by measuring, after this shipped
+          without it once and a short window clipped the last row
+          against the footer. */}
+      <div ref={desktopRef} className="relative mt-8 hidden w-full max-w-[720px] sm:block lg:mt-10" style={{ height: DESKTOP_DESIGN_H * desktopScale }}>
+        <div className="relative" style={{ height: DESKTOP_DESIGN_H, transform: `scale(${desktopScale})`, transformOrigin: "top left" }}>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 80, left: 255, width: 210, height: 176, padding: "0.7rem 0.85rem", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 20 }}>
+            {hiveInner}
+          </div>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 16, left: 6, width: 118, height: 82, padding: "0.5rem 0.6rem", transform: "rotate(-7deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 24 }}>
+            {trendInner}
+          </div>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 0, left: 144, width: 134, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(3deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 18 }}>
+            {vigilInner}
+          </div>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 2, left: 452, width: 134, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(-4deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 19 }}>
+            {scoreInner}
+          </div>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 26, left: 592, width: 122, height: 86, padding: "0.5rem 0.6rem", transform: "rotate(5deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 25 }}>
+            {playInner}
+          </div>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 126, left: 6, width: 112, height: 80, padding: "0.5rem 0.6rem", transform: "rotate(4deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 15 }}>
+            {learnInner}
+          </div>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 136, left: 592, width: 124, height: 90, padding: "0.5rem 0.6rem", transform: "rotate(-5deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 23 }}>
+            {voiceInner}
+          </div>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 224, left: 6, width: 118, height: 84, padding: "0.5rem 0.6rem", transform: "rotate(6deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 17 }}>
+            {windowInner}
+          </div>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 246, left: 140, width: 164, height: 76, padding: "0.5rem 0.6rem", transform: "rotate(-2deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 22 }}>
+            {pathInner}
+          </div>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 244, left: 452, width: 134, height: 82, padding: "0.5rem 0.6rem", transform: "rotate(4deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 16 }}>
+            {compareInner}
+          </div>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 222, left: 598, width: 120, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(-3deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 21 }}>
+            {networkInner}
+          </div>
+          <div className="bee-bento-mini absolute flex flex-col" style={{ top: 336, left: 214, width: 284, height: 112, padding: "0.55rem 0.7rem", transform: "rotate(-1.5deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 14 }}>
+            {crmInner}
+          </div>
+          {/* Decorative, matching the hex-icon idiom the old streak card
+              used — not a KPI, just the identity mark floating loose. */}
+          <svg width="20" height="20" viewBox="-10 -10 20 20" className="absolute" style={{ top: 172, left: 460, opacity: 0.5 }} aria-hidden>
+            <path d={hexagonPath(0, 0, 10)} fill={TONE.calm} />
+          </svg>
         </div>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 16, left: 6, width: 118, height: 82, padding: "0.5rem 0.6rem", transform: "rotate(-7deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 24 }}>
-          {trendInner}
-        </div>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 0, left: 144, width: 134, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(3deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 18 }}>
-          {vigilInner}
-        </div>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 2, left: 452, width: 134, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(-4deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 19 }}>
-          {scoreInner}
-        </div>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 26, left: 592, width: 122, height: 86, padding: "0.5rem 0.6rem", transform: "rotate(5deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 25 }}>
-          {playInner}
-        </div>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 126, left: 6, width: 112, height: 80, padding: "0.5rem 0.6rem", transform: "rotate(4deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 15 }}>
-          {learnInner}
-        </div>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 136, left: 592, width: 124, height: 90, padding: "0.5rem 0.6rem", transform: "rotate(-5deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 23 }}>
-          {voiceInner}
-        </div>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 224, left: 6, width: 118, height: 84, padding: "0.5rem 0.6rem", transform: "rotate(6deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 17 }}>
-          {windowInner}
-        </div>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 246, left: 140, width: 164, height: 76, padding: "0.5rem 0.6rem", transform: "rotate(-2deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 22 }}>
-          {pathInner}
-        </div>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 244, left: 452, width: 134, height: 82, padding: "0.5rem 0.6rem", transform: "rotate(4deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 16 }}>
-          {compareInner}
-        </div>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 222, left: 598, width: 120, height: 88, padding: "0.5rem 0.6rem", transform: "rotate(-3deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 21 }}>
-          {networkInner}
-        </div>
-        <div className="bee-bento-mini absolute flex flex-col" style={{ top: 0, left: 300, width: 142, height: 62, padding: "0.45rem 0.6rem", transform: "rotate(2deg)", boxShadow: "var(--bee-shadow-card-lift)", zIndex: 14 }}>
-          {leadInner}
-        </div>
-        {/* Decorative, matching the hex-icon idiom the old streak card
-            used — not a KPI, just the identity mark floating loose. */}
-        <svg width="20" height="20" viewBox="-10 -10 20 20" className="absolute" style={{ top: 172, left: 460, opacity: 0.5 }} aria-hidden>
-          <path d={hexagonPath(0, 0, 10)} fill={TONE.calm} />
-        </svg>
       </div>
     </>
   );
@@ -381,56 +479,12 @@ interface MobileCard {
  * path. No drop-zone or boundary clamp: a phone-sized collage has no
  * "wrong place" to drop a card, it is just rearranged for reading.
  */
-// The design was hand-placed against this box — see MOBILE_CARDS.
-const MOBILE_DESIGN_H = 252;
 
 function MobileCollage({ cards }: { cards: readonly MobileCard[] }) {
   const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({});
   const [activeId, setActiveId] = useState<string | null>(null);
   const drag = useRef<{ id: string; startX: number; startY: number; baseX: number; baseY: number } | null>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  // The page is cero-scroll (see app/page.tsx) — on a short phone
-  // (an SE, or a big one in landscape) `main`'s own overflow-hidden
-  // would otherwise just silently clip the collage's bottom row instead
-  // of the page scrolling for it. Measured on mount/resize, same "fit
-  // the real box" idea use-box-size.ts already applies to every chart,
-  // just for this one plain DOM scatter instead of an SVG.
-  const [scale, setScale] = useState(1);
-
-  useEffect(() => {
-    // Bound against <main>'s own bottom edge, not window.innerHeight —
-    // main stops well short of the viewport bottom (the footer sits
-    // below it) — and iterate: `main` centers its whole column
-    // (justify-center), so shrinking the collage moves *where* it sits,
-    // which invalidates a single measurement taken before that move. A
-    // few passes of measure→resize (mutating the DOM directly so each
-    // pass sees the last one's real, reflowed layout, not stale React
-    // state) converge in practice within 2-3 steps; committed to state
-    // once settled so the drag math (which reads `scale`) has the same
-    // number the DOM does.
-    function fit() {
-      const el = wrapRef.current;
-      const inner = el?.firstElementChild as HTMLElement | null;
-      if (!el || !inner) return;
-      let s = 1;
-      for (let i = 0; i < 5; i++) {
-        const boundary = el.closest("main")?.getBoundingClientRect().bottom ?? window.innerHeight;
-        const available = boundary - el.getBoundingClientRect().top - 6;
-        const next = Math.max(0.55, Math.min(1, available / MOBILE_DESIGN_H));
-        if (Math.abs(next - s) < 0.005 && i > 0) {
-          s = next;
-          break;
-        }
-        s = next;
-        el.style.height = `${MOBILE_DESIGN_H * s}px`;
-        inner.style.transform = `scale(${s})`;
-      }
-      setScale(s);
-    }
-    fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
-  }, []);
+  const { ref: wrapRef, scale } = useFitScale(MOBILE_DESIGN_H);
 
   function handlePointerDown(id: string, e: ReactPointerEvent<HTMLDivElement>) {
     e.currentTarget.setPointerCapture(e.pointerId);

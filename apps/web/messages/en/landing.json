@@ -255,6 +255,13 @@
       "network": {
         "eyebrow": "Your network already knows them",
         "text": "The warm path already exists in your network — not one more cold email"
+      },
+      "crm": {
+        "eyebrow": "CRM vs. BEE",
+        "crmRow1": "Acts once the lead already exists",
+        "beeRow1": "Acts on the signal, before the lead",
+        "crmRow2": "Gives you a list",
+        "beeRow2": "Builds the play and learns from every close"
       }
     },
     "dragHint": "Drag the cards",
