@@ -1,14 +1,20 @@
 import type { AuditEntry, HotLeadScore } from "@/types/extended";
-import type { Signal } from "@/types/domain";
+import type { Meeting, Signal } from "@/types/domain";
+import type { MilestoneLogEntry } from "@/lib/notifications/milestone-log";
 
 export interface AppNotification {
   id: string;
-  kind: "hot_lead" | "hot_signal" | "review_required";
+  kind: "hot_lead" | "hot_signal" | "review_required" | "meeting_soon" | "milestone";
   title: string;
   description: string;
   timestamp: string;
   href: string;
 }
+
+/** A meeting counts as "soon" from now until 30 minutes out — long enough
+ *  to still be useful, short enough that it's never a stale reminder for
+ *  something that started an hour ago. */
+const MEETING_SOON_WINDOW_MS = 30 * 60 * 1000;
 
 const AGENT_LABELS: Record<string, string> = {
   strategy_generator: "Generador de estrategias",
@@ -31,10 +37,23 @@ export function buildNotifications({
   hotLeads,
   signals,
   reviewEntries,
+  meetings = [],
+  meId = null,
+  now = Date.now(),
+  milestoneLog = [],
 }: {
   hotLeads: HotLeadScore[];
   signals: Signal[];
   reviewEntries: AuditEntry[];
+  /** This rep's own meetings — only ones they created or are attending
+   *  ever surface a "meeting_soon" notification, never a teammate's. */
+  meetings?: Meeting[];
+  meId?: string | null;
+  now?: number;
+  /** Already-celebrated milestone toasts (see milestone-log.ts) — the
+   *  toast itself is transient, this is what the bell still has after it
+   *  fades. */
+  milestoneLog?: MilestoneLogEntry[];
 }): AppNotification[] {
   const items: AppNotification[] = [];
 
@@ -71,6 +90,34 @@ export function buildNotifications({
       description: entry.strategy_reasoning ?? entry.decision_type.replace(/_/g, " "),
       timestamp: entry.created_at,
       href: "/dashboard/resilience",
+    });
+  }
+
+  if (meId) {
+    for (const meeting of meetings) {
+      if (meeting.created_by_user_id !== meId && !meeting.attendee_user_ids.includes(meId)) continue;
+      const startsAt = new Date(meeting.starts_at).getTime();
+      const minutesUntil = Math.round((startsAt - now) / 60_000);
+      if (minutesUntil < 0 || startsAt - now > MEETING_SOON_WINDOW_MS) continue;
+      items.push({
+        id: `meeting-soon-${meeting.id}`,
+        kind: "meeting_soon",
+        title: `Reunión pronto: ${meeting.title}`,
+        description: minutesUntil <= 0 ? "Está empezando" : `En ${minutesUntil} min`,
+        timestamp: meeting.starts_at,
+        href: "/dashboard/calendar",
+      });
+    }
+  }
+
+  for (const entry of milestoneLog) {
+    items.push({
+      id: `milestone-${entry.count}-${entry.timestamp}`,
+      kind: "milestone",
+      title: `Hito alcanzado: ${entry.count} cierres tuyos`,
+      description: "Tu semana en BEE — camino de hitos",
+      timestamp: entry.timestamp,
+      href: "/dashboard",
     });
   }
 

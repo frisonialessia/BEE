@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Bell, Flame, Radio } from "lucide-react";
+import { AlertCircle, Bell, CalendarClock, Flame, Radio, Trophy } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -17,6 +17,8 @@ const KIND_ICON: Record<AppNotification["kind"], typeof Flame> = {
   hot_lead: Flame,
   hot_signal: Radio,
   review_required: AlertCircle,
+  meeting_soon: CalendarClock,
+  milestone: Trophy,
 };
 
 // Same tones TONE itself defines for these exact categories (see
@@ -24,11 +26,16 @@ const KIND_ICON: Record<AppNotification["kind"], typeof Flame> = {
 // notification at the hue BEE already uses for that kind of thing
 // everywhere else, so the bell reads with the rest of the app instead of
 // its own invented scheme: a hot lead is urgency/priority, a hot signal is
-// market detection, a "needs review" is something BEE prepared.
+// market detection, a "needs review" is something BEE prepared, a
+// meeting is forecast/team (same tone milestone-path.tsx's own meeting
+// badge uses), a milestone is the calm surface — never green, that's
+// reserved for Ventas/CRM/Calendar's actual closed-money contexts.
 const KIND_TONE: Record<AppNotification["kind"], string> = {
   hot_lead: TONE.urgency,
   hot_signal: TONE.market,
   review_required: TONE.prepared,
+  meeting_soon: TONE.forecast,
+  milestone: TONE.calm,
 };
 
 

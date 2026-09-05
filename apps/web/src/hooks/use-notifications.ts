@@ -5,8 +5,12 @@ import { useCallback, useState } from "react";
 
 import { getAuditDecisions } from "@/lib/api";
 import { useHiveLeads } from "@/hooks/queries/use-lead-board";
+import { useMeetings } from "@/hooks/queries/use-meetings";
 import { useSignals } from "@/hooks/queries/use-signals";
+import { useUsers } from "@/hooks/queries/use-users";
 import { buildNotifications } from "@/lib/notifications/build-notifications";
+import { readMilestoneNotifications } from "@/lib/notifications/milestone-log";
+import { useAuth } from "@/providers/auth-provider";
 
 const LAST_SEEN_KEY = "bee.notifications.lastSeen";
 
@@ -20,11 +24,22 @@ function readLastSeen(): string {
 }
 
 export function useNotifications() {
+  const { user: authUser } = useAuth();
+  const { data: usersResult } = useUsers();
   const { data: hiveResult, isLoading: hiveLoading } = useHiveLeads(200);
   const { data: signalsResult, isLoading: signalsLoading } = useSignals(100);
+  const { data: meetingsResult } = useMeetings();
   const { data: reviewResult, isLoading: reviewLoading } = useQuery({
     queryKey: ["notifications", "review-required"],
     queryFn: async () => getAuditDecisions({ manual_review_required: true, limit: 20 }),
+    refetchInterval: 30_000,
+  });
+  // Re-read on the same 30s cadence as the review-required query above —
+  // a milestone crossed in another tab/component this render otherwise
+  // wouldn't show until the next full remount.
+  const { data: milestoneLog = [] } = useQuery({
+    queryKey: ["notifications", "milestone-log"],
+    queryFn: async () => readMilestoneNotifications(),
     refetchInterval: 30_000,
   });
   // Sin esto, la campana muestra "no hay novedades" en el primer render —
@@ -33,11 +48,15 @@ export function useNotifications() {
   const isLoading = hiveLoading || signalsLoading || reviewLoading;
 
   const [lastSeen, setLastSeen] = useState<string>(() => readLastSeen());
+  const meId = authUser?.id ?? usersResult?.[0]?.id ?? null;
 
   const notifications = buildNotifications({
     hotLeads: hiveResult?.data ?? [],
     signals: signalsResult?.data ?? [],
     reviewEntries: reviewResult?.data ?? [],
+    meetings: meetingsResult ?? [],
+    meId,
+    milestoneLog,
   });
 
   const unreadCount = notifications.filter(

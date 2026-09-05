@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { useCelebrateMilestone } from "@/components/celebration/celebration-toast";
 import { milestoneAt } from "@/lib/milestones";
+import { recordMilestoneNotification } from "@/lib/notifications/milestone-log";
 
 const STORAGE_KEY = "bee_milestone_seen_total_v1";
 
@@ -35,7 +36,13 @@ export function useMilestoneCelebration(totalWon: number) {
         if (m > totalWon) break;
         if (m > stored) reached.push(m);
       }
-      if (reached.length > 0) celebrateMilestone(reached[reached.length - 1]);
+      if (reached.length > 0) {
+        const latest = reached[reached.length - 1];
+        celebrateMilestone(latest);
+        // The toast fades in 6s; this is what the bell still has to show
+        // afterward (see notification-bell.tsx / build-notifications.ts).
+        recordMilestoneNotification(latest);
+      }
     }
     try {
       window.localStorage.setItem(STORAGE_KEY, String(totalWon));
