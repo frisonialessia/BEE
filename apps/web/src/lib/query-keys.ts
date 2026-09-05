@@ -167,6 +167,14 @@ export const queryKeys = {
     hiveLeads: (limit?: number) =>
       [...queryKeys.control.all, "hive-leads", limit] as const,
   },
+  network: {
+    all: ["network"] as const,
+    warmIntroSummary: () => [...queryKeys.network.all, "warm-intro-summary"] as const,
+  },
+  analytics: {
+    all: ["analytics"] as const,
+    quickScenario: (signalType: string, factor: number) => [...queryKeys.analytics.all, "quick-scenario", signalType, factor] as const,
+  },
   assistantConversations: {
     all: ["assistant-conversations"] as const,
     list: () => [...queryKeys.assistantConversations.all, "list"] as const,

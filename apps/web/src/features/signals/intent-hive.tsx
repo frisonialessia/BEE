@@ -6,15 +6,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Honeycomb, type HiveCellAnchor, type HiveItem } from "@/components/charts/honeycomb";
-import { HIVE_RAMP, REST, pickedColor } from "@/components/charts/palette";
+import { HIVE_RAMP, REST, TONE, pickedColor } from "@/components/charts/palette";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOpportunityDrawer } from "@/features/crm/opportunity-drawer-context";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useHiveLeads, useSetHiveTemperature } from "@/hooks/queries/use-lead-board";
 import { useOpportunities } from "@/hooks/queries/use-opportunities";
+import { formatAmount } from "@/lib/i18n/format";
+import { useLocale } from "next-intl";
+import type { Locale } from "@/i18n/locales";
 import { cn } from "@/lib/utils";
-import type { Opportunity } from "@/types/domain";
+import type { Company, Opportunity } from "@/types/domain";
 import type { HotLeadScore } from "@/types/extended";
+
+// The colors an industry cycles through when grouping is on — the same
+// six BEE hues everything else uses, never a new one per industry name.
+const GROUP_TONES = [TONE.market, TONE.prepared, TONE.urgency, TONE.forecast, TONE.calm, TONE.marketDeep] as const;
 
 /** The four buying stages, hot → cool — the order of the pills above the comb. */
 export const HIVE_STAGES = ["ready_to_buy", "decision", "consideration", "awareness"] as const;
@@ -69,6 +76,9 @@ export function IntentHive({
   minHeight = 240,
   stage,
   showStages = true,
+  showLegend = false,
+  enableIndustryToggle = false,
+  richDetail = false,
   className,
 }: {
   maxLeads?: number;
@@ -78,15 +88,33 @@ export function IntentHive({
   minHeight?: number;
   stage?: Stage | null;
   showStages?: boolean;
+  /** A cold→hot color-scale strip under the comb (Honeycomb's own
+   *  `legend` prop) — off by default, since most instances of this
+   *  component sit in a box too short to spare the row. */
+  showLegend?: boolean;
+  /** A second sort — group by industry, hottest within each group —
+   *  next to the default "by intent" one, with each industry's cells
+   *  sharing an outline color. Off by default: it needs `Company.industry`
+   *  populated to say anything, and a row of control the smaller
+   *  instances of this component (an account panel) have no room for. */
+  enableIndustryToggle?: boolean;
+  /** Adds the linked opportunity's deal value and how recently the
+   *  account's last signal landed to each cell's tooltip detail — the
+   *  Resumen-only "richer hive" the founder asked for; off elsewhere so
+   *  the tooltip stays exactly what it's always been. */
+  richDetail?: boolean;
   className?: string;
 }) {
   const t = useTranslations("shared.intentHive");
+  const locale = useLocale() as Locale;
   const { data: result, isLoading } = useHiveLeads(maxLeads);
   const { data: oppsResult } = useOpportunities(undefined, 2200);
   const { data: companiesResult } = useCompanies(300);
   const { openOpportunity, openNew } = useOpportunityDrawer();
   const setTemperature = useSetHiveTemperature();
   const [selected, setSelected] = useState<{ id: string; anchor: HiveCellAnchor } | null>(null);
+  const [sortMode, setSortMode] = useState<"intent" | "industry">("intent");
+  const [now] = useState(() => Date.now());
   const boxRef = useRef<HTMLDivElement>(null);
 
   const leads = useMemo(() => result?.data ?? [], [result?.data]);
@@ -99,27 +127,72 @@ export function IntentHive({
     }
     return map;
   }, [companiesResult]);
+  // Same keying as companyIdByKey above, just carrying the whole company
+  // (for its industry) instead of only the id — no second fetch.
+  const companyByKey = useMemo(() => {
+    const map = new Map<string, Company>();
+    for (const c of companiesResult?.data ?? []) {
+      map.set(c.name.toLowerCase(), c);
+      if (c.domain) map.set(c.domain.toLowerCase(), c);
+    }
+    return map;
+  }, [companiesResult]);
+  const industryOf = (lead: HotLeadScore): string | null =>
+    companyByKey.get(lead.company_domain.toLowerCase())?.industry ??
+    (lead.company_name ? companyByKey.get(lead.company_name.toLowerCase())?.industry : undefined) ??
+    null;
 
-  const visible = useMemo(() => {
+  const hottestVisible = useMemo(() => {
     const filtered = leads.filter((l) => !stage || stageOf(l) === stage).sort((a, b) => heatOf(b) - heatOf(a));
     return maxCells ? filtered.slice(0, maxCells) : filtered;
   }, [leads, stage, maxCells]);
   const totalMatching = leads.filter((l) => !stage || stageOf(l) === stage).length;
 
+  // Grouping only ever reorders which of the already-hottest N accounts
+  // sit next to each other in the spiral — it never changes which
+  // accounts are shown (that's still purely the top N by heat, above).
+  const visible = useMemo(() => {
+    if (sortMode !== "industry") return hottestVisible;
+    return [...hottestVisible].sort((a, b) => {
+      const ia = industryOf(a) ?? "";
+      const ib = industryOf(b) ?? "";
+      return ia !== ib ? ia.localeCompare(ib) : heatOf(b) - heatOf(a);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- industryOf closes over companyByKey, already a dep of hottestVisible's own inputs
+  }, [hottestVisible, sortMode]);
+
+  const groupColorByIndustry = useMemo(() => {
+    if (sortMode !== "industry") return new Map<string, string>();
+    const names = [...new Set(visible.map((l) => industryOf(l) ?? t("noIndustry")))].sort((a, b) => a.localeCompare(b));
+    return new Map(names.map((name, i) => [name, GROUP_TONES[i % GROUP_TONES.length]]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, sortMode, t]);
+
   const items = useMemo<HiveItem[]>(
     () =>
       visible.map((l) => {
         const opp = opportunityFor(l, opportunities, companyIdByKey);
+        const extra: string[] = [];
+        if (richDetail) {
+          if (opp?.amount) extra.push(t("dealValue", { amount: formatAmount(opp.amount, locale) }));
+          if (l.last_signal_at) {
+            const days = Math.floor((now - new Date(l.last_signal_at).getTime()) / 86_400_000);
+            if (days >= 0) extra.push(t("sinceDays", { days }));
+          }
+        }
+        const keywordDetail = l.top_intent_keywords.slice(0, 3).join(" · ") || undefined;
         return {
           id: l.id,
           heat: heatOf(l),
           label: l.company_name ?? l.company_domain,
           caption: `${t(`stages.${stageOf(l)}`)} · ${t("score", { score: Math.round(heatOf(l)) })}${l.manual_temperature != null ? ` · ${t("manual")}` : ""}`,
-          detail: l.top_intent_keywords.slice(0, 3).join(" · ") || undefined,
+          detail: [keywordDetail, ...extra].filter(Boolean).join(" · ") || undefined,
           mark: pickedColor(opp?.color ?? null),
+          groupColor: sortMode === "industry" ? (groupColorByIndustry.get(industryOf(l) ?? t("noIndustry")) ?? null) : null,
         };
       }),
-    [visible, opportunities, companyIdByKey, t],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- industryOf closes over companyByKey
+    [visible, opportunities, companyIdByKey, t, richDetail, locale, sortMode, groupColorByIndustry, now],
   );
 
   const counts = useMemo(() => {
@@ -172,6 +245,21 @@ export function IntentHive({
 
   return (
     <div className={cn("bee-fill flex min-h-0 flex-col", className)}>
+      {enableIndustryToggle && (
+        <div className="mb-2 flex shrink-0 items-center gap-1 self-end" role="group" aria-label={t("sortIntent")}>
+          {(["intent", "industry"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setSortMode(mode)}
+              aria-pressed={sortMode === mode}
+              className={cn("bee-btn-ghost !px-2.5 !py-1 !text-xs", sortMode === mode && "bee-btn-ghost--active")}
+            >
+              {t(mode === "intent" ? "sortIntent" : "sortIndustry")}
+            </button>
+          ))}
+        </div>
+      )}
       <div ref={boxRef} className="bee-fill relative flex min-h-0 flex-col">
         <Honeycomb
           items={items}
@@ -181,6 +269,7 @@ export function IntentHive({
           minHeight={minHeight}
           emptyHint={t("empty")}
           ariaLabel={t("aria", { count: items.length })}
+          legend={showLegend ? { cold: t("legendCold"), hot: t("legendHot") } : undefined}
         />
         {selected && selectedLead && (
           <div

@@ -20,7 +20,9 @@
       "openPipeline": "Pipeline",
       "openPipelineHint": "{count, plural, one {# abierta} other {# abiertas}}",
       "buyingWindow": "Calientes",
-      "buyingWindowHint": "listas o calientes"
+      "buyingWindowHint": "listas o calientes",
+      "forecastQuarter": "Pronóstico Q",
+      "forecastAtRiskHint": "{count, plural, one {# deal en riesgo} other {# deals en riesgo}}"
     },
     "itemLabels": {
       "battlecards": "battlecards",
@@ -46,7 +48,33 @@
       },
       "revenueSimulator": {
         "title": "Proyección de ingresos",
-        "caption": "Qué pasaría si invertimos más en prospección"
+        "caption": "Qué pasaría si invertimos más en prospección",
+        "baseline": "Base actual",
+        "projected": "Duplicando prospección",
+        "signalType": "Señal: ronda de financiamiento",
+        "confidence": {
+          "none": "Sin histórico todavía",
+          "low": "Confianza baja",
+          "medium": "Confianza media",
+          "high": "Confianza alta"
+        },
+        "empty": "Cierra tu primer trato para ver una proyección real.",
+        "link": "Ver Pronóstico"
+      },
+      "copilot": {
+        "title": "Copiloto BEE",
+        "caption": "Tu jugada de mayor prioridad, según BEE",
+        "askButton": "Preguntarle a BEE",
+        "empty": "Sin jugadas urgentes ahora mismo — todo al día."
+      },
+      "warmIntros": {
+        "title": "Introducciones cálidas",
+        "caption": "Cuentas calientes con un camino en tu red",
+        "checked": "{withPaths} de {checked} cuentas calientes tienen un camino cálido",
+        "via": "vía {connector}",
+        "empty": "Ninguna de tus cuentas calientes tiene un camino en tu red todavía.",
+        "noConnections": "Agrega tu red profesional para ver caminos cálidos aquí.",
+        "link": "Ir a Red"
       },
       "allSignals": {
         "title": "Todas las señales",

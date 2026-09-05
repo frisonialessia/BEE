@@ -84,3 +84,24 @@ class NetworkStats(BaseModel):
     top_industries: list[str]
     avg_relationship_strength: float
     companies_covered: int
+
+
+class WarmIntroAccountSummary(BaseModel):
+    """One hot account that has a real path into it — the entry the Resumen
+    dashboard's "Introducciones cálidas" card shows as an example."""
+
+    company_name: str
+    domain: str
+    best_path: IntroPath
+
+
+class WarmIntroSummary(BaseModel):
+    """How many of the org's current hot accounts have a warm path in,
+    across the CEO's network — a dashboard-wide aggregate, not one target's
+    paths. ``accounts_checked`` is capped (see the endpoint) so this stays
+    a handful of `find_intro_paths` calls, not one per hot account ever
+    seeded."""
+
+    accounts_checked: int
+    accounts_with_paths: int
+    examples: list[WarmIntroAccountSummary]

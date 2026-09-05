@@ -20,7 +20,9 @@
       "openPipeline": "Pipeline",
       "openPipelineHint": "{count, plural, one {# open} other {# open}}",
       "buyingWindow": "Hot",
-      "buyingWindowHint": "ready or hot"
+      "buyingWindowHint": "ready or hot",
+      "forecastQuarter": "Forecast Q",
+      "forecastAtRiskHint": "{count, plural, one {# deal at risk} other {# deals at risk}}"
     },
     "itemLabels": {
       "battlecards": "battlecards",
@@ -46,7 +48,33 @@
       },
       "revenueSimulator": {
         "title": "Revenue projection",
-        "caption": "What would happen if we invested more in prospecting"
+        "caption": "What would happen if we invested more in prospecting",
+        "baseline": "Current baseline",
+        "projected": "Doubling prospecting",
+        "signalType": "Signal: funding round",
+        "confidence": {
+          "none": "No history yet",
+          "low": "Low confidence",
+          "medium": "Medium confidence",
+          "high": "High confidence"
+        },
+        "empty": "Close your first deal to see a real projection.",
+        "link": "See Forecast"
+      },
+      "copilot": {
+        "title": "BEE Copilot",
+        "caption": "Your top-priority play, picked by BEE",
+        "askButton": "Ask BEE",
+        "empty": "No urgent plays right now — all caught up."
+      },
+      "warmIntros": {
+        "title": "Warm introductions",
+        "caption": "Hot accounts with a path in your network",
+        "checked": "{withPaths} of {checked} hot accounts have a warm path",
+        "via": "via {connector}",
+        "empty": "None of your hot accounts have a path in your network yet.",
+        "noConnections": "Add your professional network to see warm paths here.",
+        "link": "Go to Network"
       },
       "allSignals": {
         "title": "All signals",

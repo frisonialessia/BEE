@@ -16,10 +16,17 @@ import {
   demoFetchPendingActions,
   demoFetchTeams,
   demoFetchUsers,
+  demoFindIntroPaths,
 } from "@/lib/demo/store";
+import { getSampleHotLeads } from "@/lib/sample-data";
 import type { Quota } from "@/lib/api/quotas";
 import { computeQuotaActual, computeQuotaClients } from "@/lib/quotas";
-import type { DecisionCard, RevenueSimulation, TodayFeedOut } from "@/types/extended";
+import type { DecisionCard, RevenueSimulation, TodayFeedOut, WarmIntroSummary } from "@/types/extended";
+
+/** Same cap the real endpoint uses (network.py's own
+ *  `_WARM_INTRO_HOT_ACCOUNT_CAP`) — a handful of the sandbox's hottest
+ *  accounts, not every one it has ever generated. */
+const WARM_INTRO_HOT_ACCOUNT_CAP = 10;
 
 const DISMISSED_KEY = "bee.demo.feedDismissed.v1";
 
@@ -334,6 +341,34 @@ export function demoRevenueSimulation(params: {
       locale === "en"
         ? `Based on ${closed.length} closed deals in this sandbox — a projection, not a forecast.`
         : `Basado en ${closed.length} deals cerrados de este sandbox — es una proyección, no un pronóstico.`,
+  };
+}
+
+/** Same aggregate the real `GET /network/warm-intros/summary` computes —
+ *  the sandbox's own seeded network connections (store.ts) checked
+ *  against its own hottest accounts (sample-data.ts's HIVE_ACCOUNTS,
+ *  which the seed connections' domains deliberately overlap), so the
+ *  card shows genuine, non-zero examples in `/probar` too instead of an
+ *  empty state nobody could act on. */
+export function demoWarmIntroSummary(): WarmIntroSummary {
+  const locale = getDemoLocale();
+  const hot = getSampleHotLeads(locale)
+    .filter((l) => l.is_hot)
+    .sort((a, b) => b.research_intensity_score - a.research_intensity_score)
+    .slice(0, WARM_INTRO_HOT_ACCOUNT_CAP);
+
+  const found = hot
+    .map((lead) => {
+      const result = demoFindIntroPaths({ target_domain: lead.company_domain, target_company: lead.company_name ?? undefined });
+      return result.best_path ? { name: lead.company_name ?? lead.company_domain, domain: lead.company_domain, path: result.best_path } : null;
+    })
+    .filter((row): row is { name: string; domain: string; path: NonNullable<ReturnType<typeof demoFindIntroPaths>["best_path"]> } => row !== null)
+    .sort((a, b) => b.path.strength_score - a.path.strength_score);
+
+  return {
+    accounts_checked: hot.length,
+    accounts_with_paths: found.length,
+    examples: found.slice(0, 3).map((row) => ({ company_name: row.name, domain: row.domain, best_path: row.path })),
   };
 }
 

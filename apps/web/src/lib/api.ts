@@ -33,6 +33,7 @@ import type {
   TodayFeedOut,
   VoiceProfile,
   VoiceProfileExtractResult,
+  WarmIntroSummary,
   WorkflowStatus,
   WorkflowTask,
 } from "@/lib/types";
@@ -75,7 +76,7 @@ import type { FetchResult } from "@/types/api";
 import type { Opportunity, OpportunityStatus } from "@/types/domain";
 import { getSampleArtifacts, getSampleHotLeads } from "@/lib/sample-data";
 import { getDemoLocale } from "@/lib/demo/locale";
-import { demoDismissFromFeed, demoRevenueSimulation, demoTodayFeed } from "@/lib/demo/overview";
+import { demoDismissFromFeed, demoRevenueSimulation, demoTodayFeed, demoWarmIntroSummary } from "@/lib/demo/overview";
 
 /**
  * Thin client for the BEE API.
@@ -798,6 +799,20 @@ export async function getNetworkStats(): Promise<FetchResult<NetworkStats | null
     const res = await beeFetch(`${API_URL}/api/v1/network/stats`, { cache: "no-store" });
     if (!res.ok) throw new Error(`API responded ${res.status}`);
     return { data: (await res.json()) as NetworkStats, live: true };
+  } catch {
+    return { data: null, live: false };
+  }
+}
+
+/** Dashboard-wide aggregate for Resumen's "Introducciones cálidas" card —
+ *  how many of the org's current hot accounts have a warm path in, not
+ *  paths to one target (that's findIntroPaths above). */
+export async function getWarmIntroSummary(): Promise<FetchResult<WarmIntroSummary | null>> {
+  if (isDemoMode()) return { data: demoWarmIntroSummary(), live: true };
+  try {
+    const res = await beeFetch(`${API_URL}/api/v1/network/warm-intros/summary`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`API responded ${res.status}`);
+    return { data: (await res.json()) as WarmIntroSummary, live: true };
   } catch {
     return { data: null, live: false };
   }

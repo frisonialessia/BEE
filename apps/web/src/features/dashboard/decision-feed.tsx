@@ -58,8 +58,10 @@ const URGENCY_DOT: Record<DecisionUrgency, string> = {
 };
 
 /** Localized explanation: the reason-code template when one exists for
- *  this code, the server's rendered sentence otherwise. */
-function useExplanation(card: DecisionCard): { headline: string; reasoning: string } {
+ *  this code, the server's rendered sentence otherwise. Exported for
+ *  copilot-suggestion-card.tsx, which shows this same feed's top card
+ *  framed as the assistant's own pick rather than as a feed row. */
+export function useExplanation(card: DecisionCard): { headline: string; reasoning: string } {
   const t = useTranslations("dashboardOverview.decisionFeed");
   const code = card.reason_code;
   if (!code || !t.has(`reasons.${code}.headline`)) {

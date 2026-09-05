@@ -14,10 +14,17 @@ from app.schemas.network import (
     NetworkConnectionOut,
     NetworkQueryResult,
     NetworkStats,
+    WarmIntroSummary,
 )
+from app.services.dark_funnel import DarkFunnelService
 from app.services.network_navigator import NetworkNavigator
 
 router = APIRouter(prefix="/network", tags=["Network Navigator (Warm Intros)"])
+
+# How many of the org's hottest accounts a dashboard summary checks —
+# each one costs a real find_intro_paths lookup, so this stays small
+# rather than fanning out over every hot account ever scored.
+_WARM_INTRO_HOT_ACCOUNT_CAP = 10
 
 
 def _get_navigator(session: Session = Depends(get_session)) -> NetworkNavigator:
@@ -124,6 +131,32 @@ def find_intro_paths(
         top_k=top_k,
         organization_id=organization_id,
     )
+
+
+@router.get(
+    "/warm-intros/summary",
+    response_model=WarmIntroSummary,
+    summary="How many of the org's current hot accounts have a warm path in",
+)
+def get_warm_intro_summary(
+    session: Session = Depends(get_session),
+    nav: NetworkNavigator = Depends(_get_navigator),
+    organization_id: uuid.UUID | None = Depends(get_organization_id),
+) -> WarmIntroSummary:
+    """Dashboard-wide aggregate for Resumen's "Introducciones cálidas" card.
+
+    ``find_intro_paths`` only ever answers for one target company; this
+    checks the org's hottest ``_WARM_INTRO_HOT_ACCOUNT_CAP`` accounts (Dark
+    Funnel's own ranking) one at a time and reports how many have a real
+    path, with the strongest few as examples. Bounded on purpose — this is
+    a handful of lookups per dashboard load, never one per hot account the
+    organization has ever scored.
+    """
+    hot_leads = DarkFunnelService(session).get_hot_leads(
+        hot_only=True, limit=_WARM_INTRO_HOT_ACCOUNT_CAP, organization_id=organization_id
+    )
+    hot_accounts = [(lead.company_domain, lead.company_name or lead.company_domain) for lead in hot_leads]
+    return nav.summarize_hot_account_paths(hot_accounts, organization_id=organization_id)
 
 
 @router.get(

@@ -601,6 +601,42 @@ class TestNetworkNavigator:
         result = network_nav.find_intro_paths("corp.com")
         assert result.network_coverage in ("strong", "moderate")
 
+    def test_summarize_hot_account_paths_counts_matches(
+        self, network_nav: NetworkNavigator, session: Session
+    ) -> None:
+        network_nav.add_connection(_make_connection("Gina", "HotOne", "hotone.com", strength=8))
+        session.commit()
+        summary = network_nav.summarize_hot_account_paths(
+            [("hotone.com", "HotOne"), ("nobody-here.com", "NoConnection")]
+        )
+        assert summary.accounts_checked == 2
+        assert summary.accounts_with_paths == 1
+        assert len(summary.examples) == 1
+        assert summary.examples[0].domain == "hotone.com"
+        assert summary.examples[0].best_path.strength_score == 8
+
+    def test_summarize_hot_account_paths_empty_when_no_matches(
+        self, network_nav: NetworkNavigator, session: Session  # noqa: ARG002
+    ) -> None:
+        summary = network_nav.summarize_hot_account_paths([("cold1.com", "Cold One"), ("cold2.com", "Cold Two")])
+        assert summary.accounts_checked == 2
+        assert summary.accounts_with_paths == 0
+        assert summary.examples == []
+
+    def test_summarize_hot_account_paths_caps_examples(
+        self, network_nav: NetworkNavigator, session: Session
+    ) -> None:
+        for i in range(5):
+            network_nav.add_connection(_make_connection(f"Person{i}", f"Co{i}", f"co{i}.com", strength=5 + i))
+        session.commit()
+        summary = network_nav.summarize_hot_account_paths(
+            [(f"co{i}.com", f"Co{i}") for i in range(5)], max_examples=2
+        )
+        assert summary.accounts_with_paths == 5
+        assert len(summary.examples) == 2
+        # Strongest connections first.
+        assert summary.examples[0].best_path.strength_score >= summary.examples[1].best_path.strength_score
+
     def test_get_stats_empty_network(self, network_nav: NetworkNavigator) -> None:
         stats = network_nav.get_stats()
         assert stats.total_connections == 0
@@ -888,3 +924,36 @@ class TestNetworkEndpoints:
         assert resp.status_code == 200
         data = resp.json()
         assert "total_connections" in data
+
+    def test_warm_intro_summary_finds_hot_account_with_path(self, client, session: Session) -> None:
+        headers = _auth_headers(session)
+        client.post(
+            "/api/v1/dark-funnel/signals/batch",
+            json=[{"company_domain": "warmintro.com", "signal_type": s} for s in
+                  ["pricing_view", "competitor_compare", "product_trial", "demo_watch", "review_visit", "case_study_view"]],
+            headers=headers,
+        )
+        client.post(
+            "/api/v1/network/connections",
+            json={
+                "contact_name": "Warm Connector",
+                "contact_company": "WarmIntro Inc",
+                "contact_domain": "warmintro.com",
+                "relationship_strength": 8,
+            },
+            headers=headers,
+        )
+        resp = client.get("/api/v1/network/warm-intros/summary", headers=headers)
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["accounts_checked"] >= 1
+        assert data["accounts_with_paths"] >= 1
+        assert any(ex["domain"] == "warmintro.com" for ex in data["examples"])
+
+    def test_warm_intro_summary_empty_with_no_hot_accounts(self, client) -> None:
+        resp = client.get("/api/v1/network/warm-intros/summary")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["accounts_checked"] == 0
+        assert data["accounts_with_paths"] == 0
+        assert data["examples"] == []

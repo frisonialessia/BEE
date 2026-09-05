@@ -18,10 +18,13 @@ import { PipelineFunnel } from "@/components/dashboard/pipeline-funnel";
 import { LiveBadge } from "@/components/live-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MyCalendarWidget } from "@/features/calendar/my-calendar-widget";
+import { CopilotSuggestionCard } from "@/features/dashboard/copilot-suggestion-card";
 import { DailyBrief } from "@/features/dashboard/daily-brief";
 import { DecisionFeed } from "@/features/dashboard/decision-feed";
 import { GettingStartedCard } from "@/features/dashboard/getting-started-card";
+import { RevenueSimulatorCard } from "@/features/dashboard/revenue-simulator-card";
 import { TeamGoalRanking } from "@/features/dashboard/team-goal-ranking";
+import { WarmIntrosCard } from "@/features/dashboard/warm-intros-card";
 import { IntentHive, stageOf } from "@/features/signals/intent-hive";
 import { useCompanies } from "@/hooks/queries/use-companies";
 import { useHiveLeads } from "@/hooks/queries/use-lead-board";
@@ -37,6 +40,7 @@ import { localeTags } from "@/i18n/locales";
 import { useDashboardBase } from "@/lib/demo/mode";
 import { getSignalTypeLabels } from "@/lib/format";
 import { formatAmount, formatMoney } from "@/lib/i18n/format";
+import { computeForecast } from "@/lib/forecast";
 import { isQuotaActive } from "@/lib/quotas";
 import { buildSalesModel } from "@/lib/sales-model";
 import { useAuth } from "@/providers/auth-provider";
@@ -156,6 +160,22 @@ export function DashboardOverview({
     return { count: open.length, amount: open.reduce((sum, o) => sum + (o.amount ?? 0), 0) };
   }, [allOppsResult]);
   const criticalAccounts = useMemo(() => battlecards.filter((b) => b.ready_to_action).sort((a, b) => b.score - a.score), [battlecards]);
+
+  // Pronóstico del trimestre — el mismo cálculo que la página de Pronóstico
+  // (lib/forecast.ts's computeForecast, sin endpoint propio: ver ese
+  // archivo), nunca antes en Resumen. "Sin fecha" no cuenta como mes.
+  const forecast = useMemo(() => computeForecast(allOppsResult?.data ?? [], new Date(now), locale), [allOppsResult, now, locale]);
+  const forecastQuarter = useMemo(() => {
+    const today = new Date(now);
+    const q = Math.floor(today.getMonth() / 3);
+    const year = today.getFullYear();
+    const keys = new Set(Array.from({ length: 3 }, (_, i) => `${year}-${String(q * 3 + i + 1).padStart(2, "0")}`));
+    const months = forecast.byMonth.filter((b) => b.key !== "sin_fecha");
+    return {
+      weighted: months.filter((b) => keys.has(b.key)).reduce((sum, b) => sum + b.weighted, 0),
+      trend: months.map((b) => b.weighted),
+    };
+  }, [forecast, now]);
 
   // Real accounts to suggest on a slow week — the hottest ones not yet in
   // motion, from the same hive data the centre box already fetched.
@@ -371,7 +391,7 @@ export function DashboardOverview({
 
       {marketSlow && <AntiBurnoutCard leads={burnoutLeads} />}
 
-      <StatStrip cols={4}>
+      <StatStrip cols={5}>
         <StatTile label={t("kpis.signals")} value={signals.length} delta={weekDelta} deltaLabel={t("kpis.weeklySignals")} trend={weekly} tone={TONE.market} />
         <StatTile label={t("kpis.buyingWindow")} value={buyingWindow} hint={t("kpis.buyingWindowHint")} trend={hotTrend} tone={TONE.forecast} />
         <StatTile
@@ -383,12 +403,19 @@ export function DashboardOverview({
           tone={TONE.urgency}
         />
         <StatTile label={t("kpis.openPipeline")} value={amount(openPipeline.amount)} hint={t("kpis.openPipelineHint", { count: openPipeline.count })} tone={TONE.prepared} />
+        <StatTile
+          label={t("kpis.forecastQuarter")}
+          value={amount(forecastQuarter.weighted)}
+          hint={forecast.atRisk.length > 0 ? t("kpis.forecastAtRiskHint", { count: forecast.atRisk.length }) : undefined}
+          trend={forecastQuarter.trend}
+          tone={TONE.calm}
+        />
       </StatStrip>
 
       <div className="bee-overview">
         {/* Hoy — the hive at the centre, the plays beside it. */}
         <OverviewCard span={8} title={t("sections.hive.title")} caption={t("sections.hive.caption")} className="lg:min-h-[34rem]!" action={<CardLink href={`${base}/signals?tab=intent`}>{t("sections.hive.link")}</CardLink>}>
-          <IntentHive maxRadius={34} minHeight={300} maxCells={200} />
+          <IntentHive maxRadius={34} minHeight={300} maxCells={200} showLegend enableIndustryToggle richDetail />
         </OverviewCard>
         <OverviewCard span={4} title={tFeed("title")} caption={tFeed("eyebrow")} className="lg:min-h-[34rem]!">
           <DecisionFeed criticalAccounts={criticalAccounts} />
@@ -460,6 +487,30 @@ export function DashboardOverview({
           ) : (
             <StackedBars points={market.points} legend={market.legend} tone={TONE.market} minHeight={150} />
           )}
+        </OverviewCard>
+
+        {/* BEE mismo — lo que ningún CRM ofrece: un copiloto que sugiere,
+            una red que abre puertas, un simulador con datos reales. */}
+        <OverviewCard span={4} title={t("sections.copilot.title")} caption={t("sections.copilot.caption")} className="lg:min-h-[14rem]!">
+          <CopilotSuggestionCard />
+        </OverviewCard>
+        <OverviewCard
+          span={4}
+          title={t("sections.warmIntros.title")}
+          caption={t("sections.warmIntros.caption")}
+          className="lg:min-h-[14rem]!"
+          action={<CardLink href={`${base}/network`}>{t("sections.warmIntros.link")}</CardLink>}
+        >
+          <WarmIntrosCard />
+        </OverviewCard>
+        <OverviewCard
+          span={4}
+          title={t("sections.revenueSimulator.title")}
+          caption={t("sections.revenueSimulator.caption")}
+          className="lg:min-h-[14rem]!"
+          action={<CardLink href={`${base}/forecast`}>{t("sections.revenueSimulator.link")}</CardLink>}
+        >
+          <RevenueSimulatorCard />
         </OverviewCard>
       </div>
     </PageShell>

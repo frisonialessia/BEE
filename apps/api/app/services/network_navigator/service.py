@@ -57,6 +57,8 @@ from app.schemas.network import (
     NetworkConnectionCreate,
     NetworkQueryResult,
     NetworkStats,
+    WarmIntroAccountSummary,
+    WarmIntroSummary,
 )
 from app.services.permissions import scope_by_organization_id as _scope
 
@@ -205,6 +207,38 @@ class NetworkNavigator:
             best_path=best,
             cold_outreach_fallback=cold_fallback,
             network_coverage=coverage,
+        )
+
+    def summarize_hot_account_paths(
+        self,
+        hot_accounts: list[tuple[str, str]],
+        organization_id: uuid.UUID | None = None,
+        max_examples: int = 3,
+    ) -> WarmIntroSummary:
+        """How many of these (domain, company_name) accounts have a real
+        warm-intro path, across the whole set — a dashboard-wide aggregate
+        `find_intro_paths` has no equivalent for (it only ever answers for
+        one target at a time). The caller (the endpoint) is what bounds
+        `hot_accounts` to a handful of the hottest accounts — this method
+        does exactly that many single-target lookups, no more, so a
+        dashboard card never fans out over every hot account BEE has ever
+        scored.
+        """
+        found: list[tuple[str, str, IntroPath]] = []
+        for domain, name in hot_accounts:
+            result = self.find_intro_paths(target_domain=domain, target_company=name, top_k=1, organization_id=organization_id)
+            if result.best_path is not None:
+                found.append((name, domain, result.best_path))
+
+        found.sort(key=lambda row: row[2].strength_score, reverse=True)
+        examples = [
+            WarmIntroAccountSummary(company_name=name, domain=domain, best_path=path)
+            for name, domain, path in found[:max_examples]
+        ]
+        return WarmIntroSummary(
+            accounts_checked=len(hot_accounts),
+            accounts_with_paths=len(found),
+            examples=examples,
         )
 
     def get_stats(self, organization_id: uuid.UUID | None = None) -> NetworkStats:

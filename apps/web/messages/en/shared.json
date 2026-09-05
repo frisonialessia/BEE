@@ -143,7 +143,14 @@
     "temperatureHint": "Moves the account in the hive. BEE keeps its own reading.",
     "saved": "Temperature saved.",
     "error": "Could not save the temperature.",
-    "close": "Close"
+    "close": "Close",
+    "sortIntent": "Intent",
+    "sortIndustry": "Industry",
+    "legendCold": "Cold",
+    "legendHot": "Hot",
+    "noIndustry": "No industry",
+    "dealValue": "{amount} deal",
+    "sinceDays": "{days, plural, one {# day} other {# days}} ago"
   },
   "colorDots": {
     "aria": "Color",

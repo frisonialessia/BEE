@@ -143,7 +143,14 @@
     "temperatureHint": "Mueve la cuenta en la colmena. BEE conserva su propio cálculo.",
     "saved": "Temperatura guardada.",
     "error": "No se pudo guardar la temperatura.",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "sortIntent": "Intención",
+    "sortIndustry": "Industria",
+    "legendCold": "Frío",
+    "legendHot": "Caliente",
+    "noIndustry": "Sin industria",
+    "dealValue": "trato de {amount}",
+    "sinceDays": "hace {days, plural, one {# día} other {# días}}"
   },
   "colorDots": {
     "aria": "Color",

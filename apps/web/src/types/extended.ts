@@ -582,6 +582,33 @@ export interface NetworkStats {
   companies_covered: number;
 }
 
+export interface WarmIntroAccountSummary {
+  company_name: string;
+  domain: string;
+  best_path: IntroPath;
+}
+
+export interface WarmIntroSummary {
+  accounts_checked: number;
+  accounts_with_paths: number;
+  examples: WarmIntroAccountSummary[];
+}
+
+// ── ScenarioSimulator — What-If revenue projection ──────────────────────────
+
+export interface ScenarioRequest {
+  sector?: string | null;
+  signal_type?: string | null;
+  channel?: string | null;
+  psychographic_style?: string | null;
+  target_monthly_signals?: number;
+  additional_prospecting_reps?: number | null;
+  dark_funnel_heat?: number | null;
+}
+
+// ScenarioVariant/ScenarioResult already declared below (Scenario Simulator
+// section) — this only adds the one type that section was missing.
+
 // ─── Dead Letter Queue ────────────────────────────────────────────────────────
 
 export type DLQStatus = "pending" | "retrying" | "resolved" | "permanently_failed";

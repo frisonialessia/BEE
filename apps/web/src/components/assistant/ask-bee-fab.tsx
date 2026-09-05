@@ -18,9 +18,8 @@ import { useAssistantChatContext } from "@/features/assistant/assistant-chat-con
 export function AskBeeFab() {
   const t = useTranslations("workspace.assistant");
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
-  const { messages, send, pending, engine } = useAssistantChatContext();
+  const { messages, send, pending, engine, fabOpen: open, setFabOpen: setOpen } = useAssistantChatContext();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -103,7 +102,7 @@ export function AskBeeFab() {
 
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(!open)}
         className="bee-assistant-fab flex size-12 items-center justify-center rounded-full transition-transform hover:scale-105"
         aria-label={open ? t("fab.toggleCloseAria") : t("fab.toggleOpenAria")}
       >
