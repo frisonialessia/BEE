@@ -67,7 +67,12 @@ const WEEK_MS = 7 * DAY_MS;
 // The two collages' hand-placed "design" sizes — see useFitScale, which
 // scales each down to whatever room is actually available.
 const DESKTOP_DESIGN_H = 452;
-const MOBILE_DESIGN_H = 252;
+const MOBILE_DESIGN_H = 280;
+// The mobile cluster's actual width, used only to center it (see
+// MobileCollage): its own wrapper has no natural width otherwise, so the
+// cluster sat flush against the left edge with all the slack on the
+// right instead of split evenly on both sides.
+const MOBILE_DESIGN_W = 348;
 // Same illustrative shape as the Ventas comparison's own chart
 // (marketing-sales.tsx's WON/TARGET) — same data, same three-greens-by-
 // strength read, so a visitor who scrolls to /funcionalidades later sees
@@ -391,18 +396,26 @@ export function HeroBento({ locale }: { locale: Locale }) {
   );
 
   // Phone: the same idea as the desktop collage — scattered, tilted,
-  // never a flat grid — sized for the narrowest real target (~320px) so
-  // a wider phone just gets extra margin on the right, never overflow.
-  // Genuinely draggable (pointer events, real offset state): a card that
-  // starts nudged behind a neighbour is one drag away from sitting in
-  // the clear, so the tight mobile fit never permanently hides one.
+  // never a flat grid — sized to the design canvas (MOBILE_DESIGN_W ×
+  // MOBILE_DESIGN_H below), centered as one cluster (see MobileCollage)
+  // so a wider phone gets margin split evenly on both sides, never just
+  // on the right. Every card's box is sized to its own real content —
+  // play, learn and vigil used to be narrower/shorter than what their
+  // copy needs and lost text to their own overflow:hidden (a title
+  // ellipsis eating "Copiloto BEE", vigil's whole description line
+  // never rendering, learn's third line cut mid-word) — caught by eye,
+  // not by the clip-vs-main check, since a card fully inside main can
+  // still clip its own inner content. Genuinely draggable (pointer
+  // events, real offset state): a card that starts nudged behind a
+  // neighbour is one drag away from sitting in the clear, so the tight
+  // mobile fit never permanently hides one.
   const MOBILE_CARDS = [
-    { id: "hive", node: hiveInnerMobile, top: 42, left: 90, width: 140, height: 130, rotate: 0, z: 20 },
-    { id: "trend", node: trendInner, top: 0, left: 0, width: 88, height: 64, rotate: -6, z: 22 },
-    { id: "play", node: playInner, top: 6, left: 234, width: 80, height: 72, rotate: 5, z: 23 },
-    { id: "window", node: windowInner, top: 176, left: 0, width: 88, height: 64, rotate: 6, z: 18 },
-    { id: "learn", node: learnInner, top: 182, left: 228, width: 86, height: 62, rotate: -4, z: 19 },
-    { id: "vigil", node: vigilInner, top: 182, left: 90, width: 138, height: 56, rotate: 2, z: 17 },
+    { id: "hive", node: hiveInnerMobile, top: 48, left: 102, width: 140, height: 130, rotate: 0, z: 20 },
+    { id: "trend", node: trendInner, top: 0, left: 4, width: 92, height: 64, rotate: -6, z: 22 },
+    { id: "play", node: playInner, top: 0, left: 204, width: 136, height: 88, rotate: 5, z: 23 },
+    { id: "window", node: windowInner, top: 182, left: 4, width: 92, height: 66, rotate: 6, z: 18 },
+    { id: "learn", node: learnInner, top: 176, left: 246, width: 98, height: 90, rotate: -4, z: 19 },
+    { id: "vigil", node: vigilInner, top: 182, left: 100, width: 140, height: 88, rotate: 2, z: 17 },
   ] as const;
 
   // Desktop: the same 12 cards, spread ~1.3× wider than the old 720px
@@ -431,7 +444,7 @@ export function HeroBento({ locale }: { locale: Locale }) {
       {/* Phone: the 6 cards that read best at this size, scattered and
           rotated, dragged with a finger like the collage they're a piece
           of — see MobileCollage below for the actual drag mechanics. */}
-      <div className="mt-8 w-full sm:hidden">
+      <div className="mt-8 flex w-full justify-center sm:hidden">
         <MobileCollage cards={MOBILE_CARDS} />
       </div>
 
@@ -503,8 +516,24 @@ function MobileCollage({ cards }: { cards: readonly MobileCard[] }) {
   }
 
   return (
-    <div ref={wrapRef} style={{ height: MOBILE_DESIGN_H * scale }}>
-      <div className="relative" style={{ height: MOBILE_DESIGN_H, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+    // Explicit width: without one this box just fills its full-bleed
+    // flex parent (see the caller, which centers via justify-content —
+    // not margin:auto, which silently collapses to 0 and drops the
+    // centering the moment this box is wider than a narrow phone's
+    // available width, e.g. 360px). Since the cards are absolutely
+    // placed from left:0, giving the box their real design width is
+    // what lets that centering split the slack evenly on both sides.
+    // Scaled from top *center*, not top left: even a roomy phone
+    // (390×844) shrinks the collage a little (MOBILE_DESIGN_H grew to
+    // fit the bigger cards below), and a left origin pulls the whole
+    // cluster toward the box's left edge as it shrinks, undoing the
+    // centering at anything under scale 1. flexShrink:0 because a flex
+    // item shrinks to fit its container by default — letting it do
+    // that here would shrink the box's actual width below the design
+    // width its absolutely-positioned children still assume, throwing
+    // the same centering off again at a narrow phone (320–360px).
+    <div ref={wrapRef} style={{ height: MOBILE_DESIGN_H * scale, width: MOBILE_DESIGN_W, flexShrink: 0 }}>
+      <div className="relative" style={{ height: MOBILE_DESIGN_H, transform: `scale(${scale})`, transformOrigin: "top center" }}>
         {cards.map((c) => {
           const offset = offsets[c.id] ?? { x: 0, y: 0 };
           const active = activeId === c.id;
