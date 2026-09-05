@@ -1,8 +1,9 @@
 "use client";
 
-import { Eye } from "lucide-react";
+import { Eye, Move } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 
 import { Honeycomb } from "@/components/charts/honeycomb";
 import { SALES, TONE } from "@/components/charts/palette";
@@ -62,6 +63,7 @@ const SALES_TARGET = 50;
 export function HeroBento({ locale }: { locale: Locale }) {
   const t = useTranslations("landing.hero.cards");
   const tDiff = useTranslations("landing.hero.differentiators");
+  const tHero = useTranslations("landing.hero");
   const tConf = useTranslations("shared.cyclePrediction.confidence");
   const [now] = useState(() => Date.now());
 
@@ -115,6 +117,27 @@ export function HeroBento({ locale }: { locale: Locale }) {
         <Honeycomb items={hiveItems} maxRadius={13} minHeight={110} ariaLabel={t("hive.aria")} />
       </div>
       {hotLead && <p className="mt-1 truncate text-center text-xs font-semibold">{hotLead.company_name ?? hotLead.company_domain}</p>}
+    </>
+  );
+
+  // Same idea, smaller floor — the phone card gives the hive 130px total,
+  // not the desktop card's 176px, and Honeycomb's own `minHeight` is a
+  // hard floor it won't shrink under; without a smaller one here the
+  // card measurably overflowed its own box (caught by measuring
+  // scrollHeight vs clientHeight before this shipped, not by eye).
+  const hiveInnerMobile = (
+    <>
+      <div className="flex items-center justify-between gap-1">
+        <p className="bee-micro truncate">{t("hive.eyebrow")}</p>
+        <span className="flex shrink-0 items-center gap-1">
+          <i className="size-1.5 animate-pulse rounded-full" style={{ background: TONE.urgency }} aria-hidden />
+          <span className="bee-micro">{t("hive.live")}</span>
+        </span>
+      </div>
+      <div className="mt-1 flex flex-1 items-center justify-center">
+        <Honeycomb items={hiveItems} maxRadius={9} minHeight={80} ariaLabel={t("hive.aria")} />
+      </div>
+      {hotLead && <p className="mt-0.5 truncate text-center text-xs font-semibold">{hotLead.company_name ?? hotLead.company_domain}</p>}
     </>
   );
 
@@ -259,15 +282,32 @@ export function HeroBento({ locale }: { locale: Locale }) {
     </>
   );
 
+  // Phone: the same idea as the desktop collage — scattered, tilted,
+  // never a flat grid — sized for the narrowest real target (~320px) so
+  // a wider phone just gets extra margin on the right, never overflow.
+  // Genuinely draggable (pointer events, real offset state): a card that
+  // starts nudged behind a neighbour is one drag away from sitting in
+  // the clear, so the tight mobile fit never permanently hides one.
+  const MOBILE_CARDS = [
+    { id: "hive", node: hiveInnerMobile, top: 42, left: 90, width: 140, height: 130, rotate: 0, z: 20 },
+    { id: "trend", node: trendInner, top: 0, left: 0, width: 88, height: 64, rotate: -6, z: 22 },
+    { id: "play", node: playInner, top: 6, left: 234, width: 80, height: 72, rotate: 5, z: 23 },
+    { id: "window", node: windowInner, top: 176, left: 0, width: 88, height: 64, rotate: 6, z: 18 },
+    { id: "learn", node: learnInner, top: 182, left: 228, width: 86, height: 62, rotate: -4, z: 19 },
+    { id: "vigil", node: vigilInner, top: 182, left: 90, width: 138, height: 56, rotate: 2, z: 17 },
+  ] as const;
+
   return (
     <>
-      {/* Phone: no room for a scattered 12-card collage — a plain, narrow
-          row of the four most self-explanatory cards. */}
-      <div className="mt-8 grid w-full grid-cols-2 gap-2.5 sm:hidden">
-        <div className="bee-bento-mini flex flex-col" style={{ height: 118, padding: "0.55rem 0.65rem" }}>{hiveInner}</div>
-        <div className="bee-bento-mini flex flex-col" style={{ height: 118, padding: "0.55rem 0.65rem" }}>{playInner}</div>
-        <div className="bee-bento-mini flex flex-col" style={{ height: 108, padding: "0.55rem 0.65rem" }}>{windowInner}</div>
-        <div className="bee-bento-mini flex flex-col" style={{ height: 108, padding: "0.55rem 0.65rem" }}>{trendInner}</div>
+      {/* Phone: the 6 cards that read best at this size, scattered and
+          rotated, dragged with a finger like the collage they're a piece
+          of — see MobileCollage below for the actual drag mechanics. */}
+      <div className="mt-8 w-full sm:hidden">
+        <p className="bee-micro mb-2 flex items-center gap-1">
+          <Move className="size-3" aria-hidden />
+          {tHero("dragHint")}
+        </p>
+        <MobileCollage cards={MOBILE_CARDS} />
       </div>
 
       {/* sm+: the full 12-card collage — one bigger centre card (the
@@ -318,5 +358,136 @@ export function HeroBento({ locale }: { locale: Locale }) {
         </svg>
       </div>
     </>
+  );
+}
+
+interface MobileCard {
+  id: string;
+  node: ReactNode;
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+  rotate: number;
+  z: number;
+}
+
+/**
+ * The phone version of the collage's drag: real pointer-event state, not
+ * a decorative transform. One card at a time (`activeId`) lifts to the
+ * top and drops its rotation while held, exactly the feel the desktop
+ * mockups this shipped from were judged by — Pointer Events cover mouse,
+ * touch and pen with the same handlers, so this needs no separate touch
+ * path. No drop-zone or boundary clamp: a phone-sized collage has no
+ * "wrong place" to drop a card, it is just rearranged for reading.
+ */
+// The design was hand-placed against this box — see MOBILE_CARDS.
+const MOBILE_DESIGN_H = 252;
+
+function MobileCollage({ cards }: { cards: readonly MobileCard[] }) {
+  const [offsets, setOffsets] = useState<Record<string, { x: number; y: number }>>({});
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const drag = useRef<{ id: string; startX: number; startY: number; baseX: number; baseY: number } | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  // The page is cero-scroll (see app/page.tsx) — on a short phone
+  // (an SE, or a big one in landscape) `main`'s own overflow-hidden
+  // would otherwise just silently clip the collage's bottom row instead
+  // of the page scrolling for it. Measured on mount/resize, same "fit
+  // the real box" idea use-box-size.ts already applies to every chart,
+  // just for this one plain DOM scatter instead of an SVG.
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    // Bound against <main>'s own bottom edge, not window.innerHeight —
+    // main stops well short of the viewport bottom (the footer sits
+    // below it) — and iterate: `main` centers its whole column
+    // (justify-center), so shrinking the collage moves *where* it sits,
+    // which invalidates a single measurement taken before that move. A
+    // few passes of measure→resize (mutating the DOM directly so each
+    // pass sees the last one's real, reflowed layout, not stale React
+    // state) converge in practice within 2-3 steps; committed to state
+    // once settled so the drag math (which reads `scale`) has the same
+    // number the DOM does.
+    function fit() {
+      const el = wrapRef.current;
+      const inner = el?.firstElementChild as HTMLElement | null;
+      if (!el || !inner) return;
+      let s = 1;
+      for (let i = 0; i < 5; i++) {
+        const boundary = el.closest("main")?.getBoundingClientRect().bottom ?? window.innerHeight;
+        const available = boundary - el.getBoundingClientRect().top - 6;
+        const next = Math.max(0.55, Math.min(1, available / MOBILE_DESIGN_H));
+        if (Math.abs(next - s) < 0.005 && i > 0) {
+          s = next;
+          break;
+        }
+        s = next;
+        el.style.height = `${MOBILE_DESIGN_H * s}px`;
+        inner.style.transform = `scale(${s})`;
+      }
+      setScale(s);
+    }
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
+
+  function handlePointerDown(id: string, e: ReactPointerEvent<HTMLDivElement>) {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const base = offsets[id] ?? { x: 0, y: 0 };
+    drag.current = { id, startX: e.clientX, startY: e.clientY, baseX: base.x, baseY: base.y };
+    setActiveId(id);
+  }
+  function handlePointerMove(e: ReactPointerEvent<HTMLDivElement>) {
+    const d = drag.current;
+    if (!d) return;
+    // Divide by scale: the outer wrapper's own transform:scale() means a
+    // screen pixel of finger movement is only `scale` design-pixels
+    // here, so without this a shrunk (short-phone) collage would drag
+    // faster than the finger moves.
+    setOffsets((prev) => ({
+      ...prev,
+      [d.id]: { x: d.baseX + (e.clientX - d.startX) / scale, y: d.baseY + (e.clientY - d.startY) / scale },
+    }));
+  }
+  function handlePointerUp() {
+    drag.current = null;
+    setActiveId(null);
+  }
+
+  return (
+    <div ref={wrapRef} style={{ height: MOBILE_DESIGN_H * scale }}>
+      <div className="relative" style={{ height: MOBILE_DESIGN_H, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+        {cards.map((c) => {
+          const offset = offsets[c.id] ?? { x: 0, y: 0 };
+          const active = activeId === c.id;
+          return (
+            <div
+              key={c.id}
+              className="bee-bento-mini absolute flex touch-none flex-col"
+              style={{
+                top: c.top,
+                left: c.left,
+                width: c.width,
+                height: c.height,
+                padding: "0.45rem 0.55rem",
+                overflow: "hidden",
+                boxShadow: "var(--bee-shadow-card-lift)",
+                transform: `translate3d(${offset.x}px, ${offset.y}px, 0) rotate(${active ? 0 : c.rotate}deg)`,
+                transition: active ? "none" : "transform 180ms ease",
+                zIndex: active ? 60 : c.z,
+                cursor: active ? "grabbing" : "grab",
+              }}
+              onPointerDown={(e) => handlePointerDown(c.id, e)}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
+            >
+              {c.node}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
