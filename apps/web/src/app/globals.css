@@ -244,6 +244,15 @@
 .bee-eyebrow--muted { color: var(--color-text-muted); }
 .bee-eyebrow--green { color: var(--color-text-muted); }
 
+/* Landing hero's eyebrow only: a touch smaller on phones (its pill's own
+   padding shrinks too, via Tailwind classes at the call site) so the
+   badge takes less of the vertical room the headline and email field
+   need most on a short screen — normal .bee-eyebrow size from sm: up,
+   same as every other page. */
+@media (max-width: 639px) {
+  .bee-eyebrow--hero { font-size: 0.625rem; letter-spacing: 0.1em; }
+}
+
 .bee-display {
   font-size: var(--bee-text-display);
   font-weight: 700;
