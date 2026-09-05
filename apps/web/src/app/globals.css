@@ -1418,15 +1418,20 @@
   box-shadow: var(--bee-shadow-card);
 }
 
-/* Ground, hero only: a faint wash from the lavender primary token (toward
-   the page background) down to the page background. Nothing else — no
-   blobs, no brand hue. */
+/* Ground, home hero only: a soft mesh off BEE's own tokens (honey top-left,
+   lilac top-right, over the lavender-to-background wash) — richer than a
+   flat single-hue veil, closer to the "colorful SaaS hero" the founder
+   pointed to as a reference (2026-09-05), but still only BEE tokens
+   mixed toward the page background, never a foreign hue or a solid blob. */
 .bee-hero-wash {
   position: absolute;
   inset: 0;
   pointer-events: none;
   overflow: hidden;
-  background: linear-gradient(to bottom, color-mix(in srgb, var(--color-primary) 45%, var(--color-background)), var(--color-background) 85%);
+  background:
+    radial-gradient(1100px 620px at 12% -12%, color-mix(in srgb, var(--color-chart-1) 20%, transparent), transparent 58%),
+    radial-gradient(1000px 720px at 100% -6%, color-mix(in srgb, var(--color-chart-6) 24%, transparent), transparent 55%),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-primary) 45%, var(--color-background)), var(--color-background) 85%);
 }
 
 /* CTA hover: a shadow lift only — colors stay the button's own. */

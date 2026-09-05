@@ -1,3 +1,4 @@
+import { Sparkles } from "lucide-react";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 
@@ -47,8 +48,14 @@ export default async function Home() {
         <HeroAtmosphere />
 
         <div className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center">
-          <p className="bee-eyebrow">{t("eyebrow")}</p>
-          <h1 className="mt-2 text-balance text-[clamp(1.5rem,3.6vh+1rem,3.5rem)] font-semibold leading-[1.08] tracking-tight text-[var(--color-text)]">
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1"
+            style={{ background: "color-mix(in srgb, var(--color-chart-4) 14%, var(--color-card))" }}
+          >
+            <Sparkles className="size-3" aria-hidden />
+            <span className="bee-eyebrow">{t("eyebrow")}</span>
+          </span>
+          <h1 className="mt-4 text-balance text-[clamp(1.5rem,3.6vh+1rem,3.5rem)] font-semibold leading-[1.08] tracking-tight text-[var(--color-text)]">
             {t("heroTitle")}
           </h1>
           <p className="bee-caption mt-3 line-clamp-2 max-w-lg text-[clamp(0.8rem,1.5vh+0.35rem,1.125rem)]">
