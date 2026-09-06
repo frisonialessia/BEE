@@ -571,17 +571,17 @@
           {
             "kind": "steps",
             "items": [
-              "Llega un webhook a POST /api/v1/signals/ingest con la firma HMAC del emisor.",
-              "Se valida la firma y se resuelve el tenant (cabecera X-BEE-Org-Key o parámetro org_key). Nada entra sin organización.",
-              "La petición responde 202 Accepted en menos de 50 ms y encola el trabajo. El emisor nunca espera al análisis.",
-              "El motor de señales pasa la señal por sus analizadores registrados; cada uno aporta score y etiquetas.",
-              "Si el puntaje califica, nace una oportunidad con su score, su ventana de compra y su estrategia (argumento, canal y momento).",
+              "Llega un webhook firmado a POST /api/v1/signals/webhook. Se verifica la firma HMAC del emisor y se resuelve el tenant — nada entra sin organización.",
+              "El motor pasa la señal por todos sus analizadores aplicables y agrega sus veredictos en un score.",
+              "La señal se persiste, y si el puntaje califica nace una oportunidad con su ventana de compra y su estrategia: argumento, canal y momento. Respuesta 201.",
+              "Los proveedores externos entran por otra puerta, POST /api/v1/webhooks/receive: esa responde 202 Accepted en milisegundos y encola el enriquecimiento, para no hacer esperar al emisor por una llamada a un tercero.",
+              "El trabajo encolado lo drena un cron cada minuto (ver la sección de trabajos en segundo plano).",
               "El resultado del cierre —ganado o perdido— vuelve al sistema y ajusta la siguiente jugada."
             ]
           },
           {
             "kind": "note",
-            "text": "El 202 es una promesa: la señal quedó aceptada, no procesada. Lo que la hace real es la cola durable de la sección siguiente."
+            "text": "Las dos puertas son distintas a propósito: /signals/webhook hace el trabajo y contesta 201 con el resultado; /webhooks/receive promete y encola. El 202 de la segunda dice «aceptada», no «procesada» — lo que la hace real es la cola durable de la sección siguiente."
           }
         ]
       },

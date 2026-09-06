@@ -5,8 +5,22 @@
 
 BEE watches the market for the moments that matter — a funding round, a key
 hire, a new tool in the stack — scores them, and turns each qualified trigger
-into an actionable, prioritized opportunity (lead + signal + strategy), ready for
-an AI layer to generate the play.
+into an actionable, prioritized opportunity — lead, signal, and a written play:
+argument, channel and timing.
+
+**Live demo, no signup:** [beedemo.xyz/probar](https://www.beedemo.xyz/probar)
+
+### Where everything is
+
+| Document | What it holds |
+|---|---|
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | What's next, by horizon — including where BEE breaks at scale and what fixes it |
+| [`docs/PRODUCTION_READINESS.md`](docs/PRODUCTION_READINESS.md) | Risk audit, with file and line |
+| [`docs/MONETIZATION_ROADMAP.md`](docs/MONETIZATION_ROADMAP.md) | Tiers, pricing and their technical mapping |
+| [`docs/DESIGN_BRIEF.md`](docs/DESIGN_BRIEF.md) | The design system, as a specification |
+| [`DEPLOY_CHECKLIST.md`](DEPLOY_CHECKLIST.md) | What to configure to deploy this |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`SECURITY.md`](SECURITY.md) | How to send work back · how to report a vulnerability |
+| [`CLAUDE.md`](CLAUDE.md) | The house rules — written for AI agents, true for everyone |
 
 ---
 
@@ -41,7 +55,7 @@ bee/
 │           ├── components/     UI + shadcn primitives
 │           └── lib/            API client · types · formatting
 │
-├── docker-compose.yml           Postgres + API for local dev
+├── docker-compose.yml           Postgres · Redis · migrations · API · cron
 └── README.md
 ```
 
@@ -51,7 +65,10 @@ bee/
   `NEXT_PUBLIC_API_URL`.
 - `apps/api` → any container platform (Fly, Railway, Render, ECS…) using the
   provided `Dockerfile`. Scales horizontally and is ready for async workers.
-- `docker-compose.yml` runs the whole stack locally with one command.
+- `docker-compose.yml` runs the whole stack locally with one command, on the
+  production code path (`ENVIRONMENT=production`, Alembic-managed schema,
+  durable queue) — see the file's own header for what that matches and the
+  one thing it cannot.
 
 ### Clean, layered dependencies
 
@@ -172,8 +189,10 @@ class LLMAnalyzer(SignalAnalyzer):
         ...
 ```
 
-This is exactly how the **AI layer** plugs in later — the architecture is ready
-for it now.
+That is not hypothetical: `LLMAnalyzer` is one of the eleven analyzers
+registered today. It is also optional — with `AI_PROVIDER=none` (the default)
+BEE runs entirely on the rule-based ones: zero cost, zero external latency,
+no dependency on any provider.
 
 ---
 
@@ -198,7 +217,7 @@ Not a priority for the MVP; nothing in the app gates on it.
 ### Everything at once (recommended)
 
 ```bash
-docker compose up --build        # Postgres + API
+docker compose up --build        # Postgres · Redis · migrations · API · cron
 # → API:  http://localhost:8000/docs
 ```
 

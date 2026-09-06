@@ -571,17 +571,17 @@
           {
             "kind": "steps",
             "items": [
-              "A webhook arrives at POST /api/v1/signals/ingest with the sender's HMAC signature.",
-              "The signature is verified and the tenant resolved (X-BEE-Org-Key header or org_key parameter). Nothing enters without an organization.",
-              "The request answers 202 Accepted in under 50 ms and queues the work. The sender never waits for analysis.",
-              "The signal engine runs the signal past its registered analyzers; each contributes a score and tags.",
-              "If the score qualifies, an opportunity is born with its score, its buying window and its strategy (argument, channel, timing).",
+              "A signed webhook arrives at POST /api/v1/signals/webhook. The sender's HMAC signature is verified and the tenant resolved — nothing enters without an organization.",
+              "The engine runs the signal past every applicable analyzer and aggregates their verdicts into a score.",
+              "The signal is persisted, and if the score qualifies an opportunity is born with its buying window and its strategy: argument, channel, timing. Answers 201.",
+              "External providers come in through a different door, POST /api/v1/webhooks/receive: that one answers 202 Accepted in milliseconds and queues the enrichment, so the sender never waits on a third-party call.",
+              "The queued work is drained by a cron every minute (see the background jobs section).",
               "The outcome of the close — won or lost — feeds back and adjusts the next play."
             ]
           },
           {
             "kind": "note",
-            "text": "The 202 is a promise: the signal was accepted, not processed. What makes it real is the durable queue in the next section."
+            "text": "The two doors differ on purpose: /signals/webhook does the work and answers 201 with the result; /webhooks/receive promises and queues. That 202 means \"accepted\", not \"processed\" — what makes it real is the durable queue in the next section."
           }
         ]
       },
