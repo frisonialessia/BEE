@@ -7,42 +7,47 @@ Backend status after External Ingestion: **Ready**.
 
 ---
 
-## 0. Lanzamiento MVP — lo que falta configurar hoy (2026-09-04)
+## 0. Estado actual (2026-09-06)
 
-**Bloqueante único para el login:** el `DATABASE_URL` de `bee-api` en Vercel
-apunta a **Neon** (`ep-jolly-field-awhxt8aq-pooler.c-12.us-east-1.aws.neon.tech`,
-base `neondb`), y esa base está en la revisión Alembic `025`. El código
-espera `047`. Cada login da 500 hasta que esa base — no la de Supabase — se
-migre. `GET /api/v1/ready` lo muestra en vivo (503 con el detalle) y el log
-de arranque dice contra qué host se comprobó.
+Esta sección es el estado, no un histórico. Si cambias algo de producción,
+cámbiala aquí también — una lista que dice "falta" sobre algo ya hecho es
+peor que no tener lista.
 
-Dos maneras de salir, elige una:
+### Hecho y verificado
 
-| Opción | Qué hacer | Cuándo conviene |
-|--------|-----------|-----------------|
-| **A. Migrar Neon** (conserva los datos que ya hay ahí) | Neon → Dashboard → SQL Editor → pegar y ejecutar `neon-025-to-047.sql` (se genera con `cd apps/api && alembic upgrade 025_account_activity_events:head --sql`; empieza con `ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(128)` porque los ids de revisión superan los 32 caracteres). Después, GitHub → Settings → Secrets → Actions → `PRODUCTION_DATABASE_URL` = cadena **directa** de Neon (sin `-pooler`) para que el workflow migre solo en adelante. | Si las cuentas que ya se registraron en producción viven en Neon. |
-| **B. Apuntar a Supabase** (ya está en 047, con RLS y pgvector) | Vercel → `bee-api` → Environment Variables → `DATABASE_URL` = Supabase → Project Settings → Database → **Transaction pooler** (puerto 6543) + `?sslmode=require`; redeploy. Y el mismo secreto `PRODUCTION_DATABASE_URL` en GitHub con esa cadena. | Si Neon era una prueba y no hay datos que conservar. Una sola base: menos sorpresas. |
+| | Cómo se comprueba |
+|---|---|
+| Base de datos en la revisión que espera el código (`052`) | `GET /api/v1/ready` → `{"status":"ready"}`. Devuelve 503 con el detalle si hay deriva |
+| Migraciones automáticas en cada push que toque migraciones o modelos | `.github/workflows/migrate.yml`, con el secreto `PRODUCTION_DATABASE_URL` puesto. Desde el incidente de septiembre **falla** si el secreto falta, en vez de avisar y salir con éxito |
+| CORS con los orígenes reales del frontend | El aviso `INSECURE PRODUCTION CONFIG` del arranque ya no menciona `BACKEND_CORS_ORIGINS` |
+| Registro cerrado con código de invitación | `SIGNUP_INVITE_CODE` puesto; `/register` responde 403 y la landing ofrece la lista de espera |
+| Los tres cron autenticados | `GET /api/v1/internal/jobs/tick` sin cabecera responde **401**, no 404 |
 
-Estado del resto tras el incidente: Supabase migrada a 047, RLS en las 40
-tablas, guardia de deriva de esquema en `/api/v1/ready` y `/api/v1/status`,
-errores 500 con JSON y CORS, y el workflow `.github/workflows/migrate.yml`
-que corre `alembic upgrade head` en cada push a main que toque migraciones.
-Lo demás solo se puede hacer desde las cuentas de Vercel / GitHub / Resend:
+### Falta, por orden
 
-| Dónde | Variable | Valor |
-|-------|----------|-------|
-| GitHub → Settings → Secrets → Actions | `PRODUCTION_DATABASE_URL` | La cadena de la base elegida arriba. Sin este secreto el workflow de migraciones avisa y no hace nada. |
-| Vercel `bee-api` | `DATABASE_URL` | Cadena **pooled** de la base elegida. La conexión directa agota el límite de conexiones con pocos usuarios simultáneos. |
-| Vercel `bee-api` | `VECTOR_STORE_BACKEND` | `pgvector` — en Supabase la extensión y la tabla `vector_embeddings` ya existen; en Neon la migración 001 ya la creó (Neon soporta pgvector). Hoy la memoria de Sales DNA se borra en cada arranque. |
-| Vercel `bee-api` | `EMAIL_SMTP_HOST` / `EMAIL_SMTP_PORT` / `EMAIL_SMTP_USER` / `EMAIL_SMTP_PASSWORD` / `EMAIL_FROM_ADDRESS` | Con Resend: `smtp.resend.com` / `587` / `resend` / la API key `re_…` / `hola@<dominio verificado en Resend>`. Sin esto "recuperar contraseña" dice "revisa tu correo" y nunca llega nada. |
-| Vercel `bee-api` | `SENTRY_DSN` | DSN del proyecto en sentry.io. Sin él, cero visibilidad cuando algo falle a un cliente real. |
-| Vercel `bee-web` | `NEXT_PUBLIC_SENTRY_DSN` | Ídem para el frontend. |
+1. **Correo saliente (`EMAIL_SMTP_*`).** Es el único que bloquea algo. Sin
+   proveedor, "recuperar contraseña" escribe al log y devuelve éxito: el
+   usuario no recibe nada y nadie se entera. Bloquea además la verificación
+   de correo, y con ella abrir el registro. Con Resend: `smtp.resend.com` /
+   `587` / `resend` / la API key `re_…` / una dirección **pelada** en
+   `EMAIL_FROM_ADDRESS` (`hola@tudominio.com`, nunca `BEE <hola@…>` — el
+   código la usa también como remitente del sobre SMTP).
+2. **`SENTRY_DSN` y `NEXT_PUBLIC_SENTRY_DSN`.** El SDK ya está cableado en
+   ambos lados y está inerte sin DSN: cero visibilidad el día que algo le
+   falle a un cliente real.
+3. **`WAITLIST_NOTIFY_EMAIL`.** Depende del punto 1. La lista de espera ya
+   persiste sin él; esto solo añade el aviso al buzón.
+4. **`VECTOR_STORE_BACKEND=pgvector`.** La extensión y la tabla
+   `vector_embeddings` existen desde la migración `001`. Sin la variable, la
+   memoria de Sales DNA se reconstruye en cada arranque.
 
-Comprobación en un minuto, después de guardar las variables y redeployar:
-`GET https://bee-api-two.vercel.app/api/v1/ready` debe responder
-`{"status":"ready"}` (503 si hay deriva de esquema), y `GET /api/v1/status`
-(con `X-API-Key`) debe mostrar `schema.in_sync: true`, `schema.db_target`
-con el host esperado y `vector_store.backend: pgvector`.
+### Aplazado a propósito
+
+**Redis** (`REDIS_URL`, `JOB_QUEUE_BACKEND=redis`). Enciende la cola durable
+y hace globales los límites de abuso. **El disparador es conectar el primer
+emisor real de señales, no una cifra de usuarios**: hasta entonces la cola
+está vacía y una cola durable vacía no aporta nada. Ver `docs/ROADMAP.md`
+§1.1 — y §3.5 antes de encender también el stream de notificaciones.
 
 ---
 
@@ -77,8 +82,12 @@ CREATE EXTENSION IF NOT EXISTS vector;
 > with the new models, but the database keeps the old schema until someone
 > runs `alembic upgrade head` against it — and every request that touches a
 > missing column then fails with a 500 (login included). This is exactly what
-> broke production on 2026-09-04: the code was at revision 047 while Supabase
-> sat at 028. After **every** deploy that adds a file under
+> broke production twice: on 2026-09-04 the code was at revision 047 with the
+> database at 028, and again on 2026-09-06 at 051 against a database still on
+> 025 — that second time the migration workflow had been in place for two
+> days and was exiting successfully without migrating, showing a green check
+> each run. It now fails instead. After **every** deploy that adds a file
+> under
 > `apps/api/alembic/versions/`, run, with `DATABASE_URL` pointing at
 > production:
 >
@@ -87,7 +96,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 > ```
 >
 > No direct DB access? `alembic upgrade <current>:head --sql` emits the exact
-> SQL, which you can paste into the Supabase SQL editor. `env.py` widens
+> SQL, which you can paste into your provider's SQL console (Neon's is under
+> the project dashboard). `env.py` widens
 > `alembic_version.version_num` automatically (Alembic bootstraps it as
 > VARCHAR(32) and some of our revision ids are longer).
 

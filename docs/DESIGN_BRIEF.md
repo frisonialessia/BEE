@@ -12,6 +12,14 @@ quiero rediseñarlo con el cerebro que ya tenemos".
 Estas cuatro piezas son la referencia. No se tocan; todo lo nuevo se diseña
 para parecerse a ellas.
 
+Las capturas de las cuatro están en [`design/`](design/), y son la fuente
+visual de este apartado — léelo con ellas al lado:
+[CRM](design/referencia-crm.png) ·
+[Calendario](design/referencia-calendario.png) ·
+[Nueva reunión](design/referencia-nueva-reunion.png) ·
+[Ventas](design/referencia-ventas.png). La referencia del bento y la colmena
+del hero está en [`referencia-bento-colmena.jpg`](design/referencia-bento-colmena.jpg).
+
 ### Ventana "Nueva reunión" (calendario)
 `apps/web/src/features/calendar/calendar-page.tsx` (bloque `<Dialog>` al final
 del archivo, ~línea 1568).

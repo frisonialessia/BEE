@@ -7,7 +7,7 @@ BEE watches the market for the moments that matter — a funding round, a key
 hire, a new tool in the stack — scores them, and turns each qualified trigger
 into an actionable, prioritized opportunity — lead, signal, and a written play:
 argument, channel and timing.
- 
+
 **Live demo, no signup:** [beedemo.xyz/probar](https://www.beedemo.xyz/probar)
 
 ### Where everything is
