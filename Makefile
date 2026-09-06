@@ -8,7 +8,7 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
 
-up: ## Start the full stack (Postgres + API) with docker compose
+up: ## Start the full stack (Postgres, Redis, migrations, API, cron)
 	docker compose up --build
 
 down: ## Stop the docker compose stack

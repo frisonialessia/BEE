@@ -5,4 +5,3 @@
   "buildCommand": "pnpm --dir apps/web build",
   "outputDirectory": "apps/web/.next"
 }
- 
