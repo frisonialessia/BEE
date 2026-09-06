@@ -66,7 +66,7 @@ export function MarketingSales() {
   // can't share one id.
   return (
     <section id="ventas-comparacion" className="border-t border-border">
-      <div className="mx-auto w-full max-w-6xl px-6 py-20 lg:py-28">
+      <div className="mx-auto w-full max-w-6xl px-6 py-14 lg:py-16">
         <Reveal className="max-w-3xl">
           <p className="bee-eyebrow">{t("eyebrow")}</p>
           <h2 className="mt-3 text-balance text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">{t("heading")}</h2>
@@ -74,46 +74,61 @@ export function MarketingSales() {
         </Reveal>
 
         {/* Three cards — the comparison, written as facts, not ticks. */}
-        <Reveal stagger className="mt-12 grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+        <Reveal stagger className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-3">
           {COLUMNS.map((col) => {
             const isBee = col === "bee";
             return (
+              // Sin `!h-auto`: esa clase apagaba el height:100% de
+              // .bee-card, así que la tarjeta de BEE —la única con
+              // gráfico— salía mucho más alta que las otras dos y las
+              // tres dejaban de leerse como una comparación. Ahora la
+              // fila del grid las iguala, y el gráfico se mudó abajo.
               <div
                 key={col}
-                className="bee-card !h-auto"
+                className="bee-card"
+                // Solo la columna de BEE lleva tono; las otras dos son la
+                // referencia y no deben competir por la mirada.
+                style={isBee ? { borderTop: `3px solid ${TONE.market}` } : undefined}
               >
                 <p className="text-lg font-semibold">{t(`columns.${col}.title`)}</p>
                 <p className="bee-caption mt-1">{t(`columns.${col}.subtitle`)}</p>
-                <dl className="mt-5 divide-y divide-[var(--color-divider)] border-t border-[var(--color-divider)]">
+                <dl className="mt-4 divide-y divide-[var(--color-divider)] border-t border-[var(--color-divider)]">
                   {ROWS.map((row) => (
-                    <div key={row} className="py-3">
-                      <dt className="bee-micro">{t(`rows.${row}`)}</dt>
-                      <dd className={`mt-0.5 text-sm ${isBee ? "font-medium" : "text-[var(--color-text-muted)]"}`}>{t(`columns.${col}.${row}`)}</dd>
+                    // Etiqueta y respuesta en la misma línea: cuatro pares
+                    // apilados eran ocho renglones por tarjeta, y la
+                    // comparación se leía en vertical en vez de en
+                    // horizontal, que es como se compara.
+                    <div key={row} className="grid grid-cols-[5.5rem_1fr] gap-3 py-2.5">
+                      <dt className="bee-micro pt-0.5">{t(`rows.${row}`)}</dt>
+                      <dd className={`text-sm leading-snug ${isBee ? "font-medium" : "text-[var(--color-text-muted)]"}`}>{t(`columns.${col}.${row}`)}</dd>
                     </div>
                   ))}
                 </dl>
-                {isBee && (
-                  <div className="mt-5 border-t border-[var(--color-divider)] pt-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="bee-eyebrow">{t("chart.title")}</p>
-                      <span className="bee-micro">{t("chart.caption")}</span>
-                    </div>
-                    <div className="mt-2">
-                      <BarsVsTarget
-                        points={WON.map((value, i) => ({ label: months[i], value, current: i === WON.length - 1 }))}
-                        target={TARGET}
-                        targetLabel={t("chart.target")}
-                        minHeight={130}
-                        formatValue={(v) => `${Math.round(v)} k`}
-                        // Same reading as the real Ventas page: three greens by strength.
-                        colorFor={(p, _i, max) => (p.value >= max * 0.66 ? SALES.won : p.value >= max * 0.33 ? SALES.lime : SALES.mint)}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             );
           })}
+        </Reveal>
+
+        {/* Ganado por mes: los verdes de Ventas, en su propia caja. Vivía
+            dentro de la tarjeta de BEE, que es justo lo que la hacía más
+            alta que sus dos vecinas. Aquí abajo cumple la misma función
+            —cerrar la comparación con el número real— sin romper la fila. */}
+        <Reveal className="bee-card mt-4 !h-auto" delay={60}>
+          <div className="flex items-center justify-between gap-3">
+            <p className="bee-eyebrow">{t("chart.title")}</p>
+            <span className="bee-micro">{t("chart.caption")}</span>
+          </div>
+          <div className="mt-3">
+            <BarsVsTarget
+              points={WON.map((value, i) => ({ label: months[i], value, current: i === WON.length - 1 }))}
+              target={TARGET}
+              targetLabel={t("chart.target")}
+              minHeight={150}
+              formatValue={(v) => `${Math.round(v)} k`}
+              // La misma lectura que la página de Ventas: tres verdes por fuerza.
+              colorFor={(p, _i, max) => (p.value >= max * 0.66 ? SALES.won : p.value >= max * 0.33 ? SALES.lime : SALES.mint)}
+            />
+          </div>
         </Reveal>
 
         {/* Simulator — on white; the active factor takes the lavender selection wash. */}
