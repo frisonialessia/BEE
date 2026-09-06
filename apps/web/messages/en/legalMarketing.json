@@ -29,7 +29,12 @@
         ],
         "chart": {
           "title": "Intent hive"
-        }
+        },
+        "tableHeaders": [
+          "Signal",
+          "Type",
+          "Score"
+        ]
       },
       "crm": {
         "eyebrow": "CRM",
@@ -46,7 +51,13 @@
           "qualified": "Qualified",
           "proposal": "Proposal",
           "closing": "Closing"
-        }
+        },
+        "tableHeaders": [
+          "Account",
+          "Stage",
+          "Amount",
+          "Score"
+        ]
       },
       "estrategias": {
         "eyebrow": "Strategies",
@@ -62,7 +73,13 @@
           "email": "Email",
           "linkedin": "LinkedIn",
           "call": "Call"
-        }
+        },
+        "tableHeaders": [
+          "Account",
+          "Industry",
+          "Country",
+          "Score"
+        ]
       },
       "pronostico": {
         "eyebrow": "Forecast",
@@ -76,7 +93,13 @@
         "chart": {
           "title": "Realistic projection",
           "unit": "deals"
-        }
+        },
+        "tableHeaders": [
+          "Month",
+          "Opportunities",
+          "Expected amount",
+          "Weight"
+        ]
       },
       "ventas": {
         "eyebrow": "Sales",
@@ -89,7 +112,13 @@
         ],
         "chart": {
           "title": "Won vs. target (k)"
-        }
+        },
+        "tableHeaders": [
+          "Account",
+          "Amount",
+          "Date",
+          "Score"
+        ]
       },
       "calendario": {
         "eyebrow": "Calendar",
@@ -106,7 +135,13 @@
           "week": "This week",
           "overdue": "Overdue",
           "weekDone": "of the week completed"
-        }
+        },
+        "tableHeaders": [
+          "Account",
+          "Date",
+          "Stage",
+          "Score"
+        ]
       },
       "control": {
         "eyebrow": "Control",
@@ -123,12 +158,57 @@
           "queue": "Queue",
           "facts": "Facts",
           "errors": "Errors"
-        }
+        },
+        "tableHeaders": [
+          "Account",
+          "Decision",
+          "Priority",
+          "Confidence"
+        ]
       }
     },
     "closingTitle": "Ready to see these modules working on your own pipeline?",
     "ctaStart": "Get started",
-    "ctaDemo": "Watch the live demo"
+    "ctaDemo": "Watch the live demo",
+    "signalTypes": {
+      "funding_round": "Funding round",
+      "leadership_change": "Leadership change",
+      "tech_adoption": "Stack change",
+      "expansion": "Expansion"
+    },
+    "tour": {
+      "opportunities": "{count} opportunities",
+      "reviewYes": "Manual review",
+      "reviewNo": "Automatic",
+      "hotYes": "Hot",
+      "hotNo": "Normal",
+      "stats": {
+        "signals": "Signals",
+        "accounts": "Accounts",
+        "qualified": "Qualified",
+        "open": "Open",
+        "pipeline": "Pipeline",
+        "hot": "Hot",
+        "playbooks": "Playbooks",
+        "ready": "Ready",
+        "industries": "Industries",
+        "months": "Months",
+        "projected": "Projected",
+        "won": "Won",
+        "revenue": "Revenue",
+        "winRate": "Win rate",
+        "scheduled": "Dated",
+        "decisions": "Decisions",
+        "review": "In review",
+        "auto": "Automatic"
+      }
+    },
+    "crmPreview": {
+      "eyebrow": "CRM board",
+      "title": "The same board you use inside BEE.",
+      "caption": "Five columns, one colour per stage, each card's intensity from its score. Inside the product you drag between columns; here it's just the picture.",
+      "empty": "No opportunities"
+    }
   },
   "soluciones": {
     "meta": {
@@ -274,8 +354,6 @@
     "heroSubtitle": "BEE is an open-source project, not a sales pitch — if you have specific questions about the platform or the code, use the contact form.",
     "formEyebrow": "Write to BEE",
     "formPromise": "There's one person behind BEE, not a sales team.",
-    "afterSubmitTitle": "What happens after you send this?",
-    "afterSubmitBody": "Your message is really stored, never silently dropped. I read it myself and reply to the address you leave here — no turnaround promise I can't keep.",
     "haveAccountTitle": "Already have an account?",
     "haveAccountBody": "If you already use BEE, sign in directly. You can also join the waitlist.",
     "mvpNoticeTitle": "This is an open-source MVP, not a sales pitch",

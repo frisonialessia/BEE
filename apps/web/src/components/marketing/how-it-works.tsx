@@ -28,7 +28,7 @@ export async function HowItWorks({ locale }: { locale: Locale }) {
 
   return (
     <section id="como-funciona" className="border-t border-border">
-      <div className="mx-auto w-full max-w-6xl px-6 py-16 lg:py-24">
+      <div className="mx-auto w-full max-w-6xl px-6 py-10 lg:py-12">
         <Reveal className="grid grid-cols-1 gap-6 text-left sm:grid-cols-3 sm:gap-8 sm:text-center">
           {HERO_DIFFERENTIATORS.map((key) => (
             <div key={key}>
@@ -39,7 +39,7 @@ export async function HowItWorks({ locale }: { locale: Locale }) {
         </Reveal>
 
         <Reveal delay={60}>
-          <p className="bee-eyebrow mt-14">{t("steps.eyebrow")}</p>
+          <p className="bee-eyebrow mt-10">{t("steps.eyebrow")}</p>
         </Reveal>
         <Reveal stagger className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3" delay={100}>
           {STEPS.map((step) => (

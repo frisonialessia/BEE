@@ -29,7 +29,12 @@
         ],
         "chart": {
           "title": "Colmena de intención"
-        }
+        },
+        "tableHeaders": [
+          "Señal",
+          "Tipo",
+          "Score"
+        ]
       },
       "crm": {
         "eyebrow": "CRM",
@@ -46,7 +51,13 @@
           "qualified": "Calificado",
           "proposal": "Propuesta",
           "closing": "Cierre"
-        }
+        },
+        "tableHeaders": [
+          "Cuenta",
+          "Etapa",
+          "Monto",
+          "Score"
+        ]
       },
       "estrategias": {
         "eyebrow": "Estrategias",
@@ -62,7 +73,13 @@
           "email": "Email",
           "linkedin": "LinkedIn",
           "call": "Llamada"
-        }
+        },
+        "tableHeaders": [
+          "Cuenta",
+          "Industria",
+          "País",
+          "Score"
+        ]
       },
       "pronostico": {
         "eyebrow": "Pronóstico",
@@ -76,7 +93,13 @@
         "chart": {
           "title": "Proyección realista",
           "unit": "operaciones"
-        }
+        },
+        "tableHeaders": [
+          "Mes",
+          "Oportunidades",
+          "Monto esperado",
+          "Peso"
+        ]
       },
       "ventas": {
         "eyebrow": "Ventas",
@@ -89,7 +112,13 @@
         ],
         "chart": {
           "title": "Ganado vs. meta (k)"
-        }
+        },
+        "tableHeaders": [
+          "Cuenta",
+          "Monto",
+          "Fecha",
+          "Score"
+        ]
       },
       "calendario": {
         "eyebrow": "Calendario",
@@ -106,7 +135,13 @@
           "week": "Esta semana",
           "overdue": "Vencidas",
           "weekDone": "de la semana completada"
-        }
+        },
+        "tableHeaders": [
+          "Cuenta",
+          "Fecha",
+          "Etapa",
+          "Score"
+        ]
       },
       "control": {
         "eyebrow": "Control",
@@ -123,12 +158,57 @@
           "queue": "Cola",
           "facts": "Hechos",
           "errors": "Errores"
-        }
+        },
+        "tableHeaders": [
+          "Cuenta",
+          "Decisión",
+          "Prioridad",
+          "Confianza"
+        ]
       }
     },
     "closingTitle": "¿Listo para ver estos módulos trabajando sobre tu propio pipeline?",
     "ctaStart": "Comenzar ahora",
-    "ctaDemo": "Ver demo en vivo"
+    "ctaDemo": "Ver demo en vivo",
+    "signalTypes": {
+      "funding_round": "Ronda de financiación",
+      "leadership_change": "Cambio de liderazgo",
+      "tech_adoption": "Cambio de stack",
+      "expansion": "Expansión"
+    },
+    "tour": {
+      "opportunities": "{count} oportunidades",
+      "reviewYes": "Revisión manual",
+      "reviewNo": "Automática",
+      "hotYes": "Caliente",
+      "hotNo": "Normal",
+      "stats": {
+        "signals": "Señales",
+        "accounts": "Cuentas",
+        "qualified": "Calificadas",
+        "open": "Abiertas",
+        "pipeline": "Pipeline",
+        "hot": "Calientes",
+        "playbooks": "Jugadas",
+        "ready": "Listas",
+        "industries": "Industrias",
+        "months": "Meses",
+        "projected": "Proyectado",
+        "won": "Cerradas",
+        "revenue": "Ingresos",
+        "winRate": "Tasa de cierre",
+        "scheduled": "Con fecha",
+        "decisions": "Decisiones",
+        "review": "En revisión",
+        "auto": "Automáticas"
+      }
+    },
+    "crmPreview": {
+      "eyebrow": "Tablero CRM",
+      "title": "El mismo tablero que usas dentro de BEE.",
+      "caption": "Cinco columnas, un color por etapa, y la intensidad de cada tarjeta según su score. Dentro del producto se arrastra entre columnas; aquí solo es la foto.",
+      "empty": "Sin oportunidades"
+    }
   },
   "soluciones": {
     "meta": {
@@ -274,8 +354,6 @@
     "heroSubtitle": "BEE es un proyecto de código abierto, no una oferta de venta — si tienes preguntas específicas sobre la plataforma o el código, utiliza el formulario de contacto.",
     "formEyebrow": "Escribe a BEE",
     "formPromise": "Detrás de BEE hay una sola persona, no un equipo de ventas.",
-    "afterSubmitTitle": "¿Qué pasa después de enviar esto?",
-    "afterSubmitBody": "Tu mensaje se guarda de verdad, nunca se descarta en silencio. Lo leo yo, y te respondo al correo que dejes aquí — sin promesas de plazo que no pueda cumplir.",
     "haveAccountTitle": "¿Ya tienes cuenta?",
     "haveAccountBody": "Si ya usas BEE, inicia sesión directamente. También puedes utilizar la waitlist.",
     "mvpNoticeTitle": "Esto es un MVP de código abierto, no una oferta de venta",

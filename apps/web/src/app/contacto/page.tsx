@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Code2, LogIn, Send } from "lucide-react";
+import { Code2, LogIn } from "lucide-react";
 
 import { ContactForm } from "@/components/contact-form";
 import { MarketingFooter } from "@/components/marketing-footer";
@@ -29,8 +29,11 @@ export async function generateMetadata(): Promise<Metadata> {
  * submit. The three notes on the left are compact rows, one hue each.
  */
 
+/** Two notes, not three. The third ("¿qué pasa después de enviar esto?")
+ *  explained the mechanics of the form to someone standing in front of the
+ *  form — and its three rows pushed the left column taller than the card
+ *  beside it, which is what made this page scroll on a laptop at all. */
 const NOTES = [
-  { id: "afterSubmit", icon: Send },
   { id: "haveAccount", icon: LogIn },
   { id: "mvpNotice", icon: Code2 },
 ] as const;
@@ -57,7 +60,7 @@ export default async function ContactoPage({
               <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{t("heroTitle")}</h1>
               <p className="bee-caption mt-4 max-w-sm text-base">{t("heroSubtitle")}</p>
 
-              <ul className="mt-8 divide-y divide-border border-y border-border">
+              <ul className="mt-6 divide-y divide-border border-y border-border">
                 {NOTES.map((note) => (
                   <li key={note.id} className="flex items-start gap-3 py-4">
                     <span
