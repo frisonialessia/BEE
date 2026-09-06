@@ -197,24 +197,32 @@ const DEMO_TEAMS: Omit<TeamOut, "currency">[] = [
   { id: "demo-team-south", organization_id: "demo-org", parent_team_id: null, name: "Equipo Sur", description: null },
 ];
 
-// Each of the 4 gets a distinct BEE chart tone (avatar_color) — the same
-// real profile field a real user sets from Equipo → Perfil (see
-// team-admin-view.tsx's color picker); no photo, so this is what actually
-// tells them apart wherever only initials show (presence bar, leaderboard,
-// calendar attendees), instead of every teammate reading as the exact same
-// flat color the way this used to render.
+// The 4 demo teammates carry a real photo (avatar_url) AND a distinct BEE
+// chart tone (avatar_color) — both are the same profile fields a real user
+// sets from Equipo → Perfil (see team-admin-view.tsx). The photo is what
+// renders everywhere a teammate appears (header strip, Resumen and Ventas
+// rankings, calendar attendees, CRM owner pill); the tone stays as the
+// initials fallback underneath it, so a broken or missing file still tells
+// the four apart instead of collapsing them into one flat color.
+//
+// These are /public paths, not the `data:` URIs a real upload produces
+// (lib/image.ts): a data URI for four faces would ship ~70 KB of base64
+// inside the JS bundle on every page load, where four static files are
+// fetched once, cached, and never parsed by the bundler. Both forms land in
+// the same <img src>, so nothing downstream can tell the difference.
+// Sources live in apps/web/public/demo/team/ — square 256 px, face centered.
 const DEMO_USERS_ES: UserOut[] = [
-  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@beedemo.xyz", full_name: "Ana García", role: "manager", is_active: true, avatar_url: null, avatar_color: "chart-1", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@beedemo.xyz", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, avatar_color: "chart-6", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@beedemo.xyz", full_name: "Sofía Méndez", role: "manager", is_active: true, avatar_url: null, avatar_color: "chart-4", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@beedemo.xyz", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, avatar_color: "chart-3", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@beedemo.xyz", full_name: "Ana García", role: "manager", is_active: true, avatar_url: "/demo/team/ana.jpg", avatar_color: "chart-1", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@beedemo.xyz", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: "/demo/team/carlos.jpg", avatar_color: "chart-6", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@beedemo.xyz", full_name: "Sofía Méndez", role: "manager", is_active: true, avatar_url: "/demo/team/sofia.jpg", avatar_color: "chart-4", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@beedemo.xyz", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: "/demo/team/diego.jpg", avatar_color: "chart-3", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
 ];
 
 const DEMO_USERS_EN: UserOut[] = [
-  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@beedemo.xyz", full_name: "Ana Garcia", role: "manager", is_active: true, avatar_url: null, avatar_color: "chart-1", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@beedemo.xyz", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: null, avatar_color: "chart-6", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@beedemo.xyz", full_name: "Sofia Mendez", role: "manager", is_active: true, avatar_url: null, avatar_color: "chart-4", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
-  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@beedemo.xyz", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: null, avatar_color: "chart-3", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-1", organization_id: "demo-org", team_id: "demo-team-north", email: "ana@beedemo.xyz", full_name: "Ana Garcia", role: "manager", is_active: true, avatar_url: "/demo/team/ana.jpg", avatar_color: "chart-1", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-2", organization_id: "demo-org", team_id: "demo-team-north", email: "carlos@beedemo.xyz", full_name: "Carlos Ruiz", role: "member", is_active: true, avatar_url: "/demo/team/carlos.jpg", avatar_color: "chart-6", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-3", organization_id: "demo-org", team_id: "demo-team-south", email: "sofia@beedemo.xyz", full_name: "Sofia Mendez", role: "manager", is_active: true, avatar_url: "/demo/team/sofia.jpg", avatar_color: "chart-4", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
+  { id: "demo-user-4", organization_id: "demo-org", team_id: "demo-team-south", email: "diego@beedemo.xyz", full_name: "Diego Torres", role: "member", is_active: true, avatar_url: "/demo/team/diego.jpg", avatar_color: "chart-3", phone: null, bio: null, timezone: null, created_at: "2026-01-01T00:00:00Z" },
 ];
 
 export function demoFetchUsers(): UserOut[] {
