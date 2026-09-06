@@ -28,7 +28,9 @@ export async function MarketingFooter() {
 
   const accountLinks = [
     { label: t("accountLinks.login"), href: "/login" },
-    { label: t("accountLinks.register"), href: "/register" },
+    // Signup is closed until email verification exists, so the footer
+    // advertises the waiting list rather than a form that will refuse them.
+    { label: t("accountLinks.register"), href: "/#waitlist" },
     { label: t("accountLinks.contact"), href: "/contacto?source=footer" },
     { label: t("accountLinks.support"), href: "/soporte" },
   ] as const;

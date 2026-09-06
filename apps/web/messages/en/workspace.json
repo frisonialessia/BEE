@@ -18,7 +18,7 @@
     "comingSoon": {
       "title": "{label} — not simulated in this sandbox",
       "description": "This tool runs fully on a real account, with your own data. We haven't built it as a demo here yet — so we don't show you something that isn't real.",
-      "createAccount": "Create free account",
+      "createAccount": "Join the list",
       "backToSignals": "Back to Signals"
     },
     "library": {

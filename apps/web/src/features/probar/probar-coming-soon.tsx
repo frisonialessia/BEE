@@ -22,7 +22,9 @@ export function ProbarComingSoon({ label, icon: Icon }: { label: string; icon: L
         <p className="bee-caption mt-1 max-w-md">{t("description")}</p>
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-        <Link href="/register" className="bee-btn bee-btn--primary">
+        {/* Same reason as the sandbox banner's own CTA: signup is closed,
+            so this goes to the waiting list, not to a refusal. */}
+        <Link href="/#waitlist" className="bee-btn bee-btn--primary">
           {t("createAccount")}
         </Link>
         <Link href="/probar/signals" className="bee-btn-ghost">

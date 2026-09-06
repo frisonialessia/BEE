@@ -56,8 +56,14 @@ export default function ProbarLayout({ children }: { children: React.ReactNode }
                     <span className="hidden sm:inline">{t("subtitle")}</span>
                   </p>
                   <div className="flex shrink-0 gap-2">
+                    {/* Was /register. This is the highest-intent moment in
+                        the whole funnel — someone who just tried the product
+                        and wants in — so sending them to a signup the invite
+                        gate will refuse is the worst possible place to leave
+                        a dead end. Points at the landing's waiting list until
+                        signup reopens. */}
                     <Link
-                      href="/register"
+                      href="/#waitlist"
                       // Tour target — the guided tour's closing step for
                       // /probar (see tour-steps.ts) points here.
                       data-tour="tour-create-account"

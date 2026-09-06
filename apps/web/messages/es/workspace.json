@@ -18,7 +18,7 @@
     "comingSoon": {
       "title": "{label} — no está simulado en este sandbox",
       "description": "Esta herramienta funciona por completo en una cuenta real, con tus propios datos. Aquí todavía no la armamos como demo — para no mostrarte algo que no es de verdad.",
-      "createAccount": "Crear cuenta gratis",
+      "createAccount": "Únete a la lista",
       "backToSignals": "Volver a Señales"
     },
     "library": {

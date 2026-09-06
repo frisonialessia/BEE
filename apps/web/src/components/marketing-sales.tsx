@@ -167,7 +167,9 @@ export function MarketingSales() {
           <Link href="/probar/sales" className="bee-btn bee-btn--primary bee-cta-lift">
             {t("cta")}
           </Link>
-          <Link href="/register" className="bee-btn bee-btn--secondary">
+          {/* Signup is closed (see waitlist-form.tsx) — the secondary CTA
+              on /funcionalidades goes to the list, not to a refusal. */}
+          <Link href="/#waitlist" className="bee-btn bee-btn--secondary">
             {t("ctaSecondary")}
           </Link>
         </Reveal>
