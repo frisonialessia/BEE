@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { CrmPreview } from "@/components/marketing/crm-preview";
+import { FeatureCards } from "@/components/marketing/feature-cards";
 import { HowItWorks } from "@/components/marketing/how-it-works";
-import { ProductTour } from "@/components/marketing/product-tour";
 import { MarketingFAQ } from "@/components/marketing-faq";
 import { MarketingFooter } from "@/components/marketing-footer";
 import { MarketingHeader } from "@/components/marketing-header";
@@ -17,26 +16,24 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Página pública de funcionalidades.
+ * Página pública de funcionalidades: por qué BEE no es un CRM.
  *
- * Antes: siete bandas a todo el ancho, una por módulo, alternando lados —
- * cada una con título, una línea, tres chips y una tarjeta de gráfico. Eran
- * unas nueve pantallas de scroll para entender qué hace BEE, y lo que
- * decían eran adjetivos ("detección en tiempo real") en vez de producto.
+ * Dos versiones anteriores fallaron por lo mismo desde lados opuestos. La
+ * primera eran siete bandas a todo el ancho con título, una línea y tres
+ * chips cada una: nueve pantallas de adjetivos. La segunda metió los siete
+ * módulos en un marco con pestañas, pero con tablas de registros del
+ * sandbox — cuentas, montos, scores — que convertían la página en una
+ * imitación del producto. No es eso: es la explicación de por qué el
+ * producto existe, y el producto está a un clic en /probar.
  *
- * Ahora los siete módulos viven en UN marco con pestañas
- * (`product-tour.tsx`), del alto de uno solo, y el espacio que eso libera
- * se gasta en filas de registros de verdad: ocho señales con su score, ocho
- * oportunidades con su monto y su etapa. Debajo, el tablero CRM real en
- * miniatura (`crm-preview.tsx`) porque es una de las cuatro piezas que la
- * fundadora nombró como buenas — mejor enseñarlo que describirlo.
- *
- * Todo sale de `lib/sample-data`, el mismo fixture del sandbox, y cada
- * bloque lo dice. Ningún número inventado (DESIGN_BRIEF §2.10).
+ * Ahora es una cuadrícula de ocho tarjetas (`feature-cards.tsx`), una por
+ * capacidad que un CRM no tiene, cada una con una figura **abstracta** en
+ * el tono de su módulo — barras, panal, embudo, anillo — sin un solo
+ * número ni nombre de empresa. Después, la comparación de tres columnas
+ * (`MarketingSales`) y el FAQ, que ya cierran la página por su cuenta.
  */
 export default async function FuncionalidadesPage() {
   const t = await getTranslations("legalMarketing.funcionalidades");
-  const tCrm = await getTranslations("legalMarketing.funcionalidades.crmPreview");
   const locale = (await getLocale()) as Locale;
 
   return (
@@ -52,32 +49,20 @@ export default async function FuncionalidadesPage() {
           <p className="bee-caption mx-auto mt-4 max-w-xl text-base">{t("heroSubtitle")}</p>
         </section>
 
-        <section className="mx-auto w-full max-w-6xl px-6 py-10 lg:py-12">
+        <section className="mx-auto w-full max-w-6xl px-6 pb-12 lg:pb-14">
           <Reveal>
-            <ProductTour locale={locale} />
+            <FeatureCards />
           </Reveal>
-          <p className="bee-micro mt-3 text-center">{t("demoNote")}</p>
         </section>
 
-        {/* El panorama narrativo va DESPUÉS del producto: quien llega aquí
-            ya vio la landing y quiere ver la herramienta, no que se la
-            expliquen otra vez antes de enseñársela. */}
+        {/* El panorama narrativo va DESPUÉS: quien llega aquí ya vio la
+            landing y quiere ver en qué se diferencia BEE, no que se lo
+            expliquen otra vez antes de enseñárselo. */}
         <HowItWorks locale={locale} />
 
-        <section className="mx-auto w-full max-w-6xl px-6 py-12 lg:py-14">
-          <Reveal>
-            <div className="mb-5">
-              <p className="bee-eyebrow">{tCrm("eyebrow")}</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{tCrm("title")}</h2>
-              <p className="bee-caption mt-3 max-w-2xl">{tCrm("caption")}</p>
-            </div>
-            <CrmPreview locale={locale} />
-          </Reveal>
-        </section>
-
-        {/* Ventas + FAQ — cada una trae su propio cierre (simulador + CTAs,
-            y el acordeón de objeciones), así que no hace falta un tercer
-            cierre genérico después de esto. */}
+        {/* Ventas + FAQ — cada una trae su propio cierre (la comparación con
+            un CRM y con las herramientas de intent, y el acordeón de
+            objeciones), así que no hace falta un tercer cierre genérico. */}
         <MarketingSales />
         <MarketingFAQ />
       </main>

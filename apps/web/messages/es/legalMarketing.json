@@ -5,8 +5,8 @@
       "description": "El producto módulo por módulo: Señales, CRM, Estrategias, Pronóstico, Ventas, Calendario y Control — con los gráficos reales del dashboard."
     },
     "eyebrow": "Plataforma",
-    "heroTitle": "El producto, módulo por módulo.",
-    "heroSubtitle": "Cada capacidad de aquí corre hoy en producción — nada de lo que sigue es una promesa de roadmap.",
+    "heroTitle": "Un CRM guarda lo que ya pasó. BEE decide lo que sigue.",
+    "heroSubtitle": "Ocho capacidades que un CRM no tiene y una herramienta de intent no cierra. Las figuras son ilustrativas — los datos reales están en el sandbox.",
     "demoBadge": "Datos de ejemplo",
     "demoNote": "Todos los gráficos usan datos de ejemplo del demo — no una cuenta real.",
     "months": {
@@ -29,12 +29,7 @@
         ],
         "chart": {
           "title": "Colmena de intención"
-        },
-        "tableHeaders": [
-          "Señal",
-          "Tipo",
-          "Score"
-        ]
+        }
       },
       "crm": {
         "eyebrow": "CRM",
@@ -51,13 +46,7 @@
           "qualified": "Calificado",
           "proposal": "Propuesta",
           "closing": "Cierre"
-        },
-        "tableHeaders": [
-          "Cuenta",
-          "Etapa",
-          "Monto",
-          "Score"
-        ]
+        }
       },
       "estrategias": {
         "eyebrow": "Estrategias",
@@ -73,13 +62,7 @@
           "email": "Email",
           "linkedin": "LinkedIn",
           "call": "Llamada"
-        },
-        "tableHeaders": [
-          "Cuenta",
-          "Industria",
-          "País",
-          "Score"
-        ]
+        }
       },
       "pronostico": {
         "eyebrow": "Pronóstico",
@@ -93,13 +76,7 @@
         "chart": {
           "title": "Proyección realista",
           "unit": "operaciones"
-        },
-        "tableHeaders": [
-          "Mes",
-          "Oportunidades",
-          "Monto esperado",
-          "Peso"
-        ]
+        }
       },
       "ventas": {
         "eyebrow": "Ventas",
@@ -112,13 +89,7 @@
         ],
         "chart": {
           "title": "Ganado vs. meta (k)"
-        },
-        "tableHeaders": [
-          "Cuenta",
-          "Monto",
-          "Fecha",
-          "Score"
-        ]
+        }
       },
       "calendario": {
         "eyebrow": "Calendario",
@@ -135,13 +106,7 @@
           "week": "Esta semana",
           "overdue": "Vencidas",
           "weekDone": "de la semana completada"
-        },
-        "tableHeaders": [
-          "Cuenta",
-          "Fecha",
-          "Etapa",
-          "Score"
-        ]
+        }
       },
       "control": {
         "eyebrow": "Control",
@@ -158,56 +123,53 @@
           "queue": "Cola",
           "facts": "Hechos",
           "errors": "Errores"
-        },
-        "tableHeaders": [
-          "Cuenta",
-          "Decisión",
-          "Prioridad",
-          "Confianza"
-        ]
+        }
       }
     },
     "closingTitle": "¿Listo para ver estos módulos trabajando sobre tu propio pipeline?",
     "ctaStart": "Comenzar ahora",
     "ctaDemo": "Ver demo en vivo",
-    "signalTypes": {
-      "funding_round": "Ronda de financiación",
-      "leadership_change": "Cambio de liderazgo",
-      "tech_adoption": "Cambio de stack",
-      "expansion": "Expansión"
-    },
-    "tour": {
-      "opportunities": "{count} oportunidades",
-      "reviewYes": "Revisión manual",
-      "reviewNo": "Automática",
-      "hotYes": "Caliente",
-      "hotNo": "Normal",
-      "stats": {
-        "signals": "Señales",
-        "accounts": "Cuentas",
-        "qualified": "Calificadas",
-        "open": "Abiertas",
-        "pipeline": "Pipeline",
-        "hot": "Calientes",
-        "playbooks": "Jugadas",
-        "ready": "Listas",
-        "industries": "Industrias",
-        "months": "Meses",
-        "projected": "Proyectado",
-        "won": "Cerradas",
-        "revenue": "Ingresos",
-        "winRate": "Tasa de cierre",
-        "scheduled": "Con fecha",
-        "decisions": "Decisiones",
-        "review": "En revisión",
-        "auto": "Automáticas"
+    "cards": {
+      "signal": {
+        "eyebrow": "Señales",
+        "title": "Actúa sobre la señal, no sobre el formulario.",
+        "text": "Un CRM empieza a existir cuando alguien ya levantó la mano. BEE empieza antes: una ronda, una contratación clave, un cambio de stack. Cuando el lead aparece en tu CRM, la conversación ya debería estar abierta."
+      },
+      "hive": {
+        "eyebrow": "Colmena de intención",
+        "title": "Todo el mercado en una sola vista.",
+        "text": "No una lista ordenada por fecha de carga, sino el mercado entero con la intención de cada cuenta al mismo tiempo. Lo caliente está al centro y lo tibio en los bordes: se ve dónde mirar antes de leer un solo nombre."
+      },
+      "window": {
+        "eyebrow": "Ventana de compra",
+        "title": "El momento, no solo el contacto.",
+        "text": "Toda cuenta tiene semanas en las que se decide y meses en los que no. BEE estima esa ventana y la ordena por urgencia real, no por antigüedad en el pipeline."
+      },
+      "pipeline": {
+        "eyebrow": "Pipeline",
+        "title": "El tablero que ya conoces, alimentado por algo que ningún CRM tiene.",
+        "text": "Cinco etapas, arrastrar entre columnas, cierres en verde: por fuera es un tablero. La diferencia es de dónde salen las tarjetas — nadie las carga a mano, llegan de la señal, ya puntuadas y con su jugada escrita."
+      },
+      "play": {
+        "eyebrow": "Copiloto BEE",
+        "title": "Una jugada lista, no una lista de tareas.",
+        "text": "Argumento, canal y momento, escritos para esa cuenta y ese disparador. Una herramienta de intent te dice a quién; BEE además te dice qué decir, y su IA es propia — no un chat genérico pegado al costado."
+      },
+      "sales": {
+        "eyebrow": "Ventas",
+        "title": "El resultado, cerrado y medido.",
+        "text": "Lo ganado por mes contra tu meta, con el ranking del equipo y la tasa de cierre real. Es la única parte de BEE que se pinta de verde, porque es la única que habla de dinero cobrado."
+      },
+      "learn": {
+        "eyebrow": "Aprendizaje",
+        "title": "Cada cierre corrige la siguiente jugada.",
+        "text": "Ganado y perdido vuelven al sistema: qué argumento funcionó, en qué canal, en qué momento. Un CRM guarda el resultado; BEE lo usa. Es el circuito que ninguna herramienta de listas puede cerrar."
+      },
+      "network": {
+        "eyebrow": "Red",
+        "title": "El camino más corto ya existe.",
+        "text": "Antes de escribir en frío, BEE busca si alguien de tu equipo ya tiene una ruta a esa cuenta. La presentación tibia gana a la mejor secuencia en frío, y esa ruta ya estaba en tus propios datos."
       }
-    },
-    "crmPreview": {
-      "eyebrow": "Tablero CRM",
-      "title": "El mismo tablero que usas dentro de BEE.",
-      "caption": "Cinco columnas, un color por etapa, y la intensidad de cada tarjeta según su score. Dentro del producto se arrastra entre columnas; aquí solo es la foto.",
-      "empty": "Sin oportunidades"
     }
   },
   "soluciones": {
