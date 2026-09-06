@@ -4,7 +4,8 @@
     "login": "Iniciar sesión",
     "tryFree": "Probar sin registrarte",
     "contact": "Contacto",
-    "docs": "Documentación"
+    "docs": "Documentación",
+    "waitlist": "Únete a la lista"
   },
   "footer": {
     "tagline": "Inteligencia comercial autónoma para equipos de revenue que no tienen tiempo de buscar la señal — solo de actuar sobre ella.",
@@ -46,8 +47,11 @@
     "signup": {
       "emailLabel": "Correo de trabajo",
       "placeholder": "tu@empresa.com",
-      "cta": "Crear cuenta",
-      "orTry": "o prueba con datos de ejemplo, sin registro →"
+      "cta": "Unirme a la lista",
+      "sending": "Apuntando…",
+      "success": "Listo — estás en la lista. Te escribimos en cuanto abramos.",
+      "error": "No pudimos apuntarte. Inténtalo de nuevo en un momento.",
+      "orTry": "o pruébalo ahora con datos de ejemplo, sin registro →"
     },
     "features": {
       "signal": {

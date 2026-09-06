@@ -3,6 +3,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { HeroAtmosphere } from "@/components/marketing/hero-atmosphere";
 import { HeroBento } from "@/components/marketing/hero-bento";
+import { WaitlistForm } from "@/components/marketing/waitlist-form";
 import { MarketingHeader } from "@/components/marketing-header";
 import type { Locale } from "@/i18n/locales";
 
@@ -63,36 +64,8 @@ export default async function Home() {
             {t("heroSubtitle")}
           </p>
 
-          <form action="/register" method="get" className="mt-5 flex w-full max-w-md flex-col gap-2 sm:mt-7 sm:flex-row sm:gap-2">
-            <label htmlFor="hero-email" className="sr-only">
-              {t("signup.emailLabel")}
-            </label>
-            {/* .bee-input's own height is the compact tier (2rem) — one
-                size smaller than .bee-btn's primary tier (2.25rem), by
-                design everywhere else. Here the two sit right next to
-                each other as one action, so the mismatch reads as a
-                bug: bumped this one input to the primary tier inline
-                rather than touching the shared class every other input
-                in the app still needs at its normal, smaller size.
-                flex-1 only from sm: up (the row layout, where it grows
-                to fill the width beside the button): on mobile the form
-                is flex-col, where flex-1's flex-basis:0% governs the
-                MAIN axis — height, in a column — and silently overrides
-                any explicit height. .bee-input's own width:100% already
-                gives it full mobile width without flex-1's help. */}
-            <input
-              id="hero-email"
-              name="email"
-              type="email"
-              required
-              placeholder={t("signup.placeholder")}
-              className="bee-input sm:flex-1"
-              style={{ height: "var(--bee-control-h-primary)" }}
-            />
-            <button type="submit" className="bee-btn bee-btn--primary bee-cta-lift shrink-0 justify-center">
-              {t("signup.cta")}
-            </button>
-          </form>
+          <WaitlistForm />
+
           <Link href="/probar" className="bee-micro mt-2 hover:text-foreground">
             {t("signup.orTry")}
           </Link>

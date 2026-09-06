@@ -17,11 +17,19 @@ class ContactSubmissionIn(BaseModel):
     which is how the endpoint tells them apart without a CAPTCHA.
     """
 
-    full_name: str = Field(min_length=1, max_length=255)
+    # Optional for the same reason as `message` below: the landing's waitlist
+    # form asks for an email and nothing else, because every extra field on a
+    # one-line signup costs conversions. /contacto still requires a name in
+    # its own UI.
+    full_name: str | None = Field(default=None, max_length=255)
     email: EmailStr
     company_name: str | None = Field(default=None, max_length=255)
     phone: str | None = Field(default=None, max_length=64)
-    message: str = Field(min_length=1, max_length=4000)
+    # Optional since the landing's waitlist form posts here too (source=
+    # "waitlist_*"): someone joining a waiting list has no message to write,
+    # and inventing one to satisfy a NOT NULL would put UI copy in the
+    # database. The /contacto form still requires it in its own UI.
+    message: str | None = Field(default=None, max_length=4000)
     source: str | None = Field(default=None, max_length=100)
     honeypot: str | None = Field(default=None, max_length=255)
 
@@ -33,3 +41,23 @@ class ContactSubmissionOut(BaseModel):
 
     id: uuid.UUID
     created_at: datetime
+
+
+class ContactSubmissionRow(BaseModel):
+    """One row of the BEE-team-only inbox listing. Deliberately omits
+    ``ip_address``: it exists for spam triage, not for reading."""
+
+    id: uuid.UUID
+    created_at: datetime
+    full_name: str | None
+    email: str
+    company_name: str | None
+    phone: str | None
+    message: str | None
+    source: str | None
+    status: str
+
+
+class ContactSubmissionListOut(BaseModel):
+    total: int
+    items: list[ContactSubmissionRow]

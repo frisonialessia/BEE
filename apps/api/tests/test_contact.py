@@ -62,7 +62,12 @@ class TestContactSubmission:
     def test_missing_required_field_returns_422_and_does_not_persist(
         self, client, session: Session
     ) -> None:
-        resp = client.post("/api/v1/contact", json={"email": "jane@example.com", "message": "hi"})
+        # full_name used to be the omitted field here. It became optional in
+        # migration 052 so the landing's waitlist can post an email and
+        # nothing else, so this now asserts on the one field that is still
+        # required — which is also the only one the endpoint cannot do
+        # anything useful without.
+        resp = client.post("/api/v1/contact", json={"full_name": "Jane", "message": "hi"})
         assert resp.status_code == 422
         assert session.exec(select(ContactSubmission)).first() is None
 
@@ -120,3 +125,95 @@ class TestContactSubmission:
         explicitly rather than rely on that being implicit)."""
         resp = client.post("/api/v1/contact", json=VALID_PAYLOAD)
         assert resp.status_code == 201
+
+
+class TestWaitlistSubmission:
+    """The landing's primary CTA posts here with an email and nothing else
+    (see migration 052 for why name and message became optional rather than
+    getting a second table and a second set of abuse defenses)."""
+
+    def test_email_only_submission_is_accepted(self, client, session: Session) -> None:
+        res = client.post(
+            "/api/v1/contact",
+            json={"email": "solo@example.com", "source": "waitlist_hero"},
+        )
+        assert res.status_code == 201, res.text
+
+        row = session.exec(
+            select(ContactSubmission).where(ContactSubmission.email == "solo@example.com")
+        ).one()
+        assert row.full_name is None
+        assert row.message is None
+        assert row.source == "waitlist_hero"
+
+    def test_email_is_still_required(self, client) -> None:
+        assert client.post("/api/v1/contact", json={"source": "waitlist_hero"}).status_code == 422
+
+    def test_honeypot_still_applies_to_the_waitlist(self, client, session: Session) -> None:
+        res = client.post(
+            "/api/v1/contact",
+            json={"email": "bot@example.com", "source": "waitlist_hero", "honeypot": "x"},
+        )
+        assert res.status_code == 201  # fake success, on purpose
+        assert (
+            session.exec(
+                select(ContactSubmission).where(ContactSubmission.email == "bot@example.com")
+            ).first()
+            is None
+        )
+
+    def test_signup_is_stored_and_still_201_when_the_mailer_blows_up(
+        self, client, session: Session, monkeypatch
+    ) -> None:
+        """The whole reason _notify_new_submission runs after the commit and
+        swallows everything: a broken mailer must never cost a signup, and
+        must never be visible to the person signing up either. This is the
+        exact failure mode that had password recovery reporting success while
+        delivering nothing for weeks — inverted."""
+        from app.core.config import get_settings
+        from app.services.omnichannel.providers import email as email_provider
+
+        monkeypatch.setattr(
+            get_settings(), "WAITLIST_NOTIFY_EMAIL", "founder@example.com", raising=False
+        )
+
+        def explode(self, payload):  # noqa: ANN001, ARG001
+            raise RuntimeError("smtp is on fire")
+
+        monkeypatch.setattr(email_provider.EmailProvider, "send", explode, raising=True)
+
+        res = client.post(
+            "/api/v1/contact", json={"email": "kept@example.com", "source": "waitlist_hero"}
+        )
+        assert res.status_code == 201, res.text
+        assert (
+            session.exec(
+                select(ContactSubmission).where(ContactSubmission.email == "kept@example.com")
+            ).first()
+            is not None
+        )
+
+    def test_nobody_is_emailed_when_no_notify_address_is_configured(
+        self, client, monkeypatch
+    ) -> None:
+        """Unset is the default and must stay a silent no-op, not an attempt
+        against a mock provider that logs a fake send on every signup."""
+        from app.core.config import get_settings
+        from app.services.omnichannel.providers import email as email_provider
+
+        monkeypatch.setattr(get_settings(), "WAITLIST_NOTIFY_EMAIL", None, raising=False)
+        calls: list[object] = []
+        monkeypatch.setattr(
+            email_provider.EmailProvider,
+            "send",
+            lambda self, payload: calls.append(payload),  # noqa: ARG005
+            raising=True,
+        )
+
+        assert (
+            client.post(
+                "/api/v1/contact", json={"email": "quiet@example.com", "source": "waitlist_hero"}
+            ).status_code
+            == 201
+        )
+        assert calls == []

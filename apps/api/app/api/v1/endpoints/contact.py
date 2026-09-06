@@ -30,6 +30,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlmodel import Session
 
+from app.core.config import get_settings
 from app.core.database import get_session
 from app.core.logging import get_logger
 from app.core.signup_guard import SignupGuard
@@ -71,11 +72,11 @@ def submit_contact(
         )
 
     submission = ContactSubmission(
-        full_name=data.full_name.strip(),
+        full_name=(data.full_name or "").strip() or None,
         email=data.email.strip().lower(),
         company_name=(data.company_name or "").strip() or None,
         phone=(data.phone or "").strip() or None,
-        message=data.message.strip(),
+        message=(data.message or "").strip() or None,
         source=data.source,
         ip_address=client_ip,
     )
@@ -84,4 +85,52 @@ def submit_contact(
     session.refresh(submission)
 
     logger.info("Contact submission received id=%s source=%s", submission.id, submission.source)
+
+    # AFTER the commit, and never able to undo it. The row is the record; the
+    # email is a convenience for whoever watches the inbox. Doing this the
+    # other way round is precisely how "recuperar contraseña" ended up
+    # reporting success to users while delivering nothing for weeks — a
+    # notification path that can fail must never be able to take the data
+    # with it. With WAITLIST_NOTIFY_EMAIL or SMTP unset this is a no-op and
+    # the submission is still safely stored.
+    _notify_new_submission(submission)
+
     return ContactSubmissionOut(id=submission.id, created_at=submission.created_at)
+
+
+def _notify_new_submission(submission: ContactSubmission) -> None:
+    """Best-effort "someone just signed up" email. Swallows everything."""
+    settings = get_settings()
+    recipient = settings.WAITLIST_NOTIFY_EMAIL
+    if not recipient:
+        return
+
+    try:
+        from app.services.omnichannel.interface import ChannelPayload
+        from app.services.omnichannel.providers.email import EmailProvider
+
+        who = submission.full_name or submission.email
+        lines = [
+            f"Email:    {submission.email}",
+            f"Nombre:   {submission.full_name or '—'}",
+            f"Empresa:  {submission.company_name or '—'}",
+            f"Teléfono: {submission.phone or '—'}",
+            f"Origen:   {submission.source or '—'}",
+            f"Fecha:    {submission.created_at.isoformat()}",
+        ]
+        if submission.message:
+            lines += ["", "Mensaje:", submission.message]
+
+        result = EmailProvider().send(
+            ChannelPayload(
+                channel="email",
+                recipient_id=recipient,
+                subject=f"BEE — nuevo registro: {who}",
+                body="\n".join(lines),
+            )
+        )
+        if not result.success:
+            # Warning, not an exception: the person is already stored.
+            logger.warning("contact: notification email failed for id=%s: %s", submission.id, result.error)
+    except Exception:  # noqa: BLE001 — a broken mailer must never lose a signup
+        logger.exception("contact: notification email raised for id=%s", submission.id)

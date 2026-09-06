@@ -4,7 +4,8 @@
     "login": "Sign in",
     "tryFree": "Try without signing up",
     "contact": "Contact",
-    "docs": "Documentation"
+    "docs": "Documentation",
+    "waitlist": "Join the list"
   },
   "footer": {
     "tagline": "Autonomous sales intelligence for revenue teams who don't have time to go looking for the signal — only to act on it.",
@@ -46,8 +47,11 @@
     "signup": {
       "emailLabel": "Work email",
       "placeholder": "you@company.com",
-      "cta": "Create account",
-      "orTry": "or try sample data, no sign-up →"
+      "cta": "Join the list",
+      "sending": "Adding you…",
+      "success": "You're on the list. We'll write as soon as we open up.",
+      "error": "We couldn't add you. Try again in a moment.",
+      "orTry": "or try it right now with sample data, no signup →"
     },
     "features": {
       "signal": {

@@ -80,8 +80,15 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-full items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-sm">
+        {/* The wordmark is the way back out. Someone who lands on a login
+            or signup form and decides they want to read about the product
+            first reaches for the logo — every other site trains them to.
+            Without this it was inert and the only way back to the landing
+            was the browser's back button. */}
         <div className="mb-4 flex justify-center">
-          <Logo />
+          <Link href="/" aria-label="BEE" className="rounded-lg transition-opacity hover:opacity-80">
+            <Logo />
+          </Link>
         </div>
 
         <div className="bee-bento bee-bento-pad">
@@ -153,8 +160,12 @@ export default function LoginPage() {
 
         <p className="bee-caption mt-4 text-center">
           {t("noOrgYet")}{" "}
-          <Link href="/register" className="font-medium text-foreground underline underline-offset-4">
-            {t("createOne")}
+          {/* Was a link to /register. Signup is closed until email
+              verification exists, so sending someone there just to be
+              refused by the invite gate wastes their time. /login itself
+              stays fully functional for existing accounts. */}
+          <Link href="/#waitlist" className="font-medium text-foreground underline underline-offset-4">
+            {t("waitlistLink")}
           </Link>
         </p>
       </div>

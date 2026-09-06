@@ -30,6 +30,7 @@ from app.api.v1.endpoints import (
     health,
     insights,
     integrations,
+    internal_contact,
     internal_digest,
     internal_job_queue,
     internal_market_scan,
@@ -68,6 +69,7 @@ api_router.include_router(autopilot.router)
 api_router.include_router(federated_intelligence.router)
 api_router.include_router(ml_training.router)
 api_router.include_router(internal_support.router)
+api_router.include_router(internal_contact.router)
 api_router.include_router(internal_market_scan.router)
 api_router.include_router(internal_job_queue.router)
 api_router.include_router(internal_digest.router)

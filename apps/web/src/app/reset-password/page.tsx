@@ -51,8 +51,15 @@ function ResetPasswordForm() {
   return (
     <div className="flex min-h-full items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-sm">
+        {/* The wordmark is the way back out. Someone who lands on a login
+            or signup form and decides they want to read about the product
+            first reaches for the logo — every other site trains them to.
+            Without this it was inert and the only way back to the landing
+            was the browser's back button. */}
         <div className="mb-4 flex justify-center">
-          <Logo />
+          <Link href="/" aria-label="BEE" className="rounded-lg transition-opacity hover:opacity-80">
+            <Logo />
+          </Link>
         </div>
 
         <div className="bee-bento bee-bento-pad">

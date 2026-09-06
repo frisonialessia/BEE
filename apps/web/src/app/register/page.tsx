@@ -22,6 +22,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [signupClosed, setSignupClosed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -38,7 +39,16 @@ export default function RegisterPage() {
       });
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : t("genericError"));
+      // 403 here is specifically SIGNUP_INVITE_CODE rejecting them (see
+      // app/api/v1/endpoints/auth.py's register()). Until email
+      // verification exists that gate is what keeps a stranger from
+      // claiming another company's domain, so the honest answer is not
+      // "invalid invite code" — it is "we are not open, here is the list".
+      if (err instanceof ApiError && err.status === 403) {
+        setSignupClosed(true);
+      } else {
+        setError(err instanceof ApiError ? err.message : t("genericError"));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -47,9 +57,29 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-full items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-sm">
+        {/* The wordmark is the way back out. Someone who lands on a login
+            or signup form and decides they want to read about the product
+            first reaches for the logo — every other site trains them to.
+            Without this it was inert and the only way back to the landing
+            was the browser's back button. */}
         <div className="mb-4 flex justify-center">
-          <Logo />
+          <Link href="/" aria-label="BEE" className="rounded-lg transition-opacity hover:opacity-80">
+            <Logo />
+          </Link>
         </div>
+
+        {signupClosed && (
+          <div className="bee-bento bee-bento-pad mb-4">
+            <h1 className="text-lg font-semibold">{t("closedTitle")}</h1>
+            <p className="bee-caption mt-2">{t("closedBody")}</p>
+            <Link
+              href="/#waitlist"
+              className="bee-btn bee-btn--primary bee-cta-lift mt-4 w-full justify-center"
+            >
+              {t("waitlistLink")}
+            </Link>
+          </div>
+        )}
 
         <div className="bee-bento bee-bento-pad">
           <p className="bee-eyebrow">{t("eyebrow")}</p>

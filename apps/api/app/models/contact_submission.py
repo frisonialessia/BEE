@@ -35,11 +35,14 @@ class ContactSubmission(TimestampMixin, table=True):
 
     id: uuid.UUID = Field(default_factory=new_uuid, primary_key=True, index=True)
 
-    full_name: str = Field(nullable=False, max_length=255)
+    full_name: str | None = Field(default=None, nullable=True, max_length=255)
     email: str = Field(nullable=False, max_length=255, index=True)
     company_name: str | None = Field(default=None, max_length=255)
     phone: str | None = Field(default=None, max_length=64)
-    message: str = Field(nullable=False, max_length=4000)
+    # Nullable: the landing's waitlist form writes rows here with no message
+    # at all (see ContactSubmissionIn.message). `source` is what tells the two
+    # kinds of row apart, not the presence of text.
+    message: str | None = Field(default=None, nullable=True, max_length=4000)
 
     # Which CTA sent them here (e.g. "hero_primary", "header", "closing_cta")
     # — lets whoever triages these see which part of the page is actually

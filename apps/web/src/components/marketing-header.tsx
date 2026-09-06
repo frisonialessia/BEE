@@ -48,9 +48,17 @@ export function MarketingHeader() {
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">
+          {/* Was "Iniciar sesión". Signup is closed until email
+              verification exists (see waitlist-form.tsx), so the header
+              advertises the waiting list instead — /login still works by
+              direct URL for the people who already have accounts, it is
+              just not what a visitor arriving from a launch post is
+              pointed at. /#waitlist rather than a bare #waitlist so this
+              also works from /funcionalidades and /contacto, which have
+              no hero form of their own. */}
           <span className="hidden sm:inline-flex">
-            <Link href="/login" className="bee-btn bee-btn--secondary">
-              {t("login")}
+            <Link href="/#waitlist" className="bee-btn bee-btn--secondary">
+              {t("waitlist")}
             </Link>
           </span>
           <Link href="/probar" className="bee-btn bee-btn--primary bee-cta-lift">

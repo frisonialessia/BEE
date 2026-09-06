@@ -525,6 +525,11 @@ class Settings(BaseSettings):
     EMAIL_SMTP_USER: str | None = None
     EMAIL_SMTP_PASSWORD: str | None = None
     EMAIL_FROM_ADDRESS: str | None = None
+    # Where a new public waitlist/contact submission is announced. Unset (the
+    # default) means nobody is emailed — the submission is still persisted,
+    # which is the part that must never depend on mail working. See
+    # app.api.v1.endpoints.contact for why that order is not negotiable here.
+    WAITLIST_NOTIFY_EMAIL: str | None = None
 
     # ----- AI providers -------------------------------------------------------
     # AI_PROVIDER controls which LLM is used for strategy + artifact generation.
