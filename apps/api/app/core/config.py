@@ -190,6 +190,25 @@ class Settings(BaseSettings):
     # timing-safe comparison. None (the default) keeps registration fully
     # open, same as before this existed.
     SIGNUP_INVITE_CODE: str | None = None
+
+    # ----- Public contact / waitlist form abuse limit ---------------------------
+    # Per-IP submissions to POST /api/v1/contact per rolling hour. 0 disables.
+    #
+    # Deliberately much higher than SIGNUP_RATE_LIMIT_PER_HOUR, and it was
+    # 5 hardcoded until the landing's primary CTA became a waiting list.
+    # Registration is a once-in-a-lifetime act per person, so 5/hour/IP is
+    # generous there. Joining a list from a link in a social post is not:
+    # mobile carriers put large numbers of subscribers behind a handful of
+    # public addresses (CGNAT), so on a launch day "one IP" can be a few
+    # hundred genuinely different people on the same network. At 5 the
+    # sixth of them is told "no pudimos apuntarte", which reads as a broken
+    # product rather than as a rate limit — the exact failure the honeypot
+    # exists to avoid needing.
+    #
+    # The honeypot (see the endpoint) is what actually stops bots; this is
+    # the backstop against someone scripting the form, and 30/hour still
+    # makes bulk abuse pointless.
+    CONTACT_RATE_LIMIT_PER_HOUR: int = 30
     # Per-IP registration attempts allowed per rolling hour, independent of
     # the invite code above (a leaked/brute-forced code still hits this). 0
     # disables the check entirely.

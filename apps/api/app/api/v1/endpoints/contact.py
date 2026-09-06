@@ -40,8 +40,7 @@ from app.schemas.contact import ContactSubmissionIn, ContactSubmissionOut
 logger = get_logger(__name__)
 router = APIRouter(prefix="/contact", tags=["Public Contact"])
 
-_RATE_LIMIT_PER_HOUR = 5
-_guard = SignupGuard(_RATE_LIMIT_PER_HOUR, redis_namespace="contact_form")
+_guard = SignupGuard(get_settings().CONTACT_RATE_LIMIT_PER_HOUR, redis_namespace="contact_form")
 
 
 @router.post(

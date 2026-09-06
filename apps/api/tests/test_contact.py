@@ -12,6 +12,7 @@ import pytest
 from sqlmodel import Session, select
 
 from app.api.v1.endpoints import contact as contact_endpoint
+from app.core.config import get_settings
 from app.models.contact_submission import ContactSubmission
 
 
@@ -97,10 +98,11 @@ class TestContactSubmission:
         assert "id" in resp.json()
         assert session.exec(select(ContactSubmission)).first() is None
 
-    def test_rate_limit_blocks_after_five_submissions_from_same_client(
+    def test_rate_limit_blocks_once_the_configured_limit_is_reached(
         self, client, session: Session
     ) -> None:
-        for i in range(5):
+        limit = get_settings().CONTACT_RATE_LIMIT_PER_HOUR
+        for i in range(limit):
             resp = client.post(
                 "/api/v1/contact",
                 json={**VALID_PAYLOAD, "email": f"jane{i}@example.com"},
@@ -115,7 +117,7 @@ class TestContactSubmission:
 
         # The blocked attempt must not have been persisted either.
         rows = session.exec(select(ContactSubmission)).all()
-        assert len(rows) == 5
+        assert len(rows) == limit
 
     def test_no_api_key_required(self, client) -> None:
         """The whole point of this endpoint — a real anonymous visitor has
