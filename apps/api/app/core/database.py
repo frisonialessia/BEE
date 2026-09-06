@@ -33,8 +33,19 @@ def _build_engine() -> Engine:
     SQLAlchemy's own — see ``Settings.DB_POOL_SIZE``'s docstring for why.
     """
     connect_args: dict = {}
+    uri = settings.sqlalchemy_database_uri
+
+    if uri.startswith("sqlite"):
+        # SQLite's pool takes none of the arguments below — passing them is a
+        # TypeError at import time, not a warning, so the whole app fails to
+        # start. Only reachable when DATABASE_URL points at SQLite, which is
+        # what the hermetic dry run (scripts/simulate_signal.py) does so it
+        # can run with no database at all.
+        connect_args["check_same_thread"] = False
+        return create_engine(uri, echo=settings.DEBUG, connect_args=connect_args)
+
     return create_engine(
-        settings.sqlalchemy_database_uri,
+        uri,
         echo=settings.DEBUG,
         pool_pre_ping=True,
         pool_size=settings.DB_POOL_SIZE,

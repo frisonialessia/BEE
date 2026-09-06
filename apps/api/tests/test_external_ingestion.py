@@ -376,3 +376,105 @@ class TestIngestionWorker:
         replayed_task = mock_process.call_args[0][0]
         assert replayed_task.task_id == task.task_id
         assert replayed_task.provider == "linkedin"
+
+
+# ---------------------------------------------------------------------------
+# Enrichment persistence (regression)
+# ---------------------------------------------------------------------------
+
+
+class TestEnrichmentPersistence:
+    """``signal.raw_payload`` is a plain JSON column with no mutation tracking.
+
+    Mutating the loaded dict and re-assigning the *same* object makes SQLAlchemy
+    compare old against new, find them equal, and emit no UPDATE — the enrichment
+    is then visible inside the writing session but never reaches the row. Every
+    assertion here reads through a *second* session on purpose; a same-session
+    read passes even when nothing was written.
+    """
+
+    def _make_signal(self, engine):
+        import uuid as _uuid
+        from datetime import UTC, datetime
+
+        from sqlmodel import Session
+
+        from app.models.base import SignalType
+        from app.models.signal import Signal, SignalSource
+
+        signal_id = _uuid.uuid4()
+        signal = Signal(
+            id=signal_id,
+            signal_type=SignalType.FUNDING_ROUND,
+            source=SignalSource.WEBHOOK,
+            title="Series B",
+            score=80.0,
+            raw_payload={"company": {"domain": "techfinance.io"}},
+            detected_at=datetime.now(UTC),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+        with Session(engine) as session:
+            session.add(signal)
+            session.commit()
+        return signal_id
+
+    def test_apply_enrichment_survives_the_session(self, engine):
+        from sqlmodel import Session
+
+        from app.models.signal import Signal
+
+        signal_id = self._make_signal(engine)
+        enrichment = {
+            "providers_called": ["linkedin"],
+            "lead": {"title": "VP Sales"},
+            "linkedin": {"success": True, "mock": True},
+        }
+
+        worker = IngestionWorker()
+        with Session(engine) as session:
+            worker._apply_enrichment_and_reenrich(session, signal_id, None, enrichment)
+            session.commit()
+
+        with Session(engine) as session:
+            raw = session.get(Signal, signal_id).raw_payload
+        assert raw["external_enrichment"] == enrichment
+        assert raw["lead"]["title"] == "VP Sales"
+        assert raw["company"] == {"domain": "techfinance.io"}
+
+    def test_signal_enrichment_task_survives_the_session(self, engine):
+        from contextlib import contextmanager
+
+        from sqlmodel import Session
+
+        import app.services.external_api.worker as worker_module
+        from app.models.signal import Signal
+
+        signal_id = self._make_signal(engine)
+        enrichment = {"providers_called": ["linkedin"], "lead": {"title": "CTO"}}
+
+        @contextmanager
+        def _scope():
+            with Session(engine) as session:
+                yield session
+                session.commit()
+
+        task = IngestionTask(
+            task_type=IngestionTaskType.SIGNAL_ENRICHMENT,
+            provider="linkedin",
+            payload={},
+            signal_id=str(signal_id),
+        )
+
+        with (
+            patch.object(worker_module, "session_scope", _scope),
+            patch.object(
+                ExternalAPIOrchestrator, "enrich_lead_from_signal", return_value=enrichment
+            ),
+        ):
+            IngestionWorker()._process_signal_enrichment(task)
+
+        with Session(engine) as session:
+            raw = session.get(Signal, signal_id).raw_payload
+        assert raw["external_enrichment"] == enrichment
+        assert raw["lead"]["title"] == "CTO"

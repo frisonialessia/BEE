@@ -123,22 +123,15 @@ def _capture_logs() -> Generator[_LogCapture, None, None]:
     handler = _LogCapture()
     handler.setFormatter(logging.Formatter("%(levelname)-8s | %(name)s | %(message)s"))
     handler.setLevel(logging.DEBUG)
-    loggers = (
-        "app",
-        "app.services.external_api",
-        "app.api",
-        "app.services.signal_engine",
-        "app.services.strategy_generator",
-    )
-    for name in loggers:
-        log = logging.getLogger(name)
-        log.setLevel(logging.INFO)
-        log.addHandler(handler)
+    # Only the "app" root: every BEE logger propagates up to it, so attaching
+    # to the children as well captured (and printed) each record twice.
+    log = logging.getLogger("app")
+    log.setLevel(logging.INFO)
+    log.addHandler(handler)
     try:
         yield handler
     finally:
-        for name in loggers:
-            logging.getLogger(name).removeHandler(handler)
+        log.removeHandler(handler)
 
 
 def _setup_sqlite_app():
@@ -187,6 +180,18 @@ def _setup_sqlite_app():
 def run_inline(*, simulate_failure: bool = False) -> int:
     """Run full pipeline in-process with SQLite."""
     import os
+
+    # Hermetic by construction. DATABASE_URL and VECTOR_STORE_BACKEND are
+    # forced rather than defaulted: a developer's .env points at a real
+    # Postgres, and both the app's startup init_db() and PgVectorStore open
+    # their own connections outside the session this script injects — which
+    # buried the run in connection tracebacks on a machine with no database,
+    # in a script whose whole promise is "no running server required".
+    os.environ["DATABASE_URL"] = "sqlite://"
+    os.environ["VECTOR_STORE_BACKEND"] = "mock"
+    # DEBUG=true in a local .env turns on SQLAlchemy's statement echo, which
+    # drowns this script's own pipeline trace in thousands of PRAGMA lines.
+    os.environ["DEBUG"] = "false"
 
     # Dry-run env: enable ingestion + signatures, use test secret
     test_secret = "dry-run-webhook-secret-do-not-use-in-prod"

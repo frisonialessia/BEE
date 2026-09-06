@@ -254,7 +254,11 @@ class IngestionWorker:
                 logger.warning("IngestionWorker: signal %s not found", task.signal_id)
                 return
 
-            raw = signal.raw_payload or {}
+            # A copy, not the loaded dict: SQLAlchemy compares old and new by
+            # value, so re-assigning the *same* mutated object is a no-op and
+            # the UPDATE is never emitted (the change is only visible inside
+            # this session, which is why tests never caught it).
+            raw = dict(signal.raw_payload or {})
             orchestrator = ExternalAPIOrchestrator(session)
             enrichment = orchestrator.enrich_lead_from_signal(raw)
             raw["external_enrichment"] = enrichment
@@ -334,7 +338,8 @@ class IngestionWorker:
         if not signal:
             return
 
-        raw = signal.raw_payload or {}
+        # Copy before mutating — see _process_signal_enrichment for why.
+        raw = dict(signal.raw_payload or {})
         raw["external_enrichment"] = enrichment
         raw["lead"] = enrichment.get("lead", raw.get("lead", {}))
         raw["company"] = enrichment.get("company", raw.get("company", {}))

@@ -39,7 +39,7 @@ Run what CI runs. It's fast and it's the whole review's first pass:
 
 ```bash
 cd apps/api
-pytest                 # 1,277 tests, hermetic — no Postgres, no Redis, no network
+pytest                 # 1,279 tests, hermetic — no Postgres, no Redis, no network
 ruff check app tests
 
 cd apps/web
