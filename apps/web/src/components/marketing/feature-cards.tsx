@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
-import { SALES, TONE, mix, tint } from "@/components/charts/palette";
+import { HIVE_RAMP, REST, SALES, TONE, tint } from "@/components/charts/palette";
+import { hexagonPath, layoutRadialHive, rampIndex } from "@/lib/visualization/honeycomb-radial";
 
 /**
  * Por qué BEE no es un CRM, en tarjetas.
@@ -84,30 +85,37 @@ function Bars({ hue, values }: { hue: string; values: number[] }) {
   );
 }
 
-/** Panal: el mercado entero mirado de una vez, cada celda una cuenta. */
-function Hive({ hue }: { hue: string }) {
-  // Tres anillos alrededor de un centro. Las coordenadas son axiales
-  // (q, r) convertidas a píxeles — la misma geometría del panal del
-  // producto, sin sus datos.
-  const cells: { q: number; r: number }[] = [];
-  for (let q = -3; q <= 3; q++) {
-    for (let r = Math.max(-3, -q - 3); r <= Math.min(3, -q + 3); r++) cells.push({ q, r });
-  }
-  const R = 11;
-  const W = Math.sqrt(3) * R;
+/** Panal: el mismo del sandbox, no una aproximación.
+ *
+ *  El primer intento dibujaba tres anillos concéntricos de un solo tono, y
+ *  no se parecía: la colmena de BEE reparte las celdas en espiral por calor
+ *  (la más caliente al centro) y las pinta con HIVE_RAMP, trece pasos que
+ *  van del miel profundo al lavanda. Aquí se reusan las MISMAS funciones que
+ *  usa el producto — `layoutRadialHive`, `hexagonPath`, `rampIndex` — que
+ *  son puras, así que se puede dibujar en el servidor con un tamaño fijo sin
+ *  volver la tarjeta un componente de cliente ni medir su caja.
+ *
+ *  Lo único que no viene del producto son los datos, porque aquí no hay:
+ *  61 celdas (cuatro anillos) y el color por posición, sin cuentas detrás.
+ */
+function Hive() {
+  const COUNT = 61;
+  const W = 260;
+  const H = 176;
+  const layout = layoutRadialHive(COUNT, W, H, { maxRadius: 14 });
+  const steps = HIVE_RAMP.length;
   return (
-    <svg viewBox="-100 -92 200 184" className="h-full w-full" aria-hidden>
-      {cells.map(({ q, r }) => {
-        const x = W * (q + r / 2);
-        const y = 1.5 * R * r;
-        const ring = Math.max(Math.abs(q), Math.abs(r), Math.abs(-q - r));
-        const fill = ring === 0 ? hue : ring === 1 ? tint(hue, 70) : ring === 2 ? tint(hue, 45) : mix(hue, 14);
-        const pts = Array.from({ length: 6 }, (_, i) => {
-          const a = (Math.PI / 180) * (60 * i - 30);
-          return `${x + (R - 1.1) * Math.cos(a)},${y + (R - 1.1) * Math.sin(a)}`;
-        }).join(" ");
-        return <polygon key={`${q},${r}`} points={pts} fill={fill} />;
-      })}
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-full w-full" aria-hidden>
+      {layout.ghosts.map((g, i) => (
+        <path key={`g${i}`} d={hexagonPath(g.x, g.y, layout.radius - 1)} fill={REST} />
+      ))}
+      {layout.cells.map((c, i) => (
+        <path
+          key={`c${i}`}
+          d={hexagonPath(c.x, c.y, layout.radius - 1)}
+          fill={HIVE_RAMP[rampIndex(i, c.ring, COUNT, steps)]}
+        />
+      ))}
     </svg>
   );
 }
@@ -174,8 +182,18 @@ function Loop({ hue }: { hue: string }) {
         strokeWidth="7"
         strokeLinecap="round"
       />
-      {[28, 130, 232].map((x) => (
-        <circle key={x} cx={x} cy={52} r="11" fill={hue} />
+      {[28, 130, 232].map((x, i) => (
+        <circle
+          key={x}
+          cx={x}
+          cy={52}
+          r="11"
+          // El último nodo es el cierre: dinero ganado, y por eso verde. Es
+          // la misma excepción que ya tienen el paso "Cliente" del embudo y
+          // la columna "Cerradas" del tablero (DESIGN_BRIEF §2.2) — el resto
+          // del lazo es el aprendizaje, que no es dinero y se queda en lila.
+          fill={i === 2 ? SALES.won : hue}
+        />
       ))}
     </svg>
   );
@@ -232,7 +250,7 @@ function Figure({ id, hue }: { id: CardId; hue: string }) {
     case "signal":
       return <Bars hue={hue} values={[22, 34, 30, 48, 62, 58, 84, 100]} />;
     case "hive":
-      return <Hive hue={hue} />;
+      return <Hive />;
     case "window":
       return <Window hue={hue} />;
     case "pipeline":
