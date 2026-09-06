@@ -329,3 +329,16 @@ Use `init_db()` only for local dev — production must use Alembic.
 
 Built on **SOLID** principles, ready to grow into a full market-intelligence
 platform.
+
+---
+
+## 9. License
+
+MIT — see [LICENSE](LICENSE). Clone it, change it, ship it, sell it; keep the
+copyright notice.
+
+Two things the license does not cover, because they are not code: the BEE
+name and the honeycomb mark are not granted with it, and the sample data
+under `apps/web/src/lib/sample-data.ts` is fictional — the companies in it do
+not exist and it is there so the sandbox has something to draw.
+
