@@ -255,31 +255,33 @@
     "companyPlaceholder": "Acme Inc",
     "phoneLabel": "Teléfono",
     "phonePlaceholder": "+54 9 11 0000 0000",
-    "messageLabel": "Cuéntanos qué necesitas",
+    "messageLabel": "Cuéntame qué necesitas",
     "messagePlaceholder": "Tamaño de tu equipo comercial, qué CRM usas hoy, qué te gustaría automatizar…",
     "honeypotLabel": "No completar este campo",
     "submit": "Enviar mensaje",
     "submitting": "Enviando…",
     "successTitle": "Mensaje enviado",
-    "successBody": "Recibimos tu mensaje. Te vamos a responder por email en menos de 24 horas hábiles.",
-    "genericError": "No pudimos enviar tu mensaje. Prueba de nuevo en un momento."
+    "successBody": "Recibí tu mensaje y queda guardado. Te respondo al correo que dejaste.",
+    "genericError": "No se pudo enviar tu mensaje. Prueba de nuevo en un momento."
   },
   "contacto": {
     "meta": {
-      "title": "Contacto — BEE",
-      "description": "Habla con el equipo de BEE. Te respondemos en menos de 24 horas hábiles."
+      "title": "Escribe a BEE",
+      "description": "BEE es un proyecto de código abierto, no una oferta de venta. Escribe si tienes preguntas sobre la plataforma o el código."
     },
     "eyebrow": "Contacto",
-    "heroTitle": "Este código es abierto. Pregúntanos lo que necesites.",
-    "heroSubtitle": "BEE es un proyecto de código abierto, no una oferta de venta — escríbenos si tienes preguntas específicas sobre la plataforma o el código, y te respondemos en menos de 24 horas hábiles.",
-    "formEyebrow": "Escríbenos",
-    "formPromise": "Te respondemos en menos de 24 horas hábiles.",
+    "heroTitle": "Este código es abierto. Pregunta lo que necesites.",
+    "heroSubtitle": "BEE es un proyecto de código abierto, no una oferta de venta — si tienes preguntas específicas sobre la plataforma o el código, utiliza el formulario de contacto.",
+    "formEyebrow": "Escribe a BEE",
+    "formPromise": "Detrás de BEE hay una sola persona, no un equipo de ventas.",
     "afterSubmitTitle": "¿Qué pasa después de enviar esto?",
-    "afterSubmitBody": "Un mensaje real llega directo a nuestro equipo — queda registrado, nunca se descarta en silencio. Te contactamos por el email que dejes aquí.",
+    "afterSubmitBody": "Tu mensaje se guarda de verdad, nunca se descarta en silencio. Lo leo yo, y te respondo al correo que dejes aquí — sin promesas de plazo que no pueda cumplir.",
     "haveAccountTitle": "¿Ya tienes cuenta?",
-    "haveAccountBody": "Este formulario es para organizaciones nuevas. Si ya usas BEE, inicia sesión directamente en vez de escribirnos aquí.",
+    "haveAccountBody": "Si ya usas BEE, inicia sesión directamente. También puedes utilizar la waitlist.",
     "mvpNoticeTitle": "Esto es un MVP de código abierto, no una oferta de venta",
-    "mvpNoticeBody": "El código está abierto en GitHub y este sitio es una demo pública. Si evalúas BEE para tu propio producto, este es el lugar para preguntar — no es un embudo de ventas."
+    "mvpNoticeBody": "El código está abierto en GitHub y este sitio es una demo pública. Si evalúas BEE para tu propio producto, este es el lugar para preguntar — no es un embudo de ventas.",
+    "haveAccountLogin": "Iniciar sesión",
+    "haveAccountWaitlist": "Únete a la lista"
   },
   "soporte": {
     "meta": {

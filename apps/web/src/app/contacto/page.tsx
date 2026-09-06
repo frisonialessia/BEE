@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Code2, LogIn, Send } from "lucide-react";
 
@@ -68,6 +69,35 @@ export default async function ContactoPage({
                     <div className="min-w-0">
                       <p className="text-sm font-semibold">{t(`${note.id}Title`)}</p>
                       <p className="bee-caption mt-1">{t(`${note.id}Body`)}</p>
+                      {/* This note names two places a visitor might actually
+                          want instead of the form; naming them without
+                          linking them makes the reader hunt for both. */}
+                      {note.id === "haveAccount" && (
+                        <p className="bee-caption mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                          <Link href="/login" className="font-medium text-foreground underline underline-offset-4">
+                            {t("haveAccountLogin")}
+                          </Link>
+                          <Link href="/#waitlist" className="font-medium text-foreground underline underline-offset-4">
+                            {t("haveAccountWaitlist")}
+                          </Link>
+                        </p>
+                      )}
+                      {/* The claim right above is checkable, so it links to
+                          the thing it claims. Saying "the code is open on
+                          GitHub" without a way to go look is the kind of
+                          line a sales page writes. */}
+                      {note.id === "mvpNotice" && (
+                        <p className="bee-caption mt-2">
+                          <a
+                            href="https://github.com/frisonialessia/BEE"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-medium text-foreground underline underline-offset-4"
+                          >
+                            github.com/frisonialessia/BEE
+                          </a>
+                        </p>
+                      )}
                     </div>
                   </li>
                 ))}
