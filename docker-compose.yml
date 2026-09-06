@@ -1,22 +1,64 @@
 # =============================================================================
-# BEE — local development stack.
-# Brings up PostgreSQL (with pgvector) and the FastAPI backend. The Next.js
-# frontend runs separately with `pnpm dev` (or add a service here once
-# containerized).
+# BEE — local stack: PostgreSQL + Redis + the FastAPI backend.
 #
 #   docker compose up --build
+#   → API      http://localhost:8000
+#   → Postgres localhost:5432   (bee / bee / bee)
+#   → Redis    localhost:6379
 #
-# This file is for LOCAL DEVELOPMENT ONLY. It intentionally ships with auth
-# disabled (API_SECRET_KEY empty, WEBHOOK_SIGNATURE_REQUIRED=false) and the
-# default webhook secret — never reuse these values, or this file as-is, for
-# a real deployment. See DEPLOY_CHECKLIST.md for the production checklist.
+# The Next.js frontend is NOT here on purpose: it runs with `pnpm dev`, which
+# is faster than any container round-trip and is how it's actually developed.
+# Point it at this stack with, in apps/web/.env.local:
+#
+#   NEXT_PUBLIC_API_URL=http://localhost:8000
+#   NEXT_PUBLIC_BEE_API_KEY=local-dev-api-key
+#
+# -----------------------------------------------------------------------------
+# WHAT THIS MATCHES IN PRODUCTION, AND WHAT IT CANNOT
+# -----------------------------------------------------------------------------
+# Matches, deliberately:
+#
+#   * Python 3.11 — the same interpreter as both CI workflows and mypy.
+#   * PostgreSQL 16 with pgvector, the extension migration 001 requires.
+#   * ENVIRONMENT=production, so the code takes the production path: no
+#     create_all(), the schema-drift check runs at boot, and JWT_SECRET_KEY
+#     is refused if left at its placeholder. Running local as `local` is how
+#     a schema drift can exist for weeks without anyone seeing it — that
+#     already happened here, 26 revisions' worth.
+#   * The schema comes from `alembic upgrade head`, run by its own one-shot
+#     service before the API starts. Never from create_all().
+#   * Redis on, with JOB_QUEUE_BACKEND=redis: the durable job queue and the
+#     shared abuse limits behave as they do in production instead of
+#     silently degrading to per-process state.
+#   * API_SECRET_KEY set, so every call needs X-API-Key exactly as it does
+#     in production. Leaving it empty locally is what makes a CORS or
+#     API-key mistake invisible until it reaches a deploy.
+#   * A `cron` service that hits the same tick endpoints Vercel Cron hits,
+#     on the same schedule, so the queue actually drains here too.
+#
+# Cannot match, and it matters:
+#
+#   * Production runs on serverless functions that freeze between requests.
+#     This compose file runs one long-lived uvicorn process. That difference
+#     HIDES a real class of bug: work pushed onto the in-process
+#     asyncio.Queue survives here and is lost there. Redis is on below
+#     precisely so the durable path is the one being exercised — do not turn
+#     it off to "simplify" local, or local stops testing what deploys.
+#
+# -----------------------------------------------------------------------------
+# The values below are development credentials. They are committed on purpose
+# and are worthless: they only ever reach containers on your own machine.
+# Never reuse any of them, or this file, anywhere real traffic can arrive.
+# See DEPLOY_CHECKLIST.md for what production actually needs.
 # =============================================================================
+
+name: bee
 
 services:
   db:
     # pgvector/pgvector ships the `vector` extension pre-installed on top of
     # the official postgres image — plain postgres:16 does NOT include it, so
-    # `CREATE EXTENSION vector` (run by alembic migration 001) would fail.
+    # `CREATE EXTENSION vector` (alembic migration 001) would fail.
     image: pgvector/pgvector:pg16
     container_name: bee-postgres
     environment:
@@ -33,36 +75,127 @@ services:
       timeout: 5s
       retries: 10
 
-  api:
+  redis:
+    image: redis:7-alpine
+    container_name: bee-redis
+    ports:
+      - "6379:6379"
+    # No persistence: this Redis holds a job queue and rate-limit windows,
+    # both of which are fine to lose on restart. Adding an AOF here would
+    # only make local state outlive a `docker compose down` in a way
+    # production's managed Redis wouldn't.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # One-shot: brings the schema to head, then exits. The API waits for it to
+  # complete successfully, so a container that comes up is a container whose
+  # database matches its code — the invariant production enforces with the
+  # migrate workflow and the boot-time drift check.
+  migrate:
     build:
       context: ./apps/api
-    container_name: bee-api
+      target: dev
+    container_name: bee-migrate
     depends_on:
       db:
         condition: service_healthy
     environment:
-      # Point the API at the compose Postgres service.
       DATABASE_URL: postgresql+psycopg://bee:bee@db:5432/bee
-      ENVIRONMENT: local
-      # Dev-only defaults — auth disabled. See the file header before reusing
-      # this compose file anywhere real traffic could reach it.
-      API_SECRET_KEY: ""
-      WEBHOOK_SIGNING_SECRET: "change-me-in-production"
-      WEBHOOK_SIGNATURE_REQUIRED: "false"
-      BACKEND_CORS_ORIGINS: "http://localhost:3000"
-    ports:
-      - "8000:8000"
-    # Live-reload during development.
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      ENVIRONMENT: production
+      JWT_SECRET_KEY: local-dev-jwt-secret-not-used-for-anything-real
+    command: alembic upgrade head
     volumes:
       - ./apps/api:/app
+    restart: "no"
+
+  api:
+    build:
+      context: ./apps/api
+      # dev, not runtime: this target adds pytest/ruff/mypy so the suite can
+      # run in the same image — `docker compose run --rm api pytest`.
+      target: dev
+    container_name: bee-api
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql+psycopg://bee:bee@db:5432/bee
+      REDIS_URL: redis://redis:6379/0
+
+      # The production code path. See the header for why local runs this and
+      # not ENVIRONMENT=local.
+      ENVIRONMENT: production
+      JWT_SECRET_KEY: local-dev-jwt-secret-not-used-for-anything-real
+      API_SECRET_KEY: local-dev-api-key
+      SUPPORT_ADMIN_SECRET: local-dev-support-secret
+
+      # Durable queue + the cron that drains it, exactly as deployed.
+      JOB_QUEUE_BACKEND: redis
+      CRON_SECRET: local-dev-cron-secret
+
+      BACKEND_CORS_ORIGINS: "http://localhost:3000"
+
+      # Webhook signing is REQUIRED here, as in production. Turning it off
+      # locally means the first signed webhook anyone sends is the one that
+      # arrives in production untested.
+      WEBHOOK_SIGNING_SECRET: local-dev-webhook-secret
+      WEBHOOK_SIGNATURE_REQUIRED: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind mount for live reload. It shadows /app, so the image's installed
+      # packages (site-packages) stay put but the code is yours.
+      - ./apps/api:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     healthcheck:
-      # python -c avoids depending on curl/wget being present in the image.
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      # /api/v1/health needs no API key (it is in API_KEY_EXEMPT_PATHS) and
+      # touches no database, which is what a liveness probe should be.
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/api/v1/health"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      start_period: 15s
+
+  # Vercel Cron, locally. Production calls these three paths on these three
+  # schedules with `Authorization: Bearer $CRON_SECRET` auto-injected; this
+  # loop does the same thing so the job queue drains here too. Without it the
+  # durable queue fills up locally and everything looks fine until it doesn't.
+  #
+  # A shell loop rather than a cron daemon: three fixed intervals do not need
+  # crontab, and this way the whole schedule is readable in one place.
+  cron:
+    image: curlimages/curl:8.11.1
+    container_name: bee-cron
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      CRON_SECRET: local-dev-cron-secret
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        # Un bucle por horario, en segundo plano, y `wait`. La alternativa
+        # —un solo bucle de 60 s con aritmética modular— hacía lo mismo pero
+        # había que leer un `n % 15` para saber cada cuánto corre cada cosa,
+        # y el desfase del sleep se acumulaba sobre los tres a la vez.
+        tick() {
+          curl -fsS -m 30 -H "Authorization: Bearer $$CRON_SECRET" \
+            "http://api:8000/api/v1/internal/$$1/tick" > /dev/null \
+            || echo "cron: $$1 falló (se reintenta en $$2s)"
+        }
+        while true; do tick jobs        60;   sleep 60;   done &
+        while true; do tick market-scan 900;  sleep 900;  done &
+        while true; do tick digest      3600; sleep 3600; done &
+        wait
+    restart: unless-stopped
 
 volumes:
   bee_pgdata:

@@ -50,7 +50,11 @@ pnpm lint
 pnpm build
 ```
 
-**Both at once**: `docker compose up --build` from the repo root (Postgres + API), then run the frontend separately as above.
+**Both at once**: `docker compose up --build` from the repo root brings up Postgres (with
+pgvector), Redis, applies the Alembic migrations, starts the API, and runs a cron
+loop that hits the same tick endpoints Vercel Cron does. It runs with
+`ENVIRONMENT=production` on purpose — see the file's own header for what that
+matches and the one thing it cannot. Run the frontend separately as above.
 
 ## Security — read before touching config or secrets
 

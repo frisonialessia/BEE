@@ -743,7 +743,7 @@
           },
           {
             "kind": "code",
-            "text": "# Backend\ncd apps/api\nuv venv .venv && source .venv/bin/activate\nuv pip install -r requirements-dev.txt\npytest                      # 1277 pruebas, sin servicios externos\nruff check app tests\nuvicorn app.main:app --reload\n\n# Frontend\ncd apps/web\npnpm install\npnpm dev                    # http://localhost:3000\n\n# Todo junto (Postgres + API)\ndocker compose up --build",
+            "text": "# Backend\ncd apps/api\nuv venv .venv && source .venv/bin/activate\nuv pip install -r requirements-dev.txt\npytest                      # 1277 pruebas, sin servicios externos\nruff check app tests\nuvicorn app.main:app --reload\n\n# Frontend\ncd apps/web\npnpm install\npnpm dev                    # http://localhost:3000\n\n# Todo junto: Postgres + Redis + migraciones + API + cron\ndocker compose up --build",
             "lang": "bash"
           }
         ]
