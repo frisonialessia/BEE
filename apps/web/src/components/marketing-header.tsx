@@ -2,7 +2,6 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 import { Logo } from "@/components/logo";
-import { getApiBaseUrl } from "@/lib/api/client";
 
 /**
  * Cabecera pública — barra flotante: sticky, centrada en el mismo
@@ -42,9 +41,15 @@ export function MarketingHeader() {
           <Link href="/contacto" className="bee-btn-text text-sm">
             {t("contact")}
           </Link>
-          <a href={`${getApiBaseUrl()}/docs`} target="_blank" rel="noreferrer" className="bee-btn-text text-sm">
+          {/* Apuntaba a `{API}/docs`, el Swagger de FastAPI — que en
+              producción vive detrás de APIKeyMiddleware y responde 401 a
+              cualquier visitante: un enlace roto en la barra desde que se
+              activó la llave. Ahora va a la documentación de arquitectura,
+              que además es lo que alguien que abre "Documentación" en una
+              landing espera encontrar. */}
+          <Link href="/documentacion" className="bee-btn-text text-sm">
             {t("docs")}
-          </a>
+          </Link>
         </nav>
 
         <div className="flex shrink-0 items-center gap-2">

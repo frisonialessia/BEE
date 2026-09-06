@@ -430,5 +430,382 @@
     ],
     "securityBody": "See the <link>Security</link> page for the technical detail: multi-tenant isolation, layered authentication, secrets that are never persisted in the database or logged.",
     "lastUpdated": "Last updated: see the site's version history."
+  },
+  "documentacion": {
+    "meta": {
+      "title": "Documentation — how BEE works inside",
+      "description": "BEE's architecture, its languages, the path a signal takes, and what's still missing. Written for whoever is about to read or extend the code."
+    },
+    "eyebrow": "Documentation",
+    "heroTitle": "How BEE works inside.",
+    "heroSubtitle": "Not API docs — the architecture, the languages and the decisions, for whoever picks up the code and wants to understand it before touching it. At the end, the roadmap: what BEE can do and what it still lacks.",
+    "tocTitle": "On this page",
+    "updated": "Last reviewed: September 2026",
+    "sections": {
+      "arquitectura": {
+        "title": "Two applications, one contract",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "BEE is a monorepo with two applications that share no code and deploy separately. They speak only over HTTP, through a versioned API. That boundary is deliberate: the brain has to survive a complete rewrite of the frontend."
+          },
+          {
+            "kind": "code",
+            "text": "apps/\n├── api/    FastAPI · SQLModel · PostgreSQL · Alembic\n└── web/    Next.js (App Router) · TypeScript · Tailwind · shadcn/ui",
+            "lang": "text"
+          },
+          {
+            "kind": "p",
+            "text": "In production they are two separate projects on the same host. The frontend knows the backend through a single variable (NEXT_PUBLIC_API_URL) and nothing else; the backend doesn't know the frontend exists, beyond the list of origins it accepts in CORS."
+          },
+          {
+            "kind": "note",
+            "text": "Never merge them into one deployment. That independence is what lets the frontend be replaced without touching the engine, and lets each scale when it — not the other — asks for it."
+          }
+        ]
+      },
+      "stack": {
+        "title": "Languages and parts",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "Nothing exotic and nothing for fashion: every choice solves a concrete problem and can be swapped without dragging the rest with it."
+          },
+          {
+            "kind": "table",
+            "headers": [
+              "Part",
+              "What it is",
+              "Why"
+            ],
+            "rows": [
+              [
+                "Python 3.11+",
+                "Backend language",
+                "The ecosystem where the data and model work BEE will need already lives."
+              ],
+              [
+                "FastAPI",
+                "HTTP framework",
+                "Real types in the signatures; validation and the OpenAPI schema generated from the same code."
+              ],
+              [
+                "SQLModel",
+                "ORM and schemas",
+                "Joins SQLAlchemy and Pydantic: one definition is both the table and the API contract."
+              ],
+              [
+                "PostgreSQL",
+                "Database",
+                "Relational, with extensions — pgvector is already enabled for embeddings."
+              ],
+              [
+                "Alembic",
+                "Migrations",
+                "Every schema change is a versioned, reversible revision, never a create_all()."
+              ],
+              [
+                "TypeScript 5",
+                "Frontend language",
+                "Domain types are mirrored by hand from the backend schemas."
+              ],
+              [
+                "Next.js 16 (App Router)",
+                "Frontend framework",
+                "Server components by default; the client only where there is interaction."
+              ],
+              [
+                "React 19",
+                "Interface",
+                "—"
+              ],
+              [
+                "Tailwind 4",
+                "Styling",
+                "Every colour comes from BEE tokens; no loose values."
+              ],
+              [
+                "TanStack Query 5",
+                "Client data",
+                "Cache, retries and revalidation without writing a single reducer."
+              ],
+              [
+                "next-intl",
+                "Languages",
+                "Spanish and English, with no route segment and no locale middleware."
+              ],
+              [
+                "Redis (optional)",
+                "Shared state",
+                "Off by default. See the background jobs section."
+              ]
+            ]
+          }
+        ]
+      },
+      "capas": {
+        "title": "The backend's four layers",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "The backend is strictly layered and the dependency always points inward. A layer may call the one below, never the one above."
+          },
+          {
+            "kind": "code",
+            "text": "api/           HTTP routes: validate, authenticate, delegate. No business logic.\n  ↓\nservices/      the brain: scoring, strategies, permissions, integrations.\n  ↓\nrepositories/  data access: queries, per-organization filtering.\n  ↓\nmodels/        the SQLModel tables and their invariants.",
+            "lang": "text"
+          },
+          {
+            "kind": "p",
+            "text": "The practical rule: if a function in api/ has an if that decides something about the business, it is in the wrong layer. And if a service writes a select() by hand instead of asking a repository, it skipped the layer that guarantees the organization filter."
+          }
+        ]
+      },
+      "senal": {
+        "title": "The path a signal takes",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "This is the product's central route. Everything else hangs off it."
+          },
+          {
+            "kind": "steps",
+            "items": [
+              "A webhook arrives at POST /api/v1/signals/ingest with the sender's HMAC signature.",
+              "The signature is verified and the tenant resolved (X-BEE-Org-Key header or org_key parameter). Nothing enters without an organization.",
+              "The request answers 202 Accepted in under 50 ms and queues the work. The sender never waits for analysis.",
+              "The signal engine runs the signal past its registered analyzers; each contributes a score and tags.",
+              "If the score qualifies, an opportunity is born with its score, its buying window and its strategy (argument, channel, timing).",
+              "The outcome of the close — won or lost — feeds back and adjusts the next play."
+            ]
+          },
+          {
+            "kind": "note",
+            "text": "The 202 is a promise: the signal was accepted, not processed. What makes it real is the durable queue in the next section."
+          }
+        ]
+      },
+      "analizadores": {
+        "title": "The extension point: analyzers",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "Signal types change constantly, so the engine doesn't know them — it discovers them. An analyzer is a class with a decorator, and adding one requires touching no other part of the system."
+          },
+          {
+            "kind": "code",
+            "text": "from app.services.signal_engine.analyzers.base import register_analyzer\n\n@register_analyzer\nclass MyAnalyzer(SignalAnalyzer):\n    signal_types = (\"my_type\",)\n\n    def analyze(self, signal: Signal) -> AnalysisResult:\n        ...  # returns score, tags and reasons",
+            "lang": "python"
+          },
+          {
+            "kind": "p",
+            "text": "Eleven are registered today: funding, hiring, tech adoption, franchise expansion, mergers and acquisitions, public tenders, regulatory change, grants, behaviour, a generic fallback and an LLM-based one."
+          },
+          {
+            "kind": "p",
+            "text": "The LLM analyzer is optional. With AI_PROVIDER=none — the default — BEE runs entirely on rules: zero cost, zero external latency and no dependency on any provider."
+          }
+        ]
+      },
+      "tenants": {
+        "title": "Multi-tenant from the first migration",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "Every table holding customer data carries organization_id, and all 39 that do have an index led by that column, created in the same migration that creates the table."
+          },
+          {
+            "kind": "p",
+            "text": "Isolation is not trusted to each query: it lives in shared helpers (scope_to_organization, scope_by_organization_id, get_visible_user_ids). A query that skips them is a security bug, not a shortcut."
+          },
+          {
+            "kind": "note",
+            "text": "Hard rule in this repository: no new endpoint or query over an organization's data is written without going through those helpers."
+          }
+        ]
+      },
+      "auth": {
+        "title": "Authentication",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "BEE uses no Supabase and no identity provider. The session is a JWT the backend signs itself."
+          },
+          {
+            "kind": "ul",
+            "items": [
+              "The token carries the minimum: user id, organization id, role and expiry.",
+              "On every request, get_current_user reloads the user from the database and re-checks role and is_active. Deactivating someone cuts their access immediately, even with a still-valid token.",
+              "Registration creates the organization and its first OWNER user in a single transaction; the email is globally unique.",
+              "There is a second, independent secret (API_SECRET_KEY) for service-to-service calls, and a third (SUPPORT_ADMIN_SECRET) for two internal tools. Leaking one does not compromise the others."
+            ]
+          }
+        ]
+      },
+      "middleware": {
+        "title": "Middleware: the order matters",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "Starlette inserts each middleware at the front of the stack, so the last one registered is the outermost. In BEE that order is chosen, not inherited:"
+          },
+          {
+            "kind": "code",
+            "text": "CORS                  ← outermost: answers the preflight OPTIONS\n  └ UnhandledError    ← turns an exception into a JSON 500\n     └ RateLimit      ← per IP, before asking for the key\n        └ APIKey      ← requires X-API-Key except on public routes\n           └ Security ← headers on every response, errors included",
+            "lang": "text"
+          },
+          {
+            "kind": "p",
+            "text": "CORS goes outside because a browser never attaches custom headers to a preflight: if the API key were evaluated first, every preflight would die with a 401 and the browser would never send the real request. And the per-IP limit sits before the key so a client hammering with invalid keys is throttled too, instead of getting 401s for free forever."
+          }
+        ]
+      },
+      "trabajos": {
+        "title": "Background jobs",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "This is the part that needs the most care on a serverless deployment, and the one that most easily breaks in silence."
+          },
+          {
+            "kind": "p",
+            "text": "Without Redis, queueing means an asyncio.Queue inside the process. On a long-lived server that is fine; inside a serverless function, when the instance freezes the queued work disappears — and the webhook already answered 202."
+          },
+          {
+            "kind": "p",
+            "text": "With Redis the queue is durable and a cron drains it every minute. A job that fails is rescheduled with exponential backoff until its retries run out, and then moves to a dead-letter queue that can be inspected and replayed."
+          },
+          {
+            "kind": "table",
+            "headers": [
+              "Variable",
+              "What it turns on"
+            ],
+            "rows": [
+              [
+                "REDIS_URL",
+                "Shared state for the abuse limits, which are per-instance without it."
+              ],
+              [
+                "JOB_QUEUE_BACKEND=redis",
+                "The durable queue instead of the in-process one."
+              ],
+              [
+                "CRON_SECRET",
+                "The scheduled ticks. Without it those routes answer 404 on purpose."
+              ]
+            ]
+          },
+          {
+            "kind": "note",
+            "text": "A warning learned the hard way: turn Redis on for queues and limits, but leave the notification stream off on serverless. Every open tab holds a function for 60 seconds in a loop, and that is billed by the second."
+          }
+        ]
+      },
+      "datos": {
+        "title": "Schema and migrations",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "44 tables and 52 Alembic revisions. create_all() never runs in production: startup compares the database's revision against the one the code expects and shouts in the log if they differ, and /api/v1/ready answers 503 while there is drift."
+          },
+          {
+            "kind": "p",
+            "text": "Migrations apply themselves on every push that touches migrations or models. If the database secret is missing, the step fails — it does not warn and carry on."
+          },
+          {
+            "kind": "note",
+            "text": "That last sentence is a scar. The step used to exit successfully when the secret was missing, showed a green check, and the database fell 26 revisions behind until a login started failing. A step that might do nothing must fail."
+          }
+        ]
+      },
+      "frontend": {
+        "title": "Frontend",
+        "blocks": [
+          {
+            "kind": "ul",
+            "items": [
+              "App Router with server components by default. \"use client\" only where there is state or events, and the further down the tree, the better.",
+              "Domain types live in src/types/domain.ts, mirrored by hand from the backend schemas. When one side changes, the other changes.",
+              "The public sandbox (/probar) does not call the API: it reads and writes a demo store in the browser, seeded from sample data. That is why it works with no account and no backend.",
+              "The design system rules: all colour comes from BEE tokens, one hue per box at three intensities, green only where closed money is the subject, and no coloured text or icons.",
+              "The charts are our own and measure their box: no box is left with white space, and none deforms with long data."
+            ]
+          }
+        ]
+      },
+      "pruebas": {
+        "title": "Tests and how to run it",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "The backend suite is 1,277 tests and it is hermetic: it runs on in-memory SQLite, with no Postgres, no Redis and no network. The whole thing runs in a couple of minutes, and it is where most of this project's regressions have been caught."
+          },
+          {
+            "kind": "code",
+            "text": "# Backend\ncd apps/api\nuv venv .venv && source .venv/bin/activate\nuv pip install -r requirements-dev.txt\npytest                      # 1,277 tests, no external services\nruff check app tests\nuvicorn app.main:app --reload\n\n# Frontend\ncd apps/web\npnpm install\npnpm dev                    # http://localhost:3000\n\n# Both at once (Postgres + API)\ndocker compose up --build",
+            "lang": "bash"
+          }
+        ]
+      }
+    },
+    "roadmapTitle": "Roadmap",
+    "roadmapIntro": "What BEE can do today, and what it lacks. Written so whoever takes the code knows where the edge is before starting.",
+    "roadmapNowTitle": "What already works",
+    "roadmapNow": [
+      "Signal ingestion by webhook with HMAC signature, isolated per organization.",
+      "Eleven pluggable analyzers; adding one touches nothing else.",
+      "Scored opportunities with a buying window and a written strategy (argument, channel, timing).",
+      "A five-stage CRM board with drag between columns and closes in green.",
+      "Sales, Forecast, Calendar, Network, Sequences, Brand voice and Control.",
+      "Real multi-tenancy with teams, roles and hierarchy-based visibility.",
+      "A public sandbox with no signup, running on sample data in the browser.",
+      "Spanish and English across the whole product.",
+      "Versioned, automatic migrations with schema-drift detection."
+    ],
+    "roadmapNextTitle": "What's missing, in order",
+    "roadmapNext": [
+      {
+        "title": "Email verification",
+        "text": "Registration hands out a session without verifying the address, and emails are globally unique: someone can claim another company's address and lock its real owner out. This is the blocker for opening signup."
+      },
+      {
+        "title": "Outbound email (SMTP)",
+        "text": "With no provider configured, password recovery writes to the log and delivers nothing. It also blocks the verification above: they are one problem, not two."
+      },
+      {
+        "title": "Redis",
+        "text": "Turns on the durable queue — today a queued job is lost when the function freezes — and makes the abuse limits global instead of per-instance."
+      },
+      {
+        "title": "File storage",
+        "text": "An avatar is stored as a data URI inside the user's row, up to 300 KB, in the table reloaded on every authenticated request. It belongs in a blob store, with only the URL kept."
+      },
+      {
+        "title": "Rep progress on the server",
+        "text": "Milestones live in localStorage with no user id: switching computers resets the progress and two people sharing a browser share it. For a product built on gamification, that has to be a server fact."
+      },
+      {
+        "title": "httpOnly cookie session with refresh",
+        "text": "Today it is a single token in localStorage, with no rotation and no revocation. It works, but any XSS takes the whole session."
+      },
+      {
+        "title": "Live notifications off serverless",
+        "text": "The stream exists and degrades cleanly to polling, but holding long connections inside functions is billed by the second. It needs its own runtime before being switched on."
+      },
+      {
+        "title": "Organization dedupe by domain",
+        "text": "The second employee from the same company creates a parallel organization with nothing stopping them. Detecting the domain and offering 'request access' fixes it."
+      },
+      {
+        "title": "Per-team currency with historical rates",
+        "text": "Currency is already stored per team; what's missing is converting amounts that arrive in signals using the rate on the day of the event, never today's, so history doesn't move."
+      },
+      {
+        "title": "Composite indexes",
+        "text": "The organization filter is already indexed on all 39 tables. What comes next — organization plus status plus date — is decided with EXPLAIN ANALYZE over real data, not by inspection."
+      }
+    ],
+    "repoCta": "The full code is on GitHub"
   }
 }

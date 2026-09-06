@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { Logo } from "@/components/logo";
-import { getApiBaseUrl } from "@/lib/api/client";
 
 /** Pie ejecutivo — marca, navegación real (sin enlaces inventados) y copyright.
  *  Server component (async, `getTranslations` — not the `useTranslations`
@@ -16,8 +15,15 @@ export async function MarketingFooter() {
   const productLinks = [
     { label: t("productLinks.features"), href: "/funcionalidades" },
     { label: t("productLinks.solutions"), href: "/soluciones" },
-    { label: t("productLinks.preview"), href: "#producto" },
-    { label: t("productLinks.apiDocs"), href: `${getApiBaseUrl()}/docs`, external: true },
+    // "#producto" no existe en ninguna página del sitio: era el ancla de una
+    // sección del home de antes de que el home pasara a una sola pantalla.
+    // Desde entonces este enlace no llevaba a ningún lado, en todas las
+    // páginas que muestran el pie. La vista previa real es el sandbox.
+    { label: t("productLinks.preview"), href: "/probar" },
+    // Igual que en el encabezado: el Swagger del API responde 401 a un
+    // visitante desde que APIKeyMiddleware está activo. La documentación de
+    // arquitectura sí es pública, y es la que sirve a quien viene a leer.
+    { label: t("productLinks.apiDocs"), href: "/documentacion", external: false },
   ] as const;
 
   const companyLinks = [

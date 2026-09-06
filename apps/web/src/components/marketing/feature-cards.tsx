@@ -29,27 +29,11 @@ import { hexagonPath, layoutRadialHive, rampIndex } from "@/lib/visualization/ho
  * render del servidor y el del cliente — el fallo que ya nos costó /probar.
  */
 
-/** Ancho en columnas (de 12) por tarjeta, en lg. Abajo todas van a 1.
- *  Ocho tarjetas en filas de tres dejan dos solas al final, así que las dos
- *  últimas van a media fila cada una y la cuadrícula cierra completa. */
-const SPAN: Record<string, string> = {
-  signal: "lg:col-span-4",
-  hive: "lg:col-span-4",
-  window: "lg:col-span-4",
-  pipeline: "lg:col-span-4",
-  play: "lg:col-span-4",
-  sales: "lg:col-span-4",
-  learn: "lg:col-span-6",
-  network: "lg:col-span-6",
-};
-
-/** Alto de la figura por tarjeta. No es decorativo: el embudo son cinco
- *  barras con sus separaciones y no cabe en la caja corta — se montaba
- *  encima del párrafo. El panal necesita altura para leerse como panal. */
-const FIG_H: Record<string, string> = {
-  hive: "h-40",
-  pipeline: "h-28",
-};
+/** Todas las tarjetas miden lo mismo. Ocho en filas de tres dejaban dos
+ *  al final, así que antes las dos últimas iban a media fila — y quedaban
+ *  del doble de ancho que sus vecinas. Cuatro columnas parten ocho en dos
+ *  filas exactas y ninguna tarjeta necesita un ancho propio. */
+const FIG_H = "h-32";
 
 const ORDER = ["signal", "hive", "window", "pipeline", "play", "sales", "learn", "network"] as const;
 type CardId = (typeof ORDER)[number];
@@ -270,13 +254,13 @@ export async function FeatureCards() {
   const t = await getTranslations("legalMarketing.funcionalidades.cards");
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-12">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {ORDER.map((id) => {
         const hue = HUE[id];
         return (
           <article
             key={id}
-            className={`bee-bento bee-bento-pad flex flex-col ${SPAN[id]}`}
+            className="bee-bento bee-bento-pad flex flex-col"
             style={{ borderTop: `3px solid ${hue}` }}
           >
             <p className="bee-micro truncate">{t(`${id}.eyebrow`)}</p>
@@ -295,7 +279,7 @@ export async function FeatureCards() {
                 aquí: un padding cuenta dentro del alto de la caja, así que
                 h-28 daba 28 menos el padding y las cinco barras del embudo
                 se salían por abajo. */}
-            <div className={`mt-auto w-full ${FIG_H[id] ?? "h-20"}`}>
+            <div className={`mt-auto w-full ${FIG_H}`}>
               <Figure id={id} hue={hue} />
             </div>
           </article>
