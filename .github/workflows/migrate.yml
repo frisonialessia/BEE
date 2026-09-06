@@ -51,9 +51,15 @@ jobs:
           # irrelevant to Alembic itself.
           JWT_SECRET_KEY: ${{ secrets.PRODUCTION_JWT_SECRET_KEY || 'migration-only-not-used-for-tokens' }}
         run: |
+          # exit 1, not 0. This skipped silently on 4 of its first 4 runs
+          # and reported a green check each time, while production drifted
+          # 26 revisions behind the code and every login 500'd on a column
+          # that did not exist yet. A migration step that migrated nothing
+          # is a failed deploy, not a warning: the whole reason this job
+          # exists is that nobody watches its logs when it is green.
           if [ -z "$DATABASE_URL" ]; then
-            echo "::warning::PRODUCTION_DATABASE_URL secret is not set — skipping. Add it in Settings → Secrets and re-run, or run 'alembic upgrade head' by hand (DEPLOY_CHECKLIST.md §1)."
-            exit 0
+            echo "::error::PRODUCTION_DATABASE_URL secret is not set — no migration ran. Add it in Settings → Secrets and variables → Actions, then re-run this workflow (DEPLOY_CHECKLIST.md §1)."
+            exit 1
           fi
           alembic current
           alembic upgrade head

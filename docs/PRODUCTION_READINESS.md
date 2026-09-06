@@ -192,31 +192,43 @@ cambies al endpoint directo**: ese es solo para las migraciones.
 
 ## 4. P2 — El muro de escala (camino a 100 000 usuarios)
 
-### 4.1 30 de 39 tablas multi-tenant no tienen índice en `organization_id`
+### 4.1 Los índices de `organization_id` — verificado, NO es un problema
 
-Este es el hallazgo más caro de todos y el más barato de arreglar.
+**Corrección de una versión anterior de este documento**, que afirmaba que 30
+de las 39 tablas multi-tenant no tenían índice en `organization_id`. Era falso.
+El error venía de contar con un `grep` por líneas, que solo veía las 9 llamadas
+a `op.create_index(...)` escritas en una sola línea y se perdía las 30 escritas
+en varias.
 
-Tablas con índice (9): `teams`, `users`, `companies`, `leads`, `opportunities`,
-`signals`, `quotas`, `saved_views`, `meetings`.
+La comprobación buena —y la que hay que repetir si alguien vuelve a dudar— es
+replicar las 52 migraciones sobre un Postgres vacío y preguntarle al catálogo,
+no a los archivos:
 
-Tablas **sin** índice (30), entre ellas las que crecen sin techo con el uso:
-`account_activity_events`, `audit_entries`, `dark_funnel_signals`,
-`incoming_engagement_events`, `pending_actions`, `hot_lead_scores`,
-`assistant_conversations`, `sequence_executions`, `workflow_tasks`,
-`strategy_outcomes`, `network_connections`, `opportunity_tasks`,
-`admin_audit_logs`, `failed_events`, `anomaly_alerts`, `artifact_corrections`,
-`account_briefs`, `brand_fragments`, `dynamic_sequences`, `integration_connections`,
-`lead_psychographics`, `market_insights`, `message_templates`,
-`organization_api_keys`, `outbound_webhooks`, `tactic_variants`, `team_profiles`,
-`user_style_profiles`, `voice_profiles`, `autopilot_configs`.
+```sql
+WITH cols AS (
+  SELECT table_name FROM information_schema.columns
+  WHERE table_schema='public' AND column_name='organization_id'
+), idx AS (
+  SELECT DISTINCT t.relname AS table_name
+  FROM pg_index i
+  JOIN pg_class t     ON t.oid = i.indrelid
+  JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = i.indkey[0]
+  JOIN pg_namespace n ON n.oid = t.relnamespace
+  WHERE n.nspname = 'public' AND a.attname = 'organization_id'
+)
+SELECT table_name FROM cols EXCEPT SELECT table_name FROM idx;
+```
 
-Toda consulta con `WHERE organization_id = …` sobre esas tablas hace **escaneo
-secuencial completo**. Con 10 organizaciones no se nota; con 10 000 y millones
-de eventos, cada petición del dashboard lee la tabla entera de todos los
-clientes para devolver las filas de uno.
+Resultado: **0 filas**. Las 39 tablas con `organization_id` tienen un índice
+encabezado por esa columna, creado en la misma migración que crea la tabla.
 
-**Arreglo.** Una sola migración con 30 `op.create_index(...)`. Usar
-`CREATE INDEX CONCURRENTLY` si se aplica con datos ya en producción.
+Lo que sí queda como trabajo futuro, pero **guiado por medición y no por
+inspección**: los índices son de una sola columna. Las consultas que filtran por
+organización *y además* ordenan o filtran por otra cosa
+(`WHERE organization_id = … AND status = … ORDER BY created_at DESC`) se
+beneficiarían de índices compuestos. Eso se decide con `EXPLAIN ANALYZE` sobre
+datos reales, no antes — que es exactamente la lección de haber escrito mal
+este apartado la primera vez.
 
 ### 4.2 `avatar_url` guarda la imagen dentro de la tabla `users`
 
@@ -296,7 +308,7 @@ Lo que falta no es migración de datos, es **la cadena operativa**:
 | 2 | Redis (colas + límites de abuso) | Pendiente — ver 3.1 y 3.2 |
 | 3 | SMTP con dominio verificado | Pendiente — ver 2.2 |
 | 4 | Almacenamiento de blobs para avatares | Pendiente — ver 4.2 |
-| 5 | Índices de `organization_id` | Pendiente — ver 4.1 |
+| 5 | Índices de `organization_id` | **Ya existen** — verificado contra `pg_index`, ver 4.1 |
 | 6 | Backups / point-in-time recovery en Neon | Verificar en el plan contratado |
 | 7 | Observabilidad | `sentry_sdk` ya está cableado (`app/main.py:105`); falta poner `SENTRY_DSN` y `NEXT_PUBLIC_SENTRY_DSN` |
 
@@ -362,13 +374,12 @@ Lo que **falta** para poder llamarlo "alta de organizaciones reales":
 
 6. Provisionar Redis → `REDIS_URL`, `JOB_QUEUE_BACKEND=redis`, `CRON_SECRET`.
    **Dejar el SSE apagado.** *(3.1, 3.2, 3.3)*
-7. Migración con los 30 índices de `organization_id`. *(4.1)*
-8. Poner `SENTRY_DSN` en ambos proyectos. *(5.1)*
+7. Poner `SENTRY_DSN` en ambos proyectos. *(5.1)*
 
 ### Fase 3 — Antes de escalar (P2)
 
-9. Avatares a almacenamiento de blobs + migrar los data URIs existentes. *(4.2)*
-10. Progreso de hitos al servidor. *(4.3)*
-11. Sesión en cookie `httpOnly` + refresh token. *(2.3, paso 2)*
-12. SSE fuera de las funciones serverless. *(3.3)*
-13. Deduplicación de organizaciones por dominio. *(4.5)*
+8. Avatares a almacenamiento de blobs + migrar los data URIs existentes. *(4.2)*
+9. Progreso de hitos al servidor. *(4.3)*
+10. Sesión en cookie `httpOnly` + refresh token. *(2.3, paso 2)*
+11. SSE fuera de las funciones serverless. *(3.3)*
+12. Deduplicación de organizaciones por dominio. *(4.5)*

@@ -2,12 +2,31 @@
 
 import { Compass, KanbanSquare, Lightbulb, Radio, TrendingUp, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 
 import { useTour } from "@/features/tour/tour-context";
 import { buildTourSteps, type TourMode } from "@/features/tour/tour-steps";
 
 const STORAGE_KEY = "bee_tour_intro_seen_v1";
+
+/** Nothing outside React ever changes this value while the page is open —
+ *  markSeen() below re-renders through `dismissed` instead — so the
+ *  subscription is a no-op that never fires. */
+const subscribeNever = () => () => {};
+
+const readSeen = (): boolean => {
+  try {
+    return Boolean(window.localStorage.getItem(STORAGE_KEY));
+  } catch {
+    // Storage unavailable — treat as "already seen" rather than risk popping
+    // this up on every single reload for that visitor.
+    return true;
+  }
+};
+
+/** The server has no storage and must render the same thing every time, so it
+ *  renders nothing; the client swaps in the real answer right after hydration. */
+const readSeenOnServer = (): boolean => true;
 
 // Same 5 tools and icons as OnboardingTourStep's own preview (the real
 // dashboard's wizard) — one decision, shown consistently wherever the
@@ -33,16 +52,17 @@ export function TourIntroPopup({ mode }: { mode: TourMode }) {
   const t = useTranslations("onboarding.intro.tourPreview");
   const tTour = useTranslations("onboarding.tour");
   const [dismissed, setDismissed] = useState(false);
-  const [alreadySeen] = useState(() => {
-    if (typeof window === "undefined") return true;
-    try {
-      return Boolean(window.localStorage.getItem(STORAGE_KEY));
-    } catch {
-      // Storage unavailable — treat as "already seen" rather than risk
-      // popping this up on every single reload for that visitor.
-      return true;
-    }
-  });
+  // Read through useSyncExternalStore, not a useState initializer. The
+  // initializer ran during render: on the server there is no storage so it
+  // returned `true` (render nothing), while a first-time visitor's browser
+  // returned `false` (render the popup) — a node the server never sent.
+  // React calls that a hydration mismatch and discards and re-renders the
+  // ENTIRE /probar tree, on every page of the sandbox (confirmed: React #418
+  // on /probar and /probar/sales). This hook exists for exactly this shape of
+  // problem: it hydrates against the server snapshot and then switches to the
+  // client one in a normal re-render, with no mismatch and no setState in an
+  // effect (which this repo's lint forbids, rightly).
+  const alreadySeen = useSyncExternalStore(subscribeNever, readSeen, readSeenOnServer);
 
   function markSeen() {
     try {
