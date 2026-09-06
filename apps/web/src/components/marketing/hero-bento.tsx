@@ -195,8 +195,8 @@ export function HeroBento({ locale }: { locale: Locale }) {
           <span className="bee-micro">{t("hive.live")}</span>
         </span>
       </div>
-      <div className="mt-2 flex w-full flex-1 items-center justify-center">
-        <Honeycomb items={hiveItems} maxRadius={18} minHeight={150} ariaLabel={t("hive.aria")} />
+      <div className="mt-2 flex w-full flex-1 justify-center">
+        <Honeycomb items={hiveItems} maxRadius={22} minHeight={120} ariaLabel={t("hive.aria")} />
       </div>
       <p className="bee-micro mt-2 w-full truncate">{t("hive.caption")}</p>
     </>
@@ -208,10 +208,9 @@ export function HeroBento({ locale }: { locale: Locale }) {
         <i className="size-1.5 shrink-0 animate-pulse rounded-full" style={{ background: TONE.urgency }} aria-hidden />
         <p className="bee-micro truncate">{t("hive.eyebrow")}</p>
       </div>
-      <div className="mt-1 flex w-full flex-1 items-center justify-center">
-        <Honeycomb items={hiveItemsMobile} maxRadius={12} minHeight={104} ariaLabel={t("hive.aria")} />
+      <div className="mt-1 flex w-full flex-1 justify-center">
+        <Honeycomb items={hiveItemsMobile} maxRadius={17} minHeight={80} ariaLabel={t("hive.aria")} />
       </div>
-      <p className="bee-micro mt-1 w-full leading-tight">{t("hive.caption")}</p>
     </>
   );
 
@@ -489,8 +488,8 @@ export function HeroBento({ locale }: { locale: Locale }) {
     { id: "score", node: scoreInner, top: 8, left: 185, width: 185, height: 170, rotate: 2, z: 23, padding: "0.9rem 1rem" },
     { id: "window", node: windowInner, top: 190, left: 0, width: 170, height: 140, rotate: 3, z: 18, padding: "0.85rem 1rem" },
     { id: "learn", node: learnInner, top: 195, left: 185, width: 200, height: 140, rotate: -2, z: 19, padding: "0.85rem 1rem" },
-    { id: "hive", node: hiveInner, top: 30, left: 410, width: 360, height: 255, rotate: 0, z: 20, padding: "1rem 1.15rem" },
-    { id: "path", node: pathInner, top: 300, left: 410, width: 360, height: 110, rotate: 0, z: 21, padding: "0.8rem 0.95rem" },
+    { id: "hive", node: hiveInner, top: 15, left: 438, width: 300, height: 285, rotate: 0, z: 20, padding: "1rem 1.15rem" },
+    { id: "path", node: pathInner, top: 310, left: 408, width: 360, height: 105, rotate: 0, z: 21, padding: "0.8rem 0.95rem" },
     { id: "play", node: playInner, top: 0, left: 790, width: 200, height: 140, rotate: 3, z: 22, padding: "0.85rem 1rem" },
     { id: "voice", node: voiceInner, top: 10, left: 1005, width: 170, height: 170, rotate: -2, z: 25, padding: "0.9rem 1rem" },
     { id: "compare", node: compareInner, top: 155, left: 790, width: 200, height: 140, rotate: -3, z: 16, padding: "0.85rem 1rem" },
